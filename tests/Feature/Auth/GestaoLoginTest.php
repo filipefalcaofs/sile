@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Models\Cidadao;
 use App\Models\User;
 use App\Support\Settings;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -74,7 +75,7 @@ class GestaoLoginTest extends TestCase
 
     public function test_cidadao_nao_loga_no_console_e_tentativa_e_auditada(): void
     {
-        $cidadao = User::factory()->cidadao()->create();
+        $cidadao = Cidadao::factory()->create();
 
         $response = $this->post('/gestao/login', [
             'identifier' => $cidadao->email,
@@ -252,7 +253,7 @@ class GestaoLoginTest extends TestCase
     {
         // Com guards separados, a sessão do portal é invisível para a gestão:
         // o formulário de login interno aparece normalmente.
-        $cidadao = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $cidadao = Cidadao::factory()->withAcceptedLgpdTerm()->create();
 
         $this->actingAs($cidadao)->get('/gestao/login')->assertOk();
     }

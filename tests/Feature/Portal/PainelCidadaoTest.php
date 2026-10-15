@@ -5,6 +5,7 @@ namespace Tests\Feature\Portal;
 use App\Enums\CompanyLinkRole;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\AnalysisPendency;
+use App\Models\Cidadao;
 use App\Models\Company;
 use App\Models\Procuration;
 use App\Models\User;
@@ -31,9 +32,9 @@ class PainelCidadaoTest extends TestCase
     }
 
     /** Cidadão habilitado a navegar no portal (papel + termo LGPD aceito). */
-    private function portalUser(): User
+    private function portalUser(): Cidadao
     {
-        return User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        return Cidadao::factory()->withAcceptedLgpdTerm()->create();
     }
 
     /** Empresa com vínculo ATIVO do usuário. */

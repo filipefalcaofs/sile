@@ -3,7 +3,7 @@
 namespace Tests\Feature\Solicitacao;
 
 use App\Enums\ViabilityRequestStatus;
-use App\Models\User;
+use App\Models\Cidadao;
 use App\Models\ViabilityRequest;
 use App\Services\Solicitacao\CancelamentoNaoPermitidoException;
 use App\Services\Solicitacao\CancelarSolicitacaoService;
@@ -35,9 +35,9 @@ class CancelarSolicitacaoTest extends TestCase
     /**
      * Cidadão habilitado a navegar no portal (papel + termo LGPD aceito).
      */
-    private function portalUser(): User
+    private function portalUser(): Cidadao
     {
-        return User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        return Cidadao::factory()->withAcceptedLgpdTerm()->create();
     }
 
     private function service(): CancelarSolicitacaoService

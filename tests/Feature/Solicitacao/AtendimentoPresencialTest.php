@@ -5,6 +5,7 @@ namespace Tests\Feature\Solicitacao;
 use App\Enums\CompanyLinkRole;
 use App\Http\Middleware\ResolveAssistedAttendance;
 use App\Models\AssistedAttendance;
+use App\Models\Cidadao;
 use App\Models\Company;
 use App\Models\Procuration;
 use App\Models\User;
@@ -110,7 +111,7 @@ class AtendimentoPresencialTest extends TestCase
     public function test_middleware_resolve_atendimento_ativo_para_representacao(): void
     {
         $attendant = User::factory()->administrador()->create();
-        $citizen = User::factory()->cidadao()->create();
+        $citizen = Cidadao::factory()->create();
         $attendance = AssistedAttendance::factory()->active()->create([
             'attendant_user_id' => $attendant->id,
             'citizen_user_id' => $citizen->id,
@@ -169,7 +170,7 @@ class AtendimentoPresencialTest extends TestCase
      */
     private function citizenWithCompany(): array
     {
-        $citizen = User::factory()->cidadao()->create();
+        $citizen = Cidadao::factory()->create();
         $company = Company::factory()->create();
         $company->links()->create([
             'user_id' => $citizen->id,
@@ -193,7 +194,7 @@ class AtendimentoPresencialTest extends TestCase
     public function test_inicia_atendimento_informando_cpf(): void
     {
         $attendant = $this->attendant();
-        $citizen = User::factory()->cidadao()->create();
+        $citizen = Cidadao::factory()->create();
 
         $this->actingAs($attendant, 'gestao')
             ->post('/gestao/atendimento', ['cpf' => $citizen->cpf])
@@ -355,7 +356,7 @@ class AtendimentoPresencialTest extends TestCase
     public function test_encerra_atendimento(): void
     {
         $attendant = $this->attendant();
-        $citizen = User::factory()->cidadao()->create();
+        $citizen = Cidadao::factory()->create();
         $attendance = AssistedAttendance::factory()->active()->create([
             'attendant_user_id' => $attendant->id,
             'citizen_user_id' => $citizen->id,

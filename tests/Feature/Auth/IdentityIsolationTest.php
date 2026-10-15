@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Models\Cidadao;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -27,7 +28,7 @@ class IdentityIsolationTest extends TestCase
     public function test_console_mostra_identidade_do_servidor_nao_do_cidadao(): void
     {
         $servidor = User::factory()->administrador()->withAcceptedLgpdTerm()->create();
-        $cidadao = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $cidadao = Cidadao::factory()->withAcceptedLgpdTerm()->create();
 
         $this->actingAs($cidadao, 'web');
         $this->actingAs($servidor, 'gestao');
@@ -39,7 +40,7 @@ class IdentityIsolationTest extends TestCase
     public function test_portal_mostra_identidade_do_cidadao_nao_do_servidor(): void
     {
         $servidor = User::factory()->administrador()->withAcceptedLgpdTerm()->create();
-        $cidadao = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $cidadao = Cidadao::factory()->withAcceptedLgpdTerm()->create();
 
         $this->actingAs($servidor, 'gestao');
         $this->actingAs($cidadao, 'web');

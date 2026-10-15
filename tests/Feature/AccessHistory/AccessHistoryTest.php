@@ -3,6 +3,7 @@
 namespace Tests\Feature\AccessHistory;
 
 use App\Models\AccessLog;
+use App\Models\Cidadao;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -22,7 +23,7 @@ class AccessHistoryTest extends TestCase
 
     public function test_usuario_ve_somente_os_proprios_acessos(): void
     {
-        $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $user = Cidadao::factory()->withAcceptedLgpdTerm()->create();
 
         AccessLog::factory()->count(3)->create([
             'user_id' => $user->id,
@@ -41,7 +42,7 @@ class AccessHistoryTest extends TestCase
 
     public function test_bloqueio_sem_user_id_aparece_pelo_email(): void
     {
-        $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $user = Cidadao::factory()->withAcceptedLgpdTerm()->create();
 
         AccessLog::factory()->create([
             'user_id' => null,
@@ -60,7 +61,7 @@ class AccessHistoryTest extends TestCase
 
     public function test_acessos_exibem_evento_data_e_ip(): void
     {
-        $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $user = Cidadao::factory()->withAcceptedLgpdTerm()->create();
 
         AccessLog::factory()->create([
             'user_id' => $user->id,
@@ -81,7 +82,7 @@ class AccessHistoryTest extends TestCase
 
     public function test_historico_e_paginado(): void
     {
-        $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $user = Cidadao::factory()->withAcceptedLgpdTerm()->create();
 
         AccessLog::factory()->count(20)->create([
             'user_id' => $user->id,

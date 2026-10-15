@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Companies;
 
+use App\Models\Cidadao;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -39,7 +40,7 @@ class CnpjThrottleTest extends TestCase
     {
         $this->seed(RolesAndPermissionsSeeder::class);
 
-        return User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        return Cidadao::factory()->withAcceptedLgpdTerm()->create();
     }
 
     public function test_excedente_recebe_429(): void

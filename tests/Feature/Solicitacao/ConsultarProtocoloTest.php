@@ -3,6 +3,7 @@
 namespace Tests\Feature\Solicitacao;
 
 use App\Enums\ViabilityRequestStatus;
+use App\Models\Cidadao;
 use App\Models\Parameter;
 use App\Models\User;
 use App\Models\ViabilityDecision;
@@ -36,9 +37,9 @@ class ConsultarProtocoloTest extends TestCase
     /**
      * Cidadão habilitado a navegar no portal (papel + termo LGPD aceito).
      */
-    private function portalUser(): User
+    private function portalUser(): Cidadao
     {
-        return User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        return Cidadao::factory()->withAcceptedLgpdTerm()->create();
     }
 
     private function timeline(): TimelineSolicitacao

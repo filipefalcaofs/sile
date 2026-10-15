@@ -3,6 +3,7 @@
 namespace Tests\Feature\Companies;
 
 use App\Models\Activity;
+use App\Models\Cidadao;
 use App\Models\Parameter;
 use App\Models\User;
 use App\Services\Cnpj\BrasilApiCnpjLookup;
@@ -64,7 +65,7 @@ class CnpjLookupTest extends TestCase
     {
         $this->seed(RolesAndPermissionsSeeder::class);
 
-        return User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        return Cidadao::factory()->withAcceptedLgpdTerm()->create();
     }
 
     // ----------------------------------------------------------------

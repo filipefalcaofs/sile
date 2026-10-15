@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\EscritorioVirtual;
 
+use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\User;
 use App\Models\ViabilityRequest;
@@ -36,9 +37,9 @@ class AbrigadoCnaeBlockTest extends TestCase
     /**
      * Cidadão habilitado a navegar no portal (papel + termo LGPD aceito).
      */
-    private function portalUser(): User
+    private function portalUser(): Cidadao
     {
-        return User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        return Cidadao::factory()->withAcceptedLgpdTerm()->create();
     }
 
     /**

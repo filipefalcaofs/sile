@@ -9,6 +9,7 @@ use App\Enums\ViabilityRequestStatus;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Models\AiConfiguration;
 use App\Models\AiSuggestion;
+use App\Models\Cidadao;
 use App\Models\Company;
 use App\Models\User;
 use App\Models\ViabilityRequest;
@@ -152,7 +153,7 @@ class ResumoSolicitacaoTest extends TestCase
         config(['sile.features.solicitacao_viabilidade' => true]);
         $this->provedorTextoAtivo();
 
-        $dono = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $dono = Cidadao::factory()->withAcceptedLgpdTerm()->create();
         $solicitacao = $this->solicitacaoDeclarada($dono);
 
         ResumoSolicitacaoAgent::fake([[
@@ -193,7 +194,7 @@ class ResumoSolicitacaoTest extends TestCase
         config(['sile.features.solicitacao_viabilidade' => true]);
         $this->provedorTextoAtivo();
 
-        $dono = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $dono = Cidadao::factory()->withAcceptedLgpdTerm()->create();
         $solicitacao = $this->solicitacaoDeclarada($dono);
 
         ResumoSolicitacaoAgent::fake([[

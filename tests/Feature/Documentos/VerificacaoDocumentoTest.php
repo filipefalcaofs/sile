@@ -2,9 +2,9 @@
 
 namespace Tests\Feature\Documentos;
 
+use App\Models\Cidadao;
 use App\Models\IndeferimentoDocument;
 use App\Models\TvlDocument;
-use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Solicitacao\ComprovanteProtocoloService;
@@ -86,7 +86,7 @@ class VerificacaoDocumentoTest extends TestCase
 
     public function test_codigo_de_comprovante_valido_confirma_autenticidade(): void
     {
-        $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $user = Cidadao::factory()->withAcceptedLgpdTerm()->create();
         $solicitacao = ViabilityRequest::factory()->draft()->withPrimaryCnae()->create([
             'requester_user_id' => $user->id,
             'created_by_user_id' => $user->id,
@@ -105,7 +105,7 @@ class VerificacaoDocumentoTest extends TestCase
 
     public function test_codigo_de_comprovante_adulterado_e_invalido(): void
     {
-        $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $user = Cidadao::factory()->withAcceptedLgpdTerm()->create();
         $solicitacao = ViabilityRequest::factory()->draft()->withPrimaryCnae()->create([
             'requester_user_id' => $user->id,
             'created_by_user_id' => $user->id,

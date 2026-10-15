@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Viabilidade;
 
-use App\Models\User;
+use App\Models\Cidadao;
 use App\Models\ViabilityQuery;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -30,9 +30,9 @@ class HistoricoConsultaPaginaTest extends TestCase
     /**
      * Cidadão do portal com termo LGPD aceito — precedente "Minhas empresas".
      */
-    private function portalUser(): User
+    private function portalUser(): Cidadao
     {
-        return User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        return Cidadao::factory()->withAcceptedLgpdTerm()->create();
     }
 
     public function test_pagina_do_historico_renderiza_consultas_do_dono(): void

@@ -8,6 +8,7 @@ use App\Enums\AiSuggestionType;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Models\AiConfiguration;
 use App\Models\AiSuggestion;
+use App\Models\Cidadao;
 use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
@@ -147,7 +148,7 @@ class ExplicacaoCidadaoTest extends TestCase
         config(['sile.features.ia_explicacao' => true]);
         $this->provedorTextoAtivo();
 
-        $dono = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $dono = Cidadao::factory()->withAcceptedLgpdTerm()->create();
         $processo = $this->processoDecidido($dono);
 
         ExplicacaoCidadaoAgent::fake([[
@@ -184,7 +185,7 @@ class ExplicacaoCidadaoTest extends TestCase
         config(['sile.features.ia_explicacao' => true]);
         $this->provedorTextoAtivo();
 
-        $dono = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $dono = Cidadao::factory()->withAcceptedLgpdTerm()->create();
         // Protocolado, sem decisão registrada (em análise): nada a explicar.
         $processo = ViabilityRequest::factory()->protocoled()->withPrimaryCnae()->create([
             'requester_user_id' => $dono->id,

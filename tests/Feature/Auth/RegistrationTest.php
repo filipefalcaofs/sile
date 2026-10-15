@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Models\Cidadao;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -154,7 +155,7 @@ class RegistrationTest extends TestCase
 
     public function test_usuario_autenticado_nao_acessa_cadastro(): void
     {
-        $user = User::factory()->cidadao()->create();
+        $user = Cidadao::factory()->create();
 
         $this->actingAs($user)->get('/portal/register')->assertRedirect();
     }

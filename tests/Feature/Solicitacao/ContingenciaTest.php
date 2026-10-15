@@ -4,6 +4,7 @@ namespace Tests\Feature\Solicitacao;
 
 use App\Enums\ViabilityRequestOrigin;
 use App\Enums\ViabilityRequestStatus;
+use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\DocumentRequirement;
@@ -49,9 +50,9 @@ class ContingenciaTest extends TestCase
     /**
      * Cidadão beneficiário informado pelo operador (referenciado por CPF).
      */
-    private function beneficiario(): User
+    private function beneficiario(): Cidadao
     {
-        return User::factory()->cidadao()->create();
+        return Cidadao::factory()->create();
     }
 
     /**

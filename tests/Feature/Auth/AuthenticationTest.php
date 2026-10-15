@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Models\Cidadao;
 use App\Models\User;
 use App\Support\Settings;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -31,7 +32,7 @@ class AuthenticationTest extends TestCase
 
     public function test_cidadao_autentica_com_cpf_e_vai_para_o_portal(): void
     {
-        $user = User::factory()->cidadao()->create();
+        $user = Cidadao::factory()->create();
 
         $response = $this->post('/portal/login', [
             'cpf' => $user->cpf,
@@ -44,7 +45,7 @@ class AuthenticationTest extends TestCase
 
     public function test_cpf_com_mascara_tambem_autentica(): void
     {
-        $user = User::factory()->cidadao()->create();
+        $user = Cidadao::factory()->create();
 
         $masked = preg_replace('/(\d{3})(\d{3})(\d{3})(\d{2})/', '$1.$2.$3-$4', $user->cpf);
 
@@ -75,7 +76,7 @@ class AuthenticationTest extends TestCase
 
     public function test_login_gera_registro_no_historico_de_acessos(): void
     {
-        $user = User::factory()->cidadao()->create();
+        $user = Cidadao::factory()->create();
 
         $this->post('/portal/login', [
             'cpf' => $user->cpf,
@@ -91,7 +92,7 @@ class AuthenticationTest extends TestCase
 
     public function test_credencial_invalida_nao_autentica_e_registra_falha(): void
     {
-        $user = User::factory()->cidadao()->create();
+        $user = Cidadao::factory()->create();
 
         $response = $this->post('/portal/login', [
             'cpf' => $user->cpf,
@@ -130,7 +131,7 @@ class AuthenticationTest extends TestCase
     {
         config(['sile.security.login.max_attempts' => 3]);
 
-        $user = User::factory()->cidadao()->create();
+        $user = Cidadao::factory()->create();
 
         $max = (int) Settings::get('security.login.max_attempts');
 
@@ -162,7 +163,7 @@ class AuthenticationTest extends TestCase
     {
         config(['sile.security.login.max_attempts' => 3]);
 
-        $user = User::factory()->cidadao()->create();
+        $user = Cidadao::factory()->create();
 
         $masked = preg_replace('/(\d{3})(\d{3})(\d{3})(\d{2})/', '$1.$2.$3-$4', $user->cpf);
 
@@ -188,7 +189,7 @@ class AuthenticationTest extends TestCase
 
     public function test_logout_encerra_sessao_e_registra(): void
     {
-        $user = User::factory()->cidadao()->create();
+        $user = Cidadao::factory()->create();
 
         $this->actingAs($user)->post('/portal/logout');
 
@@ -202,7 +203,7 @@ class AuthenticationTest extends TestCase
 
     public function test_intended_da_gestao_e_descartado_no_login_do_portal(): void
     {
-        $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $user = Cidadao::factory()->withAcceptedLgpdTerm()->create();
 
         // Visita guest a uma rota da gestão salva a URL pretendida na sessão.
         $this->get('/gestao/cnaes')->assertRedirect('/gestao/login');
@@ -233,7 +234,7 @@ class AuthenticationTest extends TestCase
 
     public function test_cidadao_logado_no_portal_nao_entra_na_gestao(): void
     {
-        $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $user = Cidadao::factory()->withAcceptedLgpdTerm()->create();
 
         $this->post('/portal/login', [
             'cpf' => $user->cpf,

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Models\Cidadao;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -262,7 +263,7 @@ class GestaoLoginAdTest extends TestCase
     {
         $this->fakeAdSucesso();
 
-        $cidadao = User::factory()->cidadao()->ad('seuusuarioad')->create();
+        $cidadao = Cidadao::factory()->ad('seuusuarioad')->create();
 
         $this->post('/gestao/login', [
             'identifier' => $cidadao->email,

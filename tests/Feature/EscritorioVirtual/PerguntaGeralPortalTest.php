@@ -3,6 +3,7 @@
 namespace Tests\Feature\EscritorioVirtual;
 
 use App\Enums\CompanyLinkRole;
+use App\Models\Cidadao;
 use App\Models\Company;
 use App\Models\User;
 use App\Models\ViabilityRequest;
@@ -26,9 +27,9 @@ class PerguntaGeralPortalTest extends TestCase
         $this->seed(RolesAndPermissionsSeeder::class);
     }
 
-    private function portalUser(): User
+    private function portalUser(): Cidadao
     {
-        return User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        return Cidadao::factory()->withAcceptedLgpdTerm()->create();
     }
 
     private function companyLinkedTo(User $user): Company

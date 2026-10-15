@@ -3,6 +3,7 @@
 namespace Tests\Feature\Users;
 
 use App\Models\Activity;
+use App\Models\Cidadao;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -31,7 +32,7 @@ class ManageUsersTest extends TestCase
         $admin = $this->admin();
 
         User::factory()->analista()->inactive()->create();
-        User::factory()->cidadao()->create();
+        Cidadao::factory()->create();
 
         $this->actingAs($admin, 'gestao')
             ->get('/gestao/usuarios')
@@ -54,7 +55,7 @@ class ManageUsersTest extends TestCase
         $admin = $this->admin();
 
         User::factory()->analista()->create();
-        $cidada = User::factory()->cidadao()->create(['name' => 'Maria Souza']);
+        $cidada = Cidadao::factory()->create(['name' => 'Maria Souza']);
         $semPapel = User::factory()->create(['name' => 'Sem Papel']);
 
         $this->actingAs($admin, 'gestao')
@@ -70,7 +71,7 @@ class ManageUsersTest extends TestCase
     {
         $admin = $this->admin();
         User::factory()->ad('servidora.ad')->create(['name' => 'Servidora AD']);
-        User::factory()->cidadao()->create(['name' => 'Cidadã Portal']);
+        Cidadao::factory()->create(['name' => 'Cidadã Portal']);
 
         $this->actingAs($admin, 'gestao')
             ->get('/gestao/usuarios')
@@ -120,8 +121,8 @@ class ManageUsersTest extends TestCase
             'email' => 'admin@sedur.test',
         ]);
 
-        User::factory()->cidadao()->create(['name' => 'Maria Souza', 'email' => 'maria@x.dev']);
-        User::factory()->cidadao()->create(['name' => 'João Lima', 'email' => 'joao@x.dev']);
+        Cidadao::factory()->create(['name' => 'Maria Souza', 'email' => 'maria@x.dev']);
+        Cidadao::factory()->create(['name' => 'João Lima', 'email' => 'joao@x.dev']);
 
         $this->actingAs($admin, 'gestao')
             ->get('/gestao/usuarios?tab=portal&search=maria')
@@ -140,7 +141,7 @@ class ManageUsersTest extends TestCase
     public function test_inativa_usuario_com_auditoria(): void
     {
         $admin = $this->admin();
-        $user = User::factory()->cidadao()->create();
+        $user = Cidadao::factory()->create();
 
         $this->actingAs($admin, 'gestao')
             ->put("/gestao/usuarios/{$user->id}/inativacao")
@@ -160,7 +161,7 @@ class ManageUsersTest extends TestCase
     public function test_reativa_usuario_com_auditoria(): void
     {
         $admin = $this->admin();
-        $user = User::factory()->cidadao()->inactive()->create();
+        $user = Cidadao::factory()->inactive()->create();
 
         $this->actingAs($admin, 'gestao')
             ->put("/gestao/usuarios/{$user->id}/inativacao")
@@ -243,7 +244,7 @@ class ManageUsersTest extends TestCase
     public function test_inativacao_pela_interface_bloqueia_o_login_de_verdade(): void
     {
         $admin = $this->admin();
-        $user = User::factory()->cidadao()->create();
+        $user = Cidadao::factory()->create();
 
         $this->actingAs($admin, 'gestao')
             ->put("/gestao/usuarios/{$user->id}/inativacao")

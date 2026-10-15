@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Models\Cidadao;
 use App\Models\User;
 use App\Notifications\GestaoResetPasswordQueued;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -53,7 +54,7 @@ class GestaoPasswordResetTest extends TestCase
     {
         Notification::fake();
 
-        $cidadao = User::factory()->cidadao()->create();
+        $cidadao = Cidadao::factory()->create();
 
         $this->post('/gestao/forgot-password', ['email' => $cidadao->email])
             ->assertSessionHas('status');

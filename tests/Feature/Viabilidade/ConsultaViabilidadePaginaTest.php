@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Viabilidade;
 
+use App\Models\Cidadao;
 use App\Models\Procuration;
-use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Inertia\Testing\AssertableInertia;
@@ -35,7 +35,7 @@ class ConsultaViabilidadePaginaTest extends TestCase
     public function test_pagina_continua_acessivel_para_cidadao_logado(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
-        $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $user = Cidadao::factory()->withAcceptedLgpdTerm()->create();
 
         $this->actingAs($user)
             ->get('/portal/viabilidade')
@@ -48,8 +48,8 @@ class ConsultaViabilidadePaginaTest extends TestCase
     public function test_consulta_logada_mantem_a_representacao_ativa(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
-        $grantor = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
-        $attorney = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $grantor = Cidadao::factory()->withAcceptedLgpdTerm()->create();
+        $attorney = Cidadao::factory()->withAcceptedLgpdTerm()->create();
         $procuration = Procuration::factory()->create([
             'grantor_user_id' => $grantor->id,
             'attorney_user_id' => $attorney->id,

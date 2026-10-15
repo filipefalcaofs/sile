@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Auth;
 
-use App\Models\User;
+use App\Models\Cidadao;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -21,7 +21,7 @@ class ConfirmPasswordTest extends TestCase
 
     public function test_tela_de_confirmacao_de_senha_renderiza(): void
     {
-        $user = User::factory()->cidadao()->create();
+        $user = Cidadao::factory()->create();
 
         $this->actingAs($user)
             ->get('/portal/user/confirm-password')
@@ -31,7 +31,7 @@ class ConfirmPasswordTest extends TestCase
 
     public function test_senha_correta_confirma_a_sessao(): void
     {
-        $user = User::factory()->cidadao()->create();
+        $user = Cidadao::factory()->create();
 
         $response = $this->actingAs($user)->post('/portal/user/confirm-password', [
             'password' => 'password',
@@ -43,7 +43,7 @@ class ConfirmPasswordTest extends TestCase
 
     public function test_senha_incorreta_nao_confirma(): void
     {
-        $user = User::factory()->cidadao()->create();
+        $user = Cidadao::factory()->create();
 
         $response = $this->actingAs($user)->post('/portal/user/confirm-password', [
             'password' => 'senha-errada',

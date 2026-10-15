@@ -4,6 +4,7 @@ namespace Tests\Feature\Solicitacao;
 
 use App\Enums\CompanyLinkRole;
 use App\Enums\ViabilityRequestStatus;
+use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\User;
@@ -34,9 +35,9 @@ class SolicitacaoWizardPaginaTest extends TestCase
         $this->seed(RolesAndPermissionsSeeder::class);
     }
 
-    private function portalUser(): User
+    private function portalUser(): Cidadao
     {
-        return User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        return Cidadao::factory()->withAcceptedLgpdTerm()->create();
     }
 
     private function companyLinkedTo(User $user): Company

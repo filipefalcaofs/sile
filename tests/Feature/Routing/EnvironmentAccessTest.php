@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Routing;
 
+use App\Models\Cidadao;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -93,7 +94,7 @@ class EnvironmentAccessTest extends TestCase
 
     public function test_cidadao_acessa_dashboard_do_portal(): void
     {
-        $cidadao = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $cidadao = Cidadao::factory()->withAcceptedLgpdTerm()->create();
 
         $this->actingAs($cidadao)
             ->get('/portal/painel')
@@ -103,7 +104,7 @@ class EnvironmentAccessTest extends TestCase
 
     public function test_props_de_autenticacao_sao_compartilhadas(): void
     {
-        $cidadao = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $cidadao = Cidadao::factory()->withAcceptedLgpdTerm()->create();
 
         $this->actingAs($cidadao)
             ->get('/portal/painel')
@@ -117,7 +118,7 @@ class EnvironmentAccessTest extends TestCase
 
     public function test_cidadao_nao_acessa_gestao_e_tentativa_e_auditada(): void
     {
-        $cidadao = User::factory()->cidadao()->create();
+        $cidadao = Cidadao::factory()->create();
 
         // Sessão do portal é invisível para a gestão: vai ao login interno.
         $this->actingAs($cidadao)->get('/gestao')->assertRedirect('/gestao/login');
@@ -174,7 +175,7 @@ class EnvironmentAccessTest extends TestCase
     {
         // Sessão do portal não conta como sessão da gestão: o POST cai no
         // redirect de guest do contexto e o portal permanece intacto.
-        $cidadao = User::factory()->cidadao()->create();
+        $cidadao = Cidadao::factory()->create();
 
         $response = $this->actingAs($cidadao)->post('/gestao/logout');
 

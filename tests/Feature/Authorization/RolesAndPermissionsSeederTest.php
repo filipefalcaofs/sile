@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Authorization;
 
+use App\Models\Cidadao;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -183,7 +184,7 @@ class RolesAndPermissionsSeederTest extends TestCase
     {
         $this->seed(RolesAndPermissionsSeeder::class);
 
-        $this->assertTrue(User::factory()->cidadao()->create()->hasRole('cidadao'));
+        $this->assertTrue(Cidadao::factory()->create()->hasRole('cidadao'));
         $this->assertTrue(User::factory()->analista()->create()->hasRole('Analista Terceirizado'));
         $this->assertTrue(User::factory()->apoio()->create()->hasRole('apoio'));
         $this->assertTrue(User::factory()->gestor()->create()->hasRole('Coordenador'));

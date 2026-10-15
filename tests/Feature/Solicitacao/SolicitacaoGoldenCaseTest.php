@@ -2,9 +2,9 @@
 
 namespace Tests\Feature\Solicitacao;
 
+use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\DocumentRequirement;
-use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Solicitacao\CancelarSolicitacaoService;
 use App\Services\Solicitacao\DocumentacaoIncompletaException;
@@ -132,7 +132,7 @@ class SolicitacaoGoldenCaseTest extends TestCase
      */
     private function buildDraft(array $caso): ViabilityRequest
     {
-        $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $user = Cidadao::factory()->withAcceptedLgpdTerm()->create();
 
         $attributes = [
             'requester_user_id' => $user->id,

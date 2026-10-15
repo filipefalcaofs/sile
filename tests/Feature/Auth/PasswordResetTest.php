@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Auth;
 
-use App\Models\User;
+use App\Models\Cidadao;
 use App\Notifications\ResetPasswordQueued;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -35,7 +35,7 @@ class PasswordResetTest extends TestCase
     {
         Notification::fake();
 
-        $user = User::factory()->cidadao()->create();
+        $user = Cidadao::factory()->create();
 
         $this->post('/portal/forgot-password', ['email' => $user->email]);
 
@@ -46,7 +46,7 @@ class PasswordResetTest extends TestCase
     {
         Notification::fake();
 
-        $user = User::factory()->cidadao()->create();
+        $user = Cidadao::factory()->create();
 
         $this->post('/portal/forgot-password', ['email' => $user->email]);
 
@@ -68,7 +68,7 @@ class PasswordResetTest extends TestCase
 
     public function test_senha_e_redefinida_com_token_valido(): void
     {
-        $user = User::factory()->cidadao()->create();
+        $user = Cidadao::factory()->create();
 
         $token = Password::createToken($user);
 
@@ -87,7 +87,7 @@ class PasswordResetTest extends TestCase
 
     public function test_redefinicao_gera_auditoria(): void
     {
-        $user = User::factory()->cidadao()->create();
+        $user = Cidadao::factory()->create();
 
         $token = Password::createToken($user);
 
@@ -106,7 +106,7 @@ class PasswordResetTest extends TestCase
 
     public function test_token_invalido_nao_redefine(): void
     {
-        $user = User::factory()->cidadao()->create();
+        $user = Cidadao::factory()->create();
 
         $response = $this->post('/portal/reset-password', [
             'token' => Str::random(60),
@@ -134,7 +134,7 @@ class PasswordResetTest extends TestCase
 
     public function test_nova_senha_fraca_e_bloqueada(): void
     {
-        $user = User::factory()->cidadao()->create();
+        $user = Cidadao::factory()->create();
 
         $token = Password::createToken($user);
 
@@ -154,7 +154,7 @@ class PasswordResetTest extends TestCase
     {
         Notification::fake();
 
-        $user = User::factory()->cidadao()->create();
+        $user = Cidadao::factory()->create();
 
         $this->post('/portal/forgot-password', ['email' => $user->email]);
 
@@ -166,7 +166,7 @@ class PasswordResetTest extends TestCase
 
     public function test_autenticado_nao_acessa_recuperacao(): void
     {
-        $user = User::factory()->cidadao()->create();
+        $user = Cidadao::factory()->create();
 
         // Rotas de recuperação são guest-only: redirectUsersTo manda o
         // autenticado para o próprio painel, conforme o perfil (fase 2.3).

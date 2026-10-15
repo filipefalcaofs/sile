@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Viabilidade;
 
+use App\Models\Cidadao;
 use App\Models\User;
 use App\Models\ViabilityQuery;
 use App\Services\Geo\AddressNotFoundException;
@@ -49,9 +50,9 @@ class HistoricoConsultaTest extends TestCase
     /**
      * Cidadão do portal com termo LGPD aceito — precedente "Minhas empresas".
      */
-    private function portalUser(): User
+    private function portalUser(): Cidadao
     {
-        return User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        return Cidadao::factory()->withAcceptedLgpdTerm()->create();
     }
 
     public function test_consulta_autenticada_grava_snapshot_no_historico(): void

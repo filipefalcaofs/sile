@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Solicitacao;
 
+use App\Models\Cidadao;
 use App\Models\DocumentRequirement;
 use App\Models\Parameter;
 use App\Models\User;
@@ -31,9 +32,9 @@ class AnexarDocumentoTest extends TestCase
         Storage::fake('local');
     }
 
-    private function portalUser(): User
+    private function portalUser(): Cidadao
     {
-        return User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        return Cidadao::factory()->withAcceptedLgpdTerm()->create();
     }
 
     private function draftFor(User $user): ViabilityRequest

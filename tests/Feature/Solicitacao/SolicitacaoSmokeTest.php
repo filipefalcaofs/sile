@@ -5,6 +5,7 @@ namespace Tests\Feature\Solicitacao;
 use App\Enums\CompanyLinkRole;
 use App\Enums\GeoLayerType;
 use App\Enums\ViabilityRequestStatus;
+use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\DocumentRequirement;
@@ -242,7 +243,7 @@ class SolicitacaoSmokeTest extends TestCase
      */
     private function ator(): array
     {
-        $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $user = Cidadao::factory()->withAcceptedLgpdTerm()->create();
 
         $company = Company::factory()->create();
         $company->links()->create([
