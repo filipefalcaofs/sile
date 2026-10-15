@@ -51,6 +51,7 @@ use App\Http\Controllers\Gestao\PrecedenteController;
 use App\Http\Controllers\Gestao\ProcessoBuscaController;
 use App\Http\Controllers\Gestao\ProcessoController;
 use App\Http\Controllers\Gestao\ProcessoDecisaoController;
+use App\Http\Controllers\Gestao\ProcessoJustificativaReginController;
 use App\Http\Controllers\Gestao\ProcessoPendenciaController;
 use App\Http\Controllers\Gestao\PropertyTypeController;
 use App\Http\Controllers\Gestao\ReginIntegrationController;
@@ -804,6 +805,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::middleware('permission:analisar-processos')->group(function () {
                 Route::post('{viabilityRequest}/decidir', ProcessoDecisaoController::class)->middleware('permission:concluir-analise')->name('decidir');
                 Route::post('{viabilityRequest}/conclusao-analise', ConclusaoAnaliseController::class)->middleware('permission:concluir-analise')->name('conclusao-analise');
+                Route::put('{viabilityRequest}/justificativa-regin', ProcessoJustificativaReginController::class)->middleware('permission:concluir-analise')->name('justificativa-regin');
                 Route::post('{viabilityRequest}/pendencias', [ProcessoPendenciaController::class, 'store'])->name('pendencias.store');
                 Route::post('{viabilityRequest}/cancelar-convite', [ProcessoPendenciaController::class, 'cancelar'])->name('cancelar-convite');
                 Route::post('{viabilityRequest}/status-analise', [ProcessoController::class, 'atualizarStatusAnalise'])->name('status-analise');

@@ -54,7 +54,7 @@ use Illuminate\Support\Collection;
     'property_polygon_geojson',
     'is_virtual_office', 'wants_virtual_office_hq', 'wants_virtual_office_tenant', 'confirma_perda_condicao_sede', 'is_public_area', 'has_independent_access',
     'simulation_snapshot', 'simulation_rules_versions', 'simulation_resultado', 'simulated_at',
-    'applicant_proceeded_despite', 'contingency_reason', 'external_reference',
+    'applicant_proceeded_despite', 'contingency_reason', 'external_reference', 'regin_justificativa',
     'origem_declarada',
 ])]
 class ViabilityRequest extends Model

@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { useState } from 'react';
 import ConclusaoAnaliseForm from '@/components/analise/conclusao-analise-form';
 import BaixarTvl from '@/components/analise/baixar-tvl';
+import JustificativaReginCard, { type JustificativaRegin } from '@/components/analise/justificativa-regin-card';
 import {
     CategoriaBadges,
     formatarDataHora,
@@ -69,6 +70,8 @@ interface ShowProps {
     };
     /** Logradouro declarado × logradouro da inscrição (SEFAZ); null quando coincidem ou falta dado. */
     divergencia_endereco?: { declarado: string; sefaz: string } | null;
+    /** Texto que o parecer leva à JUCEB; null sem decisão ou fora do REGIN. */
+    justificativaRegin?: JustificativaRegin | null;
     /** Explicabilidade passo a passo (HU-099); null quando não há decisão. */
     explicacao?: DecisionExplanationData | null;
     /** Próximas transições manuais oferecidas ao analista (Tarefa 10). */
@@ -158,6 +161,7 @@ export default function Show({
     geo,
     divergencia_endereco = null,
     explicacao,
+    justificativaRegin = null,
     analysisStatusProximas,
     conclusaoOpcoes,
     setoresEncaminhamento = [],
@@ -357,6 +361,14 @@ export default function Show({
                         </div>
 
                         {aba === 'informacoes' && parecer && <ParecerCard parecer={parecer} />}
+
+                        {aba === 'informacoes' && justificativaRegin && auth.permissions.includes('concluir-analise') && (
+                            <JustificativaReginCard
+                                key={justificativaRegin.texto}
+                                processoId={processo.id}
+                                justificativa={justificativaRegin}
+                            />
+                        )}
 
                         {aba === 'informacoes' && divergencia_endereco && (
                             <Alert
