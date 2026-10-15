@@ -4,7 +4,7 @@ namespace Tests\Feature\Analise;
 
 use App\Enums\AnalysisStatus;
 use App\Models\AnalysisRecord;
-use App\Models\User;
+use App\Models\Cidadao;
 use App\Models\ViabilityRequest;
 use App\Services\Analise\PrecedentRepository;
 use App\Services\Analise\PrecedentService;
@@ -71,10 +71,10 @@ class PrecedentServiceTest extends TestCase
      */
     private function fichaComSnapshot(?array $engineSnapshot, string $cpf = '52998224725'): AnalysisRecord
     {
-        $requester = User::factory()->create(['cpf' => $cpf]);
+        $requester = Cidadao::factory()->create(['cpf' => $cpf]);
 
         $request = ViabilityRequest::factory()->protocoled()->create([
-            'requester_user_id' => $requester->id,
+            'requester_cidadao_id' => $requester->id,
             'address_street' => 'Rua das Laranjeiras',
             'address_number' => '100',
         ]);

@@ -88,7 +88,7 @@ class VerificacaoDocumentoTest extends TestCase
     {
         $user = Cidadao::factory()->withAcceptedLgpdTerm()->create();
         $solicitacao = ViabilityRequest::factory()->draft()->withPrimaryCnae()->create([
-            'requester_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
             'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
         ]);
         app(ProtocolarSolicitacaoService::class)->protocol($solicitacao, $user);
@@ -107,7 +107,7 @@ class VerificacaoDocumentoTest extends TestCase
     {
         $user = Cidadao::factory()->withAcceptedLgpdTerm()->create();
         $solicitacao = ViabilityRequest::factory()->draft()->withPrimaryCnae()->create([
-            'requester_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
             'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
         ]);
         app(ProtocolarSolicitacaoService::class)->protocol($solicitacao, $user);

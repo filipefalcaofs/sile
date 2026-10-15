@@ -176,7 +176,7 @@ class TerritorioProcessoTest extends TestCase
 
         $user = Cidadao::factory()->withAcceptedLgpdTerm()->create();
         $solicitacao = ViabilityRequest::factory()->draft()->withPrimaryCnae()->create([
-            'requester_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
             'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
             'used_area_m2' => 120.0,
         ]);

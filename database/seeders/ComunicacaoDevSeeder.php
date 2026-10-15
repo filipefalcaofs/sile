@@ -177,7 +177,7 @@ class ComunicacaoDevSeeder extends Seeder
             'origin' => ViabilityRequestOrigin::Portal,
             'service_type_id' => $ctx['type']->id,
             'company_id' => $ctx['company']->id,
-            'requester_user_id' => $ctx['cidadao']->id,
+            'requester_cidadao_id' => $ctx['cidadao']->id,
             'created_by_type' => $ctx['cidadao']->getMorphClass(),
             'created_by_id' => $ctx['cidadao']->id,
             'used_area_m2' => 90.0,
@@ -212,7 +212,7 @@ class ComunicacaoDevSeeder extends Seeder
     private function exemploExistente(User $cidadao): ?ViabilityRequest
     {
         return ViabilityRequest::query()
-            ->where('requester_user_id', $cidadao->id)
+            ->where('requester_cidadao_id', $cidadao->id)
             ->where('address_reference', self::MARK)
             ->first();
     }

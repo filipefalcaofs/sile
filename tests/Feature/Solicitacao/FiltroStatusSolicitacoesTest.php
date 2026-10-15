@@ -33,7 +33,7 @@ class FiltroStatusSolicitacoesTest extends TestCase
     private function solicitacao(Cidadao $user, ViabilityRequestStatus $status, ?string $protocolo = null): ViabilityRequest
     {
         return ViabilityRequest::factory()->create([
-            'requester_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
             'status' => $status,
             'protocol_number' => $protocolo,
         ]);

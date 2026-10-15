@@ -43,6 +43,7 @@ const EVIDENCIA_LABEL: Record<string, string> = {
     enderecos: 'Endereços',
     enderecos_distintos: 'Endereços distintos',
     minimo: 'Mínimo',
+    requester_cidadao_id: 'Requerente',
     requester_user_id: 'Requerente',
     processos: 'Processos',
     inscricao: 'Inscrição',

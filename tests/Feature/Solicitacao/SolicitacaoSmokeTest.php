@@ -84,7 +84,7 @@ class SolicitacaoSmokeTest extends TestCase
 
         $solicitacao = ViabilityRequest::query()
             ->where('company_id', $company->id)
-            ->where('requester_user_id', $user->id)
+            ->where('requester_cidadao_id', $user->id)
             ->latest('id')
             ->firstOrFail();
         $this->assertSame(ViabilityRequestStatus::Rascunho, $solicitacao->status);
@@ -186,7 +186,7 @@ class SolicitacaoSmokeTest extends TestCase
         $solicitacao = ViabilityRequest::factory()->draft()->create([
             'company_id' => $company->id,
             'service_type_id' => $serviceType->id,
-            'requester_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
             'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
             'used_area_m2' => 120.0,
             'is_public_area' => false,
@@ -213,7 +213,7 @@ class SolicitacaoSmokeTest extends TestCase
         // PENDENTE — nunca um permitido/não permitido inventado.
         [$user] = $this->ator();
         $solicitacao = ViabilityRequest::factory()->draft()->create([
-            'requester_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
             'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
             'used_area_m2' => 120.0,
         ]);

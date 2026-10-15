@@ -65,7 +65,7 @@ class SedeTitularNaoEBloqueadaTest extends TestCase
         $user = $this->portalUser();
         $company = Company::factory()->create();
         $solicitacao = ViabilityRequest::factory()->draft()->create([
-            'requester_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
             'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
             'company_id' => $company->id,
             'property_registration' => 'X',
@@ -94,7 +94,7 @@ class SedeTitularNaoEBloqueadaTest extends TestCase
         $terceiro = Company::factory()->create();
         $titular = Company::factory()->create();
         $solicitacao = ViabilityRequest::factory()->draft()->create([
-            'requester_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
             'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
             'company_id' => $terceiro->id,
             'property_registration' => 'X',

@@ -114,7 +114,7 @@ class DocumentRequirementResolverTest extends TestCase
             'size' => 1024,
             'sha256' => hash('sha256', 'conteudo'),
             'uploaded_by_type' => $solicitacao->requester->getMorphClass(),
-            'uploaded_by_id' => $solicitacao->requester_user_id,
+            'uploaded_by_id' => $solicitacao->requester_cidadao_id,
         ]);
 
         $this->assertNotContains(

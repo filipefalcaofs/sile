@@ -119,7 +119,7 @@ class ContingenciaController extends Controller
                     'origin' => ViabilityRequestOrigin::Contingencia,
                     'service_type_id' => $request->validated('service_type_id'),
                     'company_id' => $company->id,
-                    'requester_user_id' => $beneficiary->id,
+                    'requester_cidadao_id' => $beneficiary->id,
                     'created_by_type' => $operator->getMorphClass(),
                     'created_by_id' => $operator->id,
                     'contingency_reason' => $request->validated('contingency_reason'),

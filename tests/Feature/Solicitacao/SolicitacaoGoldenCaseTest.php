@@ -135,7 +135,7 @@ class SolicitacaoGoldenCaseTest extends TestCase
         $user = Cidadao::factory()->withAcceptedLgpdTerm()->create();
 
         $attributes = [
-            'requester_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
             'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
             'used_area_m2' => 120.0,
             'is_public_area' => (bool) ($caso['is_public_area'] ?? false),

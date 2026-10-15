@@ -8,6 +8,7 @@ use App\Enums\CommunicationStatus;
 use App\Enums\CommunicationType;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\AnalysisPendency;
+use App\Models\Cidadao;
 use App\Models\Communication;
 use App\Models\User;
 use App\Models\ViabilityRequest;
@@ -109,10 +110,10 @@ class AlertarVencimentosCommandTest extends TestCase
     public function test_pendencia_aberta_vencendo_alerta_o_requerente(): void
     {
         NotificationFacade::fake();
-        $requerente = User::factory()->create();
+        $requerente = Cidadao::factory()->create();
         $processo = ViabilityRequest::factory()->create([
             'status' => ViabilityRequestStatus::EmPendencia,
-            'requester_user_id' => $requerente->id,
+            'requester_cidadao_id' => $requerente->id,
             'protocol_number' => 'VIA-'.now()->year.'-900001',
             'protocoled_at' => now(),
         ]);

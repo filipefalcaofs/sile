@@ -4,6 +4,7 @@ namespace App\Services\Analise;
 
 use App\Enums\AnalysisStatus;
 use App\Models\AnalysisStatusTransition;
+use App\Models\Cidadao;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Support\Audit\AuditService;
@@ -44,7 +45,7 @@ class AnalysisStatusStateMachine
     public function transition(
         ViabilityRequest $request,
         AnalysisStatus $to,
-        ?User $actor = null,
+        User|Cidadao|null $actor = null,
         ?string $reason = null,
         bool $force = false,
     ): AnalysisStatusTransition {
@@ -60,7 +61,8 @@ class AnalysisStatusStateMachine
             'from_status' => $from,
             'to_status' => $to,
             'reason' => $reason,
-            'actor_user_id' => $actor?->id,
+            // actor_user_id referencia users: ator cidadão (ex.: renovação) não é gravado aqui.
+            'actor_user_id' => $actor instanceof User ? $actor->id : null,
         ]);
 
         $this->audit->log(

@@ -28,9 +28,9 @@ class ViabilityRequestPolicyTest extends TestCase
 
     public function test_dono_ve_e_opera_o_proprio_rascunho(): void
     {
-        $owner = User::factory()->create();
+        $owner = Cidadao::factory()->create();
         $request = ViabilityRequest::factory()->draft()->create([
-            'requester_user_id' => $owner->id,
+            'requester_cidadao_id' => $owner->id,
         ]);
 
         $this->assertTrue($this->policy()->view($owner, $request));
@@ -41,10 +41,10 @@ class ViabilityRequestPolicyTest extends TestCase
 
     public function test_terceiro_nao_ve_nem_opera(): void
     {
-        $owner = User::factory()->create();
+        $owner = Cidadao::factory()->create();
         $other = User::factory()->create();
         $request = ViabilityRequest::factory()->draft()->create([
-            'requester_user_id' => $owner->id,
+            'requester_cidadao_id' => $owner->id,
         ]);
 
         $this->assertFalse($this->policy()->view($other, $request));
@@ -55,9 +55,9 @@ class ViabilityRequestPolicyTest extends TestCase
 
     public function test_update_e_protocolo_so_em_rascunho(): void
     {
-        $owner = User::factory()->create();
+        $owner = Cidadao::factory()->create();
         $protocoled = ViabilityRequest::factory()->protocoled()->create([
-            'requester_user_id' => $owner->id,
+            'requester_cidadao_id' => $owner->id,
         ]);
 
         // O dono ainda VÊ a protocolada, mas não pode editá-la nem protocolá-la.
@@ -68,7 +68,7 @@ class ViabilityRequestPolicyTest extends TestCase
         $this->assertTrue($this->policy()->cancel($owner, $protocoled));
 
         $cancelled = ViabilityRequest::factory()->cancelled()->create([
-            'requester_user_id' => $owner->id,
+            'requester_cidadao_id' => $owner->id,
         ]);
         $this->assertFalse($this->policy()->update($owner, $cancelled));
         $this->assertFalse($this->policy()->protocol($owner, $cancelled));
@@ -86,7 +86,7 @@ class ViabilityRequestPolicyTest extends TestCase
         ]);
 
         $request = ViabilityRequest::factory()->draft()->create([
-            'requester_user_id' => $grantor->id,
+            'requester_cidadao_id' => $grantor->id,
         ]);
 
         // Sem representação ativa, o procurador é "terceiro".
@@ -102,9 +102,9 @@ class ViabilityRequestPolicyTest extends TestCase
 
     public function test_gate_resolve_a_policy_por_auto_discovery(): void
     {
-        $owner = User::factory()->create();
+        $owner = Cidadao::factory()->create();
         $request = ViabilityRequest::factory()->draft()->create([
-            'requester_user_id' => $owner->id,
+            'requester_cidadao_id' => $owner->id,
         ]);
 
         $this->assertTrue($owner->can('view', $request));

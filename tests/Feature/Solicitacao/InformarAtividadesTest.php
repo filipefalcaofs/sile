@@ -43,7 +43,7 @@ class InformarAtividadesTest extends TestCase
     private function draftFor(Cidadao $user): ViabilityRequest
     {
         return ViabilityRequest::factory()->draft()->create([
-            'requester_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
             'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
         ]);
     }
@@ -191,7 +191,7 @@ class InformarAtividadesTest extends TestCase
     {
         $user = $this->portalUser();
         $solicitacao = ViabilityRequest::factory()->draft()->create([
-            'requester_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
             'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
             'simulation_resultado' => 'permitido',
             'simulated_at' => now(),
@@ -230,7 +230,7 @@ class InformarAtividadesTest extends TestCase
     {
         $owner = $this->portalUser();
         $solicitacao = ViabilityRequest::factory()->protocoled()->create([
-            'requester_user_id' => $owner->id,
+            'requester_cidadao_id' => $owner->id,
             'created_by_type' => $owner->getMorphClass(), 'created_by_id' => $owner->id,
         ]);
         $principal = Cnae::factory()->create();

@@ -3,6 +3,7 @@
 namespace Tests\Feature\Analise;
 
 use App\Models\AnalysisRecord;
+use App\Models\Cidadao;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Analise\PrecedentRepository;
@@ -42,10 +43,10 @@ class PrecedenteEndpointTest extends TestCase
      */
     private function fichaComZona(string $cpf): AnalysisRecord
     {
-        $requester = User::factory()->create(['cpf' => $cpf]);
+        $requester = Cidadao::factory()->create(['cpf' => $cpf]);
 
         $request = ViabilityRequest::factory()->protocoled()->create([
-            'requester_user_id' => $requester->id,
+            'requester_cidadao_id' => $requester->id,
             'address_street' => 'Rua das Laranjeiras',
             'address_number' => '100',
         ]);

@@ -7,8 +7,8 @@ use App\Enums\CommunicationStatus;
 use App\Enums\CommunicationType;
 use App\Enums\DecisionOutcome;
 use App\Events\ResultadoEmitido;
+use App\Models\Cidadao;
 use App\Models\Parameter;
-use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Notifications\ResultadoExpressoNotification;
@@ -33,10 +33,10 @@ class NotificarResultadoExpressoListenerTest extends TestCase
     /**
      * @return array{0: ViabilityRequest, 1: ViabilityDecision}
      */
-    private function decisao(DecisionOutcome $outcome = DecisionOutcome::Deferida, ?User $requester = null): array
+    private function decisao(DecisionOutcome $outcome = DecisionOutcome::Deferida, ?Cidadao $requester = null): array
     {
         $request = ViabilityRequest::factory()->protocoled()->create(
-            $requester !== null ? ['requester_user_id' => $requester->id] : []
+            $requester !== null ? ['requester_cidadao_id' => $requester->id] : []
         );
 
         $factory = $outcome === DecisionOutcome::Indeferida
@@ -128,7 +128,7 @@ class NotificarResultadoExpressoListenerTest extends TestCase
     {
         Notification::fake();
 
-        $semEmail = User::factory()->create(['email' => '']);
+        $semEmail = Cidadao::factory()->create(['email' => '']);
         [$request, $decision] = $this->decisao(requester: $semEmail);
 
         event(new ResultadoEmitido($request, $decision));

@@ -3,7 +3,6 @@
 namespace Tests\Feature\Viabilidade;
 
 use App\Models\Cidadao;
-use App\Models\User;
 use App\Models\ViabilityQuery;
 use App\Services\Geo\AddressNotFoundException;
 use App\Services\Geo\Geocoder;
@@ -59,7 +58,7 @@ class HistoricoConsultaTest extends TestCase
     {
         // HU-060/CA-01: autenticado (guard web), a consulta grava um snapshot
         // imutável da própria consulta — entrada, resultado e versões da época.
-        $user = User::factory()->create();
+        $user = $this->portalUser();
 
         $this->actingAs($user)
             ->postJson('/portal/viabilidade/cnae', [
@@ -72,7 +71,7 @@ class HistoricoConsultaTest extends TestCase
 
         $query = ViabilityQuery::query()->latest('id')->first();
 
-        $this->assertSame($user->id, $query->user_id);
+        $this->assertSame($user->id, $query->cidadao_id);
         $this->assertSame('cnae', $query->entry_type);
         // Sem território (via CNAE), o veredito é PROPAGADO como pendente.
         $this->assertSame('pendente', $query->result['veredito_locacional']['resultado']);
@@ -113,7 +112,7 @@ class HistoricoConsultaTest extends TestCase
             }
         });
 
-        $user = User::factory()->create();
+        $user = $this->portalUser();
 
         $this->actingAs($user)
             ->postJson('/portal/viabilidade/endereco', [
@@ -129,7 +128,7 @@ class HistoricoConsultaTest extends TestCase
     public function test_historico_lista_so_as_consultas_do_dono(): void
     {
         // HU-060/CA-04 (escopo): o usuário vê SOMENTE as próprias consultas
-        // (forUser — precedente "Minhas empresas"); as de terceiro nunca aparecem.
+        // (forCidadao — precedente "Minhas empresas"); as de terceiro nunca aparecem.
         $userA = $this->portalUser();
         $userB = $this->portalUser();
 

@@ -72,7 +72,7 @@ class NotificationCenterUiSmokeTest extends TestCase
     private function processo(?Cidadao $owner = null): ViabilityRequest
     {
         $attrs = $owner === null ? [] : [
-            'requester_user_id' => $owner->id,
+            'requester_cidadao_id' => $owner->id,
             'created_by_type' => $owner->getMorphClass(), 'created_by_id' => $owner->id,
         ];
 

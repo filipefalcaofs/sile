@@ -13,10 +13,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * Histórico imutável de consultas prévias de viabilidade (HU-060). Cada
  * registro é um SNAPSHOT da consulta — entrada, resultado consolidado e versões
  * das regras da época — nunca editado. Não usa HasAuditoria: o snapshot já É o
- * registro auditável. user_id nullable (consulta anônima não grava histórico
+ * registro auditável. cidadao_id nullable (consulta anônima não grava histórico
  * pessoal — a regra de gravar só quando autenticado é do controller, 07-07).
  */
-#[Fillable(['user_id', 'entry_type', 'input', 'result', 'rules_versions', 'resultado', 'ip_address', 'created_at'])]
+#[Fillable(['cidadao_id', 'entry_type', 'input', 'result', 'rules_versions', 'resultado', 'ip_address', 'created_at'])]
 class ViabilityQuery extends Model
 {
     /** @use HasFactory<ViabilityQueryFactory> */
@@ -43,22 +43,22 @@ class ViabilityQuery extends Model
     /**
      * Dono da consulta (nulo quando anônima).
      *
-     * @return BelongsTo<User, $this>
+     * @return BelongsTo<Cidadao, $this>
      */
-    public function user(): BelongsTo
+    public function cidadao(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Cidadao::class);
     }
 
     /**
      * Histórico SÓ do dono (precedente Company::countForUser — "Minhas
-     * empresas"): o usuário autenticado vê apenas as próprias consultas.
+     * empresas"): o cidadão autenticado vê apenas as próprias consultas.
      *
      * @param  Builder<ViabilityQuery>  $query
      * @return Builder<ViabilityQuery>
      */
-    public function scopeForUser(Builder $query, User $user): Builder
+    public function scopeForCidadao(Builder $query, Cidadao $cidadao): Builder
     {
-        return $query->where('user_id', $user->id);
+        return $query->where('cidadao_id', $cidadao->id);
     }
 }

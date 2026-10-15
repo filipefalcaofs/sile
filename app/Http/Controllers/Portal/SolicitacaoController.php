@@ -86,7 +86,7 @@ class SolicitacaoController extends Controller
         $cancelableStates = $this->cancelableStates();
 
         $solicitacoes = ViabilityRequest::query()
-            ->where('requester_user_id', $effectiveUser->id)
+            ->where('requester_cidadao_id', $effectiveUser->id)
             ->with(['company', 'serviceType'])
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($inner) use ($search) {
@@ -166,7 +166,7 @@ class SolicitacaoController extends Controller
             'origin' => ViabilityRequestOrigin::Portal,
             'service_type_id' => $request->validated('service_type_id'),
             'company_id' => $company->id,
-            'requester_user_id' => $effectiveUser->id,
+            'requester_cidadao_id' => $effectiveUser->id,
             'created_by_type' => $request->user()->getMorphClass(),
             'created_by_id' => $request->user()->id,
         ]));
@@ -252,8 +252,8 @@ class SolicitacaoController extends Controller
             // entrada evita reprocessar) e então LÊ o ledger. Sempre SUGESTÃO de
             // conferência revisável, jamais decisão nem afirmação de desfecho
             // (RN-001/Failure Mode #1).
-            'sugestoesResumo' => Inertia::optional(function () use ($request, $solicitacao): array {
-                $this->resumos->processar($solicitacao, $request->user()?->id);
+            'sugestoesResumo' => Inertia::optional(function () use ($solicitacao): array {
+                $this->resumos->processar($solicitacao);
 
                 return $this->sugestoesResumo($solicitacao);
             }),

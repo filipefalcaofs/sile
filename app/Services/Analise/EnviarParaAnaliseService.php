@@ -5,6 +5,7 @@ namespace App\Services\Analise;
 use App\Enums\AnalysisStage;
 use App\Enums\AnalysisStatus;
 use App\Events\EncaminhadoParaAnalise;
+use App\Models\Cidadao;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Support\Audit\AuditService;
@@ -47,7 +48,7 @@ class EnviarParaAnaliseService
      */
     public function enviar(
         ViabilityRequest $request,
-        ?User $actor = null,
+        User|Cidadao|null $actor = null,
         string $motivo = 'Envio manual para análise (gestão)',
     ): bool {
         $ttl = (int) config('sile.expresso.lock.ttl_segundos', 10);
@@ -58,7 +59,7 @@ class EnviarParaAnaliseService
         );
     }
 
-    private function enviarSobLock(ViabilityRequest $request, ?User $actor, string $motivo): bool
+    private function enviarSobLock(ViabilityRequest $request, User|Cidadao|null $actor, string $motivo): bool
     {
         $request->refresh();
 

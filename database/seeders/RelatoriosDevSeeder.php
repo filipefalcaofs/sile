@@ -47,7 +47,7 @@ class RelatoriosDevSeeder extends Seeder
         $requester = User::query()->where('email', self::REQUESTER_EMAIL)->first();
 
         // Idempotência: solicitações do requerente dedicado já existem → semeado.
-        if ($requester !== null && ViabilityRequest::query()->where('requester_user_id', $requester->id)->exists()) {
+        if ($requester !== null && ViabilityRequest::query()->where('requester_cidadao_id', $requester->id)->exists()) {
             return;
         }
 
@@ -141,7 +141,7 @@ class RelatoriosDevSeeder extends Seeder
             'status' => $status,
             'service_type_id' => $serviceType->id,
             'company_id' => $company->id,
-            'requester_user_id' => $requester->id,
+            'requester_cidadao_id' => $requester->id,
             'created_by_type' => $requester->getMorphClass(),
             'created_by_id' => $requester->id,
             'protocol_number' => fake()->unique()->numerify('VIA-'.now()->year.'-######'),

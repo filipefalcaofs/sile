@@ -58,7 +58,7 @@ class AtividadesPortalEscritorioVirtualTest extends TestCase
     private function draftAlteracaoAtividade(Cidadao $user): ViabilityRequest
     {
         return ViabilityRequest::factory()->draft()->create([
-            'requester_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
             'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
             'service_type_id' => $this->alteracaoAtividade()->id,
         ]);
@@ -137,7 +137,7 @@ class AtividadesPortalEscritorioVirtualTest extends TestCase
         $user = $this->portalUser();
         // Primeiro estabelecimento — não é alteração de atividade.
         $solicitacao = ViabilityRequest::factory()->draft()->create([
-            'requester_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
             'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
         ]);
         $principal = Cnae::factory()->create();

@@ -45,7 +45,7 @@ class SolicitacaoSchemaTest extends TestCase
 
         $this->assertTrue(Schema::hasColumns('viability_requests', [
             'protocol_number', 'status', 'origin',
-            'service_type_id', 'company_id', 'requester_user_id', 'created_by_type', 'created_by_id',
+            'service_type_id', 'company_id', 'requester_cidadao_id', 'created_by_type', 'created_by_id',
             'used_area_m2', 'property_registration', 'tipo_imovel', 'tipo_imovel_normalized',
             'address_street', 'address_number', 'address_complement', 'address_neighborhood', 'address_zip', 'address_reference',
             'property_polygon_geojson',
@@ -150,7 +150,7 @@ class SolicitacaoSchemaTest extends TestCase
         $this->assertSame(ViabilityRequestOrigin::Portal, $request->origin);
         $this->assertNull($request->protocol_number);
         $this->assertIsArray($request->property_polygon_geojson);
-        $this->assertNotNull($request->requester_user_id);
+        $this->assertNotNull($request->requester_cidadao_id);
         $this->assertNotNull($request->created_by_id);
     }
 

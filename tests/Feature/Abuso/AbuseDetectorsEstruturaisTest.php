@@ -4,9 +4,9 @@ namespace Tests\Feature\Abuso;
 
 use App\Enums\ViabilityRequestStatus;
 use App\Models\AbuseAlert;
+use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\Parameter;
-use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Abuso\AbuseDetectionService;
 use App\Services\Abuso\AbuseFinding;
@@ -365,10 +365,10 @@ class AbuseDetectorsEstruturaisTest extends TestCase
      * Solicitação cuja simulação respondeu condicionantes evitando a análise
      * (resposta dada, nenhuma acionou) — o padrão evasivo do requerente.
      */
-    private function processoEvasivo(User $requerente, ?CarbonInterface $criadoEm = null): ViabilityRequest
+    private function processoEvasivo(Cidadao $requerente, ?CarbonInterface $criadoEm = null): ViabilityRequest
     {
         return $this->solicitacao([
-            'requester_user_id' => $requerente->id,
+            'requester_cidadao_id' => $requerente->id,
             'simulation_snapshot' => $this->snapshotComCondicionantes([
                 ['resposta' => false, 'acionou' => false],
             ]),
@@ -380,16 +380,16 @@ class AbuseDetectorsEstruturaisTest extends TestCase
     {
         // Requerente com 3 processos cujas condicionantes SEMPRE evitam a análise
         // (acima do mínimo provisório de 3) e NENHUMA resposta acionadora → alerta.
-        $requerente = User::factory()->create();
+        $requerente = Cidadao::factory()->create();
         $ids = [];
         for ($i = 0; $i < 3; $i++) {
             $ids[] = $this->processoEvasivo($requerente)->id;
         }
 
         // Outro requerente que respondeu honestamente (acionou) — não deve alertar.
-        $honesto = User::factory()->create();
+        $honesto = Cidadao::factory()->create();
         $this->solicitacao([
-            'requester_user_id' => $honesto->id,
+            'requester_cidadao_id' => $honesto->id,
             'simulation_snapshot' => $this->snapshotComCondicionantes([
                 ['resposta' => true, 'acionou' => true],
             ]),
@@ -400,10 +400,10 @@ class AbuseDetectorsEstruturaisTest extends TestCase
         $this->assertCount(1, $findings);
         $finding = $findings[0];
         $this->assertSame('condicionante_evasao', $finding->ruleKey);
-        $this->assertSame($requerente->id, $finding->evidence['requester_user_id']);
+        $this->assertSame($requerente->id, $finding->evidence['requester_cidadao_id']);
         $this->assertSame(3, $finding->evidence['processos']);
         $this->assertEqualsCanonicalizing($ids, $finding->evidence['ids']);
-        $this->assertInstanceOf(User::class, $finding->subject);
+        $this->assertInstanceOf(Cidadao::class, $finding->subject);
         $this->assertTrue($finding->subject->is($requerente));
     }
 
@@ -411,12 +411,12 @@ class AbuseDetectorsEstruturaisTest extends TestCase
     {
         // Mesmo com 3 evasivos, UMA resposta acionadora (escolheu a opção que leva
         // à análise) descaracteriza o "sempre evita" → sem alerta.
-        $requerente = User::factory()->create();
+        $requerente = Cidadao::factory()->create();
         for ($i = 0; $i < 3; $i++) {
             $this->processoEvasivo($requerente);
         }
         $this->solicitacao([
-            'requester_user_id' => $requerente->id,
+            'requester_cidadao_id' => $requerente->id,
             'simulation_snapshot' => $this->snapshotComCondicionantes([
                 ['resposta' => true, 'acionou' => true],
             ]),
@@ -429,7 +429,7 @@ class AbuseDetectorsEstruturaisTest extends TestCase
 
     public function test_condicionante_evasao_nao_emite_abaixo_do_minimo(): void
     {
-        $requerente = User::factory()->create();
+        $requerente = Cidadao::factory()->create();
         $this->processoEvasivo($requerente);
         $this->processoEvasivo($requerente);
 
@@ -442,10 +442,10 @@ class AbuseDetectorsEstruturaisTest extends TestCase
     {
         // Snapshot sem resposta (resposta null) não é sinal de evasão — a simulação
         // pode nem ter capturado condicionante. Não conta para o mínimo.
-        $requerente = User::factory()->create();
+        $requerente = Cidadao::factory()->create();
         for ($i = 0; $i < 3; $i++) {
             $this->solicitacao([
-                'requester_user_id' => $requerente->id,
+                'requester_cidadao_id' => $requerente->id,
                 'simulation_snapshot' => $this->snapshotComCondicionantes([
                     ['resposta' => null, 'acionou' => false],
                 ]),
@@ -460,7 +460,7 @@ class AbuseDetectorsEstruturaisTest extends TestCase
     public function test_condicionante_evasao_respeita_a_janela(): void
     {
         // 2 evasivos na janela + 1 fora (40 dias). Dentro só 2 (< 3) → sem alerta.
-        $requerente = User::factory()->create();
+        $requerente = Cidadao::factory()->create();
         $this->processoEvasivo($requerente);
         $this->processoEvasivo($requerente);
         $this->processoEvasivo($requerente, now()->subDays(40));
@@ -472,7 +472,7 @@ class AbuseDetectorsEstruturaisTest extends TestCase
 
     public function test_condicionante_evasao_fingerprint_e_estavel(): void
     {
-        $requerente = User::factory()->create();
+        $requerente = Cidadao::factory()->create();
         for ($i = 0; $i < 3; $i++) {
             $this->processoEvasivo($requerente);
         }

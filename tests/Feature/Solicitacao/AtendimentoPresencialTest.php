@@ -276,7 +276,7 @@ class AtendimentoPresencialTest extends TestCase
         $solicitacao = ViabilityRequest::query()->where('company_id', $company->id)->first();
         $this->assertNotNull($solicitacao);
         // Beneficiário = cidadão; ator real = atendente (CA-01/RN-001).
-        $this->assertSame($citizen->id, $solicitacao->requester_user_id);
+        $this->assertSame($citizen->id, $solicitacao->requester_cidadao_id);
         $this->assertSame($attendant->id, $solicitacao->created_by_id);
         $this->assertSame(User::class, $solicitacao->created_by_type);
         $this->assertSame('portal', $solicitacao->origin->value);

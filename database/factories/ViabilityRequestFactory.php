@@ -7,7 +7,6 @@ use App\Enums\ViabilityRequestStatus;
 use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\Company;
-use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -28,7 +27,7 @@ class ViabilityRequestFactory extends Factory
             'origin' => ViabilityRequestOrigin::Portal,
             'service_type_id' => ViabilityServiceType::factory(),
             'company_id' => Company::factory(),
-            'requester_user_id' => User::factory(),
+            'requester_cidadao_id' => Cidadao::factory(),
             'created_by_type' => Cidadao::class,
             'created_by_id' => Cidadao::factory(),
             'used_area_m2' => fake()->randomFloat(2, 20, 500),

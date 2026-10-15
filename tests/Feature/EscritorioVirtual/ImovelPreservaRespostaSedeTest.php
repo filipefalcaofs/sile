@@ -55,7 +55,7 @@ class ImovelPreservaRespostaSedeTest extends TestCase
     {
         $user = $this->portalUser();
         $solicitacao = ViabilityRequest::factory()->draft()->create([
-            'requester_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
             'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
             'wants_virtual_office_hq' => true,
         ]);

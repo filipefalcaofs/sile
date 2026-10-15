@@ -231,7 +231,7 @@ class DatabaseSeederTest extends TestCase
         $cidadao = User::query()->where('email', 'cidadao@sile.dev')->firstOrFail();
 
         $rascunho = ViabilityRequest::query()
-            ->where('requester_user_id', $cidadao->id)
+            ->where('requester_cidadao_id', $cidadao->id)
             ->where('status', ViabilityRequestStatus::Rascunho)
             ->first();
         $this->assertNotNull($rascunho, 'Esperava um rascunho instruído de exemplo.');
@@ -239,7 +239,7 @@ class DatabaseSeederTest extends TestCase
         $this->assertNotNull($rascunho->property_polygon_geojson);
 
         $protocolada = ViabilityRequest::query()
-            ->where('requester_user_id', $cidadao->id)
+            ->where('requester_cidadao_id', $cidadao->id)
             ->where('status', ViabilityRequestStatus::Protocolada)
             ->where('origin', ViabilityRequestOrigin::Portal)
             ->first();
@@ -252,14 +252,14 @@ class DatabaseSeederTest extends TestCase
         );
 
         $cancelada = ViabilityRequest::query()
-            ->where('requester_user_id', $cidadao->id)
+            ->where('requester_cidadao_id', $cidadao->id)
             ->where('status', ViabilityRequestStatus::Cancelada)
             ->first();
         $this->assertNotNull($cancelada, 'Esperava uma solicitação cancelada de exemplo.');
         $this->assertNotNull($cancelada->cancelled_at);
 
         $contingencia = ViabilityRequest::query()
-            ->where('requester_user_id', $cidadao->id)
+            ->where('requester_cidadao_id', $cidadao->id)
             ->where('origin', ViabilityRequestOrigin::Contingencia)
             ->first();
         $this->assertNotNull($contingencia, 'Esperava uma solicitação de contingência de exemplo.');
@@ -277,7 +277,7 @@ class DatabaseSeederTest extends TestCase
         // sobre a zona fictícia (deferimento navegável) e um fora dela (em
         // análise honesto). Identificados pelo marcador estável.
         $deferimento = ViabilityRequest::query()
-            ->where('requester_user_id', $cidadao->id)
+            ->where('requester_cidadao_id', $cidadao->id)
             ->where('address_reference', ExpressoDevSeeder::MARK_DEFERIDA)
             ->first();
         $this->assertNotNull($deferimento, 'Esperava o exemplo de deferimento do fluxo expresso.');
@@ -285,7 +285,7 @@ class DatabaseSeederTest extends TestCase
         $this->assertNotNull($deferimento->property_polygon_geojson);
 
         $emAnalise = ViabilityRequest::query()
-            ->where('requester_user_id', $cidadao->id)
+            ->where('requester_cidadao_id', $cidadao->id)
             ->where('address_reference', ExpressoDevSeeder::MARK_EM_ANALISE)
             ->first();
         $this->assertNotNull($emAnalise, 'Esperava o exemplo de em análise (sem zona) do fluxo expresso.');
@@ -436,14 +436,14 @@ class DatabaseSeederTest extends TestCase
         // dedicado de comunicação do EP11 (em_analise após o ciclo de pendência,
         // ComunicacaoDevSeeder) = 7, estáveis no re-seed.
         $cidadaoId = User::query()->where('email', 'cidadao@sile.dev')->value('id');
-        $this->assertSame(7, ViabilityRequest::query()->where('requester_user_id', $cidadaoId)->count());
+        $this->assertSame(7, ViabilityRequest::query()->where('requester_cidadao_id', $cidadaoId)->count());
         // Os exemplos protocolados não ganham número novo a cada re-seed: 1 da
         // Fase 8 + 2 do expresso (em SQLite os exemplos do expresso ficam
         // protocolados — a decisão real exige PostGIS, testes @group postgis).
         $this->assertSame(
             3,
             ViabilityRequest::query()
-                ->where('requester_user_id', $cidadaoId)
+                ->where('requester_cidadao_id', $cidadaoId)
                 ->where('origin', ViabilityRequestOrigin::Portal)
                 ->where('status', ViabilityRequestStatus::Protocolada)
                 ->count()

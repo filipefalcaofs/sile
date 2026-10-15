@@ -8,10 +8,10 @@ use App\Enums\SefazNotificationStatus;
 use App\Enums\ViabilityRequestStatus;
 use App\Events\EncaminhadoParaAnalise;
 use App\Events\ResultadoEmitido;
+use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\SefazNotification;
-use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Models\VirtualOfficeInscriptionLock;
@@ -170,10 +170,10 @@ class ExclusaoCnaeSedeTest extends TestCase
         $titular = Company::factory()->create();
         $this->sedeAtivaNaInscricao('123.456.789', $titular);
 
-        $requester = User::factory()->create();
+        $requester = Cidadao::factory()->create();
         $abrigado = ViabilityRequest::factory()->protocoled()->create([
             'property_registration' => '123.456.789',
-            'requester_user_id' => $requester->id,
+            'requester_cidadao_id' => $requester->id,
             'protocol_number' => 'VIA-2026-ABRIGADO1',
         ]);
         ViabilityDecision::factory()->create([

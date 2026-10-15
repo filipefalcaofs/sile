@@ -119,7 +119,7 @@ class ContingenciaTest extends TestCase
         $this->assertNotSame(ViabilityRequestStatus::Rascunho, $solicitacao->status);
         $this->assertMatchesRegularExpression('/^VIA-\d{4}-\d{6}$/', (string) $solicitacao->protocol_number);
         $this->assertNotNull($solicitacao->protocoled_at);
-        $this->assertSame($beneficiario->id, $solicitacao->requester_user_id);
+        $this->assertSame($beneficiario->id, $solicitacao->requester_cidadao_id);
         $this->assertSame($operador->id, $solicitacao->created_by_id);
         $this->assertSame(User::class, $solicitacao->created_by_type);
         $this->assertNotNull($solicitacao->contingency_reason);
@@ -242,7 +242,7 @@ class ContingenciaTest extends TestCase
         // Processo já registrado com a mesma referência externa.
         $existente = ViabilityRequest::factory()->protocoled()->create([
             'company_id' => $company->id,
-            'requester_user_id' => $beneficiario->id,
+            'requester_cidadao_id' => $beneficiario->id,
             'external_reference' => 'REGIN-2026-0001',
         ]);
 

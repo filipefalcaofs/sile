@@ -51,7 +51,7 @@ class ExplicacaoCidadaoTest extends TestCase
         $atributos = [];
 
         if ($dono !== null) {
-            $atributos['requester_user_id'] = $dono->id;
+            $atributos['requester_cidadao_id'] = $dono->id;
             $atributos['created_by_type'] = $dono->getMorphClass();
             $atributos['created_by_id'] = $dono->id;
         }
@@ -188,7 +188,7 @@ class ExplicacaoCidadaoTest extends TestCase
         $dono = Cidadao::factory()->withAcceptedLgpdTerm()->create();
         // Protocolado, sem decisão registrada (em análise): nada a explicar.
         $processo = ViabilityRequest::factory()->protocoled()->withPrimaryCnae()->create([
-            'requester_user_id' => $dono->id,
+            'requester_cidadao_id' => $dono->id,
             'created_by_type' => $dono->getMorphClass(),
             'created_by_id' => $dono->id,
         ]);

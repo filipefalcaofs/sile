@@ -42,7 +42,7 @@ class ComunicacaoDevSeederTest extends TestCase
         }
 
         return ViabilityRequest::query()
-            ->where('requester_user_id', $cidadao->id)
+            ->where('requester_cidadao_id', $cidadao->id)
             ->where('address_reference', ComunicacaoDevSeeder::MARK)
             ->first();
     }
@@ -142,7 +142,7 @@ class ComunicacaoDevSeederTest extends TestCase
         $this->assertSame(
             1,
             ViabilityRequest::query()
-                ->where('requester_user_id', $request->requester_user_id)
+                ->where('requester_cidadao_id', $request->requester_cidadao_id)
                 ->where('address_reference', ComunicacaoDevSeeder::MARK)
                 ->count(),
             'O processo dedicado não pode ser duplicado no re-seed.'

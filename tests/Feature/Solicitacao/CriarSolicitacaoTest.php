@@ -73,7 +73,7 @@ class CriarSolicitacaoTest extends TestCase
         $this->assertDatabaseHas('viability_requests', [
             'company_id' => $company->id,
             'service_type_id' => $serviceType->id,
-            'requester_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
             'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
             'origin' => 'portal',
             'status' => 'rascunho',
@@ -147,7 +147,7 @@ class CriarSolicitacaoTest extends TestCase
 
         $request = ViabilityRequest::query()->where('company_id', $company->id)->first();
         $this->assertNotNull($request);
-        $this->assertSame($grantor->id, $request->requester_user_id);
+        $this->assertSame($grantor->id, $request->requester_cidadao_id);
         $this->assertSame($attorney->id, $request->created_by_id);
         $this->assertSame(Cidadao::class, $request->created_by_type);
 
@@ -167,7 +167,7 @@ class CriarSolicitacaoTest extends TestCase
         // Processo anterior recente (protocolada) da MESMA empresa.
         $previous = ViabilityRequest::factory()->protocoled()->create([
             'company_id' => $company->id,
-            'requester_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
         ]);
 
         $this->actingAs($user)
@@ -215,12 +215,12 @@ class CriarSolicitacaoTest extends TestCase
 
         $mine = ViabilityRequest::factory()->protocoled()->create([
             'company_id' => $companyA->id,
-            'requester_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
             'protocol_number' => 'VIA-2026-000010',
         ]);
         ViabilityRequest::factory()->protocoled()->create([
             'company_id' => $companyB->id,
-            'requester_user_id' => $other->id,
+            'requester_cidadao_id' => $other->id,
             'protocol_number' => 'VIA-2026-000011',
         ]);
 

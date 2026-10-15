@@ -9,6 +9,7 @@ use App\Enums\CommunicationType;
 use App\Enums\ViabilityRequestStatus;
 use App\Events\PendenciaSolicitada;
 use App\Models\AnalysisPendency;
+use App\Models\Cidadao;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Notifications\PendenciaSolicitadaNotification;
@@ -44,12 +45,12 @@ class PendenciaServiceTest extends TestCase
      * Processo REAL em análise técnica (protocolado + transicionado), cujo
      * requerente é controlado para os testes de escopo/notificação.
      */
-    private function emAnalise(?User $requester = null): ViabilityRequest
+    private function emAnalise(?Cidadao $requester = null): ViabilityRequest
     {
-        $requester ??= User::factory()->create();
+        $requester ??= Cidadao::factory()->create();
 
         $request = ViabilityRequest::factory()->protocoled()->create([
-            'requester_user_id' => $requester->id,
+            'requester_cidadao_id' => $requester->id,
         ]);
 
         $request->forceFill(['status' => ViabilityRequestStatus::EmAnalise])->save();
@@ -104,7 +105,7 @@ class PendenciaServiceTest extends TestCase
     {
         Notification::fake();
 
-        $requester = User::factory()->create();
+        $requester = Cidadao::factory()->create();
         $analista = User::factory()->create();
         $request = $this->emAnalise($requester);
 
@@ -180,7 +181,7 @@ class PendenciaServiceTest extends TestCase
 
     public function test_responder_grava_resposta_e_reabre_a_analise(): void
     {
-        $requester = User::factory()->create();
+        $requester = Cidadao::factory()->create();
         $request = $this->emAnalise($requester);
         $request->forceFill(['status' => ViabilityRequestStatus::EmPendencia])->save();
 
@@ -220,7 +221,7 @@ class PendenciaServiceTest extends TestCase
 
     public function test_responder_pendencia_ja_respondida_e_bloqueado(): void
     {
-        $requester = User::factory()->create();
+        $requester = Cidadao::factory()->create();
         $request = $this->emAnalise($requester);
 
         // Pendência já respondida e processo em_analise (não em_pendencia).

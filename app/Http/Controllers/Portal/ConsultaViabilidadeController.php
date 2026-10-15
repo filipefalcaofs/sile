@@ -130,16 +130,16 @@ class ConsultaViabilidadeController extends Controller
      */
     private function registrarHistorico(Request $request, ConsultaViabilidadeResult $result): void
     {
-        $user = $request->user();
+        $cidadao = $request->user();
 
-        if ($user === null) {
+        if ($cidadao === null) {
             return;
         }
 
         $payload = $result->toArray();
 
         ViabilityQuery::create([
-            'user_id' => $user->id,
+            'cidadao_id' => $cidadao->id,
             'entry_type' => $payload['entrada']['tipo'],
             'input' => $payload['entrada'],
             'result' => $payload,

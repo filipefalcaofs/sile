@@ -52,7 +52,7 @@ class CancelarSolicitacaoTest extends TestCase
         // 'transicao' com o usuário (RN-002).
         $owner = $this->portalUser();
         $solicitacao = ViabilityRequest::factory()->draft()->withPrimaryCnae()->create([
-            'requester_user_id' => $owner->id,
+            'requester_cidadao_id' => $owner->id,
             'created_by_type' => $owner->getMorphClass(), 'created_by_id' => $owner->id,
         ]);
 
@@ -95,7 +95,7 @@ class CancelarSolicitacaoTest extends TestCase
         // número de protocolo permanece (histórico preservado).
         $owner = $this->portalUser();
         $solicitacao = ViabilityRequest::factory()->protocoled()->withPrimaryCnae()->create([
-            'requester_user_id' => $owner->id,
+            'requester_cidadao_id' => $owner->id,
             'created_by_type' => $owner->getMorphClass(), 'created_by_id' => $owner->id,
         ]);
         $numeroProtocolo = $solicitacao->protocol_number;
@@ -128,7 +128,7 @@ class CancelarSolicitacaoTest extends TestCase
 
         $owner = $this->portalUser();
         $solicitacao = ViabilityRequest::factory()->protocoled()->withPrimaryCnae()->create([
-            'requester_user_id' => $owner->id,
+            'requester_cidadao_id' => $owner->id,
             'created_by_type' => $owner->getMorphClass(), 'created_by_id' => $owner->id,
         ]);
 
@@ -164,7 +164,7 @@ class CancelarSolicitacaoTest extends TestCase
 
         $owner = $this->portalUser();
         $solicitacao = ViabilityRequest::factory()->protocoled()->withPrimaryCnae()->create([
-            'requester_user_id' => $owner->id,
+            'requester_cidadao_id' => $owner->id,
             'created_by_type' => $owner->getMorphClass(), 'created_by_id' => $owner->id,
         ]);
 
@@ -196,7 +196,7 @@ class CancelarSolicitacaoTest extends TestCase
         $owner = $this->portalUser();
         $stranger = $this->portalUser();
         $solicitacao = ViabilityRequest::factory()->draft()->withPrimaryCnae()->create([
-            'requester_user_id' => $owner->id,
+            'requester_cidadao_id' => $owner->id,
             'created_by_type' => $owner->getMorphClass(), 'created_by_id' => $owner->id,
         ]);
 
@@ -218,7 +218,7 @@ class CancelarSolicitacaoTest extends TestCase
         // sem reason → erro de validação, nada é cancelado.
         $owner = $this->portalUser();
         $solicitacao = ViabilityRequest::factory()->draft()->withPrimaryCnae()->create([
-            'requester_user_id' => $owner->id,
+            'requester_cidadao_id' => $owner->id,
             'created_by_type' => $owner->getMorphClass(), 'created_by_id' => $owner->id,
         ]);
 

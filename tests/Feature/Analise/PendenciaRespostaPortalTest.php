@@ -47,7 +47,7 @@ class PendenciaRespostaPortalTest extends TestCase
     private function emPendenciaDoDono(Cidadao $owner): ViabilityRequest
     {
         $request = ViabilityRequest::factory()->withPrimaryCnae()->create([
-            'requester_user_id' => $owner->id,
+            'requester_cidadao_id' => $owner->id,
             'created_by_type' => $owner->getMorphClass(), 'created_by_id' => $owner->id,
         ]);
 
@@ -142,7 +142,7 @@ class PendenciaRespostaPortalTest extends TestCase
         // em_pendencia) é bloqueado com aviso comunicado — nada muda.
         $owner = $this->portalUser();
         $request = ViabilityRequest::factory()->protocoled()->withPrimaryCnae()->create([
-            'requester_user_id' => $owner->id,
+            'requester_cidadao_id' => $owner->id,
             'created_by_type' => $owner->getMorphClass(), 'created_by_id' => $owner->id,
         ]);
         $request->forceFill(['status' => ViabilityRequestStatus::EmAnalise])->save();

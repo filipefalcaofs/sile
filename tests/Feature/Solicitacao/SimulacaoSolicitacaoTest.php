@@ -78,7 +78,7 @@ class SimulacaoSolicitacaoTest extends TestCase
     private function draftFor(Cidadao $user, array $cnaeCodes): ViabilityRequest
     {
         $solicitacao = ViabilityRequest::factory()->draft()->create([
-            'requester_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
             'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
             'used_area_m2' => 120.0,
         ]);
@@ -261,7 +261,7 @@ class SimulacaoSolicitacaoTest extends TestCase
         // real + Quadro 7), sem território, veredito pendente. Não inventa local.
         $user = $this->portalUser();
         $solicitacao = ViabilityRequest::factory()->draft()->create([
-            'requester_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
             'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
             'used_area_m2' => 120.0,
             'property_polygon_geojson' => null,

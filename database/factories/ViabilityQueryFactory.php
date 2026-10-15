@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\User;
+use App\Models\Cidadao;
 use App\Models\ViabilityQuery;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -17,7 +17,7 @@ class ViabilityQueryFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => User::factory(),
+            'cidadao_id' => Cidadao::factory(),
             'entry_type' => 'endereco',
             'input' => [
                 'endereco' => fake()->streetAddress(),
@@ -45,7 +45,7 @@ class ViabilityQueryFactory extends Factory
     public function anonima(): static
     {
         return $this->state(fn (array $attributes) => [
-            'user_id' => null,
+            'cidadao_id' => null,
             'ip_address' => fake()->ipv4(),
         ]);
     }

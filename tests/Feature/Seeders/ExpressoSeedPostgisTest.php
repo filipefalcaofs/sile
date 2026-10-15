@@ -56,7 +56,7 @@ class ExpressoSeedPostgisTest extends PostgisTestCase
         // o minimercado (risco baixo → expresso) é DEFERIDA pelo motor real, com
         // número TVL — o core value, sem fachada.
         $deferimento = ViabilityRequest::query()
-            ->where('requester_user_id', $cidadao->id)
+            ->where('requester_cidadao_id', $cidadao->id)
             ->where('address_reference', ExpressoDevSeeder::MARK_DEFERIDA)
             ->firstOrFail();
 
@@ -70,7 +70,7 @@ class ExpressoSeedPostgisTest extends PostgisTestCase
         // EM ANÁLISE honesto: a solicitação FORA da zona fictícia (Pituba) não
         // tem zona — o motor degrada para em_analise, SEM decisão e SEM TVL.
         $emAnalise = ViabilityRequest::query()
-            ->where('requester_user_id', $cidadao->id)
+            ->where('requester_cidadao_id', $cidadao->id)
             ->where('address_reference', ExpressoDevSeeder::MARK_EM_ANALISE)
             ->firstOrFail();
 

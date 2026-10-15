@@ -4,8 +4,8 @@ namespace Tests\Feature\Solicitacao;
 
 use App\Enums\ViabilityRequestStatus;
 use App\Models\Activity;
+use App\Models\Cidadao;
 use App\Models\Company;
-use App\Models\User;
 use App\Models\ViabilityRequest;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -85,10 +85,10 @@ class ConsultarProtocoloPublicoTest extends TestCase
     {
         // LGPD: a página pública mostra SÓ situação/timeline/prazo — nunca CPF,
         // CNPJ completo, endereço detalhado nem anexos.
-        $user = User::factory()->create();
+        $user = Cidadao::factory()->create();
         $company = Company::factory()->create(['legal_name' => 'Empresa Confidencial LTDA']);
         $solicitacao = $this->protocolada([
-            'requester_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
             'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
             'company_id' => $company->id,
             'address_street' => 'Rua Secreta dos Testes',

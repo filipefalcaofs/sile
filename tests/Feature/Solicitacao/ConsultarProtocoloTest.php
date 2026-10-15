@@ -53,7 +53,7 @@ class ConsultarProtocoloTest extends TestCase
     private function protocoladaDoUsuario(Cidadao $user): ViabilityRequest
     {
         $solicitacao = ViabilityRequest::factory()->draft()->withPrimaryCnae()->create([
-            'requester_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
             'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
             'used_area_m2' => 120.0,
         ]);
@@ -70,7 +70,7 @@ class ConsultarProtocoloTest extends TestCase
         // motivo interno e o rótulo técnico NÃO são expostos (LGPD).
         $user = $this->portalUser();
         $solicitacao = ViabilityRequest::factory()->draft()->withPrimaryCnae()->create([
-            'requester_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
             'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
         ]);
 
@@ -122,7 +122,7 @@ class ConsultarProtocoloTest extends TestCase
         // derivada do status REAL, nunca inventada. Sem transições ainda.
         $user = $this->portalUser();
         $solicitacao = ViabilityRequest::factory()->draft()->create([
-            'requester_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
             'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
         ]);
 

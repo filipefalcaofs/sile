@@ -114,7 +114,7 @@ class SolicitacaoDevSeeder extends Seeder
         array $overrides = [],
     ): ViabilityRequest {
         $existing = ViabilityRequest::query()
-            ->where('requester_user_id', $cidadao->id)
+            ->where('requester_cidadao_id', $cidadao->id)
             ->where('address_reference', $marker)
             ->first();
 
@@ -129,7 +129,7 @@ class SolicitacaoDevSeeder extends Seeder
             'origin' => ViabilityRequestOrigin::Portal,
             'service_type_id' => $type->id,
             'company_id' => $company->id,
-            'requester_user_id' => $cidadao->id,
+            'requester_cidadao_id' => $cidadao->id,
             'created_by_type' => $creator->getMorphClass(),
             'created_by_id' => $creator->id,
             'used_area_m2' => 120.0,

@@ -49,7 +49,7 @@ use Illuminate\Support\Collection;
  */
 #[Fillable([
     'origin',
-    'service_type_id', 'renews_viability_request_id', 'company_id', 'requester_user_id', 'created_by_type', 'created_by_id', 'assisted_attendance_id',
+    'service_type_id', 'renews_viability_request_id', 'company_id', 'requester_cidadao_id', 'created_by_type', 'created_by_id', 'assisted_attendance_id',
     'used_area_m2', 'property_registration',
     'address_street', 'address_number', 'address_complement', 'address_neighborhood', 'address_zip', 'address_reference',
     'property_polygon_geojson',
@@ -298,11 +298,11 @@ class ViabilityRequest extends Model
     /**
      * Beneficiário da solicitação.
      *
-     * @return BelongsTo<User, $this>
+     * @return BelongsTo<Cidadao, $this>
      */
     public function requester(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'requester_user_id');
+        return $this->belongsTo(Cidadao::class, 'requester_cidadao_id');
     }
 
     /**

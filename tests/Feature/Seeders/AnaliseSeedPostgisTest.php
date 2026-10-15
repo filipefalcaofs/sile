@@ -92,7 +92,7 @@ class AnaliseSeedPostgisTest extends PostgisTestCase
             $this->assertSame(
                 1,
                 ViabilityRequest::query()
-                    ->where('requester_user_id', $cidadao->id)
+                    ->where('requester_cidadao_id', $cidadao->id)
                     ->where('address_reference', $marker)
                     ->count(),
                 "O exemplo '{$marker}' não pode duplicar no re-seed.",
@@ -107,7 +107,7 @@ class AnaliseSeedPostgisTest extends PostgisTestCase
     private function processo(User $cidadao, string $marker): ViabilityRequest
     {
         return ViabilityRequest::query()
-            ->where('requester_user_id', $cidadao->id)
+            ->where('requester_cidadao_id', $cidadao->id)
             ->where('address_reference', $marker)
             ->firstOrFail();
     }

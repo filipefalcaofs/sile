@@ -39,7 +39,7 @@ class AnexarDocumentoTest extends TestCase
     private function draftFor(Cidadao $user): ViabilityRequest
     {
         return ViabilityRequest::factory()->draft()->create([
-            'requester_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
             'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
         ]);
     }

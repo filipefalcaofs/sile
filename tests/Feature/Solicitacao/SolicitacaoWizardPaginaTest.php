@@ -55,7 +55,7 @@ class SolicitacaoWizardPaginaTest extends TestCase
     private function draftFor(Cidadao $user, array $overrides = []): ViabilityRequest
     {
         return ViabilityRequest::factory()->draft()->create(array_merge([
-            'requester_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
             'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
             'company_id' => $this->companyLinkedTo($user)->id,
         ], $overrides));
