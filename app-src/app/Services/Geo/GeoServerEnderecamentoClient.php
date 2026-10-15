@@ -16,10 +16,18 @@ use Throwable;
  * - pelo ponto do imóvel (INTERSECTS, ~30 s medidos): só um polígono distinto
  *   no ponto vale. Sobrando mais de um, o resultado é ambíguo.
  *
- * Em ambos, sobrando mais de uma geometria distinta, nenhuma é escolhida.
+ * Em ambos, geometrias quase iguais (o mesmo lote desenhado por origens
+ * diferentes) contam como uma, com preferência pela de origem SEDUR. Sobrando
+ * mais de um lote distinto, nenhum é escolhido.
  */
 class GeoServerEnderecamentoClient
 {
+    /** Diferença máxima, em graus (~1 m), entre os retângulos envolventes. */
+    private const TOLERANCIA_ENVOLVENTE = 0.00001;
+
+    /** Diferença relativa de área abaixo da qual duas geometrias são o mesmo lote. */
+    private const TOLERANCIA_AREA = 0.01;
+
     /** @var array<string, EnderecamentoHit> */
     private array $memo = [];
 
@@ -145,8 +153,8 @@ class GeoServerEnderecamentoClient
 
         $distintas = [];
 
-        foreach ($feicoes as $feicao) {
-            $distintas[(string) json_encode($feicao['geometry'])] ??= $feicao;
+        foreach ($this->agrupar($feicoes) as $grupo) {
+            $distintas[] = $this->preferida($grupo);
         }
 
         if ($distintas === []) {
@@ -163,9 +171,146 @@ class GeoServerEnderecamentoClient
             );
         }
 
-        $unica = array_values($distintas)[0];
+        $unica = $distintas[0];
 
         return new EnderecamentoHit(EnderecamentoHit::ENCONTRADO, geometria: $unica['geometry'], propriedades: $unica['properties'], candidatas: 1);
+    }
+
+    /**
+     * Junta as feições que são o mesmo lote: geometria idêntica ou quase igual
+     * (mesmo retângulo envolvente e área com diferença abaixo de 1%), como o
+     * lote redesenhado por outra origem com vértices a mais ou a menos.
+     *
+     * @param  list<array{geometry: array<string, mixed>, properties: array<string, mixed>}>  $feicoes
+     * @return list<list<array{geometry: array<string, mixed>, properties: array<string, mixed>}>>
+     */
+    private function agrupar(array $feicoes): array
+    {
+        $grupos = [];
+
+        foreach ($feicoes as $feicao) {
+            foreach ($grupos as $indice => $grupo) {
+                if ($this->quaseIguais($grupo[0]['geometry'], $feicao['geometry'])) {
+                    $grupos[$indice][] = $feicao;
+
+                    continue 2;
+                }
+            }
+
+            $grupos[] = [$feicao];
+        }
+
+        return $grupos;
+    }
+
+    /**
+     * @param  list<array{geometry: array<string, mixed>, properties: array<string, mixed>}>  $grupo
+     * @return array{geometry: array<string, mixed>, properties: array<string, mixed>}
+     */
+    private function preferida(array $grupo): array
+    {
+        foreach ($grupo as $feicao) {
+            if (mb_strtolower(trim((string) ($feicao['properties']['ORIGEM'] ?? ''))) === 'sedur') {
+                return $feicao;
+            }
+        }
+
+        return $grupo[0];
+    }
+
+    /**
+     * @param  array<string, mixed>  $a
+     * @param  array<string, mixed>  $b
+     */
+    private function quaseIguais(array $a, array $b): bool
+    {
+        if ($a === $b) {
+            return true;
+        }
+
+        $envolventeA = $this->envolvente($a);
+        $envolventeB = $this->envolvente($b);
+
+        if ($envolventeA === null || $envolventeB === null) {
+            return false;
+        }
+
+        foreach ($envolventeA as $indice => $valor) {
+            if (abs($valor - $envolventeB[$indice]) > self::TOLERANCIA_ENVOLVENTE) {
+                return false;
+            }
+        }
+
+        $areaA = $this->area($a);
+        $areaB = $this->area($b);
+        $maior = max($areaA, $areaB);
+
+        return $maior > 0 && abs($areaA - $areaB) / $maior < self::TOLERANCIA_AREA;
+    }
+
+    /**
+     * @param  array<string, mixed>  $geometria
+     * @return list<list<list<float>>>
+     */
+    private function poligonosDe(array $geometria): array
+    {
+        $coordenadas = is_array($geometria['coordinates'] ?? null) ? $geometria['coordinates'] : [];
+
+        return ($geometria['type'] ?? null) === 'MultiPolygon' ? $coordenadas : [$coordenadas];
+    }
+
+    /**
+     * @param  array<string, mixed>  $geometria
+     * @return array{0: float, 1: float, 2: float, 3: float}|null
+     */
+    private function envolvente(array $geometria): ?array
+    {
+        $xs = [];
+        $ys = [];
+
+        foreach ($this->poligonosDe($geometria) as $aneis) {
+            foreach ((array) ($aneis[0] ?? []) as $ponto) {
+                $xs[] = (float) ($ponto[0] ?? 0);
+                $ys[] = (float) ($ponto[1] ?? 0);
+            }
+        }
+
+        return $xs === [] ? null : [min($xs), min($ys), max($xs), max($ys)];
+    }
+
+    /**
+     * Área plana em graus², só para comparar geometrias do mesmo lugar: anel
+     * externo menos os buracos, somada por polígono.
+     *
+     * @param  array<string, mixed>  $geometria
+     */
+    private function area(array $geometria): float
+    {
+        $total = 0.0;
+
+        foreach ($this->poligonosDe($geometria) as $aneis) {
+            foreach (array_values((array) $aneis) as $indice => $anel) {
+                $area = $this->areaDoAnel((array) $anel);
+                $total += $indice === 0 ? $area : -$area;
+            }
+        }
+
+        return $total;
+    }
+
+    /**
+     * @param  array<int, mixed>  $anel
+     */
+    private function areaDoAnel(array $anel): float
+    {
+        $soma = 0.0;
+        $pontos = array_values($anel);
+
+        for ($i = 0, $n = count($pontos); $i < $n - 1; $i++) {
+            $soma += (float) $pontos[$i][0] * (float) $pontos[$i + 1][1] - (float) $pontos[$i + 1][0] * (float) $pontos[$i][1];
+        }
+
+        return abs($soma) / 2;
     }
 
     private function url(string $codLog, string $numero): string

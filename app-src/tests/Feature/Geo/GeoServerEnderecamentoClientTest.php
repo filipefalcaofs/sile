@@ -52,7 +52,34 @@ class GeoServerEnderecamentoClientTest extends TestCase
     }
 
     /**
-     * @param  list<array{complemento: ?string, geometria: array<string, mixed>}>  $feicoes
+     * O mesmo quadrado redesenhado: vértice extra no meio da base e o lado de
+     * cima um pouco recuado no canto direito, sem mudar o contorno externo.
+     *
+     * @return array{type: string, coordinates: list<list<list<float>>>}
+     */
+    private function quadradoRedesenhado(float $lng, float $lat): array
+    {
+        return ['type' => 'Polygon', 'coordinates' => [[
+            [$lng, $lat], [$lng + 0.00025, $lat], [$lng + 0.0005, $lat], [$lng + 0.0005, $lat + 0.0005],
+            [$lng + 0.000499, $lat + 0.0005], [$lng, $lat + 0.0005], [$lng, $lat],
+        ]]];
+    }
+
+    /**
+     * Mesmo contorno externo do quadrado, mas sem o quarto superior direito.
+     *
+     * @return array{type: string, coordinates: list<list<list<float>>>}
+     */
+    private function quadradoRecortado(float $lng, float $lat): array
+    {
+        return ['type' => 'Polygon', 'coordinates' => [[
+            [$lng, $lat], [$lng + 0.0005, $lat], [$lng + 0.0005, $lat + 0.00025], [$lng + 0.00025, $lat + 0.00025],
+            [$lng + 0.00025, $lat + 0.0005], [$lng, $lat + 0.0005], [$lng, $lat],
+        ]]];
+    }
+
+    /**
+     * @param  list<array{complemento: ?string, geometria: array<string, mixed>, origem?: string}>  $feicoes
      */
     private function responder(array $feicoes): void
     {
@@ -61,7 +88,7 @@ class GeoServerEnderecamentoClientTest extends TestCase
             'features' => array_map(fn (array $f): array => [
                 'type' => 'Feature',
                 'geometry' => $f['geometria'],
-                'properties' => ['CODLOG' => 24574, 'NUMERACAO_METRICA' => 70, 'COMPLEMENTO' => $f['complemento'], 'ALVARA' => 'A-1'],
+                'properties' => ['CODLOG' => 24574, 'NUMERACAO_METRICA' => 70, 'COMPLEMENTO' => $f['complemento'], 'ALVARA' => 'A-1', 'ORIGEM' => $f['origem'] ?? null],
             ], $feicoes),
         ])]);
     }
@@ -116,6 +143,61 @@ class GeoServerEnderecamentoClientTest extends TestCase
         $hit = app(GeoServerEnderecamentoClient::class)->consultar('4923', '7416');
 
         $this->assertSame(EnderecamentoHit::ENCONTRADO, $hit->status);
+    }
+
+    public function test_geometrias_quase_iguais_contam_como_uma_e_vale_a_de_origem_sedur(): void
+    {
+        $this->responder([
+            ['complemento' => null, 'origem' => 'semut', 'geometria' => $this->quadrado(-38.5, -12.98)],
+            ['complemento' => '0', 'origem' => 'sedur', 'geometria' => $this->quadradoRedesenhado(-38.5, -12.98)],
+            ['complemento' => null, 'origem' => 'fmlf', 'geometria' => $this->quadrado(-38.5, -12.98)],
+        ]);
+
+        $hit = app(GeoServerEnderecamentoClient::class)->consultar('1545', '2294');
+
+        $this->assertSame(EnderecamentoHit::ENCONTRADO, $hit->status);
+        $this->assertSame(1, $hit->candidatas);
+        $this->assertSame($this->quadradoRedesenhado(-38.5, -12.98), $hit->geometria);
+        $this->assertSame('sedur', $hit->propriedades['ORIGEM']);
+    }
+
+    public function test_geometrias_quase_iguais_sem_origem_sedur_ficam_com_a_primeira(): void
+    {
+        $this->responder([
+            ['complemento' => null, 'origem' => 'semut', 'geometria' => $this->quadrado(-38.5, -12.98)],
+            ['complemento' => null, 'origem' => 'fmlf', 'geometria' => $this->quadradoRedesenhado(-38.5, -12.98)],
+        ]);
+
+        $hit = app(GeoServerEnderecamentoClient::class)->consultar('1545', '2294');
+
+        $this->assertSame(EnderecamentoHit::ENCONTRADO, $hit->status);
+        $this->assertSame($this->quadrado(-38.5, -12.98), $hit->geometria);
+    }
+
+    public function test_mesmo_contorno_com_area_diferente_continua_ambiguo(): void
+    {
+        $this->responder([
+            ['complemento' => null, 'origem' => 'semut', 'geometria' => $this->quadrado(-38.5, -12.98)],
+            ['complemento' => null, 'origem' => 'sedur', 'geometria' => $this->quadradoRecortado(-38.5, -12.98)],
+        ]);
+
+        $hit = app(GeoServerEnderecamentoClient::class)->consultar('1545', '2294');
+
+        $this->assertSame(EnderecamentoHit::AMBIGUO, $hit->status);
+        $this->assertSame(2, $hit->candidatas);
+    }
+
+    public function test_consulta_por_ponto_com_geometrias_quase_iguais_conta_como_uma(): void
+    {
+        $this->responder([
+            ['complemento' => null, 'origem' => 'semut', 'geometria' => $this->quadrado(-38.5, -12.98)],
+            ['complemento' => '0', 'origem' => 'sedur', 'geometria' => $this->quadradoRedesenhado(-38.5, -12.98)],
+        ]);
+
+        $hit = app(GeoServerEnderecamentoClient::class)->consultarPorPonto(-12.98, -38.5);
+
+        $this->assertSame(EnderecamentoHit::ENCONTRADO, $hit->status);
+        $this->assertSame('sedur', $hit->propriedades['ORIGEM']);
     }
 
     public function test_sem_feicao_e_nao_encontrado(): void
