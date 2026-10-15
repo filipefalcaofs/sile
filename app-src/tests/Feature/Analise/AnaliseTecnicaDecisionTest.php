@@ -214,6 +214,32 @@ class AnaliseTecnicaDecisionTest extends TestCase
         Event::assertDispatched(ResultadoEmitido::class);
     }
 
+    public function test_deferimento_grava_o_parecer_do_analista_como_motivo(): void
+    {
+        Event::fake([ResultadoEmitido::class]);
+
+        $ficha = $this->fichaFinalizada([
+            ['cnae' => '4712100', 'status_sugerido' => 'deferida', 'status_escolhido' => 'deferida'],
+        ]);
+
+        $result = $this->service()->decide($ficha, $this->analista(), DecisionOutcome::Deferida, "  Atividade compatível com a zona e com o porte do imóvel.  \n");
+
+        $this->assertSame('Atividade compatível com a zona e com o porte do imóvel.', $result->decision->reason);
+    }
+
+    public function test_deferimento_sem_parecer_segue_sem_motivo(): void
+    {
+        Event::fake([ResultadoEmitido::class]);
+
+        $ficha = $this->fichaFinalizada([
+            ['cnae' => '4712100', 'status_sugerido' => 'deferida', 'status_escolhido' => 'deferida'],
+        ]);
+
+        $result = $this->service()->decide($ficha, $this->analista(), DecisionOutcome::Deferida, '   ');
+
+        $this->assertNull($result->decision->reason);
+    }
+
     public function test_recusa_decidir_quando_a_ficha_ainda_esta_em_rascunho(): void
     {
         // HU-086 CA-03: ficha em rascunho não decide — bloqueio por inconsistência.
