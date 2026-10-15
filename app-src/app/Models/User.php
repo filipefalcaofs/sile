@@ -51,7 +51,7 @@ class User extends Authenticatable implements MustVerifyEmail
         ];
     }
 
-    /** Conta técnica da integração JUCEB/REGIN: autora dos processos recebidos e requerente quando o envelope não traz solicitante. */
+    /** Conta técnica da integração JUCEB/REGIN: autora (created_by) dos processos recebidos. Sem e-mail entregável. */
     public const EMAIL_INTEGRACAO_REGIN = 'solicitante-nao-identificado@regin.invalid';
 
     public function temEmailEntregavel(): bool

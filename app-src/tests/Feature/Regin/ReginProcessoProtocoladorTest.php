@@ -7,6 +7,7 @@ use App\Enums\ViabilityRequestStatus;
 use App\Jobs\DecidirFluxoExpressoJob;
 use App\Models\Cnae;
 use App\Models\Company;
+use App\Models\IntegrationCall;
 use App\Models\ReginRecebimento;
 use App\Models\User;
 use App\Models\ViabilityRequest;
@@ -162,9 +163,8 @@ class ReginProcessoProtocoladorTest extends TestCase
         $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($this->ruc()));
 
         $this->assertNotNull($processo);
-        $this->assertNotSame($gestor->id, $processo->requester_user_id);
-        $this->assertNotSame(User::query()->orderBy('id')->value('id'), $processo->requester_user_id);
-        $this->assertFalse($processo->requester->temEmailEntregavel());
+        $this->assertNull($processo->requester_user_id);
+        $this->assertNotSame($gestor->id, $processo->created_by_user_id);
     }
 
     public function test_cpf_ja_usado_nao_impede_o_solicitante_nao_identificado(): void
@@ -174,7 +174,7 @@ class ReginProcessoProtocoladorTest extends TestCase
         $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($this->ruc()));
 
         $this->assertNotNull($processo);
-        $this->assertSame(User::EMAIL_INTEGRACAO_REGIN, $processo->requester->email);
+        $this->assertSame(User::EMAIL_INTEGRACAO_REGIN, $processo->createdBy->email);
     }
 
     public function test_comando_refaz_requerente_pelo_envelope_e_criador_pela_integracao(): void
@@ -196,6 +196,38 @@ class ReginProcessoProtocoladorTest extends TestCase
         $processo = $processo->fresh();
         $this->assertSame('maria@exemplo.com', $processo->requester->email);
         $this->assertSame(User::EMAIL_INTEGRACAO_REGIN, $processo->createdBy->email);
+    }
+
+    public function test_comando_le_o_solicitante_do_json_do_log_de_integracao_quando_o_processo_nao_guarda_o_envelope(): void
+    {
+        $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($this->ruc()));
+        $processo->forceFill(['origem_declarada' => null])->save();
+
+        IntegrationCall::query()->create([
+            'direction' => 'entrada',
+            'integration' => 'regin',
+            'method' => 'POST',
+            'url' => 'https://viabiliza.test/api_integracao/recebe',
+            'outcome' => 'sucesso',
+            'request_body' => json_encode(['protocolo' => '43747', 'cpfSolicitante' => '529.982.247-25', 'nomeSolicitante' => 'Maria Souza', 'emailSolicitante' => 'maria@exemplo.com']),
+        ]);
+
+        $this->artisan('regin:corrigir-requerentes')->assertSuccessful();
+
+        $processo = $processo->fresh();
+        $this->assertSame('maria@exemplo.com', $processo->requester->email);
+        $this->assertSame('52998224725', $processo->requester->cpf);
+        $this->assertSame(User::EMAIL_INTEGRACAO_REGIN, $processo->createdBy->email);
+    }
+
+    public function test_comando_deixa_o_requerente_nulo_quando_a_juceb_nao_mandou_solicitante(): void
+    {
+        $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($this->ruc()));
+        $processo->forceFill(['requester_user_id' => app(ReginProcessoProtocolador::class)->integracao()->id, 'origem_declarada' => null])->save();
+
+        $this->artisan('regin:corrigir-requerentes')->assertSuccessful();
+
+        $this->assertNull($processo->fresh()->requester_user_id);
     }
 
     public function test_natureza_juridica_do_ruc_vai_para_a_empresa(): void

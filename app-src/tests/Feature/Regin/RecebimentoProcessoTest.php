@@ -26,10 +26,9 @@ class RecebimentoProcessoTest extends TestCase
         $recebimento = ReginRecebimento::query()->where('protocolo', 'BAP-2026-0001')->firstOrFail();
         $processo = ViabilityRequest::query()->findOrFail($recebimento->viability_request_id);
 
-        $this->assertNotSame($primeiro->id, $processo->requester_user_id);
+        $this->assertNull($processo->requester_user_id);
         $this->assertNotSame($primeiro->id, $processo->created_by_user_id);
         $this->assertSame(User::EMAIL_INTEGRACAO_REGIN, $processo->createdBy->email);
-        $this->assertFalse($processo->requester->temEmailEntregavel());
     }
 
     public function test_post_da_declaracao_abre_processo_com_os_dados_recebidos(): void
