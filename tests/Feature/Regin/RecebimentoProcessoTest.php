@@ -98,7 +98,6 @@ class RecebimentoProcessoTest extends TestCase
         $processo = ViabilityRequest::query()->firstOrFail();
         $requerente = Cidadao::query()->where('cpf', '52998224725')->firstOrFail();
 
-        $this->assertSame(5, $requerente->id);
         $this->assertSame($requerente->id, $processo->requester_cidadao_id);
         $this->assertSame(User::class, $processo->created_by_type);
         $this->assertSame($servidor->id, $processo->created_by_id);

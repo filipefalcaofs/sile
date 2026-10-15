@@ -5,6 +5,7 @@ namespace Tests\Feature\Comunicacao;
 use App\Enums\CommunicationChannel;
 use App\Enums\CommunicationStatus;
 use App\Enums\CommunicationType;
+use App\Models\Cidadao;
 use App\Models\Communication;
 use App\Models\Parameter;
 use App\Models\User;
@@ -157,6 +158,32 @@ class NotificationDispatcherTest extends TestCase
         $emailId = Communication::query()->where('channel', CommunicationChannel::Email->value)->value('id');
         $inAppId = Communication::query()->where('channel', CommunicationChannel::InApp->value)->value('id');
         $this->assertSame(['mail' => $emailId, 'database' => $inAppId], $notification->communicationIds);
+    }
+
+    public function test_destinatario_com_email_tecnico_de_balcao_nao_recebe_email_e_fica_sem_canal(): void
+    {
+        NotificationFacade::fake();
+        $cidadao = Cidadao::factory()->semSenha()->create(['email' => '52998224725@solicitante.viabiliza.local']);
+        $notification = $this->notificacao(CommunicationType::PendenciaAberta);
+
+        $this->dispatcher()->deliver($cidadao, $notification);
+
+        $this->assertDatabaseHas('communications', [
+            'recipient_type' => $cidadao->getMorphClass(), 'recipient_id' => $cidadao->id,
+            'channel' => CommunicationChannel::Email->value,
+            'status' => CommunicationStatus::Bloqueado->value,
+        ]);
+        $this->assertDatabaseHas('communications', [
+            'recipient_id' => $cidadao->id,
+            'channel' => CommunicationChannel::InApp->value,
+            'status' => CommunicationStatus::NaFila->value,
+        ]);
+        NotificationFacade::assertSentTo(
+            $cidadao,
+            get_class($notification),
+            fn (object $sent, array $channels): bool => $channels === ['database'],
+        );
+        $this->assertSame(['database' => Communication::query()->where('channel', 'in_app')->value('id')], $notification->communicationIds);
     }
 
     public function test_toggle_in_app_off_gera_linha_desativada_com_auditoria_e_so_mail_na_fila(): void

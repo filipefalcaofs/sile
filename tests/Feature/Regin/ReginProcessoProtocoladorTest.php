@@ -166,7 +166,9 @@ class ReginProcessoProtocoladorTest extends TestCase
 
         $this->assertSame('00000000000', $requerente->cpf);
         $this->assertFalse($requerente->temSenha());
-        $this->assertNotSame($servidor->id, $requerente->id);
+        $this->assertTrue($processo->requester->is($requerente));
+        $this->assertSame(Cidadao::class, $processo->requester->getMorphClass());
+        $this->assertNotSame(Cidadao::query()->whereKey($servidor->id)->value('cpf'), $requerente->cpf);
         $this->assertSame(User::class, $processo->created_by_type);
         $this->assertSame($servidor->id, $processo->created_by_id);
     }

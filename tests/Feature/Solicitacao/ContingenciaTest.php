@@ -12,8 +12,11 @@ use App\Models\User;
 use App\Models\ViabilityRequest;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Http\Client\Factory;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
@@ -348,6 +351,89 @@ class ContingenciaTest extends TestCase
 
         // Bloqueio anti-fachada: o processo NÃO é criado nem protocolado.
         $this->assertDatabaseCount('viability_requests', 0);
+    }
+
+    public function test_protocolo_bloqueado_desfaz_o_registro_de_balcao(): void
+    {
+        config(['sile.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
+        Http::fake(['*/pessoafisica/cpf/*' => Http::response(['nome' => 'Joana do Balcão'])]);
+        Notification::fake();
+
+        $company = Company::factory()->create();
+        $principal = Cnae::factory()->create();
+        DocumentRequirement::factory()->required()->create()->cnaes()->attach($principal->id);
+        $dados = $this->payload(Cidadao::factory()->make(['cpf' => '52998224725']), $company, $principal);
+
+        $this->actingAs($this->operador(), 'gestao')
+            ->from(route('gestao.contingencia.create'))
+            ->post(route('gestao.contingencia.store'), $dados)
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseCount('viability_requests', 0);
+        $this->assertSame(0, Cidadao::query()->count());
+        Notification::assertNothingSent();
+    }
+
+    public function test_sedur_indisponivel_bloqueia_sem_criar_com_mensagem_propria(): void
+    {
+        config(['sile.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
+        Http::fake(['*/pessoafisica/cpf/*' => Http::response([], 500)]);
+
+        $company = Company::factory()->create();
+        $principal = Cnae::factory()->create();
+        $dados = $this->payload(Cidadao::factory()->make(['cpf' => '52998224725']), $company, $principal);
+
+        $this->actingAs($this->operador(), 'gestao')
+            ->post(route('gestao.contingencia.store'), $dados)
+            ->assertSessionHasErrors(['beneficiary_cpf' => 'CPF sem cadastro no Viabiliza e a consulta da SEDUR está indisponível. Tente novamente.']);
+
+        $this->assertSame(0, Cidadao::query()->count());
+        $this->assertDatabaseCount('viability_requests', 0);
+    }
+
+    public function test_consulta_na_sedur_e_auditada_com_dado_pessoal_em_sucesso_nao_encontrado_e_indisponivel(): void
+    {
+        config(['sile.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
+        $operador = $this->operador();
+        $company = Company::factory()->create();
+        $principal = Cnae::factory()->create();
+        $dados = $this->payload(Cidadao::factory()->make(['cpf' => '52998224725']), $company, $principal);
+
+        foreach ([
+            ['resposta' => Http::response([], 404), 'resultado' => 'falha'],
+            ['resposta' => Http::response([], 500), 'resultado' => 'falha'],
+            ['resposta' => Http::response(['nome' => 'Joana']), 'resultado' => 'sucesso'],
+        ] as $caso) {
+            Http::swap(new Factory);
+            Http::fake(['*/pessoafisica/cpf/*' => $caso['resposta']]);
+
+            $this->actingAs($operador, 'gestao')->post(route('gestao.contingencia.store'), $dados);
+
+            $this->assertDatabaseHas('activity_log', [
+                'log_name' => 'contingencia',
+                'event' => 'consulta-cpf',
+                'result' => $caso['resultado'],
+                'personal_data' => true,
+            ]);
+        }
+
+        $this->assertSame(2, DB::table('activity_log')->where('log_name', 'contingencia')->where('event', 'consulta-cpf')->where('result', 'falha')->count());
+    }
+
+    public function test_outro_campo_invalido_nao_consulta_a_sedur(): void
+    {
+        config(['sile.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
+        Http::fake();
+
+        $company = Company::factory()->create();
+        $principal = Cnae::factory()->create();
+        $dados = $this->payload(Cidadao::factory()->make(['cpf' => '52998224725']), $company, $principal, ['contingency_reason' => '']);
+
+        $this->actingAs($this->operador(), 'gestao')
+            ->post(route('gestao.contingencia.store'), $dados)
+            ->assertSessionHasErrors('contingency_reason');
+
+        Http::assertNothingSent();
     }
 
     public function test_anexo_satisfaz_requisito_e_protocola(): void

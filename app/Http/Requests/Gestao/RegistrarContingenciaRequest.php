@@ -109,10 +109,6 @@ class RegistrarContingenciaRequest extends FormRequest
     {
         return [
             function (Validator $validator): void {
-                if (! $validator->errors()->has('beneficiary_cpf')) {
-                    $this->conferirBeneficiario($validator);
-                }
-
                 if (! $validator->errors()->has('company_cnpj') && $this->resolveCompany() === null) {
                     $validator->errors()->add('company_cnpj', 'Nenhuma empresa cadastrada com este CNPJ.');
                 }
@@ -122,6 +118,11 @@ class RegistrarContingenciaRequest extends FormRequest
 
                 if ($principal !== 0 && in_array($principal, $complementares, true)) {
                     $validator->errors()->add('complementares', 'A atividade principal não pode estar entre os CNAEs complementares.');
+                }
+
+                // Consulta externa (SEDUR) só com o restante válido: reenvio com erro não bate na SEDUR.
+                if ($validator->errors()->isEmpty()) {
+                    $this->conferirBeneficiario($validator);
                 }
             },
         ];
@@ -155,7 +156,7 @@ class RegistrarContingenciaRequest extends FormRequest
         }
 
         try {
-            $this->nomeNaSedur = app(RequerenteDeBalcao::class)->nomeNaSedur($cpf);
+            $this->nomeNaSedur = app(RequerenteDeBalcao::class)->nomeNaSedur($cpf, 'contingencia');
         } catch (SedurContatoNaoEncontradoException|SedurContatoIndisponivelException $e) {
             $validator->errors()->add('beneficiary_cpf', RequerenteDeBalcao::mensagemDeFalha($e));
         }

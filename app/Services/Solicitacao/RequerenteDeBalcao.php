@@ -3,7 +3,7 @@
 namespace App\Services\Solicitacao;
 
 use App\Models\Cidadao;
-use App\Services\Sedur\SedurContatoClient;
+use App\Services\Sedur\ConsultaCpfSedurService;
 use App\Services\Sedur\SedurContatoIndisponivelException;
 use App\Services\Sedur\SedurContatoNaoEncontradoException;
 
@@ -14,7 +14,7 @@ use App\Services\Sedur\SedurContatoNaoEncontradoException;
  */
 class RequerenteDeBalcao
 {
-    public function __construct(private SedurContatoClient $contato) {}
+    public function __construct(private ConsultaCpfSedurService $consulta) {}
 
     public function localizar(string $cpf): ?Cidadao
     {
@@ -25,11 +25,11 @@ class RequerenteDeBalcao
      * @throws SedurContatoNaoEncontradoException
      * @throws SedurContatoIndisponivelException
      */
-    public function nomeNaSedur(string $cpf): string
+    public function nomeNaSedur(string $cpf, string $auditLogName): string
     {
-        $nome = $this->contato->consultarCpf($cpf)->nome;
+        $nome = $this->consulta->consultar($cpf, $auditLogName)->nome;
 
-        if ($nome === '') {
+        if ($nome === null || $nome === '') {
             throw new SedurContatoNaoEncontradoException('CPF não encontrado na base da SEDUR.');
         }
 
@@ -40,10 +40,10 @@ class RequerenteDeBalcao
      * @throws SedurContatoNaoEncontradoException
      * @throws SedurContatoIndisponivelException
      */
-    public function resolver(string $cpf): Cidadao
+    public function resolver(string $cpf, string $auditLogName): Cidadao
     {
         return $this->localizar($cpf)
-            ?? Cidadao::criarRegistroDeBalcao($cpf, $this->nomeNaSedur($cpf), null, null);
+            ?? Cidadao::criarRegistroDeBalcao($cpf, $this->nomeNaSedur($cpf, $auditLogName), null, null);
     }
 
     public static function mensagemDeFalha(SedurContatoNaoEncontradoException|SedurContatoIndisponivelException $e): string

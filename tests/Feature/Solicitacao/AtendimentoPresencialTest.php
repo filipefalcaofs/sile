@@ -14,9 +14,11 @@ use App\Models\ViabilityServiceType;
 use App\Support\Representation\CurrentRepresentation;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Http\Client\Factory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Notification;
 use Inertia\Testing\AssertableInertia as Assert;
 use Symfony\Component\HttpFoundation\Response;
 use Tests\TestCase;
@@ -275,6 +277,56 @@ class AtendimentoPresencialTest extends TestCase
 
         $this->assertDatabaseCount('assisted_attendances', 0);
         $this->assertSame(0, Cidadao::query()->count());
+    }
+
+    public function test_registro_de_balcao_do_atendimento_nao_dispara_email_de_verificacao(): void
+    {
+        config(['sile.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
+        Http::fake(['*/pessoafisica/cpf/*' => Http::response(['nome' => 'Joana do Balcão'])]);
+        Notification::fake();
+
+        $this->actingAs($this->attendant(), 'gestao')
+            ->post('/gestao/atendimento', ['cpf' => '52998224725'])
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame(1, Cidadao::query()->count());
+        Notification::assertNothingSent();
+    }
+
+    public function test_sedur_indisponivel_bloqueia_o_atendimento_com_mensagem_propria(): void
+    {
+        config(['sile.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
+        Http::fake(['*/pessoafisica/cpf/*' => Http::response([], 500)]);
+
+        $this->actingAs($this->attendant(), 'gestao')
+            ->post('/gestao/atendimento', ['cpf' => '52998224725'])
+            ->assertSessionHasErrors(['cpf' => 'CPF sem cadastro no Viabiliza e a consulta da SEDUR está indisponível. Tente novamente.']);
+
+        $this->assertSame(0, Cidadao::query()->count());
+        $this->assertDatabaseCount('assisted_attendances', 0);
+    }
+
+    public function test_consulta_na_sedur_do_atendimento_e_auditada_com_dado_pessoal(): void
+    {
+        config(['sile.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
+        $attendant = $this->attendant();
+
+        foreach ([
+            [Http::response([], 404), 'falha'],
+            [Http::response([], 500), 'falha'],
+            [Http::response(['nome' => 'Joana']), 'sucesso'],
+        ] as [$resposta, $resultado]) {
+            Http::swap(new Factory);
+            Http::fake(['*/pessoafisica/cpf/*' => $resposta]);
+            $this->actingAs($attendant, 'gestao')->post('/gestao/atendimento', ['cpf' => '52998224725']);
+
+            $this->assertDatabaseHas('activity_log', [
+                'log_name' => 'atendimento',
+                'event' => 'consulta-cpf',
+                'result' => $resultado,
+                'personal_data' => true,
+            ]);
+        }
     }
 
     public function test_servidor_sem_cadastro_de_cidadao_nao_atende_o_proprio_cpf_nem_cria_registro(): void

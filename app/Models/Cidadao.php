@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Notifications\Notification;
@@ -27,6 +28,9 @@ class Cidadao extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<CidadaoFactory> */
     use CausesActivity, HasAuditoria, HasFactory, Notifiable;
+
+    /** Sufixo do e-mail técnico de registros de balcão sem e-mail próprio. */
+    public const SUFIXO_EMAIL_TECNICO = '@solicitante.viabiliza.local';
 
     protected $table = 'cidadaos';
 
@@ -72,10 +76,18 @@ class Cidadao extends Authenticatable implements MustVerifyEmail
         $cidadao = new self([
             'name' => $nome,
             'cpf' => $cpf,
-            'email' => ($email === null || $emailEmUso) ? $cpf.'@solicitante.viabiliza.local' : $email,
+            'email' => ($email === null || $emailEmUso) ? $cpf.self::SUFIXO_EMAIL_TECNICO : $email,
             'phone' => $telefone,
         ]);
-        $cidadao->save();
+
+        try {
+            $cidadao->save();
+        } catch (UniqueConstraintViolationException $e) {
+            // Corrida: outra requisição criou o mesmo CPF (ou e-mail) entre a checagem e o insert.
+            return self::query()->where('cpf', $cpf)->first()
+                ?? self::query()->where('email', $cidadao->email)->first()
+                ?? throw $e;
+        }
 
         return $cidadao;
     }

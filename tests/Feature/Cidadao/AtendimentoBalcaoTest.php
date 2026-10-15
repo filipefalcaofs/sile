@@ -4,6 +4,8 @@ namespace Tests\Feature\Cidadao;
 
 use App\Models\Cidadao;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class AtendimentoBalcaoTest extends TestCase
@@ -26,6 +28,42 @@ class AtendimentoBalcaoTest extends TestCase
 
         $this->assertTrue($cidadao->is($existente));
         $this->assertSame($existente->name, $cidadao->fresh()->name);
+    }
+
+    public function test_corrida_na_criacao_do_mesmo_cpf_devolve_o_registro_que_ganhou(): void
+    {
+        $vencedor = null;
+
+        Cidadao::creating(function (Cidadao $novo) use (&$vencedor): void {
+            if ($vencedor !== null) {
+                return;
+            }
+
+            $vencedor = true;
+            $id = DB::table('cidadaos')->insertGetId([
+                'name' => 'Quem Chegou Antes',
+                'cpf' => $novo->cpf,
+                'email' => 'antes@example.com',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+            $vencedor = $id;
+        });
+
+        $cidadao = Cidadao::criarRegistroDeBalcao('52998224725', 'Maria', 'maria@example.com', null);
+
+        $this->assertSame($vencedor, $cidadao->id);
+        $this->assertSame('Quem Chegou Antes', $cidadao->name);
+        $this->assertSame(1, Cidadao::query()->count());
+    }
+
+    public function test_registro_de_balcao_nao_recebe_email_de_verificacao(): void
+    {
+        Notification::fake();
+
+        Cidadao::criarRegistroDeBalcao('52998224725', 'Maria', 'maria@example.com', null);
+
+        Notification::assertNothingSent();
     }
 
     public function test_email_em_uso_recebe_endereco_tecnico_unico(): void

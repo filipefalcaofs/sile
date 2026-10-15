@@ -92,7 +92,7 @@ class AssistedAttendanceController extends Controller
         }
 
         try {
-            $citizen = $this->requerentes->resolver($cpf);
+            $citizen = $this->requerentes->resolver($cpf, 'atendimento');
         } catch (SedurContatoNaoEncontradoException|SedurContatoIndisponivelException $e) {
             throw ValidationException::withMessages(['cpf' => RequerenteDeBalcao::mensagemDeFalha($e)]);
         }

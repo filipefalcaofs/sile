@@ -48,6 +48,12 @@ class NotificationDispatcher
         $communicationIds = [];
 
         foreach ($this->mappedChannels($type->value) as $channel) {
+            if ($channel === CommunicationChannel::Email && $this->semCanalDeEmail($recipient)) {
+                $this->registrarSemCanal($recipient, $notification, $channel);
+
+                continue;
+            }
+
             if ($this->channelEnabled($channel) && $this->preferredByRecipient($recipient, $channel)) {
                 $communication = $this->queue($recipient, $notification, $channel);
                 $resolved[] = $channel;
@@ -73,6 +79,45 @@ class NotificationDispatcher
         }
 
         $recipient->notify($notification);
+    }
+
+    /**
+     * Registro de balcão sem e-mail próprio usa o endereço técnico do domínio
+     * reservado: não há caixa postal real para receber.
+     */
+    private function semCanalDeEmail(User|Cidadao $recipient): bool
+    {
+        return str_ends_with(strtolower((string) $recipient->email), Cidadao::SUFIXO_EMAIL_TECNICO);
+    }
+
+    private function registrarSemCanal(User|Cidadao $recipient, ProcessNotification $notification, CommunicationChannel $channel): void
+    {
+        $type = $notification->communicationType();
+
+        $communication = Communication::create([
+            'viability_request_id' => $notification->viabilityRequestId(),
+            'recipient_type' => $recipient->getMorphClass(),
+            'recipient_id' => $recipient->id,
+            'channel' => $channel,
+            'type' => $type,
+            'status' => CommunicationStatus::Bloqueado,
+            'title' => $type->label(),
+            'error_message' => 'Destinatário sem e-mail próprio (registro de balcão).',
+        ]);
+
+        $this->audit->log(
+            'notificacoes',
+            $type->value,
+            "Canal {$channel->label()} sem destinatário real para a comunicação {$type->label()}",
+            properties: [
+                'viability_request_id' => $notification->viabilityRequestId(),
+                'channel' => $channel->value,
+                'type' => $type->value,
+                'communication_id' => $communication->id,
+            ],
+            subject: $communication,
+            result: 'sem-canal',
+        );
     }
 
     /**
