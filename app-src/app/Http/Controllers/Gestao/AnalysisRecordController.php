@@ -127,8 +127,6 @@ class AnalysisRecordController extends Controller
             'localizacao' => $this->localizacaoDoImovel($viabilityRequest, $cadastro),
             'dadosTvl' => $this->dadosTvl($viabilityRequest, $record),
             'recepcao' => $this->recepcao($viabilityRequest),
-            'etapasMotor' => $this->etapasDoMotor($viabilityRequest),
-            'podeReprocessar' => (bool) request()->user()?->can('reprocessar-processos'),
             'cadastroImobiliario' => $cadastro,
             'tramitacao' => $this->tramitacao($viabilityRequest),
             'conclusaoOpcoes' => ConclusionOutcome::options(),
