@@ -788,14 +788,10 @@ function colunasProcessos(opcoes: {
             align: 'end',
             cell: (item) => (
                 <Link
-                    href={
-                        item.fluxo === 'expresso'
-                            ? `/gestao/processos/${item.id}/ficha`
-                            : `/gestao/processos/${item.id}`
-                    }
+                    href={`/gestao/processos/${item.id}`}
                     className="text-sm font-medium text-brand-600 hover:underline dark:text-brand-400"
                 >
-                    {item.fluxo === 'expresso' ? 'Abrir ficha' : 'Abrir'}
+                    Abrir
                 </Link>
             ),
         },
