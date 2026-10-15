@@ -35,7 +35,7 @@ class ProcessoDecisaoEndpointTest extends TestCase
 
     private function analista(): User
     {
-        return User::factory()->analista()->withAcceptedLgpdTerm()->create();
+        return User::factory()->analistaServidor()->withAcceptedLgpdTerm()->create();
     }
 
     private function semAnalisarProcessos(): User

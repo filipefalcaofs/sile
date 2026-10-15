@@ -111,6 +111,14 @@ class UserFactory extends Factory
     }
 
     /**
+     * Assign the Analista Servidor role, que também conclui processos (role must be seeded first).
+     */
+    public function analistaServidor(): static
+    {
+        return $this->afterCreating(fn (User $user) => $user->assignRole('Analista Servidor'));
+    }
+
+    /**
      * Assign the apoio role (role must be seeded first).
      */
     public function apoio(): static

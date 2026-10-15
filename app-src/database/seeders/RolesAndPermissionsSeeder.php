@@ -17,7 +17,6 @@ class RolesAndPermissionsSeeder extends Seeder
         'consultar-louos',
         'consultar-solicitacoes',
         'analisar-processos',
-        'concluir-analise',
         'reprocessar-processos',
         'encaminhar-malha-fina',
         'emitir-tvl',
@@ -38,6 +37,9 @@ class RolesAndPermissionsSeeder extends Seeder
     private const array PERFIS_ANALISE = ['Analista Terceirizado', 'Analista Servidor'];
 
     private const array PERFIS_CHEFIA = ['Coordenador', 'Subcoordenador', 'Chefe de setor'];
+
+    /** Perfis que podem deferir e indeferir (concluir-analise): as chefias e o Analista Servidor. */
+    private const array PERFIS_CONCLUSAO = ['Coordenador', 'Subcoordenador', 'Chefe de setor', 'Analista Servidor'];
 
     /**
      * Perfis herdados do sistema antigo da SEDUR: nascem sem permissão e o
@@ -119,6 +121,10 @@ class RolesAndPermissionsSeeder extends Seeder
 
         foreach (self::PERFIS_CHEFIA as $nome) {
             $this->perfil($nome)->givePermissionTo([...self::PERMISSOES_ANALISE, ...self::PERMISSOES_CHEFIA]);
+        }
+
+        foreach (self::PERFIS_CONCLUSAO as $nome) {
+            $this->perfil($nome)->givePermissionTo('concluir-analise');
         }
 
         // Apoio (tramitação): distribui os processos da caixa para um analista
