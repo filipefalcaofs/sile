@@ -138,21 +138,28 @@ Route::middleware(['auth:web', 'verified'])
             // Solicitações de viabilidade (HU-061) — rotas literais; as rotas
             // com {solicitacao} entram em 08-06/08-11. O store degrada de forma
             // comunicada com o toggle features.solicitacao_viabilidade off.
-            Route::get('renovacao', [RenovacaoController::class, 'index'])->name('renovacao.index');
-            Route::post('renovacao/consultar-cnpj', [RenovacaoController::class, 'consultarCnpj'])->name('renovacao.consultar-cnpj');
-            Route::get('renovacao/{origem}', [RenovacaoController::class, 'show'])->name('renovacao.show');
-            Route::post('renovacao/{origem}', [RenovacaoController::class, 'store'])->name('renovacao.store');
+            Route::get('renovacao', [RenovacaoController::class, 'index'])->middleware('portal.solicitacao')
+                ->name('renovacao.index');
+            Route::post('renovacao/consultar-cnpj', [RenovacaoController::class, 'consultarCnpj'])->middleware('portal.solicitacao')
+                ->name('renovacao.consultar-cnpj');
+            Route::get('renovacao/{origem}', [RenovacaoController::class, 'show'])->middleware('portal.solicitacao')
+                ->name('renovacao.show');
+            Route::post('renovacao/{origem}', [RenovacaoController::class, 'store'])->middleware('portal.solicitacao')
+                ->name('renovacao.store');
 
             Route::get('solicitacoes', [SolicitacaoController::class, 'index'])->name('solicitacoes.index');
-            Route::post('solicitacoes', [SolicitacaoController::class, 'store'])->name('solicitacoes.store');
+            Route::post('solicitacoes', [SolicitacaoController::class, 'store'])->middleware('portal.solicitacao')
+                ->name('solicitacoes.store');
 
             // Wizard multi-etapas (HU-061..067, 141) — rotas GET que RENDERIZAM o
             // wizard. 'nova' é LITERAL e precisa vir ANTES de solicitacoes/{solicitacao}
             // (08-11 show) para não ser capturada como id. 'editar' continua um
             // rascunho existente (policy update, dono + rascunho). São DISTINTAS da
             // GET solicitacoes/{solicitacao} (página de protocolo/consulta do 08-11).
-            Route::get('solicitacoes/nova', [SolicitacaoController::class, 'create'])->name('solicitacoes.create');
-            Route::get('solicitacoes/{solicitacao}/editar', [SolicitacaoController::class, 'edit'])->name('solicitacoes.edit');
+            Route::get('solicitacoes/nova', [SolicitacaoController::class, 'create'])->middleware('portal.solicitacao')
+                ->name('solicitacoes.create');
+            Route::get('solicitacoes/{solicitacao}/editar', [SolicitacaoController::class, 'edit'])->middleware('portal.solicitacao')
+                ->name('solicitacoes.edit');
 
             // Consulta AUTENTICADA do protocolo (HU-069) — rota com {solicitacao}
             // DEPOIS das literais. Dono/representado (policy view) acompanha a
@@ -168,29 +175,34 @@ Route::middleware(['auth:web', 'verified'])
             // Atividades da solicitação (HU-064/HU-065) — rota com {solicitacao}
             // DEPOIS das literais. Define o CNAE principal + complementares
             // (até o limite parametrizável) só do dono em rascunho (policy).
-            Route::put('solicitacoes/{solicitacao}/atividades', [SolicitacaoAtividadeController::class, 'update'])->name('solicitacoes.atividades');
+            Route::put('solicitacoes/{solicitacao}/atividades', [SolicitacaoAtividadeController::class, 'update'])->middleware('portal.solicitacao')
+                ->name('solicitacoes.atividades');
 
             // Imóvel + área da solicitação (HU-062/HU-063) — rota com
             // {solicitacao} DEPOIS das literais. Grava o polígono (fonte GeoJSON),
             // identifica o território (Fase 4) e valida área×polígono; só do dono
             // em rascunho (policy update).
-            Route::put('solicitacoes/{solicitacao}/imovel', [SolicitacaoImovelController::class, 'update'])->name('solicitacoes.imovel');
+            Route::put('solicitacoes/{solicitacao}/imovel', [SolicitacaoImovelController::class, 'update'])->middleware('portal.solicitacao')
+                ->name('solicitacoes.imovel');
 
             // Documentos da solicitação (HU-066) — rotas com {solicitacao} DEPOIS
             // das literais. Upload via Storage (disk parametrizado, nunca público)
             // com sha256; download por STREAMING só do dono autenticado (LGPD);
             // substituição/remoção só em rascunho. {documento} é validado contra a
             // solicitação no controller (anti-IDOR).
-            Route::post('solicitacoes/{solicitacao}/documentos', [SolicitacaoDocumentoController::class, 'store'])->name('solicitacoes.documentos.store');
+            Route::post('solicitacoes/{solicitacao}/documentos', [SolicitacaoDocumentoController::class, 'store'])->middleware('portal.solicitacao')
+                ->name('solicitacoes.documentos.store');
             Route::get('solicitacoes/{solicitacao}/documentos/{documento}/download', [SolicitacaoDocumentoController::class, 'download'])->name('solicitacoes.documentos.download');
-            Route::delete('solicitacoes/{solicitacao}/documentos/{documento}', [SolicitacaoDocumentoController::class, 'destroy'])->name('solicitacoes.documentos.destroy');
+            Route::delete('solicitacoes/{solicitacao}/documentos/{documento}', [SolicitacaoDocumentoController::class, 'destroy'])->middleware('portal.solicitacao')
+                ->name('solicitacoes.documentos.destroy');
 
             // Simulação pré-protocolo (HU-141) — rota com {solicitacao} DEPOIS
             // das literais. Reusa o ConsultaViabilidadeService da Fase 7 por
             // CNAE/ponto, propaga o veredito do motor LOUOS e persiste o snapshot;
             // ORIENTATIVA, NÃO bloqueia o protocolo. Só do dono em rascunho
             // (policy update); toggle features.simulacao_solicitacao degrada.
-            Route::post('solicitacoes/{solicitacao}/simular', [SolicitacaoSimulacaoController::class, 'store'])->name('solicitacoes.simular');
+            Route::post('solicitacoes/{solicitacao}/simular', [SolicitacaoSimulacaoController::class, 'store'])->middleware('portal.solicitacao')
+                ->name('solicitacoes.simular');
 
             // Protocolar a solicitação (HU-068) — rota com {solicitacao} DEPOIS
             // das literais. Valida documentos obrigatórios (bloqueia com aviso se
@@ -198,7 +210,8 @@ Route::middleware(['auth:web', 'verified'])
             // rascunho→protocolada (timeline + auditoria) e dispara o primeiro
             // evento de domínio após o commit. Só do dono em rascunho (policy
             // protocol); toggle features.solicitacao_viabilidade degrada.
-            Route::post('solicitacoes/{solicitacao}/protocolar', [ProtocoloController::class, 'store'])->name('solicitacoes.protocolar');
+            Route::post('solicitacoes/{solicitacao}/protocolar', [ProtocoloController::class, 'store'])->middleware('portal.solicitacao')
+                ->name('solicitacoes.protocolar');
 
             // Cancelar a solicitação (HU-070) — rota com {solicitacao} DEPOIS das
             // literais. Só o dono enquanto não decidida (policy cancel); o
