@@ -295,13 +295,25 @@ class LoginController extends Controller
 
         $sincronizacaoFalhou = $resultado->sincronizacaoFalhou;
 
-        // Sincronização cadastral com minimização: somente o nome oficial.
-        // name está no fillable — a auditoria HasAuditoria registra a mudança.
-        if ($resultado->nome !== null && $resultado->nome !== $user->name) {
-            $user->update(['name' => $resultado->nome]);
+        // Sincronização cadastral pela pessoaView: nome, telefone e e-mail
+        // oficiais. O e-mail só muda se nenhuma outra conta já o usa. A
+        // auditoria HasAuditoria registra a mudança.
+        $cadastro = array_filter([
+            'name' => $resultado->nome,
+            'phone' => $resultado->telefone,
+            'email' => $resultado->email !== null
+                && ! User::query()->where('email', $resultado->email)->whereKeyNot($user->id)->exists()
+                ? $resultado->email
+                : null,
+        ], fn (?string $valor): bool => $valor !== null);
+
+        $user->fill($cadastro);
+
+        if ($user->isDirty()) {
+            $user->save();
         }
 
-        // Lotação via discovery (mesmo token transitório). Falha aqui não
+        // Lotação via discovery ou pessoaView (mesmo token transitório). Falha aqui não
         // derruba o login — identidade já validada no /auth.
         if ($resultado->setorCodigo !== null || $resultado->setorNome !== null) {
             try {
@@ -354,7 +366,7 @@ class LoginController extends Controller
 
     /**
      * Limite por IP (além do por conta): contém password spraying — muitas
-     * contas, uma senha — que a chave email|ip não pega. Sem ele, o SILE
+     * contas, uma senha — que a chave email|ip não pega. Sem ele, o VIABILIZA
      * vira proxy de força bruta contra o AD institucional.
      */
     private function ensureIpIsNotRateLimited(LoginRequest $request): void
