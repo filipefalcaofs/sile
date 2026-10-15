@@ -30,6 +30,9 @@ import GestaoLayout from '@/layouts/gestao-layout';
 import type { SharedProps } from '@/types';
 
 interface TimelineItem {
+    /** status | analise | atribuicao | pendencia | vistoria | malha_fina | documento | integracao */
+    tipo?: string;
+    resultado?: string | null;
     from: string | null;
     from_label: string | null;
     to: string;
@@ -74,6 +77,16 @@ interface ShowProps {
 }
 
 type Aba = 'informacoes' | 'tramitacao' | 'explicabilidade';
+
+const ROTULOS_TIPO: Record<string, string> = {
+    analise: 'Análise',
+    atribuicao: 'Atribuição',
+    pendencia: 'Pendência',
+    vistoria: 'Vistoria',
+    malha_fina: 'Malha fina',
+    documento: 'Documento',
+    integracao: 'Integração',
+};
 
 /** Centroide do anel exterior do polígono (média dos vértices em [lng, lat]). */
 function centroide(poligono: Polygon | null): { lat: number; lng: number } | null {
@@ -127,9 +140,9 @@ function formatarDuracao(inicioIso: string | null, fimIso: string | null): strin
     return `${Math.round(horas / 24)} dias`;
 }
 
-function DescItem({ label, children }: { label: string; children: ReactNode }) {
+function DescItem({ label, children, className }: { label: string; children: ReactNode; className?: string }) {
     return (
-        <div>
+        <div className={className}>
             <dt className="text-theme-xs font-medium tracking-wide text-gray-400 uppercase dark:text-gray-500">
                 {label}
             </dt>
@@ -355,6 +368,9 @@ export default function Show({
                                     <dl className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                                         <DescItem label="Empresa">{processo.empresa ?? '—'}</DescItem>
                                         <DescItem label="CNPJ">{processo.cnpj ?? '—'}</DescItem>
+                                        <DescItem label="CNAE" className="sm:col-span-2">
+                                            {processo.cnaes ?? '—'}
+                                        </DescItem>
                                         <DescItem label="Imóvel">{processo.endereco_completo || processo.imovel || '—'}</DescItem>
                                         <DescItem label="Inscrição imobiliária">{processo.inscricao ?? '—'}</DescItem>
                                         <DescItem label="Tipo de imóvel">{processo.tipo_imovel ?? '—'}</DescItem>
@@ -484,7 +500,7 @@ export default function Show({
                             <Card>
                                 <CardHeader
                                     title="Tramitação"
-                                    description="Linha do tempo das transições de estado, com o tempo em cada etapa."
+                                    description="Linha do tempo completa do processo: mudanças de situação, análise, atribuições, pendências e envios à JUCEB e à SEFAZ."
                                 />
                                 <CardContent>
                                     {eventos.length === 0 ? (
@@ -495,14 +511,26 @@ export default function Show({
                                     ) : (
                                         <ol className="relative space-y-6 border-l border-gray-200 pl-6 dark:border-gray-800">
                                             {eventos.map((evento, index) => {
-                                                const duracao = formatarDuracao(
-                                                    evento.em,
-                                                    eventos[index + 1]?.em ?? null,
-                                                );
+                                                const status = (evento.tipo ?? 'status') === 'status';
+                                                const proximoStatus = eventos
+                                                    .slice(index + 1)
+                                                    .find((outro) => (outro.tipo ?? 'status') === 'status');
+                                                const duracao = status ? formatarDuracao(evento.em, proximoStatus?.em ?? null) : null;
+                                                const rotuloTipo = ROTULOS_TIPO[evento.tipo ?? 'status'];
 
                                                 return (
-                                                    <li key={`${evento.to}-${evento.em}-${index}`} className="relative">
-                                                        <span className="absolute top-1 -left-[1.4rem] size-3 rounded-full border-2 border-white bg-brand-500 dark:border-gray-900" />
+                                                    <li key={`${evento.tipo ?? 'status'}-${evento.to}-${evento.em}-${index}`} className="relative">
+                                                        <span
+                                                            className={`absolute top-1 -left-[1.4rem] size-3 rounded-full border-2 border-white dark:border-gray-900 ${
+                                                                status
+                                                                    ? 'bg-brand-500'
+                                                                    : evento.resultado === 'bloqueado'
+                                                                      ? 'bg-warning-500'
+                                                                      : evento.tipo === 'integracao'
+                                                                        ? 'bg-success-500'
+                                                                        : 'bg-gray-400'
+                                                            }`}
+                                                        />
                                                         <div className="flex flex-wrap items-center gap-2">
                                                             <span className="text-theme-sm font-medium text-gray-800 dark:text-white/90">
                                                                 {evento.to_label}
@@ -525,6 +553,20 @@ export default function Show({
                                                             {duracao && (
                                                                 <Badge color="light" size="sm">
                                                                     {duracao}
+                                                                </Badge>
+                                                            )}
+                                                            {!status && rotuloTipo && (
+                                                                <Badge
+                                                                    color={
+                                                                        evento.resultado === 'bloqueado'
+                                                                            ? 'warning'
+                                                                            : evento.tipo === 'integracao'
+                                                                              ? 'success'
+                                                                              : 'light'
+                                                                    }
+                                                                    size="sm"
+                                                                >
+                                                                    {rotuloTipo}
                                                                 </Badge>
                                                             )}
                                                         </div>

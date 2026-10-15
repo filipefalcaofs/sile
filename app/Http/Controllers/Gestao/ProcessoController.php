@@ -17,6 +17,7 @@ use App\Models\ViabilityServiceType;
 use App\Services\Analise\AnalysisStatusStateMachine;
 use App\Services\Analise\InvalidAnalysisStatusTransitionException;
 use App\Services\Analise\ProcessoQueryService;
+use App\Services\Analise\TramitacaoProcessoService;
 use App\Services\Auditoria\DecisionExplanationService;
 use App\Services\Geo\DivergenciaLogradouroInscricao;
 use App\Services\Relatorios\Export\ReportExporter;
@@ -256,14 +257,16 @@ class ProcessoController extends Controller
     {
         $distribuidor = $this->distribuidorDoProcesso($viabilityRequest);
 
-        return $viabilityRequest->transitions->load('actor')->map(fn ($transicao): array => [
+        $status = $viabilityRequest->transitions->load('actor')->map(fn ($transicao): array => [
+            'tipo' => 'status',
+            'resultado' => null,
             'from' => $transicao->from_status?->value,
             'from_label' => $transicao->from_status?->label(),
             'to' => $transicao->to_status->value,
             'to_label' => $transicao->to_status->label(),
             'reason' => $transicao->reason,
             'em' => $transicao->created_at?->toIso8601String(),
-            'ator' => $transicao->actor?->name,
+            'ator' => $transicao->actor?->isAtorOcultoNaTramitacao() ? null : $transicao->actor?->name,
             'atribuido' => $transicao->to_status === ViabilityRequestStatus::EmAnalise
                 ? $viabilityRequest->assignedTo?->name
                 : null,
@@ -271,6 +274,12 @@ class ProcessoController extends Controller
                 ? $distribuidor
                 : null,
         ])->all();
+
+        $linha = [...$status, ...app(TramitacaoProcessoService::class)->eventos($viabilityRequest)];
+
+        usort($linha, fn (array $a, array $b): int => strcmp((string) $b['em'], (string) $a['em']));
+
+        return $linha;
     }
 
     /**
@@ -296,9 +305,9 @@ class ProcessoController extends Controller
             return null;
         }
 
-        $nome = User::query()->whereKey($atorId)->value('name');
+        $ator = User::query()->find($atorId);
 
-        return is_string($nome) ? $nome : null;
+        return $ator === null || $ator->isAtorOcultoNaTramitacao() ? null : $ator->name;
     }
 
     /**

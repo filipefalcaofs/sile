@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Analise\DistribuicaoService;
+use App\Support\Audit\AuditService;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -130,6 +131,33 @@ class ProcessoUiSmokeTest extends TestCase
                 ->where('geo.ponto', null));
     }
 
+    public function test_tramitacao_inclui_os_envios_a_juceb_e_sefaz_sem_registros_tecnicos(): void
+    {
+        $processo = $this->processo(['status' => ViabilityRequestStatus::Deferida]);
+        $audit = app(AuditService::class);
+
+        $audit->log('integracoes', 'regin-parecer', 'Parecer (deferida) comunicado ao Regin/Junta', subject: $processo, result: 'bloqueado');
+        $audit->log('integracoes', 'regin-parecer', 'Parecer (deferida) comunicado ao Regin/Junta', subject: $processo, result: 'sucesso');
+        $audit->log('integracoes', 'sefaz-viabilidade', 'Envio à SEFAZ pendente', subject: $processo, result: 'bloqueado');
+        $audit->log('integracoes', 'sefaz-viabilidade', 'Envio à SEFAZ não se aplica', subject: $processo, result: 'ignorado');
+        $audit->log('analise', 'consulta-processo', 'Consulta do processo', subject: $processo);
+        $audit->log('analise', 'ficha-autosave', 'Autosave da ficha', subject: $processo);
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get("/gestao/processos/{$processo->id}")
+            ->assertOk()
+            ->assertInertia(function (Assert $page) {
+                $titulos = collect($page->toArray()['props']['timeline'])->pluck('to_label')->all();
+
+                $this->assertContains('Envio do parecer à JUCEB não confirmado', $titulos);
+                $this->assertContains('Parecer enviado à JUCEB (REGIN)', $titulos);
+                $this->assertContains('Envio à SEFAZ pendente', $titulos);
+                $this->assertNotContains('Consulta do processo', $titulos);
+                $this->assertCount(1, array_keys($titulos, 'Envio à SEFAZ pendente'));
+                $this->assertNotContains('Autosave da ficha', $titulos);
+            });
+    }
+
     public function test_detalhe_mostra_o_parecer_com_o_motivo_do_indeferimento(): void
     {
         $processo = $this->processo(['status' => ViabilityRequestStatus::Indeferida]);
@@ -192,6 +220,33 @@ class ProcessoUiSmokeTest extends TestCase
         $this->assertSame($apoio->name, $emAnalise['distribuidor']);
         $this->assertSame('Lisa Sousa', $emAnalise['atribuido']);
         $this->assertNull($protocolada['distribuidor']);
+    }
+
+    public function test_tramitacao_omite_o_ator_de_conta_de_desenvolvedor(): void
+    {
+        config(['viabiliza.tramitacao.atores_ocultos.emails' => ['dev@exemplo.test']]);
+        $dev = User::factory()->create(['name' => 'Pessoa Dev', 'email' => 'Dev@Exemplo.test']);
+        $outro = User::factory()->create(['name' => 'Filipe Protocolo']);
+
+        $processo = $this->processo(['status' => ViabilityRequestStatus::EmAnalise]);
+        $processo->transitions()->create([
+            'from_status' => ViabilityRequestStatus::Rascunho,
+            'to_status' => ViabilityRequestStatus::Protocolada,
+            'actor_user_id' => $dev->id,
+        ]);
+        $processo->transitions()->create([
+            'from_status' => ViabilityRequestStatus::Protocolada,
+            'to_status' => ViabilityRequestStatus::EmAnalise,
+            'actor_user_id' => $outro->id,
+        ]);
+
+        $timeline = $this->actingAs($this->analista(), 'gestao')
+            ->get("/gestao/processos/{$processo->id}")
+            ->assertOk()
+            ->viewData('page')['props']['timeline'];
+
+        $this->assertNull(collect($timeline)->firstWhere('to', ViabilityRequestStatus::Protocolada->value)['ator']);
+        $this->assertSame('Filipe Protocolo', collect($timeline)->firstWhere('to', ViabilityRequestStatus::EmAnalise->value)['ator']);
     }
 
     public function test_detalhe_mostra_o_ponto_do_cadastro_quando_nao_ha_poligono(): void
