@@ -14,7 +14,7 @@ use Tests\TestCase;
  * página existe (resources/js/pages/portal/viabilidade/historico.tsx), o teste
  * reativa a asserção do componente Inertia que o 07-07 deixou pendente. Reforça
  * o contrato server-side da tela: o componente renderizado, o escopo do dono
- * (forUser — precedente "Minhas empresas") e a exigência de autenticação.
+ * (forCidadao — precedente "Minhas empresas") e a exigência de autenticação.
  */
 class HistoricoConsultaPaginaTest extends TestCase
 {

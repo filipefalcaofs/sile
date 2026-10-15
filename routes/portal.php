@@ -105,7 +105,7 @@ Route::middleware(['auth:web', 'verified'])
 
             // Histórico autenticado das consultas de viabilidade do próprio
             // usuário (HU-060) — rota literal, sem conflito com a pública
-            // viabilidade.index (07-06). Escopo do dono no controller (forUser).
+            // viabilidade.index (07-06). Escopo do dono no controller (forCidadao).
             Route::get('viabilidade/historico', HistoricoConsultaController::class)->name('viabilidade.historico');
 
             Route::get('procuracoes', [ProcurationController::class, 'index'])->name('procuracoes.index');

@@ -36,6 +36,7 @@ const EVIDENCIA_LABEL: Record<string, string> = {
     total: 'Total',
     limite: 'Limite',
     ids: 'Processos',
+    // Chave legada: evidência gravada antes da separação cidadão x servidor.
     created_by_user_id: 'Representante',
     created_by_type: 'Tipo do representante',
     created_by_id: 'Representante',
@@ -44,6 +45,7 @@ const EVIDENCIA_LABEL: Record<string, string> = {
     enderecos_distintos: 'Endereços distintos',
     minimo: 'Mínimo',
     requester_cidadao_id: 'Requerente',
+    // Chave legada: evidência gravada antes da separação cidadão x servidor.
     requester_user_id: 'Requerente',
     processos: 'Processos',
     inscricao: 'Inscrição',
