@@ -127,9 +127,9 @@ function formatarDuracao(inicioIso: string | null, fimIso: string | null): strin
     return `${Math.round(horas / 24)} dias`;
 }
 
-function DescItem({ label, children }: { label: string; children: ReactNode }) {
+function DescItem({ label, children, className }: { label: string; children: ReactNode; className?: string }) {
     return (
-        <div>
+        <div className={className}>
             <dt className="text-theme-xs font-medium tracking-wide text-gray-400 uppercase dark:text-gray-500">
                 {label}
             </dt>
@@ -355,6 +355,9 @@ export default function Show({
                                     <dl className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                                         <DescItem label="Empresa">{processo.empresa ?? '—'}</DescItem>
                                         <DescItem label="CNPJ">{processo.cnpj ?? '—'}</DescItem>
+                                        <DescItem label="CNAE" className="sm:col-span-2">
+                                            {processo.cnaes ?? '—'}
+                                        </DescItem>
                                         <DescItem label="Imóvel">{processo.endereco_completo || processo.imovel || '—'}</DescItem>
                                         <DescItem label="Inscrição imobiliária">{processo.inscricao ?? '—'}</DescItem>
                                         <DescItem label="Tipo de imóvel">{processo.tipo_imovel ?? '—'}</DescItem>
