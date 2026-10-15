@@ -194,6 +194,33 @@ class ProcessoUiSmokeTest extends TestCase
         $this->assertNull($protocolada['distribuidor']);
     }
 
+    public function test_tramitacao_omite_o_ator_de_conta_de_desenvolvedor(): void
+    {
+        config(['sile.tramitacao.atores_ocultos.emails' => ['dev@exemplo.test']]);
+        $dev = User::factory()->create(['name' => 'Pessoa Dev', 'email' => 'Dev@Exemplo.test']);
+        $outro = User::factory()->create(['name' => 'Filipe Protocolo']);
+
+        $processo = $this->processo(['status' => ViabilityRequestStatus::EmAnalise]);
+        $processo->transitions()->create([
+            'from_status' => ViabilityRequestStatus::Rascunho,
+            'to_status' => ViabilityRequestStatus::Protocolada,
+            'actor_user_id' => $dev->id,
+        ]);
+        $processo->transitions()->create([
+            'from_status' => ViabilityRequestStatus::Protocolada,
+            'to_status' => ViabilityRequestStatus::EmAnalise,
+            'actor_user_id' => $outro->id,
+        ]);
+
+        $timeline = $this->actingAs($this->analista(), 'gestao')
+            ->get("/gestao/processos/{$processo->id}")
+            ->assertOk()
+            ->viewData('page')['props']['timeline'];
+
+        $this->assertNull(collect($timeline)->firstWhere('to', ViabilityRequestStatus::Protocolada->value)['ator']);
+        $this->assertSame('Filipe Protocolo', collect($timeline)->firstWhere('to', ViabilityRequestStatus::EmAnalise->value)['ator']);
+    }
+
     public function test_detalhe_mostra_o_ponto_do_cadastro_quando_nao_ha_poligono(): void
     {
         $processo = $this->processo(['property_polygon_geojson' => null]);

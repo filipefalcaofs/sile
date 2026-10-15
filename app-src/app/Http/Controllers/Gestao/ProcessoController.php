@@ -263,7 +263,7 @@ class ProcessoController extends Controller
             'to_label' => $transicao->to_status->label(),
             'reason' => $transicao->reason,
             'em' => $transicao->created_at?->toIso8601String(),
-            'ator' => $transicao->actor?->name,
+            'ator' => $transicao->actor?->isAtorOcultoNaTramitacao() ? null : $transicao->actor?->name,
             'atribuido' => $transicao->to_status === ViabilityRequestStatus::EmAnalise
                 ? $viabilityRequest->assignedTo?->name
                 : null,
@@ -296,9 +296,9 @@ class ProcessoController extends Controller
             return null;
         }
 
-        $nome = User::query()->whereKey($atorId)->value('name');
+        $ator = User::query()->find($atorId);
 
-        return is_string($nome) ? $nome : null;
+        return $ator === null || $ator->isAtorOcultoNaTramitacao() ? null : $ator->name;
     }
 
     /**

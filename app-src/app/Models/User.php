@@ -57,6 +57,18 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Conta de desenvolvedor/suporte, omitida como autor na tramitação.
+     */
+    public function isAtorOcultoNaTramitacao(): bool
+    {
+        $emails = array_map('mb_strtolower', (array) config('sile.tramitacao.atores_ocultos.emails'));
+        $usernames = array_map('mb_strtolower', (array) config('sile.tramitacao.atores_ocultos.ad_usernames'));
+
+        return in_array(mb_strtolower((string) $this->email), $emails, true)
+            || ($this->ad_username !== null && in_array(mb_strtolower($this->ad_username), $usernames, true));
+    }
+
+    /**
      * Equipe SEDUR: conta do AD corporativo ou com perfil que dá acesso à gestão.
      */
     public function scopeEquipeSedur(Builder $query): Builder
