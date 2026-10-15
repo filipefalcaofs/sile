@@ -17,6 +17,56 @@ use Illuminate\Support\Facades\Http;
  */
 class SedurAuthClient
 {
+    /**
+     * Blocos da pessoaView que podem trazer o centro de informação, na ordem de
+     * preferência. O formato real (SEDUR, 15/10/2026) traz o centro na raiz:
+     * centroInformacaoNumero e centroInformacaoDescricao.
+     */
+    private const array BLOCOS_LOTACAO_PESSOA = [
+        'centroInformacao',
+        'centro_informacao',
+        'centroDeInformacao',
+        'centrosInformacao',
+        'cein',
+        'lotacaoAtual',
+        'lotacao',
+        'lotacoes',
+        'setor',
+        'unidade',
+    ];
+
+    private const array CHAVES_CODIGO_CENTRO = [
+        'centroInformacaoNumero',
+        'ceinNumero',
+        'CEIN_NUMERO',
+        'cein_numero',
+        'codigoCein',
+        'codigoCentroInformacao',
+        'codigo_centro_informacao',
+        'codigoCentro',
+        'codigo_centro',
+        'codigoLotacao',
+        'codigoSetor',
+    ];
+
+    private const array CHAVES_NOME_CENTRO = [
+        'centroInformacaoDescricao',
+        'ceinDescricao',
+        'CEIN_DESCRICAO',
+        'cein_descricao',
+        'descricaoCein',
+        'descricaoCentroInformacao',
+        'descricao_centro_informacao',
+        'nomeCentroInformacao',
+        'nomeCentro',
+        'nome_centro',
+        'descricaoLotacao',
+        'nomeLotacao',
+        'setorNome',
+        'setor_nome',
+        'nomeSetor',
+    ];
+
     public function __construct(private SedurAuthSettings $settings) {}
 
     /**
@@ -175,7 +225,7 @@ class SedurAuthClient
      * Busca a pessoa pelo CPF e extrai SOMENTE o nome (minimização LGPD): o
      * restante do payload é descartado na mesma request, sem persistência.
      *
-     * @return array{nome: ?string, email: ?string, telefone: ?string}
+     * @return array{nome: ?string, email: ?string, telefone: ?string, lotacaoCodigo: ?string, lotacaoNome: ?string}
      *
      * @throws SedurAuthUnavailableException API fora ou erro HTTP
      */
@@ -198,11 +248,57 @@ class SedurAuthClient
         $payload = $response->json();
         $dados = is_array($payload) ? $payload : [];
 
+        $lotacao = $this->extractLotacaoPessoa($dados);
+
         return [
             'nome' => $this->firstString($dados, ['nome', 'name', 'nomeCompleto', 'nome_completo']),
             'email' => $this->firstString($dados, ['email', 'mail', 'emailInstitucional', 'email_institucional']),
             'telefone' => $this->firstString($dados, ['telefone', 'phone', 'celular']),
+            'lotacaoCodigo' => $lotacao['codigo'],
+            'lotacaoNome' => $lotacao['nome'],
         ];
+    }
+
+    /**
+     * Extrai o centro de informação (setor no RH) da resposta da pessoaView.
+     * Diferente do discovery, a raiz dessa resposta é a pessoa: `nome` e
+     * `codigo` soltos na raiz NÃO são setor. Lê blocos de lotação (objeto,
+     * lista ou texto) e, na raiz, só chaves próprias do centro de informação.
+     *
+     * @param  array<string, mixed>  $payload
+     * @return array{codigo: ?string, nome: ?string}
+     */
+    public function extractLotacaoPessoa(array $payload): array
+    {
+        foreach (self::BLOCOS_LOTACAO_PESSOA as $chave) {
+            $bloco = $payload[$chave] ?? null;
+
+            if (is_string($bloco) && trim($bloco) !== '') {
+                return ['codigo' => null, 'nome' => trim($bloco)];
+            }
+
+            if (! is_array($bloco) || $bloco === []) {
+                continue;
+            }
+
+            $bloco = array_is_list($bloco) ? $bloco[0] : $bloco;
+
+            if (! is_array($bloco)) {
+                continue;
+            }
+
+            $codigo = $this->firstString($bloco, [...self::CHAVES_CODIGO_CENTRO, 'codigo', 'code', 'numero', 'id']);
+            $nome = $this->firstString($bloco, [...self::CHAVES_NOME_CENTRO, 'nome', 'name', 'descricao', 'sigla']);
+
+            if ($codigo !== null || $nome !== null) {
+                return ['codigo' => $codigo, 'nome' => $nome];
+            }
+        }
+
+        $codigo = $this->firstString($payload, self::CHAVES_CODIGO_CENTRO);
+        $nome = $this->firstString($payload, self::CHAVES_NOME_CENTRO);
+
+        return ['codigo' => $codigo, 'nome' => $nome];
     }
 
     /**

@@ -107,7 +107,7 @@ class GestaoLoginAdTest extends TestCase
         $this->assertDatabaseMissing('users', ['remember_token' => 'tk-fake']);
     }
 
-    public function test_usuario_ad_autentica_pela_api_e_sincroniza_o_nome(): void
+    public function test_usuario_ad_autentica_pela_api_e_sincroniza_o_cadastro(): void
     {
         $this->fakeAdSucesso();
 
@@ -128,7 +128,7 @@ class GestaoLoginAdTest extends TestCase
             && $request['senha'] === 'senha-corporativa');
 
         $this->assertSame('Nome Sincronizado', $servidor->fresh()->name);
-        $this->assertSame($servidor->phone, $servidor->fresh()->phone);
+        $this->assertSame('71999990000', $servidor->fresh()->phone);
 
         $this->assertDatabaseHas('access_logs', [
             'user_id' => $servidor->id,

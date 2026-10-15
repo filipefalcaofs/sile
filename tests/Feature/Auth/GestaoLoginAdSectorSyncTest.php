@@ -121,4 +121,68 @@ class GestaoLoginAdSectorSyncTest extends TestCase
             $servidor->fresh()->sectors()->where('code', '8888888888')->exists(),
         );
     }
+
+    public function test_login_ad_vincula_o_setor_do_centro_de_informacao_da_pessoa_view(): void
+    {
+        Http::fake([
+            '*/ws-autenticacao/auth' => Http::response(['token' => 'tk-fake']),
+            '*/ws-autenticacao/discovery' => Http::response(['usuario' => 'seuusuarioad']),
+            '*/pessoaView/buscarPorCPF/*' => Http::response([
+                'nome' => 'Maria Analista',
+                'telefone' => '71988887777',
+                'centroInformacaoNumero' => '0231400300',
+                'centroInformacaoDescricao' => 'SEDUR-DLI-CAP-ATIV-Subcoordenadoria de Atividade',
+            ]),
+        ]);
+
+        $servidor = User::factory()->administrador()->ad('seuusuarioad')->create([
+            'phone' => null,
+        ]);
+
+        $this->post('/gestao/login', [
+            'identifier' => 'seuusuarioad',
+            'password' => 'senha-corporativa',
+        ])->assertRedirect('/gestao');
+
+        $servidor->refresh();
+        $this->assertSame('Maria Analista', $servidor->name);
+        $this->assertSame('71988887777', $servidor->phone);
+        $this->assertTrue($servidor->sectors()->where('code', '0231400300')->exists());
+        $this->assertDatabaseMissing('sectors', ['name' => 'Maria Analista']);
+        $this->assertDatabaseHas('user_sector_assignments', [
+            'user_id' => $servidor->id,
+            'source' => 'discovery',
+            'ended_at' => null,
+        ]);
+    }
+
+    public function test_login_ad_atualiza_o_email_pela_pessoa_view(): void
+    {
+        $this->fakePessoaComEmail('servidor@salvador.ba.gov.br');
+        $servidor = User::factory()->administrador()->ad('seuusuarioad')->create(['email' => 'antigo@example.com']);
+
+        $this->post('/gestao/login', ['identifier' => 'seuusuarioad', 'password' => 'senha-corporativa'])->assertRedirect('/gestao');
+
+        $this->assertSame('servidor@salvador.ba.gov.br', $servidor->fresh()->email);
+    }
+
+    public function test_login_ad_nao_copia_email_de_outra_conta(): void
+    {
+        $this->fakePessoaComEmail('ocupado@salvador.ba.gov.br');
+        User::factory()->create(['email' => 'ocupado@salvador.ba.gov.br']);
+        $servidor = User::factory()->administrador()->ad('seuusuarioad')->create(['email' => 'antigo@example.com']);
+
+        $this->post('/gestao/login', ['identifier' => 'seuusuarioad', 'password' => 'senha-corporativa'])->assertRedirect('/gestao');
+
+        $this->assertSame('antigo@example.com', $servidor->fresh()->email);
+    }
+
+    private function fakePessoaComEmail(string $email): void
+    {
+        Http::fake([
+            '*/ws-autenticacao/auth' => Http::response(['token' => 'tk-fake']),
+            '*/ws-autenticacao/discovery' => Http::response([]),
+            '*/pessoaView/buscarPorCPF/*' => Http::response(['nome' => 'Servidor', 'email' => $email]),
+        ]);
+    }
 }
