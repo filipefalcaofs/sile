@@ -25,6 +25,12 @@ class DashboardController extends Controller
     {
         $user = $request->user();
 
+        // Perfil de analista abre sempre na Caixa de entrada, mesmo com
+        // consultar-relatorios concedido pelo administrador.
+        if ($user->can('analisar-processos') && $user->hasAnyRole(['Analista Terceirizado', 'Analista Servidor'])) {
+            return redirect('/gestao/processos/fila');
+        }
+
         if (! $user->can('consultar-relatorios')) {
             if ($user->can('analisar-processos')) {
                 return redirect('/gestao/processos/fila');
