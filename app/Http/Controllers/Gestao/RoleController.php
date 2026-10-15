@@ -12,6 +12,7 @@ use App\Services\Relatorios\ReportFilters;
 use App\Support\Audit\AuditService;
 use App\Support\PermissionCatalog;
 use App\Support\RoleProtection;
+use App\Support\ServidoresPorPerfil;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -41,7 +42,7 @@ class RoleController extends Controller
         }
 
         $roles = Role::query()
-            ->withCount('users')
+            ->addSelect(['users_count' => ServidoresPorPerfil::contagem()])
             ->with('permissions:id,name')
             ->orderBy('name')
             ->get()

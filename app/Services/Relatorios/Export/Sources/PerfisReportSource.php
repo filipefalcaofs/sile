@@ -7,6 +7,7 @@ use App\Services\Relatorios\Export\ReportDefinition;
 use App\Services\Relatorios\Export\ReportExporter;
 use App\Services\Relatorios\Export\ReportSource;
 use App\Services\Relatorios\ReportFilters;
+use App\Support\ServidoresPorPerfil;
 use Illuminate\Database\Eloquent\Builder;
 use Spatie\Permission\Models\Role;
 
@@ -31,7 +32,8 @@ final class PerfisReportSource implements ReportSource
             ],
             // RN-005: mesma ordem por nome da tela; totais agregados no banco.
             builder: fn (): Builder => Role::query()
-                ->withCount(['permissions', 'users'])
+                ->withCount('permissions')
+                ->addSelect(['users_count' => ServidoresPorPerfil::contagem()])
                 ->orderBy('name'),
             mapRow: fn (Role $role): array => [
                 $role->name,
