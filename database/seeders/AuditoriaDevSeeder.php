@@ -514,7 +514,7 @@ class AuditoriaDevSeeder extends Seeder
     private function vincular(Company $empresa, User $requerente): void
     {
         CompanyUser::firstOrCreate(
-            ['company_id' => $empresa->id, 'user_id' => $requerente->id, 'role' => CompanyLinkRole::Responsavel],
+            ['company_id' => $empresa->id, 'cidadao_id' => CompanySeeder::cidadaoDe($requerente)->id, 'role' => CompanyLinkRole::Responsavel],
             ['started_at' => now()],
         );
     }

@@ -40,7 +40,7 @@ class SecondaryCnaesTest extends TestCase
 
         CompanyUser::factory()->responsavel()->create([
             'company_id' => $company->id,
-            'user_id' => $user->id,
+            'cidadao_id' => $user->id,
         ]);
 
         return $company;

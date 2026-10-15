@@ -7,6 +7,7 @@ use App\Enums\CompanySource;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Portal\StoreCompanyRequest;
 use App\Http\Requests\Portal\UpdateCompanyRequest;
+use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\User;
@@ -54,10 +55,10 @@ class CompanyController extends Controller
         $search = (string) $request->string('search')->trim();
 
         $companies = Company::query()
-            ->whereHas('links', fn ($q) => $q->where('user_id', $effectiveUser->id))
+            ->whereHas('links', fn ($q) => $q->where('cidadao_id', $effectiveUser->id))
             ->with([
                 'cnaes' => fn ($q) => $q->wherePivot('is_primary', true),
-                'links' => fn ($q) => $q->where('user_id', $effectiveUser->id)->latest('started_at'),
+                'links' => fn ($q) => $q->where('cidadao_id', $effectiveUser->id)->latest('started_at'),
             ])
             ->when($search !== '', function ($query) use ($search) {
                 $digits = preg_replace('/\D/', '', $search);
@@ -106,7 +107,7 @@ class CompanyController extends Controller
                 'per_page' => $perPage,
             ],
             'perPageOptions' => self::PER_PAGE_OPTIONS,
-            'totalCompanies' => Company::countForUser($effectiveUser),
+            'totalCompanies' => Company::countForCidadao($effectiveUser),
         ]);
     }
 
@@ -139,7 +140,7 @@ class CompanyController extends Controller
             ]);
 
             $company->links()->create([
-                'user_id' => $effectiveUser->id,
+                'cidadao_id' => $effectiveUser->id,
                 'role' => CompanyLinkRole::Responsavel,
                 'started_at' => now(),
             ]);
@@ -163,7 +164,7 @@ class CompanyController extends Controller
 
         $company->load([
             'cnaes' => fn ($q) => $q->withPivot('is_primary'),
-            'links.user',
+            'links.cidadao',
         ]);
 
         $effectiveUser = $this->effectiveUser($request);
@@ -214,12 +215,12 @@ class CompanyController extends Controller
                 ->values()
                 ->map(fn ($link) => [
                     'id' => $link->id,
-                    'user_name' => $link->user?->name,
+                    'user_name' => $link->cidadao?->name,
                     'role_label' => $link->role->label(),
                     'started_at' => $link->started_at?->toDateString(),
                     'ended_at' => $link->ended_at?->toDateString(),
                     'ended_reason' => $link->ended_reason,
-                    'is_current_user' => $link->user_id === $effectiveUser->id,
+                    'is_current_user' => $link->cidadao_id === $effectiveUser->id,
                 ])
                 ->all(),
             'abilities' => [
@@ -249,7 +250,7 @@ class CompanyController extends Controller
      * Usuário efetivo: o representado em representação ativa, senão o próprio
      * ([01-07]). Resolvido pelo middleware ResolveRepresentation.
      */
-    private function effectiveUser(Request $request): User
+    private function effectiveUser(Request $request): Cidadao|User
     {
         return app(CurrentRepresentation::class)->grantor() ?? $request->user();
     }

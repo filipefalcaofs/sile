@@ -129,7 +129,7 @@ class RenovacaoPortalTest extends TestCase
     {
         $empresa = Company::factory()->create();
         $empresa->links()->create([
-            'user_id' => $user->id,
+            'cidadao_id' => $user->id,
             'role' => CompanyLinkRole::Responsavel,
             'started_at' => now(),
         ]);

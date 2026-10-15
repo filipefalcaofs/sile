@@ -148,7 +148,7 @@ class AssistedAttendanceController extends Controller
         $hasActiveLink = Company::query()
             ->whereKey($validated['company_id'])
             ->whereHas('links', fn ($query) => $query
-                ->where('user_id', $citizen->id)
+                ->where('cidadao_id', $citizen->id)
                 ->whereNull('ended_at'))
             ->exists();
 
@@ -212,7 +212,7 @@ class AssistedAttendanceController extends Controller
     {
         return Company::query()
             ->whereHas('links', fn ($query) => $query
-                ->where('user_id', $citizen->id)
+                ->where('cidadao_id', $citizen->id)
                 ->whereNull('ended_at'))
             ->orderBy('legal_name')
             ->get()

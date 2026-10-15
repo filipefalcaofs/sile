@@ -188,13 +188,13 @@ class DatabaseSeederTest extends TestCase
         $this->assertTrue(Company::query()->where('source', CompanySource::Redesim)->exists());
 
         $vinculosAtivos = CompanyUser::query()
-            ->where('user_id', $cidadao->id)
+            ->where('cidadao_id', $cidadao->id)
             ->whereNull('ended_at')
             ->count();
         $this->assertGreaterThanOrEqual(2, $vinculosAtivos);
 
         $temPrincipal = Company::query()
-            ->whereHas('links', fn ($q) => $q->where('user_id', $cidadao->id)->whereNull('ended_at'))
+            ->whereHas('links', fn ($q) => $q->where('cidadao_id', $cidadao->id)->whereNull('ended_at'))
             ->whereHas('cnaes', fn ($q) => $q->where('company_cnae.is_primary', true))
             ->exists();
         $this->assertTrue($temPrincipal);
@@ -420,7 +420,7 @@ class DatabaseSeederTest extends TestCase
         $this->assertSame(
             2,
             CompanyUser::query()
-                ->where('user_id', User::query()->where('email', 'cidadao@sile.dev')->value('id'))
+                ->where('cidadao_id', User::query()->where('email', 'cidadao@sile.dev')->value('id'))
                 ->whereNull('ended_at')
                 ->count()
         );

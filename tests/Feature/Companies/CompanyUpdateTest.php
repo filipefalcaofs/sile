@@ -38,7 +38,7 @@ class CompanyUpdateTest extends TestCase
 
         CompanyUser::factory()->responsavel()->create(array_merge([
             'company_id' => $company->id,
-            'user_id' => $user->id,
+            'cidadao_id' => $user->id,
         ], $linkAttributes));
 
         return $company;

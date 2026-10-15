@@ -127,7 +127,7 @@ class GovBrAuthService
      */
     private function syncAccount(Cidadao $user, array $claims, string $level): void
     {
-        $account = GovBrAccount::query()->firstOrNew(['user_id' => $user->id]);
+        $account = GovBrAccount::query()->firstOrNew(['cidadao_id' => $user->id]);
 
         if (! $account->exists) {
             $account->linked_at = now();
@@ -198,7 +198,7 @@ class GovBrAuthService
             $user->markEmailAsVerified();
 
             GovBrAccount::create([
-                'user_id' => $user->id,
+                'cidadao_id' => $user->id,
                 'reliability_level' => $level,
                 'reliability_levels' => $this->reliabilityIds($claims),
                 'linked_at' => now(),

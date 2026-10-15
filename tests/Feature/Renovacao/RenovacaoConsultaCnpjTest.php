@@ -31,7 +31,7 @@ class RenovacaoConsultaCnpjTest extends TestCase
         $cidadao = Cidadao::factory()->withAcceptedLgpdTerm()->create();
         $empresa = Company::factory()->create();
         $empresa->links()->create([
-            'user_id' => $cidadao->id,
+            'cidadao_id' => $cidadao->id,
             'role' => CompanyLinkRole::Responsavel,
             'started_at' => now(),
         ]);

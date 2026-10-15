@@ -36,7 +36,7 @@ class PerguntaGeralPortalTest extends TestCase
         $company = Company::factory()->create();
 
         $company->links()->create([
-            'user_id' => $user->id,
+            'cidadao_id' => $user->id,
             'role' => CompanyLinkRole::Responsavel,
             'started_at' => now(),
         ]);

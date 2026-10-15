@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Enums\CompanyLinkRole;
 use App\Enums\CompanySource;
+use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\CompanyUser;
@@ -30,6 +31,27 @@ class CompanySeeder extends Seeder
         $cidadao = $this->seedCidadao();
         $this->seedEmpresaManual($cidadao);
         $this->seedEmpresasRedesim($cidadao);
+    }
+
+    /**
+     * Conta de cidadão com o mesmo id e dados do `User` de dev: os demais seeders
+     * ainda localizam o requerente como `User` (migram nas tarefas seguintes),
+     * enquanto o vínculo com a empresa já aponta para `cidadaos`.
+     */
+    public static function cidadaoDe(User $user): Cidadao
+    {
+        return Cidadao::query()->find($user->id) ?? tap(
+            (new Cidadao)->forceFill([
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'cpf' => $user->cpf,
+                'phone' => $user->phone,
+                'password' => 'password',
+                'email_verified_at' => $user->email_verified_at ?? now(),
+            ]),
+            fn (Cidadao $cidadao) => $cidadao->save(),
+        );
     }
 
     private function seedCidadao(): User
@@ -85,7 +107,7 @@ class CompanySeeder extends Seeder
         );
 
         CompanyUser::firstOrCreate(
-            ['company_id' => $company->id, 'user_id' => $cidadao->id, 'role' => CompanyLinkRole::Responsavel],
+            ['company_id' => $company->id, 'cidadao_id' => self::cidadaoDe($cidadao)->id, 'role' => CompanyLinkRole::Responsavel],
             ['started_at' => now()],
         );
 
@@ -110,7 +132,7 @@ class CompanySeeder extends Seeder
 
         if ($company) {
             CompanyUser::firstOrCreate(
-                ['company_id' => $company->id, 'user_id' => $cidadao->id, 'role' => CompanyLinkRole::Responsavel],
+                ['company_id' => $company->id, 'cidadao_id' => self::cidadaoDe($cidadao)->id, 'role' => CompanyLinkRole::Responsavel],
                 ['started_at' => now()],
             );
         }

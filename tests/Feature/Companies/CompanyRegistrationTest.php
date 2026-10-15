@@ -83,12 +83,12 @@ class CompanyRegistrationTest extends TestCase
         ]);
 
         $this->assertDatabaseHas('company_user', [
-            'user_id' => $user->id,
+            'cidadao_id' => $user->id,
             'role' => 'responsavel',
             'ended_at' => null,
         ]);
 
-        $link = CompanyUser::query()->where('user_id', $user->id)->first();
+        $link = CompanyUser::query()->where('cidadao_id', $user->id)->first();
         $this->assertNotNull($link);
         $this->assertNotNull($link->started_at);
     }
@@ -204,13 +204,13 @@ class CompanyRegistrationTest extends TestCase
 
         $this->assertDatabaseHas('company_user', [
             'company_id' => $company->id,
-            'user_id' => $grantor->id,
+            'cidadao_id' => $grantor->id,
             'role' => 'responsavel',
         ]);
 
         $this->assertDatabaseMissing('company_user', [
             'company_id' => $company->id,
-            'user_id' => $attorney->id,
+            'cidadao_id' => $attorney->id,
         ]);
 
         $this->assertDatabaseHas('activity_log', [

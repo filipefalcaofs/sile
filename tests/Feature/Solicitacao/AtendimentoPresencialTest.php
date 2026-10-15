@@ -173,7 +173,7 @@ class AtendimentoPresencialTest extends TestCase
         $citizen = Cidadao::factory()->create();
         $company = Company::factory()->create();
         $company->links()->create([
-            'user_id' => $citizen->id,
+            'cidadao_id' => $citizen->id,
             'role' => CompanyLinkRole::Responsavel,
             'started_at' => now(),
         ]);

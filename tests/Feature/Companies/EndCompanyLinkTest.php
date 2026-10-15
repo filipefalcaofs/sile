@@ -38,7 +38,7 @@ class EndCompanyLinkTest extends TestCase
 
         CompanyUser::factory()->responsavel()->create(array_merge([
             'company_id' => $company->id,
-            'user_id' => $user->id,
+            'cidadao_id' => $user->id,
         ], $linkAttributes));
 
         return $company;
@@ -53,7 +53,7 @@ class EndCompanyLinkTest extends TestCase
 
         CompanyUser::factory()->responsavel()->create([
             'company_id' => $company->id,
-            'user_id' => $user->id,
+            'cidadao_id' => $user->id,
         ]);
 
         return $user;
@@ -74,7 +74,7 @@ class EndCompanyLinkTest extends TestCase
 
         $link = CompanyUser::query()
             ->where('company_id', $company->id)
-            ->where('user_id', $user->id)
+            ->where('cidadao_id', $user->id)
             ->first();
 
         $this->assertNotNull($link->ended_at);
@@ -96,7 +96,7 @@ class EndCompanyLinkTest extends TestCase
 
         $link = CompanyUser::query()
             ->where('company_id', $company->id)
-            ->where('user_id', $user->id)
+            ->where('cidadao_id', $user->id)
             ->first();
 
         $this->assertNotNull($link->ended_at);
@@ -142,7 +142,7 @@ class EndCompanyLinkTest extends TestCase
 
         $link = CompanyUser::query()
             ->where('company_id', $company->id)
-            ->where('user_id', $user->id)
+            ->where('cidadao_id', $user->id)
             ->first();
 
         $this->assertNull($link->ended_at);
@@ -157,7 +157,7 @@ class EndCompanyLinkTest extends TestCase
 
         CompanyUser::factory()->procurador()->create([
             'company_id' => $company->id,
-            'user_id' => $procurador->id,
+            'cidadao_id' => $procurador->id,
         ]);
 
         // A proteção conta APENAS responsáveis: o procurador encerra normalmente.
@@ -167,7 +167,7 @@ class EndCompanyLinkTest extends TestCase
 
         $link = CompanyUser::query()
             ->where('company_id', $company->id)
-            ->where('user_id', $procurador->id)
+            ->where('cidadao_id', $procurador->id)
             ->first();
 
         $this->assertNotNull($link->ended_at);

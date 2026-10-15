@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Models\Cidadao;
 use App\Models\Company;
 use App\Models\User;
 use App\Support\Representation\CurrentRepresentation;
@@ -15,22 +16,22 @@ use App\Support\Representation\CurrentRepresentation;
 class CompanyPolicy
 {
     /**
-     * Usuário efetivo: o representado quando em representação ativa, senão
-     * o próprio usuário autenticado ([01-07]).
+     * Cidadão efetivo: o representado quando em representação ativa, senão
+     * o próprio cidadão autenticado ([01-07]).
      */
-    private function effectiveUser(User $user): User
+    private function effectiveUser(Cidadao $cidadao): Cidadao|User
     {
-        return app(CurrentRepresentation::class)->grantor() ?? $user;
+        return app(CurrentRepresentation::class)->grantor() ?? $cidadao;
     }
 
     /**
      * Ver a empresa: qualquer vínculo do usuário efetivo (ativo OU encerrado
      * — o histórico do vínculo continua visível, HU-027/HU-028).
      */
-    public function view(User $user, Company $company): bool
+    public function view(Cidadao $cidadao, Company $company): bool
     {
         return $company->links()
-            ->where('user_id', $this->effectiveUser($user)->id)
+            ->where('cidadao_id', $this->effectiveUser($cidadao)->id)
             ->exists();
     }
 
@@ -38,10 +39,10 @@ class CompanyPolicy
      * Atualizar dados da empresa: somente com vínculo ATIVO do usuário
      * efetivo (HU-024 CA-04).
      */
-    public function update(User $user, Company $company): bool
+    public function update(Cidadao $cidadao, Company $company): bool
     {
         return $company->links()
-            ->where('user_id', $this->effectiveUser($user)->id)
+            ->where('cidadao_id', $this->effectiveUser($cidadao)->id)
             ->whereNull('ended_at')
             ->exists();
     }
@@ -49,10 +50,10 @@ class CompanyPolicy
     /**
      * Gerir CNAEs (principal/secundários): exige vínculo ATIVO (HU-025/026).
      */
-    public function manageCnaes(User $user, Company $company): bool
+    public function manageCnaes(Cidadao $cidadao, Company $company): bool
     {
         return $company->links()
-            ->where('user_id', $this->effectiveUser($user)->id)
+            ->where('cidadao_id', $this->effectiveUser($cidadao)->id)
             ->whereNull('ended_at')
             ->exists();
     }
@@ -61,10 +62,10 @@ class CompanyPolicy
      * Encerrar o próprio vínculo: exige vínculo ATIVO do usuário efetivo
      * (HU-028).
      */
-    public function endLink(User $user, Company $company): bool
+    public function endLink(Cidadao $cidadao, Company $company): bool
     {
         return $company->links()
-            ->where('user_id', $this->effectiveUser($user)->id)
+            ->where('cidadao_id', $this->effectiveUser($cidadao)->id)
             ->whereNull('ended_at')
             ->exists();
     }
