@@ -144,7 +144,8 @@ class UserFactory extends Factory
                 ?? LegalTerm::factory()->published()->create(['type' => 'lgpd', 'version' => 1]);
 
             LegalTermAcceptance::create([
-                'user_id' => $user->id,
+                'accepted_by_type' => User::class,
+                'accepted_by_id' => $user->id,
                 'legal_term_id' => $term->id,
                 'ip_address' => '127.0.0.1',
                 'accepted_at' => now(),

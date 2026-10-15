@@ -178,7 +178,8 @@ class ComunicacaoDevSeeder extends Seeder
             'service_type_id' => $ctx['type']->id,
             'company_id' => $ctx['company']->id,
             'requester_user_id' => $ctx['cidadao']->id,
-            'created_by_user_id' => $ctx['cidadao']->id,
+            'created_by_type' => $ctx['cidadao']->getMorphClass(),
+            'created_by_id' => $ctx['cidadao']->id,
             'used_area_m2' => 90.0,
             'address_street' => 'Rua da Paciência',
             'address_number' => '120',
@@ -201,7 +202,8 @@ class ComunicacaoDevSeeder extends Seeder
             'mime_type' => 'image/jpeg',
             'size' => 51200,
             'sha256' => hash('sha256', "comunicacao-fachada-{$request->id}"),
-            'uploaded_by_user_id' => $ctx['cidadao']->id,
+            'uploaded_by_type' => $ctx['cidadao']->getMorphClass(),
+            'uploaded_by_id' => $ctx['cidadao']->id,
         ]);
 
         return $request;

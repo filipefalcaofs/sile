@@ -67,7 +67,8 @@ class TrilhaProcessoTest extends TestCase
             'viability_request_id' => $processo->id,
             'from_status' => ViabilityRequestStatus::Rascunho,
             'to_status' => ViabilityRequestStatus::Protocolada,
-            'actor_user_id' => $this->ator->id,
+            'actor_type' => $this->ator->getMorphClass(),
+            'actor_id' => $this->ator->id,
             'created_at' => Carbon::parse('2026-06-10 10:00'),
         ]);
 
@@ -75,7 +76,8 @@ class TrilhaProcessoTest extends TestCase
             'viability_request_id' => $processo->id,
             'from_status' => ViabilityRequestStatus::Protocolada,
             'to_status' => ViabilityRequestStatus::EmAnalise,
-            'actor_user_id' => $this->ator->id,
+            'actor_type' => $this->ator->getMorphClass(),
+            'actor_id' => $this->ator->id,
             'created_at' => Carbon::parse('2026-06-12 09:00'),
         ]);
 

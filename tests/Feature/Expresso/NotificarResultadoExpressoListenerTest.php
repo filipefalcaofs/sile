@@ -65,7 +65,7 @@ class NotificarResultadoExpressoListenerTest extends TestCase
         // default de 'resultado' = [email, in_app] → duas linhas na_fila.
         $this->assertDatabaseHas('communications', [
             'viability_request_id' => $request->id,
-            'recipient_user_id' => $request->requester->id,
+            'recipient_type' => $request->requester->getMorphClass(), 'recipient_id' => $request->requester->id,
             'channel' => CommunicationChannel::Email->value,
             'type' => CommunicationType::Resultado->value,
             'status' => CommunicationStatus::NaFila->value,

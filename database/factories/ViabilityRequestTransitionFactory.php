@@ -23,7 +23,8 @@ class ViabilityRequestTransitionFactory extends Factory
             'to_status' => ViabilityRequestStatus::Protocolada,
             'reason' => null,
             'public_label' => null,
-            'actor_user_id' => null,
+            'actor_type' => null,
+            'actor_id' => null,
         ];
     }
 }

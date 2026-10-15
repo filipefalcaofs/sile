@@ -168,7 +168,7 @@ class ExpressoSmokeTest extends TestCase
 
         $solicitacao = ViabilityRequest::factory()->draft()->create([
             'requester_user_id' => $requerente->id,
-            'created_by_user_id' => $requerente->id,
+            'created_by_type' => $requerente->getMorphClass(), 'created_by_id' => $requerente->id,
             'used_area_m2' => 120.0,
         ]);
 

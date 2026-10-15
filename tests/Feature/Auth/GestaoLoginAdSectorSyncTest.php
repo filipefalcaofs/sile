@@ -88,7 +88,7 @@ class GestaoLoginAdSectorSyncTest extends TestCase
         $this->assertAuthenticatedAs($servidor, 'gestao');
         $this->assertSame(0, UserSectorAssignment::query()->count());
         $this->assertDatabaseHas('access_logs', [
-            'user_id' => $servidor->id,
+            'actor_type' => $servidor->getMorphClass(), 'actor_id' => $servidor->id,
             'event' => 'ad-sincronizacao-falhou',
             'channel' => 'gestao',
         ]);

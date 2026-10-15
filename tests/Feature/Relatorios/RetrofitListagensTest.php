@@ -211,14 +211,14 @@ class RetrofitListagensTest extends TestCase
         $outro = User::factory()->create();
 
         AccessLog::factory()->create([
-            'user_id' => $alvo->id,
+            'actor_type' => $alvo->getMorphClass(), 'actor_id' => $alvo->id,
             'email' => $alvo->email,
             'event' => 'login',
             'ip_address' => '10.0.0.7',
         ]);
 
         AccessLog::factory()->create([
-            'user_id' => $outro->id,
+            'actor_type' => $outro->getMorphClass(), 'actor_id' => $outro->id,
             'email' => $outro->email,
             'event' => 'login',
             'ip_address' => '10.9.9.9',
@@ -242,7 +242,7 @@ class RetrofitListagensTest extends TestCase
         $alvo = User::factory()->create();
 
         AccessLog::factory()->create([
-            'user_id' => $alvo->id,
+            'actor_type' => $alvo->getMorphClass(), 'actor_id' => $alvo->id,
             'email' => $alvo->email,
         ]);
 

@@ -52,7 +52,7 @@ class ConstituicaoSedeBloqueiosTest extends TestCase
     {
         return ViabilityRequest::factory()->draft()->create([
             'requester_user_id' => $user->id,
-            'created_by_user_id' => $user->id,
+            'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
             'property_registration' => $propertyRegistration,
             'wants_virtual_office_tenant' => $wantsTenant,
             'wants_virtual_office_hq' => $wantsHq,

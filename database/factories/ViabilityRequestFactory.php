@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Enums\ViabilityRequestOrigin;
 use App\Enums\ViabilityRequestStatus;
+use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\User;
@@ -28,7 +29,8 @@ class ViabilityRequestFactory extends Factory
             'service_type_id' => ViabilityServiceType::factory(),
             'company_id' => Company::factory(),
             'requester_user_id' => User::factory(),
-            'created_by_user_id' => User::factory(),
+            'created_by_type' => Cidadao::class,
+            'created_by_id' => Cidadao::factory(),
             'used_area_m2' => fake()->randomFloat(2, 20, 500),
             'property_registration' => null,
             'address_street' => fake()->streetName(),

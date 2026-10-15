@@ -63,7 +63,8 @@ class ResumoSolicitacaoTest extends TestCase
 
         if ($dono !== null) {
             $atributos['requester_user_id'] = $dono->id;
-            $atributos['created_by_user_id'] = $dono->id;
+            $atributos['created_by_type'] = $dono->getMorphClass();
+            $atributos['created_by_id'] = $dono->id;
         }
 
         return ViabilityRequest::factory()->withPrimaryCnae()->create($atributos);

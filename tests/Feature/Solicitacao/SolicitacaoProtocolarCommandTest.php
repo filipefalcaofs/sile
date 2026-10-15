@@ -46,7 +46,7 @@ class SolicitacaoProtocolarCommandTest extends TestCase
     {
         $solicitacao = ViabilityRequest::factory()->draft()->create([
             'requester_user_id' => $user->id,
-            'created_by_user_id' => $user->id,
+            'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
             'used_area_m2' => 120.0,
         ]);
 
@@ -93,7 +93,7 @@ class SolicitacaoProtocolarCommandTest extends TestCase
         $user = $this->portalUser();
         $solicitacao = ViabilityRequest::factory()->draft()->create([
             'requester_user_id' => $user->id,
-            'created_by_user_id' => $user->id,
+            'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
             'used_area_m2' => 120.0,
         ]);
 
@@ -110,7 +110,7 @@ class SolicitacaoProtocolarCommandTest extends TestCase
         $user = $this->portalUser();
         $solicitacao = ViabilityRequest::factory()->protocoled()->withPrimaryCnae()->create([
             'requester_user_id' => $user->id,
-            'created_by_user_id' => $user->id,
+            'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
         ]);
         $numeroAntes = $solicitacao->protocol_number;
 

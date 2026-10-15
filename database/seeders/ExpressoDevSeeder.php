@@ -115,7 +115,8 @@ class ExpressoDevSeeder extends Seeder
             'service_type_id' => $type->id,
             'company_id' => $company->id,
             'requester_user_id' => $cidadao->id,
-            'created_by_user_id' => $cidadao->id,
+            'created_by_type' => $cidadao->getMorphClass(),
+            'created_by_id' => $cidadao->id,
             'used_area_m2' => 120.0,
             'address_street' => 'Avenida Sete de Setembro',
             'address_number' => '2000',
@@ -144,7 +145,8 @@ class ExpressoDevSeeder extends Seeder
             'mime_type' => 'image/jpeg',
             'size' => 51200,
             'sha256' => hash('sha256', "expresso-fachada-{$request->id}"),
-            'uploaded_by_user_id' => $cidadao->id,
+            'uploaded_by_type' => $cidadao->getMorphClass(),
+            'uploaded_by_id' => $cidadao->id,
         ]);
 
         return $request;

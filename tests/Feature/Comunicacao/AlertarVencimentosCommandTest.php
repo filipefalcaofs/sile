@@ -78,7 +78,7 @@ class AlertarVencimentosCommandTest extends TestCase
 
         $this->assertDatabaseHas('communications', [
             'viability_request_id' => $processo->id,
-            'recipient_user_id' => $analista->id,
+            'recipient_type' => $analista->getMorphClass(), 'recipient_id' => $analista->id,
             'type' => CommunicationType::PrazoVencendo->value,
             'status' => CommunicationStatus::NaFila->value,
         ]);
@@ -126,7 +126,7 @@ class AlertarVencimentosCommandTest extends TestCase
 
         $this->assertDatabaseHas('communications', [
             'viability_request_id' => $processo->id,
-            'recipient_user_id' => $requerente->id,
+            'recipient_type' => $requerente->getMorphClass(), 'recipient_id' => $requerente->id,
             'type' => CommunicationType::PrazoVencendo->value,
         ]);
         NotificationFacade::assertSentTo($requerente, PrazoVencendoNotification::class);

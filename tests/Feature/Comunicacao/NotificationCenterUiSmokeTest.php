@@ -73,7 +73,7 @@ class NotificationCenterUiSmokeTest extends TestCase
     {
         $attrs = $owner === null ? [] : [
             'requester_user_id' => $owner->id,
-            'created_by_user_id' => $owner->id,
+            'created_by_type' => $owner->getMorphClass(), 'created_by_id' => $owner->id,
         ];
 
         $request = ViabilityRequest::factory()->create($attrs);

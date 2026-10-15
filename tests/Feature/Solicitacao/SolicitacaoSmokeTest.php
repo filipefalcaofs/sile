@@ -187,7 +187,7 @@ class SolicitacaoSmokeTest extends TestCase
             'company_id' => $company->id,
             'service_type_id' => $serviceType->id,
             'requester_user_id' => $user->id,
-            'created_by_user_id' => $user->id,
+            'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
             'used_area_m2' => 120.0,
             'is_public_area' => false,
         ]);
@@ -214,7 +214,7 @@ class SolicitacaoSmokeTest extends TestCase
         [$user] = $this->ator();
         $solicitacao = ViabilityRequest::factory()->draft()->create([
             'requester_user_id' => $user->id,
-            'created_by_user_id' => $user->id,
+            'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
             'used_area_m2' => 120.0,
         ]);
         $cnae = Cnae::factory()->create(['code' => self::CNAE_MINIMERCADO]);

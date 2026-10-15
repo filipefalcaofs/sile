@@ -37,7 +37,7 @@ class ComprovanteProtocoloTest extends TestCase
     {
         $solicitacao = ViabilityRequest::factory()->draft()->withPrimaryCnae()->create([
             'requester_user_id' => $user->id,
-            'created_by_user_id' => $user->id,
+            'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
         ]);
 
         app(ProtocolarSolicitacaoService::class)->protocol($solicitacao, $user);
@@ -72,7 +72,7 @@ class ComprovanteProtocoloTest extends TestCase
         $user = $this->portalUser();
         $rascunho = ViabilityRequest::factory()->draft()->withPrimaryCnae()->create([
             'requester_user_id' => $user->id,
-            'created_by_user_id' => $user->id,
+            'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
         ]);
 
         $this->actingAs($user)

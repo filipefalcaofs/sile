@@ -218,7 +218,8 @@ class AuditoriaDevSeeder extends Seeder
             'service_type_id' => $ctx['type']->id,
             'company_id' => $empresa->id,
             'requester_user_id' => $requerente->id,
-            'created_by_user_id' => $requerente->id,
+            'created_by_type' => $requerente->getMorphClass(),
+            'created_by_id' => $requerente->id,
             'protocol_number' => 'VIA-2025-099999',
             'protocoled_at' => now()->subMonths(8),
             'used_area_m2' => 90.0,
@@ -269,7 +270,8 @@ class AuditoriaDevSeeder extends Seeder
                 'service_type_id' => $ctx['type']->id,
                 'company_id' => $empresa->id,
                 'requester_user_id' => $requerente->id,
-                'created_by_user_id' => $requerente->id,
+                'created_by_type' => $requerente->getMorphClass(),
+                'created_by_id' => $requerente->id,
                 'used_area_m2' => 80.0,
                 'property_registration' => null,
                 'address_street' => 'Rua do Volume Atípico',
@@ -425,7 +427,8 @@ class AuditoriaDevSeeder extends Seeder
             'service_type_id' => $ctx['type']->id,
             'company_id' => $empresa->id,
             'requester_user_id' => $requerente->id,
-            'created_by_user_id' => $requerente->id,
+            'created_by_type' => $requerente->getMorphClass(),
+            'created_by_id' => $requerente->id,
             'used_area_m2' => 120.0,
             'property_registration' => null,
             'address_street' => $street,
@@ -449,7 +452,8 @@ class AuditoriaDevSeeder extends Seeder
             'mime_type' => 'image/jpeg',
             'size' => 51200,
             'sha256' => hash('sha256', "auditoria-fachada-{$request->id}"),
-            'uploaded_by_user_id' => $requerente->id,
+            'uploaded_by_type' => $requerente->getMorphClass(),
+            'uploaded_by_id' => $requerente->id,
         ]);
 
         return $request;
@@ -474,7 +478,7 @@ class AuditoriaDevSeeder extends Seeder
 
         if ($term = LegalTerm::current('lgpd')) {
             LegalTermAcceptance::firstOrCreate(
-                ['user_id' => $user->id, 'legal_term_id' => $term->id],
+                ['accepted_by_type' => $user->getMorphClass(), 'accepted_by_id' => $user->id, 'legal_term_id' => $term->id],
                 ['ip_address' => '127.0.0.1', 'accepted_at' => now()],
             );
         }

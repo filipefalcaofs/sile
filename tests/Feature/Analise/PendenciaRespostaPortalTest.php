@@ -48,7 +48,7 @@ class PendenciaRespostaPortalTest extends TestCase
     {
         $request = ViabilityRequest::factory()->withPrimaryCnae()->create([
             'requester_user_id' => $owner->id,
-            'created_by_user_id' => $owner->id,
+            'created_by_type' => $owner->getMorphClass(), 'created_by_id' => $owner->id,
         ]);
 
         $request->forceFill([
@@ -143,7 +143,7 @@ class PendenciaRespostaPortalTest extends TestCase
         $owner = $this->portalUser();
         $request = ViabilityRequest::factory()->protocoled()->withPrimaryCnae()->create([
             'requester_user_id' => $owner->id,
-            'created_by_user_id' => $owner->id,
+            'created_by_type' => $owner->getMorphClass(), 'created_by_id' => $owner->id,
         ]);
         $request->forceFill(['status' => ViabilityRequestStatus::EmAnalise])->save();
 

@@ -84,7 +84,7 @@ class AuthenticationTest extends TestCase
         ]);
 
         $this->assertDatabaseHas('access_logs', [
-            'user_id' => $user->id,
+            'actor_type' => $user->getMorphClass(), 'actor_id' => $user->id,
             'event' => 'login',
             'ip_address' => '127.0.0.1',
         ]);
@@ -104,7 +104,7 @@ class AuthenticationTest extends TestCase
 
         // A trilha resolve o titular pelo CPF e registra o e-mail da conta.
         $this->assertDatabaseHas('access_logs', [
-            'user_id' => $user->id,
+            'actor_type' => $user->getMorphClass(), 'actor_id' => $user->id,
             'email' => $user->email,
             'event' => 'falha',
         ]);
@@ -196,7 +196,7 @@ class AuthenticationTest extends TestCase
         $this->assertGuest();
 
         $this->assertDatabaseHas('access_logs', [
-            'user_id' => $user->id,
+            'actor_type' => $user->getMorphClass(), 'actor_id' => $user->id,
             'event' => 'logout',
         ]);
     }

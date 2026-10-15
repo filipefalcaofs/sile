@@ -52,7 +52,8 @@ class ExplicacaoCidadaoTest extends TestCase
 
         if ($dono !== null) {
             $atributos['requester_user_id'] = $dono->id;
-            $atributos['created_by_user_id'] = $dono->id;
+            $atributos['created_by_type'] = $dono->getMorphClass();
+            $atributos['created_by_id'] = $dono->id;
         }
 
         $processo = ViabilityRequest::factory()->protocoled()->withPrimaryCnae()->create($atributos);
@@ -188,7 +189,8 @@ class ExplicacaoCidadaoTest extends TestCase
         // Protocolado, sem decisão registrada (em análise): nada a explicar.
         $processo = ViabilityRequest::factory()->protocoled()->withPrimaryCnae()->create([
             'requester_user_id' => $dono->id,
-            'created_by_user_id' => $dono->id,
+            'created_by_type' => $dono->getMorphClass(),
+            'created_by_id' => $dono->id,
         ]);
 
         ExplicacaoCidadaoAgent::fake([[

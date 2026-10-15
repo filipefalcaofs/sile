@@ -132,7 +132,7 @@ class GestaoLoginAdTest extends TestCase
         $this->assertSame('71999990000', $servidor->fresh()->phone);
 
         $this->assertDatabaseHas('access_logs', [
-            'user_id' => $servidor->id,
+            'actor_type' => $servidor->getMorphClass(), 'actor_id' => $servidor->id,
             'event' => 'login',
             'channel' => 'gestao',
             'origin' => 'ad',
@@ -231,7 +231,7 @@ class GestaoLoginAdTest extends TestCase
         Http::assertNothingSent();
 
         $this->assertDatabaseHas('access_logs', [
-            'user_id' => $servidor->id,
+            'actor_type' => $servidor->getMorphClass(), 'actor_id' => $servidor->id,
             'event' => 'login',
             'origin' => 'local',
         ]);
@@ -313,7 +313,7 @@ class GestaoLoginAdTest extends TestCase
         $this->assertAuthenticatedAs($servidor, 'gestao');
 
         $this->assertDatabaseHas('access_logs', [
-            'user_id' => $servidor->id,
+            'actor_type' => $servidor->getMorphClass(), 'actor_id' => $servidor->id,
             'event' => 'ad-sincronizacao-falhou',
             'channel' => 'gestao',
         ]);

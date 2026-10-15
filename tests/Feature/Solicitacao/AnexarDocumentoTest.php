@@ -40,7 +40,7 @@ class AnexarDocumentoTest extends TestCase
     {
         return ViabilityRequest::factory()->draft()->create([
             'requester_user_id' => $user->id,
-            'created_by_user_id' => $user->id,
+            'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
         ]);
     }
 
@@ -138,7 +138,7 @@ class AnexarDocumentoTest extends TestCase
             'mime_type' => 'application/pdf',
             'size' => 21,
             'sha256' => hash('sha256', 'conteudo-do-documento'),
-            'uploaded_by_user_id' => $owner->id,
+            'uploaded_by_type' => $owner->getMorphClass(), 'uploaded_by_id' => $owner->id,
         ]);
 
         // O dono baixa por streaming (conteúdo real do disk).

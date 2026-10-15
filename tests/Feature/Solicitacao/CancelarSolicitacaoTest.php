@@ -17,7 +17,7 @@ use Tests\TestCase;
  * decisão) — via ViabilityRequestStateMachine (transição auditada + marco na
  * timeline). Os estados canceláveis são PARAMETRIZÁVEIS
  * (solicitacao.cancelamento.estados_cancelaveis); a definição fina é pendência
- * SEDUR. Cancelar grava cancelled_at/cancelled_reason/cancelled_by_user_id de
+ * SEDUR. Cancelar grava cancelled_at/cancelled_reason/cancelled_by de
  * verdade (anti-fachada); fora dos estados canceláveis bloqueia com aviso e
  * audita (RN-002); só o dono cancela (policy, CA-04).
  */
@@ -53,7 +53,7 @@ class CancelarSolicitacaoTest extends TestCase
         $owner = $this->portalUser();
         $solicitacao = ViabilityRequest::factory()->draft()->withPrimaryCnae()->create([
             'requester_user_id' => $owner->id,
-            'created_by_user_id' => $owner->id,
+            'created_by_type' => $owner->getMorphClass(), 'created_by_id' => $owner->id,
         ]);
 
         $this->actingAs($owner)
@@ -69,7 +69,7 @@ class CancelarSolicitacaoTest extends TestCase
         $this->assertSame(ViabilityRequestStatus::Cancelada, $solicitacao->status);
         $this->assertNotNull($solicitacao->cancelled_at);
         $this->assertSame('Cadastro duplicado por engano.', $solicitacao->cancelled_reason);
-        $this->assertSame($owner->id, $solicitacao->cancelled_by_user_id);
+        $this->assertSame($owner->id, $solicitacao->cancelled_by_id);
 
         $transition = $solicitacao->transitions()->first();
         $this->assertNotNull($transition);
@@ -95,7 +95,7 @@ class CancelarSolicitacaoTest extends TestCase
         $owner = $this->portalUser();
         $solicitacao = ViabilityRequest::factory()->protocoled()->withPrimaryCnae()->create([
             'requester_user_id' => $owner->id,
-            'created_by_user_id' => $owner->id,
+            'created_by_type' => $owner->getMorphClass(), 'created_by_id' => $owner->id,
         ]);
         $numeroProtocolo = $solicitacao->protocol_number;
 
@@ -128,7 +128,7 @@ class CancelarSolicitacaoTest extends TestCase
         $owner = $this->portalUser();
         $solicitacao = ViabilityRequest::factory()->protocoled()->withPrimaryCnae()->create([
             'requester_user_id' => $owner->id,
-            'created_by_user_id' => $owner->id,
+            'created_by_type' => $owner->getMorphClass(), 'created_by_id' => $owner->id,
         ]);
 
         try {
@@ -141,7 +141,7 @@ class CancelarSolicitacaoTest extends TestCase
         $solicitacao->refresh();
         $this->assertSame(ViabilityRequestStatus::Protocolada, $solicitacao->status);
         $this->assertNull($solicitacao->cancelled_at);
-        $this->assertNull($solicitacao->cancelled_by_user_id);
+        $this->assertNull($solicitacao->cancelled_by_id);
         $this->assertSame(0, $solicitacao->transitions()->count());
 
         // RN-002: o bloqueio é auditado com resultado 'bloqueado' e a solicitação
@@ -164,7 +164,7 @@ class CancelarSolicitacaoTest extends TestCase
         $owner = $this->portalUser();
         $solicitacao = ViabilityRequest::factory()->protocoled()->withPrimaryCnae()->create([
             'requester_user_id' => $owner->id,
-            'created_by_user_id' => $owner->id,
+            'created_by_type' => $owner->getMorphClass(), 'created_by_id' => $owner->id,
         ]);
 
         $this->actingAs($owner)
@@ -196,7 +196,7 @@ class CancelarSolicitacaoTest extends TestCase
         $stranger = $this->portalUser();
         $solicitacao = ViabilityRequest::factory()->draft()->withPrimaryCnae()->create([
             'requester_user_id' => $owner->id,
-            'created_by_user_id' => $owner->id,
+            'created_by_type' => $owner->getMorphClass(), 'created_by_id' => $owner->id,
         ]);
 
         $this->actingAs($stranger)
@@ -218,7 +218,7 @@ class CancelarSolicitacaoTest extends TestCase
         $owner = $this->portalUser();
         $solicitacao = ViabilityRequest::factory()->draft()->withPrimaryCnae()->create([
             'requester_user_id' => $owner->id,
-            'created_by_user_id' => $owner->id,
+            'created_by_type' => $owner->getMorphClass(), 'created_by_id' => $owner->id,
         ]);
 
         $this->actingAs($owner)

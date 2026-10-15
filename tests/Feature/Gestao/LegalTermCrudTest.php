@@ -97,7 +97,7 @@ class LegalTermCrudTest extends TestCase
         // Aceites anteriores permanecem vinculados à versão aceita (histórico).
         $this->assertSame(
             $vigenteAntigo?->id,
-            LegalTermAcceptance::query()->where('user_id', $admin->id)->value('legal_term_id'),
+            LegalTermAcceptance::query()->where('accepted_by_type', $admin->getMorphClass())->where('accepted_by_id', $admin->id)->value('legal_term_id'),
         );
     }
 

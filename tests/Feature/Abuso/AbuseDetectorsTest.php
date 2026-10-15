@@ -133,11 +133,11 @@ class AbuseDetectorsTest extends TestCase
         $this->definirLimite('abuso.volume_contador.limite', 3);
 
         $contador = User::factory()->create();
-        ViabilityRequest::factory()->count(4)->create(['created_by_user_id' => $contador->id]);
+        ViabilityRequest::factory()->count(4)->create(['created_by_type' => $contador->getMorphClass(), 'created_by_id' => $contador->id]);
 
         // Outro criador com 3 (não excede) — não deve gerar finding.
         $outro = User::factory()->create();
-        ViabilityRequest::factory()->count(3)->create(['created_by_user_id' => $outro->id]);
+        ViabilityRequest::factory()->count(3)->create(['created_by_type' => $outro->getMorphClass(), 'created_by_id' => $outro->id]);
 
         $findings = $this->lista(app(VolumeContadorDetector::class)->detect($this->janela()));
 
@@ -145,7 +145,7 @@ class AbuseDetectorsTest extends TestCase
         $finding = $findings[0];
         $this->assertSame('volume_contador', $finding->ruleKey);
         $this->assertSame(4, $finding->evidence['total']);
-        $this->assertSame($contador->id, $finding->evidence['created_by_user_id']);
+        $this->assertSame($contador->id, $finding->evidence['created_by_id']);
         $this->assertInstanceOf(User::class, $finding->subject);
         $this->assertTrue($finding->subject->is($contador));
     }

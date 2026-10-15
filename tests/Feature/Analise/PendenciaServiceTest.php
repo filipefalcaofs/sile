@@ -118,14 +118,14 @@ class PendenciaServiceTest extends TestCase
         // canal (mapa default pendencia_aberta = [email, in_app]; HU-096).
         $this->assertDatabaseHas('communications', [
             'viability_request_id' => $request->id,
-            'recipient_user_id' => $requester->id,
+            'recipient_type' => $requester->getMorphClass(), 'recipient_id' => $requester->id,
             'type' => CommunicationType::PendenciaAberta->value,
             'channel' => CommunicationChannel::Email->value,
             'status' => CommunicationStatus::NaFila->value,
         ]);
         $this->assertDatabaseHas('communications', [
             'viability_request_id' => $request->id,
-            'recipient_user_id' => $requester->id,
+            'recipient_type' => $requester->getMorphClass(), 'recipient_id' => $requester->id,
             'type' => CommunicationType::PendenciaAberta->value,
             'channel' => CommunicationChannel::InApp->value,
             'status' => CommunicationStatus::NaFila->value,

@@ -56,7 +56,7 @@ class InformarImovelTest extends TestCase
     {
         return ViabilityRequest::factory()->draft()->create(array_merge([
             'requester_user_id' => $user->id,
-            'created_by_user_id' => $user->id,
+            'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
             'company_id' => $this->companyLinkedTo($user)->id,
             'used_area_m2' => null,
             'address_reference' => null,

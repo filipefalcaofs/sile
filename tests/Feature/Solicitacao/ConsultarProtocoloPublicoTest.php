@@ -36,7 +36,8 @@ class ConsultarProtocoloPublicoTest extends TestCase
             'from_status' => ViabilityRequestStatus::Rascunho,
             'to_status' => ViabilityRequestStatus::Protocolada,
             'public_label' => ViabilityRequestStatus::Protocolada->publicLabel(),
-            'actor_user_id' => null,
+            'actor_type' => null,
+            'actor_id' => null,
         ]);
 
         return $solicitacao;
@@ -88,7 +89,7 @@ class ConsultarProtocoloPublicoTest extends TestCase
         $company = Company::factory()->create(['legal_name' => 'Empresa Confidencial LTDA']);
         $solicitacao = $this->protocolada([
             'requester_user_id' => $user->id,
-            'created_by_user_id' => $user->id,
+            'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
             'company_id' => $company->id,
             'address_street' => 'Rua Secreta dos Testes',
             'address_number' => '777',

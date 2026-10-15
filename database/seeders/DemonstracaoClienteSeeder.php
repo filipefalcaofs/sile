@@ -109,7 +109,7 @@ class DemonstracaoClienteSeeder extends Seeder
 
         if ($term = LegalTerm::current('lgpd')) {
             LegalTermAcceptance::firstOrCreate(
-                ['user_id' => $user->id, 'legal_term_id' => $term->id],
+                ['accepted_by_type' => $user->getMorphClass(), 'accepted_by_id' => $user->id, 'legal_term_id' => $term->id],
                 ['ip_address' => '127.0.0.1', 'accepted_at' => now()],
             );
         }

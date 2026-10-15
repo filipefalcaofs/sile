@@ -50,7 +50,7 @@ class TermAcceptanceTest extends TestCase
         $this->assertFalse($user->hasAcceptedTerm($term));
 
         LegalTermAcceptance::create([
-            'user_id' => $user->id,
+            'accepted_by_type' => $user->getMorphClass(), 'accepted_by_id' => $user->id,
             'legal_term_id' => $term->id,
             'accepted_at' => now(),
         ]);
@@ -105,7 +105,7 @@ class TermAcceptanceTest extends TestCase
             ->assertRedirect('/portal/painel');
 
         $this->assertDatabaseHas('legal_term_acceptances', [
-            'user_id' => $cidadao->id,
+            'accepted_by_type' => $cidadao->getMorphClass(), 'accepted_by_id' => $cidadao->id,
             'legal_term_id' => $term->id,
             'ip_address' => '127.0.0.1',
         ]);

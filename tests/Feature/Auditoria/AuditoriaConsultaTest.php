@@ -166,13 +166,13 @@ class AuditoriaConsultaTest extends TestCase
     public function test_acessos_filtra_por_usuario(): void
     {
         $user = User::factory()->create(['name' => 'Carla Cidadã']);
-        AccessLog::factory()->create(['user_id' => $user->id, 'email' => $user->email]);
+        AccessLog::factory()->create(['actor_type' => $user->getMorphClass(), 'actor_id' => $user->id, 'email' => $user->email]);
         AccessLog::factory()->create();
 
-        $porId = $this->service()->acessos(['usuario_id' => $user->id])->pluck('user_id')->all();
+        $porId = $this->service()->acessos(['usuario_id' => $user->id])->pluck('actor_id')->all();
         $this->assertSame([$user->id], $porId);
 
-        $porNome = $this->service()->acessos(['usuario' => 'carla'])->pluck('user_id')->all();
+        $porNome = $this->service()->acessos(['usuario' => 'carla'])->pluck('actor_id')->all();
         $this->assertSame([$user->id], $porNome);
     }
 

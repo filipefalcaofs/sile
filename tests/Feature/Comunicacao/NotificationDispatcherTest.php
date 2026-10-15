@@ -133,13 +133,13 @@ class NotificationDispatcherTest extends TestCase
         // Duas linhas na_fila (mapa default pendencia_aberta = [email, in_app]).
         $this->assertSame(2, Communication::query()->where('status', CommunicationStatus::NaFila)->count());
         $this->assertDatabaseHas('communications', [
-            'recipient_user_id' => $user->id,
+            'recipient_type' => $user->getMorphClass(), 'recipient_id' => $user->id,
             'channel' => CommunicationChannel::Email->value,
             'type' => CommunicationType::PendenciaAberta->value,
             'status' => CommunicationStatus::NaFila->value,
         ]);
         $this->assertDatabaseHas('communications', [
-            'recipient_user_id' => $user->id,
+            'recipient_type' => $user->getMorphClass(), 'recipient_id' => $user->id,
             'channel' => CommunicationChannel::InApp->value,
             'status' => CommunicationStatus::NaFila->value,
         ]);

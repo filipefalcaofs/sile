@@ -249,7 +249,7 @@ class AtendimentoPresencialTest extends TestCase
         $this->assertNotNull($solicitacao);
         // Beneficiário = cidadão; ator real = atendente (CA-01/RN-001).
         $this->assertSame($citizen->id, $solicitacao->requester_user_id);
-        $this->assertSame($attendant->id, $solicitacao->created_by_user_id);
+        $this->assertSame($attendant->id, $solicitacao->created_by_id);
         $this->assertSame('portal', $solicitacao->origin->value);
 
         // Auditoria com os DOIS CPFs: causer = atendente, acting_for = cidadão.

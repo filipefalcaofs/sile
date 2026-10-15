@@ -26,7 +26,7 @@ class AccessHistoryTest extends TestCase
         $user = Cidadao::factory()->withAcceptedLgpdTerm()->create();
 
         AccessLog::factory()->count(3)->create([
-            'user_id' => $user->id,
+            'actor_type' => $user->getMorphClass(), 'actor_id' => $user->id,
             'email' => $user->email,
         ]);
 
@@ -45,7 +45,7 @@ class AccessHistoryTest extends TestCase
         $user = Cidadao::factory()->withAcceptedLgpdTerm()->create();
 
         AccessLog::factory()->create([
-            'user_id' => null,
+            'actor_type' => null, 'actor_id' => null,
             'email' => $user->email,
             'event' => 'bloqueio',
         ]);
@@ -64,7 +64,7 @@ class AccessHistoryTest extends TestCase
         $user = Cidadao::factory()->withAcceptedLgpdTerm()->create();
 
         AccessLog::factory()->create([
-            'user_id' => $user->id,
+            'actor_type' => $user->getMorphClass(), 'actor_id' => $user->id,
             'email' => $user->email,
             'event' => 'falha',
             'ip_address' => '10.0.0.1',
@@ -85,7 +85,7 @@ class AccessHistoryTest extends TestCase
         $user = Cidadao::factory()->withAcceptedLgpdTerm()->create();
 
         AccessLog::factory()->count(20)->create([
-            'user_id' => $user->id,
+            'actor_type' => $user->getMorphClass(), 'actor_id' => $user->id,
             'email' => $user->email,
         ]);
 
@@ -105,7 +105,7 @@ class AccessHistoryTest extends TestCase
         $target = User::factory()->create();
 
         AccessLog::factory()->count(2)->create([
-            'user_id' => $target->id,
+            'actor_type' => $target->getMorphClass(), 'actor_id' => $target->id,
             'email' => $target->email,
         ]);
 

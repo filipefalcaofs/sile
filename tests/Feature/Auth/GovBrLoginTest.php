@@ -190,7 +190,7 @@ class GovBrLoginTest extends TestCase
         $this->assertNotNull($account->last_authenticated_at);
 
         $this->assertDatabaseHas('access_logs', [
-            'user_id' => $user->id,
+            'actor_type' => $user->getMorphClass(), 'actor_id' => $user->id,
             'event' => 'login',
             'channel' => 'portal',
         ]);
@@ -294,7 +294,7 @@ class GovBrLoginTest extends TestCase
         $this->assertGuest();
 
         $this->assertDatabaseHas('access_logs', [
-            'user_id' => $user->id,
+            'actor_type' => $user->getMorphClass(), 'actor_id' => $user->id,
             'event' => 'inativada',
         ]);
     }

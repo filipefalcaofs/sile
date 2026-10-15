@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\User;
+use App\Models\Cidadao;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityRequestDocument;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -26,7 +26,8 @@ class ViabilityRequestDocumentFactory extends Factory
             'mime_type' => 'application/pdf',
             'size' => fake()->numberBetween(1000, 5_000_000),
             'sha256' => hash('sha256', fake()->uuid()),
-            'uploaded_by_user_id' => User::factory(),
+            'uploaded_by_type' => Cidadao::class,
+            'uploaded_by_id' => Cidadao::factory(),
         ];
     }
 }

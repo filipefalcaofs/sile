@@ -52,7 +52,7 @@ class GestaoLoginTest extends TestCase
         $this->assertGuest('web');
 
         $this->assertDatabaseHas('access_logs', [
-            'user_id' => $administrador->id,
+            'actor_type' => $administrador->getMorphClass(), 'actor_id' => $administrador->id,
             'event' => 'login',
             'channel' => 'gestao',
         ]);

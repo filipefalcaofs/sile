@@ -66,7 +66,7 @@ class LgpdMonitorTest extends TestCase
 
         foreach ($users->take(3) as $user) {
             LegalTermAcceptance::create([
-                'user_id' => $user->id,
+                'accepted_by_type' => $user->getMorphClass(), 'accepted_by_id' => $user->id,
                 'legal_term_id' => $v1->id,
                 'accepted_at' => now(),
             ]);

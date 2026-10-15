@@ -54,7 +54,7 @@ class ConsultarProtocoloTest extends TestCase
     {
         $solicitacao = ViabilityRequest::factory()->draft()->withPrimaryCnae()->create([
             'requester_user_id' => $user->id,
-            'created_by_user_id' => $user->id,
+            'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
             'used_area_m2' => 120.0,
         ]);
 
@@ -71,7 +71,7 @@ class ConsultarProtocoloTest extends TestCase
         $user = $this->portalUser();
         $solicitacao = ViabilityRequest::factory()->draft()->withPrimaryCnae()->create([
             'requester_user_id' => $user->id,
-            'created_by_user_id' => $user->id,
+            'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
         ]);
 
         // Transição REAL rascunho→protocolada — fonte da timeline.
@@ -123,7 +123,7 @@ class ConsultarProtocoloTest extends TestCase
         $user = $this->portalUser();
         $solicitacao = ViabilityRequest::factory()->draft()->create([
             'requester_user_id' => $user->id,
-            'created_by_user_id' => $user->id,
+            'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
         ]);
 
         $timeline = $this->timeline()->build($solicitacao, publico: false);

@@ -130,7 +130,8 @@ class SolicitacaoDevSeeder extends Seeder
             'service_type_id' => $type->id,
             'company_id' => $company->id,
             'requester_user_id' => $cidadao->id,
-            'created_by_user_id' => $creator->id,
+            'created_by_type' => $creator->getMorphClass(),
+            'created_by_id' => $creator->id,
             'used_area_m2' => 120.0,
             'address_street' => 'Avenida Sete de Setembro',
             'address_number' => '1000',
@@ -153,7 +154,8 @@ class SolicitacaoDevSeeder extends Seeder
             'mime_type' => 'image/jpeg',
             'size' => 51200,
             'sha256' => hash('sha256', "fachada-exemplo-{$request->id}"),
-            'uploaded_by_user_id' => $creator->id,
+            'uploaded_by_type' => $creator->getMorphClass(),
+            'uploaded_by_id' => $creator->id,
         ]);
 
         return $request;

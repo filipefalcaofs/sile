@@ -22,7 +22,8 @@ class CommunicationFactory extends Factory
     {
         return [
             'viability_request_id' => null,
-            'recipient_user_id' => null,
+            'recipient_type' => null,
+            'recipient_id' => null,
             'channel' => CommunicationChannel::Email,
             'type' => CommunicationType::PendenciaAberta,
             'status' => CommunicationStatus::NaFila,

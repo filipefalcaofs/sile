@@ -120,7 +120,7 @@ class ContingenciaTest extends TestCase
         $this->assertMatchesRegularExpression('/^VIA-\d{4}-\d{6}$/', (string) $solicitacao->protocol_number);
         $this->assertNotNull($solicitacao->protocoled_at);
         $this->assertSame($beneficiario->id, $solicitacao->requester_user_id);
-        $this->assertSame($operador->id, $solicitacao->created_by_user_id);
+        $this->assertSame($operador->id, $solicitacao->created_by_id);
         $this->assertNotNull($solicitacao->contingency_reason);
 
         // MESMO motor: a transição rascunho→protocolada foi gravada e auditada.

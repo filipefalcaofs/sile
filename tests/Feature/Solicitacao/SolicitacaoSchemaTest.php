@@ -45,14 +45,14 @@ class SolicitacaoSchemaTest extends TestCase
 
         $this->assertTrue(Schema::hasColumns('viability_requests', [
             'protocol_number', 'status', 'origin',
-            'service_type_id', 'company_id', 'requester_user_id', 'created_by_user_id',
+            'service_type_id', 'company_id', 'requester_user_id', 'created_by_type', 'created_by_id',
             'used_area_m2', 'property_registration', 'tipo_imovel', 'tipo_imovel_normalized',
             'address_street', 'address_number', 'address_complement', 'address_neighborhood', 'address_zip', 'address_reference',
             'property_polygon_geojson',
             'is_virtual_office', 'is_public_area', 'has_independent_access',
             'simulation_snapshot', 'simulation_rules_versions', 'simulation_resultado', 'simulated_at',
             'applicant_proceeded_despite', 'contingency_reason', 'external_reference',
-            'protocoled_at', 'cancelled_at', 'cancelled_reason', 'cancelled_by_user_id',
+            'protocoled_at', 'cancelled_at', 'cancelled_reason', 'cancelled_by_type', 'cancelled_by_id',
         ]));
     }
 
@@ -72,12 +72,12 @@ class SolicitacaoSchemaTest extends TestCase
 
         $this->assertTrue(Schema::hasTable('viability_request_documents'));
         $this->assertTrue(Schema::hasColumns('viability_request_documents', [
-            'viability_request_id', 'requirement_id', 'disk', 'path', 'original_name', 'mime_type', 'size', 'sha256', 'uploaded_by_user_id',
+            'viability_request_id', 'requirement_id', 'disk', 'path', 'original_name', 'mime_type', 'size', 'sha256', 'uploaded_by_type', 'uploaded_by_id',
         ]));
 
         $this->assertTrue(Schema::hasTable('viability_request_transitions'));
         $this->assertTrue(Schema::hasColumns('viability_request_transitions', [
-            'viability_request_id', 'from_status', 'to_status', 'reason', 'public_label', 'actor_user_id',
+            'viability_request_id', 'from_status', 'to_status', 'reason', 'public_label', 'actor_type', 'actor_id',
         ]));
     }
 
@@ -151,7 +151,7 @@ class SolicitacaoSchemaTest extends TestCase
         $this->assertNull($request->protocol_number);
         $this->assertIsArray($request->property_polygon_geojson);
         $this->assertNotNull($request->requester_user_id);
-        $this->assertNotNull($request->created_by_user_id);
+        $this->assertNotNull($request->created_by_id);
     }
 
     public function test_factory_protocolada_tem_numero_e_data(): void

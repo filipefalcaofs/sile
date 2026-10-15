@@ -59,7 +59,7 @@ class ProtocolarSolicitacaoTest extends TestCase
     {
         $solicitacao = ViabilityRequest::factory()->draft()->create([
             'requester_user_id' => $user->id,
-            'created_by_user_id' => $user->id,
+            'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
             'used_area_m2' => 120.0,
         ]);
 
@@ -138,7 +138,7 @@ class ProtocolarSolicitacaoTest extends TestCase
         $user = $this->portalUser();
         $solicitacao = ViabilityRequest::factory()->draft()->create([
             'requester_user_id' => $user->id,
-            'created_by_user_id' => $user->id,
+            'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
             'used_area_m2' => 120.0,
         ]);
 
@@ -256,7 +256,7 @@ class ProtocolarSolicitacaoTest extends TestCase
         $user = $this->portalUser();
         $solicitacao = ViabilityRequest::factory()->protocoled()->withPrimaryCnae()->create([
             'requester_user_id' => $user->id,
-            'created_by_user_id' => $user->id,
+            'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
         ]);
         $numeroAntes = $solicitacao->protocol_number;
 
@@ -392,7 +392,7 @@ class ProtocolarSolicitacaoTest extends TestCase
         // número anterior permanece (nenhum novo é gerado).
         $protocolada = ViabilityRequest::factory()->protocoled()->withPrimaryCnae()->create([
             'requester_user_id' => $owner->id,
-            'created_by_user_id' => $owner->id,
+            'created_by_type' => $owner->getMorphClass(), 'created_by_id' => $owner->id,
         ]);
         $numeroAntes = $protocolada->protocol_number;
 

@@ -74,7 +74,7 @@ class CriarSolicitacaoTest extends TestCase
             'company_id' => $company->id,
             'service_type_id' => $serviceType->id,
             'requester_user_id' => $user->id,
-            'created_by_user_id' => $user->id,
+            'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
             'origin' => 'portal',
             'status' => 'rascunho',
         ]);
@@ -148,7 +148,7 @@ class CriarSolicitacaoTest extends TestCase
         $request = ViabilityRequest::query()->where('company_id', $company->id)->first();
         $this->assertNotNull($request);
         $this->assertSame($grantor->id, $request->requester_user_id);
-        $this->assertSame($attorney->id, $request->created_by_user_id);
+        $this->assertSame($attorney->id, $request->created_by_id);
 
         $this->assertDatabaseHas('activity_log', [
             'subject_type' => $request->getMorphClass(),

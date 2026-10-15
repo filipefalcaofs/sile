@@ -62,7 +62,7 @@ class ContingenciaRelatorioTest extends TestCase
             'protocoled_at' => Carbon::parse($protocoladoEm),
             'origin' => $origem,
             'contingency_reason' => $motivo,
-            'created_by_user_id' => $this->operador->id,
+            'created_by_type' => $this->operador->getMorphClass(), 'created_by_id' => $this->operador->id,
         ]);
     }
 

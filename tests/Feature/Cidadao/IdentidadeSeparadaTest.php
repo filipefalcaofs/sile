@@ -3,7 +3,6 @@
 namespace Tests\Feature\Cidadao;
 
 use App\Models\Cidadao;
-use App\Models\LegalTerm;
 use App\Models\User;
 use App\Support\Migration\IdentidadeSeparada;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -146,23 +145,15 @@ class IdentidadeSeparadaTest extends TestCase
         $this->assertTrue($tipo['nullable']);
     }
 
-    public function test_para_morph_na_tabela_real_de_aceites_inclui_o_tipo_no_unique(): void
+    public function test_tabela_real_de_aceites_migrada_tem_o_tipo_no_unique(): void
     {
-        $user = User::factory()->create();
-        $termo = LegalTerm::factory()->create();
-        DB::table('legal_term_acceptances')->insert([
-            'user_id' => $user->id, 'legal_term_id' => $termo->id, 'accepted_at' => now(),
-        ]);
-        IdentidadeSeparada::copiarContasDeCidadao();
-
-        IdentidadeSeparada::paraMorph('legal_term_acceptances', 'user_id', 'accepted_by');
-
         $indices = $this->indices('legal_term_acceptances');
+
         $this->assertSame(
             ['accepted_by_type', 'accepted_by_id', 'legal_term_id'],
             $indices['legal_term_acceptances_accepted_by_type_accepted_by_id_legal_term_id_unique']['columns'],
         );
-        $this->assertDatabaseHas('legal_term_acceptances', ['accepted_by_id' => $user->id, 'accepted_by_type' => Cidadao::class]);
+        $this->assertFalse(Schema::hasColumn('legal_term_acceptances', 'user_id'));
     }
 
     public function test_espelhar_orfaos_espelha_so_os_ausentes_e_e_idempotente(): void

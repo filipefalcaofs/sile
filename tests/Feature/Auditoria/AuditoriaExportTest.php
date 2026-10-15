@@ -187,7 +187,7 @@ class AuditoriaExportTest extends TestCase
     {
         $gestor = $this->administrador();
         $user = User::factory()->create(['name' => 'Eduarda Acesso']);
-        AccessLog::factory()->create(['user_id' => $user->id, 'email' => 'eduarda@example.test', 'event' => 'login']);
+        AccessLog::factory()->create(['actor_type' => $user->getMorphClass(), 'actor_id' => $user->id, 'email' => 'eduarda@example.test', 'event' => 'login']);
 
         $response = $this->actingAs($gestor, 'gestao')
             ->get('/gestao/auditoria/export?fonte=acessos')
