@@ -12,8 +12,8 @@ use Illuminate\Console\Command;
 
 /**
  * Refaz o vínculo dos processos REGIN com pessoas: o criador é sempre a conta da
- * integração JUCEB e o requerente é o solicitante que veio no envelope (ou a
- * própria integração quando o envelope não trouxe solicitante). O envelope vem de
+ * integração JUCEB e o requerente é o solicitante que veio no envelope (ou nulo
+ * quando o envelope não trouxe solicitante). O envelope vem de
  * origem_declarada; sem ele, do JSON de entrada guardado no log de integração
  * (a chamada mais recente do protocolo que trouxe cpfSolicitante). Só toca
  * processo hoje ligado à conta da integração ou a conta de desenvolvedor/suporte.
@@ -55,13 +55,13 @@ class ReginCorrigirRequerentesCommand extends Command
                 }
 
                 $processo->forceFill([
-                    'requester_user_id' => ($requerente ?? $integracao)->id,
+                    'requester_user_id' => $requerente?->id,
                     'created_by_user_id' => $integracao->id,
                 ])->save();
             });
 
         $this->info("Com solicitante da JUCEB: {$contagem['com_solicitante']}");
-        $this->info("Sem solicitante no envelope (requerente = integração): {$contagem['sem_solicitante']}");
+        $this->info("Sem solicitante no envelope (requerente nulo): {$contagem['sem_solicitante']}");
 
         return self::SUCCESS;
     }

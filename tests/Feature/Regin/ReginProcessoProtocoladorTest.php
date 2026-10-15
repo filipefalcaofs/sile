@@ -163,9 +163,8 @@ class ReginProcessoProtocoladorTest extends TestCase
         $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($this->ruc()));
 
         $this->assertNotNull($processo);
-        $this->assertNotSame($gestor->id, $processo->requester_user_id);
-        $this->assertNotSame(User::query()->orderBy('id')->value('id'), $processo->requester_user_id);
-        $this->assertFalse($processo->requester->temEmailEntregavel());
+        $this->assertNull($processo->requester_user_id);
+        $this->assertNotSame($gestor->id, $processo->created_by_user_id);
     }
 
     public function test_cpf_ja_usado_nao_impede_o_solicitante_nao_identificado(): void
@@ -175,7 +174,7 @@ class ReginProcessoProtocoladorTest extends TestCase
         $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($this->ruc()));
 
         $this->assertNotNull($processo);
-        $this->assertSame(User::EMAIL_INTEGRACAO_REGIN, $processo->requester->email);
+        $this->assertSame(User::EMAIL_INTEGRACAO_REGIN, $processo->createdBy->email);
     }
 
     public function test_comando_refaz_requerente_pelo_envelope_e_criador_pela_integracao(): void
@@ -219,6 +218,16 @@ class ReginProcessoProtocoladorTest extends TestCase
         $this->assertSame('maria@exemplo.com', $processo->requester->email);
         $this->assertSame('52998224725', $processo->requester->cpf);
         $this->assertSame(User::EMAIL_INTEGRACAO_REGIN, $processo->createdBy->email);
+    }
+
+    public function test_comando_deixa_o_requerente_nulo_quando_a_juceb_nao_mandou_solicitante(): void
+    {
+        $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($this->ruc()));
+        $processo->forceFill(['requester_user_id' => app(ReginProcessoProtocolador::class)->integracao()->id, 'origem_declarada' => null])->save();
+
+        $this->artisan('regin:corrigir-requerentes')->assertSuccessful();
+
+        $this->assertNull($processo->fresh()->requester_user_id);
     }
 
     public function test_natureza_juridica_do_ruc_vai_para_a_empresa(): void

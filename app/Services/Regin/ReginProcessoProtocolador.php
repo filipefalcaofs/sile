@@ -83,7 +83,7 @@ class ReginProcessoProtocolador
             'origin' => ViabilityRequestOrigin::Regin,
             'service_type_id' => $this->tipoServico()->id,
             'company_id' => $this->empresa($rowset)->id,
-            'requester_user_id' => $ator->id,
+            'requester_user_id' => null,
             'created_by_user_id' => $ator->id,
             'used_area_m2' => $area,
             'address_street' => $endereco['street'],
@@ -131,7 +131,7 @@ class ReginProcessoProtocolador
             'origin' => ViabilityRequestOrigin::Regin,
             'service_type_id' => $this->tipoServicoDeclarado($dados->servico)->id,
             'company_id' => $this->empresaDaDeclaracao($dados, $recebimento->protocolo)->id,
-            'requester_user_id' => $requerente->id,
+            'requester_user_id' => $requerente?->id,
             'created_by_user_id' => $ator->id,
             'used_area_m2' => $dados->area,
             'address_street' => $dados->logradouro,
@@ -219,15 +219,15 @@ class ReginProcessoProtocolador
     }
 
     /**
-     * Quem a JUCEB indicou como solicitante; sem os dados, a conta da integração.
+     * Quem a JUCEB indicou como solicitante; sem os dados, ninguém (null).
      */
-    public function requerenteDaDeclaracao(RecebimentoProcesso $dados, bool $criar = true): User
+    public function requerenteDaDeclaracao(RecebimentoProcesso $dados, bool $criar = true): ?User
     {
-        return $this->solicitante($dados, $criar) ?? $this->integracao();
+        return $this->solicitante($dados, $criar);
     }
 
     /**
-     * Autora técnica dos processos recebidos da JUCEB: nunca uma pessoa real
+     * Autora dos processos recebidos da JUCEB (created_by): nunca uma pessoa real
      * (nem o primeiro usuário, nem quem está logado). Sem e-mail entregável.
      */
     public function integracao(): User
