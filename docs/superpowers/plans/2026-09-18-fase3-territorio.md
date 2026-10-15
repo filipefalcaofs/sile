@@ -4,7 +4,7 @@
 
 **Goal:** fechar as quatro lacunas de território da auditoria: atributo de nome da zona parametrizável (3.4), catálogo de camadas GeoServer em banco (3.2), gestão de camadas geo pela interface (3.1) e cadastro de zonas com validação na publicação do Quadro 10 (3.3).
 
-**Architecture:** tudo segue os padrões consolidados — parâmetros HU-014 (`ParameterSeeder` + `Settings::get` com fallback em `config/sile.php`), CRUD server-driven espelhando os controllers recentes (`PropertyTypeController`), versionamento de camadas pelo `GeoLayerService`/`GeoJsonLayerImporter` já existentes (a UI é um wrapper do que o `geo:importar` faz), e validação de zona na borda de publicação do rascunho LOUOS.
+**Architecture:** tudo segue os padrões consolidados — parâmetros HU-014 (`ParameterSeeder` + `Settings::get` com fallback em `config/viabiliza.php`), CRUD server-driven espelhando os controllers recentes (`PropertyTypeController`), versionamento de camadas pelo `GeoLayerService`/`GeoJsonLayerImporter` já existentes (a UI é um wrapper do que o `geo:importar` faz), e validação de zona na borda de publicação do rascunho LOUOS.
 
 **Tech Stack:** Laravel 13, PHP 8.5, PHPUnit 12, Inertia v3 + React 19, PostGIS.
 
@@ -28,7 +28,7 @@
 
 **Files:**
 - Modify: `database/seeders/ParameterSeeder.php` (grupo 'geo', após a entrada existente ~linha 235)
-- Modify: `config/sile.php` (seção `geo` — criar se não existir)
+- Modify: `config/viabiliza.php` (seção `geo` — criar se não existir)
 - Modify: `app/Services/Louos/LouosEnquadramentoService.php` (`zonaNome()`, linhas 588-604)
 - Modify: `tests/Feature/Seeders/ParameterSeederTest.php` e `tests/Feature/Seeders/DatabaseSeederTest.php` (contagem +1)
 - Test: `tests/Unit/Louos/ZonaNomeAtributosTest.php` (ou o arquivo de teste mais próximo do enquadramento — verificar onde zonaNome já é exercitado)
@@ -37,7 +37,7 @@
 - Consumes: `Settings::get('geo.zona.atributos_nome', <default>)` — json no banco, fallback em config.
 - Produces: parâmetro `geo.zona.atributos_nome` (type json, default `["ZONA","zona","SIGLA_ZONA","SUBZONA"]`).
 
-- [ ] **Step 1: Teste que falha** — configurar uma lista customizada (ex.: `config(['sile.geo.zona.atributos_nome' => ['NM_ZONA']])`) e provar que `zonaNome` passa a ler `NM_ZONA` das propriedades da feição (hoje lê só as 4 fixas). O método é private — exercitar via o caminho público que o usa (verificar nos testes existentes de enquadramento como a zona entra; se já houver teste cobrindo `zonaNome` indiretamente, seguir o mesmo caminho).
+- [ ] **Step 1: Teste que falha** — configurar uma lista customizada (ex.: `config(['viabiliza.geo.zona.atributos_nome' => ['NM_ZONA']])`) e provar que `zonaNome` passa a ler `NM_ZONA` das propriedades da feição (hoje lê só as 4 fixas). O método é private — exercitar via o caminho público que o usa (verificar nos testes existentes de enquadramento como a zona entra; se já houver teste cobrindo `zonaNome` indiretamente, seguir o mesmo caminho).
 - [ ] **Step 2: RED** — `php artisan test --compact --filter=ZonaNomeAtributos` → FAIL (atributo customizado ignorado).
 - [ ] **Step 3: Implementar** — em `zonaNome()`, trocar o array fixo por:
 
@@ -60,7 +60,7 @@ ParameterSeeder (espelhar a entrada json de `risco.mapa_encaminhamento`):
             ],
 ```
 
-`config/sile.php` — seção `geo` (ou onde fizer mais sentido junto às chaves geo existentes):
+`config/viabiliza.php` — seção `geo` (ou onde fizer mais sentido junto às chaves geo existentes):
 
 ```php
     'geo' => [
@@ -74,7 +74,7 @@ ParameterSeeder (espelhar a entrada json de `risco.mapa_encaminhamento`):
 - [ ] **Step 5: Commit**
 
 ```bash
-git add database/seeders/ParameterSeeder.php config/sile.php app/Services/Louos/LouosEnquadramentoService.php tests/
+git add database/seeders/ParameterSeeder.php config/viabiliza.php app/Services/Louos/LouosEnquadramentoService.php tests/
 git commit -m "feat: parametriza os atributos de nome da zona na feição"
 ```
 
@@ -101,8 +101,8 @@ git commit -m "feat: parametriza os atributos de nome da zona na feição"
 - Produces: tabela `geoserver_layers` (id, workspace, type_name, label nullable, ativo bool, ordem int, timestamps; unique(workspace, type_name)); model com `scopeAtivos()` (ordenado por ordem) + HasAuditoria; rotas `gestao.territorio.geoserver.{index,store,update,ativacao.update}` sob `manter-territorio`.
 
 **Decisões:**
-- **Leitura do cliente:** banco quando alcançável (mesmo vazio — vazio = nenhuma camada, honesto); fallback para `config('sile.integrations.geoserver.type_names')` SÓ com banco inalcançável (QueryException, padrão `Settings`). Formato emitido: `"workspace:type_name"`.
-- **Seed:** as 20 entradas atuais de `config/sile.php:284-296` (workspace = prefixo antes de `:`, type_name = depois), ordem sequencial. Idempotente (`updateOrCreate` por workspace+type_name).
+- **Leitura do cliente:** banco quando alcançável (mesmo vazio — vazio = nenhuma camada, honesto); fallback para `config('viabiliza.integrations.geoserver.type_names')` SÓ com banco inalcançável (QueryException, padrão `Settings`). Formato emitido: `"workspace:type_name"`.
+- **Seed:** as 20 entradas atuais de `config/viabiliza.php:284-296` (workspace = prefixo antes de `:`, type_name = depois), ordem sequencial. Idempotente (`updateOrCreate` por workspace+type_name).
 - **CRUD completo** (create/edit/toggle, sem destroy — padrão do projeto): diferente dos gatilhos, aqui a linha nova NÃO é fachada — o cliente consome qualquer linha ativa de verdade na próxima consulta WFS.
 - O teste unitário existente `GeoServerWfsZonaClientTest` seta o config — com a leitura DB-first, ele passa a semear `GeoServerLayer` (factory) em vez de setar config. Atualizá-lo.
 
@@ -132,7 +132,7 @@ git commit -m "feat: parametriza os atributos de nome da zona na feição"
 **Files:**
 - Create: `app/Http/Controllers/Gestao\GeoLayerController.php`
 - Create: `app/Http/Requests/Gestao/ImportGeoLayerRequest.php`
-- Modify: `config/sile.php` (`geo.upload_max_mb` default 20 — constante técnica de upload, comentário explicando)
+- Modify: `config/viabiliza.php` (`geo.upload_max_mb` default 20 — constante técnica de upload, comentário explicando)
 - Modify: `routes/gestao.php` (prefixo `territorio/camadas`, mesma permissão `manter-territorio` da Task 2)
 - Create: `resources/js/pages/gestao/territorio/camadas.tsx`
 - Modify: `resources/js/layouts/gestao-layout.tsx`

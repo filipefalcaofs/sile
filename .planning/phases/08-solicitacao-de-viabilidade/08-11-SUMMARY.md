@@ -11,7 +11,7 @@ requires:
     provides: "viability_request_transitions (fonte da timeline) + ViabilityRequestStatus::publicLabel()/label() + ViabilityRequestStateMachine (transição com public_label)"
   - phase: 08-solicitacao-de-viabilidade
     plan: "02"
-    provides: "parâmetros solicitacao.consulta_publica.assinatura_ttl_dias, solicitacao.prazo_estimado_dias, seguranca.throttle.consulta_protocolo.por_minuto (catálogo + fallback config/sile.php)"
+    provides: "parâmetros solicitacao.consulta_publica.assinatura_ttl_dias, solicitacao.prazo_estimado_dias, seguranca.throttle.consulta_protocolo.por_minuto (catálogo + fallback config/viabiliza.php)"
   - phase: 08-solicitacao-de-viabilidade
     plan: "05"
     provides: "ViabilityRequestPolicy::view (dono/representado, qualquer status, CA-04)"

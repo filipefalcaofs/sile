@@ -32,6 +32,6 @@ class GeoServerEnderecamentoToggleTest extends TestCase
 
     public function test_camada_do_enderecamento_esta_configurada(): void
     {
-        $this->assertSame('enderecamento:VM_ENDERECAMENTO', config('sile.integrations.geoserver.enderecamento.type_name'));
+        $this->assertSame('enderecamento:VM_ENDERECAMENTO', config('viabiliza.integrations.geoserver.enderecamento.type_name'));
     }
 }

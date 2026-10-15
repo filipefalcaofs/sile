@@ -2,7 +2,7 @@
 
 **Gathered:** 2026-06-10
 **Status:** Ready for planning
-**Source:** PRD Express Path (HUs do EP02 — `docs/SILE_HUs_Completas_MD/EP02-Administracao/`, HU-011 a HU-014)
+**Source:** PRD Express Path (HUs do EP02 — `docs/VIABILIZA_HUs_Completas_MD/EP02-Administracao/`, HU-011 a HU-014)
 
 <domain>
 ## Phase Boundary
@@ -36,7 +36,7 @@ Fora do escopo desta fase: mantenedores de quadros da LOUOS, condicionantes e cl
 
 ### HU-014 — Manter parâmetros do sistema (RN-004 a RN-011, CA-05 a CA-07)
 - Registry de parâmetros administráveis por interface: cada parâmetro com tipo, descrição, valor padrão, regras de validação (faixa/formato/obrigatoriedade); valor inválido rejeitado na gravação (RN-007).
-- **Backend do `Settings` da Fase 1 evolui**: passa a ler do banco com fallback para `config/sile.php` (valor padrão), com cache e invalidação na gravação — efeito sem deploy dentro do TTL de cache (RN-006, CA-05). Call sites existentes (`Settings::get`) não mudam — essa era a promessa da Fase 1.
+- **Backend do `Settings` da Fase 1 evolui**: passa a ler do banco com fallback para `config/viabiliza.php` (valor padrão), com cache e invalidação na gravação — efeito sem deploy dentro do TTL de cache (RN-006, CA-05). Call sites existentes (`Settings::get`) não mudam — essa era a promessa da Fase 1.
 - Feature toggles administráveis para funcionalidades acopláveis (RN-005); desativação degrada de forma controlada e comunicada, nunca falha silenciosa (RN-011, CA-06). Nesta fase nascem o mecanismo e os toggles já aplicáveis; toggles de integrações/IA/fluxo expresso são registrados quando as fases correspondentes chegarem.
 - Parâmetros sensíveis (credenciais, tokens) armazenados criptografados (cast `encrypted`), nunca exibidos em claro após gravados — UI mostra mascarado (RN-009).
 - Histórico de alterações consultável: valor anterior, valor novo, responsável, data/hora (RN-008, CA-07) — usar a trilha de auditoria transversal da Fase 1.
@@ -69,18 +69,18 @@ Fora do escopo desta fase: mantenedores de quadros da LOUOS, condicionantes e cl
 **Downstream agents MUST read these before planning or implementing.**
 
 ### Requisitos da fase (fonte de verdade)
-- `docs/SILE_HUs_Completas_MD/EP02-Administracao/HU-011-Manter-CNAEs.md` — CNAEs (observações citam seed oficial e modelo SIGVISA)
-- `docs/SILE_HUs_Completas_MD/EP02-Administracao/HU-012-Manter-usuarios.md` — usuários
-- `docs/SILE_HUs_Completas_MD/EP02-Administracao/HU-013-Manter-perfis.md` — perfis
-- `docs/SILE_HUs_Completas_MD/EP02-Administracao/HU-014-Manter-parâmetros-do-sistema.md` — parâmetros (RN-004 a RN-011, CA-05 a CA-07, domínios parametrizáveis)
+- `docs/VIABILIZA_HUs_Completas_MD/EP02-Administracao/HU-011-Manter-CNAEs.md` — CNAEs (observações citam seed oficial e modelo SIGVISA)
+- `docs/VIABILIZA_HUs_Completas_MD/EP02-Administracao/HU-012-Manter-usuarios.md` — usuários
+- `docs/VIABILIZA_HUs_Completas_MD/EP02-Administracao/HU-013-Manter-perfis.md` — perfis
+- `docs/VIABILIZA_HUs_Completas_MD/EP02-Administracao/HU-014-Manter-parâmetros-do-sistema.md` — parâmetros (RN-004 a RN-011, CA-05 a CA-07, domínios parametrizáveis)
 
 ### Dados oficiais
 - `docs/dados-oficiais/CNAE_Subclasses_2_3_Estrutura_Detalhada.xlsx` — estrutura oficial IBGE/CONCLA para o seed
 - `docs/ANALISE-HUs-REUNIAO-SEDUR.md` (seções 4A e 4C) — volumetria CNAE, normalizações necessárias, risco municipal × sanitário
 
 ### Código existente a respeitar (Fase 1)
-- `app/Support/Settings.php` — wrapper atual (lê config/sile.php); a fase troca o backend SEM tocar call sites
-- `config/sile.php` — parâmetros atuais (security, ui) que viram valores padrão do registry
+- `app/Support/Settings.php` — wrapper atual (lê config/viabiliza.php); a fase troca o backend SEM tocar call sites
+- `config/viabiliza.php` — parâmetros atuais (security, ui) que viram valores padrão do registry
 - `app/Services/AuditService.php` + `app/Actions/RecordActivityAction.php` — auditoria transversal (assinaturas travadas)
 - `database/seeders/RolesAndPermissionsSeeder.php` — padrão de seed idempotente de papéis/permissões
 - `routes/gestao.php` + `resources/js/layouts/gestao-layout.tsx` — ambiente Gestão onde as telas entram

@@ -84,7 +84,7 @@ class DecidirFluxoExpressoJobLocalizacaoTest extends TestCase
 
     public function test_cadastro_indisponivel_adia_a_decisao_enquanto_ha_tentativas(): void
     {
-        config(['sile.expresso.job.tries' => 3, 'sile.expresso.job.backoff' => [30, 60, 120]]);
+        config(['viabiliza.expresso.job.tries' => 3, 'viabiliza.expresso.job.backoff' => [30, 60, 120]]);
         $this->cadastroIndisponivel();
         $request = $this->protocoladaSemPonto();
 
@@ -100,7 +100,7 @@ class DecidirFluxoExpressoJobLocalizacaoTest extends TestCase
 
     public function test_cadastro_indisponivel_na_ultima_tentativa_decide_com_a_degradacao_honesta(): void
     {
-        config(['sile.expresso.job.tries' => 3, 'sile.expresso.job.backoff' => [30, 60, 120]]);
+        config(['viabiliza.expresso.job.tries' => 3, 'viabiliza.expresso.job.backoff' => [30, 60, 120]]);
         $this->cadastroIndisponivel();
         $request = $this->protocoladaSemPonto();
 
@@ -115,7 +115,7 @@ class DecidirFluxoExpressoJobLocalizacaoTest extends TestCase
 
     public function test_inscricao_nao_encontrada_e_definitiva_e_decide_na_hora(): void
     {
-        config(['sile.expresso.job.tries' => 3]);
+        config(['viabiliza.expresso.job.tries' => 3]);
         $this->cadastroSemInscricao();
         $request = $this->protocoladaSemPonto();
 
@@ -130,7 +130,7 @@ class DecidirFluxoExpressoJobLocalizacaoTest extends TestCase
 
     public function test_cadastro_que_volta_na_segunda_tentativa_grava_o_ponto_antes_de_decidir(): void
     {
-        config(['sile.expresso.job.tries' => 3]);
+        config(['viabiliza.expresso.job.tries' => 3]);
         $this->cadastroLocalizado();
         $request = $this->protocoladaSemPonto();
 
@@ -149,7 +149,7 @@ class DecidirFluxoExpressoJobLocalizacaoTest extends TestCase
 
     public function test_processo_que_ja_tem_ponto_nao_consulta_o_cadastro_de_novo(): void
     {
-        config(['sile.expresso.job.tries' => 3]);
+        config(['viabiliza.expresso.job.tries' => 3]);
         $this->cadastroIndisponivel();
         $request = $this->protocoladaSemPonto();
         $request->forceFill(['property_point_lat' => -12.97, 'property_point_lng' => -38.48])->save();

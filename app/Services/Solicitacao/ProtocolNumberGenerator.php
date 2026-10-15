@@ -36,8 +36,8 @@ class ProtocolNumberGenerator
             return (int) $sequence->last_number;
         });
 
-        $prefix = (string) Settings::get('solicitacao.protocolo.prefixo', config('sile.solicitacao.protocolo.prefixo', 'VIA'));
-        $padding = (int) Settings::get('solicitacao.protocolo.padding', config('sile.solicitacao.protocolo.padding', 6));
+        $prefix = (string) Settings::get('solicitacao.protocolo.prefixo', config('viabiliza.solicitacao.protocolo.prefixo', 'VIA'));
+        $padding = (int) Settings::get('solicitacao.protocolo.padding', config('viabiliza.solicitacao.protocolo.padding', 6));
 
         return sprintf('%s-%d-%s', $prefix, $year, str_pad((string) $number, $padding, '0', STR_PAD_LEFT));
     }

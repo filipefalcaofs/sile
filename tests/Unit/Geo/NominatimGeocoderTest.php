@@ -26,7 +26,7 @@ class NominatimGeocoderTest extends TestCase
         Http::preventStrayRequests();
 
         // Backoff zero mantém o teste rápido — o retry real dorme em produção.
-        config(['sile.integrations.geocoding.backoff_ms' => 0]);
+        config(['viabiliza.integrations.geocoding.backoff_ms' => 0]);
     }
 
     /**
@@ -137,7 +137,7 @@ class NominatimGeocoderTest extends TestCase
 
     public function test_indisponibilidade_de_conexao_lanca_excecao_de_geocodificacao(): void
     {
-        config(['sile.integrations.geocoding.retries' => 1]);
+        config(['viabiliza.integrations.geocoding.retries' => 1]);
 
         Http::fake(['*/search*' => Http::sequence()->pushFailedConnection()]);
 
@@ -148,7 +148,7 @@ class NominatimGeocoderTest extends TestCase
 
     public function test_retry_parametrizado_repete_antes_de_desistir(): void
     {
-        config(['sile.integrations.geocoding.retries' => 2]);
+        config(['viabiliza.integrations.geocoding.retries' => 2]);
 
         // Primeira tentativa falha na conexão; a segunda (retry) sucede.
         Http::fake([
@@ -170,7 +170,7 @@ class NominatimGeocoderTest extends TestCase
         $geocoder = app(Geocoder::class);
         $geocoder->geocode('Praça da Sé, Salvador');
 
-        $this->assertIsArray(Cache::get('sile.geocoding.'.sha1('Praça da Sé, Salvador')));
+        $this->assertIsArray(Cache::get('viabiliza.geocoding.'.sha1('Praça da Sé, Salvador')));
 
         $geocoder->geocode('Praça da Sé, Salvador');
 
@@ -179,7 +179,7 @@ class NominatimGeocoderTest extends TestCase
 
     public function test_falha_nao_e_cacheada(): void
     {
-        config(['sile.integrations.geocoding.retries' => 1]);
+        config(['viabiliza.integrations.geocoding.retries' => 1]);
 
         // 1ª chamada falha (indisponibilidade) e a 2ª sucede: se a falha
         // tivesse sido cacheada, a 2ª nunca chegaria à rede.

@@ -183,7 +183,7 @@ class PropertyType extends Model
     /** @use HasFactory<PropertyTypeFactory> */
     use HasFactory;
 
-    public const CACHE_KEY = 'sile.property_types.catalogo';
+    public const CACHE_KEY = 'viabiliza.property_types.catalogo';
 
     protected static function booted(): void
     {
@@ -481,7 +481,7 @@ Em `app/Services/Risco/TipoImovelCatalog.php`, acrescentar (imports: `App\Models
         try {
             return Cache::remember(
                 PropertyType::CACHE_KEY,
-                (int) config('sile.parameters.cache_ttl', 300),
+                (int) config('viabiliza.parameters.cache_ttl', 300),
                 function () {
                     $dirigemRegra = [];
                     $ramoComum = [];

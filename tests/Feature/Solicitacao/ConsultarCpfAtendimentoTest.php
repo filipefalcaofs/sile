@@ -21,7 +21,7 @@ class ConsultarCpfAtendimentoTest extends TestCase
         parent::setUp();
 
         $this->seed(RolesAndPermissionsSeeder::class);
-        config(['sile.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
+        config(['viabiliza.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
     }
 
     public function test_consulta_cpf_devolve_o_nome_e_se_ja_esta_cadastrado(): void

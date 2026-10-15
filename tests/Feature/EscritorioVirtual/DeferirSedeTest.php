@@ -56,7 +56,7 @@ class DeferirSedeTest extends TestCase
         $this->assertTrue($decision->is_virtual_office_hq);
         $this->assertSame(ResultadoViabilidade::PermitidoComCondicoes->value, $decision->consolidated_result);
         $this->assertContains(
-            config('sile.analise.escritorio_virtual.condicionante_sede'),
+            config('viabiliza.analise.escritorio_virtual.condicionante_sede'),
             $decision->fundamentacao,
         );
         $this->assertTrue(VirtualOfficeInscriptionLock::ativoPara('111.222.333'));

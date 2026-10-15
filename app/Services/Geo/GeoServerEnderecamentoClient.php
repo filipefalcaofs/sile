@@ -64,7 +64,7 @@ class GeoServerEnderecamentoClient
 
         return $this->buscar(
             $this->url($codLog, $numero),
-            (int) config('sile.integrations.geoserver.timeout', 8),
+            (int) config('viabiliza.integrations.geoserver.timeout', 8),
             $complemento,
         );
     }
@@ -77,7 +77,7 @@ class GeoServerEnderecamentoClient
 
         return $this->buscar(
             $this->urlPorPonto($lat, $lng),
-            (int) config('sile.integrations.geoserver.enderecamento.timeout_ponto', 45),
+            (int) config('viabiliza.integrations.geoserver.enderecamento.timeout_ponto', 45),
             '',
             porPonto: true,
         );
@@ -87,7 +87,7 @@ class GeoServerEnderecamentoClient
     {
         try {
             $response = Http::withHeaders([
-                'User-Agent' => (string) config('sile.integrations.geoserver.user_agent', 'Viabiliza-SEDUR-Salvador/1.0'),
+                'User-Agent' => (string) config('viabiliza.integrations.geoserver.user_agent', 'Viabiliza-SEDUR-Salvador/1.0'),
             ])
                 ->timeout($timeout)
                 ->connectTimeout(3)
@@ -325,13 +325,13 @@ class GeoServerEnderecamentoClient
 
     private function wfsUrl(string $cqlFilter): string
     {
-        $base = rtrim((string) Settings::get('integrations.geoserver.base_url', config('sile.integrations.geoserver.base_url')), '/');
+        $base = rtrim((string) Settings::get('integrations.geoserver.base_url', config('viabiliza.integrations.geoserver.base_url')), '/');
 
         return $base.'/wfs?'.http_build_query([
             'service' => 'WFS',
             'version' => '1.1.0',
             'request' => 'GetFeature',
-            'typeName' => (string) config('sile.integrations.geoserver.enderecamento.type_name', 'enderecamento:VM_ENDERECAMENTO'),
+            'typeName' => (string) config('viabiliza.integrations.geoserver.enderecamento.type_name', 'enderecamento:VM_ENDERECAMENTO'),
             'outputFormat' => 'application/json',
             'srsName' => 'EPSG:4326',
             'maxFeatures' => 50,

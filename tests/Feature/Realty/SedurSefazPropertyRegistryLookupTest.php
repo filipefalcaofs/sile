@@ -20,7 +20,7 @@ class SedurSefazPropertyRegistryLookupTest extends TestCase
         parent::setUp();
 
         Http::preventStrayRequests();
-        config(['sile.features.cadastro_imobiliario' => true]);
+        config(['viabiliza.features.cadastro_imobiliario' => true]);
     }
 
     public function test_binding_real_e_o_cliente_do_bff_sedur(): void
@@ -138,7 +138,7 @@ class SedurSefazPropertyRegistryLookupTest extends TestCase
 
     public function test_toggle_desligado_nao_chama_a_api(): void
     {
-        config(['sile.features.cadastro_imobiliario' => false]);
+        config(['viabiliza.features.cadastro_imobiliario' => false]);
         Http::fake();
 
         try {

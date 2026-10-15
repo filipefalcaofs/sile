@@ -36,10 +36,10 @@ class PredictiveAuditServiceTest extends TestCase
 
         Cache::flush();
         config([
-            'sile.features.ia_auditoria_preditiva' => true,
-            'sile.ia.auditoria_preditiva.janela_dias' => 30,
-            'sile.ia.auditoria_preditiva.limiar_score' => 70,
-            'sile.abuso.volume_cnpj.limite' => 2,
+            'viabiliza.features.ia_auditoria_preditiva' => true,
+            'viabiliza.ia.auditoria_preditiva.janela_dias' => 30,
+            'viabiliza.ia.auditoria_preditiva.limiar_score' => 70,
+            'viabiliza.abuso.volume_cnpj.limite' => 2,
         ]);
     }
 
@@ -76,7 +76,7 @@ class PredictiveAuditServiceTest extends TestCase
 
     public function test_toggle_desligado_e_noop_sem_gravar(): void
     {
-        config(['sile.features.ia_auditoria_preditiva' => false]);
+        config(['viabiliza.features.ia_auditoria_preditiva' => false]);
         Cache::flush();
 
         $company = Company::factory()->create();

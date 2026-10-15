@@ -36,7 +36,7 @@ class LocationValidationService
     {
         $limiar = (int) Settings::get(
             'geo.validacao.sobreposicao_minima',
-            config('sile.geo.validacao.sobreposicao_minima', 50),
+            config('viabiliza.geo.validacao.sobreposicao_minima', 50),
         );
 
         $layer = $this->resolveLoteLayer($date);

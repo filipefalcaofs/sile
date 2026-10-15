@@ -7,7 +7,7 @@ tags: [fortify, inertia-react, rate-limiting, password-reset, activitylog, setti
 # Dependency graph
 requires:
   - phase: 01-01
-    provides: config/sile.php + App\Support\Settings + Password::defaults() parametrizado + features do Fortify
+    provides: config/viabiliza.php + App\Support\Settings + Password::defaults() parametrizado + features do Fortify
   - phase: 01-02
     provides: listeners de access_logs (login/falha/bloqueio/logout), AuditService e 403 auditado
   - phase: 01-03

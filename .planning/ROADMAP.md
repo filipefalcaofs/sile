@@ -6,7 +6,7 @@ O Viabiliza será construído em 15 fases que partem da fundação (identidade, 
 
 ## Justificativa da ordem
 
-A estrutura segue a ordem sugerida em `docs/PROMPT-INICIO-PROJETO-SILE.md`, que reflete as dependências reais entre épicas. Decisões estruturais:
+A estrutura segue a ordem sugerida em `docs/PROMPT-INICIO-PROJETO-VIABILIZA.md`, que reflete as dependências reais entre épicas. Decisões estruturais:
 
 - **Auditoria transversal na Fase 1**: a RN-002 (usuário, data/hora, origem, ação, resultado, versão de regras) é exigida por todas as HUs. O mecanismo nasce como infraestrutura reutilizável na Fase 1; a Fase 12 (EP12) cobre apenas consulta, exportação e LGPD sobre dados já registrados.
 - **Mantenedores junto com os motores**: HU-015 a HU-018 (Quadros 7/10/11/11A) entram na Fase 5 e HU-019/HU-020 (condicionantes, risco) na Fase 6 — mantenedor sem motor que consuma os dados é feature morta; juntos formam fatia vertical verificável.
@@ -69,7 +69,7 @@ A estrutura segue a ordem sugerida em `docs/PROMPT-INICIO-PROJETO-SILE.md`, que 
 **Plans**: 9 plans
 
 Plans:
-- [x] 01-01-PLAN.md — Wave 0/fundação: dependências (Fortify/permission/activitylog), pt-BR, config/sile.php + Settings, SecurityHeaders (wave 1) ✓ 2026-06-09
+- [x] 01-01-PLAN.md — Wave 0/fundação: dependências (Fortify/permission/activitylog), pt-BR, config/viabiliza.php + Settings, SecurityHeaders (wave 1) ✓ 2026-06-09
 - [x] 01-02-PLAN.md — Auditoria transversal RN-002: activitylog estendido, HasAuditoria, AuditService, 403 auditado, access_logs + listeners (wave 2) ✓ 2026-06-10
 - [x] 01-03-PLAN.md — Perfis/permissões seedados, rotas portal × gestão, landing pública, shared props, layouts e dashboards (wave 3) ✓ 2026-06-10
 - [x] 01-04-PLAN.md — HU-001 + HU-005: cadastro com CPF validado, papel cidadao e confirmação de e-mail (wave 4) ✓ 2026-06-10
@@ -138,7 +138,7 @@ Plans:
 **Plans**: 5 plans
 
 Plans:
-- [x] 03.1-01-PLAN.md — Fundação: 5 parâmetros novos (retenção, throttle, retries/timeout/backoff) + fallbacks em config/sile.php + testes de seeder (wave 1) ✓ 2026-06-13
+- [x] 03.1-01-PLAN.md — Fundação: 5 parâmetros novos (retenção, throttle, retries/timeout/backoff) + fallbacks em config/viabiliza.php + testes de seeder (wave 1) ✓ 2026-06-13
 - [x] 03.1-02-PLAN.md — Jobs REDESIM/CNAE com retry/timeout/backoff, flag --queue, comando cnae:importar e visibilidade de failed_jobs (wave 1) ✓ 2026-06-13
 - [x] 03.1-03-PLAN.md — Scheduler ativo (composer dev) + pruning diário de access_logs com retenção parametrizada; activity_log fora (wave 2) ✓ 2026-06-13
 - [x] 03.1-04-PLAN.md — Throttle parametrizado na consulta de CNPJ + HTTP client com retries/timeout/backoff parametrizados (wave 2) ✓ 2026-06-13
@@ -296,7 +296,7 @@ Plans:
 - [x] 08-15-PLAN.md — HU-150: atendimento presencial assistido (AssistedAttendance + middleware reusando representação) backend+UI (wave 7, ‖ 08-14)
 - [x] 08-16-PLAN.md — Fechamento: seeds dev + comando + golden/smoke + verificação integral (@group postgis) + smoke navegável (checkpoint humano) (wave 9)
 
-Nota (reunião SEDUR 2026-06-11): HU-071/072 tiveram escopo **revisado** — DAM de viabilidade via Regin é da SEFAZ; SILE consulta/exibe. Renovação direta pelo portal Simplifica pode ter regras distintas (confirmar).
+Nota (reunião SEDUR 2026-06-11): HU-071/072 tiveram escopo **revisado** — DAM de viabilidade via Regin é da SEFAZ; VIABILIZA consulta/exibe. Renovação direta pelo portal Simplifica pode ter regras distintas (confirmar).
 
 Nota (recursos do framework — levantamento 2026-06-12): anexos de documentos via Storage/Filesystem com disk parametrizado (local/S3) e download por streaming; consulta de protocolo sem login (HU-069) com URLs temporárias assinadas (`temporarySignedRoute`); protocolo dispara evento de domínio (`SolicitacaoProtocolada`) — primeiro evento próprio do sistema, base para notificação, auditoria e integrações desacopladas (Fases 9, 11 e 13).
 

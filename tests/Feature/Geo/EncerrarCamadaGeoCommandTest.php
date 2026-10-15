@@ -37,7 +37,7 @@ class EncerrarCamadaGeoCommandTest extends TestCase
 
     public function test_zona_ficticia_nunca_e_permitida_em_producao_mesmo_com_dados_de_demonstracao(): void
     {
-        config(['sile.demo_data' => true]);
+        config(['viabiliza.demo_data' => true]);
 
         $this->assertTrue(ZonaFicticiaDevSeeder::permitido());
 

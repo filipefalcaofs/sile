@@ -350,7 +350,7 @@ class ConsultaViabilidadePublicaTest extends TestCase
         // HU-014: o limite por minuto é administrável sem deploy. Com 2/min, a 3ª
         // consulta pública dentro da janela é bloqueada (429) — usa a via CNAE
         // (sem geocoder/território), que exercita o mesmo middleware.
-        config(['sile.seguranca.throttle.consulta_viabilidade.por_minuto' => 2]);
+        config(['viabiliza.seguranca.throttle.consulta_viabilidade.por_minuto' => 2]);
 
         for ($i = 0; $i < 2; $i++) {
             $this->postJson('/portal/viabilidade/cnae', [

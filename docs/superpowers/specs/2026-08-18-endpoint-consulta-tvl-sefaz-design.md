@@ -43,7 +43,7 @@ Resposta 200: JSON no contrato documentado em
 Resposta 404: TVL inexistente — corpo com `resposta.status = "00"` e mensagem
 "TVL não encontrado." (`[OPEN-TVL-2]`).
 
-### Mapeamento de status (SILE → enum SIGS)
+### Mapeamento de status (VIABILIZA → enum SIGS)
 
 | Situação no Viabiliza | Código | Mensagem |
 |---|---|---|

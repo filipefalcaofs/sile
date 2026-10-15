@@ -82,7 +82,7 @@ app/
 │   └── Requests/               # Form Requests (ProfileUpdateRequest, StoreProcurationRequest...)
 ├── Listeners/                  # RecordSuccessfulLogin, RecordFailedLogin, RecordLogout, RecordLockout (auto-descobertos)
 ├── Models/
-│   ├── Activity.php            # estende Spatie, colunas SILE
+│   ├── Activity.php            # estende Spatie, colunas VIABILIZA
 │   ├── AccessLog.php           # HU-010
 │   ├── LegalTerm.php / LegalTermAcceptance.php   # HU-006
 │   ├── Procuration.php         # HU-008/009
@@ -92,7 +92,7 @@ app/
 │   ├── Audit/AuditService.php             # log explícito em serviços (ação, resultado, versão de regras)
 │   └── Settings.php                       # leitura de parâmetros (config-backed na Fase 1)
 ├── Concerns/HasAuditoria.php   # trait: LogsActivity + LogOptions padrão Viabiliza
-config/sile.php                 # parâmetros de negócio com defaults (política de senha, throttle, etc.)
+config/viabiliza.php                 # parâmetros de negócio com defaults (política de senha, throttle, etc.)
 routes/
 ├── web.php                     # público + require dos demais (padrão starter kit)
 ├── auth.php                    # rotas extras de auth se necessário (Fortify registra as suas)
@@ -138,7 +138,7 @@ Fortify::verifyEmailView(fn (Request $request) => Inertia::render('auth/verify-e
 // Rate limit de login PARAMETRIZADO (RN do Viabiliza: nada hardcoded)
 RateLimiter::for('login', function (Request $request) {
     $key = Str::transliterate(Str::lower($request->input(Fortify::username())).'|'.$request->ip());
-    return Limit::perMinute(config('sile.security.login.max_attempts'))->by($key);
+    return Limit::perMinute(config('viabiliza.security.login.max_attempts'))->by($key);
 });
 ```
 
@@ -349,10 +349,10 @@ legal_terms                       legal_term_acceptances
 
 ### Padrão 7: Parametrização sem UI (preparação para HU-014)
 
-`config/sile.php` com defaults sensatos + wrapper fino:
+`config/viabiliza.php` com defaults sensatos + wrapper fino:
 
 ```php
-// config/sile.php
+// config/viabiliza.php
 return [
     'security' => [
         'password' => ['min_length' => 8, 'require_mixed_case' => true, 'require_numbers' => true, 'require_symbols' => false],
@@ -362,7 +362,7 @@ return [
 ];
 ```
 
-- Política de senha aplicada via `Password::defaults()` no `AppServiceProvider::boot()` lendo `config('sile.security.password.*')` — usada por Fortify no cadastro, reset e alteração (`Password::defaults()->toPasswordRulesString()` é compartilhável com o React para exibir os requisitos).
+- Política de senha aplicada via `Password::defaults()` no `AppServiceProvider::boot()` lendo `config('viabiliza.security.password.*')` — usada por Fortify no cadastro, reset e alteração (`Password::defaults()->toPasswordRulesString()` é compartilhável com o React para exibir os requisitos).
 - Classe `App\Support\Settings::get('security.login.max_attempts')` delegando para `config()` na Fase 1 — na Fase 2 o backend vira banco (HU-014) sem tocar nos call sites. Indireção de uma classe, paga-se na Fase 2.
 
 ### Padrão 8: Rotas segregadas e SecurityHeaders
@@ -386,7 +386,7 @@ return [
 - **Rotas de auth manuais paralelas ao Fortify** (POST /login próprio): conflito de rotas e dois caminhos de autenticação — toda customização via extension points do Fortify.
 - **Auditoria chamada manualmente em cada controller:** o mecanismo é transversal (trait + action custom + exception handler + listeners); chamada explícita só em serviços com semântica própria.
 - **`Event::fake()` global em testes de auth:** mata os listeners de access log/auditoria que são o objeto do teste (CA-02). Usar `Event::fake([EventoEspecifico::class])` apenas para asserções de dispatch, ou assertar efeitos no banco.
-- **Valores de negócio hardcoded** (tentativas de login, expiração de link, texto do termo): tudo em `config/sile.php`/seed.
+- **Valores de negócio hardcoded** (tentativas de login, expiração de link, texto do termo): tudo em `config/viabiliza.php`/seed.
 - **Papel "procurador"** como role do spatie: estado de procuração é dado com vigência, não papel.
 
 ## Don't Hand-Roll
@@ -542,7 +542,7 @@ Schema::create('activity_log', function (Blueprint $table) {
     $table->nullableMorphs('causer', 'causer');
     $table->json('properties')->nullable();
     $table->json('attribute_changes')->nullable();   // v5
-    // ---- colunas SILE (RN-002) ----
+    // ---- colunas VIABILIZA (RN-002) ----
     $table->string('ip_address', 45)->nullable();
     $table->string('user_agent', 500)->nullable();
     $table->string('channel', 20)->nullable();                       // portal|gestao|console

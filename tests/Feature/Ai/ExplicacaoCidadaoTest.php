@@ -69,7 +69,7 @@ class ExplicacaoCidadaoTest extends TestCase
 
     public function test_explica_decisao_com_fonte_quando_ha_decisao(): void
     {
-        config(['sile.features.ia_explicacao' => true]);
+        config(['viabiliza.features.ia_explicacao' => true]);
         $this->provedorTextoAtivo();
         $processo = $this->processoDecidido();
 
@@ -104,7 +104,7 @@ class ExplicacaoCidadaoTest extends TestCase
 
     public function test_sem_decisao_registrada_nao_despacha(): void
     {
-        config(['sile.features.ia_explicacao' => true]);
+        config(['viabiliza.features.ia_explicacao' => true]);
         $this->provedorTextoAtivo();
 
         // Processo protocolado AINDA EM ANÁLISE (sem ViabilityDecision): não há
@@ -125,7 +125,7 @@ class ExplicacaoCidadaoTest extends TestCase
 
     public function test_toggle_desligado_nao_chama_provedor_nem_cria_sugestao(): void
     {
-        config(['sile.features.ia_explicacao' => false]);
+        config(['viabiliza.features.ia_explicacao' => false]);
         $this->provedorTextoAtivo();
         $processo = $this->processoDecidido();
 
@@ -144,7 +144,7 @@ class ExplicacaoCidadaoTest extends TestCase
     public function test_protocolo_dispara_explicacao_ao_carregar_sugestao(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
-        config(['sile.features.ia_explicacao' => true]);
+        config(['viabiliza.features.ia_explicacao' => true]);
         $this->provedorTextoAtivo();
 
         $dono = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
@@ -181,7 +181,7 @@ class ExplicacaoCidadaoTest extends TestCase
     public function test_protocolo_nao_dispara_explicacao_sem_decisao(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
-        config(['sile.features.ia_explicacao' => true]);
+        config(['viabiliza.features.ia_explicacao' => true]);
         $this->provedorTextoAtivo();
 
         $dono = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();

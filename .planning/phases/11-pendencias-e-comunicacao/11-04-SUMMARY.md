@@ -78,7 +78,7 @@ completed: 2026-06-15
 
 ### `NotificationDispatcher::deliver(User $recipient, ProcessNotification $notification): void`
 Pipeline (espelha `VerifyEmailQueued::freezeUrlFor` — resolve no DISPARO, lê no envio enfileirado):
-1. **Resolve** os canais do tipo: `notificacoes.mapa_canais[type]` (via `Settings::get` → fallback `config('sile.notificacoes.mapa_canais')`) ∩ toggles `features.notificacao_email/_in_app/_whatsapp` (via `Settings::enabled("notificacao_{$channel->value}")`) + gancho `preferredByRecipient` (no-op).
+1. **Resolve** os canais do tipo: `notificacoes.mapa_canais[type]` (via `Settings::get` → fallback `config('viabiliza.notificacoes.mapa_canais')`) ∩ toggles `features.notificacao_email/_in_app/_whatsapp` (via `Settings::enabled("notificacao_{$channel->value}")`) + gancho `preferredByRecipient` (no-op).
 2. **Cria o ledger** SÍNCRONO: por canal HABILITADO uma linha `communications` `na_fila` (`channel`/`type`/`viability_request_id`/`recipient_user_id`/`title=type->label()`/`queued_at=now()`); por canal do mapa com toggle OFF uma linha `desativado` + `AuditService::log('notificacoes', type->value, ..., result: 'desativado')`.
 3. **Congela** os canais resolvidos via `freezeChannels(array<CommunicationChannel>)` (lidos pelo `via()`) E o mapa `{driver→communicationId}` na propriedade pública `communicationIds`.
 4. **Dispara** `$recipient->notify($notification)` (envio enfileirado pela ShouldQueue da Notification). Se NENHUM canal habilitado: NÃO notifica (só o ledger `desativado` — honesto).

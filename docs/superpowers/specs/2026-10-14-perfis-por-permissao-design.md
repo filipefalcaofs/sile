@@ -16,7 +16,7 @@ Analista Terceirizado.
   - `ProcessoController::atualizarStatusAnalise` — `hasRole('gestor')` libera o
     `force` (ignora o grafo de transições da `AnalysisStatusStateMachine`).
   - `EscalonarSlaCommand` e `AlertarExercicioTllCommand` — notificam quem tem o
-    papel de `config('sile.notificacoes.escalonamento.gestor_role')`.
+    papel de `config('viabiliza.notificacoes.escalonamento.gestor_role')`.
   - `CreateNewUser` e `GovBrAuthService` — `assignRole('cidadao')` no autocadastro.
   - `Roles::STRUCTURAL` — lista no código dos perfis não excluíveis/renomeáveis
     (`RoleController`, `UpdateRoleRequest`).
@@ -32,7 +32,7 @@ Analista Terceirizado.
    - `forcar-transicao-analise` — substitui `hasRole('gestor')` no `force`.
    - `receber-escalonamento-sla` — define quem recebe os escalonamentos de SLA
      vencido e de exercício TLL faltante. Os dois comandos listam usuários com
-     essa permissão; o `gestor_role` sai de `config/sile.php`.
+     essa permissão; o `gestor_role` sai de `config/viabiliza.php`.
 2. **Perfil do cidadão** vira o parâmetro `portal.perfil_cidadao` (`Settings`), que
    guarda o **nome** do perfil usado no autocadastro (o id muda entre ambientes) e
    só aceita nome existente na tabela `roles`. `CreateNewUser` e `GovBrAuthService`

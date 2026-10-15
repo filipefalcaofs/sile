@@ -7,7 +7,7 @@ tags: [geocoding, nominatim, osm, hu-029, territorio, contrato, cache, throttle,
 # Dependency graph
 requires:
   - phase: 04-02
-    provides: features.geocoding, integrations.geocoding.base_url, seguranca.throttle.geocoding.por_minuto, bloco config sile.integrations.geocoding (user_agent/timeout/retries/backoff_ms/cache_ttl), permissão consultar-territorio
+    provides: features.geocoding, integrations.geocoding.base_url, seguranca.throttle.geocoding.por_minuto, bloco config viabiliza.integrations.geocoding (user_agent/timeout/retries/backoff_ms/cache_ttl), permissão consultar-territorio
   - phase: 03.1-cnpj-lookup
     provides: padrão contrato+provider+cache (CnpjLookup/BrasilApiCnpjLookup), retry/timeout/backoff parametrizados no Http client, throttle parametrizado (RateLimiter nomeado), shouldRenderJsonWhen para endpoint JSON
   - phase: 01-identidade
@@ -107,7 +107,7 @@ Cada task foi commitada atomicamente (ciclo TDD RED → GREEN → REFACTOR/pint 
 | Middleware | `auth:gestao` › `permission:acessar-gestao` › `lgpd.accepted` › `permission:consultar-territorio` › `throttle:geocoding` |
 | Auditoria | log_name `territorio`, event `geocodificacao`, result `sucesso`/`falha`/`bloqueado`, properties `endereco` + `provider` (host) ou `motivo` |
 | Binding | `Geocoder::class → NominatimGeocoder::class` (AppServiceProvider) |
-| Cache | `sile.geocoding.{sha1(address)}`, TTL `config('sile.integrations.geocoding.cache_ttl')` — só sucesso |
+| Cache | `viabiliza.geocoding.{sha1(address)}`, TTL `config('viabiliza.integrations.geocoding.cache_ttl')` — só sucesso |
 
 ### Respostas do endpoint
 

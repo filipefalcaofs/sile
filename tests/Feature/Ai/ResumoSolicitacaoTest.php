@@ -76,7 +76,7 @@ class ResumoSolicitacaoTest extends TestCase
 
     public function test_resumo_com_fonte_vira_sugestao_revisavel(): void
     {
-        config(['sile.features.ia_resumo' => true]);
+        config(['viabiliza.features.ia_resumo' => true]);
         $this->provedorTextoAtivo();
         $solicitacao = $this->solicitacaoDeclarada();
 
@@ -112,7 +112,7 @@ class ResumoSolicitacaoTest extends TestCase
 
     public function test_resumo_sem_fonte_escala_para_humano(): void
     {
-        config(['sile.features.ia_resumo' => true]);
+        config(['viabiliza.features.ia_resumo' => true]);
         $this->provedorTextoAtivo();
         $solicitacao = $this->solicitacaoDeclarada();
 
@@ -129,7 +129,7 @@ class ResumoSolicitacaoTest extends TestCase
 
     public function test_toggle_desligado_nao_chama_provedor_nem_cria_sugestao(): void
     {
-        config(['sile.features.ia_resumo' => false]);
+        config(['viabiliza.features.ia_resumo' => false]);
         $this->provedorTextoAtivo();
         $solicitacao = $this->solicitacaoDeclarada();
 
@@ -148,8 +148,8 @@ class ResumoSolicitacaoTest extends TestCase
     public function test_revisao_do_wizard_dispara_resumo_ao_carregar_sugestao(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
-        config(['sile.features.ia_resumo' => true]);
-        config(['sile.features.solicitacao_viabilidade' => true]);
+        config(['viabiliza.features.ia_resumo' => true]);
+        config(['viabiliza.features.solicitacao_viabilidade' => true]);
         $this->provedorTextoAtivo();
 
         $dono = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
@@ -189,8 +189,8 @@ class ResumoSolicitacaoTest extends TestCase
     public function test_revisao_do_wizard_nao_dispara_resumo_com_toggle_desligado(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
-        config(['sile.features.ia_resumo' => false]);
-        config(['sile.features.solicitacao_viabilidade' => true]);
+        config(['viabiliza.features.ia_resumo' => false]);
+        config(['viabiliza.features.solicitacao_viabilidade' => true]);
         $this->provedorTextoAtivo();
 
         $dono = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();

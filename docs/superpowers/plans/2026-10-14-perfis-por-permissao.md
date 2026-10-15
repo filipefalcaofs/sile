@@ -503,7 +503,7 @@ git commit -m "feat: perfis de análise da SEDUR com permissões próprias e see
 - Modify: `app/Http/Controllers/Gestao/ProcessoController.php` (docblock ~linha 260 e linha 273)
 - Modify: `app/Console/Commands/EscalonarSlaCommand.php` (docblock, linha 49, chamada e método `destinatarios` na linha 112)
 - Modify: `app/Console/Commands/AlertarExercicioTllCommand.php` (linhas 47-51)
-- Modify: `config/sile.php` (remover linha 273)
+- Modify: `config/viabiliza.php` (remover linha 273)
 - Test: `tests/Feature/Analise/AnalysisStatusEndpointTest.php`, `tests/Feature/Comunicacao/EscalonarSlaCommandTest.php`, `tests/Feature/Analise/AlertarExercicioTllCommandTest.php`, `tests/Feature/Seeders/ParameterSeederTest.php` (linhas 628-629)
 
 **Interfaces:**
@@ -565,7 +565,7 @@ Imports: `App\Services\Comunicacao\DestinatariosEscalonamento`, `Illuminate\Supp
 Em `ParameterSeederTest.php` (linhas 628-629) remover as duas linhas que referenciam `notificacoes.escalonamento.gestor_role` e a de `config(...)` que espera `'gestor'`; no lugar:
 
 ```php
-        $this->assertNull(config('sile.notificacoes.escalonamento.gestor_role'));
+        $this->assertNull(config('viabiliza.notificacoes.escalonamento.gestor_role'));
 ```
 
 - [ ] **Step 2: Rodar e ver falhar**
@@ -632,7 +632,7 @@ Atualizar o docblock da classe: "escala a quem tem a permissão receber-escalona
 
 `AlertarExercicioTllCommand`: `handle(AuditService $audit, DestinatariosEscalonamento $escalonamento)`; trocar as linhas 47-51 por `$gestores = $escalonamento->usuarios();`; remover `use App\Models\User;` se ficar sem uso; importar `App\Services\Comunicacao\DestinatariosEscalonamento`.
 
-`config/sile.php`: remover a linha `'gestor_role' => 'gestor',`.
+`config/viabiliza.php`: remover a linha `'gestor_role' => 'gestor',`.
 
 - [ ] **Step 4: Rodar e ver passar**
 
@@ -643,7 +643,7 @@ Expected: PASS (os testes existentes com `User::factory()->gestor()` passam porq
 
 ```bash
 vendor/bin/pint --dirty --format agent
-git add app/Services/Comunicacao/DestinatariosEscalonamento.php app/Http/Controllers/Gestao/ProcessoController.php app/Console/Commands config/sile.php tests
+git add app/Services/Comunicacao/DestinatariosEscalonamento.php app/Http/Controllers/Gestao/ProcessoController.php app/Console/Commands config/viabiliza.php tests
 git commit -m "refactor: force e escalonamentos passam a depender de permissão"
 ```
 
@@ -669,7 +669,7 @@ git commit -m "refactor: force e escalonamentos passam a depender de permissão"
     public function test_cadastro_usa_o_perfil_definido_no_parametro(): void
     {
         Role::create(['name' => 'municipe', 'guard_name' => 'web']);
-        config(['sile.portal.perfil_cidadao' => 'municipe']);
+        config(['viabiliza.portal.perfil_cidadao' => 'municipe']);
 
         $this->post('/portal/register', $this->validPayload());
 
@@ -685,7 +685,7 @@ git commit -m "refactor: force e escalonamentos passam a depender de permissão"
     public function test_callback_usa_o_perfil_definido_no_parametro(): void
     {
         Role::create(['name' => 'municipe', 'guard_name' => 'web']);
-        config(['sile.portal.perfil_cidadao' => 'municipe']);
+        config(['viabiliza.portal.perfil_cidadao' => 'municipe']);
         $this->enableGovBr();
         $this->mockSocialiteUser($this->govBrClaims());
 
@@ -719,7 +719,7 @@ git commit -m "refactor: force e escalonamentos passam a depender de permissão"
     {
         $admin = $this->admin();
         $municipe = Role::create(['name' => 'municipe', 'guard_name' => 'web']);
-        config(['sile.portal.perfil_cidadao' => 'municipe']);
+        config(['viabiliza.portal.perfil_cidadao' => 'municipe']);
 
         $this->actingAs($admin, 'gestao')
             ->put("/gestao/perfis/{$municipe->id}", ['name' => 'outro'])

@@ -57,7 +57,7 @@ key-decisions:
   - "Os 5 abuso.* vão para o grupo NOVO 'abuso' (convenção prefixo→grupo); per_page em 'ui'; toggle em 'features'"
   - "Idempotência por índice parcial: confirmados/descartados NÃO bloqueiam novo alerta aberto futuro do mesmo fingerprint"
   - "Analista NÃO recebe nenhuma das 3 permissões (default gestor/admin; sem papel auditor dedicado — pendência SEDUR)"
-  - "Reusa retencao.access_logs.dias (não recria); constantes técnicas ficam em config/sile.php (12-04/12-07)"
+  - "Reusa retencao.access_logs.dias (não recria); constantes técnicas ficam em config/viabiliza.php (12-04/12-07)"
 
 patterns-established:
   - "abuse_alerts: ledger auditável (HasAuditoria) com idempotência estrutural — base dos detectores Strategy (12-07)"

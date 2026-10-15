@@ -19,7 +19,7 @@ provides:
   - "ActivityResource: payload minimizado da trilha (causer/acting_for/subject/result/rules_version/ip/channel/personal_data + attribute_changes), sem properties cruas"
   - "Gestao\\AuditoriaController: index (roteia fonte, pagina, AUDITA) + export CSV streaming (mesmos filtros, guarda de volume, AUDITA)"
   - "Rotas gestao.auditoria.index e gestao.auditoria.export sob permission:consultar-auditoria"
-  - "config sile.auditoria.export.max_linhas (constante técnica de volume = 50000)"
+  - "config viabiliza.auditoria.export.max_linhas (constante técnica de volume = 50000)"
 affects:
   - "12-10 (página da trilha): consome props de gestao/auditoria/index + rotas gestao.auditoria.*"
   - "12-12 (smoke/verificação integral da auditoria)"
@@ -42,14 +42,14 @@ key-files:
     - "tests/Feature/Auditoria/AuditoriaConsultaTest.php"
     - "tests/Feature/Auditoria/AuditoriaExportTest.php"
   modified:
-    - "config/sile.php"
+    - "config/viabiliza.php"
     - "routes/gestao.php"
 
 key-decisions:
   - "activity_log É a trilha (decisão do CONTEXT): consulta direto, sem tabela/materialized view; access_logs é fonte secundária por merge na aplicação"
   - "Busca por nome do causer com whereHasMorph([User::class]) (não whereHas) — causer é morphTo; evita erro de relação polimórfica"
   - "entidade_tipo filtra subject_type com whereLike %valor% (aceita basename E classe completa, já que não há morph map no projeto)"
-  - "max_linhas é constante TÉCNICA em config/sile.php (precedente [02-02]); per_page é o parâmetro de negócio ui.auditoria.per_page (HU-014, 12-03)"
+  - "max_linhas é constante TÉCNICA em config/viabiliza.php (precedente [02-02]); per_page é o parâmetro de negócio ui.auditoria.per_page (HU-014, 12-03)"
   - "ActivityResource NÃO expõe properties cruas (minimização LGPD); o attribute_changes (diff estruturado) É exposto para a HU-098"
   - "Export pleno XLSX/PDF permanece bloqueado honesto (HU-131/Fase 15); só CSV agora"
   - "Commit atômico único por task (test+impl, padrão da fase) por causa do working tree COMPARTILHADO com 12-05/12-06; pathspec no git add e no git commit, nunca git add -A"
@@ -143,7 +143,7 @@ Linha da fonte `acessos`: `{ id, created_at, event, usuario, email, ip_address, 
 ## Config (constante técnica)
 
 ```php
-// config/sile.php
+// config/viabiliza.php
 'auditoria' => ['export' => ['max_linhas' => 50000]],
 ```
 
@@ -157,7 +157,7 @@ Guarda de volume do CSV (fora do catálogo HU-014 — precedente [02-02]). O `pe
 ## Deviations from Plan
 
 - **Commits atômicos test+impl unificados por task** (em vez de RED/GREEN separados): o working tree é COMPARTILHADO com os executores 12-05/12-06 em paralelo, então deixar um teste RED commitado correria o risco de quebrar a suíte de um irmão. A disciplina TDD foi seguida no processo (teste escrito, RED verificado pelo motivo certo, GREEN verificado); só a granularidade do commit foi consolidada — mesmo padrão dos SUMMARYs 12-01/12-03 ("feat, TDD"). Uso de `pathspec` no `git add` e no `git commit` para tocar apenas os meus arquivos.
-- Nada além do escopo: nenhum toque em arquivos de 12-05/12-06; único editor de `routes/gestao.php` e `config/sile.php` na Wave 2.
+- Nada além do escopo: nenhum toque em arquivos de 12-05/12-06; único editor de `routes/gestao.php` e `config/viabiliza.php` na Wave 2.
 
 ## Issues Encountered
 

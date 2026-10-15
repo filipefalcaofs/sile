@@ -51,9 +51,9 @@ abstract class RunAiAgentJob implements ShouldQueue
 
     public function __construct()
     {
-        $this->tries = (int) config('sile.ai.job.tries', 3);
-        $this->timeout = (int) config('sile.ai.job.timeout', 120);
-        $this->onQueue((string) config('sile.ai.job.fila', 'default'));
+        $this->tries = (int) config('viabiliza.ai.job.tries', 3);
+        $this->timeout = (int) config('viabiliza.ai.job.timeout', 120);
+        $this->onQueue((string) config('viabiliza.ai.job.fila', 'default'));
     }
 
     /**
@@ -61,7 +61,7 @@ abstract class RunAiAgentJob implements ShouldQueue
      */
     public function backoff(): array
     {
-        return (array) config('sile.ai.job.backoff', [30, 60, 120]);
+        return (array) config('viabiliza.ai.job.backoff', [30, 60, 120]);
     }
 
     public function handle(AiFeatureGate $gate, AiCallAuditor $auditor, AiCostEstimator $costs, AiConfigResolver $resolver): void

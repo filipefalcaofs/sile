@@ -36,6 +36,16 @@ final readonly class DecisionResult
     }
 
     /**
+     * Motor sem condição de decidir (serviço externo indisponível): o processo
+     * segue protocolado, sem decisão e sem encaminhamento, até a próxima
+     * tentativa do reprocessamento.
+     */
+    public static function aguardando(string $reason): self
+    {
+        return new self(ViabilityRequestStatus::Protocolada, null, $reason, emitted: false);
+    }
+
+    /**
      * Decisão vinculante efetivada (deferida/indeferida). `emitted` é false
      * quando a decisão já existia (corrida idempotente) e o evento não deve ser
      * redisparado.

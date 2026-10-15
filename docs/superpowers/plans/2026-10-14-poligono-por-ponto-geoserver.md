@@ -19,7 +19,7 @@
 - Nova ordem de fontes do polígono: chave (CODLOG + número) → SEMAP → ponto. O ponto só roda se o chamador pedir (`consultarPorPonto`) ou via `aplicarPorPonto()`.
 - Resultado da consulta por ponto: exatamente 1 geometria distinta grava; mais de 1 é `ambiguo` e não grava; vazio, erro HTTP, JSON fora do contrato ou falha de conexão não gravam nem apagam polígono existente.
 - Ponto sempre em (longitude, latitude), com 8 casas e ponto decimal (`%.8F`), prefixo `SRID=4326;` obrigatório: sem ele o GeoServer devolve 0 resultados.
-- Timeout da consulta por ponto: 45 s (`sile.integrations.geoserver.enderecamento.timeout_ponto`), sem retry interno. Os 8 s gerais seguem para as demais consultas.
+- Timeout da consulta por ponto: 45 s (`viabiliza.integrations.geoserver.enderecamento.timeout_ponto`), sem retry interno. Os 8 s gerais seguem para as demais consultas.
 - Fora de escopo: SEMAP (token), ponto no mapa da ficha, trava por zona ambígua, camada `parcelamento_lotes`.
 - O MCP `laravel-boost` (`search-docs`) falhou ao conectar nesta sessão; nenhuma API nova do framework é usada neste plano (só `Http`, `Schema`, casts e Mockery já presentes no repositório).
 
@@ -79,8 +79,8 @@ class PoligonoFonteTest extends TestCase
         parent::setUp();
 
         config([
-            'sile.features.geoserver_enderecamento' => true,
-            'sile.features.arcgis_semap' => true,
+            'viabiliza.features.geoserver_enderecamento' => true,
+            'viabiliza.features.arcgis_semap' => true,
         ]);
     }
 
@@ -287,7 +287,7 @@ git commit -m "feat: registra a fonte do polígono do lote (chave, SEMAP ou pont
 
 **Files:**
 - Modify: `app/Services/Geo/GeoServerEnderecamentoClient.php` (arquivo inteiro, ver Step 3)
-- Modify: `config/sile.php` (bloco `geoserver.enderecamento`)
+- Modify: `config/viabiliza.php` (bloco `geoserver.enderecamento`)
 - Test: `tests/Feature/Geo/GeoServerEnderecamentoClientTest.php` (acrescentar testes)
 
 **Interfaces:**
@@ -408,7 +408,7 @@ Em `tests/Feature/Geo/GeoServerEnderecamentoClientTest.php`, acrescentar o impor
 
     public function test_timeout_da_consulta_por_ponto_e_de_45_segundos(): void
     {
-        $this->assertSame(45, config('sile.integrations.geoserver.enderecamento.timeout_ponto'));
+        $this->assertSame(45, config('viabiliza.integrations.geoserver.enderecamento.timeout_ponto'));
     }
 ```
 
@@ -480,7 +480,7 @@ class GeoServerEnderecamentoClient
 
         return $this->buscar(
             $this->url($codLog, $numero),
-            (int) config('sile.integrations.geoserver.timeout', 8),
+            (int) config('viabiliza.integrations.geoserver.timeout', 8),
             $complemento,
         );
     }
@@ -493,7 +493,7 @@ class GeoServerEnderecamentoClient
 
         return $this->buscar(
             $this->urlPorPonto($lat, $lng),
-            (int) config('sile.integrations.geoserver.enderecamento.timeout_ponto', 45),
+            (int) config('viabiliza.integrations.geoserver.enderecamento.timeout_ponto', 45),
             '',
             porPonto: true,
         );
@@ -503,7 +503,7 @@ class GeoServerEnderecamentoClient
     {
         try {
             $response = Http::withHeaders([
-                'User-Agent' => (string) config('sile.integrations.geoserver.user_agent', 'Viabiliza-SEDUR-Salvador/1.0'),
+                'User-Agent' => (string) config('viabiliza.integrations.geoserver.user_agent', 'Viabiliza-SEDUR-Salvador/1.0'),
             ])
                 ->timeout($timeout)
                 ->connectTimeout(3)
@@ -604,13 +604,13 @@ class GeoServerEnderecamentoClient
 
     private function wfsUrl(string $cqlFilter): string
     {
-        $base = rtrim((string) Settings::get('integrations.geoserver.base_url', config('sile.integrations.geoserver.base_url')), '/');
+        $base = rtrim((string) Settings::get('integrations.geoserver.base_url', config('viabiliza.integrations.geoserver.base_url')), '/');
 
         return $base.'/wfs?'.http_build_query([
             'service' => 'WFS',
             'version' => '1.1.0',
             'request' => 'GetFeature',
-            'typeName' => (string) config('sile.integrations.geoserver.enderecamento.type_name', 'enderecamento:VM_ENDERECAMENTO'),
+            'typeName' => (string) config('viabiliza.integrations.geoserver.enderecamento.type_name', 'enderecamento:VM_ENDERECAMENTO'),
             'outputFormat' => 'application/json',
             'srsName' => 'EPSG:4326',
             'maxFeatures' => 50,
@@ -622,7 +622,7 @@ class GeoServerEnderecamentoClient
 
 - [ ] **Step 4: Acrescentar o timeout na config**
 
-Em `config/sile.php`, no bloco `geoserver` → `'enderecamento' => [...]`, deixar:
+Em `config/viabiliza.php`, no bloco `geoserver` → `'enderecamento' => [...]`, deixar:
 
 ```php
             'enderecamento' => [
@@ -644,8 +644,8 @@ Expected: PASS.
 - [ ] **Step 6: Pint e commit**
 
 ```bash
-vendor/bin/pint --format agent app/Services/Geo/GeoServerEnderecamentoClient.php config/sile.php tests/Feature/Geo/GeoServerEnderecamentoClientTest.php
-git add app/Services/Geo/GeoServerEnderecamentoClient.php config/sile.php tests/Feature/Geo/GeoServerEnderecamentoClientTest.php
+vendor/bin/pint --format agent app/Services/Geo/GeoServerEnderecamentoClient.php config/viabiliza.php tests/Feature/Geo/GeoServerEnderecamentoClientTest.php
+git add app/Services/Geo/GeoServerEnderecamentoClient.php config/viabiliza.php tests/Feature/Geo/GeoServerEnderecamentoClientTest.php
 git commit -m "feat: consulta o lote do endereçamento pelo ponto do imóvel no GeoServer"
 ```
 
@@ -693,8 +693,8 @@ class PoligonoPorPontoTest extends TestCase
         parent::setUp();
 
         config([
-            'sile.features.geoserver_enderecamento' => true,
-            'sile.features.arcgis_semap' => true,
+            'viabiliza.features.geoserver_enderecamento' => true,
+            'viabiliza.features.arcgis_semap' => true,
         ]);
     }
 
@@ -883,7 +883,7 @@ class PoligonoPorPontoTest extends TestCase
 
     public function test_interruptor_desligado_nao_consulta_o_ponto(): void
     {
-        config(['sile.features.geoserver_enderecamento' => false]);
+        config(['viabiliza.features.geoserver_enderecamento' => false]);
         $this->fakeGeoServer($this->colecao($this->quadrado(-38.5, -12.98)));
         $request = $this->processo();
 
@@ -1071,7 +1071,7 @@ class DecidirFluxoExpressoJobPoligonoPorPontoTest extends TestCase
     {
         parent::setUp();
 
-        config(['sile.features.geoserver_enderecamento' => true]);
+        config(['viabiliza.features.geoserver_enderecamento' => true]);
     }
 
     /**
@@ -1478,7 +1478,7 @@ class ReprocessarPoligonoPorPontoTest extends TestCase
 
     public function test_sem_poligono_e_com_ponto_agenda_a_decisao_com_o_ator(): void
     {
-        config(['sile.features.geoserver_enderecamento' => true]);
+        config(['viabiliza.features.geoserver_enderecamento' => true]);
         $ator = User::factory()->create();
         $processo = $this->processoEmAnaliseComPonto();
 
@@ -1496,7 +1496,7 @@ class ReprocessarPoligonoPorPontoTest extends TestCase
 
     public function test_com_poligono_ja_gravado_reavalia_na_hora_sem_agendar(): void
     {
-        config(['sile.features.geoserver_enderecamento' => true]);
+        config(['viabiliza.features.geoserver_enderecamento' => true]);
         $processo = $this->processoEmAnaliseComPonto([
             'address_polygon_geojson' => ['type' => 'Polygon', 'coordinates' => [[
                 [-38.4803, -12.9738], [-38.4798, -12.9738], [-38.4798, -12.9733], [-38.4803, -12.9733], [-38.4803, -12.9738],
@@ -1511,7 +1511,7 @@ class ReprocessarPoligonoPorPontoTest extends TestCase
 
     public function test_interruptor_desligado_reavalia_na_hora_sem_agendar(): void
     {
-        config(['sile.features.geoserver_enderecamento' => false]);
+        config(['viabiliza.features.geoserver_enderecamento' => false]);
         $processo = $this->processoEmAnaliseComPonto();
 
         app(ReprocessarEtapasService::class)->reprocessar($processo);

@@ -703,6 +703,20 @@ const colunaAlteracoes: ColumnDef<AtividadeRow> = {
     cell: (linha) => <DiffCell changes={linha.attribute_changes} />,
 };
 
+const colunaIp: ColumnDef<AtividadeRow> = {
+    id: 'ip',
+    header: 'IP',
+    cellClassName: 'whitespace-nowrap text-gray-600 dark:text-gray-400',
+    cell: (linha) => linha.ip_address ?? '—',
+};
+
+const colunaCanal: ColumnDef<AtividadeRow> = {
+    id: 'canal',
+    header: 'Canal',
+    cellClassName: 'whitespace-nowrap text-gray-600 dark:text-gray-400',
+    cell: (linha) => linha.channel ?? '—',
+};
+
 const colunasAtividade: ColumnDef<AtividadeRow>[] = [
     colunaData,
     colunaAcao,
@@ -710,6 +724,8 @@ const colunasAtividade: ColumnDef<AtividadeRow>[] = [
     colunaEntidade,
     colunaResultado,
     colunaVersao,
+    colunaIp,
+    colunaCanal,
 ];
 
 const colunasAlteracoes: ColumnDef<AtividadeRow>[] = [

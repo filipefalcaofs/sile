@@ -24,8 +24,8 @@ class ReginIntegrationSettings
             : 'integrations.regin.url_homologacao';
 
         $fallback = $this->usingProduction()
-            ? (string) config('sile.integrations.regin.url_producao')
-            : (string) config('sile.integrations.regin.url_homologacao');
+            ? (string) config('viabiliza.integrations.regin.url_producao')
+            : (string) config('viabiliza.integrations.regin.url_homologacao');
 
         return rtrim((string) Settings::get($key, $fallback), '/');
     }
@@ -37,7 +37,7 @@ class ReginIntegrationSettings
      */
     public function caminhoResposta(): string
     {
-        $caminho = trim((string) Settings::get('integrations.regin.caminho_resposta', config('sile.integrations.regin.caminho_resposta', '/recebe')));
+        $caminho = trim((string) Settings::get('integrations.regin.caminho_resposta', config('viabiliza.integrations.regin.caminho_resposta', '/recebe')));
 
         return '/'.ltrim($caminho, '/');
     }
@@ -48,7 +48,7 @@ class ReginIntegrationSettings
      */
     public function codigoArea(): int
     {
-        return max(1, (int) Settings::get('integrations.regin.codigo_area', config('sile.integrations.regin.codigo_area', 1)));
+        return max(1, (int) Settings::get('integrations.regin.codigo_area', config('viabiliza.integrations.regin.codigo_area', 1)));
     }
 
     public function username(): string

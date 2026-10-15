@@ -43,7 +43,7 @@ class AlertarVencimentosCommand extends Command
     {
         $antecedenciaDias = (int) Settings::get(
             'notificacoes.vencimento.antecedencia_dias',
-            config('sile.notificacoes.vencimento.antecedencia_dias', 3),
+            config('viabiliza.notificacoes.vencimento.antecedencia_dias', 3),
         );
 
         $agora = now();

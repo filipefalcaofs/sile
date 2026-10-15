@@ -95,7 +95,7 @@ class ProcessoController extends Controller
                 'concluido' => 0,
             ];
         } else {
-            $processos = $this->processos->filtered($consulta)
+            $processos = $this->processos->consulta($consulta)
                 ->paginate($perPage)
                 ->withQueryString()
                 ->through(fn (ViabilityRequest $processo): array => (new ProcessoResource($processo))->resolve());

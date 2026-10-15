@@ -44,7 +44,7 @@ key-files:
     - tests/Feature/Companies/CompanyFoundationTest.php
   modified:
     - app/Models/Cnae.php
-    - config/sile.php
+    - config/viabiliza.php
     - database/seeders/ParameterSeeder.php
     - app/Http/Controllers/Gestao/CnaeController.php
     - app/Http/Middleware/HandleInertiaRequests.php
@@ -54,7 +54,7 @@ key-files:
 key-decisions:
   - "ValidCnpj nasce compatível com CNPJ alfanumérico (módulo 11 ASCII-48) antecipando julho/2026"
   - "Pivot company_cnae precisa de nome explícito no belongsToMany (Eloquent inferiria cnae_company)"
-  - "Constantes técnicas do lookup (timeout/retries/cache_ttl) ficam só em config/sile.php, nunca no registry"
+  - "Constantes técnicas do lookup (timeout/retries/cache_ttl) ficam só em config/viabiliza.php, nunca no registry"
   - "Bloqueio de exclusão de CNAE: verificação amigável na aplicação + restrictOnDelete como defesa no banco"
 
 patterns-established:
@@ -83,7 +83,7 @@ completed: 2026-06-12
 - Schema empresarial migrável: `companies` (cnpj string(14) unique), `company_user` (vínculo com ciclo de vida) e `company_cnae` (pivot com `restrictOnDelete` em `cnae_id` e `unique(company_id, cnae_id)`).
 - Models `Company`/`CompanyUser` com `HasAuditoria`, relações `cnaes`/`primaryCnae`/`links`/`activeLinks` e accessor `formatted_cnpj`; `Cnae` ganhou `companies()`.
 - Factories geram CNPJ válido pelo mesmo algoritmo de pesos e states `fromRedesim()`/`withPrimaryCnae()`/`responsavel()`/`procurador()`/`ended()`.
-- Catálogo HU-014 passou de 11 para 14 parâmetros (`features.cnpj_lookup`, `integrations.cnpj_lookup.base_url` com `requires_connection_test`, `ui.companies.per_page`), defaults espelhados em `config/sile.php`.
+- Catálogo HU-014 passou de 11 para 14 parâmetros (`features.cnpj_lookup`, `integrations.cnpj_lookup.base_url` com `requires_connection_test`, `ui.companies.per_page`), defaults espelhados em `config/viabiliza.php`.
 - Pendência da Fase 2 resolvida: `CnaeController::destroy` bloqueia exclusão de CNAE vinculado com mensagem pt-BR visível (canal `flash.error` + `Alert`), com `restrictOnDelete` como defesa no banco.
 
 ## Task Commits
@@ -106,7 +106,7 @@ _Tarefas seguiram TDD (RED → GREEN → REFACTOR) em commit único cada, com o 
 - `database/migrations/*_create_company_user_table.php` - vínculo started_at/ended_at + index(company_id, user_id)
 - `database/migrations/*_create_company_cnae_table.php` - restrictOnDelete + unique(company_id, cnae_id)
 - `database/factories/CompanyFactory.php`, `CompanyUserFactory.php` - geração de CNPJ válido e states
-- `config/sile.php` - defaults de cnpj_lookup (features/integrations) e ui.companies.per_page
+- `config/viabiliza.php` - defaults de cnpj_lookup (features/integrations) e ui.companies.per_page
 - `database/seeders/ParameterSeeder.php` - 3 chaves novas no catálogo (total 14)
 - `app/Http/Controllers/Gestao/CnaeController.php` - destroy bloqueia CNAE vinculado
 - `app/Http/Middleware/HandleInertiaRequests.php` - flash.error compartilhado

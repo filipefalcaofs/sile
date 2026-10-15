@@ -27,7 +27,7 @@ class AiFeatureGateTest extends TestCase
 
     public function test_toggle_desligado_indisponibiliza_mesmo_com_provedor_ativo(): void
     {
-        config(['sile.features.ia_ocr' => false]);
+        config(['viabiliza.features.ia_ocr' => false]);
         AiConfiguration::factory()->create(['capability' => 'vision', 'active' => true]);
 
         $this->assertFalse($this->gate()->available('ocr', 'vision'));
@@ -35,14 +35,14 @@ class AiFeatureGateTest extends TestCase
 
     public function test_toggle_ligado_sem_provedor_ativo_indisponibiliza(): void
     {
-        config(['sile.features.ia_ocr' => true]);
+        config(['viabiliza.features.ia_ocr' => true]);
 
         $this->assertFalse($this->gate()->available('ocr', 'vision'));
     }
 
     public function test_toggle_ligado_com_provedor_inativo_indisponibiliza(): void
     {
-        config(['sile.features.ia_ocr' => true]);
+        config(['viabiliza.features.ia_ocr' => true]);
         AiConfiguration::factory()->inactive()->create(['capability' => 'vision']);
 
         $this->assertFalse($this->gate()->available('ocr', 'vision'));
@@ -50,7 +50,7 @@ class AiFeatureGateTest extends TestCase
 
     public function test_provedor_de_outra_capacidade_nao_satisfaz(): void
     {
-        config(['sile.features.ia_ocr' => true]);
+        config(['viabiliza.features.ia_ocr' => true]);
         AiConfiguration::factory()->create(['capability' => 'text', 'active' => true]);
 
         $this->assertFalse($this->gate()->available('ocr', 'vision'));
@@ -58,7 +58,7 @@ class AiFeatureGateTest extends TestCase
 
     public function test_toggle_ligado_com_provedor_ativo_da_capacidade_disponibiliza(): void
     {
-        config(['sile.features.ia_ocr' => true]);
+        config(['viabiliza.features.ia_ocr' => true]);
         AiConfiguration::factory()->create(['capability' => 'vision', 'active' => true]);
 
         $this->assertTrue($this->gate()->available('ocr', 'vision'));
@@ -66,7 +66,7 @@ class AiFeatureGateTest extends TestCase
 
     public function test_capacidade_padrao_e_texto(): void
     {
-        config(['sile.features.ia_resumo' => true]);
+        config(['viabiliza.features.ia_resumo' => true]);
         AiConfiguration::factory()->create(['capability' => 'text', 'active' => true]);
 
         $this->assertTrue($this->gate()->available('resumo'));
@@ -75,8 +75,8 @@ class AiFeatureGateTest extends TestCase
 
     public function test_motivo_explica_toggle_desligado_e_falta_de_provedor(): void
     {
-        config(['sile.features.ia_resumo' => false]);
-        Cache::forget('sile.parameters.features.ia_resumo');
+        config(['viabiliza.features.ia_resumo' => false]);
+        Cache::forget('viabiliza.parameters.features.ia_resumo');
 
         $motivo = (string) $this->gate()->unavailableReason('resumo');
 
@@ -84,16 +84,16 @@ class AiFeatureGateTest extends TestCase
         $this->assertStringNotContainsString('features.ia_resumo', $motivo);
         $this->assertStringNotContainsString('features.', $motivo);
 
-        config(['sile.features.ia_resumo' => true]);
-        Cache::forget('sile.parameters.features.ia_resumo');
+        config(['viabiliza.features.ia_resumo' => true]);
+        Cache::forget('viabiliza.parameters.features.ia_resumo');
 
         $this->assertStringContainsString('provedor', (string) $this->gate()->unavailableReason('resumo'));
     }
 
     public function test_parametro_ainda_no_padrao_nao_bloqueia_provedor_ativo(): void
     {
-        config(['sile.features.ia_resumo' => false]);
-        Cache::put('sile.parameters.features.ia_resumo', false, 300);
+        config(['viabiliza.features.ia_resumo' => false]);
+        Cache::put('viabiliza.parameters.features.ia_resumo', false, 300);
         Parameter::factory()->create([
             'key' => 'features.ia_resumo',
             'group' => 'ia',
@@ -110,8 +110,8 @@ class AiFeatureGateTest extends TestCase
 
     public function test_parametro_ligado_vence_cache_que_ainda_diz_desligado(): void
     {
-        config(['sile.features.ia_resumo' => false]);
-        Cache::put('sile.parameters.features.ia_resumo', false, 300);
+        config(['viabiliza.features.ia_resumo' => false]);
+        Cache::put('viabiliza.parameters.features.ia_resumo', false, 300);
         Parameter::factory()->create([
             'key' => 'features.ia_resumo',
             'group' => 'ia',
@@ -127,7 +127,7 @@ class AiFeatureGateTest extends TestCase
 
     public function test_parametro_explicitamente_desligado_bloqueia_mesmo_com_provedor(): void
     {
-        config(['sile.features.ia_resumo' => true]);
+        config(['viabiliza.features.ia_resumo' => true]);
         Parameter::factory()->create([
             'key' => 'features.ia_resumo',
             'group' => 'ia',

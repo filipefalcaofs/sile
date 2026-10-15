@@ -120,7 +120,7 @@ class ConstituicaoSedeBloqueiosTest extends TestCase
         $errors = $this->app['session']->get('errors')->getBag('default')->get('principal_cnae_id');
         $this->assertCount(1, $errors);
         $this->assertSame(
-            str_replace(':cnae', '8211-3/00', config('sile.analise.escritorio_virtual.mensagem_cnae_sede_em_abrigado')),
+            str_replace(':cnae', '8211-3/00', config('viabiliza.analise.escritorio_virtual.mensagem_cnae_sede_em_abrigado')),
             $errors[0],
         );
     }
@@ -148,7 +148,7 @@ class ConstituicaoSedeBloqueiosTest extends TestCase
         $errors = $this->app['session']->get('errors')->getBag('default')->get('principal_cnae_id');
         $this->assertCount(1, $errors);
         $this->assertSame(
-            config('sile.analise.escritorio_virtual.mensagem_bloqueio_abrigado'),
+            config('viabiliza.analise.escritorio_virtual.mensagem_bloqueio_abrigado'),
             $errors[0],
         );
     }
@@ -196,7 +196,7 @@ class ConstituicaoSedeBloqueiosTest extends TestCase
         $errors = $this->app['session']->get('errors')->getBag('default')->get('principal_cnae_id');
         $this->assertCount(1, $errors);
         $this->assertSame(
-            config('sile.analise.escritorio_virtual.mensagem_sede_duplicada'),
+            config('viabiliza.analise.escritorio_virtual.mensagem_sede_duplicada'),
             $errors[0],
         );
     }
@@ -318,7 +318,7 @@ class ConstituicaoSedeBloqueiosTest extends TestCase
 
         $errors = $this->app['session']->get('errors')->getBag('default')->get('principal_cnae_id');
         $this->assertSame(
-            config('sile.analise.escritorio_virtual.mensagem_sede_duplicada'),
+            config('viabiliza.analise.escritorio_virtual.mensagem_sede_duplicada'),
             $errors[0],
         );
     }

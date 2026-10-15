@@ -35,9 +35,9 @@ class SaturacaoServiceTest extends TestCase
         // quando não há parâmetro no banco). Flush evita cache entre testes.
         Cache::flush();
         config([
-            'sile.relatorios.saturacao.capacidades' => ['4712100' => 2, '5611201' => 5],
-            'sile.relatorios.saturacao.alerta_percentual' => 80,
-            'sile.relatorios.saturacao.bloqueio_percentual' => 100,
+            'viabiliza.relatorios.saturacao.capacidades' => ['4712100' => 2, '5611201' => 5],
+            'viabiliza.relatorios.saturacao.alerta_percentual' => 80,
+            'viabiliza.relatorios.saturacao.bloqueio_percentual' => 100,
         ]);
     }
 

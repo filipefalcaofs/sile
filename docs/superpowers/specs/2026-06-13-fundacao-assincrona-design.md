@@ -16,7 +16,7 @@ Ativar a infraestrutura assíncrona que o Laravel 13 entrega pronta e que ainda 
 - Sem `withSchedule()` em `bootstrap/app.php`; `routes/console.php` só tem `inspire`.
 - As migrations `jobs`, `failed_jobs` e `job_batches` JÁ existem (`database/migrations/0001_01_01_000002_create_jobs_table.php`, padrão do Laravel 11+) — não há migration a criar; os jobs apenas as USAM.
 - `AccessLog` (`app/Models/AccessLog.php`): sem pruning; `const UPDATED_AT = null`, tem `created_at`. NÃO usa `HasAuditoria` (já É auditoria de acesso).
-- `BrasilApiCnpjLookup` já faz `->retry(retries, 200, throw: false)` + `timeout`/`connectTimeout`, mas os valores vêm de **constantes** em `config/sile.php` (`sile.integrations.cnpj_lookup.*`), não de parâmetros.
+- `BrasilApiCnpjLookup` já faz `->retry(retries, 200, throw: false)` + `timeout`/`connectTimeout`, mas os valores vêm de **constantes** em `config/viabiliza.php` (`viabiliza.integrations.cnpj_lookup.*`), não de parâmetros.
 - `RedesimImportService->import(path)` e `CnaeImportService` existem e são síncronos; comando `redesim:importar` despacha o serviço direto. Não há comando de CNAE (carga via `CnaeSeeder`).
 - Produção: **só** o compose de dev existe no repo; não há Dockerfile/supervisord/compose Portainer. Decisão do usuário (2026-06-13): produção apenas **documentada** nesta fase.
 
@@ -50,7 +50,7 @@ Ativar a infraestrutura assíncrona que o Laravel 13 entrega pronta e que ainda 
 - **Teste:** N requisições passam, a N+1 recebe 429; alterar o parâmetro muda o limite (efeito sem deploy).
 
 ### U4 — HTTP client com retry/backoff parametrizado
-- `BrasilApiCnpjLookup`: `retries`, `timeout` e novo `backoff_ms` lidos de **parâmetros** (fallback em `config/sile.php`).
+- `BrasilApiCnpjLookup`: `retries`, `timeout` e novo `backoff_ms` lidos de **parâmetros** (fallback em `config/viabiliza.php`).
 - **Teste:** `Http::fake()` com falhas iniciais → sucesso após retry; o número de tentativas segue o parâmetro.
 
 ### U5 — Catálogo de parâmetros

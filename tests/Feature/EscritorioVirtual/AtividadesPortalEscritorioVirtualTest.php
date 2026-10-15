@@ -75,7 +75,7 @@ class AtividadesPortalEscritorioVirtualTest extends TestCase
         $response->assertInertia(fn ($page) => $page
             ->where('solicitacao.escritorio_virtual.pergunta_vinculada', Settings::get(
                 'analise.escritorio_virtual.pergunta_vinculada',
-                config('sile.analise.escritorio_virtual.pergunta_vinculada'),
+                config('viabiliza.analise.escritorio_virtual.pergunta_vinculada'),
             ))
             ->where('solicitacao.escritorio_virtual.cnae_gatilho_id', $gatilho->id));
     }

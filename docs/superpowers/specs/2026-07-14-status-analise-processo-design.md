@@ -209,7 +209,7 @@ Toda transição grava `AuditService::log('analise','status-analise',...)` + tim
 ### 12.2 Código (evidência)
 - `app/Models/AnalysisPendency.php`, `app/Enums/AnalysisPendencyStatus.php`, `app/Console/Commands/ExpirarPendenciasCommand.php` + `routes/console.php` (`pendencias:expirar` @ 06:00), `routes/portal.php`, `app/Services/Analise/PendenciaService.php` — subsistema a renomear/estender.
 - `app/Enums/ViabilityRequestStatus.php` (`em_pendencia`→`em_convite`), `app/Enums/AnalysisStage.php`, `app/Services/Analise/ProcessoQueryService.php`.
-- `app/Services/Expresso/BusinessDeadlineCalculator.php` (`dueAt` calendário; docblock "dias úteis depende de confirmação"), `config/sile.php` (`analise.pendencia.prazo_resposta_dias = 15`).
+- `app/Services/Expresso/BusinessDeadlineCalculator.php` (`dueAt` calendário; docblock "dias úteis depende de confirmação"), `config/viabiliza.php` (`analise.pendencia.prazo_resposta_dias = 15`).
 - `app/Services/Expresso/FluxoExpressoService.php` (`encaminharAnalise`) + `EncaminhadoParaAnalise` — inicialização.
 - `app/Services/Analise/DistribuicaoService.php` — distribuição/assunção.
 - `app/Services/Solicitacao/TimelineSolicitacao.php` + `app/Models/ViabilityRequestTransition.php` — timeline do cidadão.

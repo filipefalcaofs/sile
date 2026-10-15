@@ -1,9 +1,9 @@
 ---
-description: Fluxo de deploy SILE via Portainer GitOps (build no host a partir da main)
+description: Fluxo de deploy VIABILIZA via Portainer GitOps (build no host a partir da main)
 alwaysApply: true
 ---
 
-# Docker — Deploy SILE via Portainer
+# Docker — Deploy VIABILIZA via Portainer
 
 Servidor de produção: Linux AMD64 (Portainer faz o `docker compose build` no host).
 Máquina de desenvolvimento: Apple Silicon — **não** precisa buildar imagem local para publicar.

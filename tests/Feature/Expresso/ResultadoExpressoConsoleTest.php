@@ -181,4 +181,18 @@ class ResultadoExpressoConsoleTest extends TestCase
                 ->where('transmissao.regin.status', 'pendente')
                 ->where('transmissao.sefaz.status', 'pendente'));
     }
+
+    public function test_periodo_invertido_nao_consulta_e_preserva_as_datas(): void
+    {
+        $this->deferida('VIA-'.now()->year.'-000001');
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get('/gestao/resultados-expresso?data_de=2026-10-05&data_ate=2026-10-01')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('decisoes.data', 0)
+                ->where('erroPeriodo', 'A data inicial não pode ser posterior à data final.')
+                ->where('filtros.data_de', '2026-10-05')
+                ->where('filtros.data_ate', '2026-10-01'));
+    }
 }

@@ -7,13 +7,13 @@ tags: [parametrizacao, hu-014, rate-limiting, fortify, seeder, throttle, feature
 # Dependency graph
 requires:
   - phase: 03.1-cnpj-lookup
-    provides: "padrão de throttle parametrizado (RateLimiter::for cnpj-lookup/geocoding) + Settings::get com fallback em config/sile.php"
+    provides: "padrão de throttle parametrizado (RateLimiter::for cnpj-lookup/geocoding) + Settings::get com fallback em config/viabiliza.php"
   - phase: 02-parametrizacao
     provides: "catálogo ParameterSeeder + tabela parameters + App\\Support\\Settings"
 provides:
   - "Parâmetro features.consulta_viabilidade (toggle, default ligado) — liga/desliga a consulta pública sem deploy"
   - "Parâmetro seguranca.throttle.consulta_viabilidade.por_minuto (default 20) — limite administrável sem deploy"
-  - "Fallbacks espelhados em config/sile.php (Settings funciona com banco indisponível)"
+  - "Fallbacks espelhados em config/viabiliza.php (Settings funciona com banco indisponível)"
   - "RateLimiter nomeado 'consulta-viabilidade' parametrizado por usuário autenticado/IP anônimo"
   - "Catálogo de parâmetros 33→35 travado nos dois testes de seeder"
 affects: [07-06 (rotas públicas /portal/viabilidade com throttle + toggle), 07-09/07-10 (degradação honesta do toggle)]
@@ -29,7 +29,7 @@ key-files:
   created: []
   modified:
     - database/seeders/ParameterSeeder.php
-    - config/sile.php
+    - config/viabiliza.php
     - app/Providers/FortifyServiceProvider.php
     - tests/Feature/Seeders/ParameterSeederTest.php
     - tests/Feature/Seeders/DatabaseSeederTest.php
@@ -62,7 +62,7 @@ completed: 2026-06-14
 ## Accomplishments
 - 2 parâmetros administráveis novos no catálogo (HU-014), em grupos já existentes (`features`, `seguranca`) — nenhum grupo novo
 - `RateLimiter::for('consulta-viabilidade')` parametrizado por usuário autenticado (ou IP quando anônimo), espelhando exatamente `cnpj-lookup`/`geocoding`
-- Fallbacks espelhados em `config/sile.php` (`features.consulta_viabilidade => true`, `seguranca.throttle.consulta_viabilidade => ['por_minuto' => 20]`) — Settings resolve sem banco
+- Fallbacks espelhados em `config/viabiliza.php` (`features.consulta_viabilidade => true`, `seguranca.throttle.consulta_viabilidade => ['por_minuto' => 20]`) — Settings resolve sem banco
 - Catálogo 33→35 travado nos DOIS testes de seeder + caso dedicado validando tipo/default/regras/grupo dos 2 parâmetros
 - Zero dependência nova
 
@@ -80,7 +80,7 @@ _Nota: a Task 1 (implementação) e a Task 2 (testes) foram commitadas em ordem 
 
 ## Files Created/Modified
 - `database/seeders/ParameterSeeder.php` - +2 entradas no `catalog()`: `features.consulta_viabilidade` (boolean, default '1') e `seguranca.throttle.consulta_viabilidade.por_minuto` (integer, default '20', min:1/max:300)
-- `config/sile.php` - fallbacks: `features.consulta_viabilidade => true` e `seguranca.throttle.consulta_viabilidade => ['por_minuto' => 20]`
+- `config/viabiliza.php` - fallbacks: `features.consulta_viabilidade => true` e `seguranca.throttle.consulta_viabilidade => ['por_minuto' => 20]`
 - `app/Providers/FortifyServiceProvider.php` - `RateLimiter::for('consulta-viabilidade', ...)` lendo o parâmetro via `Settings::get(..., 20)`, chaveado por `user()?->id ?: ip()`
 - `tests/Feature/Seeders/ParameterSeederTest.php` - contagem 35 (2 pontos) + `test_seeder_registra_parametros_da_consulta_de_viabilidade`
 - `tests/Feature/Seeders/DatabaseSeederTest.php` - contagem 35 (2 pontos)

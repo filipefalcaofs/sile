@@ -118,7 +118,7 @@ class LouosSandboxController extends Controller
     {
         return [
             'rascunhos' => $this->rascunhos(),
-            'amostraPadrao' => (int) config('sile.louos.sandbox.amostra_padrao', 50),
+            'amostraPadrao' => (int) config('viabiliza.louos.sandbox.amostra_padrao', 50),
         ];
     }
 

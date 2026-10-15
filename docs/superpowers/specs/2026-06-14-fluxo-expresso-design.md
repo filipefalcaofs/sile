@@ -81,7 +81,7 @@ Scheduler (Fase 3.1):
 
 ## Parametrização (HU-014) e testes
 
-**Parâmetros novos** (ParameterSeeder + fallback config/sile.php): `features.fluxo_expresso`, `features.notificacao_resultado_expresso`, `expresso.bap.prazo_horas` (48), `expresso.notificacao.assunto_deferida`/`_indeferida`, `expresso.tvl.prefixo`/`expresso.tvl.padding`. **Reusa** `risco.mapa_encaminhamento` (elegibilidade — não criar novo). Constantes técnicas (timeout do lock, cadência do scheduler, fila, tries/backoff) em `config/sile.php`, fora do catálogo.
+**Parâmetros novos** (ParameterSeeder + fallback config/viabiliza.php): `features.fluxo_expresso`, `features.notificacao_resultado_expresso`, `expresso.bap.prazo_horas` (48), `expresso.notificacao.assunto_deferida`/`_indeferida`, `expresso.tvl.prefixo`/`expresso.tvl.padding`. **Reusa** `risco.mapa_encaminhamento` (elegibilidade — não criar novo). Constantes técnicas (timeout do lock, cadência do scheduler, fila, tries/backoff) em `config/viabiliza.php`, fora do catálogo.
 
 **Testes (TDD):**
 - Elegibilidade HU-073: baixo→decide; alto/gatilho/não-classificado → em_analise auditado (SQLite + fake SpatialRepository).

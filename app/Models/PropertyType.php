@@ -26,7 +26,7 @@ class PropertyType extends Model
     /** @use HasFactory<PropertyTypeFactory> */
     use HasFactory;
 
-    public const CACHE_KEY = 'sile.property_types.catalogo';
+    public const CACHE_KEY = 'viabiliza.property_types.catalogo';
 
     protected static function booted(): void
     {

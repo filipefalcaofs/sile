@@ -56,7 +56,7 @@ Os textos padrão de indeferimento já fornecidos existem no catálogo administr
    - cada camada poligonal das regras territoriais ativas (ZEM, ZPAM, ABM, ZUE, loteamentos TAC), consultada **sem o filtro da regra** para devolver o atributo da feição (ex.: `TRECHOS = 5`), marcando se a regra incide.
    Resultado gravado em `viability_requests.camadas_incidentes` (jsonb) com a versão/fonte de cada camada e a data da identificação. Materializado no protocolo e refeito na decisão expressa (reaproveitado pela avaliação das regras territoriais, sem consulta dupla).
 10. **Exibição:** ficha de análise e detalhe do processo mostram "Camadas do imóvel" (camada → elemento identificado, ex.: "Logradouros → 212 — Avenida Lafayete Coutinho"; "Área de Borda Marítima → Trecho 5"). Camada indisponível aparece como indisponível, nunca omitida.
-11. **Sem parâmetro novo.** O raio de logradouros próximos é constante técnica em `config/sile.php` (mesmo padrão de `via_max_metros`).
+11. **Sem parâmetro novo.** O raio de logradouros próximos é constante técnica em `config/viabiliza.php` (mesmo padrão de `via_max_metros`).
 
 ## 3. Fora de escopo
 

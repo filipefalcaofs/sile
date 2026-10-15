@@ -34,9 +34,9 @@ class SaturacaoControllerTest extends TestCase
 
         Cache::flush();
         config([
-            'sile.relatorios.saturacao.capacidades' => ['4712100' => 2],
-            'sile.relatorios.saturacao.alerta_percentual' => 80,
-            'sile.relatorios.saturacao.bloqueio_percentual' => 100,
+            'viabiliza.relatorios.saturacao.capacidades' => ['4712100' => 2],
+            'viabiliza.relatorios.saturacao.alerta_percentual' => 80,
+            'viabiliza.relatorios.saturacao.bloqueio_percentual' => 100,
         ]);
     }
 

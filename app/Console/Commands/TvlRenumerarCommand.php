@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Storage;
 
 /**
  * Migra os números TVL já emitidos (TVL-AAAA-NNNNNN) para a sequência única
- * sile.expresso.tvl.inicio em diante (TVL-3000000...), que é a que segue à
+ * viabiliza.expresso.tvl.inicio em diante (TVL-3000000...), que é a que segue à
  * SEFAZ. A ordem é a da decisão (decided_at, id), então a numeração conta a
  * história do sistema. Sem --executar só simula. Idempotente: números já no novo
  * formato são ignorados e uma nova rodada continua do contador. Os vínculos de

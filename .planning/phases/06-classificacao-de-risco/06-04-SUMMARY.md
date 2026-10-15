@@ -22,7 +22,7 @@ provides:
   - "Tabela tabular risk_triggers (codigo, titulo, motivo auditável, ativo, categoria) — gatilhos como DADO parametrizado, ativáveis por interface"
   - "Model RiskTrigger (HasAuditoria, casts codigo→TipoGatilho + ativo→bool, scope ativos()) + factory"
   - "RiskTriggerSeeder (upsert por codigo, aditivo em ativo — preserva liga/desliga administrado), integrado ao DatabaseSeeder"
-  - "Parâmetros risco.mapa_encaminhamento (json, default baixo_a/baixo_b=expresso, alto=analise) e risco.dimensao_tvl (default municipal) no catálogo (29→31), com fallback sile.risco.* em config/sile.php"
+  - "Parâmetros risco.mapa_encaminhamento (json, default baixo_a/baixo_b=expresso, alto=analise) e risco.dimensao_tvl (default municipal) no catálogo (29→31), com fallback viabiliza.risco.* em config/viabiliza.php"
   - "DTOs readonly RiscoInput/RiscoResult — contrato snake_case (toArray), versoes() por dimensão e encaminhadoParaAnalise() — insumo do motor 06-05 e do EP07+"
 affects: [06-05-motor-risco, 06-06-mantenedores-publicacao, 06-08-ui-risco]
 
@@ -49,14 +49,14 @@ key-files:
     - tests/Unit/Risco/RiscoDtoTest.php
   modified:
     - database/seeders/ParameterSeeder.php
-    - config/sile.php
+    - config/viabiliza.php
     - database/seeders/DatabaseSeeder.php
     - tests/Feature/Seeders/ParameterSeederTest.php
     - tests/Feature/Seeders/DatabaseSeederTest.php
 
 key-decisions:
   - "Mapa de encaminhamento é parâmetro json (risco.mapa_encaminhamento), não 3 toggles: troca atômica do roteamento sem deploy; nível ausente no mapa é decisão de DEGRADAÇÃO do consumidor (06-05) → 'analise', nunca inventar nível. O Decreto não tem 'médio'."
-  - "Fallback de config/sile.php é o ARRAY já decodificado; typedValue() do parâmetro json também devolve array — o consumidor (motor 06-05) sempre recebe array, nunca string (provado por teste e por Settings::get no tinker)."
+  - "Fallback de config/viabiliza.php é o ARRAY já decodificado; typedValue() do parâmetro json também devolve array — o consumidor (motor 06-05) sempre recebe array, nunca string (provado por teste e por Settings::get no tinker)."
   - "ativo fora do array de update do RiskTriggerSeeder (upsert aditivo): o default true da coluna cobre a criação; re-seed não sobrescreve o liga/desliga administrado — precedente do value do ParameterSeeder."
   - "Migration risk_triggers com timestamp explícito 014719 (após as 014716/7/8 da fase): sem FK a rule_versions (gatilho é parametrização própria), mas mantém a ordem cronológica do conjunto."
   - "RiscoResult expõe $versoes como propriedade E versoes() como método (getter, paralelo a TerritoryResult::versoes()): cada dimensão também carrega versao_regras no toArray (self-contido), e o top-level versoes é o resumo consolidado por dimensão."
@@ -86,7 +86,7 @@ completed: 2026-06-14
 ## Accomplishments
 - Enums `Fluxo` (expresso/analise — sem 'semi_expresso' como fluxo) e `TipoGatilho` (os 3 gatilhos conhecidos) com `label()` pt-BR.
 - Tabela tabular `risk_triggers` + model `RiskTrigger` (HasAuditoria, scope `ativos()`) + factory + `RiskTriggerSeeder` (upsert aditivo em `ativo`), integrado ao `DatabaseSeeder`.
-- Parâmetros `risco.mapa_encaminhamento` (json) e `risco.dimensao_tvl` (string) no catálogo (29→31), com fallback `sile.risco.*` em `config/sile.php` e contagem atualizada nos DOIS testes.
+- Parâmetros `risco.mapa_encaminhamento` (json) e `risco.dimensao_tvl` (string) no catálogo (29→31), com fallback `viabiliza.risco.*` em `config/viabiliza.php` e contagem atualizada nos DOIS testes.
 - DTOs readonly `RiscoInput`/`RiscoResult` com contrato snake_case (`toArray`), `versoes()` por dimensão e `encaminhadoParaAnalise()`.
 - Suíte SQLite: **484/484 verde** (475 baseline + 9 novos), sem regressão. `--filter=Risco` 25/25.
 
@@ -108,7 +108,7 @@ Cada task foi commitada atomicamente (TDD RED→GREEN):
 | `risco.mapa_encaminhamento` | risco | json | `{"baixo_a":"expresso","baixo_b":"expresso","alto":"analise"}` | `['required','json']` |
 | `risco.dimensao_tvl` | risco | string | `municipal` | `['required','in:municipal,sanitario']` |
 
-- `typedValue()` do `mapa_encaminhamento` devolve o **array** `['baixo_a'=>'expresso','baixo_b'=>'expresso','alto'=>'analise']`; o fallback `config('sile.risco.mapa_encaminhamento')` é o **mesmo array** — o consumidor sempre recebe array (provado por teste e por `Settings::get` no tinker).
+- `typedValue()` do `mapa_encaminhamento` devolve o **array** `['baixo_a'=>'expresso','baixo_b'=>'expresso','alto'=>'analise']`; o fallback `config('viabiliza.risco.mapa_encaminhamento')` é o **mesmo array** — o consumidor sempre recebe array (provado por teste e por `Settings::get` no tinker).
 - **Nível ausente no mapa ⇒ o consumidor (06-05) degrada para `analise`** (degradação segura). NUNCA inventar nível; o Decreto não tem 'médio'.
 - Grupos ordenados passam a `['features','geo','integracoes','retencao','risco','seguranca','ui']`.
 
@@ -152,7 +152,7 @@ Métodos: `versoes(): array` (por dimensão), `toArray(): array` (snake_case, es
 - `app/Services/Risco/RiscoInput.php` - DTO readonly de entrada + paraCnae().
 - `app/Services/Risco/RiscoResult.php` - DTO readonly de resultado (dimensões separadas, toArray, versoes, encaminhadoParaAnalise).
 - `database/seeders/ParameterSeeder.php` - +2 parâmetros risco.* (grupo risco).
-- `config/sile.php` - +bloco fallback sile.risco.* (mapa como array, dimensao_tvl).
+- `config/viabiliza.php` - +bloco fallback viabiliza.risco.* (mapa como array, dimensao_tvl).
 - `database/seeders/DatabaseSeeder.php` - Registra RiskTriggerSeeder após RiscoSanitarioSeeder.
 - `tests/Feature/Risco/RiskTriggerSeederTest.php` - 3 gatilhos, idempotência, scope ativos, preservação de ativo administrado (4 testes).
 - `tests/Unit/Risco/RiscoDtoTest.php` - paraCnae, toArray snake_case, versoes por dimensão, encaminhadoParaAnalise (4 testes).

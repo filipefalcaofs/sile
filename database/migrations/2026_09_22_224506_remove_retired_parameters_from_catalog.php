@@ -59,7 +59,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        // Os valores passaram a viver em config/sile.php. Recriar a linha
+        // Os valores passaram a viver em config/viabiliza.php. Recriar a linha
         // no catálogo exigiria o metadado antigo; o re-seed não as recoloca.
     }
 };

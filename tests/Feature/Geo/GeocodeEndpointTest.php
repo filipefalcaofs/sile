@@ -35,7 +35,7 @@ class GeocodeEndpointTest extends TestCase
         $this->seed(RolesAndPermissionsSeeder::class);
 
         // Backoff zero mantém os testes de indisponibilidade rápidos.
-        config(['sile.integrations.geocoding.backoff_ms' => 0]);
+        config(['viabiliza.integrations.geocoding.backoff_ms' => 0]);
     }
 
     /**
@@ -240,7 +240,7 @@ class GeocodeEndpointTest extends TestCase
     {
         $analista = User::factory()->analista()->withAcceptedLgpdTerm()->create();
 
-        config(['sile.seguranca.throttle.geocoding.por_minuto' => 2]);
+        config(['viabiliza.seguranca.throttle.geocoding.por_minuto' => 2]);
 
         Http::fake(['*/search*' => Http::response($this->nominatimFixture(), 200)]);
 

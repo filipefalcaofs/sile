@@ -9,7 +9,7 @@ requires:
   - phase: 04-01
     provides: "geo_layers/geo_features (geometry(Geometry,4326) + GiST), models GeoLayer (vigente()/naData()) e GeoFeature, enums GeoLayerType/GeoLayerStatus, conexão pgsql_testing + PostgisTestCase (guard fail-not-skip)"
   - phase: 04-02
-    provides: "geo.via_max_metros (constante técnica em config/sile.php) — raio da via mais próxima"
+    provides: "geo.via_max_metros (constante técnica em config/viabiliza.php) — raio da via mais próxima"
   - phase: 04-04
     provides: "GeoJsonLayerImporter (carga real de FeatureCollection), camadas reais GeoSalvador (bairro/restrição/via) e zona/lote pendente_fonte; fixture tests/Fixtures/geo/bairros-amostra.geojson"
   - phase: 01-identidade

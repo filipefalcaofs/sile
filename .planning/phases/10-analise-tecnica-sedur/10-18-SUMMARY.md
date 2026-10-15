@@ -108,7 +108,7 @@ completed: 2026-06-15
   Atividade principal: 4712-1/00 — Comércio varejista ... minimercados ...
   Resultado: DEFERIDA
   Desfecho: DEFERIDA
-  Analista responsável: Analista SILE (#3)
+  Analista responsável: Analista VIABILIZA (#3)
   Número TVL: TVL-2026-000003
   Parecer do analista:
    Parecer técnico favorável: atividade compatível com o local, com fundamentação na LOUOS (Lei nº 9.148/2016).

@@ -95,6 +95,8 @@ class TerritorialRuleService
 
         $incidencias = [];
         $encaminhar = null;
+        $aguardandoCamada = false;
+        $encaminhamentoFirme = false;
 
         foreach ($regras as $regra) {
             $hit = match ($regra->tipo) {
@@ -132,6 +134,12 @@ class TerritorialRuleService
             }
 
             $encaminhar ??= [$regra, $hit['motivo']];
+
+            if ($hit['aguardar_camada'] ?? false) {
+                $aguardandoCamada = true;
+            } else {
+                $encaminhamentoFirme = true;
+            }
         }
 
         if ($encaminhar !== null) {
@@ -141,6 +149,7 @@ class TerritorialRuleService
                 $encaminhar[1],
                 $versao->version,
                 $incidencias,
+                aguardarCamada: $aguardandoCamada && ! $encaminhamentoFirme,
             );
 
             $this->auditar($request, $verdict);
@@ -203,7 +212,7 @@ class TerritorialRuleService
      * regra. O CNAE é checado primeiro para só consultar o Cadastro
      * Imobiliário quando a restrição pode de fato incidir.
      *
-     * @return array{efeito: TerritorialRuleEffect, motivo: string}|null
+     * @return array{efeito: TerritorialRuleEffect, motivo: string, aguardar_camada?: bool}|null
      */
     private function casarLogradouroCnae(TerritorialRule $regra, ViabilityRequest $request): ?array
     {
@@ -287,7 +296,7 @@ class TerritorialRuleService
      * registrando a indisponibilidade (CA-RT-09).
      *
      * @param  array{lat: float, lng: float}|null  $ponto
-     * @return array{efeito: TerritorialRuleEffect, motivo: string}|null
+     * @return array{efeito: TerritorialRuleEffect, motivo: string, aguardar_camada?: bool}|null
      */
     private function casarPoligonal(TerritorialRule $regra, ?array $ponto): ?array
     {
@@ -313,6 +322,7 @@ class TerritorialRuleService
             return [
                 'efeito' => TerritorialRuleEffect::EncaminharAnalise,
                 'motivo' => $this->motivoCamadaIndisponivel($regra),
+                'aguardar_camada' => true,
             ];
         }
 
@@ -332,7 +342,7 @@ class TerritorialRuleService
      * estar na lista não defere, só devolve ao fluxo normal.
      *
      * @param  array{lat: float, lng: float}|null  $ponto
-     * @return array{efeito: TerritorialRuleEffect, motivo: string}|null
+     * @return array{efeito: TerritorialRuleEffect, motivo: string, aguardar_camada?: bool}|null
      */
     private function casarPoligonalAllowlist(TerritorialRule $regra, ViabilityRequest $request, ?array $ponto): ?array
     {
@@ -358,6 +368,7 @@ class TerritorialRuleService
             return [
                 'efeito' => TerritorialRuleEffect::EncaminharAnalise,
                 'motivo' => $this->motivoCamadaIndisponivel($regra),
+                'aguardar_camada' => true,
             ];
         }
 

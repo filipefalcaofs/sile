@@ -113,7 +113,7 @@ class SedeTitularNaoEBloqueadaTest extends TestCase
 
         $errors = $this->app['session']->get('errors')->getBag('default')->get('principal_cnae_id');
         $this->assertSame(
-            config('sile.analise.escritorio_virtual.mensagem_sede_duplicada'),
+            config('viabiliza.analise.escritorio_virtual.mensagem_sede_duplicada'),
             $errors[0],
         );
     }

@@ -11,7 +11,7 @@ requires:
     provides: "ViabilityRequest::cnaes() belongsToMany viability_request_cnaes withPivot('is_primary') + primaryCnae() + markSimulationStale() (HU-063 RN-005); unique(viability_request_id, cnae_id)"
   - phase: 08-solicitacao-de-viabilidade
     plan: 02
-    provides: "parâmetro solicitacao.cnaes_complementares.max (catálogo + fallback config/sile.php, default 99) lido via Settings::get"
+    provides: "parâmetro solicitacao.cnaes_complementares.max (catálogo + fallback config/viabiliza.php, default 99) lido via Settings::get"
   - phase: 08-solicitacao-de-viabilidade
     plan: 05
     provides: "ViabilityRequestPolicy::update (dono efetivo + status rascunho) integrada à representação; rotas portal.solicitacoes.* no grupo auth:web+verified+lgpd.accepted+ResolveRepresentation"
@@ -42,7 +42,7 @@ key-files:
 
 key-decisions:
   - "Pivot escrito no controller (não em service dedicado): a solicitação recebe principal + complementares numa única request, então um único $solicitacao->cnaes()->sync($payload) com o principal primeiro (is_primary=true) e os complementares (is_primary=false) já garante a invariante 'um principal' e a unicidade (request, cnae). Diferente do CompanyCnaeService (Fase 3), que precisa de setPrimary/syncSecondaries porque a empresa tem dois endpoints distintos. files_modified do plano não previa service — boundary respeitado."
-  - "Limite de complementares lido dinamicamente no rules(): Settings::get('solicitacao.cnaes_complementares.max', config('sile.solicitacao.cnaes_complementares.max', 99)) como max:{N} — exceder gera erro de validação comunicado em 'complementares' (não silencioso); unique(request, cnae) é a defesa final no banco."
+  - "Limite de complementares lido dinamicamente no rules(): Settings::get('solicitacao.cnaes_complementares.max', config('viabiliza.solicitacao.cnaes_complementares.max', 99)) como max:{N} — exceder gera erro de validação comunicado em 'complementares' (não silencioso); unique(request, cnae) é a defesa final no banco."
   - "Só CNAEs ATIVOS são vinculáveis (Rule::exists('cnaes','id')->where('active', true)) tanto no principal quanto em cada complementar — mesma regra da seleção manual da Fase 3 ([03-06]); a busca reusa portal.cnaes.search (CnaeSearchController, já só ativos)."
   - "Autorização dono+rascunho no controller via Gate::authorize('update', $solicitacao) usando a ViabilityRequestPolicy do 08-05 (a regra fina da edição já existia). FormRequest::authorize() retorna true; a validação só é alcançada por quem passa pela rota autenticada, e o 403 vem do Gate com dados válidos."
   - "markSimulationStale() é chamado dentro da DB::transaction do sync (RN-005): trocar a atividade/CNAEs invalida a simulação orientativa anterior de forma atômica. Auditoria explícita 'solicitacao-cnaes' (antes/depois com códigos + is_primary) coexiste com o updated do HasAuditoria — relações não entram no diff automático."

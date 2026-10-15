@@ -17,7 +17,7 @@ return new class extends Migration
      * projeto) com índice HNSW cosine para a busca DIY (o SimilaritySearch do
      * laravel/ai v0.8.1 é incompleto). Em SQLite (suíte) vira `json` SEM índice —
      * a busca vetorial degrada honesto (não finge ranking). A dimensão é
-     * parametrizada (config sile.ai.embeddings.dimensions) — mesma fonte que o
+     * parametrizada (config viabiliza.ai.embeddings.dimensions) — mesma fonte que o
      * PrecedentIndexer usa ao gerar o embedding, para a coluna e o vetor casarem.
      */
     public function up(): void
@@ -36,7 +36,7 @@ return new class extends Migration
             $table->unique('viability_request_id');
         });
 
-        $dimensions = (int) config('sile.ai.embeddings.dimensions', 1536);
+        $dimensions = (int) config('viabiliza.ai.embeddings.dimensions', 1536);
 
         if (DB::getDriverName() === 'pgsql') {
             // Extensão pgvector + coluna vetorial + índice HNSW cosine (busca DIY).

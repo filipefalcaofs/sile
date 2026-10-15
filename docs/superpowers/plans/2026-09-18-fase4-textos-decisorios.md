@@ -79,7 +79,7 @@
   - `DecisionTextCatalog::get(string $key): string` — banco → cache → defaults; chave desconhecida lança `InvalidArgumentException` (chave ausente é bug, não estado de runtime).
   - `DecisionTextCatalog::render(string $key, array<string, string> $placeholders = []): string` — `strtr($template, $placeholders)`; placeholder não fornecido permanece literal (visível, honesto).
   - `DecisionTextCatalog::defaults(): array<string, string>` — os textos de fábrica (conteúdo ATUAL do código, verbatim).
-  - `DecisionText::CACHE_KEY = 'sile.decision_texts.catalogo'`; escrita invalida (booted saved/deleted, padrão PropertyType).
+  - `DecisionText::CACHE_KEY = 'viabiliza.decision_texts.catalogo'`; escrita invalida (booted saved/deleted, padrão PropertyType).
 - Consumes: nada além do padrão.
 
 **Regras:**

@@ -2,7 +2,7 @@
 
 **Gathered:** 2026-06-11
 **Status:** Ready for planning
-**Source:** PRD Express Path (HUs do EP03 — `docs/SILE_HUs_Completas_MD/EP03-Cadastro-Empresarial/`, HU-021 a HU-028)
+**Source:** PRD Express Path (HUs do EP03 — `docs/VIABILIZA_HUs_Completas_MD/EP03-Cadastro-Empresarial/`, HU-021 a HU-028)
 
 <domain>
 ## Phase Boundary
@@ -56,7 +56,7 @@ Fora do escopo: conexão/transporte com o integrador REDESIM e convênio oficial
 ### Regras do projeto aplicáveis (travadas)
 - TDD estrito; 4 CAs × 8 HUs como feature tests PHPUnit nomeados em pt-BR.
 - Padrões de UI da fase 2.1/2.2 (OBRIGATÓRIOS — STATE.md): datatable em card com ação primária, criar/editar em Modal, ConfirmDialog para destrutivas, Pagination compartilhado, EmptyState, sidebar do portal ganha grupo "Serviços" → item "Minhas empresas".
-- Parametrização: o que for valor de negócio vai para `config/sile.php`/Parameter (ex.: provider/URL do CNPJ lookup, toggle).
+- Parametrização: o que for valor de negócio vai para `config/viabiliza.php`/Parameter (ex.: provider/URL do CNPJ lookup, toggle).
 - Auditoria transversal (AuditService/HasAuditoria) em todas as ações.
 - Rotas novas do portal sob `/portal/*` (mapa de rotas da fase 2.3); pt-BR na UI; conventional commits pt-BR.
 
@@ -72,7 +72,7 @@ Fora do escopo: conexão/transporte com o integrador REDESIM e convênio oficial
 **Downstream agents MUST read these before planning or implementing.**
 
 ### Requisitos da fase (fonte de verdade)
-- `docs/SILE_HUs_Completas_MD/EP03-Cadastro-Empresarial/HU-021-Consultar-dados-do-CNPJ.md` a `HU-028-Encerrar-vinculo-empresarial.md` (8 HUs)
+- `docs/VIABILIZA_HUs_Completas_MD/EP03-Cadastro-Empresarial/HU-021-Consultar-dados-do-CNPJ.md` a `HU-028-Encerrar-vinculo-empresarial.md` (8 HUs)
 - `docs/ANALISE-HUs-REUNIAO-SEDUR.md` — seção 1 (entrada pelo integrador REDESIM confirmada) e 4B (módulos SIGVISA de referência: deduplicação de estabelecimentos)
 
 ### Código existente a respeitar

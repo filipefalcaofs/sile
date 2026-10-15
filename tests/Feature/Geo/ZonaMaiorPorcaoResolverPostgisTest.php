@@ -21,7 +21,7 @@ class ZonaMaiorPorcaoResolverPostgisTest extends PostgisTestCase
     {
         parent::setUp();
 
-        config(['sile.features.geoserver_zona' => true, 'sile.features.geoserver_enderecamento' => true]);
+        config(['viabiliza.features.geoserver_zona' => true, 'viabiliza.features.geoserver_enderecamento' => true]);
 
         GeoServerLayer::factory()->create(['workspace' => 'louos_zpr3', 'type_name' => 'VM_L_Z_USO_ZPR_3', 'ordem' => 1]);
         GeoServerLayer::factory()->create(['workspace' => 'louos_zeis', 'type_name' => 'VM_L_Z_USO_ZEIS', 'ordem' => 2]);

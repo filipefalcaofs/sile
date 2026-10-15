@@ -125,6 +125,8 @@ export interface ProcessoItem {
     contingency_reason: string | null;
     empresa: string | null;
     cnpj: string | null;
+    /** Códigos separados por vírgula, com papel quando o vínculo gravou is_primary. */
+    cnaes?: string | null;
     imovel: string;
     endereco_completo: string;
     inscricao: string | null;

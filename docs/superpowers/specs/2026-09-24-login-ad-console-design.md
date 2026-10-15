@@ -41,7 +41,7 @@ Migration em `users`:
 Regras de integridade (validação no cadastro/edição de usuários do console):
 
 - `auth_type = ad` exige `ad_username` preenchido; `auth_type = local` exige `ad_username` nulo.
-- Ao converter um usuário para `ad`: a senha local é substituída por um hash aleatório inutilizável e o reset de senha do console passa a ser recusado para essa conta (a senha é corporativa, gerida fora do SILE).
+- Ao converter um usuário para `ad`: a senha local é substituída por um hash aleatório inutilizável e o reset de senha do console passa a ser recusado para essa conta (a senha é corporativa, gerida fora do VIABILIZA).
 - Ao converter para `local`: exige definição de nova senha local (fluxo de reset), pois o hash pode ser o aleatório.
 
 ## 5. Fluxo de login (console)
@@ -81,7 +81,7 @@ A orientação visível informa: “Use o usuário da rede corporativa (ex.: seu
 
 Não há seletor “AD” × “local”: o Laravel identifica o mecanismo pelo cadastro da conta, reduzindo escolha errada e não expondo o tipo de autenticação de contas que não existem. As falhas de identificação e de senha permanecem em uma mensagem genérica (`auth.failed`), preservando o anti-oráculo.
 
-O link “Esqueceu?” permanece. Para uma conta AD, o fluxo de recuperação continua sem enviar e-mail e mantém a resposta genérica; a senha corporativa é alterada fora do SILE.
+O link “Esqueceu?” permanece. Para uma conta AD, o fluxo de recuperação continua sem enviar e-mail e mantém a resposta genérica; a senha corporativa é alterada fora do VIABILIZA.
 
 ## 6. Componentes
 
@@ -100,7 +100,7 @@ O link “Esqueceu?” permanece. Para uma conta AD, o fluxo de recuperação co
 | `integrations.sedur_auth.base_url` | string (URL) | não | Varia entre homologação e produção |
 | `features.ad_login` | bool | não | Interruptor de fluxo real; desligar bloqueia login AD com aviso explícito (nunca falha silenciosa) |
 
-Timeouts ficam em `config/sile.php` (regra de parametrização: throttle/timeout não são parâmetro de gestor). Nenhuma credencial sensível é necessária: a autenticação usa a senha do próprio usuário, transitória.
+Timeouts ficam em `config/viabiliza.php` (regra de parametrização: throttle/timeout não são parâmetro de gestor). Nenhuma credencial sensível é necessária: a autenticação usa a senha do próprio usuário, transitória.
 
 ## 8. Auditoria
 
@@ -115,7 +115,7 @@ Timeouts ficam em `config/sile.php` (regra de parametrização: throttle/timeout
 3. Throttle por usuário e por IP **antes** de chamar a API AD; anti-oráculo: usuário AD inexistente, senha errada e conta AD bloqueada retornam a mesma mensagem genérica.
 4. Fail closed: `isInactive()` + `can('acessar-gestao')` antes de `Auth::guard('gestao')->login()`; negação auditada.
 5. `pessoaView` somente com o CPF do **próprio usuário autenticado**, extraindo apenas o necessário (nome) e descartando o resto. Consulta a CPF de terceiros pelo console é feature separada — **bloqueada** até definição de escopo do token e base legal (ver §11).
-6. Provisionamento é manual-prévio (cadastro no console com `auth_type`/`ad_username`): servidor AD válido sem cadastro no SILE não entra. Não há JIT provisioning nesta fase.
+6. Provisionamento é manual-prévio (cadastro no console com `auth_type`/`ad_username`): servidor AD válido sem cadastro no VIABILIZA não entra. Não há JIT provisioning nesta fase.
 7. Desprovisionamento: a validação a cada login já barra quem foi desligado no AD; `inactivated_at` local segue soberano e `EnsureUserIsActive` derruba sessões de inativados.
 
 ## 10. Testes (TDD)

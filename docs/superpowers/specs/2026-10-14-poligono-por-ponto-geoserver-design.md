@@ -107,7 +107,7 @@ então gravar o polígono antes de `decide()` basta.
 - Mesmo `typeName` e mesmo parser de features do `consultar`.
 - `CQL_FILTER = INTERSECTS(GEOMETRY,SRID=4326;POINT(<lng> <lat>))`. O ponto
   entra em (longitude, latitude).
-- Timeout próprio: `sile.integrations.geoserver.enderecamento.timeout_ponto`,
+- Timeout próprio: `viabiliza.integrations.geoserver.enderecamento.timeout_ponto`,
   45 s. Sem retry interno, porque o job já tem tentativas.
 - O timeout geral de 8 s continua para as demais consultas.
 - Respeita o interruptor `geoserver_enderecamento`.

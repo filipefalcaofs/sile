@@ -5,6 +5,7 @@ import Input from '@/components/form/input';
 import IsoDateInput from '@/components/form/iso-date-input';
 import Select from '@/components/form/select';
 import { ArrowRightIcon } from '@/components/icons';
+import Alert from '@/components/ui/alert';
 import Badge from '@/components/ui/badge';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import DataTable from '@/components/ui/data-table/data-table';
@@ -53,6 +54,7 @@ interface ResultadosExpressoIndexProps {
     };
     perPageOptions: number[];
     outcomeOptions: SelectOption[];
+    erroPeriodo?: string | null;
 }
 
 /** Cor do badge por desfecho: deferida=verde, indeferida=vermelho. */
@@ -94,6 +96,7 @@ export default function ResultadosExpressoIndex({
     filtros,
     perPageOptions,
     outcomeOptions,
+    erroPeriodo = null,
 }: ResultadosExpressoIndexProps) {
     const table = useServerTable({
         url: '/gestao/resultados-expresso',
@@ -184,6 +187,7 @@ export default function ResultadosExpressoIndex({
                 />
                 <CardContent>
                     <div className="space-y-5">
+                        {erroPeriodo && <Alert variant="error" title="Período inválido" message={erroPeriodo} />}
                         <TableToolbar
                             search={{
                                 value: table.search,
@@ -270,7 +274,13 @@ export default function ResultadosExpressoIndex({
                             density="compact"
                             emptyState={
                                 <EmptyState
-                                    title={filtering ? 'Nenhum resultado para a busca' : 'Nenhuma decisão registrada'}
+                                    title={
+                                        erroPeriodo
+                                            ? 'Período inválido'
+                                            : filtering
+                                              ? 'Nenhum resultado para a busca'
+                                              : 'Nenhuma decisão registrada'
+                                    }
                                     description={
                                         filtering
                                             ? 'Ajuste a busca ou os filtros e tente novamente.'

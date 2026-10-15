@@ -31,10 +31,10 @@ class RedesimClient
 
         try {
             $response = Http::withHeaders([
-                'User-Agent' => (string) config('sile.integrations.redesim_estatistica.user_agent', 'Viabiliza-SEDUR-Salvador/1.0'),
+                'User-Agent' => (string) config('viabiliza.integrations.redesim_estatistica.user_agent', 'Viabiliza-SEDUR-Salvador/1.0'),
             ])
                 // São Paulo baixa cerca de 16 MB por competência.
-                ->timeout((int) config('sile.integrations.redesim_estatistica.timeout', 180))
+                ->timeout((int) config('viabiliza.integrations.redesim_estatistica.timeout', 180))
                 ->connectTimeout(15)
                 ->get($url, ['ano' => $ano, 'mes' => $mes]);
         } catch (Throwable $e) {
@@ -56,7 +56,7 @@ class RedesimClient
 
     private function url(string $uf): string
     {
-        $base = rtrim((string) config('sile.integrations.redesim_estatistica.base_url'), '/');
+        $base = rtrim((string) config('viabiliza.integrations.redesim_estatistica.base_url'), '/');
 
         return $base.'/exportar/solicitacoes/'.strtoupper(trim($uf));
     }

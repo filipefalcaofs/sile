@@ -45,7 +45,7 @@ class EscalonarSlaCommand extends Command
     {
         $tratamento = (array) Settings::get(
             'notificacoes.escalonamento.tratamento',
-            config('sile.notificacoes.escalonamento.tratamento', []),
+            config('viabiliza.notificacoes.escalonamento.tratamento', []),
         );
 
         $tratamentoAmarelo = (string) ($tratamento['amarelo'] ?? 'notificar_analista');

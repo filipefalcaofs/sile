@@ -7,7 +7,7 @@ tags: [hu-131, export, xlsx, openspout, streaming, rn-005, queue]
 # Dependency graph
 requires:
   - phase: 15-relatorios-e-indicadores (15-01)
-    provides: dependência openspout/openspout ^4.0 (v4.32.0) + bloco config/sile.php relatorios.export (formatos_habilitados já com 'xlsx')
+    provides: dependência openspout/openspout ^4.0 (v4.32.0) + bloco config/viabiliza.php relatorios.export (formatos_habilitados já com 'xlsx')
   - phase: 15-relatorios-e-indicadores (15-02)
     provides: contrato de exportação (ReportDefinition/ReportSource/ReportFormatExporter) + CsvExporter/PdfExporter + ReportExporter + GerarExportacaoJob + ExportFile
 provides:
@@ -52,7 +52,7 @@ completed: 2026-06-15
 ## Accomplishments
 
 - **Task 1** (commit `817bd0b`): `XlsxExporter` (`final class implements ReportFormatExporter`) — `write()` grava por `openToFile` (Pitfall 4) e `stream()` gera o XLSX em `tempnam` e o envia por `response()->streamDownload` + `fpassthru`; ambos iteram o Builder filtrado com `cursor()` (RN-005, baixa memória). `XlsxExporterTest::write_gera_xlsx_legivel_...` reabre o arquivo com o `Reader` do openspout e prova cabeçalho + apenas o conjunto filtrado.
-- **Task 2** (commit `6eeaa09`): `ReportExporter` — `DRIVERS_DISPONIVEIS` ampliado para `['csv','xlsx','pdf']` e `match` ganhou `'xlsx' => app(XlsxExporter::class)`; `formatos_habilitados` já trazia `'xlsx'` desde 15-01 (config/sile.php). Casos de teste xlsx síncrono (200 + Content-Type xlsx + auditoria `exporta-processos-xlsx` + volume) e assíncrono (202 + `assertPushed(GerarExportacaoJob)` com formato `xlsx`). Teste anti-fachada `formato_nao_disponivel_e_recusado` do `ReportExporterTest` REapontado de `'xlsx'` para `'json'` (xlsx deixou de ser indisponível em 15-08; o guarda permanece para formatos desconhecidos) — anti-regressão mantida verde.
+- **Task 2** (commit `6eeaa09`): `ReportExporter` — `DRIVERS_DISPONIVEIS` ampliado para `['csv','xlsx','pdf']` e `match` ganhou `'xlsx' => app(XlsxExporter::class)`; `formatos_habilitados` já trazia `'xlsx'` desde 15-01 (config/viabiliza.php). Casos de teste xlsx síncrono (200 + Content-Type xlsx + auditoria `exporta-processos-xlsx` + volume) e assíncrono (202 + `assertPushed(GerarExportacaoJob)` com formato `xlsx`). Teste anti-fachada `formato_nao_disponivel_e_recusado` do `ReportExporterTest` REapontado de `'xlsx'` para `'json'` (xlsx deixou de ser indisponível em 15-08; o guarda permanece para formatos desconhecidos) — anti-regressão mantida verde.
 - **Fix async** (commit `07d1c8a`): `GerarExportacaoJob::driver()` (resolver DUPLICADO do caminho assíncrono) também ganhou `'xlsx' => app(XlsxExporter::class)`. Bug pego pelo teste de ponta a ponta `job_assincrono_grava_xlsx_legivel_e_filtrado_no_disco`, que roda o `handle()` com formato `xlsx`, confere o `ExportFile` (format/row_count) e reabre o XLSX gravado no disco provando o conjunto filtrado (RN-005 no assíncrono).
 
 ## API do XlsxExporter

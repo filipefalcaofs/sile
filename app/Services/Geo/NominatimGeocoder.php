@@ -23,29 +23,29 @@ class NominatimGeocoder implements Geocoder
     {
         $baseUrl = rtrim((string) Settings::get(
             'integrations.geocoding.base_url',
-            config('sile.integrations.geocoding.base_url'),
+            config('viabiliza.integrations.geocoding.base_url'),
         ), '/');
 
-        $key = 'sile.geocoding.'.sha1($address);
-        $ttl = (int) config('sile.integrations.geocoding.cache_ttl', 86400);
+        $key = 'viabiliza.geocoding.'.sha1($address);
+        $ttl = (int) config('viabiliza.integrations.geocoding.cache_ttl', 86400);
         $buscar = function () use ($baseUrl, $address): array {
             try {
                 $response = Http::withHeaders([
-                    'User-Agent' => (string) config('sile.integrations.geocoding.user_agent'),
+                    'User-Agent' => (string) config('viabiliza.integrations.geocoding.user_agent'),
                 ])
                     ->timeout((int) Settings::get(
                         'integrations.geocoding.timeout',
-                        config('sile.integrations.geocoding.timeout', 8),
+                        config('viabiliza.integrations.geocoding.timeout', 8),
                     ))
                     ->connectTimeout(3)
                     ->retry(
                         (int) Settings::get(
                             'integrations.geocoding.retries',
-                            config('sile.integrations.geocoding.retries', 2),
+                            config('viabiliza.integrations.geocoding.retries', 2),
                         ),
                         (int) Settings::get(
                             'integrations.geocoding.backoff_ms',
-                            config('sile.integrations.geocoding.backoff_ms', 1000),
+                            config('viabiliza.integrations.geocoding.backoff_ms', 1000),
                         ),
                         throw: false,
                     )

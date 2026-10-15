@@ -39,8 +39,8 @@ class TerritoryService
     public function identify(float $lat, float $lng, ?CarbonInterface $date = null): TerritoryResult
     {
         // Raio (metros) da "via mais próxima": constante técnica de 04-02 em
-        // config/sile.php (não-catálogo); o default é só rede de segurança.
-        $maxMeters = (int) config('sile.geo.via_max_metros', 50);
+        // config/viabiliza.php (não-catálogo); o default é só rede de segurança.
+        $maxMeters = (int) config('viabiliza.geo.via_max_metros', 50);
 
         $result = new TerritoryResult(
             bairro: $this->identifyContaining(GeoLayerType::Bairro, $lng, $lat, $date),

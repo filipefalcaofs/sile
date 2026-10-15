@@ -17,7 +17,7 @@ use App\Support\Settings;
  * detecção por inscrição imobiliária degrada (lote/Cadastro Multifinalitário
  * BLOQUEADO pendente SEDUR — Fase 13) e fica fora daqui. A janela de recência
  * é o parâmetro `solicitacao.duplicidade.janela_dias` (fallback em
- * config/sile.php): a definição oficial de "reincidência" é pendência SEDUR.
+ * config/viabiliza.php): a definição oficial de "reincidência" é pendência SEDUR.
  */
 class DuplicateRequestDetector
 {
@@ -37,7 +37,7 @@ class DuplicateRequestDetector
     {
         $windowDays = (int) Settings::get(
             'solicitacao.duplicidade.janela_dias',
-            config('sile.solicitacao.duplicidade.janela_dias', self::DEFAULT_WINDOW_DAYS),
+            config('viabiliza.solicitacao.duplicidade.janela_dias', self::DEFAULT_WINDOW_DAYS),
         );
         $windowStart = now()->subDays($windowDays);
 

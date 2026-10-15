@@ -24,7 +24,7 @@ trait MontaDadosDocumentoDecisao
      */
     private function resolverDisco(): string
     {
-        $disk = (string) Settings::get('analise.tvl.disk', config('sile.analise.tvl.disk', 'local'));
+        $disk = (string) Settings::get('analise.tvl.disk', config('viabiliza.analise.tvl.disk', 'local'));
 
         if ($disk === 'public') {
             throw new RuntimeException('O disco dos documentos de decisão não pode ser público (analise.tvl.disk) — os documentos são internos.');
@@ -79,7 +79,7 @@ trait MontaDadosDocumentoDecisao
     {
         $modo = (string) Settings::get(
             'analise.tvl.assinatura.modo',
-            config('sile.analise.tvl.assinatura.modo', 'imagem'),
+            config('viabiliza.analise.tvl.assinatura.modo', 'imagem'),
         );
 
         if ($modo === 'nenhuma') {
@@ -88,7 +88,7 @@ trait MontaDadosDocumentoDecisao
 
         $imagem = $this->resolverImagemAssinatura((string) Settings::get(
             'analise.tvl.assinatura.imagem_path',
-            config('sile.analise.tvl.assinatura.imagem_path', ''),
+            config('viabiliza.analise.tvl.assinatura.imagem_path', ''),
         ));
 
         return ['modo' => $modo, 'imagem' => $imagem];

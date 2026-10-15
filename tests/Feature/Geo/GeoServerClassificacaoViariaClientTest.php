@@ -29,7 +29,7 @@ class GeoServerClassificacaoViariaClientTest extends TestCase
             ],
         );
 
-        cache()->forget('sile.parameters.features.geoserver_via_classe');
+        cache()->forget('viabiliza.parameters.features.geoserver_via_classe');
     }
 
     /**
@@ -105,7 +105,7 @@ class GeoServerClassificacaoViariaClientTest extends TestCase
     public function test_interruptor_desligado_nao_chama_o_geoserver(): void
     {
         Parameter::query()->where('key', 'features.geoserver_via_classe')->update(['value' => '0']);
-        cache()->forget('sile.parameters.features.geoserver_via_classe');
+        cache()->forget('viabiliza.parameters.features.geoserver_via_classe');
         Http::fake();
 
         $hit = app(GeoServerClassificacaoViariaClient::class)->consultar('822');

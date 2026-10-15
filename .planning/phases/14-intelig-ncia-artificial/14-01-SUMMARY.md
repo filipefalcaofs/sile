@@ -55,7 +55,7 @@ key-files:
     - database/seeders/ParameterSeeder.php
     - database/seeders/DatabaseSeeder.php
     - bootstrap/providers.php
-    - config/sile.php
+    - config/viabiliza.php
     - app/Providers/AppServiceProvider.php
     - app/Providers/FortifyServiceProvider.php
     - routes/gestao.php
@@ -65,10 +65,10 @@ key-files:
 key-decisions:
   - "Task 6 ENTREGUE (fecha a Onda 0): laravel/ai v0.8.1 integrado + ponte runtime (AiConfigResolver/AiConfigServiceProvider) + AiConfigDevSeeder. A ponte usa as chaves REAIS do SDK (driver/key/url/models.text.default), NÃO as do AI-SPEC (api_key/base_url)"
   - "Chaves do SDK ≠ chaves do model: provider→driver (compativel→openai), base_url→url, api_key→key, model→models.text.default (ou models.embeddings.default); defaults por capacidade em ai.default (texto) e ai.default_for_embeddings"
-  - "Cache da ponte guarda o CIPHERTEXT da api_key (RN-009/LGPD), nunca o claro; decripta só em apply() para a config em memória. TTL técnico ai.config_cache_ttl em config/sile.php (fora do catálogo HU-014, baseline 97 intacto); invalidação por evento saved/deleted do model"
+  - "Cache da ponte guarda o CIPHERTEXT da api_key (RN-009/LGPD), nunca o claro; decripta só em apply() para a config em memória. TTL técnico ai.config_cache_ttl em config/viabiliza.php (fora do catálogo HU-014, baseline 97 intacto); invalidação por evento saved/deleted do model"
   - "config/ai.php enxuto: declara só o que falta (default* + bloco conversations que o pacote referencia mas não publica); a lista de providers vem do pacote via mergeConfigFrom — sem duplicar/divergir do SDK"
   - "Teste de conexão por HTTP direto OpenAI-compatible (GET {base_url}/models Bearer), sem SDK — já entrega valor real"
-  - "Allowlist anti-SSRF deploy-controlada em config/sile.php (não no catálogo HU-014): postura segura e mantém baseline de 97 parâmetros"
+  - "Allowlist anti-SSRF deploy-controlada em config/viabiliza.php (não no catálogo HU-014): postura segura e mantém baseline de 97 parâmetros"
   - "base_url obrigatória nos requests (a integração e o teste precisam de host); api_key nullable (espelha config-email, permite endpoint compatível sem auth)"
 
 patterns-established:
@@ -99,7 +99,7 @@ completed: 2026-06-17
 - **Teste de conexão HTTP REAL** (`GET {base_url}/models` com `Authorization: Bearer`) — sem chave válida falha honestamente; sem fachada.
 - **Anti-SSRF (requisito ALTO):** `https` obrigatório + allowlist de hosts (controle PRIMÁRIO), sem seguir redirects, `connectTimeout` baixo + teto do `timeout`. Validado no FormRequest E re-checado no client.
 - **Resultado SANITIZADO:** `ConnectionResult { ok, mensagem categorizada }` — nunca corpo/headers da resposta, exceção crua nem a credencial; a `api_key` nunca é logada.
-- **HU-014:** permissão `manter-config-ia` (só administrador) e 7 toggles `features.ia_*` (grupo `ia`, default OFF) administráveis, com fallbacks em `config/sile.php`.
+- **HU-014:** permissão `manter-config-ia` (só administrador) e 7 toggles `features.ia_*` (grupo `ia`, default OFF) administráveis, com fallbacks em `config/viabiliza.php`.
 - **Auditoria RN-002** em todas as operações, sem segredo (`auditProps` nunca inclui `api_key` nem corpo do provedor; `personal_data=false`).
 
 ## Ponte de runtime (Task 6 — ENTREGUE, fecha a Onda 0)
@@ -110,7 +110,7 @@ A configuração administrável do banco agora **alimenta o SDK `laravel/ai` em 
 - **Chaves REAIS do SDK v0.8.1 (≠ AI-SPEC):** o mapeamento usa `ai.default` (texto), `ai.default_for_embeddings`, e `ai.providers.{nome}` com **`driver` / `key` / `url` / `models.text.default`** — **NÃO** `api_key`/`base_url`. Tradução: `provider→driver` (com **`compativel→openai`**), `base_url→url`, `api_key→key`, `model→models.text.default` (ou `models.embeddings.default` para embeddings). `vision` é texto multimodal no SDK (sem default próprio): registra o provider e é escolhido por chamada.
 - **Degradação honesta (anti-fachada):** sem nenhuma config ativa, `apply()` **não sobrescreve** — o SDK fica com os defaults do pacote e a IA permanece atrás dos toggles `features.ia_*` OFF. Config inativa não é aplicada.
 - **Segurança (RN-009/LGPD):** o cache guarda a `api_key` como **ciphertext** (idêntico ao banco), **nunca em claro**; a decriptação acontece **só em `apply()`**, para a config em memória do processo — nunca persistida em claro nem logada.
-- **Cache + invalidação (HU-014, efeito sem deploy):** `resolve()` cacheia por um TTL técnico curto (`ai.config_cache_ttl`, default 60s, em `config/sile.php` — fora do catálogo, baseline 97 intacto); gravar/excluir uma `AiConfiguration` invalida o cache na hora (evento `saved`/`deleted` do model, que cobre o CRUD da Onda 0 e o `setAsDefault()`).
+- **Cache + invalidação (HU-014, efeito sem deploy):** `resolve()` cacheia por um TTL técnico curto (`ai.config_cache_ttl`, default 60s, em `config/viabiliza.php` — fora do catálogo, baseline 97 intacto); gravar/excluir uma `AiConfiguration` invalida o cache na hora (evento `saved`/`deleted` do model, que cobre o CRUD da Onda 0 e o `setAsDefault()`).
 - **`config/ai.php` enxuto:** declara só o que falta — `default*` e o bloco **`conversations`** (que o pacote referencia em `DatabaseConversationStore` mas **não publica**: `connection` = conexão padrão, tabelas `agent_conversations`/`agent_conversation_messages`). A lista de `providers` vem do próprio pacote via `mergeConfigFrom` — sem duplicar/divergir do SDK.
 - **Prova de ponta a ponta SEM rede/credencial:** `BridgeProbeAgent` (interface `Agent` + trait `Promptable`) com `::fake(['ok'])`; após a ponte aplicar a config, `BridgeProbeAgent::make()->prompt('oi')->text === 'ok'` — o provedor `openai` só é resolvível porque a ponte populou `config('ai.providers.openai')`.
 - **Seed de dev:** `AiConfigDevSeeder` (gate `local`, no-op em testing/produção) cria 1 provedor openai/texto padrão+ativo com **credencial placeholder explícita** (`sk-DEV-…`, nunca real), idempotente e que não sobrescreve uma chave real cadastrada pela tela.
@@ -142,7 +142,7 @@ TDD estrito (RED → GREEN) por task:
 - `app/Models/AiConfiguration.php` — `$hidden=['api_key']`
 - `database/seeders/RolesAndPermissionsSeeder.php` — `manter-config-ia` (só admin)
 - `database/seeders/ParameterSeeder.php` — 7 toggles `features.ia_*` (grupo `ia`)
-- `config/sile.php` — fallbacks dos toggles, bloco `ai` (allowlist + tetos do teste), throttle `ai_test`
+- `config/viabiliza.php` — fallbacks dos toggles, bloco `ai` (allowlist + tetos do teste), throttle `ai_test`
 - `app/Providers/AppServiceProvider.php` — binding `AiProviderClient → OpenAiCompatibleClient`
 - `app/Providers/FortifyServiceProvider.php` — limiter `ai-connection-test` parametrizado
 - `routes/gestao.php` — grupo `config-ia` sob `permission:manter-config-ia`, throttle no `testar`
@@ -157,7 +157,7 @@ TDD estrito (RED → GREEN) por task:
 
 ## Controles de segurança implementados (requisitos ALTOS)
 
-- **Anti-SSRF:** `AiBaseUrlGuard` exige `https` e host na allowlist (`config/sile.php` `ai.allowed_hosts`: api.openai.com, api.anthropic.com, generativelanguage.googleapis.com); `withoutRedirecting()`; `connectTimeout(3)` + teto `timeout_max_ms`. Validado no Request E no client (defesa em profundidade).
+- **Anti-SSRF:** `AiBaseUrlGuard` exige `https` e host na allowlist (`config/viabiliza.php` `ai.allowed_hosts`: api.openai.com, api.anthropic.com, generativelanguage.googleapis.com); `withoutRedirecting()`; `connectTimeout(3)` + teto `timeout_max_ms`. Validado no Request E no client (defesa em profundidade).
 - **`$hidden` + DTO:** o model nunca é serializado para o Inertia (o cast decripta no `toArray()`); a listagem monta DTO com `masked_api_key`; `$hidden=['api_key']` como rede de segurança.
 - **Sanitização:** `ConnectionResult` só `{ ok, mensagem categorizada }` (ex.: "Credencial inválida...", "Tempo de conexão esgotado...", "Host não autorizado..."); nunca corpo/exceção/credencial; nada logado com a chave.
 - **Update vazio = manter:** chave em branco no editar não sobrescreve a credencial atual.
@@ -209,7 +209,7 @@ vendor/bin/pint --dirty --format agent -> passed
 
 **1. [Rule 2 - Missing Critical] Throttle parametrizado do teste de conexão**
 - **Encontrado em:** Task 4 (rota `test`)
-- **Decisão:** limiter nomeado `ai-connection-test` em `FortifyServiceProvider`, lido via `Settings::get('seguranca.throttle.ai_test.por_minuto', 10)` com fallback em `config/sile.php` — fora do catálogo HU-014 (teto técnico/segurança, precedente [02-02]) para preservar o baseline de 97 parâmetros.
+- **Decisão:** limiter nomeado `ai-connection-test` em `FortifyServiceProvider`, lido via `Settings::get('seguranca.throttle.ai_test.por_minuto', 10)` com fallback em `config/viabiliza.php` — fora do catálogo HU-014 (teto técnico/segurança, precedente [02-02]) para preservar o baseline de 97 parâmetros.
 - **Commit:** `316b031`
 
 **2. [Correção de teste próprio] Asserção do sucesso**

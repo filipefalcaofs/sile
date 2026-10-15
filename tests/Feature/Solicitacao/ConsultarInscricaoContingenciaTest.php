@@ -34,7 +34,7 @@ class ConsultarInscricaoContingenciaTest extends TestCase
 
         // A suíte desliga o cadastro real (phpunit.xml) para não chamar a SEFAZ.
         // Estes testes ligam o recurso e substituem o provider.
-        config(['sile.features.cadastro_imobiliario' => true]);
+        config(['viabiliza.features.cadastro_imobiliario' => true]);
     }
 
     public function test_consulta_preenche_endereco_e_coordenada_do_cadastro(): void

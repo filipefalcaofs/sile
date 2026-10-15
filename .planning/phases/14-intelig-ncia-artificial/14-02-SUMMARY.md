@@ -14,7 +14,7 @@ status: complete
 ## O que foi entregue
 Funções documentais de IA como **sugestão revisável** (nunca decisão — AI-SPEC Failure Mode #1), em fila, atrás de toggle, auditadas, testadas com o fake do SDK.
 
-- **Fundação de execução (compartilhada pelas Ondas 1-3):** `AiSuggestion` (model/migration/factory + enums `AiSuggestionType`/`AiSuggestionStatus` — status NUNCA `decidida`), `AiFeatureGate` (toggle `features.ia_*` + config ativa), `AiCallAuditor` (RN-002, logName `ia`), `AiCostEstimator` (custo null sem preço — nunca inventado), bloco `config('sile.ai.*')` (job/limiar/preço).
+- **Fundação de execução (compartilhada pelas Ondas 1-3):** `AiSuggestion` (model/migration/factory + enums `AiSuggestionType`/`AiSuggestionStatus` — status NUNCA `decidida`), `AiFeatureGate` (toggle `features.ia_*` + config ativa), `AiCallAuditor` (RN-002, logName `ia`), `AiCostEstimator` (custo null sem preço — nunca inventado), bloco `config('viabiliza.ai.*')` (job/limiar/preço).
 - **`RunAiAgentJob` (Job base):** re-check do toggle no handle (OFF ⇒ no-op AUDITADO `desativado`, sem chamar o provedor), idempotência por `input_hash`, guardrails (confiança < `ai.limiar_confianca` ⇒ `escalada_humano`; `fonte` obrigatória; hook `shouldEscalate` p/ ilegível), persiste `AiSuggestion` só no sucesso, auditoria RN-002 sem segredo; `failed()` audita `falha` sem criar sugestão.
 - **HU-112 OCR + HU-114 ilegibilidade:** `LeituraDocumentoAgent` (visão multimodal, schema texto/legivel/confianca/motivo/fonte) + Job + `LeituraDocumentoService`. Ilegível/baixa confiança ⇒ escala.
 - **HU-113 classificação:** `ClassificacaoDocumentoAgent` (categoria/confianca/compativel/fonte) + Job + Service; confronta com `DocumentRequirement` — alerta, nunca bloqueia o protocolo (RN-005).

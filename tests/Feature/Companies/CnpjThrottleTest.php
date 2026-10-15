@@ -46,7 +46,7 @@ class CnpjThrottleTest extends TestCase
     {
         Http::fake(['*/00000000000191' => Http::response($this->brasilApiFixture(), 200)]);
 
-        config(['sile.seguranca.throttle.cnpj_lookup.por_minuto' => 2]);
+        config(['viabiliza.seguranca.throttle.cnpj_lookup.por_minuto' => 2]);
 
         $user = $this->portalUser();
 
@@ -66,7 +66,7 @@ class CnpjThrottleTest extends TestCase
     {
         Http::fake(['*/00000000000191' => Http::response($this->brasilApiFixture(), 200)]);
 
-        config(['sile.seguranca.throttle.cnpj_lookup.por_minuto' => 5]);
+        config(['viabiliza.seguranca.throttle.cnpj_lookup.por_minuto' => 5]);
 
         $user = $this->portalUser();
 

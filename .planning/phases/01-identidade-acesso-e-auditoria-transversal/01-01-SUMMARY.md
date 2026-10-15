@@ -10,8 +10,8 @@ provides:
   - Fortify 1.37.2 instalado com registration, resetPasswords, emailVerification e updatePasswords (2FA/passkeys desligados)
   - spatie/laravel-permission 8.0.0 e spatie/laravel-activitylog 5.0.0 publicados (configs + migrations)
   - Locale pt_BR ativo com lang/pt_BR commitado (laravel-lang/common 6.8.0 dev)
-  - config/sile.php + App\Support\Settings::get() — parâmetros de segurança sem hardcode
-  - Password::defaults() parametrizado lendo config('sile.security.password')
+  - config/viabiliza.php + App\Support\Settings::get() — parâmetros de segurança sem hardcode
+  - Password::defaults() parametrizado lendo config('viabiliza.security.password')
   - Middleware SecurityHeaders em todas as respostas web
   - tests/TestCase.php com withoutVite() — base de testes imune ao Vite
 affects: [01-02, 01-03, 01-04, 01-05, 01-06, 01-07, 01-08, 01-09, fase-2-hu-014]
@@ -23,7 +23,7 @@ tech-stack:
 
 key-files:
   created:
-    - config/sile.php
+    - config/viabiliza.php
     - app/Support/Settings.php
     - app/Http/Middleware/SecurityHeaders.php
     - app/Providers/FortifyServiceProvider.php
@@ -49,7 +49,7 @@ key-decisions:
   - "Teste de política de senha ganhou caso de senha longa sem maiúscula/número para garantir RED significativo"
 
 patterns-established:
-  - "Parametrização: Settings::get('chave.aninhada', default) delega para config('sile.*') na fase 1; vira banco na HU-014 sem alterar call sites"
+  - "Parametrização: Settings::get('chave.aninhada', default) delega para config('viabiliza.*') na fase 1; vira banco na HU-014 sem alterar call sites"
   - "Política de senha única: Password::defaults() no AppServiceProvider — Fortify aplica em cadastro, reset e alteração"
   - "Cabeçalhos de segurança transversais via middleware no grupo web"
 
@@ -60,7 +60,7 @@ completed: 2026-06-09
 
 # Fase 1 Plano 01: Fundação — Dependências, pt-BR, Parametrização e SecurityHeaders — Resumo
 
-**Fortify 1.37.2 + spatie/permission 8 + activitylog 5 instalados, locale pt-BR ativo, parâmetros de segurança centralizados em config/sile.php com wrapper Settings testado e cabeçalhos de segurança em toda resposta web**
+**Fortify 1.37.2 + spatie/permission 8 + activitylog 5 instalados, locale pt-BR ativo, parâmetros de segurança centralizados em config/viabiliza.php com wrapper Settings testado e cabeçalhos de segurança em toda resposta web**
 
 ## Performance
 
@@ -75,8 +75,8 @@ completed: 2026-06-09
 - Dependências da fase instaladas nas versões exatas previstas pela pesquisa (dry-run confirmado na prática): fortify 1.37.2, permission 8.0.0, activitylog 5.0.0, laravel-lang/common 6.8.0
 - Fortify publicado com exatamente as 4 features das HUs (registration, resetPasswords, emailVerification, updatePasswords) e `home => /portal`; `FortifyServiceProvider` registrado em `bootstrap/providers.php`
 - Locale pt_BR ativo (`.env` + `.env.example`) com traduções do framework commitadas em `lang/pt_BR`
-- `config/sile.php` + `App\Support\Settings` operacionais e testados — política de senha, tentativas de login e expiração de reset sem nenhum valor hardcoded em código de produção
-- `Password::defaults()` derivado dos parâmetros (min 8, maiúscula+minúscula, número; símbolos off) e `auth.passwords.users.expire` espelhado de `sile.security.password_reset_expire`
+- `config/viabiliza.php` + `App\Support\Settings` operacionais e testados — política de senha, tentativas de login e expiração de reset sem nenhum valor hardcoded em código de produção
+- `Password::defaults()` derivado dos parâmetros (min 8, maiúscula+minúscula, número; símbolos off) e `auth.passwords.users.expire` espelhado de `viabiliza.security.password_reset_expire`
 - Middleware `SecurityHeaders` aplicado ao grupo web, provado por teste (X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy strict-origin-when-cross-origin, Permissions-Policy com geolocation=(self))
 - Base de testes imune ao Vite (`withoutVite()` no TestCase) — suíte final verde com 6 testes / 16 asserções
 
@@ -86,7 +86,7 @@ Cada task foi commitada atomicamente:
 
 1. **Task 1: Instalação, publicação e locale pt-BR** - `c8cb025` (chore)
 2. **Task 2 RED: teste falhando para Settings e política de senha** - `290513b` (test)
-3. **Task 2 GREEN: config/sile.php + Settings + Password::defaults()** - `c87a38b` (feat)
+3. **Task 2 GREEN: config/viabiliza.php + Settings + Password::defaults()** - `c87a38b` (feat)
 4. **Task 3 RED: teste falhando para cabeçalhos de segurança** - `823da0a` (test)
 5. **Task 3 GREEN: middleware SecurityHeaders no grupo web** - `951615d` (feat)
 
@@ -118,7 +118,7 @@ Os nomes batem com os usados nos testes do starter kit oficial (`login.store`, `
 
 ## Arquivos Criados/Modificados
 
-- `config/sile.php` - Parâmetros de segurança da fase com defaults (preparação HU-014)
+- `config/viabiliza.php` - Parâmetros de segurança da fase com defaults (preparação HU-014)
 - `app/Support/Settings.php` - Wrapper de leitura de parâmetros (config-backed na fase 1)
 - `app/Providers/AppServiceProvider.php` - Password::defaults() parametrizado + espelhamento do expire
 - `app/Http/Middleware/SecurityHeaders.php` - Cabeçalhos de segurança em toda resposta web
@@ -172,7 +172,7 @@ Nenhuma — sem serviços externos neste plano.
 
 - Plano 01-02 (auditoria transversal RN-002) destravado: activitylog 5.0.0 publicado com config e migration prontas para extensão (colunas Viabiliza: ip_address, user_agent, channel, acting_for_user_id, result, rules_version)
 - A migration publicada do activity_log NÃO foi executada nem editada — exatamente o estado que o 01-02 espera
-- `Settings`/`config/sile.php` disponíveis para parametrizar rate limit de login (plano 01-06) e demais valores
+- `Settings`/`config/viabiliza.php` disponíveis para parametrizar rate limit de login (plano 01-06) e demais valores
 - Atenção para o 01-02: usar API v5 do activitylog (`beforeActivityLogged`, `attribute_changes`, action classes) — exemplos antigos da web usam API v4
 
 ---

@@ -117,7 +117,7 @@ class ConsultarProtocoloPublicoTest extends TestCase
     {
         // HU-014: o limite por minuto é administrável sem deploy. Com 2/min, a 3ª
         // consulta pública dentro da janela é bloqueada (429).
-        config(['sile.seguranca.throttle.consulta_protocolo.por_minuto' => 2]);
+        config(['viabiliza.seguranca.throttle.consulta_protocolo.por_minuto' => 2]);
 
         $solicitacao = $this->protocolada();
         $url = $this->signedUrl($solicitacao);

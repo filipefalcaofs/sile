@@ -21,6 +21,7 @@ final readonly class TerritorialRuleVerdict
 
     /**
      * @param  list<array<string, mixed>>  $incidencias  Trilha das regras avaliadas/incidentes (auditoria).
+     * @param  bool  $aguardarCamada  O encaminhamento vem só de camada que não respondeu: não é veredito, é espera do motor.
      */
     public function __construct(
         public string $status,
@@ -28,6 +29,7 @@ final readonly class TerritorialRuleVerdict
         public ?string $motivo = null,
         public ?string $versaoRegra = null,
         public array $incidencias = [],
+        public bool $aguardarCamada = false,
     ) {}
 
     public static function semIncidencia(?string $versaoRegra = null): self

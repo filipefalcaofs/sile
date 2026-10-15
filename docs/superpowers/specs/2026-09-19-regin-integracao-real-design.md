@@ -5,7 +5,7 @@ Origem: conversa desta data + manual da API em `~/Downloads/Manual-API-REGIN-JUC
 
 ## 1. Decisões fechadas
 
-1. O SILE fala com a API `api_integracao` da PSCS/JUCEB nos dois sentidos: recebe o processo em `POST /api_integracao/recebe` (já existe) e devolve o parecer em `POST {base}/recebe` com header `JWT` (novo).
+1. O VIABILIZA fala com a API `api_integracao` da PSCS/JUCEB nos dois sentidos: recebe o processo em `POST /api_integracao/recebe` (já existe) e devolve o parecer em `POST {base}/recebe` com header `JWT` (novo).
 2. Autenticação de saída: `POST {base}/acesso/auth` com `username`/`password` → `token`; demais chamadas usam o header `JWT: <token>` (não `Authorization: Bearer`). Credenciais são os parâmetros `integrations.regin.*` já administráveis (senha criptografada, nunca reexibida).
 3. O parecer sai no envelope `Resposta` (`codFuncao: 110`) com `dadosProcesso` (`RespostaAnaliseInstituicaoDto`): `FINALIZA_PROCESSO: 1`, `PROCESSO_INTERESSE_INSTITUICAO: 1`, `ANALISES.AREA[0]` com `STATUS_ANALISE` 2 (deferido) ou 4 (indeferido) e `JUSTIFICATIVA_ANALISE` com a fundamentação. Sucesso = corpo `RECEBIDO_SUCESSO`.
 4. A troca é só o binding: `ReginParecerNotifier` passa de `UnavailableReginParecerNotifier` para o provider HTTP. O listener `ComunicarResultadoRegin` e a auditoria `sucesso`/`bloqueado` não mudam.
@@ -27,7 +27,7 @@ Cliente fino sobre `Http` do Laravel:
 
 - `token()`: `POST {base}/acesso/auth` com usuário/senha dos parâmetros; devolve o JWT. Sem cache além da chamada (o token é curto e o volume é baixo — um parecer por vez).
 - `enviarParecer(array $resposta)`: `POST {base}/recebe` com header `JWT` e o envelope `Resposta`. Sucesso só quando o corpo é `RECEBIDO_SUCESSO`; qualquer outro corpo, HTTP não-2xx ou `ConnectionException` lança `ReginUnavailableException` com a mensagem sanitizada (nunca token nem senha).
-- Timeout vem de `config('sile.integrations.regin.timeout')`.
+- Timeout vem de `config('viabiliza.integrations.regin.timeout')`.
 
 ### 3.2 `HttpReginParecerNotifier implements ReginParecerNotifier`
 
@@ -89,7 +89,7 @@ Comando Artisan `regin:homologar` (ou botão na tela API REGIN) que, com as cred
 ## 6. Fora de escopo (pendências PSCS/Juceb)
 
 - Anexo **Dados do Processo v2_08** (layout fino do `json`): o mapeamento da seção 4 cobre o essencial; campos não mapeados degradam para análise.
-- Autenticação de **entrada** no `/recebe` do SILE (IP vs token) — sem resposta da Juceb; hoje aberto com rate limit.
+- Autenticação de **entrada** no `/recebe` do VIABILIZA (IP vs token) — sem resposta da Juceb; hoje aberto com rate limit.
 - BAP no payload, tabela oficial de `CODIGO_AREA`/`CODIGO_LINK`.
 - Remoção do simulador e da flag `features.simulacao_protocolo`: só após homologação real de entrada + saída.
 

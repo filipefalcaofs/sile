@@ -123,7 +123,7 @@ class CancelarSolicitacaoTest extends TestCase
         // CA-03: com o parâmetro restrito a ['rascunho'], cancelar uma
         // protocolada é BLOQUEADO (CancelamentoNaoPermitidoException) e auditado
         // — o estado e a timeline permanecem intactos (nada é cancelado).
-        config(['sile.solicitacao.cancelamento.estados_cancelaveis' => ['rascunho']]);
+        config(['viabiliza.solicitacao.cancelamento.estados_cancelaveis' => ['rascunho']]);
 
         $owner = $this->portalUser();
         $solicitacao = ViabilityRequest::factory()->protocoled()->withPrimaryCnae()->create([
@@ -159,7 +159,7 @@ class CancelarSolicitacaoTest extends TestCase
     {
         // O bloqueio de estado vira flash.error (aviso, nunca silencioso) e nada
         // é cancelado; a tentativa é auditada com o usuário (RN-002).
-        config(['sile.solicitacao.cancelamento.estados_cancelaveis' => ['rascunho']]);
+        config(['viabiliza.solicitacao.cancelamento.estados_cancelaveis' => ['rascunho']]);
 
         $owner = $this->portalUser();
         $solicitacao = ViabilityRequest::factory()->protocoled()->withPrimaryCnae()->create([

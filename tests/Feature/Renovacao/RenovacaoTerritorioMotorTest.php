@@ -37,8 +37,8 @@ class RenovacaoTerritorioMotorTest extends TestCase
     public function test_protocolo_completa_territorio_e_deixa_o_motor_na_ficha(): void
     {
         config([
-            'sile.features.geoserver_enderecamento' => true,
-            'sile.features.arcgis_semap' => true,
+            'viabiliza.features.geoserver_enderecamento' => true,
+            'viabiliza.features.arcgis_semap' => true,
         ]);
 
         $this->territorio();

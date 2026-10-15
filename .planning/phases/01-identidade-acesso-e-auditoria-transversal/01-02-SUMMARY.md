@@ -9,7 +9,7 @@ requires:
   - phase: 01-01
     provides: activitylog 5.0.0 publicado (config + migration), Fortify 1.37.2 com rotas de auth, base de testes com withoutVite
 provides:
-  - Migration activity_log estendida com colunas SILE (ip_address, user_agent, channel, acting_for_user_id, result, rules_version)
+  - Migration activity_log estendida com colunas VIABILIZA (ip_address, user_agent, channel, acting_for_user_id, result, rules_version)
   - Model App\Models\Activity com relacionamento actingFor e casts mesclados
   - RecordActivityAction (action v5) — enriquecimento central de TODA activity (origem, em-nome-de via Context, result default)
   - Trait App\Concerns\HasAuditoria (logFillable + logOnlyDirty + dontLogEmptyChanges + logExcept password/remember_token)
@@ -84,7 +84,7 @@ completed: 2026-06-10
 
 ## Realizações
 
-- Migration `activity_log` estendida com as 6 colunas SILE da RN-002; `App\Models\Activity` própria com `actingFor()`; `RecordActivityAction` (action class v5) enriquece TODA activity — de model event ou chamada manual — num ponto único
+- Migration `activity_log` estendida com as 6 colunas VIABILIZA da RN-002; `App\Models\Activity` própria com `actingFor()`; `RecordActivityAction` (action class v5) enriquece TODA activity — de model event ou chamada manual — num ponto único
 - `HasAuditoria` (trait padrão Viabiliza) loga apenas atributos fillable efetivamente alterados e nunca `password`/`remember_token`; `User` ganhou `HasAuditoria` + `CausesActivity`
 - `AuditService` com registro explícito (ação, resultado, versão de regras) e `logBlocked`; qualquer 403 de autorização (Gate/Policy ou middleware do spatie/permission) gera registro `result=bloqueado` sem nenhum código por controller, mantendo o status 403 padrão (provado por teste)
 - Tabela dedicada `access_logs` (imutável, indexada para a consulta da HU-010) alimentada por listeners de `Login`, `Logout`, `Failed` e `Lockout`; `Registered`, `Verified` e `PasswordReset` geram activities com causer explícito — base do CA-02 das HU-001/003/005 e da HU-010
@@ -115,7 +115,7 @@ O causer é o usuário autenticado quando houver; o enriquecimento de origem vem
 
 Cada fase TDD foi commitada atomicamente:
 
-1. **Task 1 RED: teste da infraestrutura (colunas SILE + enriquecimento)** - `b1c0d30` (test)
+1. **Task 1 RED: teste da infraestrutura (colunas VIABILIZA + enriquecimento)** - `b1c0d30` (test)
 2. **Task 1 GREEN: migration estendida + Activity + RecordActivityAction + config** - `2a604de` (feat)
 3. **Task 2 RED: teste de trait, AuditService e 403 auditado** - `da9c5ef` (test)
 4. **Task 2 GREEN: HasAuditoria + User + AuditService + render callbacks** - `82f2d73` (feat)
@@ -126,10 +126,10 @@ _REFACTOR não gerou commits próprios: pint só reordenou imports do bootstrap/
 
 ## Arquivos Criados/Modificados
 
-- `database/migrations/2026_06_09_234627_create_activity_log_table.php` - Colunas SILE + down()
+- `database/migrations/2026_06_09_234627_create_activity_log_table.php` - Colunas VIABILIZA + down()
 - `app/Models/Activity.php` - Model estendido (casts mesclados, actingFor)
 - `app/Support/Audit/RecordActivityAction.php` - Enriquecimento central (action v5)
-- `config/activitylog.php` - activity_model e actions.log_activity apontando para as classes SILE
+- `config/activitylog.php` - activity_model e actions.log_activity apontando para as classes VIABILIZA
 - `app/Concerns/HasAuditoria.php` - Trait padrão de auditoria de models de domínio
 - `app/Models/User.php` - HasAuditoria + CausesActivity
 - `app/Support/Audit/AuditService.php` - Registro explícito + logBlocked

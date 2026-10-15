@@ -14,7 +14,7 @@
 
 - Comando de teste: `php artisan test --filter=<NomeDoTeste>`, sempre em **foreground**. Suíte em SQLite `:memory:`; o banco de desenvolvimento remoto é inacessível e desnecessário. O grupo `Postgis` falha por falta do container espacial — pré-existente, ignorar.
 - Testes: classes no estilo PHPUnit em `tests/Feature/EscritorioVirtual/`, com `use LazilyRefreshDatabase;` e docblock em português explicando a regra coberta.
-- Toda mensagem ao cidadão é parâmetro administrável: `Settings::get('<chave>', config('sile.<chave>'))`, com entrada em `config/sile.php` **e** linha em `database/seeders/ParameterSeeder.php`. A contagem esperada nos testes de seeder está em **100** — atualizar ao acrescentar, incluindo o comentário que discrimina a origem.
+- Toda mensagem ao cidadão é parâmetro administrável: `Settings::get('<chave>', config('viabiliza.<chave>'))`, com entrada em `config/viabiliza.php` **e** linha em `database/seeders/ParameterSeeder.php`. A contagem esperada nos testes de seeder está em **100** — atualizar ao acrescentar, incluindo o comentário que discrimina a origem.
 - O CNAE gatilho é parametrizável e tem fonte única em `SedeEscritorioVirtualGatilho::cnaeGatilho()`. `8211-3/00` não deve aparecer como literal em código de produção.
 - Anti-fachada: dado ausente ou operação que não pode ser concluída automaticamente vai à análise com motivo registrado — nunca decisão inventada.
 - Comentários e docblocks em português, densidade igual à do código ao redor.
@@ -256,7 +256,7 @@ RN-AA-04, e a peça de maior valor do plano. Antes de concluir, o sistema inform
 - Modify: `app/Services/Expresso/FluxoExpressoService.php`
 - Modify: `app/Services/EscritorioVirtual/DesvincularInscricaoService.php`
 - Modify: `app/Enums/SefazNotificationEvent.php`
-- Modify: `config/sile.php`
+- Modify: `config/viabiliza.php`
 - Modify: `database/seeders/ParameterSeeder.php`
 - Modify: `tests/Feature/Seeders/DatabaseSeederTest.php`
 - Modify: `tests/Feature/Seeders/ParameterSeederTest.php`
@@ -300,7 +300,7 @@ Criar a migration acrescentando `confirma_perda_condicao_sede` (bool nulável) a
 
 - [ ] **Step 4: Parâmetro do texto da confirmação**
 
-Acrescentar `analise.escritorio_virtual.mensagem_confirma_perda_sede` em `config/sile.php` e no `ParameterSeeder`, com o texto verbatim acima. O texto cita o CNAE — use o marcador `:cnae`, substituído pelo gatilho vigente, no mesmo padrão das mensagens irmãs. Atualizar a contagem nos dois testes de seeder.
+Acrescentar `analise.escritorio_virtual.mensagem_confirma_perda_sede` em `config/viabiliza.php` e no `ParameterSeeder`, com o texto verbatim acima. O texto cita o CNAE — use o marcador `:cnae`, substituído pelo gatilho vigente, no mesmo padrão das mensagens irmãs. Atualizar a contagem nos dois testes de seeder.
 
 - [ ] **Step 5: Implementar a cascata**
 
@@ -328,7 +328,7 @@ Expected: PASS nas três.
 - [ ] **Step 8: Commit**
 
 ```bash
-git add database/migrations/2026_08_31_110000_add_confirma_perda_sede_to_viability_requests.php app/Services/Expresso/FluxoExpressoService.php app/Services/EscritorioVirtual/DesvincularInscricaoService.php app/Enums/SefazNotificationEvent.php config/sile.php database/seeders/ParameterSeeder.php tests/Feature/EscritorioVirtual/ExclusaoCnaeSedeTest.php tests/Feature/Seeders/DatabaseSeederTest.php tests/Feature/Seeders/ParameterSeederTest.php
+git add database/migrations/2026_08_31_110000_add_confirma_perda_sede_to_viability_requests.php app/Services/Expresso/FluxoExpressoService.php app/Services/EscritorioVirtual/DesvincularInscricaoService.php app/Enums/SefazNotificationEvent.php config/viabiliza.php database/seeders/ParameterSeeder.php tests/Feature/EscritorioVirtual/ExclusaoCnaeSedeTest.php tests/Feature/Seeders/DatabaseSeederTest.php tests/Feature/Seeders/ParameterSeederTest.php
 git commit -m "feat(ev): retira condicao de sede na exclusao do cnae gatilho"
 ```
 

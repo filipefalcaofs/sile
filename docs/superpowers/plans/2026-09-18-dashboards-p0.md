@@ -764,7 +764,7 @@ private function filtrosCumprimento(ReportFilters $recebidos): ReportFilters
     if ($recebidos->from() === null && $recebidos->to() === null) {
         $janela = (int) Settings::get(
             'relatorios.dashboard.janela_dias',
-            config('sile.relatorios.dashboard.janela_dias', 30),
+            config('viabiliza.relatorios.dashboard.janela_dias', 30),
         );
         $bag['data_de'] = now()->subDays($janela)->toDateString();
         $bag['data_ate'] = now()->toDateString();

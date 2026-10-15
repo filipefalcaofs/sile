@@ -75,7 +75,7 @@ class ExportacaoPronta extends Notification implements ShouldQueue
     {
         $ttl = (int) Settings::get(
             'relatorios.export.download.ttl_minutos',
-            config('sile.relatorios.export.download.ttl_minutos', 15),
+            config('viabiliza.relatorios.export.download.ttl_minutos', 15),
         );
 
         return URL::temporarySignedRoute(

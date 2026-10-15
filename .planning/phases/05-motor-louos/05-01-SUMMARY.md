@@ -45,7 +45,7 @@ key-files:
   modified:
     - app/Enums/RuleDomain.php
     - database/seeders/ParameterSeeder.php
-    - config/sile.php
+    - config/viabiliza.php
     - tests/Feature/Seeders/ParameterSeederTest.php
     - tests/Feature/Seeders/DatabaseSeederTest.php
 
@@ -82,7 +82,7 @@ completed: 2026-06-14
 - 3 migrations TABULARES (sem PostGIS, rodam em SQLite) com `foreignId('rule_version_id')->constrained('rule_versions')->cascadeOnDelete()`, mais models (casts decimal/enum/array, `ruleVersion()`) e factories ligadas a `RuleVersion::factory()`.
 - Enums `ResultadoViabilidade` (veredito consolidado HU-044) e `Quadro10Permissao` (permissão na zona HU-039).
 - DTOs readonly `EnquadramentoInput`/`EnquadramentoResult` espelhando `RiscoResult`/`TerritoryResult` — cada Quadro é uma dimensão com status, e a degradação honesta (`indisponivel` → consolidado `pendente`) está no contrato.
-- Grupo de parâmetros `louos` (vagas HU-042 + sandbox HU-143); catálogo 31 → 33 travado nos dois testes de seeder; fallback em `config/sile.php`.
+- Grupo de parâmetros `louos` (vagas HU-042 + sandbox HU-143); catálogo 31 → 33 travado nos dois testes de seeder; fallback em `config/viabiliza.php`.
 
 ## Task Commits
 
@@ -121,7 +121,7 @@ Construtor: `array $quadro7, array $quadro10, array $quadro11, array $quadro11a,
 ### Parâmetros novos (grupo `louos`, catálogo agora 33)
 - `louos.vagas.exigencia_por_grupo` — json, default `{}`, `['required','json']`, `typedValue()` → `[]` (HU-042; vazio = não parametrizado, motor não bloqueia).
 - `louos.sandbox.amostra_padrao` — integer, default `50`, `['required','integer','min:1','max:1000']` (HU-143).
-- Fallback em `config/sile.php` seção `louos` (`Settings::get('louos.*')`).
+- Fallback em `config/viabiliza.php` seção `louos` (`Settings::get('louos.*')`).
 
 ## Files Created/Modified
 - `app/Enums/RuleDomain.php` - +4 domínios LOUOS (isSensitive), labels pt-BR
@@ -131,7 +131,7 @@ Construtor: `array $quadro7, array $quadro10, array $quadro11, array $quadro11a,
 - `database/factories/LouosQuadro7FaixaFactory.php` `LouosQuadro10PermissaoFactory.php` `LouosQuadro11CondicaoViaFactory.php`
 - `database/migrations/2026_06_14_045747...` / `...045748...` (x2) - 3 tabelas tabulares (SQLite)
 - `app/Services/Louos/EnquadramentoInput.php` `EnquadramentoResult.php` - contrato readonly do motor
-- `database/seeders/ParameterSeeder.php` + `config/sile.php` - grupo louos (vagas + sandbox)
+- `database/seeders/ParameterSeeder.php` + `config/viabiliza.php` - grupo louos (vagas + sandbox)
 - `tests/Unit/Louos/RuleDomainLouosTest.php` `EnquadramentoResultTest.php`, `tests/Feature/Louos/LouosQuadrosSchemaTest.php` - cobertura
 - `tests/Feature/Seeders/ParameterSeederTest.php` `DatabaseSeederTest.php` - contagem 33 + grupo louos
 

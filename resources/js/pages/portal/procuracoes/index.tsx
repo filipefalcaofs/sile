@@ -188,7 +188,29 @@ function GrantedTable({
     }
 
     return (
-        <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-white/[0.05]">
+        <>
+            <ul className="flex flex-col gap-3 md:hidden">
+                {granted.map((item) => (
+                    <li key={item.id} className="rounded-xl border border-gray-200 p-4 dark:border-white/[0.05]">
+                        <p className="font-medium text-gray-800 dark:text-white/90">{item.name}</p>
+                        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{item.email}</p>
+                        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                            Início {formatDate(item.starts_at)} · Validade {formatDate(item.expires_at)}
+                        </p>
+                        <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                            <SituationBadge item={item} />
+                            {item.is_active ? (
+                                <button type="button" onClick={() => onRevoke(item)} className={errorActionStyles}>
+                                    Revogar
+                                </button>
+                            ) : (
+                                <span className="text-gray-400 dark:text-gray-500">—</span>
+                            )}
+                        </div>
+                    </li>
+                ))}
+            </ul>
+            <div className="hidden overflow-hidden rounded-xl border border-gray-200 md:block dark:border-white/[0.05]">
             <div className="max-w-full overflow-x-auto">
                 <Table>
                     <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
@@ -251,6 +273,7 @@ function GrantedTable({
                 </Table>
             </div>
         </div>
+        </>
     );
 }
 
@@ -266,7 +289,32 @@ function ReceivedTable({ received }: { received: ProcurationItem[] }) {
     }
 
     return (
-        <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-white/[0.05]">
+        <>
+            <ul className="flex flex-col gap-3 md:hidden">
+                {received.map((item) => (
+                    <li key={item.id} className="rounded-xl border border-gray-200 p-4 dark:border-white/[0.05]">
+                        <p className="font-medium text-gray-800 dark:text-white/90">{item.name}</p>
+                        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{item.email}</p>
+                        <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                            <SituationBadge item={item} />
+                            {item.is_active ? (
+                                <Link
+                                    href="/portal/representacao"
+                                    method="post"
+                                    data={{ procuration_id: item.id }}
+                                    as="button"
+                                    className={brandActionStyles}
+                                >
+                                    Atuar em nome de
+                                </Link>
+                            ) : (
+                                <span className="text-gray-400 dark:text-gray-500">—</span>
+                            )}
+                        </div>
+                    </li>
+                ))}
+            </ul>
+            <div className="hidden overflow-hidden rounded-xl border border-gray-200 md:block dark:border-white/[0.05]">
             <div className="max-w-full overflow-x-auto">
                 <Table>
                     <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
@@ -319,6 +367,7 @@ function ReceivedTable({ received }: { received: ProcurationItem[] }) {
                 </Table>
             </div>
         </div>
+        </>
     );
 }
 

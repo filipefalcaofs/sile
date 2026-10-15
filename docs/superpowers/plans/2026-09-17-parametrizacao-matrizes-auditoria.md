@@ -80,7 +80,7 @@ Três tabelas já existem, são versionadas/auditadas, mas só mudam por seeder 
 | Item | Ação | Esforço |
 |---|---|---|
 | 3.1 | CRUD de `geo_layers` / `geo_features`: upload de camada, status (`vigente`/`substituída`/`pendente_fonte`), publicação — hoje só `artisan geo:import` no servidor | G |
-| 3.2 | Tabela `camadas_geoserver` (`workspace`, `type_name`, `tipo`, `ativo`, `ordem`) substituindo as 20 entradas fixas de `config/sile.php:275-296`; seed com a lista atual | M |
+| 3.2 | Tabela `camadas_geoserver` (`workspace`, `type_name`, `tipo`, `ativo`, `ordem`) substituindo as 20 entradas fixas de `config/viabiliza.php:275-296`; seed com a lista atual | M |
 | 3.3 | Cadastro `zonas` (`codigo`, `nome`, `macrozona`, `ativo`) + FK lógica a partir do Quadro 10 — elimina zona como string livre e o `nao_encontrado` silencioso por digitação | M |
 | 3.4 | Parâmetro `geo.zona.atributos_nome` no catálogo (hoje array fixo em `LouosEnquadramentoService::zonaNome()`); o próprio comentário do código diz "a confirmar com a base oficial" | P |
 
@@ -119,7 +119,7 @@ O inventário da Fase 4 era baseado em constantes; a revisão final encontrou te
 |---|---|---|
 | 5.1 | Classificação de parâmetros em `operacional` × `decisório` (metadado no catálogo); decisórios exigem quatro olhos (mesmo rito da publicação LOUOS) | M |
 | 5.2 | Validação de domínio em parâmetros JSON: `risco.mapa_encaminhamento` só aceita valores do enum `Fluxo`; rejeitar typo na borda | P |
-| 5.3 | Migrar para o catálogo: `solicitacao.duplicidade.janela_dias` (hoje só em `config/sile.php:127`), `ia.auditoria_preditiva.pesos` e `cortes_severidade` (hoje `private const` em `PredictiveAuditService:39-43,171-176`) | P |
+| 5.3 | Migrar para o catálogo: `solicitacao.duplicidade.janela_dias` (hoje só em `config/viabiliza.php:127`), `ia.auditoria_preditiva.pesos` e `cortes_severidade` (hoje `private const` em `PredictiveAuditService:39-43,171-176`) | P |
 | 5.4 | Cobrar da SEDUR os dados ausentes: `louos.vagas.exigencia_por_grupo` e `relatorios.saturacao.capacidades` (estrutura pronta, parâmetro vazio) — **pendência externa registrada; NÃO inventar dado** | P |
 
 **Critério de pronto:** alteração de parâmetro decisório exige segundo aprovador e fica registrada com os dois responsáveis; typo em mapa JSON é rejeitado com mensagem clara. **Cumprido** (exceto 5.4, que depende da SEDUR).

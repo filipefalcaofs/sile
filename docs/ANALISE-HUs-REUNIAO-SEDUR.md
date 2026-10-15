@@ -219,7 +219,7 @@ O processo carrega **três identificadores**: número do processo (SEDUR), proto
   - Mapeamento com a taxonomia do Decreto 32.636/2020: Baixo Risco A e Baixo Risco B → expresso; Alto Risco → análise humana. Confirmar com a SEDUR se o "médio risco" da operação corresponde ao Baixo Risco B do decreto.
   - O expresso pressupõe parametrização suficiente: os gatilhos observados no SAPS (enquadramento ausente, zona ZEIS especial etc.) continuarão derrubando casos pontuais de baixo/médio para análise (o "semi-expresso") — a meta é que isso seja exceção registrada com motivo, não regra.
   - A confirmar: o deferimento de alto risco pela analista também notifica a SEFAZ via API ao finalizar (presumido que sim — hoje todo "produto" é enviado via API à SEFAZ, conforme reunião de 2026-06-11).
-- **Escopo**: SILE cobre somente **viabilidade**. Construção fica no sistema novo do Anderson. Renovação entra direto pelo Simplifica (sem Regin).
+- **Escopo**: VIABILIZA cobre somente **viabilidade**. Construção fica no sistema novo do Anderson. Renovação entra direto pelo Simplifica (sem Regin).
 - **Documento de viabilidade**: não é entregue ao requerente; os dados vão **via API para a SEFAZ** e o parecer via **Regin**. O **PDF/TVL permanece no backoffice** — relatório emitível pelo analista (HU-132), útil para arquivo e malha fina. Assinatura hoje é imagem do diretor (não ICP-Brasil). Impacta HU-076, HU-086, HU-132.
 - **Malha fina**: é provocação humana (botão dentro do processo), distinta da caixa de entrada (chegada automática). Qualquer processo, mesmo finalizado, pode ser enviado.
 - **Atribuição**: processo cai na caixa do setor e é atribuído a um analista, sem sair da caixa do setor (cobre férias/ausências).
@@ -250,7 +250,7 @@ O processo carrega **três identificadores**: número do processo (SEDUR), proto
 
 ### 7.7 Impacto nas HUs
 
-> **Atualizado em 2026-06-12** — alterações aplicadas em `docs/SILE_HUs_Completas_MD/`.
+> **Atualizado em 2026-06-12** — alterações aplicadas em `docs/VIABILIZA_HUs_Completas_MD/`.
 
 | Descoberta | HU/EP afetado | Status |
 |---|---|---|

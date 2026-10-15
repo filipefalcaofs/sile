@@ -86,7 +86,7 @@ class ConsultaProtocoloController extends Controller
             return null;
         }
 
-        $dias = (int) config('sile.solicitacao.consulta_publica.assinatura_ttl_dias', 30);
+        $dias = (int) config('viabiliza.solicitacao.consulta_publica.assinatura_ttl_dias', 30);
 
         return URL::temporarySignedRoute(
             'portal.protocolo.publico',

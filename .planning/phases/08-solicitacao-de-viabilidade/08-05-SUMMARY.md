@@ -27,7 +27,7 @@ provides:
   - "App\\Http\\Requests\\Portal\\StoreSolicitacaoRequest (tipo de serviço ATIVO + empresa com vínculo ATIVO do efetivo)"
   - "App\\Services\\Solicitacao\\DuplicateRequestDetector::detect(Company, ?int): ?array — reincidência por CNPJ (alerta, nunca bloqueio, RN-007)"
   - "rotas portal.solicitacoes.{index,store} (auth:web + verified + lgpd.accepted + ResolveRepresentation)"
-  - "config sile.solicitacao.duplicidade.janela_dias (constante de config, default 180 — ressalva SEDUR)"
+  - "config viabiliza.solicitacao.duplicidade.janela_dias (constante de config, default 180 — ressalva SEDUR)"
 affects: [08-06-imovel-geometry, 08-07-area, 08-08-anexos, 08-09-simulacao, 08-10-protocolo, 08-11-consulta-protocolo, 08-12-cancelar, 08-13-ui, 08-15-atendimento-presencial]
 
 # Tech tracking
@@ -37,7 +37,7 @@ tech-stack:
     - "Policy de aggregate da fase 8 espelhando CompanyPolicy: effectiveUser = CurrentRepresentation::grantor() ?? user; auto-discovery resolve ViabilityRequest→ViabilityRequestPolicy (sem registro explícito, como CompanyPolicy)"
     - "Store em nome do efetivo: requester_user_id = usuário efetivo (representado), created_by_user_id = ator real; status NÃO é setado (default 'rascunho' do banco — fora do fillable); auditoria created enriquecida com acting_for pelo RecordActivityAction"
     - "Detecção de reincidência como ALERTA não-bloqueante (RN-007): serviço dedicado retorna o processo anterior (link real) calculado ANTES de criar; nunca lança/bloqueia (direito de petição)"
-    - "Janela de reincidência como CONSTANTE de config (config/sile.php), não Parameter de catálogo — evita tocar o ParameterSeeder (contagens travadas em 48); definição é pendência SEDUR (default honesto)"
+    - "Janela de reincidência como CONSTANTE de config (config/viabiliza.php), não Parameter de catálogo — evita tocar o ParameterSeeder (contagens travadas em 48); definição é pendência SEDUR (default honesto)"
     - "per_page por constante (DEFAULT_PER_PAGE=15 + whitelist) na listagem do portal — precedente [08-03], sem parâmetro dedicado para não tocar o seeder"
 
 key-files:
@@ -51,13 +51,13 @@ key-files:
     - tests/Feature/Solicitacao/CriarSolicitacaoTest.php
   modified:
     - routes/portal.php
-    - config/sile.php
+    - config/viabiliza.php
 
 key-decisions:
   - "ViabilityRequestPolicy espelha a CompanyPolicy ([03-04]): effectiveUser() = app(CurrentRepresentation::class)->grantor() ?? $user. view = dono/representado (qualquer status); update/protocol = dono E status rascunho; cancel = dono E status em {rascunho, protocolada}. Auto-discovery (sem registro explícito, como a CompanyPolicy)."
   - "requester_user_id = usuário EFETIVO (beneficiário/representado); created_by_user_id = $request->user() (ator real 'em nome de'). status fora do fillable → ViabilityRequest::create() cai no default 'rascunho' do banco; a auditoria created (HasAuditoria) loga só os fillable e é enriquecida com acting_for_user_id pelo RecordActivityAction quando em representação."
   - "DuplicateRequestDetector::detect(Company, ?int $excludeRequestId = null): ?array — mesma empresa (company_id = CNPJ), NÃO cancelada e (created_at na janela OU status protocolada = ativo); retorna o mais recente {request_id, protocol_number, status, created_at} ou null. NUNCA bloqueia. Por inscrição imobiliária degrada (lote bloqueado pendente SEDUR — só por CNPJ nesta fase)."
-  - "Janela de reincidência em config/sile.php (sile.solicitacao.duplicidade.janela_dias, default 180) com default inline no serviço — NÃO é Parameter de catálogo (não toca ParameterSeeder; contagens travadas em 48). A definição oficial de duplicidade é pendência SEDUR — default honesto e ajustável sem deploy."
+  - "Janela de reincidência em config/viabiliza.php (viabiliza.solicitacao.duplicidade.janela_dias, default 180) com default inline no serviço — NÃO é Parameter de catálogo (não toca ParameterSeeder; contagens travadas em 48). A definição oficial de duplicidade é pendência SEDUR — default honesto e ajustável sem deploy."
   - "Toggle features.solicitacao_viabilidade: o store degrada de forma comunicada (back()->with('status', ...) sem criar) quando off, espelhando features.procuracoes; o index permanece acessível (ver as próprias solicitações) e expõe solicitacaoEnabled para a UI (08-13)."
   - "Escopo por empresa no StoreSolicitacaoRequest::after(): a empresa precisa de vínculo ATIVO do usuário efetivo (Company::links whereNull ended_at) — não se cria solicitação para empresa de terceiro; mensagem pt-BR em company_id."
 
@@ -110,7 +110,7 @@ Ambas no grupo `auth:web` + `verified` + `lgpd.accepted` + `ResolveRepresentatio
   - privado `effectiveUser(User): User` = `app(CurrentRepresentation::class)->grantor() ?? $user`.
 - **`SolicitacaoController::store(StoreSolicitacaoRequest): RedirectResponse`** — cria rascunho (status default do banco), `origin = Portal`, `requester_user_id` = efetivo, `created_by_user_id` = ator; flash `status` + (condicional) `duplicateAlert`; redirect para `portal.solicitacoes.index`.
 - **`StoreSolicitacaoRequest`**: `service_type_id` (required, integer, exists em `viability_service_types` com `active=true`); `company_id` (required, integer, exists em `companies` + `after()` exige vínculo ATIVO do efetivo).
-- **`DuplicateRequestDetector::detect(Company $company, ?int $excludeRequestId = null): ?array`** → `null` ou `['request_id'=>int, 'protocol_number'=>string|null, 'status'=>string, 'created_at'=>string|null]`. Janela: `config('sile.solicitacao.duplicidade.janela_dias', 180)`.
+- **`DuplicateRequestDetector::detect(Company $company, ?int $excludeRequestId = null): ?array`** → `null` ou `['request_id'=>int, 'protocol_number'=>string|null, 'status'=>string, 'created_at'=>string|null]`. Janela: `config('viabiliza.solicitacao.duplicidade.janela_dias', 180)`.
 
 ## Shape das props da listagem (`portal/solicitacoes/index` — contrato do 08-13)
 
@@ -134,7 +134,7 @@ TDD estrito (RED→GREEN verificado com evidência fresca antes de cada commit):
 - **Policy por auto-discovery** (como `CompanyPolicy`): `App\Models\ViabilityRequest` → `App\Policies\ViabilityRequestPolicy`, sem registro explícito em provider. `protocol`/`cancel` já entram aqui (prontas para 08-10/08-12) garantindo apenas propriedade + estado, deixando a regra fina (parâmetros) aos planos donos do fluxo.
 - **`requester` ≠ `created_by`**: o beneficiário é o efetivo (representado em representação); o ator real é quem está logado. `status` nunca é informado no `create()` — vem do default do banco (`'rascunho'`), consistente com a decisão [08-01] de manter `status` fora do fillable (a StateMachine governa as transições; aqui só o nascimento).
 - **Reincidência ALERTA, não bloqueio** (RN-007 honesto): o detector aponta o processo anterior por CNPJ (recente OU ativo) com link real; canceladas não contam; o `excludeRequestId` deixa o contrato pronto para reuso em edição (08-06+). Por inscrição imobiliária degrada (lote bloqueado pendente SEDUR).
-- **Janela em config, não no catálogo**: `sile.solicitacao.duplicidade.janela_dias` (default 180) é constante de config com ressalva SEDUR — adicionar Parameter aqui quebraria as contagens de seeder travadas em 48 (precedente [08-03]).
+- **Janela em config, não no catálogo**: `viabiliza.solicitacao.duplicidade.janela_dias` (default 180) é constante de config com ressalva SEDUR — adicionar Parameter aqui quebraria as contagens de seeder travadas em 48 (precedente [08-03]).
 - **`per_page` por constante** na listagem (15 + whitelist), sem parâmetro dedicado — mesma razão (não tocar o ParameterSeeder).
 
 ## Deviations from Plan

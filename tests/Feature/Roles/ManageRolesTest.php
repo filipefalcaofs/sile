@@ -31,15 +31,15 @@ class ManageRolesTest extends TestCase
         $admin = $this->admin();
 
         $this->actingAs($admin, 'gestao')
-            ->get('/gestao/perfis')
+            ->get('/gestao/perfis?per_page=50')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('gestao/perfis/index')
-                ->has('roles', 19)
-                ->has('roles.0', fn (Assert $item) => $item
+                ->has('roles.data', 19)
+                ->has('roles.data.0', fn (Assert $item) => $item
                     ->hasAll(['id', 'name', 'permissions', 'users_count', 'structural']))
                 ->where(
-                    'roles',
+                    'roles.data',
                     fn ($roles) => collect($roles)->contains(
                         fn ($role) => $role['name'] === 'administrador'
                             && $role['structural'] === true
@@ -47,6 +47,11 @@ class ManageRolesTest extends TestCase
                     )
                 )
                 ->has('permissions', 39)
+                ->where('roles.total', 19)
+                ->where('roles.per_page', 50)
+                ->where('filters.search', '')
+                ->where('filters.per_page', 50)
+                ->has('perPageOptions', 4)
                 ->has('permissionCatalog', 39)
                 ->where(
                     'permissionCatalog',
@@ -70,6 +75,61 @@ class ManageRolesTest extends TestCase
                         fn ($item) => $item['group'] !== 'Outras' && $item['label'] !== $item['name']
                     )
                 ));
+    }
+
+    public function test_busca_por_nome_filtra_a_listagem_e_preserva_o_termo(): void
+    {
+        $this->actingAs($this->admin(), 'gestao')
+            ->get('/gestao/perfis?search=ADMINISTRADOR')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('filters.search', 'ADMINISTRADOR')
+                ->where('roles.total', 1)
+                ->where('roles.data.0.name', 'administrador')
+                ->where('roles.data.0.structural', true));
+    }
+
+    public function test_paginacao_mantem_a_busca_e_a_pagina_pedida(): void
+    {
+        $this->actingAs($this->admin(), 'gestao')
+            ->get('/gestao/perfis?per_page=10&page=2&search=a')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('filters.search', 'a')
+                ->where('filters.per_page', 10)
+                ->where('roles.per_page', 10)
+                ->where('roles.current_page', 2)
+                ->where(
+                    'roles.data',
+                    fn ($data) => collect($data)->isNotEmpty()
+                        && collect($data)->every(
+                            fn ($role) => str_contains(mb_strtolower($role['name']), 'a'),
+                        ),
+                )
+                ->has('perPageOptions', 4));
+    }
+
+    public function test_quantidade_por_pagina_fora_da_lista_volta_ao_padrao(): void
+    {
+        $this->actingAs($this->admin(), 'gestao')
+            ->get('/gestao/perfis?per_page=999')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('roles.per_page', 15)
+                ->where('filters.per_page', 15)
+                ->where('roles.total', 19));
+    }
+
+    public function test_exportacao_csv_respeita_a_busca_por_nome(): void
+    {
+        $response = $this->actingAs($this->admin(), 'gestao')
+            ->get('/gestao/perfis?formato=csv&search=administrador')
+            ->assertOk();
+
+        $conteudo = $response->streamedContent();
+
+        $this->assertStringContainsString('administrador', $conteudo);
+        $this->assertStringNotContainsString('cidadao', $conteudo);
     }
 
     public function test_cria_perfil_com_permissoes_granulares(): void
@@ -220,9 +280,9 @@ class ManageRolesTest extends TestCase
     public function test_listagem_marca_protegido_no_campo_structural(): void
     {
         $this->actingAs($this->admin(), 'gestao')
-            ->get('/gestao/perfis')
+            ->get('/gestao/perfis?per_page=50')
             ->assertInertia(fn (Assert $page) => $page
-                ->where('roles', fn ($roles) => collect($roles)->firstWhere('name', 'administrador')['structural'] === true
+                ->where('roles.data', fn ($roles) => collect($roles)->firstWhere('name', 'administrador')['structural'] === true
                     && collect($roles)->firstWhere('name', 'apoio')['structural'] === false));
     }
 
@@ -321,7 +381,7 @@ class ManageRolesTest extends TestCase
     {
         $admin = $this->admin();
         $municipe = Role::create(['name' => 'municipe', 'guard_name' => 'web']);
-        config(['sile.portal.perfil_cidadao' => 'municipe']);
+        config(['viabiliza.portal.perfil_cidadao' => 'municipe']);
 
         $this->actingAs($admin, 'gestao')
             ->put("/gestao/perfis/{$municipe->id}", ['name' => 'outro'])

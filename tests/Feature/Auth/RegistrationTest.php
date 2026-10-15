@@ -47,7 +47,7 @@ class RegistrationTest extends TestCase
     public function test_cadastro_usa_o_perfil_definido_no_parametro(): void
     {
         Role::create(['name' => 'municipe', 'guard_name' => 'web']);
-        config(['sile.portal.perfil_cidadao' => 'municipe']);
+        config(['viabiliza.portal.perfil_cidadao' => 'municipe']);
 
         $this->post('/portal/register', $this->validPayload());
 

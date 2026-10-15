@@ -23,7 +23,7 @@ class RenovacaoConsultaCnpjTest extends TestCase
         parent::setUp();
 
         $this->seed(RolesAndPermissionsSeeder::class);
-        config(['sile.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
+        config(['viabiliza.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
     }
 
     public function test_consulta_cnpj_devolve_cadastro_da_sedur_e_a_viabilidade_local(): void

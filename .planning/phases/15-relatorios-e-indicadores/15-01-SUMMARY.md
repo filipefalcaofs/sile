@@ -7,7 +7,7 @@ tags: [openspout, echarts, parametros, permissoes, indices, hu-014, relatorios]
 # Dependency graph
 requires:
   - phase: 02-cadastros-estruturantes
-    provides: ParameterSeeder + config/sile.php (catálogo HU-014) e RolesAndPermissionsSeeder
+    provides: ParameterSeeder + config/viabiliza.php (catálogo HU-014) e RolesAndPermissionsSeeder
   - phase: 12-auditoria-e-compliance
     provides: baseline 85 parâmetros / 27 permissões
 provides:
@@ -33,14 +33,14 @@ key-files:
     - composer.json
     - package.json
     - database/seeders/ParameterSeeder.php
-    - config/sile.php
+    - config/viabiliza.php
     - database/seeders/RolesAndPermissionsSeeder.php
     - tests/Feature/Seeders/ParameterSeederTest.php
     - tests/Feature/Authorization/RolesAndPermissionsSeederTest.php
 
 key-decisions:
   - "openspout ^4.0 (não v5): v5 exige ~8.4/8.5 e quebraria a promessa php ^8.3"
-  - "meta_taxa OMITIDO do config/sile.php: null no config devolve null (Arr::get); ausente cai no fallback do call site (meta não definida, nunca inventada)"
+  - "meta_taxa OMITIDO do config/viabiliza.php: null no config devolve null (Arr::get); ausente cai no fallback do call site (meta não definida, nunca inventada)"
   - "Sem permissão relatorios.exportar: a exportação herda a leitura da própria tela (RN-007)"
   - "Índice composto de transitions com nome explícito vrt_request_created_index (limite de 63 chars do PostgreSQL)"
   - "ReportFilters movido para 15-02 (mora com o contrato de export, evita acoplamento)"
@@ -70,7 +70,7 @@ completed: 2026-06-15
 - `openspout/openspout v4.32.0` instalado (require `~8.3.0 || ~8.4.0 || ~8.5.0`) — `composer.json` mantém `"php": "^8.3"`.
 - `echarts ^6.1.0` em `dependencies` (resolvido para 6.1.0).
 - Migration aditiva de índices de desempenho (RESEARCH Pitfall 1): `viability_requests.protocoled_at`; `viability_decisions.decided_at`, `(flow, outcome)`, `decided_by_user_id`; `viability_request_transitions (viability_request_id, created_at)` — up/down validados em PostgreSQL.
-- 5 parâmetros HU-014 no grupo `relatorios` (catálogo 85 → 90) + espelho em `config/sile.php` com as constantes técnicas fora do catálogo.
+- 5 parâmetros HU-014 no grupo `relatorios` (catálogo 85 → 90) + espelho em `config/viabiliza.php` com as constantes técnicas fora do catálogo.
 - 2 permissões aditivas `consultar-relatorios` e `relatorios.produtividade.nominal` para gestor/admin (27 → 29).
 - Testes de seeder atualizados (RED→GREEN): 90 parâmetros e 29 permissões, com testes dedicados às novas chaves/permissões.
 
@@ -86,7 +86,7 @@ completed: 2026-06-15
 - `composer.json` / `composer.lock` — openspout/openspout ^4.0
 - `package.json` / `package-lock.json` — echarts ^6.1 (staging seletivo, sem o vitest do usuário)
 - `database/seeders/ParameterSeeder.php` — 5 parâmetros do grupo relatorios
-- `config/sile.php` — bloco `relatorios.*` (parâmetros + constantes técnicas; meta_taxa omitida)
+- `config/viabiliza.php` — bloco `relatorios.*` (parâmetros + constantes técnicas; meta_taxa omitida)
 - `database/seeders/RolesAndPermissionsSeeder.php` — consultar-relatorios + relatorios.produtividade.nominal (gestor/admin)
 - `tests/Feature/Seeders/ParameterSeederTest.php` — catálogo 90 + grupo relatorios + teste das 5 chaves
 - `tests/Feature/Authorization/RolesAndPermissionsSeederTest.php` — idempotência 29 + teste das permissões de relatórios
@@ -94,7 +94,7 @@ completed: 2026-06-15
 ## Decisions Made
 
 - **openspout ^4.0 (não v5):** v5 exige `~8.4/8.5` e quebraria o piso `php ^8.3` do projeto; a API de escrita streaming é idêntica entre v4 e v5. Instalou v4.32.0.
-- **`meta_taxa` omitido do `config/sile.php`:** o `Settings::get` resolve `config("sile.{chave}", $default)` primeiro; um leaf `null` no config faz `Arr::get` devolver `null` (não o default). Para a meta nascer honestamente "não definida" (`Settings::get("relatorios.expresso.meta_taxa", "indefinida")` → `"indefinida"`), a chave fica ausente do config. O parâmetro segue no catálogo com `default_value null` (admin pode definir). Espelha o padrão dos parâmetros nulos existentes (`govbr.client_id`).
+- **`meta_taxa` omitido do `config/viabiliza.php`:** o `Settings::get` resolve `config("viabiliza.{chave}", $default)` primeiro; um leaf `null` no config faz `Arr::get` devolver `null` (não o default). Para a meta nascer honestamente "não definida" (`Settings::get("relatorios.expresso.meta_taxa", "indefinida")` → `"indefinida"`), a chave fica ausente do config. O parâmetro segue no catálogo com `default_value null` (admin pode definir). Espelha o padrão dos parâmetros nulos existentes (`govbr.client_id`).
 - **Sem `relatorios.exportar`:** a exportação herda a permissão de leitura da própria tela (RN-007) — registrado no plano.
 - **Índice composto de transitions com nome explícito (`vrt_request_created_index`):** o nome default (`viability_request_transitions_viability_request_id_created_at_index`, 67 chars) estouraria o limite de 63 chars do PostgreSQL e causaria mismatch no `dropIndex` do `down()`.
 - **`ReportFilters` permanece em 15-02** (mora com o contrato de export).
@@ -103,12 +103,12 @@ completed: 2026-06-15
 
 ### Auto-fixed Issues
 
-**1. [Rule 1 - Bug no plano] `meta_taxa` removido do espelho `config/sile.php`**
+**1. [Rule 1 - Bug no plano] `meta_taxa` removido do espelho `config/viabiliza.php`**
 - **Found during:** Task 2 (config + acceptance do tinker)
 - **Issue:** O plano mandava `'expresso' => ['meta_taxa' => null, ...]` no config, mas a própria acceptance exige que `Settings::get("relatorios.expresso.meta_taxa", "indefinida")` imprima `"indefinida"`. Verificado empiricamente que `Arr::get`/`config()` devolve o `null` existente (não o default) para um leaf null — o que faria a acceptance imprimir vazio.
 - **Fix:** Omitir `meta_taxa` do bloco `relatorios.expresso` no config (mantendo `janela_dias`). O parâmetro segue no catálogo com `default_value null`.
-- **Files modified:** config/sile.php, database/seeders/ParameterSeeder.php
-- **Verification:** `php artisan config:show sile.relatorios.export.assincrono_limiar_linhas` → 5000; `Settings::get("relatorios.expresso.meta_taxa", "indefinida")` → "indefinida".
+- **Files modified:** config/viabiliza.php, database/seeders/ParameterSeeder.php
+- **Verification:** `php artisan config:show viabiliza.relatorios.export.assincrono_limiar_linhas` → 5000; `Settings::get("relatorios.expresso.meta_taxa", "indefinida")` → "indefinida".
 - **Committed in:** 74a8d47 (Task 2)
 
 **2. [Rule 3 - Coordenação com trabalho paralelo] Migration validada em isolamento + staging seletivo**

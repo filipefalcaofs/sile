@@ -126,7 +126,7 @@ display_name: Elevador Lacerda, Praça Visconde de Cayru, Comércio, Salvador, B
 ```
 
 - Coordenada ≈ **lat -12.97 / lng -38.51** (central de Salvador), como esperado.
-- Diagnóstico cru confirmou HTTP **200** do `https://nominatim.openstreetmap.org` real com User-Agent próprio (`SILE-SEDUR-Salvador/1.0 (contato@sedur.salvador.ba.gov.br)`) — **não é bloqueio**. ("Praça Municipal, Salvador, BA" retorna vazio legítimo no Nominatim; "Elevador Lacerda/Avenida Sete de Setembro/Salvador" resolvem normalmente.)
+- Diagnóstico cru confirmou HTTP **200** do `https://nominatim.openstreetmap.org` real com User-Agent próprio (`VIABILIZA-SEDUR-Salvador/1.0 (contato@sedur.salvador.ba.gov.br)`) — **não é bloqueio**. ("Praça Municipal, Salvador, BA" retorna vazio legítimo no Nominatim; "Elevador Lacerda/Avenida Sete de Setembro/Salvador" resolvem normalmente.)
 - Toggle `features.geocoding` = **ON** (default semeado `'1'`; `Settings::enabled('geocoding')=true`). **Nenhum toggle foi alterado** (a chamada usou o serviço diretamente) — nada a restaurar.
 
 ### 2. Consulta espacial REAL (golden point → bairro + versão)

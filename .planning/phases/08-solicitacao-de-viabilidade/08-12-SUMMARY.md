@@ -14,12 +14,12 @@ requires:
     provides: "ViabilityRequestPolicy::cancel (dono + status em {rascunho, protocolada}, CA-04)"
   - phase: 08-solicitacao-de-viabilidade
     plan: "02"
-    provides: "grupo de parâmetros 'solicitacao' + fallback config/sile.php (padrão HU-014); contagem do catálogo"
+    provides: "grupo de parâmetros 'solicitacao' + fallback config/viabiliza.php (padrão HU-014); contagem do catálogo"
 provides:
   - "App\\Services\\Solicitacao\\CancelarSolicitacaoService::cancel(ViabilityRequest, User $actor, string $reason): void — cancelamento via StateMachine com estados canceláveis parametrizáveis"
   - "App\\Services\\Solicitacao\\CancelamentoNaoPermitidoException (->status, ->estadosCancelaveis) — bloqueio fora dos estados (CA-03)"
   - "App\\Http\\Controllers\\Portal\\CancelamentoSolicitacaoController@destroy + CancelarSolicitacaoRequest (reason obrigatório)"
-  - "Parâmetro solicitacao.cancelamento.estados_cancelaveis (json, default rascunho+protocolada) — catálogo 48→49 + fallback config/sile.php"
+  - "Parâmetro solicitacao.cancelamento.estados_cancelaveis (json, default rascunho+protocolada) — catálogo 48→49 + fallback config/viabiliza.php"
   - "Rota DELETE portal/solicitacoes/{solicitacao} (name portal.solicitacoes.cancelar)"
 affects: [08-13-ui-wizard, 08-16-fechamento]
 
@@ -29,7 +29,7 @@ tech-stack:
   patterns:
     - "Estados canceláveis como PARÂMETRO de negócio (solicitacao.cancelamento.estados_cancelaveis, json) — efeito sem deploy, default honesto, definição fina pendente SEDUR"
     - "Policy = guarda grossa (dono + não-decidido); parâmetro = regra fina dos estados — o service compara o status atual contra a lista parametrizada e bloqueia auditando se fora dela"
-    - "Único dono da mudança de catálogo na Wave 7 (ParameterSeeder/config/sile.php/seeder-tests) — contagem 48→49 atualizada em ParameterSeederTest e DatabaseSeederTest"
+    - "Único dono da mudança de catálogo na Wave 7 (ParameterSeeder/config/viabiliza.php/seeder-tests) — contagem 48→49 atualizada em ParameterSeederTest e DatabaseSeederTest"
 
 key-files:
   created:
@@ -40,13 +40,13 @@ key-files:
     - tests/Feature/Solicitacao/CancelarSolicitacaoTest.php
   modified:
     - database/seeders/ParameterSeeder.php
-    - config/sile.php
+    - config/viabiliza.php
     - routes/portal.php
     - tests/Feature/Seeders/ParameterSeederTest.php
     - tests/Feature/Seeders/DatabaseSeederTest.php
 
 key-decisions:
-  - "Estados canceláveis em parâmetro json (solicitacao.cancelamento.estados_cancelaveis), default ['rascunho','protocolada'] — antes da decisão. Definição fina é pendência SEDUR; o default é honesto e ajustável sem deploy (HU-014). Lido por Settings::get com fallback espelhado em config/sile.php (banco→cache→config)."
+  - "Estados canceláveis em parâmetro json (solicitacao.cancelamento.estados_cancelaveis), default ['rascunho','protocolada'] — antes da decisão. Definição fina é pendência SEDUR; o default é honesto e ajustável sem deploy (HU-014). Lido por Settings::get com fallback espelhado em config/viabiliza.php (banco→cache→config)."
   - "Camadas de autorização vs. regra de estado: a ViabilityRequestPolicy::cancel (08-05) garante dono + não-decidido (rascunho/protocolada) e barra terceiro com 403 auditado (CA-04); a regra FINA de quais estados são canceláveis fica no service via parâmetro. Assim, com o parâmetro restrito (ex.: só ['rascunho']), uma protocolada passa pela policy mas é bloqueada pelo service (CA-03)."
   - "Bloqueio fora dos estados auditado com AuditService::log('solicitacoes','cancelamento-bloqueado', subject=solicitação, result='bloqueado') em vez de logBlocked() — REFINAMENTO sobre o plano (que sugeria logBlocked): preserva o SUBJECT (qual solicitação) e usa um evento semântico próprio (CA-03 não é 'acesso-negado'/CA-04). RN-002 mais completo. result='bloqueado' mantido."
   - "Cancelar grava cancelled_at/cancelled_reason/cancelled_by_user_id via forceFill (fora do #[Fillable], como o protocolo grava protocol_number) e transiciona pela StateMachine reason=$reason, publicLabel='Cancelada a pedido do requerente' — timeline + auditoria 'transicao' RN-002, tudo em UMA DB::transaction."
@@ -64,7 +64,7 @@ completed: 2026-06-14
 
 # Phase 8 Plan 12: Cancelar solicitação (HU-070) Summary
 
-**O cancelamento (HU-070) deixa o requerente interromper um processo indevido ou duplicado enquanto NÃO decidido — de rascunho e de protocolada (antes da decisão). O `CancelarSolicitacaoService::cancel(ViabilityRequest, User $actor, string $reason)` lê os estados canceláveis do parâmetro `solicitacao.cancelamento.estados_cancelaveis` (json, default `["rascunho","protocolada"]`, fallback em `config/sile.php` — efeito sem deploy, HU-014); se o status atual está fora da lista, AUDITA o bloqueio (`AuditService::log('solicitacoes','cancelamento-bloqueado', result='bloqueado')`) e lança `CancelamentoNaoPermitidoException` (CA-03) — sem cancelar nada (anti-fachada). Dentro dos estados, grava `cancelled_at`/`cancelled_reason`/`cancelled_by_user_id` (via `forceFill`, fora do fillable) e transiciona para cancelada pela `ViabilityRequestStateMachine` (`publicLabel` "Cancelada a pedido do requerente", `reason` do requerente) — timeline + auditoria RN-002 — tudo em UMA `DB::transaction`. O `CancelamentoSolicitacaoController@destroy` autoriza pela `ViabilityRequestPolicy::cancel` (dono + não-decidido; terceiro → 403 auditado, CA-04), exige o motivo (`CancelarSolicitacaoRequest`: `reason` obrigatório) e traduz o bloqueio de estado em `flash.error` (aviso, nunca silencioso). A definição fina dos estados canceláveis é pendência SEDUR — entregue como default honesto + parâmetro. ZERO dependência nova. TDD estrito: CancelarSolicitacaoTest 6/6 + as contagens de seeder atualizadas de 48 para 49; filtros do plano 25/25.**
+**O cancelamento (HU-070) deixa o requerente interromper um processo indevido ou duplicado enquanto NÃO decidido — de rascunho e de protocolada (antes da decisão). O `CancelarSolicitacaoService::cancel(ViabilityRequest, User $actor, string $reason)` lê os estados canceláveis do parâmetro `solicitacao.cancelamento.estados_cancelaveis` (json, default `["rascunho","protocolada"]`, fallback em `config/viabiliza.php` — efeito sem deploy, HU-014); se o status atual está fora da lista, AUDITA o bloqueio (`AuditService::log('solicitacoes','cancelamento-bloqueado', result='bloqueado')`) e lança `CancelamentoNaoPermitidoException` (CA-03) — sem cancelar nada (anti-fachada). Dentro dos estados, grava `cancelled_at`/`cancelled_reason`/`cancelled_by_user_id` (via `forceFill`, fora do fillable) e transiciona para cancelada pela `ViabilityRequestStateMachine` (`publicLabel` "Cancelada a pedido do requerente", `reason` do requerente) — timeline + auditoria RN-002 — tudo em UMA `DB::transaction`. O `CancelamentoSolicitacaoController@destroy` autoriza pela `ViabilityRequestPolicy::cancel` (dono + não-decidido; terceiro → 403 auditado, CA-04), exige o motivo (`CancelarSolicitacaoRequest`: `reason` obrigatório) e traduz o bloqueio de estado em `flash.error` (aviso, nunca silencioso). A definição fina dos estados canceláveis é pendência SEDUR — entregue como default honesto + parâmetro. ZERO dependência nova. TDD estrito: CancelarSolicitacaoTest 6/6 + as contagens de seeder atualizadas de 48 para 49; filtros do plano 25/25.**
 
 ## Performance
 
@@ -74,7 +74,7 @@ completed: 2026-06-14
 
 ## Accomplishments
 
-- **Parâmetro `solicitacao.cancelamento.estados_cancelaveis`** (json, default `["rascunho","protocolada"]`, grupo `solicitacao`) no `ParameterSeeder` + fallback em `config/sile.php`; catálogo **48→49** com as contagens travadas em `ParameterSeederTest` e `DatabaseSeederTest`.
+- **Parâmetro `solicitacao.cancelamento.estados_cancelaveis`** (json, default `["rascunho","protocolada"]`, grupo `solicitacao`) no `ParameterSeeder` + fallback em `config/viabiliza.php`; catálogo **48→49** com as contagens travadas em `ParameterSeederTest` e `DatabaseSeederTest`.
 - **`CancelarSolicitacaoService::cancel(ViabilityRequest, User $actor, string $reason): void`** — estados canceláveis parametrizáveis; bloqueio auditado fora deles; cancelamento real (`cancelled_*`) + transição auditada na mesma transação.
 - **`CancelamentoNaoPermitidoException`** (`->status`, `->estadosCancelaveis`) — bloqueio comunicado (CA-03), traduzido em `flash.error`.
 - **`CancelamentoSolicitacaoController@destroy`** + **`CancelarSolicitacaoRequest`** (`reason` obrigatório, pt-BR) + rota `DELETE portal/solicitacoes/{solicitacao}` (name `portal.solicitacoes.cancelar`).

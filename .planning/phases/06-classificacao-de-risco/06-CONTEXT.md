@@ -37,7 +37,7 @@ Fora do escopo: o processo formal do fluxo expresso (Fases 8/9), a fila de anál
 ### Parâmetros novos (catálogo HU-014, hoje 29)
 - `risco.mapa_encaminhamento` (ou 3 toggles) — mapa risk_level→fluxo (default baixo_a/baixo_b=expresso, alto=analise).
 - `risco.dimensao_tvl` — qual dimensão prevalece no TVL (default `municipal`).
-- (constantes técnicas como cache_ttl em config/sile.php, fora do catálogo).
+- (constantes técnicas como cache_ttl em config/viabiliza.php, fora do catálogo).
 
 ### Golden cases (arquiteto-tecnico)
 - Seeds em `database/data/risco/`; casos entrada→esperado em `tests/Fixtures/golden/risco/*.json`; feature test `#[DataProvider]`. Tabulares → SQLite (sem PostGIS). Critério de regressão de domínio.
@@ -54,7 +54,7 @@ Fora do escopo: o processo formal do fluxo expresso (Fases 8/9), a fila de anál
 - Transcrição dos agents (decisões): analista-negocio (sequenciamento + escopo + mapa CA→teste) e arquiteto-tecnico (modelagem rule_versions, motor, golden cases, degradação) — sessão 2026-06-13.
 
 ### HUs (CAs BDD)
-- `docs/SILE_HUs_Completas_MD/EP06-Classificacao-de-Risco/HU-047..HU-053.md`.
+- `docs/VIABILIZA_HUs_Completas_MD/EP06-Classificacao-de-Risco/HU-047..HU-053.md`.
 - HU-019 (Manter condicionantes) e HU-020 (Manter classificação de risco) — EP02-Administracao.
 - `docs/ANALISE-HUs-REUNIAO-SEDUR.md` seção 4C (números do decreto) e seções 7.6.x (pendências de risco/gatilhos).
 

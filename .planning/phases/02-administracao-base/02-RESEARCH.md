@@ -10,7 +10,7 @@ A fase entrega quatro CRUDs administrativos sob `/gestao` (CNAEs, usuários, per
 
 A pesquisa **inspecionou o xlsx oficial real** (`CNAE_Subclasses_2_3_Estrutura_Detalhada.xlsx`): 2.401 linhas em árvore (4 de cabeçalho), com exatamente **1.331 subclasses**, 673 classes, 285 grupos, 87 divisões e 21 seções, sem duplicatas e sem código fora do padrão `DDDD-D/SS`. A **divergência 1.331 × 1.332 foi resolvida com evidência**: a publicação oficial do IBGE cita 1.332 subclasses; a única ausente no arquivo é a **9900-8/00 (Organismos internacionais e outras instituições extraterritoriais)** — confirmada existente na busca oficial da CONCLA, mas omitida na aba de estrutura (a classe 99.00-8 aparece sem linha de subclasse). As outras duas classes sem subclasse no arquivo (47.90-3 — comércio ambulante; 70.10-7 — sedes de empresas) não retornam subclasses na CONCLA, e o CSV do Decreto 32.636/2020 (risco municipal) cobre exatamente as mesmas 1.331 subclasses do arquivo (cobertura 1:1). Conclusão: importar 1.331 e registrar a divergência documentada no relatório — não inventar a linha ausente.
 
-Para o registry de parâmetros, a recomendação é tabela única `parameters` (catálogo seedado com key/group/type/value/default/validation_rules/sensitive) lida por `Settings::get` com cache por chave, invalidação na gravação e fallback resiliente para `config/sile.php` — necessário porque `Settings::get` roda no `boot()` do `AppServiceProvider` (antes de existir banco em cenários de build/CI). Histórico via `AuditService` explícito (não model events), com valores mascarados quando sensível.
+Para o registry de parâmetros, a recomendação é tabela única `parameters` (catálogo seedado com key/group/type/value/default/validation_rules/sensitive) lida por `Settings::get` com cache por chave, invalidação na gravação e fallback resiliente para `config/viabiliza.php` — necessário porque `Settings::get` roda no `boot()` do `AppServiceProvider` (antes de existir banco em cenários de build/CI). Histórico via `AuditService` explícito (não model events), com valores mascarados quando sensível.
 
 **Recomendação primária:** converter o xlsx uma única vez para CSV versionado em `database/data/` (script de conversão versionado como documentação executável da proveniência) e implementar o import real em service PHP testável com relatório de contadores; registry de parâmetros em tabela `parameters` com `Settings::get` resiliente a banco ausente; inativação de usuário via `Fortify::authenticateUsing` + middleware de sessão ativa; CRUD de perfis com proteções a papéis estruturais e cache automático do spatie v8.
 
@@ -24,7 +24,7 @@ Nenhuma dependência nova é necessária. Tudo que a fase precisa já está inst
 |---|---|---|
 | laravel/framework | 13.15.0 | Migrations, Eloquent, cache, `Crypt`, validação, `Route::resource` |
 | spatie/laravel-permission | 8.0.0 | CRUD de roles/permissions (HU-013), middleware `permission:` |
-| spatie/laravel-activitylog | 5.0.0 | Trilha de auditoria (já estendida na Fase 1 com colunas SILE) |
+| spatie/laravel-activitylog | 5.0.0 | Trilha de auditoria (já estendida na Fase 1 com colunas VIABILIZA) |
 | laravel/fortify | 1.37.2 | Ponto de bloqueio do login de inativados (`authenticateUsing`) |
 | inertiajs/inertia-laravel + @inertiajs/react | 3.1.0 / 3.3.1 | Telas administrativas (`<Form>`, `router.get`, paginação) |
 | predis/predis | 3.5 | Cache Redis em dev/prod (`CACHE_STORE=redis`); testes usam `array` |
@@ -93,7 +93,7 @@ resources/js/pages/gestao/
 
 ### Padrão 1: Settings com banco + cache + fallback resiliente (HU-014, CA-05)
 
-**O quê:** `Settings::get(key, default)` mantém a assinatura da Fase 1. Ordem de resolução: cache → banco (`parameters.value` ?? `default` do catálogo) → `config("sile.{$key}")` → `$default` do call site.
+**O quê:** `Settings::get(key, default)` mantém a assinatura da Fase 1. Ordem de resolução: cache → banco (`parameters.value` ?? `default` do catálogo) → `config("viabiliza.{$key}")` → `$default` do call site.
 
 **Restrição crítica descoberta na Fase 1:** `Settings::get` roda no `boot()` do `AppServiceProvider` (linha 45 — `password_reset_expire`). Em build Docker (`package:discover`), CI antes de migrar e testes Unit sem `RefreshDatabase`, **a tabela pode não existir**. Sem guarda, todo `artisan` quebra.
 
@@ -101,12 +101,12 @@ resources/js/pages/gestao/
 // app/Support/Settings.php — esqueleto recomendado
 public static function get(string $key, mixed $default = null): mixed
 {
-    $fallback = config("sile.{$key}", $default);
+    $fallback = config("viabiliza.{$key}", $default);
 
     try {
         return Cache::remember(
-            "sile.parameters.{$key}",
-            (int) config('sile.parameters.cache_ttl', 300),
+            "viabiliza.parameters.{$key}",
+            (int) config('viabiliza.parameters.cache_ttl', 300),
             function () use ($key, $fallback) {
                 $parameter = Parameter::query()->where('key', $key)->first();
 
@@ -121,8 +121,8 @@ public static function get(string $key, mixed $default = null): mixed
 }
 ```
 
-- **Invalidação na gravação:** no `booted()` do model `Parameter`, eventos `saved`/`deleted` fazem `Cache::forget("sile.parameters.{$parameter->key}")`. Qualquer gravação (UI, tinker, teste) invalida — efeito imediato no mesmo store (CA-05 testável de ponta a ponta).
-- **TTL é constante técnica** (`config/sile.php` → `parameters.cache_ttl`), não parâmetro do registry — parametrizá-lo no próprio registry criaria recursão; a regra de parametrização exclui constantes técnicas internas.
+- **Invalidação na gravação:** no `booted()` do model `Parameter`, eventos `saved`/`deleted` fazem `Cache::forget("viabiliza.parameters.{$parameter->key}")`. Qualquer gravação (UI, tinker, teste) invalida — efeito imediato no mesmo store (CA-05 testável de ponta a ponta).
+- **TTL é constante técnica** (`config/viabiliza.php` → `parameters.cache_ttl`), não parâmetro do registry — parametrizá-lo no próprio registry criaria recursão; a regra de parametrização exclui constantes técnicas internas.
 - **Null no cache:** `Cache::remember` não re-executa para `null` armazenado em alguns drivers? Errado para Laravel ≥ 10 — `remember` armazena `null` e re-consulta. Para evitar ambiguidade, resolver o fallback **dentro** da closure (como acima), nunca retornar `null` significando "não achei".
 - **Testes da Fase 1 continuam verdes:** `tests/Unit/Support/SettingsTest` (sem RefreshDatabase, tabela inexistente) cai no `QueryException → fallback config` e segue assertando `5`. Testes Feature com `RefreshDatabase` têm a tabela vazia → linha não existe → fallback config. Nenhum call site muda.
 
@@ -143,7 +143,7 @@ Tabela `parameters` (nome recomendado em vez de `settings` — o repositório j�
 | `requires_connection_test` | boolean, default false | contrato do RN-010 — botão só nasce na Fase 13, sem teste falso |
 
 - **Seeder idempotente que preserva o valor administrado:** `ParameterSeeder` faz upsert por `key` **apenas dos metadados** (`group`, `type`, `default_value`, `validation_rules`, `sensitive`, `description`) — NUNCA toca `value`. `updateOrCreate(['key' => …], [metadados])` sobrescreveria `value` se incluído no segundo array; deixá-lo de fora preserva o que o admin gravou.
-- **Catálogo inicial:** as chaves hoje existentes em `config/sile.php` (`security.password.min_length`, `require_mixed_case`, `require_numbers`, `require_symbols`, `security.login.max_attempts`, `security.password_reset_expire`, `ui.access_history.per_page`) — todas com `validation_rules` apropriadas (ex.: `max_attempts` entre 1 e 20).
+- **Catálogo inicial:** as chaves hoje existentes em `config/viabiliza.php` (`security.password.min_length`, `require_mixed_case`, `require_numbers`, `require_symbols`, `security.login.max_attempts`, `security.password_reset_expire`, `ui.access_history.per_page`) — todas com `validation_rules` apropriadas (ex.: `max_attempts` entre 1 e 20).
 - **Validação na gravação (RN-007):** FormRequest valida `value` com as `validation_rules` do próprio registro (`Validator::make(['value' => $input], ['value' => $parameter->validation_rules])`) + coerência com `type`. Valor inválido = 422 com mensagem pt-BR, nada gravado.
 
 ### Padrão 3: criptografia condicional de sensíveis (RN-009)
@@ -372,7 +372,7 @@ public function typedValue(): mixed
 // app/Models/Parameter.php
 protected static function booted(): void
 {
-    $forget = fn (self $parameter) => Cache::forget("sile.parameters.{$parameter->key}");
+    $forget = fn (self $parameter) => Cache::forget("viabiliza.parameters.{$parameter->key}");
 
     static::saved($forget);
     static::deleted($forget);
@@ -458,7 +458,7 @@ public function index(Request $request): Response
 
 | Abordagem antiga | Abordagem atual | Quando mudou | Impacto na fase |
 |---|---|---|---|
-| `Settings::get` lendo só `config/sile.php` | Banco + cache + fallback config | Esta fase (era a promessa da Fase 1) | Call sites intactos; testes da Fase 1 verdes via fallback |
+| `Settings::get` lendo só `config/viabiliza.php` | Banco + cache + fallback config | Esta fase (era a promessa da Fase 1) | Call sites intactos; testes da Fase 1 verdes via fallback |
 | `tapActivity` para customizar activity (activitylog v4) | v5: sem `tapActivity`; customização via `LogOptions`/pipeline ou log explícito | activitylog v5 (2025) | Mascaramento de sensível exige auditoria explícita, não model event |
 | `Spatie\Permission\Middlewares\` (plural) | `Spatie\Permission\Middleware\` (singular) | v6+ (projeto já nasceu certo na v8) | Nenhum — `bootstrap/app.php` já correto |
 | `forgetCachedPermissions` manual após toda mudança | Reset automático nos métodos built-in (v8) | Documentado na doc v8 de cache | CRUD de perfis não precisa de reset manual; manter o do seeder é inócuo |

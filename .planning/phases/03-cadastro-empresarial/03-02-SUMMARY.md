@@ -7,7 +7,7 @@ tags: [cnpj, http-client, cache, audit, feature-toggle, laravel, brasilapi]
 requires:
   - phase: 03-cadastro-empresarial
     plan: 01
-    provides: Rule ValidCnpj, parâmetros features.cnpj_lookup + integrations.cnpj_lookup.base_url, config/sile.php (timeout/retries/cache_ttl)
+    provides: Rule ValidCnpj, parâmetros features.cnpj_lookup + integrations.cnpj_lookup.base_url, config/viabiliza.php (timeout/retries/cache_ttl)
   - phase: 01-fundacao
     provides: Settings (banco+cache+fallback), AuditService.log/result, ResolveRepresentation, portal auth+verified+lgpd.accepted
 provides:
@@ -114,7 +114,7 @@ Normalizações no `fromBrasilApi`: `size_code` com `str_pad(.., 2, '0', STR_PAD
 
 ## Como trocar o provider por parâmetro (evidência)
 
-`BrasilApiCnpjLookup` lê a base via `Settings::get('integrations.cnpj_lookup.base_url', config('sile.integrations.cnpj_lookup.base_url'))`. O parâmetro é administrável (HU-014, criado no 03-01) e a gravação do `Parameter` invalida o cache do `Settings` (`booted` → `Cache::forget`). O teste `test_lookup_usa_url_parametrizada` grava `https://minhareceita.org` no parâmetro e assevera via `Http::assertSent` que o request saiu para `minhareceita.org` — troca de fonte sem deploy nem código novo. A substituição definitiva pelo convênio RFB (Fase 13 / HU-105) é uma troca de binding no `AppServiceProvider` (`bind(CnpjLookup::class, ...)`), sem tocar controller/telas.
+`BrasilApiCnpjLookup` lê a base via `Settings::get('integrations.cnpj_lookup.base_url', config('viabiliza.integrations.cnpj_lookup.base_url'))`. O parâmetro é administrável (HU-014, criado no 03-01) e a gravação do `Parameter` invalida o cache do `Settings` (`booted` → `Cache::forget`). O teste `test_lookup_usa_url_parametrizada` grava `https://minhareceita.org` no parâmetro e assevera via `Http::assertSent` que o request saiu para `minhareceita.org` — troca de fonte sem deploy nem código novo. A substituição definitiva pelo convênio RFB (Fase 13 / HU-105) é uma troca de binding no `AppServiceProvider` (`bind(CnpjLookup::class, ...)`), sem tocar controller/telas.
 
 ## Task Commits
 

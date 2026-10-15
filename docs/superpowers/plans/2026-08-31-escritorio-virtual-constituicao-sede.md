@@ -14,7 +14,7 @@
 
 - Comando de teste: `php artisan test --filter=<NomeDoTeste>`, sempre em **foreground**. Suíte em SQLite `:memory:`; o banco de desenvolvimento remoto é inacessível e desnecessário. O grupo `Postgis` falha neste ambiente por falta do container espacial — pré-existente, ignorar.
 - Testes: classes no estilo PHPUnit em `tests/Feature/EscritorioVirtual/`, com `use LazilyRefreshDatabase;` e docblock em português explicando a regra coberta. Estilo de referência: `tests/Feature/EscritorioVirtual/AbrigadoCnaeBlockTest.php`.
-- Toda mensagem ao cidadão é parâmetro administrável: `Settings::get('<chave>', config('sile.<chave>'))`, com entrada em `config/sile.php` **e** linha em `database/seeders/ParameterSeeder.php`. Nunca literal solto. Padrão de referência: `analise.escritorio_virtual.mensagem_bloqueio_abrigado`.
+- Toda mensagem ao cidadão é parâmetro administrável: `Settings::get('<chave>', config('viabiliza.<chave>'))`, com entrada em `config/viabiliza.php` **e** linha em `database/seeders/ParameterSeeder.php`. Nunca literal solto. Padrão de referência: `analise.escritorio_virtual.mensagem_bloqueio_abrigado`.
 - Ao acrescentar parâmetro, atualizar a contagem esperada em `tests/Feature/Seeders/DatabaseSeederTest.php` e `tests/Feature/Seeders/ParameterSeederTest.php`.
 - Anti-fachada: dado ausente ou integração indisponível nunca produz decisão automática — vai à análise com motivo registrado.
 - Comentários e docblocks em português, densidade igual à do código ao redor.
@@ -211,7 +211,7 @@ Três regras que o requisito descreve com o mesmo par de verbos — "indeferir a
 **Files:**
 - Create: `tests/Feature/EscritorioVirtual/ConstituicaoSedeBloqueiosTest.php`
 - Modify: `app/Http/Requests/Portal/UpdateSolicitacaoAtividadesRequest.php`
-- Modify: `config/sile.php`
+- Modify: `config/viabiliza.php`
 - Modify: `database/seeders/ParameterSeeder.php`
 - Modify: `tests/Feature/Seeders/DatabaseSeederTest.php`
 - Modify: `tests/Feature/Seeders/ParameterSeederTest.php`
@@ -256,7 +256,7 @@ Expected: FAIL nos três primeiros casos.
 
 - [ ] **Step 3: Parâmetros das três mensagens**
 
-Acrescentar as três chaves em `config/sile.php`, dentro de `'analise' => ['escritorio_virtual' => [...]]`, com os textos verbatim da tabela acima. Acrescentar as três linhas correspondentes em `database/seeders/ParameterSeeder.php`, no mesmo formato das vizinhas.
+Acrescentar as três chaves em `config/viabiliza.php`, dentro de `'analise' => ['escritorio_virtual' => [...]]`, com os textos verbatim da tabela acima. Acrescentar as três linhas correspondentes em `database/seeders/ParameterSeeder.php`, no mesmo formato das vizinhas.
 
 A mensagem da RN-C-03 traz o marcador `:cnae`, substituído pelo código reprovado no momento do erro. Havendo mais de um reprovado, emita **um erro por CNAE** — o requisito manda identificar todos.
 
@@ -291,7 +291,7 @@ Expected: PASS nas duas.
 - [ ] **Step 7: Commit**
 
 ```bash
-git add app/Http/Requests/Portal/UpdateSolicitacaoAtividadesRequest.php config/sile.php database/seeders/ParameterSeeder.php tests/Feature/EscritorioVirtual/ConstituicaoSedeBloqueiosTest.php tests/Feature/Seeders/DatabaseSeederTest.php tests/Feature/Seeders/ParameterSeederTest.php
+git add app/Http/Requests/Portal/UpdateSolicitacaoAtividadesRequest.php config/viabiliza.php database/seeders/ParameterSeeder.php tests/Feature/EscritorioVirtual/ConstituicaoSedeBloqueiosTest.php tests/Feature/Seeders/DatabaseSeederTest.php tests/Feature/Seeders/ParameterSeederTest.php
 git commit -m "feat(ev): bloqueia constituicao de sede fora das regras do decreto"
 ```
 
@@ -306,7 +306,7 @@ O gatilho de sede já encaminha à análise, com o motivo `'gatilho: sede de esc
 **Files:**
 - Create: `tests/Feature/EscritorioVirtual/FlagAnaliseSedeTest.php`
 - Modify: `app/Services/Expresso/FluxoExpressoService.php`
-- Modify: `config/sile.php`
+- Modify: `config/viabiliza.php`
 - Modify: `database/seeders/ParameterSeeder.php`
 - Modify: `tests/Feature/Seeders/DatabaseSeederTest.php`
 - Modify: `tests/Feature/Seeders/ParameterSeederTest.php`
@@ -328,7 +328,7 @@ Expected: FAIL — o motivo é `'gatilho: sede de escritório virtual'`.
 
 - [ ] **Step 3: Parâmetro da flag**
 
-Acrescentar `analise.escritorio_virtual.flag_analise_sede` em `config/sile.php` e no `ParameterSeeder`, com o texto verbatim acima. Ajustar as contagens nos dois testes de seeder.
+Acrescentar `analise.escritorio_virtual.flag_analise_sede` em `config/viabiliza.php` e no `ParameterSeeder`, com o texto verbatim acima. Ajustar as contagens nos dois testes de seeder.
 
 - [ ] **Step 4: Usar a flag como motivo**
 
@@ -351,7 +351,7 @@ Expected: PASS nas três. `GatilhoSedeTest` provavelmente assevera o motivo anti
 - [ ] **Step 7: Commit**
 
 ```bash
-git add app/Services/Expresso/FluxoExpressoService.php config/sile.php database/seeders/ParameterSeeder.php tests/Feature/EscritorioVirtual/FlagAnaliseSedeTest.php tests/Feature/Seeders/DatabaseSeederTest.php tests/Feature/Seeders/ParameterSeederTest.php
+git add app/Services/Expresso/FluxoExpressoService.php config/viabiliza.php database/seeders/ParameterSeeder.php tests/Feature/EscritorioVirtual/FlagAnaliseSedeTest.php tests/Feature/Seeders/DatabaseSeederTest.php tests/Feature/Seeders/ParameterSeederTest.php
 git commit -m "feat(ev): encaminha sede a analise com a flag do decreto 35.062"
 ```
 
@@ -361,6 +361,6 @@ git commit -m "feat(ev): encaminha sede a analise com a flag do decreto 35.062"
 
 **Cobertura da spec.** Cobre RN-C-01, RN-C-02, RN-C-03 e a parte de encaminhamento da RN-C-04, mais a correção da derivação de intenção para dado legado (achado I5 da revisão final, agora resolvível pela resposta da SEDUR de 2026-08-31). RN-C-08 já foi entregue. Fica de fora o indeferimento por zona e via da RN-C-04: o motor LOUOS já produz esse veredito e o fluxo expresso já indefere sobre ele — o que falta é só o texto de indeferimento parametrizado, que depende da pergunta 11 do e-mail à SEDUR (lista oficial) e não bloqueia o resto.
 
-**Consistência de tipos.** `SedeAtividadesResolver::naoPermitidos()` da Task 1 é consumido pela Task 2. A correção de `virtualOfficeIntent()` na Task 1 é pré-requisito das três condições da Task 2, que chaveiam por `VirtualOfficeIntent::Sede`. A Task 3 não depende das outras duas e poderia rodar em paralelo, mas mantenho sequencial porque as três mexem em `config/sile.php` e no `ParameterSeeder`, e a contagem de parâmetros nos testes de seeder colidiria.
+**Consistência de tipos.** `SedeAtividadesResolver::naoPermitidos()` da Task 1 é consumido pela Task 2. A correção de `virtualOfficeIntent()` na Task 1 é pré-requisito das três condições da Task 2, que chaveiam por `VirtualOfficeIntent::Sede`. A Task 3 não depende das outras duas e poderia rodar em paralelo, mas mantenho sequencial porque as três mexem em `config/viabiliza.php` e no `ParameterSeeder`, e a contagem de parâmetros nos testes de seeder colidiria.
 
 **Granularidade.** As três tarefas trazem o código dos testes principais. Nas Tasks 2 e 3, alguns cenários estão descritos em vez de escritos — são montagens de rascunho de solicitação que dependem de helpers existentes que o implementador precisa ler de qualquer forma; transcrevê-los aqui de memória arriscaria divergir do que o repositório tem.

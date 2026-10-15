@@ -10,13 +10,13 @@ Inicie o projeto Viabiliza usando o GSD como framework de gestão.
 
 - O Viabiliza é o Sistema de Licenciamento Eletrônico da SEDUR: gestão da viabilidade locacional de atividades econômicas, com automação, motor de regras da LOUOS, classificação de risco, georreferenciamento, fluxo expresso, análise técnica, integrações (REDESIM, Receita Federal, GIS), auditoria e indicadores.
 - O repositório já contém o esqueleto da aplicação: Laravel 13 + Inertia v3 + React 19 + Tailwind 4 + PHPUnit. Não há código de domínio ainda (apenas `User` e `Welcome.tsx`).
-- A fonte de verdade dos requisitos são as 131 Histórias de Usuário em `docs/SILE_HUs_Completas_MD/`, organizadas em 15 épicas (EP01 a EP15). O índice completo está em `docs/SILE_HUs_Completas_MD/README-CATALOGO-HUs-SILE.md`.
+- A fonte de verdade dos requisitos são as 131 Histórias de Usuário em `docs/VIABILIZA_HUs_Completas_MD/`, organizadas em 15 épicas (EP01 a EP15). O índice completo está em `docs/VIABILIZA_HUs_Completas_MD/README-CATALOGO-HUs-VIABILIZA.md`.
 - Cada HU contém: objetivo, fluxos principal e alternativos, regras de negócio (RN), critérios de aceite em BDD (CA), campos, permissões, exceções, auditoria, dependências e prioridade.
 - Leia também `docs/ANALISE-HUs-REUNIAO-SEDUR.md`: confronto das HUs com a reunião realizada com a SEDUR e com as fontes oficiais (LOUOS Lei 9.148/2016, Portal Simplifica). Contém pontos pendentes de confirmação e as HUs propostas (HU-071/HU-072 — DAM, HU-110 — SEFAZ, HU-111 — migração do legado).
 
 ## O que fazer
 
-1. Leia `docs/SILE_HUs_Completas_MD/README-CATALOGO-HUs-SILE.md` para visão geral das épicas e HUs.
+1. Leia `docs/VIABILIZA_HUs_Completas_MD/README-CATALOGO-HUs-VIABILIZA.md` para visão geral das épicas e HUs.
 2. Execute `/gsd-new-project` para criar a estrutura `.planning/` (PROJECT.md, ROADMAP.md, STATE.md, REQUIREMENTS.md, config.json):
    - Use as HUs como fonte dos requisitos. Em REQUIREMENTS.md, rastreie cada requisito pelo ID da HU (HU-001 a HU-131). Marque HU-071, HU-072 e HU-111 como pendentes de confirmação de escopo com a SEDUR.
    - Estruture o roadmap por épicas, respeitando as dependências entre elas.

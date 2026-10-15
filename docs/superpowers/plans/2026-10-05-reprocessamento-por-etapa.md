@@ -16,7 +16,7 @@
 - Após alterar PHP: `vendor/bin/pint --dirty --format agent`. Após cada teste novo ou alterado: rodar só aquele teste com `php artisan test --compact --filter=...`.
 - Cada migration traz todos os atributos das colunas; novas tabelas com factory (`database/factories`).
 - Etapa `indisponivel` é a única reprocessada sozinha. `definitiva` e `pulada` nunca.
-- Intervalo: 15 minutos nas 4 primeiras tentativas, 60 minutos depois, esgotando 24 horas após a primeira falha. Valores em `config/sile.php` → `reprocessamento.*`.
+- Intervalo: 15 minutos nas 4 primeiras tentativas, 60 minutos depois, esgotando 24 horas após a primeira falha. Valores em `config/viabiliza.php` → `reprocessamento.*`.
 - Reavaliar processo em análise só quando `status = em_analise`, `analysis_status = para_distribuir` e sem `decision`. Análise já assumida nunca é sobrescrita.
 - Propriedades de auditoria e `motivo` das etapas não carregam dado pessoal (sem nome, CPF, e-mail, endereço completo).
 - Rotas em português, nomeadas, sob `routes/gestao.php`; a permissão nova é `reprocessar-processos`, concedida a `analista` e `administrador`.
@@ -37,7 +37,7 @@
 | `app/Console/Commands/ReprocessarEtapasCommand.php` | Comando agendado e uso manual |
 | `app/Http/Controllers/Gestao/ReprocessarProcessoController.php` | Botão da ficha |
 | `resources/js/components/analise/etapas-motor.tsx` | Card "Etapas do motor" |
-| Modificados | `ViabilityRequest`, `TerritorioProcessoService`, `PoligonoEnderecamentoService`, `TerritorialRuleService`, `FluxoExpressoService`, `AnalysisRecordController`, `show.tsx`, `routes/gestao.php`, `routes/console.php`, `config/sile.php`, `RolesAndPermissionsSeeder` |
+| Modificados | `ViabilityRequest`, `TerritorioProcessoService`, `PoligonoEnderecamentoService`, `TerritorialRuleService`, `FluxoExpressoService`, `AnalysisRecordController`, `show.tsx`, `routes/gestao.php`, `routes/console.php`, `config/viabiliza.php`, `RolesAndPermissionsSeeder` |
 
 ---
 
@@ -45,11 +45,11 @@
 
 **Files:**
 - Create: `app/Enums/EtapaMotor.php`, `app/Enums/SituacaoEtapa.php`, `app/Models/ViabilityRequestEtapa.php`, `database/factories/ViabilityRequestEtapaFactory.php`, `database/migrations/2026_10_05_100000_create_viability_request_etapas_table.php`
-- Modify: `app/Models/ViabilityRequest.php` (relação `etapas()`), `config/sile.php` (bloco `reprocessamento`)
+- Modify: `app/Models/ViabilityRequest.php` (relação `etapas()`), `config/viabiliza.php` (bloco `reprocessamento`)
 - Test: `tests/Feature/Motor/ViabilityRequestEtapaTest.php`
 
 **Interfaces:**
-- Produces: `EtapaMotor::{LocalizacaoInscricao,PoligonoLote,Zona,Via,Bairro,RegraTerritorial}`, `EtapaMotor::servico(): string`, `ordem(): int`, `rotulo(): string`; `SituacaoEtapa::{Ok,Indisponivel,Definitiva,Pulada}`; `ViabilityRequest::etapas(): HasMany`; `ViabilityRequestEtapa` com colunas da spec mais `primeira_falha_em`; `config('sile.reprocessamento.intervalo_inicial_min'|'tentativas_iniciais'|'intervalo_posterior_min'|'janela_horas')`.
+- Produces: `EtapaMotor::{LocalizacaoInscricao,PoligonoLote,Zona,Via,Bairro,RegraTerritorial}`, `EtapaMotor::servico(): string`, `ordem(): int`, `rotulo(): string`; `SituacaoEtapa::{Ok,Indisponivel,Definitiva,Pulada}`; `ViabilityRequest::etapas(): HasMany`; `ViabilityRequestEtapa` com colunas da spec mais `primeira_falha_em`; `config('viabiliza.reprocessamento.intervalo_inicial_min'|'tentativas_iniciais'|'intervalo_posterior_min'|'janela_horas')`.
 
 - [ ] **Step 1: Criar o teste**
 
@@ -105,10 +105,10 @@ class ViabilityRequestEtapaTest extends TestCase
 
     public function test_config_traz_os_intervalos_do_reprocessamento(): void
     {
-        $this->assertSame(15, config('sile.reprocessamento.intervalo_inicial_min'));
-        $this->assertSame(4, config('sile.reprocessamento.tentativas_iniciais'));
-        $this->assertSame(60, config('sile.reprocessamento.intervalo_posterior_min'));
-        $this->assertSame(24, config('sile.reprocessamento.janela_horas'));
+        $this->assertSame(15, config('viabiliza.reprocessamento.intervalo_inicial_min'));
+        $this->assertSame(4, config('viabiliza.reprocessamento.tentativas_iniciais'));
+        $this->assertSame(60, config('viabiliza.reprocessamento.intervalo_posterior_min'));
+        $this->assertSame(24, config('viabiliza.reprocessamento.janela_horas'));
     }
 }
 ```
@@ -365,7 +365,7 @@ Em `app/Models/ViabilityRequest.php`, junto de `transitions()`:
     }
 ```
 
-Em `config/sile.php`, no array raiz (perto de `'expresso'`):
+Em `config/viabiliza.php`, no array raiz (perto de `'expresso'`):
 
 ```php
     // Reprocessamento por etapa do motor (spec 2026-10-05): constantes técnicas.
@@ -386,7 +386,7 @@ Expected: PASS (4 testes).
 
 ```bash
 vendor/bin/pint --dirty --format agent
-git add app/Enums/EtapaMotor.php app/Enums/SituacaoEtapa.php app/Models/ViabilityRequestEtapa.php app/Models/ViabilityRequest.php database/factories/ViabilityRequestEtapaFactory.php database/migrations/2026_10_05_100000_create_viability_request_etapas_table.php config/sile.php tests/Feature/Motor/ViabilityRequestEtapaTest.php
+git add app/Enums/EtapaMotor.php app/Enums/SituacaoEtapa.php app/Models/ViabilityRequestEtapa.php app/Models/ViabilityRequest.php database/factories/ViabilityRequestEtapaFactory.php database/migrations/2026_10_05_100000_create_viability_request_etapas_table.php config/viabiliza.php tests/Feature/Motor/ViabilityRequestEtapaTest.php
 git commit -m "feat: registra as etapas do motor por processo"
 ```
 
@@ -558,7 +558,7 @@ class EtapaMotorRegistrador
             $linha->primeira_falha_em ??= $agora;
 
             $proxima = $agora->copy()->addMinutes($this->intervaloEmMinutos($linha->tentativas));
-            $fimDaJanela = $linha->primeira_falha_em->copy()->addHours((int) config('sile.reprocessamento.janela_horas'));
+            $fimDaJanela = $linha->primeira_falha_em->copy()->addHours((int) config('viabiliza.reprocessamento.janela_horas'));
 
             if ($proxima->greaterThan($fimDaJanela)) {
                 $linha->esgotada_em = $agora;
@@ -596,9 +596,9 @@ class EtapaMotorRegistrador
 
     private function intervaloEmMinutos(int $tentativas): int
     {
-        return $tentativas <= (int) config('sile.reprocessamento.tentativas_iniciais')
-            ? (int) config('sile.reprocessamento.intervalo_inicial_min')
-            : (int) config('sile.reprocessamento.intervalo_posterior_min');
+        return $tentativas <= (int) config('viabiliza.reprocessamento.tentativas_iniciais')
+            ? (int) config('viabiliza.reprocessamento.intervalo_inicial_min')
+            : (int) config('viabiliza.reprocessamento.intervalo_posterior_min');
     }
 }
 ```
@@ -1127,7 +1127,7 @@ Em `FluxoExpressoService`, acrescentar após `decide()`:
             return $this->resultadoIdempotente($request);
         }
 
-        $ttl = (int) config('sile.expresso.lock.ttl_segundos', 10);
+        $ttl = (int) config('viabiliza.expresso.lock.ttl_segundos', 10);
 
         return Cache::lock("expresso:decisao:{$request->id}", $ttl)->block(
             $ttl,

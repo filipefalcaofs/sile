@@ -320,7 +320,7 @@ class ContingenciaController extends Controller
     {
         return (string) Settings::get(
             'storage.documentos.disk',
-            config('sile.storage.documentos.disk', 'local'),
+            config('viabiliza.storage.documentos.disk', 'local'),
         );
     }
 }

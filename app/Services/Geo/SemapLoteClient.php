@@ -49,11 +49,9 @@ class SemapLoteClient
         }
 
         try {
-            $response = Http::withHeaders([
-                'User-Agent' => (string) config('sile.integrations.arcgis_semap.user_agent', 'Viabiliza-SEDUR-Salvador/1.0'),
-            ])
+            $response = Http::withHeaders($this->cabecalhos())
                 // Partida a frio medida em ~15 s; em regime, ~0,2 s.
-                ->timeout((int) config('sile.integrations.arcgis_semap.timeout', 20))
+                ->timeout((int) config('viabiliza.integrations.arcgis_semap.timeout', 20))
                 ->connectTimeout(5)
                 ->acceptJson()
                 ->get($this->url(), [
@@ -78,6 +76,13 @@ class SemapLoteClient
         }
 
         $payload = $response->json();
+
+        if (is_array($payload) && is_array($payload['error'] ?? null)) {
+            return new EnderecamentoHit(
+                EnderecamentoHit::INDISPONIVEL,
+                motivo: 'Cadastro municipal (SEMAP) recusou a consulta: '.$this->erroDoArcGis($payload['error']).'.',
+            );
+        }
 
         if (! is_array($payload) || ($payload['type'] ?? null) !== 'FeatureCollection') {
             return new EnderecamentoHit(
@@ -135,11 +140,52 @@ class SemapLoteClient
         );
     }
 
+    /**
+     * O token vai no cabeçalho, não na URL, para não aparecer em log de acesso.
+     *
+     * @return array<string, string>
+     */
+    private function cabecalhos(): array
+    {
+        $cabecalhos = [
+            'User-Agent' => (string) config('viabiliza.integrations.arcgis_semap.user_agent', 'Viabiliza-SEDUR-Salvador/1.0'),
+        ];
+
+        $token = trim((string) Settings::get('integrations.arcgis_semap.token'));
+
+        if ($token !== '') {
+            $cabecalhos['X-Esri-Authorization'] = 'Bearer '.$token;
+        }
+
+        return $cabecalhos;
+    }
+
+    /**
+     * ArcGIS responde HTTP 200 com `{"error": {code, message, details}}` quando
+     * recusa a consulta (499 sem token, 498 token inválido ou expirado).
+     *
+     * @param  array<string, mixed>  $erro
+     */
+    private function erroDoArcGis(array $erro): string
+    {
+        $texto = trim(trim((string) ($erro['code'] ?? '')).' '.trim((string) ($erro['message'] ?? '')));
+        $detalhes = array_filter(
+            is_array($erro['details'] ?? null) ? $erro['details'] : [],
+            fn (mixed $detalhe): bool => is_string($detalhe) && trim($detalhe) !== '',
+        );
+
+        if ($detalhes !== []) {
+            $texto .= ' ('.implode(' ', array_map('trim', $detalhes)).')';
+        }
+
+        return $texto === '' ? 'erro sem descrição' : $texto;
+    }
+
     private function url(): string
     {
         return (string) Settings::get(
             'integrations.arcgis_semap.query_url',
-            config('sile.integrations.arcgis_semap.query_url'),
+            config('viabiliza.integrations.arcgis_semap.query_url'),
         );
     }
 }

@@ -45,7 +45,7 @@ class ParameterSeeder extends Seeder
     /**
      * Chaves que saíram do painel: texto, throttle, janela de tela e
      * interruptor de módulo que o produto não desliga. O re-seed apaga a
-     * linha antiga para o valor ficar só no código (config/sile.php).
+     * linha antiga para o valor ficar só no código (config/viabiliza.php).
      *
      * @return list<string>
      */
@@ -354,6 +354,14 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'url'],
                 'description' => 'URL de consulta da camada SEMAP (Inscrições Geo) do ArcGIS municipal',
             ],
+            'integrations.arcgis_semap.token' => [
+                'group' => 'integracoes',
+                'type' => 'string',
+                'sensitive' => true,
+                'default_value' => null,
+                'validation_rules' => ['nullable', 'string', 'max:2048'],
+                'description' => 'Token do Portal ArcGIS da Prefeitura para a camada SEMAP (armazenado criptografado, nunca reexibido)',
+            ],
             'features.geoserver_territorio' => [
                 'group' => 'features',
                 'type' => 'boolean',
@@ -649,7 +657,7 @@ class ParameterSeeder extends Seeder
             // (provedor real bloqueado até a Fase 13 — degradação honesta).
             // Constantes técnicas de storage (disk dos documentos e do TVL PDF),
             // padding de números de protocolo/TVL, timeout/retries/backoff da
-            // consulta de CNPJ e paginações de listagem ficam em config/sile.php
+            // consulta de CNPJ e paginações de listagem ficam em config/viabiliza.php
             // — não são valores de negócio e não precisam ser administráveis.
             'features.notificacao_email' => [
                 'group' => 'features',
@@ -746,7 +754,7 @@ class ParameterSeeder extends Seeder
             ],
             // Auditoria e compliance (EP12). O toggle de detecção de abuso
             // (HU-149) nasce DESLIGADO (nunca pune — só registra alerta e
-            // encaminha à malha fina). Paginação da trilha fica em config/sile.php.
+            // encaminha à malha fina). Paginação da trilha fica em config/viabiliza.php.
             'features.deteccao_abuso' => [
                 'group' => 'features',
                 'type' => 'boolean',
@@ -799,7 +807,7 @@ class ParameterSeeder extends Seeder
                 'description' => 'Dias de retenção dos arquivos de exportação gerados em segundo plano',
             ],
             // Meta da taxa de resposta expressa: nasce SEM valor (pendência SEDUR).
-            // default null + NÃO espelhada no config/sile.php → Settings::get cai
+            // default null + NÃO espelhada no config/viabiliza.php → Settings::get cai
             // no fallback do call site ("meta não definida"), nunca inventa meta.
             'relatorios.expresso.meta_taxa' => [
                 'group' => 'relatorios',

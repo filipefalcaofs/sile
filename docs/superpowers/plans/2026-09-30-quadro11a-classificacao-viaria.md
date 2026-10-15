@@ -15,7 +15,7 @@
 - Toda consulta externa é auditada (RN-002) via `App\Support\Audit\AuditService`.
 - `vendor/bin/pint --dirty --format agent` após alterar PHP.
 - Textos de motivo entram em `DecisionTextCatalog::defaults()` e em `DecisionTextSeeder::CHAVES`.
-- Constantes técnicas em `config/sile.php` (precedente [02-02]); interruptor de fluxo no catálogo `ApiIntegracaoCatalog`.
+- Constantes técnicas em `config/viabiliza.php` (precedente [02-02]); interruptor de fluxo no catálogo `ApiIntegracaoCatalog`.
 - Classes oficiais, grafia exata: `VA I`, `VA II`, `VC I`, `VC II`, `VE`, `VL`, `VP`.
 - pt-BR em comentários, mensagens e nomes de teste; código em inglês.
 
@@ -235,7 +235,7 @@ git commit -m "feat: textos de degradação da classificação viária"
 **Files:**
 - Create: `app/Services/Geo/ClassificacaoViariaHit.php`
 - Create: `app/Services/Geo/GeoServerClassificacaoViariaClient.php`
-- Modify: `config/sile.php` (bloco `integrations.geoserver`, após `type_names`)
+- Modify: `config/viabiliza.php` (bloco `integrations.geoserver`, após `type_names`)
 - Test: `tests/Feature/Geo/GeoServerClassificacaoViariaClientTest.php`
 
 **Interfaces:**
@@ -278,7 +278,7 @@ class GeoServerClassificacaoViariaClientTest extends TestCase
             ],
         );
 
-        cache()->forget('sile.parameters.features.geoserver_via_classe');
+        cache()->forget('viabiliza.parameters.features.geoserver_via_classe');
     }
 
     private function colecao(?string $classe): array
@@ -351,7 +351,7 @@ class GeoServerClassificacaoViariaClientTest extends TestCase
     public function test_interruptor_desligado_nao_chama_o_geoserver(): void
     {
         Parameter::query()->where('key', 'features.geoserver_via_classe')->update(['value' => '0']);
-        cache()->forget('sile.parameters.features.geoserver_via_classe');
+        cache()->forget('viabiliza.parameters.features.geoserver_via_classe');
         Http::fake();
 
         $hit = app(GeoServerClassificacaoViariaClient::class)->consultar('822');
@@ -473,9 +473,9 @@ class GeoServerClassificacaoViariaClient
 
         try {
             $response = Http::withHeaders([
-                'User-Agent' => (string) config('sile.integrations.geoserver.user_agent', 'Viabiliza-SEDUR-Salvador/1.0'),
+                'User-Agent' => (string) config('viabiliza.integrations.geoserver.user_agent', 'Viabiliza-SEDUR-Salvador/1.0'),
             ])
-                ->timeout((int) config('sile.integrations.geoserver.timeout', 8))
+                ->timeout((int) config('viabiliza.integrations.geoserver.timeout', 8))
                 ->connectTimeout(3)
                 ->acceptJson()
                 ->get($this->url($codLog));
@@ -519,7 +519,7 @@ class GeoServerClassificacaoViariaClient
             ));
         }
 
-        $atributo = (string) config('sile.integrations.geoserver.classificacao_viaria.atributo', 'CLASSIFICACAO_VIARIA');
+        $atributo = (string) config('viabiliza.integrations.geoserver.classificacao_viaria.atributo', 'CLASSIFICACAO_VIARIA');
         $properties = is_array($features[0]['properties'] ?? null) ? $features[0]['properties'] : [];
         $bruta = $properties[$atributo] ?? null;
         $bruta = is_string($bruta) && trim($bruta) !== '' ? trim($bruta) : null;
@@ -564,11 +564,11 @@ class GeoServerClassificacaoViariaClient
     {
         $base = rtrim((string) Settings::get(
             'integrations.geoserver.base_url',
-            config('sile.integrations.geoserver.base_url'),
+            config('viabiliza.integrations.geoserver.base_url'),
         ), '/');
 
         $typeName = (string) config(
-            'sile.integrations.geoserver.classificacao_viaria.type_name',
+            'viabiliza.integrations.geoserver.classificacao_viaria.type_name',
             'louos_classificacao_viaria:VM_L_CLASSIF_VIARIA',
         );
 
@@ -586,7 +586,7 @@ class GeoServerClassificacaoViariaClient
 }
 ```
 
-Em `config/sile.php`, dentro de `integrations.geoserver`, logo depois do array `type_names`:
+Em `config/viabiliza.php`, dentro de `integrations.geoserver`, logo depois do array `type_names`:
 
 ```php
             // Classificação viária da LOUOS (Quadro 11A). Constante TÉCNICA
@@ -608,7 +608,7 @@ Expected: PASS, 7 testes.
 
 ```bash
 vendor/bin/pint --dirty --format agent
-git add app/Services/Geo/ClassificacaoViariaHit.php app/Services/Geo/GeoServerClassificacaoViariaClient.php config/sile.php tests/Feature/Geo/GeoServerClassificacaoViariaClientTest.php
+git add app/Services/Geo/ClassificacaoViariaHit.php app/Services/Geo/GeoServerClassificacaoViariaClient.php config/viabiliza.php tests/Feature/Geo/GeoServerClassificacaoViariaClientTest.php
 git commit -m "feat: consulta a classificação viária da LOUOS por CODLOG no GeoServer"
 ```
 
@@ -1223,7 +1223,7 @@ Substituir o parágrafo final de pendência por:
 (casamento por código, não espacial — a camada é de linhas) e
 `Quadro11aClasseVia` normaliza a grafia (`VC-I` → `VC I`). Interruptor:
 `features.geoserver_via_classe`. Fonte configurável em
-`sile.integrations.geoserver.classificacao_viaria`.
+`viabiliza.integrations.geoserver.classificacao_viaria`.
 
 Verificação: `php artisan louos:classe-via 822` → `VC I`.
 

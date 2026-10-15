@@ -20,7 +20,7 @@ requires:
     provides: "simulation_snapshot/_resultado/_rules_versions/simulated_at — congelados no protocolo (RN-003)"
   - phase: 08-solicitacao-de-viabilidade
     plan: "02"
-    provides: "toggle features.solicitacao_viabilidade (catálogo + fallback config/sile.php)"
+    provides: "toggle features.solicitacao_viabilidade (catálogo + fallback config/viabiliza.php)"
 provides:
   - "App\\Services\\Solicitacao\\ProtocolarSolicitacaoService::protocol(ViabilityRequest, User $actor, bool $proceedDespite = false): ViabilityRequest — coração do protocolo (valida → número único → transição → ciência → evento após commit)"
   - "App\\Events\\SolicitacaoProtocolada (ShouldDispatchAfterCommit) — PRIMEIRO evento de domínio do sistema (carrega public ViabilityRequest $request)"

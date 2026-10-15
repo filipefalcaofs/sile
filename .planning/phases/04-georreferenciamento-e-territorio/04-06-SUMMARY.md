@@ -11,7 +11,7 @@ requires:
   - phase: 04-03
     provides: "PADRAO CROSS-GUARD (FormRequest authorize()=true; gate no middleware permission:consultar-territorio); grupo de rotas territorio; shouldRenderJsonWhen para gestao/territorio/*; endpoint auditado modelo (GeocodeController)"
   - phase: 04-02
-    provides: "parametro geo.validacao.sobreposicao_minima (catalogo + fallback config/sile.php); permissao consultar-territorio"
+    provides: "parametro geo.validacao.sobreposicao_minima (catalogo + fallback config/viabiliza.php); permissao consultar-territorio"
   - phase: 01-identidade
     provides: "AuditService.log (RN-002); permissoes spatie no guard web; 403 auditado em bootstrap/app.php"
 provides:

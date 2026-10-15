@@ -65,7 +65,7 @@ class LeituraDocumentoTest extends TestCase
 
     public function test_documento_legivel_gera_sugestao_ocr_sugerida_com_texto_confianca_e_fonte(): void
     {
-        config(['sile.features.ia_ocr' => true]);
+        config(['viabiliza.features.ia_ocr' => true]);
         $this->provedorVisaoAtivo();
         $doc = $this->documento();
 
@@ -105,7 +105,7 @@ class LeituraDocumentoTest extends TestCase
 
     public function test_documento_ilegivel_escala_para_humano_mesmo_com_confianca_alta(): void
     {
-        config(['sile.features.ia_ocr' => true]);
+        config(['viabiliza.features.ia_ocr' => true]);
         $this->provedorVisaoAtivo();
         $doc = $this->documento();
 
@@ -128,7 +128,7 @@ class LeituraDocumentoTest extends TestCase
 
     public function test_confianca_abaixo_do_limiar_escala_para_humano(): void
     {
-        config(['sile.features.ia_ocr' => true]);
+        config(['viabiliza.features.ia_ocr' => true]);
         $this->provedorVisaoAtivo();
         $doc = $this->documento();
 
@@ -146,7 +146,7 @@ class LeituraDocumentoTest extends TestCase
 
     public function test_documento_pdf_usa_anexo_de_documento(): void
     {
-        config(['sile.features.ia_ocr' => true]);
+        config(['viabiliza.features.ia_ocr' => true]);
         $this->provedorVisaoAtivo();
         $doc = $this->documento([
             'path' => 'solicitacoes/contrato.pdf',
@@ -169,7 +169,7 @@ class LeituraDocumentoTest extends TestCase
 
     public function test_toggle_desligado_nao_chama_provedor_nem_cria_sugestao(): void
     {
-        config(['sile.features.ia_ocr' => false]);
+        config(['viabiliza.features.ia_ocr' => false]);
         $this->provedorVisaoAtivo();
         $doc = $this->documento();
 

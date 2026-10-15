@@ -44,7 +44,7 @@
 | `app/Services/Benchmark/BenchmarkIngestionService.php` (criar) | orquestra, agrega, grava, audita |
 | `app/Services/Benchmark/BenchmarkRankingService.php` (criar) | posição, capitais, série histórica |
 | `app/Console/Commands/ImportarBenchmarkRedesim.php` (criar) | comando e agendamento |
-| `config/sile.php`, `database/seeders/ParameterSeeder.php` (alterar) | interruptor e URL |
+| `config/viabiliza.php`, `database/seeders/ParameterSeeder.php` (alterar) | interruptor e URL |
 | `app/Http/Controllers/Gestao/BenchmarkController.php` (criar) | tela |
 | `routes/gestao.php`, `resources/js/navigation/gestao-nav.ts`, `gestao-nav-icons.tsx` (alterar) | rota, item de menu e ícone |
 | `resources/js/pages/gestao/relatorios/benchmark.tsx` (criar) | tela |
@@ -66,13 +66,13 @@
 
 ### Tarefa 2: Interruptor e URL no catálogo de parâmetros (CA-BI-06)
 
-**Arquivos:** `config/sile.php`, `database/seeders/ParameterSeeder.php`, `tests/TestCase.php`, teste `tests/Feature/Benchmark/BenchmarkParametrosTest.php`.
+**Arquivos:** `config/viabiliza.php`, `database/seeders/ParameterSeeder.php`, `tests/TestCase.php`, teste `tests/Feature/Benchmark/BenchmarkParametrosTest.php`.
 
-- [ ] Teste que falha: `features.benchmark_redesim` existe no catálogo com default ligado; `config('sile.integrations.redesim_estatistica.base_url')` aponta para `https://estatistica.redesim.gov.br/tempos-abertura-redesim`.
+- [ ] Teste que falha: `features.benchmark_redesim` existe no catálogo com default ligado; `config('viabiliza.integrations.redesim_estatistica.base_url')` aponta para `https://estatistica.redesim.gov.br/tempos-abertura-redesim`.
 - [ ] Verificar o vermelho: `php artisan test --compact --filter=BenchmarkParametros`.
-- [ ] `config/sile.php`: `features.benchmark_redesim => true` e bloco `integrations.redesim_estatistica` com `base_url`, `timeout => 120` e `user_agent`. Timeout alto porque São Paulo baixa 16 MB.
+- [ ] `config/viabiliza.php`: `features.benchmark_redesim => true` e bloco `integrations.redesim_estatistica` com `base_url`, `timeout => 120` e `user_agent`. Timeout alto porque São Paulo baixa 16 MB.
 - [ ] `ParameterSeeder`: as duas entradas, com descrição citando a origem do dado e a definição de horas úteis.
-- [ ] `tests/TestCase.php`: desligar `sile.features.benchmark_redesim` por padrão, como já é feito com as outras integrações.
+- [ ] `tests/TestCase.php`: desligar `viabiliza.features.benchmark_redesim` por padrão, como já é feito com as outras integrações.
 - [ ] Verificar o verde e commitar: `feat: parametriza integracao de benchmark da redesim`.
 
 ### Tarefa 3: Cliente HTTP da REDESIM (CA-BI-05, CA-BI-06)

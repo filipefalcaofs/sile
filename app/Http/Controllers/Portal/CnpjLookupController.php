@@ -90,7 +90,7 @@ class CnpjLookupController extends Controller
         return parse_url(
             (string) Settings::get(
                 'integrations.sedur_contato.base_url',
-                config('sile.integrations.sedur_contato.base_url'),
+                config('viabiliza.integrations.sedur_contato.base_url'),
             ),
             PHP_URL_HOST,
         );

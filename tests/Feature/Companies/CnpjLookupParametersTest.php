@@ -35,14 +35,14 @@ class CnpjLookupParametersTest extends TestCase
 
     public function test_numero_de_tentativas_segue_o_parametro_retries(): void
     {
-        // retries/backoff_ms sao constantes tecnicas de HTTP em config/sile.php
+        // retries/backoff_ms sao constantes tecnicas de HTTP em config/viabiliza.php
         // (fora do catalogo HU-014); o BrasilApiCnpjLookup as le via Settings::get
         // com fallback de config. retries e o numero TOTAL de tentativas passado a
         // Http::retry($times): retries=1 => 1 unica tentativa por lookup (uma falha
         // de conexao ja e fatal); backoff zerado evita espera no teste.
         config([
-            'sile.integrations.cnpj_lookup.retries' => 1,
-            'sile.integrations.cnpj_lookup.backoff_ms' => 0,
+            'viabiliza.integrations.cnpj_lookup.retries' => 1,
+            'viabiliza.integrations.cnpj_lookup.backoff_ms' => 0,
         ]);
         Cache::flush();
 

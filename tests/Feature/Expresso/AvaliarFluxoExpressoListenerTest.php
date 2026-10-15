@@ -81,9 +81,9 @@ class AvaliarFluxoExpressoListenerTest extends TestCase
 
     public function test_job_e_despachado_na_fila_parametrizada(): void
     {
-        // Parametrização técnica (config/sile.php): a fila do job é configurável
+        // Parametrização técnica (config/viabiliza.php): a fila do job é configurável
         // sem deploy. Configurada uma fila dedicada, o listener despacha nela.
-        config(['sile.expresso.fila' => 'expresso-decisao']);
+        config(['viabiliza.expresso.fila' => 'expresso-decisao']);
         Bus::fake([DecidirFluxoExpressoJob::class]);
 
         $solicitacao = ViabilityRequest::factory()->protocoled()->create();

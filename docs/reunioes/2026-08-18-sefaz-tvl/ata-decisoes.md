@@ -62,7 +62,7 @@ e que o Viabiliza passará a expor ao substituir o Simplifica.
 | 1 | Enviar o JSON de exemplo do endpoint de **migração** (`/migracao-simplifica/{tvl}`) | Dayvson |
 | 2 | Enviar a lista de **status** do TVL | Dayvson — **cumprido no arquivo** (enum documentado) |
 | 3 | Alinhar com a Lisa o conhecimento que a SEDUR detém do processo; lacunas → reunião com SEFAZ | Filipe |
-| 4 | Definir de/para de **códigos de serviço** SILE ↔ SIGS e fonte das tabelas domínio (tipo de processo, tipo de imóvel) | Filipe + Dayvson |
+| 4 | Definir de/para de **códigos de serviço** VIABILIZA ↔ SIGS e fonte das tabelas domínio (tipo de processo, tipo de imóvel) | Filipe + Dayvson |
 | 5 | Definir autenticação/segurança do endpoint do Viabiliza (o WS SIGS atual aparenta ser aberto na rede interna) | Filipe |
 
 ## 5. Encaminhamento

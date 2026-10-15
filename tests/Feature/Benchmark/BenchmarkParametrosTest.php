@@ -43,18 +43,18 @@ class BenchmarkParametrosTest extends TestCase
     {
         $this->assertSame(
             'https://estatistica.redesim.gov.br/tempos-abertura-redesim',
-            config('sile.integrations.redesim_estatistica.base_url'),
+            config('viabiliza.integrations.redesim_estatistica.base_url'),
         );
     }
 
     public function test_timeout_acomoda_a_maior_uf(): void
     {
         // São Paulo baixa cerca de 16 MB por competência.
-        $this->assertGreaterThanOrEqual(120, config('sile.integrations.redesim_estatistica.timeout'));
+        $this->assertGreaterThanOrEqual(120, config('viabiliza.integrations.redesim_estatistica.timeout'));
     }
 
     public function test_suite_desliga_a_integracao_por_padrao(): void
     {
-        $this->assertFalse(config('sile.features.benchmark_redesim'));
+        $this->assertFalse(config('viabiliza.features.benchmark_redesim'));
     }
 }

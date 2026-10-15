@@ -14,7 +14,7 @@ requires:
     provides: "padrão de aggregate + pivot (companies, company_cnae withPivot is_primary, restrictOnDelete) + Cnae model/factory"
   - phase: 02-administracao-base
     plan: "02"
-    provides: "App\\Support\\Settings::get (banco→cache→config/sile.php) + Parameter (typedValue) — lido pelo ProtocolNumberGenerator"
+    provides: "App\\Support\\Settings::get (banco→cache→config/viabiliza.php) + Parameter (typedValue) — lido pelo ProtocolNumberGenerator"
   - phase: 01-identidade
     plan: "02"
     provides: "App\\Concerns\\HasAuditoria + App\\Support\\Audit\\AuditService::log(logName,event,description,properties,subject,result,rulesVersion) (RN-002)"
@@ -34,7 +34,7 @@ tech-stack:
     - "Geometria derivada driver-aware: coluna geometry + GiST adicionados via DB::statement só quando DB::getDriverName()==='pgsql' (em SQLite a coluna NEM EXISTE; fonte = jsonb) — espelha geo_features/GeoJsonLayerImporter (Fase 4)"
     - "Máquina de estados com mapa EXPLÍCITO (const TRANSITIONS) só das transições ativas; ganchos do enum NÃO entram no mapa — as fases seguintes só ADICIONAM entradas"
     - "Número sequencial concorrência-seguro: protocol_sequences->lockForUpdate() em DB::transaction (FOR UPDATE real no pgsql, no-op em SQLite; unique como defesa final)"
-    - "Parametrização HU-014 com default inline (Settings::get(chave, config('sile.{chave}', literal))) — serviço independe do banco/seeder do 08-02"
+    - "Parametrização HU-014 com default inline (Settings::get(chave, config('viabiliza.{chave}', literal))) — serviço independe do banco/seeder do 08-02"
 
 key-files:
   created:
@@ -73,7 +73,7 @@ key-decisions:
   - "property_polygon (geometry) NÃO existe em SQLite (driver-aware): a coluna e o GiST são adicionados por DB::statement só no pgsql; a suíte prova a ausência (test_property_polygon_geometry_nao_existe_em_sqlite). A fonte é property_polygon_geojson (jsonb); a derivada é gravada via ST_* no 08-06."
   - "protocol_number e status FORA do #[Fillable] do ViabilityRequest: o número vem do ProtocolNumberGenerator e o status só muda pela StateMachine (que audita). HasAuditoria (logFillable) não registra status — sem auditoria dupla com a transição explícita."
   - "Ganchos (aguardando_bap/em_analise/deferida/indeferida/em_pendencia) existem como CASOS do enum mas NÃO no mapa de transições — provado por test_ganchos_nao_sao_transicionaveis (CA-03). Regin é caso do enum Origin, não usado nesta fase."
-  - "ProtocolNumberGenerator lê solicitacao.protocolo.prefixo/.padding via Settings::get com DEFAULT INLINE VIA/6 — não depende do seeder do 08-02 (que rodou em paralelo e adicionou o fallback em config/sile.php; integra sem conflito)."
+  - "ProtocolNumberGenerator lê solicitacao.protocolo.prefixo/.padding via Settings::get com DEFAULT INLINE VIA/6 — não depende do seeder do 08-02 (que rodou em paralelo e adicionou o fallback em config/viabiliza.php; integra sem conflito)."
   - "transitions() é hasMany()->latest() (timeline mais recente primeiro, HU-069); cnaes() belongsToMany withPivot('is_primary') espelhando company_cnae; viability_request_cnaes.cnae_id é restrictOnDelete."
 
 patterns-established:
@@ -163,7 +163,7 @@ TDD estrito (RED→GREEN verificado com evidência fresca antes de cada commit):
 - **Geometria derivada só pgsql**: a coluna `property_polygon` e o GiST são adicionados por `DB::statement` fora do `Schema::create`, guardados por `DB::getDriverName()==='pgsql'`. Em SQLite a coluna não existe — a suíte prova a ausência. Fonte de verdade = `property_polygon_geojson`.
 - **`protocol_number`/`status` fora do fillable**: governados por serviço/máquina; `HasAuditoria` (logFillable) não os registra → sem auditoria dupla (a transição já audita explicitamente).
 - **Ganchos não transicionáveis**: presentes no enum (timeline/listeners futuros) mas ausentes do mapa — `test_ganchos_nao_sao_transicionaveis` trava a regressão.
-- **Default inline no gerador**: `Settings::get(chave, config('sile.solicitacao.protocolo.*', 'VIA'/6))` — independe do banco e do seeder do 08-02.
+- **Default inline no gerador**: `Settings::get(chave, config('viabiliza.solicitacao.protocolo.*', 'VIA'/6))` — independe do banco e do seeder do 08-02.
 
 ## Deviations from Plan
 
@@ -171,7 +171,7 @@ None — plano executado como escrito. (Nota cosmética: `vendor/bin/pint` norma
 
 ## Issues Encountered
 
-- **08-02 executando em paralelo na MESMA working dir:** o plano 08-02 (parâmetros/permissões) commitou intercalado (`a98f80a`/`fe6d42d`/`9d353ec`) antes do meu Task 2. **Boundary respeitado**: não toquei `ParameterSeeder`/`config/sile.php`/`RolesAndPermissionsSeeder` (escopo do 08-02); staging sempre individual (nunca `git add -A`). A integração é limpa — o 08-02 adicionou `solicitacao.protocolo.prefixo='VIA'`/`.padding=6` em `config/sile.php`, exatamente o fallback que o `ProtocolNumberGenerator` consome (e o default inline já protegia se ausente).
+- **08-02 executando em paralelo na MESMA working dir:** o plano 08-02 (parâmetros/permissões) commitou intercalado (`a98f80a`/`fe6d42d`/`9d353ec`) antes do meu Task 2. **Boundary respeitado**: não toquei `ParameterSeeder`/`config/viabiliza.php`/`RolesAndPermissionsSeeder` (escopo do 08-02); staging sempre individual (nunca `git add -A`). A integração é limpa — o 08-02 adicionou `solicitacao.protocolo.prefixo='VIA'`/`.padding=6` em `config/viabiliza.php`, exatamente o fallback que o `ProtocolNumberGenerator` consome (e o default inline já protegia se ausente).
 - **Suíte completa inclui `@group postgis` inline** (container `sile-pgsql` de pé na porta 5433): os testes espaciais rodaram contra Postgres real e passaram junto com os de SQLite (700/700).
 
 ## Verification (evidência fresca)

@@ -79,9 +79,9 @@ Resposta real registrada (BrasilAPI, Banco do Brasil — campos relevantes):
 - DTO `App\Services\Cnpj\CnpjData` (readonly, com `fromBrasilApi(array $payload)`): `cnpj`, `legalName`, `tradeName`, `legalNatureCode`, `legalNature`, `sizeCode`, `size`, `primaryCnaeCode`, `secondaryCnaeCodes[]`, `street`, `number`, `complement`, `neighborhood`, `city`, `state`, `zipCode`, `phone`, `email`, `registrationStatus`.
 - Implementação `BrasilApiCnpjLookup` usando `Http::timeout(...)->retry(2, 200, throw: false)->get("{$baseUrl}/{$cnpj}")`.
 - Binding no `AppServiceProvider`: `$this->app->bind(CnpjLookup::class, BrasilApiCnpjLookup::class)` — a Fase 13 troca o binding.
-- **Toggle** `features.cnpj_lookup` (registry + `config/sile.php`, default `true` — provider validado): OFF ⇒ botão "Buscar CNPJ" desabilitado com aviso "consulta automática desativada — preencha manualmente" (degradação comunicada, nunca falha silenciosa).
-- **Parâmetros novos no ParameterSeeder:** `features.cnpj_lookup` (boolean, grupo `features`), `integrations.cnpj_lookup.base_url` (string, grupo `integracoes`, `validation_rules: [required, url]`, `requires_connection_test: true` — botão real de teste é contrato da Fase 13), `ui.companies.per_page` (integer, grupo `ui`). **Constantes técnicas em `config/sile.php`, NUNCA no registry:** timeout (8s), retries (2), TTL do cache de consulta (86400s) — seguem o precedente `sile.parameters.cache_ttl` ([02-02]) e a regra "timeouts internos não viram parâmetro".
-- **Cache de consulta:** `Cache::remember("sile.cnpj_lookup.{$cnpj}", config('sile.integrations.cnpj_lookup.cache_ttl'), ...)` no service — dados RFB atualizam mensalmente; 24h evita re-consulta no mesmo dia e protege contra rate limit/indisponibilidade. Cache apenas de SUCESSO (falha nunca é cacheada).
+- **Toggle** `features.cnpj_lookup` (registry + `config/viabiliza.php`, default `true` — provider validado): OFF ⇒ botão "Buscar CNPJ" desabilitado com aviso "consulta automática desativada — preencha manualmente" (degradação comunicada, nunca falha silenciosa).
+- **Parâmetros novos no ParameterSeeder:** `features.cnpj_lookup` (boolean, grupo `features`), `integrations.cnpj_lookup.base_url` (string, grupo `integracoes`, `validation_rules: [required, url]`, `requires_connection_test: true` — botão real de teste é contrato da Fase 13), `ui.companies.per_page` (integer, grupo `ui`). **Constantes técnicas em `config/viabiliza.php`, NUNCA no registry:** timeout (8s), retries (2), TTL do cache de consulta (86400s) — seguem o precedente `viabiliza.parameters.cache_ttl` ([02-02]) e a regra "timeouts internos não viram parâmetro".
+- **Cache de consulta:** `Cache::remember("viabiliza.cnpj_lookup.{$cnpj}", config('viabiliza.integrations.cnpj_lookup.cache_ttl'), ...)` no service — dados RFB atualizam mensalmente; 24h evita re-consulta no mesmo dia e protege contra rate limit/indisponibilidade. Cache apenas de SUCESSO (falha nunca é cacheada).
 - **FA-03 (indisponibilidade):** `ConnectionException`/5xx ⇒ `AuditService->log('empresas', 'consulta-cnpj', ..., result: 'falha')` + resposta JSON com mensagem pt-BR; o formulário continua editável (cadastro manual segue possível). CA-02: toda consulta (sucesso e falha) auditada com CNPJ consultado e provider.
 - **Endpoint:** `POST /portal/empresas/consultar-cnpj` (name `portal.empresas.consultar-cnpj`), FormRequest com `ValidCnpj`, retorna JSON do DTO. No React, chamar com o `useHttp` do Inertia v3 (requests standalone sem visita).
 
@@ -401,14 +401,14 @@ class BrasilApiCnpjLookup implements CnpjLookup
     {
         $baseUrl = rtrim((string) Settings::get(
             'integrations.cnpj_lookup.base_url',
-            config('sile.integrations.cnpj_lookup.base_url'),
+            config('viabiliza.integrations.cnpj_lookup.base_url'),
         ), '/');
 
         return Cache::remember(
-            "sile.cnpj_lookup.{$cnpj}",
-            (int) config('sile.integrations.cnpj_lookup.cache_ttl', 86400),
+            "viabiliza.cnpj_lookup.{$cnpj}",
+            (int) config('viabiliza.integrations.cnpj_lookup.cache_ttl', 86400),
             function () use ($baseUrl, $cnpj) {
-                $response = Http::timeout((int) config('sile.integrations.cnpj_lookup.timeout', 8))
+                $response = Http::timeout((int) config('viabiliza.integrations.cnpj_lookup.timeout', 8))
                     ->connectTimeout(3)
                     ->retry(2, 200, throw: false)
                     ->acceptJson()

@@ -173,7 +173,7 @@ Responder **"aprovado"** (anexando prints) ou descrever divergências para corre
 
 ## Pendências SEDUR / bloqueios externos da Fase 8 (registrados, NÃO simulados)
 
-- **HU-071/072 (DAM/SEFAZ)** — BLOQUEADO → Fase 13 (DAM é da SEFAZ; SILE consulta/exibe; sem contrato agora). **Success criteria 4 do ROADMAP permanece bloqueado** (não simulado).
+- **HU-071/072 (DAM/SEFAZ)** — BLOQUEADO → Fase 13 (DAM é da SEFAZ; VIABILIZA consulta/exibe; sem contrato agora). **Success criteria 4 do ROADMAP permanece bloqueado** (não simulado).
 - **Origem `regin`** — BLOQUEADA → Fase 13 (enum extensível pronto; `contingencia` HU-148 é o caminho real hoje).
 - **HU-139 (edifício comercial/complemento)** — ADIADO pendente SEDUR (complemento é texto livre por ora).
 - **Lista oficial de tipos de serviço (HU-061)** — seed mínimo; carga oficial SEDUR substitui sem deploy (CRUD).

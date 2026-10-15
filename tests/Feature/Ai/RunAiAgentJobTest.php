@@ -35,7 +35,7 @@ class RunAiAgentJobTest extends TestCase
 
     public function test_toggle_desligado_no_handle_nao_chama_o_provedor_nem_cria_sugestao(): void
     {
-        config(['sile.features.ia_probe' => false]);
+        config(['viabiliza.features.ia_probe' => false]);
         $this->provedorAtivoDeTexto();
 
         ProbeStructuredAgent::fake([['valor' => 'x', 'confianca' => 'alta', 'fonte' => 'doc']]);
@@ -53,7 +53,7 @@ class RunAiAgentJobTest extends TestCase
 
     public function test_sucesso_cria_sugestao_sugerida_com_proveniencia_e_audita(): void
     {
-        config(['sile.features.ia_probe' => true]);
+        config(['viabiliza.features.ia_probe' => true]);
         $this->provedorAtivoDeTexto();
 
         ProbeStructuredAgent::fake([['valor' => 'ok', 'confianca' => 'alta', 'fonte' => 'documento']]);
@@ -83,7 +83,7 @@ class RunAiAgentJobTest extends TestCase
 
     public function test_confianca_abaixo_do_limiar_escala_para_humano(): void
     {
-        config(['sile.features.ia_probe' => true]);
+        config(['viabiliza.features.ia_probe' => true]);
         $this->provedorAtivoDeTexto();
 
         ProbeStructuredAgent::fake([['valor' => 'incerto', 'confianca' => 'baixa', 'fonte' => 'documento']]);
@@ -95,7 +95,7 @@ class RunAiAgentJobTest extends TestCase
 
     public function test_fonte_ausente_escala_para_humano(): void
     {
-        config(['sile.features.ia_probe' => true]);
+        config(['viabiliza.features.ia_probe' => true]);
         $this->provedorAtivoDeTexto();
 
         ProbeStructuredAgent::fake([['valor' => 'x', 'confianca' => 'alta', 'fonte' => '']]);
@@ -107,7 +107,7 @@ class RunAiAgentJobTest extends TestCase
 
     public function test_dedup_nao_reprocessa_a_mesma_entrada(): void
     {
-        config(['sile.features.ia_probe' => true]);
+        config(['viabiliza.features.ia_probe' => true]);
         $this->provedorAtivoDeTexto();
 
         ProbeStructuredAgent::fake(fn () => ['valor' => 'ok', 'confianca' => 'alta', 'fonte' => 'documento']);
@@ -120,7 +120,7 @@ class RunAiAgentJobTest extends TestCase
 
     public function test_job_falho_audita_sem_criar_sugestao(): void
     {
-        config(['sile.features.ia_probe' => true]);
+        config(['viabiliza.features.ia_probe' => true]);
         $this->provedorAtivoDeTexto();
 
         ProbeStructuredAgent::fake(fn () => throw new RuntimeException('falha do provedor'));

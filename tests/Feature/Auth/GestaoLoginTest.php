@@ -152,7 +152,7 @@ class GestaoLoginTest extends TestCase
 
     public function test_bloqueio_temporario_apos_tentativas_excedidas(): void
     {
-        config(['sile.security.login.max_attempts' => 3]);
+        config(['viabiliza.security.login.max_attempts' => 3]);
 
         $administrador = User::factory()->administrador()->create();
 

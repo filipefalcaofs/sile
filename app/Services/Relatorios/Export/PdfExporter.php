@@ -29,7 +29,7 @@ class PdfExporter implements ReportFormatExporter
     private function render(ReportDefinition $definition): DomPdf
     {
         return Pdf::loadView('relatorios.relatorio', $this->dados($definition))
-            ->setPaper((string) config('sile.relatorios.export.pdf.paper', 'a4'), 'landscape');
+            ->setPaper((string) config('viabiliza.relatorios.export.pdf.paper', 'a4'), 'landscape');
     }
 
     /**

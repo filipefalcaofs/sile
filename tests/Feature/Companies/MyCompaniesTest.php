@@ -132,9 +132,9 @@ class MyCompaniesTest extends TestCase
 
     public function test_paginacao_e_parametrizada(): void
     {
-        // ui.companies.per_page e constante tecnica de UI em config/sile.php (fora
+        // ui.companies.per_page e constante tecnica de UI em config/viabiliza.php (fora
         // do catalogo HU-014); o controller a le via Settings::get com fallback.
-        config(['sile.ui.companies.per_page' => 5]);
+        config(['viabiliza.ui.companies.per_page' => 5]);
         Cache::flush();
 
         $user = $this->portalUser();

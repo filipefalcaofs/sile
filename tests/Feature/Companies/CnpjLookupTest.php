@@ -110,7 +110,7 @@ class CnpjLookupTest extends TestCase
         $service = app(BrasilApiCnpjLookup::class);
         $service->lookup('00000000000191');
 
-        $this->assertIsArray(Cache::get('sile.cnpj_lookup.00000000000191'));
+        $this->assertIsArray(Cache::get('viabiliza.cnpj_lookup.00000000000191'));
 
         $deNovo = $service->lookup('00000000000191');
 

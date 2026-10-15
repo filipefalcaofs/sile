@@ -260,7 +260,7 @@ class IntegrationCallRecorder
         }
 
         $redigido = $this->redigirTexto($texto);
-        $limite = max(1, (int) config('sile.integrations.log.limite_corpo', 500_000));
+        $limite = max(1, (int) config('viabiliza.integrations.log.limite_corpo', 500_000));
 
         if (strlen($redigido) <= $limite) {
             return $redigido;

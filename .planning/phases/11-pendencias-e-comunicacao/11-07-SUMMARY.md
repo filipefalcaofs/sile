@@ -44,7 +44,7 @@ key-files:
     - "tests/Feature/Comunicacao/ExpirarPendenciasCommandTest.php"
   modified:
     - "routes/console.php"
-    - "config/sile.php"
+    - "config/viabiliza.php"
     - "database/seeders/ParameterSeeder.php"
     - "tests/Feature/Seeders/ParameterSeederTest.php"
 
@@ -54,7 +54,7 @@ key-decisions:
   - "Janela de idempotência: processos usam created_at >= analysis_stage_started_at (a etapa atual); pendências usam created_at >= (due_at − antecedência) — sem persistir pendency_id no ledger (o dispatcher 11-04 não grava meta)"
   - "Expiração NÃO faz checagem extra em communications: a transição Aberta→Expirada já é a idempotência; checar o ledger colapsaria múltiplas expirações do mesmo processo (o ledger não discrimina pendência)"
   - "Escalonamento usa whereHas('roles') em vez do scope spatie role() para não lançar RoleDoesNotExist se o gestor_role parametrizado não existir (degrada honesto: zero destinatários)"
-  - "DESVIO (anti-fachada): adicionado pendencia_expirada ao notificacoes.mapa_canais (config/sile.php + ParameterSeeder) — sem o mapeamento o dispatcher resolvia ZERO canais e a notificação de expiração não saía; contagem de parâmetros inalterada (78)"
+  - "DESVIO (anti-fachada): adicionado pendencia_expirada ao notificacoes.mapa_canais (config/viabiliza.php + ParameterSeeder) — sem o mapeamento o dispatcher resolvia ZERO canais e a notificação de expiração não saía; contagem de parâmetros inalterada (78)"
 
 patterns-established:
   - "Rotina de prazo do EP11 = comando idempotente + Notification ProcessNotification + agenda withoutOverlapping/onOneServer, tudo passando pelo NotificationDispatcher"
@@ -124,7 +124,7 @@ completed: 2026-06-15
 **1. [Rule 3 — Blocking/anti-fachada] `pendencia_expirada` ausente do `notificacoes.mapa_canais`.**
 - **Encontrado em:** Task 3 (a tabela `communications` ficava vazia após a expiração).
 - **Causa raiz:** o mapa de canais (11-02) tinha os 5 outros tipos, mas omitia `pendencia_expirada`; o `NotificationDispatcher` resolve ZERO canais para tipos fora do mapa → a notificação não saía (feature de fachada).
-- **Correção:** adicionado `'pendencia_expirada' => ['email', 'in_app']` em `config/sile.php` (fallback) e no `default_value` do `ParameterSeeder` (produção); a asserção do `ParameterSeederTest` foi atualizada (anti-regressão). A **contagem de parâmetros não muda** (78) — só o conteúdo do mapa.
+- **Correção:** adicionado `'pendencia_expirada' => ['email', 'in_app']` em `config/viabiliza.php` (fallback) e no `default_value` do `ParameterSeeder` (produção); a asserção do `ParameterSeederTest` foi atualizada (anti-regressão). A **contagem de parâmetros não muda** (78) — só o conteúdo do mapa.
 - **Commit:** `aa4275c`.
 
 Nenhum outro desvio. Escopo respeitado: ÚNICO editor de `routes/console.php`; os arquivos de 11-05/11-06 (PendenciaService, NotificarPendencia, ResultadoExpresso) NÃO foram tocados nem commitados.

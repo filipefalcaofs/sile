@@ -118,7 +118,7 @@ class NotificarPendenciaListenerTest extends TestCase
         Notification::fake();
 
         // Mapa custom inclui whatsapp (toggle off por default — 11-02).
-        config()->set('sile.notificacoes.mapa_canais', [
+        config()->set('viabiliza.notificacoes.mapa_canais', [
             'pendencia_aberta' => ['email', 'in_app', 'whatsapp'],
         ]);
 

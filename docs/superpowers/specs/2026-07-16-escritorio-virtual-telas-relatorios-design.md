@@ -19,7 +19,7 @@ A Lisa demonstrou telas do SAPS que a operação usa diariamente. O Viabiliza j�
 ## 2. Princípio de UI
 
 1. **Paridade funcional** com o print do legado (campos, ações, colunas essenciais).  
-2. **Melhoria controlada** no design system SILE (Inertia/React, tipografia, contraste AA, empty states, URL sync).  
+2. **Melhoria controlada** no design system VIABILIZA (Inertia/React, tipografia, contraste AA, empty states, URL sync).  
 3. **Sem fachada:** Excel e pesquisa usam o mesmo recorte de dados (RN-005).
 
 Referência visual obrigatória: `prints/catalogo/06-*.jpg`, `08-*.jpg`, `01-*.jpg`.
@@ -118,7 +118,7 @@ Não redesenhar do zero; checklist de paridade no plano de execução.
 
 ## 8. Questões abertas
 
-- ~~`[OPEN-UI-1]`~~ **DECIDIDO (nossa, aceito SEDUR):** **páginas separadas** no menu SILE (padrão atual), com paridade de conteúdo — não replicar o seletor único do SAPS.  
+- ~~`[OPEN-UI-1]`~~ **DECIDIDO (nossa, aceito SEDUR):** **páginas separadas** no menu VIABILIZA (padrão atual), com paridade de conteúdo — não replicar o seletor único do SAPS.  
 - ~~`[OPEN-UI-2]`~~ **DECIDIDO (aceito SEDUR):** manter as colunas DAM disponíveis para paridade, mas **ocultar as vazias por padrão** via seletor de colunas (§4.3).  
 - ~~`[OPEN-UI-3]`~~ **CONFIRMADO:** enquanto o REDESIM não estiver homologado, o filtro "Revisão" fica **visível porém desabilitado** com aviso (§4.2) — nunca simula dados.  
 

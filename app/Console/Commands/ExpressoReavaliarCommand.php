@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Enums\SituacaoEtapa;
 use App\Enums\ViabilityRequestStatus;
 use App\Jobs\DecidirFluxoExpressoJob;
 use App\Models\ViabilityRequest;
@@ -29,6 +30,12 @@ class ExpressoReavaliarCommand extends Command
         $query = ViabilityRequest::query()
             ->where('status', ViabilityRequestStatus::Protocolada)
             ->whereDoesntHave('decision')
+            // Espera de serviço indisponível tem agenda própria (processos:reprocessar-etapas).
+            ->whereDoesntHave('etapas', function ($etapas): void {
+                $etapas->where('situacao', SituacaoEtapa::Indisponivel->value)
+                    ->whereNull('esgotada_em')
+                    ->where('proxima_tentativa_em', '>', now());
+            })
             ->orderBy('id');
 
         $limit = $this->option('limit');

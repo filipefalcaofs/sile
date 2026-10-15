@@ -3,7 +3,7 @@
 ## RESUMO (título do card)
 
 ```text
-[Viabiliza SILE] Caminho: Gestão > Ficha de análise > Cards de CNAE / Fundamentação (decreto desatualizado, texto da Vigilância Sanitária e risco sanitário "não classificado")
+[Viabiliza VIABILIZA] Caminho: Gestão > Ficha de análise > Cards de CNAE / Fundamentação (decreto desatualizado, texto da Vigilância Sanitária e risco sanitário "não classificado")
 ```
 
 ---

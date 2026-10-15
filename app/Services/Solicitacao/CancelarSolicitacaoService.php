@@ -80,7 +80,7 @@ class CancelarSolicitacaoService
     {
         return Settings::get(
             'solicitacao.cancelamento.estados_cancelaveis',
-            config('sile.solicitacao.cancelamento.estados_cancelaveis', ['rascunho', 'protocolada']),
+            config('viabiliza.solicitacao.cancelamento.estados_cancelaveis', ['rascunho', 'protocolada']),
         );
     }
 }

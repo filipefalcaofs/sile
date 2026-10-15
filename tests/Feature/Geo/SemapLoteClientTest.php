@@ -20,7 +20,7 @@ class SemapLoteClientTest extends TestCase
     {
         parent::setUp();
 
-        config(['sile.features.arcgis_semap' => true]);
+        config(['viabiliza.features.arcgis_semap' => true]);
     }
 
     /**
@@ -74,6 +74,55 @@ class SemapLoteClientTest extends TestCase
             && str_contains(urldecode($request->url()), 'PADRAOCONS'));
     }
 
+    public function test_token_configurado_vai_no_cabecalho_e_nao_na_url(): void
+    {
+        config(['viabiliza.integrations.arcgis_semap.token' => 'token-semap-123']);
+        Http::fake(['*' => Http::response($this->colecao([$this->feicao()]))]);
+
+        $this->assertTrue(app(SemapLoteClient::class)->consultar('344672')->encontrado());
+
+        Http::assertSent(fn ($request): bool => $request->header('X-Esri-Authorization') === ['Bearer token-semap-123']
+            && ! str_contains($request->url(), 'token-semap-123'));
+    }
+
+    public function test_sem_token_nao_envia_cabecalho(): void
+    {
+        Http::fake(['*' => Http::response($this->colecao([$this->feicao()]))]);
+
+        app(SemapLoteClient::class)->consultar('344672');
+
+        Http::assertSent(fn ($request): bool => ! $request->hasHeader('X-Esri-Authorization'));
+    }
+
+    public function test_erro_do_arcgis_aparece_no_motivo(): void
+    {
+        Http::fake(['*' => Http::response(['error' => ['code' => 499, 'message' => 'Token Required', 'details' => []]])]);
+
+        $hit = app(SemapLoteClient::class)->consultar('198845-0');
+
+        $this->assertSame(EnderecamentoHit::INDISPONIVEL, $hit->status);
+        $this->assertSame('Cadastro municipal (SEMAP) recusou a consulta: 499 Token Required.', $hit->motivo);
+    }
+
+    public function test_erro_do_arcgis_com_detalhes_inclui_os_detalhes(): void
+    {
+        Http::fake(['*' => Http::response(['error' => ['code' => 498, 'message' => 'Invalid Token', 'details' => ['Token expirado.']]])]);
+
+        $hit = app(SemapLoteClient::class)->consultar('344672');
+
+        $this->assertSame('Cadastro municipal (SEMAP) recusou a consulta: 498 Invalid Token (Token expirado.).', $hit->motivo);
+    }
+
+    public function test_resposta_sem_geojson_nem_erro_continua_fora_do_formato(): void
+    {
+        Http::fake(['*' => Http::response(['qualquer' => 'coisa'])]);
+
+        $hit = app(SemapLoteClient::class)->consultar('344672');
+
+        $this->assertSame(EnderecamentoHit::INDISPONIVEL, $hit->status);
+        $this->assertSame('Resposta do SEMAP fora do formato GeoJSON.', $hit->motivo);
+    }
+
     public function test_inscricao_sem_feicao_nao_encontra(): void
     {
         Http::fake(['*' => Http::response($this->colecao([]))]);
@@ -115,7 +164,7 @@ class SemapLoteClientTest extends TestCase
 
     public function test_toggle_desligado_nao_consulta(): void
     {
-        config(['sile.features.arcgis_semap' => false]);
+        config(['viabiliza.features.arcgis_semap' => false]);
         Http::fake();
 
         $hit = app(SemapLoteClient::class)->consultar('344672');

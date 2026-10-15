@@ -29,11 +29,11 @@ class ReginIntegrationController extends Controller
                 'em_producao' => $this->settings->usingProduction(),
                 'url_homologacao' => (string) Settings::get(
                     'integrations.regin.url_homologacao',
-                    config('sile.integrations.regin.url_homologacao'),
+                    config('viabiliza.integrations.regin.url_homologacao'),
                 ),
                 'url_producao' => (string) Settings::get(
                     'integrations.regin.url_producao',
-                    config('sile.integrations.regin.url_producao'),
+                    config('viabiliza.integrations.regin.url_producao'),
                 ),
                 'usuario' => $this->settings->username(),
                 'senha' => null,

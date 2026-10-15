@@ -3,7 +3,7 @@
 ## RESUMO (título do card)
 
 ```text
-[Viabiliza SILE] Caminho: Gestão > Ficha de análise > Decisão do analista (sugestão automática, decisão pré-marcada, pergunta de outro CNAE e parecer pré-preenchido)
+[Viabiliza VIABILIZA] Caminho: Gestão > Ficha de análise > Decisão do analista (sugestão automática, decisão pré-marcada, pergunta de outro CNAE e parecer pré-preenchido)
 ```
 
 ---

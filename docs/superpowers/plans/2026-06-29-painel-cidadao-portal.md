@@ -19,7 +19,7 @@ Spec de referência: `docs/superpowers/specs/2026-06-29-painel-cidadao-portal-de
 - Criar: `tests/Feature/Portal/PainelCidadaoTest.php` — feature tests via rota.
 - Modificar: `app/Http/Controllers/Portal/SolicitacaoController.php` — reusar o resource no `index`.
 - Modificar: `app/Http/Controllers/Portal/DashboardController.php` — injetar service e passar props.
-- Modificar: `config/sile.php` — `ui.painel.solicitacoes_recentes`.
+- Modificar: `config/viabiliza.php` — `ui.painel.solicitacoes_recentes`.
 - Modificar (reescrever): `resources/js/pages/portal/dashboard.tsx` — UI do dashboard.
 
 ---
@@ -131,12 +131,12 @@ git commit -m "refactor: extrai SolicitacaoResumoResource e reusa no index do po
 Primeira fatia: indicadores reais. O service nasce com `atencao` e `solicitacoesRecentes` vazios (preenchidos nas Tasks 3 e 4).
 
 **Files:**
-- Modify: `config/sile.php:19-26`
+- Modify: `config/viabiliza.php:19-26`
 - Create: `app/Services/Painel/PainelCidadaoService.php`
 - Modify: `app/Http/Controllers/Portal/DashboardController.php`
 - Create: `tests/Feature/Portal/PainelCidadaoTest.php`
 
-- [ ] **Step 1: Adicionar a constante de itens recentes no `config/sile.php`**
+- [ ] **Step 1: Adicionar a constante de itens recentes no `config/viabiliza.php`**
 
 No bloco `'ui' => [ ... ]` (linhas 19-26), acrescentar a linha `painel`:
 
@@ -377,7 +377,7 @@ Expected: PASS
 
 ```bash
 vendor/bin/pint --dirty --format agent
-git add config/sile.php app/Services/Painel/PainelCidadaoService.php app/Http/Controllers/Portal/DashboardController.php tests/Feature/Portal/PainelCidadaoTest.php
+git add config/viabiliza.php app/Services/Painel/PainelCidadaoService.php app/Http/Controllers/Portal/DashboardController.php tests/Feature/Portal/PainelCidadaoTest.php
 git commit -m "feat: adiciona indicadores reais ao painel do cidadão"
 ```
 
@@ -413,7 +413,7 @@ Acrescentar ao final da classe `PainelCidadaoTest` (antes da chave de fechamento
             ->get('/portal/painel')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
-                // Limite default (config sile.ui.painel.solicitacoes_recentes = 5).
+                // Limite default (config viabiliza.ui.painel.solicitacoes_recentes = 5).
                 ->has('solicitacoesRecentes', 5)
                 // Mais recente primeiro (i = 0).
                 ->where('solicitacoesRecentes.0.protocol_number', 'VIA-2026-000000')
@@ -452,7 +452,7 @@ E adicionar o método (após `indicadores`):
      */
     private function solicitacoesRecentes(User $efetivo): array
     {
-        $limit = (int) config('sile.ui.painel.solicitacoes_recentes', 5);
+        $limit = (int) config('viabiliza.ui.painel.solicitacoes_recentes', 5);
 
         return SolicitacaoResumoResource::collection(
             ViabilityRequest::query()

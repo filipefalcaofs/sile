@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Expresso;
 
+use App\Enums\EtapaMotor;
+use App\Enums\SituacaoEtapa;
 use App\Jobs\DecidirFluxoExpressoJob;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
@@ -95,5 +97,40 @@ class ExpressoReavaliarCommandTest extends TestCase
             ->assertExitCode(0);
 
         Bus::assertDispatchedTimes(DecidirFluxoExpressoJob::class, 2);
+    }
+
+    public function test_nao_reenfileira_processo_que_espera_a_proxima_tentativa_de_servico_indisponivel(): void
+    {
+        Bus::fake([DecidirFluxoExpressoJob::class]);
+
+        $esperando = ViabilityRequest::factory()->protocoled()->create(['protocol_number' => 'VIA-2026-000201']);
+        $esperando->etapas()->create([
+            'etapa' => EtapaMotor::RegraTerritorial->value,
+            'servico' => EtapaMotor::RegraTerritorial->servico(),
+            'situacao' => SituacaoEtapa::Indisponivel,
+            'tentativas' => 1,
+            'ultima_tentativa_em' => now(),
+            'primeira_falha_em' => now(),
+            'proxima_tentativa_em' => now()->addMinutes(15),
+        ]);
+
+        $vencida = ViabilityRequest::factory()->protocoled()->create(['protocol_number' => 'VIA-2026-000202']);
+        $vencida->etapas()->create([
+            'etapa' => EtapaMotor::RegraTerritorial->value,
+            'servico' => EtapaMotor::RegraTerritorial->servico(),
+            'situacao' => SituacaoEtapa::Indisponivel,
+            'tentativas' => 1,
+            'ultima_tentativa_em' => now()->subMinutes(20),
+            'primeira_falha_em' => now()->subMinutes(20),
+            'proxima_tentativa_em' => now()->subMinutes(5),
+        ]);
+
+        $this->artisan('expresso:reavaliar')->assertExitCode(0);
+
+        Bus::assertDispatchedTimes(DecidirFluxoExpressoJob::class, 1);
+        Bus::assertDispatched(
+            DecidirFluxoExpressoJob::class,
+            fn (DecidirFluxoExpressoJob $job): bool => $job->viabilityRequestId === $vencida->id,
+        );
     }
 }

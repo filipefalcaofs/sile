@@ -15,7 +15,7 @@ Os dois agents convergiram no núcleo. Duas divergências pontuais resolvidas a 
 | HU | Decisão | Razão |
 |---|---|---|
 | **HU-061..070, 141, 148, 150** | **Construir agora** — caminho real de ponta a ponta | Funciona 100% reusando Fases 1/3/4/5/6/7 |
-| **HU-071/072 (DAM)** | **BLOQUEADO → Fase 13. Nenhum contrato construído agora** | A Nota SEDUR (2026-06-11) revisou o escopo (DAM é da SEFAZ; SILE só consulta/exibe) e o *escopo ainda não está confirmado* (consulta? exibição? renovação?). Construir até a interface seria especular sobre um contrato inexistente. Success criteria 4 da Fase 8 passa a depender da Fase 13 (anotado no ROADMAP). |
+| **HU-071/072 (DAM)** | **BLOQUEADO → Fase 13. Nenhum contrato construído agora** | A Nota SEDUR (2026-06-11) revisou o escopo (DAM é da SEFAZ; VIABILIZA só consulta/exibe) e o *escopo ainda não está confirmado* (consulta? exibição? renovação?). Construir até a interface seria especular sobre um contrato inexistente. Success criteria 4 da Fase 8 passa a depender da Fase 13 (anotado no ROADMAP). |
 | **HU-139 (edifício comercial)** | **ADIADO → pendente SEDUR** | Seu valor (pré-preencher complemento por inscrição imobiliária) depende do lote/inscrição, **bloqueado** (Fase 4). Semântica pendente SEDUR. Por ora, `complemento` é **texto livre** na HU-062 (como no SAPS). |
 | **Origem `regin`** | **BLOQUEADO → Fase 13** (enum extensível existe; só a origem é travada) | Contrato Regin não público. `contingencia` (HU-148) é o caminho real de operação hoje (confirmado: ROADMAP success criteria 6 + obs HU-148). |
 
@@ -68,7 +68,7 @@ rascunho ──protocolar(HU-068)──▶ protocolada ──cancelar(HU-070)─
 
 ### Anexos
 
-- **Disk parametrizado (HU-014):** `Settings::get('storage.documentos.disk', config('sile.storage.documentos.disk','local'))`. Nunca disk público.
+- **Disk parametrizado (HU-014):** `Settings::get('storage.documentos.disk', config('viabiliza.storage.documentos.disk','local'))`. Nunca disk público.
 - Upload valida MIME/tamanho parametrizados (`solicitacao.anexos.mime_permitidos`, `solicitacao.anexos.max_mb`); grava `disk`/`path`/`sha256`. Substituível antes do protocolo; imutável depois.
 - **Obrigatoriedade (HU-067):** `DocumentRequirementResolver` = união dos `document_requirements.required` dos CNAEs ∪ condicionais (fachada sempre; concessão se `is_public_area`). Protocolo **bloqueia** se faltar obrigatório (aviso, nunca silencioso).
 - **Download por streaming** só autenticado (dono via policy / analista via permissão).
@@ -82,7 +82,7 @@ rascunho ──protocolar(HU-068)──▶ protocolada ──cancelar(HU-070)─
 
 ## Parametrização (HU-014), permissões e testes
 
-**Parâmetros novos** (catálogo + fallback `config/sile.php`): `features.solicitacao_viabilidade`, `features.simulacao_solicitacao`, `solicitacao.cnaes_complementares.max` (99), `solicitacao.protocolo.prefixo`/`.padding`, `solicitacao.consulta_publica.assinatura_ttl_dias`, `solicitacao.anexos.max_mb`/`.mime_permitidos`, `storage.documentos.disk`, `solicitacao.area_poligono.tolerancia_percentual`, `solicitacao.prazo_estimado_dias` (ressalva honesta até HU-129/Fase 15), `solicitacao.atendimento.expiracao_minutos`, `seguranca.throttle.consulta_protocolo.por_minuto`. **Tipos de serviço, requisitos documentais = DADOS administráveis** (tabelas + CRUD), não parâmetros do registry.
+**Parâmetros novos** (catálogo + fallback `config/viabiliza.php`): `features.solicitacao_viabilidade`, `features.simulacao_solicitacao`, `solicitacao.cnaes_complementares.max` (99), `solicitacao.protocolo.prefixo`/`.padding`, `solicitacao.consulta_publica.assinatura_ttl_dias`, `solicitacao.anexos.max_mb`/`.mime_permitidos`, `storage.documentos.disk`, `solicitacao.area_poligono.tolerancia_percentual`, `solicitacao.prazo_estimado_dias` (ressalva honesta até HU-129/Fase 15), `solicitacao.atendimento.expiracao_minutos`, `seguranca.throttle.consulta_protocolo.por_minuto`. **Tipos de serviço, requisitos documentais = DADOS administráveis** (tabelas + CRUD), não parâmetros do registry.
 
 **Permissões (spatie, aditivo):** cidadão opera as próprias via **policy**; nomeadas: `registrar-contingencia` (HU-148), `atendimento-presencial` (HU-150), `consultar-solicitacoes` (backoffice), `manter-tipos-servico`, `manter-requisitos-documentais`.
 

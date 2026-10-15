@@ -38,7 +38,7 @@ Nenhum SUMMARY foi tomado como verdade: todos os artifacts foram lidos no códig
 | # | Verdade | Status | Evidência |
 | --- | --- | --- | --- |
 | 1 | Suíte verde com Fortify, spatie/permission e spatie/activitylog | ✓ VERIFICADO | 122 testes passando; `config/fortify.php`, `config/permission.php`, `config/activitylog.php` presentes e em uso |
-| 2 | Parâmetros de segurança lidos de `config/sile.php`, nenhum hardcoded | ✓ VERIFICADO | `Settings::get` em `AppServiceProvider` (política de senha, expiração de reset), `FortifyServiceProvider` (max_attempts em 2 pontos) e controllers de acessos (per_page) |
+| 2 | Parâmetros de segurança lidos de `config/viabiliza.php`, nenhum hardcoded | ✓ VERIFICADO | `Settings::get` em `AppServiceProvider` (política de senha, expiração de reset), `FortifyServiceProvider` (max_attempts em 2 pontos) e controllers de acessos (per_page) |
 | 3 | Mensagens nativas em pt-BR | ✓ VERIFICADO | `lang/pt_BR/validation.php` (288 linhas), `APP_LOCALE=pt_BR` em `.env`/`.env.example`; testes de mensagens pt-BR passam |
 | 4 | Cabeçalhos de segurança em toda resposta web | ✓ VERIFICADO | `SecurityHeaders` appendado ao grupo web em `bootstrap/app.php:25`; `test_respostas_web_incluem_cabecalhos_de_seguranca` |
 
@@ -133,13 +133,13 @@ Todos os 41 artifacts dos 9 planos verificados — existem, têm implementação
 
 | Artifact | Esperado | Status | Detalhes |
 | --- | --- | --- | --- |
-| `config/sile.php` | Parâmetros de negócio com defaults | ✓ VERIFICADO | password policy, login.max_attempts, password_reset_expire, ui.access_history.per_page |
+| `config/viabiliza.php` | Parâmetros de negócio com defaults | ✓ VERIFICADO | password policy, login.max_attempts, password_reset_expire, ui.access_history.per_page |
 | `app/Support/Settings.php` | Ponto único de leitura de parâmetros | ✓ VERIFICADO | `get()` delega para config; 3 testes unit |
 | `app/Support/Audit/RecordActivityAction.php` | Enriquecimento central RN-002 | ✓ VERIFICADO | `extends LogActivityAction`; registrado em `config/activitylog.php:70` |
 | `app/Support/Audit/AuditService.php` | Registro explícito com result e rules_version | ✓ VERIFICADO | `log()` + `logBlocked()`; usado em bootstrap, controllers e actions |
 | `app/Concerns/HasAuditoria.php` | Trait padrão para models de domínio | ✓ VERIFICADO | `getActivitylogOptions` com `logOnlyDirty` e exclusão de sensíveis |
 | `app/Models/AccessLog.php` + migration | Histórico de acessos imutável | ✓ VERIFICADO | user_id nullable com `nullOnDelete`, email, event, ip, user_agent, channel |
-| Migration `activity_log` | Colunas SILE da RN-002 | ✓ VERIFICADO | ip_address, user_agent, channel, acting_for_user_id, result, rules_version |
+| Migration `activity_log` | Colunas VIABILIZA da RN-002 | ✓ VERIFICADO | ip_address, user_agent, channel, acting_for_user_id, result, rules_version |
 | 7 listeners de auth | access_logs + activities | ✓ VERIFICADO | Login, Logout, Failed, Lockout, Registered, Verified, PasswordReset |
 | `app/Rules/ValidCpf.php` | Dígitos verificadores reais | ✓ VERIFICADO | 42 linhas; 4 testes unit |
 | `app/Models/Procuration.php` | Vigência e revogação | ✓ VERIFICADO | `isActive()` checa revoked_at, starts_at, ends_at |
@@ -152,8 +152,8 @@ Todos os 25 key links dos 9 planos confirmados no fonte:
 
 | De | Para | Via | Status |
 | --- | --- | --- | --- |
-| `AppServiceProvider` | `config/sile.php` | `Password::defaults()` lê `sile.security.password` | ✓ WIRED |
-| `Settings` | `config/sile.php` | `config("sile.{$key}")` | ✓ WIRED |
+| `AppServiceProvider` | `config/viabiliza.php` | `Password::defaults()` lê `viabiliza.security.password` | ✓ WIRED |
+| `Settings` | `config/viabiliza.php` | `config("viabiliza.{$key}")` | ✓ WIRED |
 | `bootstrap/app.php` | `SecurityHeaders` | append no grupo web | ✓ WIRED |
 | `config/activitylog.php` | `RecordActivityAction` | `actions.log_activity` | ✓ WIRED |
 | `config/activitylog.php` | `App\Models\Activity` | `activity_model` | ✓ WIRED |
@@ -168,7 +168,7 @@ Todos os 25 key links dos 9 planos confirmados no fonte:
 | `routes/*` | `EnsureLgpdTermAccepted` | alias `lgpd.accepted` (portal, gestão, settings) | ✓ WIRED |
 | `EnsureLgpdTermAccepted` | `LegalTerm` | `LegalTerm::current('lgpd')` | ✓ WIRED |
 | `LgpdTermController` | `legal_term_acceptances` | `LegalTermAcceptance::firstOrCreate` com versão e IP | ✓ WIRED |
-| `FortifyServiceProvider` | `config/sile.php` | rate limiter login via `max_attempts` | ✓ WIRED |
+| `FortifyServiceProvider` | `config/viabiliza.php` | rate limiter login via `max_attempts` | ✓ WIRED |
 | `FortifyServiceProvider` | `routes/gestao.php` | `LoginResponse` → `can('acessar-gestao')` | ✓ WIRED |
 | `UpdateUserPassword` | `AuditService` | evento `senha-alterada` | ✓ WIRED |
 | `ResolveRepresentation` | `RecordActivityAction` | `Context::add('acting_for_user_id')` | ✓ WIRED |
@@ -210,11 +210,11 @@ Todos os 25 key links dos 9 planos confirmados no fonte:
 | --- | --- | --- | --- | --- |
 | — | — | Nenhum TODO/FIXME/placeholder/stub em `app/` e `resources/js/` | — | Ocorrências de "placeholder" são classes CSS Tailwind (`placeholder:text-*`) e atributos HTML de input — falsos positivos |
 
-**Parametrização (critério transversal):** nenhum valor de negócio hardcoded nos fluxos da fase. Política de senha, tentativas de login, expiração de reset e paginação do histórico vêm de `config/sile.php` via `Settings::get` (4 call sites de produção confirmados). Texto do termo LGPD é dado versionado no banco.
+**Parametrização (critério transversal):** nenhum valor de negócio hardcoded nos fluxos da fase. Política de senha, tentativas de login, expiração de reset e paginação do histórico vêm de `config/viabiliza.php` via `Settings::get` (4 call sites de produção confirmados). Texto do termo LGPD é dado versionado no banco.
 
 ### Observações (informativas, não bloqueiam)
 
-1. `FortifyServiceProvider:104,110` — rate limiters `two-factor` (5/min) e `passkeys` (10/min) com valores fixos. As features `twoFactorAuthentication` e passkeys **não estão habilitadas** em `config/fortify.php` (apenas registration, resetPasswords, emailVerification, updatePasswords), então é código inativo do esqueleto. Quando 2FA entrar em fase futura, mover esses limites para `config/sile.php`.
+1. `FortifyServiceProvider:104,110` — rate limiters `two-factor` (5/min) e `passkeys` (10/min) com valores fixos. As features `twoFactorAuthentication` e passkeys **não estão habilitadas** em `config/fortify.php` (apenas registration, resetPasswords, emailVerification, updatePasswords), então é código inativo do esqueleto. Quando 2FA entrar em fase futura, mover esses limites para `config/viabiliza.php`.
 2. `vendor/bin/pint` não foi re-executado nesta verificação (nenhum PHP modificado desde o último commit da fase; repo limpo exceto `docs/` não versionados). A formatação foi garantida nos commits da fase.
 
 ### Resumo de lacunas

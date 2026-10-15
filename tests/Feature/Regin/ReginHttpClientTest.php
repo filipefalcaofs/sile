@@ -108,6 +108,18 @@ class ReginHttpClientTest extends TestCase
         Http::assertSent(fn ($request) => str_ends_with($request->url(), '/resposta/instituicao'));
     }
 
+    public function test_enviar_parecer_aceita_recebido_sucesso_como_json(): void
+    {
+        Http::fake([
+            '*/acesso/auth' => Http::response(['token' => 'jwt-123']),
+            '*/recebe' => Http::response('"RECEBIDO_SUCESSO"', 200, ['Content-Type' => 'application/json']),
+        ]);
+
+        app(ReginHttpClient::class)->enviarParecer(['protocolo' => 'BAB2601852710']);
+
+        Http::assertSent(fn ($request) => str_ends_with($request->url(), '/recebe'));
+    }
+
     public function test_enviar_parecer_lanca_quando_corpo_nao_e_recebido_sucesso(): void
     {
         Http::fake([

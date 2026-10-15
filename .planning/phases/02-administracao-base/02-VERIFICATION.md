@@ -162,7 +162,7 @@ human_verification_done:
 | RolesAndPermissionsSeeder | papel administrador | givePermissionTo manter-* | ✓ WIRED |
 | convert-cnae-xlsx.py | CSV versionado | conversão com carry-forward | ✓ WIRED |
 | Settings.php | Parameter.php | Cache::remember + catch QueryException | ✓ WIRED |
-| Parameter.php | cache sile.parameters.* | Cache::forget no saved/deleted | ✓ WIRED |
+| Parameter.php | cache viabiliza.parameters.* | Cache::forget no saved/deleted | ✓ WIRED |
 | AppServiceProvider | Settings | Password::defaults com security.password.* | ✓ WIRED |
 | FortifyServiceProvider | AccessLog | event 'inativada' no login bloqueado | ✓ WIRED |
 | bootstrap/app.php | EnsureUserIsActive | append global no grupo web | ✓ WIRED |
@@ -194,7 +194,7 @@ human_verification_done:
 
 | Verificação | Status | Evidência |
 |---|---|---|
-| Diretriz refinada de parametrização | ✓ CONFORME | 10 parâmetros de negócio administráveis com call sites reais; constante técnica `sile.parameters.cache_ttl` apenas em config (fora do catálogo); paginação de consulta interna (histórico) não parametrizada — conforme a regra |
+| Diretriz refinada de parametrização | ✓ CONFORME | 10 parâmetros de negócio administráveis com call sites reais; constante técnica `viabiliza.parameters.cache_ttl` apenas em config (fora do catálogo); paginação de consulta interna (histórico) não parametrizada — conforme a regra |
 | Promessa da Fase 1 preservada | ✓ CONFORME | `tests/Unit/Support/SettingsTest.php` com 1 único commit (Fase 1); assinatura `Settings::get(key, default)` intacta; 13 call sites funcionando com backend banco+cache+fallback (SettingsBackendTest verde) |
 | Toggle real features.procuracoes (CA-06) | ✓ CONFORME | Sem fachada: store bloqueado com aviso pt-BR, tela comunica com aviso âmbar, revogação preservada; 4 testes end-to-end |
 | Histórico de sensível mascarado (RN-009) | ✓ CONFORME | Gravação já mascara (`[criptografado]`); `assertDontSee` do valor real no teste; UI nunca recebe sensível em claro |

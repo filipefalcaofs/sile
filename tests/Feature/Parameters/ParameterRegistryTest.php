@@ -61,22 +61,22 @@ class ParameterRegistryTest extends TestCase
 
     public function test_gravacao_invalida_o_cache_da_chave(): void
     {
-        Cache::put('sile.parameters.chave.x', 'velho', 60);
+        Cache::put('viabiliza.parameters.chave.x', 'velho', 60);
 
         $parameter = Parameter::factory()->create(['key' => 'chave.x']);
 
-        $this->assertFalse(Cache::has('sile.parameters.chave.x'));
+        $this->assertFalse(Cache::has('viabiliza.parameters.chave.x'));
 
-        Cache::put('sile.parameters.chave.x', 'velho-de-novo', 60);
+        Cache::put('viabiliza.parameters.chave.x', 'velho-de-novo', 60);
 
         $parameter->update(['value' => 'novo']);
 
-        $this->assertFalse(Cache::has('sile.parameters.chave.x'));
+        $this->assertFalse(Cache::has('viabiliza.parameters.chave.x'));
 
-        Cache::put('sile.parameters.chave.x', 'velho-antes-do-delete', 60);
+        Cache::put('viabiliza.parameters.chave.x', 'velho-antes-do-delete', 60);
 
         $parameter->delete();
 
-        $this->assertFalse(Cache::has('sile.parameters.chave.x'));
+        $this->assertFalse(Cache::has('viabiliza.parameters.chave.x'));
     }
 }

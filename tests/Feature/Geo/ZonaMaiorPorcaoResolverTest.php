@@ -15,7 +15,7 @@ class ZonaMaiorPorcaoResolverTest extends TestCase
 
     public function test_ca_zn_07_fora_do_postgres_e_indisponivel_sem_consultar_o_geoserver(): void
     {
-        config(['sile.features.geoserver_zona' => true, 'sile.features.geoserver_enderecamento' => true]);
+        config(['viabiliza.features.geoserver_zona' => true, 'viabiliza.features.geoserver_enderecamento' => true]);
         GeoServerLayer::factory()->create();
         Http::fake();
 

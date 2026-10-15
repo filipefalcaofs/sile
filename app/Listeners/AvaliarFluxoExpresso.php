@@ -21,7 +21,7 @@ class AvaliarFluxoExpresso
     public function handle(SolicitacaoProtocolada $event): void
     {
         // Despacha pelo ID (serialização segura; o job recarrega o estado fresco).
-        // A fila é responsabilidade do próprio job (config/sile.php).
+        // A fila é responsabilidade do próprio job (config/viabiliza.php).
         DecidirFluxoExpressoJob::dispatch($event->request->id);
     }
 }

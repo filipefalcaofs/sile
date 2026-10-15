@@ -24,6 +24,7 @@ class ApiIntegracaoCatalog
             self::govbr(),
             self::geocoding(),
             self::geoserver(),
+            self::arcgisSemap(),
         ];
     }
 
@@ -219,6 +220,25 @@ class ApiIntegracaoCatalog
                 self::interruptor('em_producao', 'integrations.geoserver.em_producao', 'Usar produção'),
                 self::url('url_homologacao', 'integrations.geoserver.url_homologacao', 'URL de homologação'),
                 self::url('url_producao', 'integrations.geoserver.url_producao', 'URL de produção'),
+            ],
+        ];
+    }
+
+    /**
+     * @return Aba
+     */
+    private static function arcgisSemap(): array
+    {
+        return [
+            'id' => 'arcgis_semap',
+            'nome' => 'Cadastro municipal (SEMAP)',
+            'descricao' => 'Lote por inscrição imobiliária no ArcGIS da Prefeitura, quando o endereçamento não tem o polígono. A camada exige token do Portal ArcGIS.',
+            'teste' => null,
+            'espelhar_url_ativa' => null,
+            'campos' => [
+                self::interruptor('habilitada', 'features.arcgis_semap', 'Consulta do lote por inscrição habilitada'),
+                self::url('query_url', 'integrations.arcgis_semap.query_url', 'URL de consulta da camada'),
+                self::senha('token', 'integrations.arcgis_semap.token', 'Token'),
             ],
         ];
     }

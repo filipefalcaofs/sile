@@ -9,7 +9,7 @@ requires:
   - phase: 08-solicitacao-viabilidade
     provides: "ProtocolNumberGenerator (padrão lockForUpdate), ViabilityRequestStateMachine (mapa estendido), ViabilityRequest/ViabilityRequestStatus (ganchos de estado), protocol_sequences (padrão do contador), PostgisTestCase + @group postgis"
   - phase: 09-fluxo-expresso/09-01
-    provides: "config/sile.php bloco expresso (fallback HU-014 expresso.tvl.*); o gerador tem default inline TVL/6, então NÃO depende do seeder"
+    provides: "config/viabiliza.php bloco expresso (fallback HU-014 expresso.tvl.*); o gerador tem default inline TVL/6, então NÃO depende do seeder"
 provides:
   - "Tabela IMUTÁVEL viability_decisions (1:1, append-only) — fonte do PDF/TVL (Fase 10) e da explicabilidade (Fase 12)"
   - "Tabela tvl_sequences (contador por ano) + colunas dormentes bap_due_at/bap_linked_at em viability_requests (HU-134)"
@@ -117,7 +117,7 @@ completed: 2026-06-14
 ### `App\Services\Expresso\TvlNumberGenerator`
 - `generate(?int $year = null): string` → `'{prefixo}-{AAAA}-{NNNNNN}'` (ex.: `TVL-2026-000001`).
 - `tvl_sequences->lockForUpdate()` dentro de `DB::transaction`; NÃO grava em `viability_decisions` (só sequencia — o caller 09-05 usa o número dentro da transação da decisão).
-- Parametrização: `Settings::get('expresso.tvl.prefixo', config('sile.expresso.tvl.prefixo', 'TVL'))` e `expresso.tvl.padding` (default 6).
+- Parametrização: `Settings::get('expresso.tvl.prefixo', config('viabiliza.expresso.tvl.prefixo', 'TVL'))` e `expresso.tvl.padding` (default 6).
 
 ### `App\Services\Solicitacao\ViabilityRequestStateMachine` — mapa FINAL
 ```

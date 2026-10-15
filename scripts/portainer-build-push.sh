@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Fallback: build AMD64 + push da imagem SILE para o GHCR.
+# Fallback: build AMD64 + push da imagem VIABILIZA para o GHCR.
 # O fluxo padrão é o Portainer clonar a main e fazer o build no host
 # (docker-compose.portainer-full.yml com pull_policy: build). Use este script
 # só se o build no servidor estiver indisponível.

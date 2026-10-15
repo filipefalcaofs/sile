@@ -52,7 +52,7 @@ export default function PortalLayout({ children }: PortalLayoutProps) {
                         <Alert variant="success" title="Sucesso" message={flash.status} />
                     </div>
                 )}
-                {children}
+                <div className="pb-24">{children}</div>
             </AppShell>
         </ThemeProvider>
     );

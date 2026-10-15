@@ -231,10 +231,10 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ### Task 3: Parâmetro do CNAE gatilho + texto da condicionante
 
 **Files:**
-- Modify: `config/sile.php` (bloco `analise`), `database/seeders/ParameterSeeder.php`
+- Modify: `config/viabiliza.php` (bloco `analise`), `database/seeders/ParameterSeeder.php`
 - Modify: `tests/Feature/Seeders/ParameterSeederTest.php` + `tests/Feature/Seeders/DatabaseSeederTest.php` (contagem 89→91)
 
-- [ ] **Step 1:** In `config/sile.php`, no bloco `'analise' => [...]`, adicione:
+- [ ] **Step 1:** In `config/viabiliza.php`, no bloco `'analise' => [...]`, adicione:
 
 ```php
         'escritorio_virtual' => [
@@ -269,7 +269,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - [ ] **Step 5: Commit**
 
 ```bash
-git add config/sile.php database/seeders/ParameterSeeder.php tests/Feature/Seeders/ParameterSeederTest.php tests/Feature/Seeders/DatabaseSeederTest.php
+git add config/viabiliza.php database/seeders/ParameterSeeder.php tests/Feature/Seeders/ParameterSeederTest.php tests/Feature/Seeders/DatabaseSeederTest.php
 git commit -m "feat(ev): parâmetros do gatilho sede (CNAE 8211-3/00) e texto da condicionante
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
@@ -381,7 +381,7 @@ class SedeEscritorioVirtualGatilho
 
         $cnaeGatilho = $this->normalizar((string) Settings::get(
             'analise.escritorio_virtual.cnae_gatilho_sede',
-            config('sile.analise.escritorio_virtual.cnae_gatilho_sede', '8211-3/00'),
+            config('viabiliza.analise.escritorio_virtual.cnae_gatilho_sede', '8211-3/00'),
         ));
 
         return $request->cnaes->contains(fn ($cnae): bool => $this->normalizar($cnae->code) === $cnaeGatilho);

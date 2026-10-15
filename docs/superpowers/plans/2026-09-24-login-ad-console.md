@@ -12,7 +12,7 @@
 
 - TDD estrito: nenhum código de produção sem teste falhando antes (Red-Green-Refactor).
 - Senha AD e token Bearer **nunca** em log, exceção, `access_logs`, sessão, cache ou props Inertia.
-- HTTP sempre com verificação TLS (proibido `withoutVerifying()`); timeout via `config('sile.integrations.sedur_auth.timeout')`.
+- HTTP sempre com verificação TLS (proibido `withoutVerifying()`); timeout via `config('viabiliza.integrations.sedur_auth.timeout')`.
 - Anti-oráculo: credencial AD inválida, conta AD inexistente e senha local errada retornam a mesma mensagem `__('auth.failed')`.
 - Sem fallback silencioso: conta `ad` NUNCA valida contra a senha local, mesmo com a API fora.
 - `auth_type`/`ad_username` ficam **fora** do `$fillable` do User (precedente `inactivated_at`, decisão 02-03): gravação só por `forceFill` em fluxo autorizado + auditoria explícita via `AuditService`.
@@ -200,11 +200,11 @@ git commit -m "feat: adiciona tipo de autenticação e conta AD ao cadastro de u
 
 **Files:**
 - Modify: `database/seeders/ParameterSeeder.php` (catálogo, após `features.govbr_login` e após o bloco `integrations.govbr.*`)
-- Modify: `config/sile.php` (`security.login` e `integrations`)
+- Modify: `config/viabiliza.php` (`security.login` e `integrations`)
 - Test: `tests/Feature/Seeders/DatabaseSeederTest.php` (contagem 89 → 91, dois pontos)
 
 **Interfaces:**
-- Produces: parâmetros `features.ad_login` (boolean, default `'1'`) e `integrations.sedur_auth.base_url` (string, default `https://api.sedur.salvador.ba.gov.br/k8s/prd`); config `sile.integrations.sedur_auth.base_url|timeout` e `sile.security.login.max_attempts_per_ip` (30).
+- Produces: parâmetros `features.ad_login` (boolean, default `'1'`) e `integrations.sedur_auth.base_url` (string, default `https://api.sedur.salvador.ba.gov.br/k8s/prd`); config `viabiliza.integrations.sedur_auth.base_url|timeout` e `viabiliza.security.login.max_attempts_per_ip` (30).
 
 - [ ] **Step 1: Ajustar o teste do seeder (RED)**
 
@@ -246,7 +246,7 @@ E após o bloco `integrations.govbr.*` (após `integrations.govbr.client_secret`
 
 Nota: sem `requires_connection_test` — não há conta de serviço; o endpoint exige usuário/senha do próprio servidor (escalonamento TI-SEDUR na spec §11).
 
-Em `config/sile.php`, ajustar `security.login` e adicionar a integração:
+Em `config/viabiliza.php`, ajustar `security.login` e adicionar a integração:
 
 ```php
         'login' => ['max_attempts' => 5, 'max_attempts_per_ip' => 30],
@@ -270,7 +270,7 @@ Expected: PASS (arquivo inteiro — a contagem aparece em dois testes).
 
 ```bash
 vendor/bin/pint --dirty --format agent
-git add database/seeders/ParameterSeeder.php config/sile.php tests/Feature/Seeders/DatabaseSeederTest.php
+git add database/seeders/ParameterSeeder.php config/viabiliza.php tests/Feature/Seeders/DatabaseSeederTest.php
 git commit -m "feat: parametriza URL e interruptor da autenticação AD do console"
 ```
 
@@ -286,7 +286,7 @@ git commit -m "feat: parametriza URL e interruptor da autenticação AD do conso
 - Test: `tests/Feature/Sedur/SedurAuthClientTest.php`
 
 **Interfaces:**
-- Consumes: `Settings::get()` (`app/Support/Settings.php`), config `sile.integrations.sedur_auth.*` (Task 2).
+- Consumes: `Settings::get()` (`app/Support/Settings.php`), config `viabiliza.integrations.sedur_auth.*` (Task 2).
 - Produces: `SedurAuthSettings::baseUrl(): string`, `SedurAuthSettings::enabled(): bool`; `SedurAuthClient::autenticar(string $usuario, string $senha): string` (token) e `SedurAuthClient::pessoaPorCpf(string $token, string $cpf): array{nome: ?string}`; exceções `SedurAuthInvalidCredentialsException` (credencial rejeitada) e `SedurAuthUnavailableException` (indisponibilidade/erro da integração).
 
 - [ ] **Step 1: Escrever o teste que falha**
@@ -314,7 +314,7 @@ class SedurAuthClientTest extends TestCase
     {
         parent::setUp();
 
-        config(['sile.integrations.sedur_auth.base_url' => 'https://sedur.test/k8s/prd']);
+        config(['viabiliza.integrations.sedur_auth.base_url' => 'https://sedur.test/k8s/prd']);
     }
 
     private function client(): SedurAuthClient
@@ -437,7 +437,7 @@ class SedurAuthSettings
     {
         return rtrim((string) Settings::get(
             'integrations.sedur_auth.base_url',
-            (string) config('sile.integrations.sedur_auth.base_url', ''),
+            (string) config('viabiliza.integrations.sedur_auth.base_url', ''),
         ), '/');
     }
 
@@ -566,7 +566,7 @@ class SedurAuthClient
 
     private function timeout(): int
     {
-        return (int) config('sile.integrations.sedur_auth.timeout', 8);
+        return (int) config('viabiliza.integrations.sedur_auth.timeout', 8);
     }
 }
 ```
@@ -623,7 +623,7 @@ class SedurDirectoryAuthenticatorTest extends TestCase
     {
         parent::setUp();
 
-        config(['sile.integrations.sedur_auth.base_url' => 'https://sedur.test/k8s/prd']);
+        config(['viabiliza.integrations.sedur_auth.base_url' => 'https://sedur.test/k8s/prd']);
     }
 
     private function authenticator(): DirectoryAuthenticator
@@ -963,7 +963,7 @@ git commit -m "feat: registra origem da credencial (AD ou local) no histórico d
 - Regression: `tests/Feature/Auth/GestaoLoginTest.php` (deve continuar verde sem alteração)
 
 **Interfaces:**
-- Consumes: `DirectoryAuthenticator` (Task 4), `SedurAuthSettings` (Task 3), `User::isAdAccount()` (Task 1), convenção `auth_origin`/`origin` (Task 5), config `sile.security.login.max_attempts_per_ip` (Task 2).
+- Consumes: `DirectoryAuthenticator` (Task 4), `SedurAuthSettings` (Task 3), `User::isAdAccount()` (Task 1), convenção `auth_origin`/`origin` (Task 5), config `viabiliza.security.login.max_attempts_per_ip` (Task 2).
 - Produces: fluxo final do login do console; eventos de auditoria `ad-indisponivel` e `ad-sincronizacao-falhou` em `access_logs`.
 
 - [ ] **Step 1: Escrever os testes que falham**
@@ -997,7 +997,7 @@ class GestaoLoginAdTest extends TestCase
 
         $this->seed(RolesAndPermissionsSeeder::class);
 
-        config(['sile.integrations.sedur_auth.base_url' => 'https://sedur.test/k8s/prd']);
+        config(['viabiliza.integrations.sedur_auth.base_url' => 'https://sedur.test/k8s/prd']);
     }
 
     private function fakeAdSucesso(string $nome = 'Nome Sincronizado'): void
@@ -1102,7 +1102,7 @@ class GestaoLoginAdTest extends TestCase
 
     public function test_integracao_ad_desligada_bloqueia_com_aviso_e_auditoria(): void
     {
-        config(['sile.features.ad_login' => false]);
+        config(['viabiliza.features.ad_login' => false]);
         Http::fake();
 
         $servidor = User::factory()->administrador()->ad('seuusuarioad')->create();
@@ -1147,7 +1147,7 @@ class GestaoLoginAdTest extends TestCase
 
     public function test_throttle_bloqueia_antes_de_chamar_a_api_ad(): void
     {
-        config(['sile.security.login.max_attempts' => 3]);
+        config(['viabiliza.security.login.max_attempts' => 3]);
         Http::fake(['*/ws-autenticacao/auth' => Http::response([], 401)]);
 
         $servidor = User::factory()->administrador()->ad('seuusuarioad')->create();
@@ -1165,7 +1165,7 @@ class GestaoLoginAdTest extends TestCase
         ])->assertSessionHasErrors('email');
 
         // A 4ª tentativa foi barrada pelo throttle ANTES de bater na API —
-        // o SILE não vira proxy de força bruta contra o AD institucional.
+        // o VIABILIZA não vira proxy de força bruta contra o AD institucional.
         Http::assertSentCount(3);
     }
 
@@ -1471,12 +1471,12 @@ class LoginController extends Controller
 
     /**
      * Limite por IP (além do por conta): contém password spraying — muitas
-     * contas, uma senha — que a chave email|ip não pega. Sem ele, o SILE
+     * contas, uma senha — que a chave email|ip não pega. Sem ele, o VIABILIZA
      * vira proxy de força bruta contra o AD institucional.
      */
     private function ensureIpIsNotRateLimited(LoginRequest $request): void
     {
-        $maxPorIp = (int) config('sile.security.login.max_attempts_per_ip', 30);
+        $maxPorIp = (int) config('viabiliza.security.login.max_attempts_per_ip', 30);
 
         if (! RateLimiter::tooManyAttempts($this->ipThrottleKey($request), $maxPorIp)) {
             return;
@@ -1954,7 +1954,7 @@ git commit -m "feat: permite vincular conta AD no cadastro de usuários do conso
 
 **Interfaces:**
 - Consumes: `User::isAdAccount()` (Task 1).
-- Produces: conta AD não recebe link de recuperação do console, não redefine senha por token e não altera senha em `/gestao/conta/senha` — a senha corporativa é gerida fora do SILE.
+- Produces: conta AD não recebe link de recuperação do console, não redefine senha por token e não altera senha em `/gestao/conta/senha` — a senha corporativa é gerida fora do VIABILIZA.
 
 - [ ] **Step 1: Escrever os testes que falham**
 

@@ -77,7 +77,7 @@ completed: 2026-06-14
 public function decide(ViabilityRequest $request, ?User $actor = null): DecisionResult
 ```
 
-- **Idempotente e autoritativo:** roda dentro de `Cache::lock("expresso:decisao:{$request->id}", config('sile.expresso.lock.ttl_segundos', 10))->block(...)`. Dentro do lock RECARREGA (`refresh()`) e re-checa `status === Protocolada`; se já saiu, devolve a decisão existente (ou o estado atual) com `emitted=false`, SEM redecidir.
+- **Idempotente e autoritativo:** roda dentro de `Cache::lock("expresso:decisao:{$request->id}", config('viabiliza.expresso.lock.ttl_segundos', 10))->block(...)`. Dentro do lock RECARREGA (`refresh()`) e re-checa `status === Protocolada`; se já saiu, devolve a decisão existente (ou o estado atual) com `emitted=false`, SEM redecidir.
 - **Reexecução FRESCA:** `app(SolicitacaoViabilityResolver::class)->resolve($request)` — nunca o `simulation_snapshot`.
 - **Roteamento:**
   - `Settings::get('features.fluxo_expresso', config(...))` false → `encaminharAnalise('fluxo expresso desativado')`.

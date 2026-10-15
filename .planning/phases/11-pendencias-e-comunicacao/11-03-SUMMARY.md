@@ -89,7 +89,7 @@ Cada task foi commitada atomicamente (TDD RED → GREEN dentro de cada uma):
 ```
 send(WhatsAppMessage $message): void   // @throws WhatsAppUnavailableException
 ```
-Binding default em `AppServiceProvider::register` (ao lado de Regin/SEFAZ/Bap): `WhatsAppGateway → UnavailableWhatsAppGateway`. **Fase 13** troca SÓ este binding pelo adaptador HTTP real (lendo `integrations.whatsapp.base_url/.token` do 11-02 + constantes técnicas de `config('sile.integrations.whatsapp.*')`); nenhum call site muda.
+Binding default em `AppServiceProvider::register` (ao lado de Regin/SEFAZ/Bap): `WhatsAppGateway → UnavailableWhatsAppGateway`. **Fase 13** troca SÓ este binding pelo adaptador HTTP real (lendo `integrations.whatsapp.base_url/.token` do 11-02 + constantes técnicas de `config('viabiliza.integrations.whatsapp.*')`); nenhum call site muda.
 
 ### `App\Services\Whatsapp\WhatsAppMessage` (DTO imutável)
 ```

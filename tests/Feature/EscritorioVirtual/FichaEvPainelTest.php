@@ -152,9 +152,9 @@ class FichaEvPainelTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->where(
                     'escritorioVirtual.flag_analise_sede',
-                    config('sile.analise.escritorio_virtual.flag_analise_sede'),
+                    config('viabiliza.analise.escritorio_virtual.flag_analise_sede'),
                 )
-                ->where('escritorioVirtual.cnae_gatilho', config('sile.analise.escritorio_virtual.cnae_gatilho_sede')));
+                ->where('escritorioVirtual.cnae_gatilho', config('viabiliza.analise.escritorio_virtual.cnae_gatilho_sede')));
     }
 
     public function test_sede_sem_abrigados_tem_painel_vazio(): void

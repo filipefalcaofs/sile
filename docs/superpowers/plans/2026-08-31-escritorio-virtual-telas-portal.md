@@ -14,7 +14,7 @@
 
 - Comando de teste: `php artisan test --filter=<NomeDoTeste>`, sempre em **foreground**. Suíte em SQLite `:memory:`; o banco de desenvolvimento remoto é inacessível e desnecessário. O grupo `Postgis` falha por falta do container espacial — pré-existente, ignorar.
 - Testes: classes no estilo PHPUnit em `tests/Feature/EscritorioVirtual/`, com `use LazilyRefreshDatabase;` e docblock em português explicando a regra coberta.
-- **Nenhum texto de pergunta ou aviso escrito no JSX.** Todos vêm de parâmetro administrável (`Settings::get('<chave>', config('sile.<chave>'))`), entregues à tela pelo payload do Inertia. A contagem esperada nos testes de seeder está em **101** — atualizar ao acrescentar, incluindo o comentário que discrimina a origem.
+- **Nenhum texto de pergunta ou aviso escrito no JSX.** Todos vêm de parâmetro administrável (`Settings::get('<chave>', config('viabiliza.<chave>'))`), entregues à tela pelo payload do Inertia. A contagem esperada nos testes de seeder está em **101** — atualizar ao acrescentar, incluindo o comentário que discrimina a origem.
 - O CNAE gatilho é parametrizável, com fonte única em `SedeEscritorioVirtualGatilho::cnaeGatilho()` (dígitos) e `cnaeGatilhoFormatado()` (`NNNN-N/NN`). **Não** escrever o código literal em código de produção nem no JSX.
 - Front-end: seguir o padrão visual das etapas existentes (`resources/js/components/solicitacao/etapa-imovel.tsx` e `etapa-atividades.tsx`) — mesmas classes Tailwind, mesmo tratamento de erro, mesmo `useForm` do Inertia. Não introduzir biblioteca nem padrão visual novo.
 - TypeScript: as interfaces de props do wizard e das etapas precisam refletir os campos novos. `npx tsc --noEmit` (ou o script equivalente do projeto) deve passar.
@@ -35,7 +35,7 @@
 - Modify: `app/Http/Controllers/Portal/SolicitacaoController.php`
 - Modify: `resources/js/pages/portal/solicitacoes/wizard.tsx`
 - Modify: `resources/js/components/solicitacao/etapa-imovel.tsx`
-- Modify: `config/sile.php`
+- Modify: `config/viabiliza.php`
 - Modify: `database/seeders/ParameterSeeder.php`
 - Modify: `tests/Feature/Seeders/DatabaseSeederTest.php`
 - Modify: `tests/Feature/Seeders/ParameterSeederTest.php`
@@ -81,7 +81,7 @@ Expected: FAIL nos dois primeiros casos (campos ausentes do payload).
 
 - [ ] **Step 3: Parâmetro do texto**
 
-Acrescentar `analise.escritorio_virtual.pergunta_geral` em `config/sile.php` e no `ParameterSeeder`, com o texto verbatim. Atualizar a contagem 101→102 nos dois testes de seeder e o comentário que discrimina a origem.
+Acrescentar `analise.escritorio_virtual.pergunta_geral` em `config/viabiliza.php` e no `ParameterSeeder`, com o texto verbatim. Atualizar a contagem 101→102 nos dois testes de seeder e o comentário que discrimina a origem.
 
 - [ ] **Step 4: Payload do controller**
 
@@ -115,7 +115,7 @@ Expected: PASS nas três.
 Rebuilde os assets no mesmo procedimento dos commits `chore: rebuilda assets ...` desta branch, e commite código e assets **separadamente**, como a branch já faz.
 
 ```bash
-git add config/sile.php database/seeders/ParameterSeeder.php app/Http/Controllers/Portal/SolicitacaoController.php resources/js/pages/portal/solicitacoes/wizard.tsx resources/js/components/solicitacao/etapa-imovel.tsx tests/Feature/EscritorioVirtual/PerguntaGeralPortalTest.php tests/Feature/Seeders/DatabaseSeederTest.php tests/Feature/Seeders/ParameterSeederTest.php
+git add config/viabiliza.php database/seeders/ParameterSeeder.php app/Http/Controllers/Portal/SolicitacaoController.php resources/js/pages/portal/solicitacoes/wizard.tsx resources/js/components/solicitacao/etapa-imovel.tsx tests/Feature/EscritorioVirtual/PerguntaGeralPortalTest.php tests/Feature/Seeders/DatabaseSeederTest.php tests/Feature/Seeders/ParameterSeederTest.php
 git commit -m "feat(ev): pergunta a intencao de abrigo no passo do imovel"
 ```
 
@@ -199,7 +199,7 @@ A tarefa que fecha a frente. Três coisas no mesmo passo do wizard, porque as tr
 - Modify: `app/Http/Controllers/Portal/SolicitacaoController.php`
 - Modify: `resources/js/pages/portal/solicitacoes/wizard.tsx`
 - Modify: `resources/js/components/solicitacao/etapa-atividades.tsx`
-- Modify: `config/sile.php`
+- Modify: `config/viabiliza.php`
 - Modify: `database/seeders/ParameterSeeder.php`
 - Modify: `tests/Feature/Seeders/DatabaseSeederTest.php`
 - Modify: `tests/Feature/Seeders/ParameterSeederTest.php`
@@ -248,7 +248,7 @@ Expected: FAIL na maioria dos casos.
 
 - [ ] **Step 3: Parâmetro da pergunta vinculada**
 
-Acrescentar `analise.escritorio_virtual.pergunta_vinculada` em `config/sile.php` e no `ParameterSeeder`, com o texto verbatim. Atualizar a contagem (102→103 após a Task 1) nos dois testes de seeder e o comentário.
+Acrescentar `analise.escritorio_virtual.pergunta_vinculada` em `config/viabiliza.php` e no `ParameterSeeder`, com o texto verbatim. Atualizar a contagem (102→103 após a Task 1) nos dois testes de seeder e o comentário.
 
 - [ ] **Step 4: Aceitar os campos novos na validação**
 
@@ -308,7 +308,7 @@ Expected: PASS. Atenção a `AbrigadoCnaeBlockTest` e `ConstituicaoSedeBloqueios
 Mesmo procedimento da Task 1: código e assets em commits separados.
 
 ```bash
-git add config/sile.php database/seeders/ParameterSeeder.php app/Http/Requests/Portal/UpdateSolicitacaoAtividadesRequest.php app/Http/Controllers/Portal/SolicitacaoAtividadeController.php app/Http/Controllers/Portal/SolicitacaoController.php resources/js/pages/portal/solicitacoes/wizard.tsx resources/js/components/solicitacao/etapa-atividades.tsx tests/Feature/EscritorioVirtual/AtividadesPortalEscritorioVirtualTest.php tests/Feature/Seeders/DatabaseSeederTest.php tests/Feature/Seeders/ParameterSeederTest.php
+git add config/viabiliza.php database/seeders/ParameterSeeder.php app/Http/Requests/Portal/UpdateSolicitacaoAtividadesRequest.php app/Http/Controllers/Portal/SolicitacaoAtividadeController.php app/Http/Controllers/Portal/SolicitacaoController.php resources/js/pages/portal/solicitacoes/wizard.tsx resources/js/components/solicitacao/etapa-atividades.tsx tests/Feature/EscritorioVirtual/AtividadesPortalEscritorioVirtualTest.php tests/Feature/Seeders/DatabaseSeederTest.php tests/Feature/Seeders/ParameterSeederTest.php
 git commit -m "feat(ev): marca exclusao por atividade e confirma a perda da condicao de sede"
 ```
 
@@ -318,7 +318,7 @@ git commit -m "feat(ev): marca exclusao por atividade e confirma a perda da cond
 
 **Cobertura.** Torna alcançáveis: a pergunta geral (RN-EV-01), a pergunta vinculada (RN-EV-01), a marcação de intenção (RN-AA-05b) e a confirmação de perda da condição (RN-AA-04). Mais a remoção do bloqueio que impedia a sede titular de compor a solicitação. Fica de fora: a tela de gestão da ficha, que já recebe a flag de análise desde o plano de constituição; e a apresentação do TVL para exclusão, que depende de decisão da SEDUR.
 
-**Consistência.** A Task 2 é pré-requisito real da Task 3 — sem ela a tela entrega um payload que o backend rejeita. A Task 1 é independente das outras duas, mas as três tocam `config/sile.php`, o `ParameterSeeder` e a contagem nos testes de seeder, então são estritamente sequenciais.
+**Consistência.** A Task 2 é pré-requisito real da Task 3 — sem ela a tela entrega um payload que o backend rejeita. A Task 1 é independente das outras duas, mas as três tocam `config/viabiliza.php`, o `ParameterSeeder` e a contagem nos testes de seeder, então são estritamente sequenciais.
 
 **Risco reconhecido.** O Step 7 da Task 3 tem uma decisão de contrato entre etapas — quem é o dono de `wants_virtual_office_hq` se a pergunta vinculada vive no passo de atividades e o campo é escrito pelo passo do imóvel. Deixei explícito que o implementador deve perguntar em vez de escolher. Escrever a resposta aqui, sem ler o código dos dois passos em conjunto, seria inventar precisão — e nas nove vezes anteriores deste projeto em que um implementador parou para perguntar, o defeito era do enunciado.
 

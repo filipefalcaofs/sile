@@ -88,7 +88,7 @@ A documentação registra a dúvida: a classe do Quadro 11A é o
 verificado os dois coincidiram, mas são cadastros distintos e isso não prova
 equivalência na cidade inteira.
 
-`type_name` e `atributo` ficam em `config/sile.php` (constante técnica,
+`type_name` e `atributo` ficam em `config/viabiliza.php` (constante técnica,
 precedente [02-02]). Trocar a fonte para `HIERARQUIA` da camada de logradouro
 é mudança de config, não de código. A pendência continua registrada; o motor
 deixa de ficar parado por causa dela.

@@ -145,7 +145,7 @@ class XlsxExporterTest extends TestCase
     public function export_xlsx_acima_do_limiar_despacha_o_job_com_o_formato_xlsx(): void
     {
         Queue::fake();
-        config(['sile.relatorios.export.assincrono_limiar_linhas' => 1]);
+        config(['viabiliza.relatorios.export.assincrono_limiar_linhas' => 1]);
         ViabilityRequest::factory()->create(['address_neighborhood' => 'Pituba']);
         ViabilityRequest::factory()->create(['address_neighborhood' => 'Itapua']);
 

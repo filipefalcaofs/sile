@@ -153,7 +153,7 @@ def generate_fpa_json():
         "empresa": "Sudoeste Informática",
         "aplicacao": "Viabiliza — Sistema de Licenciamento Eletrônico da SEDUR",
         "projeto": "Contagem IFPUG - Código Fonte Atualizada",
-        "dv_numero": "DV-SILE-003",
+        "dv_numero": "DV-VIABILIZA-003",
         "responsavel": "Equipe de Análise — Sudoeste Informática (via Análise de Código)",
         "versao": "1.1",
         "tipo_contagem": "desenvolvimento",

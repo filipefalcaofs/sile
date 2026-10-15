@@ -102,7 +102,7 @@ Grupo dedicado sob prefixo `processos/`, name `gestao.processos.*`, dentro do gr
 - **tvl (emitir):** sem corpo (a fonte é a `ViabilityDecision` deferida do processo).
 
 ### Esquema do download assinado do TVL (HU-132 CA-02)
-1. `store` emite o documento (`TvlPdfService::generate`) e devolve `download_url = URL::temporarySignedRoute('gestao.processos.tvl.download', now()->addMinutes(ttl), ['tvlDocument' => $id])`, TTL = `Settings::get('analise.tvl.download.ttl_minutos', config('sile.analise.tvl.download.ttl_minutos', 5))`.
+1. `store` emite o documento (`TvlPdfService::generate`) e devolve `download_url = URL::temporarySignedRoute('gestao.processos.tvl.download', now()->addMinutes(ttl), ['tvlDocument' => $id])`, TTL = `Settings::get('analise.tvl.download.ttl_minutos', config('viabiliza.analise.tvl.download.ttl_minutos', 5))`.
 2. `download` (middleware `signed`) valida assinatura/TTL e faz `Storage::disk($doc->disk)->download($doc->path, "tvl-{verification_code}.pdf")` — o disco é o parametrizado em `analise.tvl.disk` (NUNCA `public`, guarda do 10-13). O acesso é auditado (`analise`/`tvl-download`).
 3. Defesa em profundidade: assinatura válida **+** gate `emitir-tvl` **+** `auth:gestao` **+** disco não público — o TVL não vaza por URL pública e não vai ao cidadão.
 

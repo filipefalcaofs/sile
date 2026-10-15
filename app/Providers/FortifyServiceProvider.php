@@ -181,19 +181,19 @@ class FortifyServiceProvider extends ServiceProvider
         // sem deploy; estabelece o padrão de throttle parametrizado para HU-069/EP07.
         RateLimiter::for('cnpj-lookup', function (Request $request) {
             return Limit::perMinute(
-                (int) config('sile.seguranca.throttle.cnpj_lookup.por_minuto', 30),
+                (int) config('viabiliza.seguranca.throttle.cnpj_lookup.por_minuto', 30),
             )->by($request->user()?->id ?: $request->ip());
         });
 
         RateLimiter::for('inscricao-lookup', function (Request $request) {
             return Limit::perMinute(
-                (int) config('sile.seguranca.throttle.inscricao_lookup.por_minuto', 30),
+                (int) config('viabiliza.seguranca.throttle.inscricao_lookup.por_minuto', 30),
             )->by($request->user()?->id ?: $request->ip());
         });
 
         RateLimiter::for('sedur-contato', function (Request $request) {
             return Limit::perMinute(
-                (int) config('sile.seguranca.throttle.sedur_contato.por_minuto', 30),
+                (int) config('viabiliza.seguranca.throttle.sedur_contato.por_minuto', 30),
             )->by($request->user()?->id ?: $request->ip());
         });
 
@@ -201,7 +201,7 @@ class FortifyServiceProvider extends ServiceProvider
         // o limite por minuto é administrável sem deploy (espelha cnpj-lookup).
         RateLimiter::for('geocoding', function (Request $request) {
             return Limit::perMinute(
-                (int) config('sile.seguranca.throttle.geocoding.por_minuto', 60),
+                (int) config('viabiliza.seguranca.throttle.geocoding.por_minuto', 60),
             )->by($request->user()?->id ?: $request->ip());
         });
 
@@ -210,7 +210,7 @@ class FortifyServiceProvider extends ServiceProvider
         // estabelecido na Fase 3.1 (cnpj-lookup/geocoding).
         RateLimiter::for('consulta-viabilidade', function (Request $request) {
             return Limit::perMinute(
-                (int) config('sile.seguranca.throttle.consulta_viabilidade.por_minuto', 20),
+                (int) config('viabiliza.seguranca.throttle.consulta_viabilidade.por_minuto', 20),
             )->by($request->user()?->id ?: $request->ip());
         });
 
@@ -218,13 +218,13 @@ class FortifyServiceProvider extends ServiceProvider
         // limite administrável sem deploy; espelha consulta-viabilidade (EP07).
         RateLimiter::for('consulta-protocolo', function (Request $request) {
             return Limit::perMinute(
-                (int) config('sile.seguranca.throttle.consulta_protocolo.por_minuto', 30),
+                (int) config('viabiliza.seguranca.throttle.consulta_protocolo.por_minuto', 30),
             )->by($request->user()?->id ?: $request->ip());
         });
 
         // Throttle do teste de conexão de IA (Fase 14, Onda 0) — ação interna de
         // admin (manter-config-ia); o limite por minuto é um teto técnico/de
-        // segurança lido via Settings (fallback config/sile.php), espelhando o
+        // segurança lido via Settings (fallback config/viabiliza.php), espelhando o
         // padrão de throttle parametrizado da Fase 3.1.
         RateLimiter::for('ai-connection-test', function (Request $request) {
             return Limit::perMinute(
@@ -235,7 +235,7 @@ class FortifyServiceProvider extends ServiceProvider
         // Throttle do webhook municipal /api_integracao/recebe (HU-103 RN-010).
         RateLimiter::for('regin-recebe', function (Request $request) {
             return Limit::perMinute(
-                (int) config('sile.seguranca.throttle.regin_recebe.por_minuto', 60),
+                (int) config('viabiliza.seguranca.throttle.regin_recebe.por_minuto', 60),
             )->by($request->ip());
         });
     }

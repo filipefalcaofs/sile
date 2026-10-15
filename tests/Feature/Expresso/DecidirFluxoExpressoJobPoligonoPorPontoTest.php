@@ -27,7 +27,7 @@ class DecidirFluxoExpressoJobPoligonoPorPontoTest extends TestCase
     {
         parent::setUp();
 
-        config(['sile.features.geoserver_enderecamento' => true]);
+        config(['viabiliza.features.geoserver_enderecamento' => true]);
     }
 
     /**

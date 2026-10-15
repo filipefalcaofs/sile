@@ -49,7 +49,7 @@ Fora do escopo / bloqueado: convite/resposta via Simplifica/Regin (HU-091 RN-004
 - Agents (2026-06-15): analista-negocio (ciclo já pronto da Fase 10, multicanal, WhatsApp toggle/contrato, HU-093/147 ativam dormente) e arquiteto-tecnico (communications ledger, canal database, WhatsAppGateway, NotificationDispatcher, refactor anti-dup, scheduler idempotente).
 
 ### HUs
-- `docs/SILE_HUs_Completas_MD/EP11-Pendências-e-Comunicacao/HU-090..HU-096.md`, `HU-147`.
+- `docs/VIABILIZA_HUs_Completas_MD/EP11-Pendências-e-Comunicacao/HU-090..HU-096.md`, `HU-147`.
 
 ### Reuso (NÃO recriar — estender)
 - Ciclo de pendência: `app/Services/Analise/PendenciaService.php` (abrir/responder — REMOVER notificarRequerente; ADICIONAR dispatch PendenciaRespondida) + `app/Events/PendenciaSolicitada.php` (já existe; pendurar listener) + `app/Http/Controllers/.../PendenciaRespostaController` (portal).

@@ -306,17 +306,17 @@ final class NominatimGeocoder implements Geocoder
     {
         $baseUrl = rtrim((string) Settings::get(
             'integrations.geocoding.base_url',
-            config('sile.integrations.geocoding.base_url'),
+            config('viabiliza.integrations.geocoding.base_url'),
         ), '/');
 
-        return Cache::remember("sile.geocoding." . sha1($address),
-            (int) config('sile.integrations.geocoding.cache_ttl', 86400),
+        return Cache::remember("viabiliza.geocoding." . sha1($address),
+            (int) config('viabiliza.integrations.geocoding.cache_ttl', 86400),
             function () use ($baseUrl, $address): GeocodeResult {
-                $response = Http::withHeaders(['User-Agent' => config('sile.integrations.geocoding.user_agent')])
-                    ->timeout((int) Settings::get('integrations.geocoding.timeout', config('sile.integrations.geocoding.timeout', 8)))
+                $response = Http::withHeaders(['User-Agent' => config('viabiliza.integrations.geocoding.user_agent')])
+                    ->timeout((int) Settings::get('integrations.geocoding.timeout', config('viabiliza.integrations.geocoding.timeout', 8)))
                     ->retry(
-                        (int) Settings::get('integrations.geocoding.retries', config('sile.integrations.geocoding.retries', 2)),
-                        (int) Settings::get('integrations.geocoding.backoff_ms', config('sile.integrations.geocoding.backoff_ms', 1000)),
+                        (int) Settings::get('integrations.geocoding.retries', config('viabiliza.integrations.geocoding.retries', 2)),
+                        (int) Settings::get('integrations.geocoding.backoff_ms', config('viabiliza.integrations.geocoding.backoff_ms', 1000)),
                         throw: false,
                     )
                     ->acceptJson()
@@ -344,7 +344,7 @@ RateLimiter::for('geocoding', function (Request $request) {
 });
 ```
 
-### Parâmetros novos (ParameterSeeder + config/sile.php)
+### Parâmetros novos (ParameterSeeder + config/viabiliza.php)
 
 ```php
 // ParameterSeeder::catalog() — grupos seguindo o padrão existente
@@ -360,7 +360,7 @@ RateLimiter::for('geocoding', function (Request $request) {
 ```
 
 ```php
-// config/sile.php — fallbacks (constantes técnicas timeout/retries/cache_ttl SÓ aqui, precedente [02-02])
+// config/viabiliza.php — fallbacks (constantes técnicas timeout/retries/cache_ttl SÓ aqui, precedente [02-02])
 'features' => ['geocoding' => true],
 'geo' => ['validacao' => ['sobreposicao_minima' => 50]],
 'seguranca' => ['throttle' => ['geocoding' => ['por_minuto' => 60]]],
@@ -487,7 +487,7 @@ Mapeia cada garantia ao tipo de teste e ao que prova — respeitando "sem fachad
 - **Versão/vigência:** seleção da camada vigente vs camada da data X (lógica pura sobre `valid_from`/`valid_to`).
 - **Diff de carga (HU-036 RN-005):** contagem features +/−/~ (lógica pura).
 - **Sobreposição (HU-037):** matemática do ratio e do limiar `geo.validacao.sobreposicao_minima` (pura, sem PostGIS).
-- **Parâmetros:** `ParameterSeeder` cataloga as 4 chaves novas; `Settings::get` cai no fallback de `config/sile.php` sem banco.
+- **Parâmetros:** `ParameterSeeder` cataloga as 4 chaves novas; `Settings::get` cai no fallback de `config/viabiliza.php` sem banco.
 - **Consumidores com fake `SpatialRepository`:** controllers/serviço que dependem de território testados sem banco.
 
 ### Camada 2 — Integração PostGIS (`@group postgis`, OBRIGATÓRIO no CI)

@@ -11,6 +11,7 @@ import Alert from '@/components/ui/alert';
 import Button from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import PortalLayout from '@/layouts/portal-layout';
+import { mensagemBuscaCnpj } from '@/lib/consulta-cnpj';
 
 interface CadastrarEmpresaProps {
     cnpjLookupEnabled: boolean;
@@ -101,10 +102,13 @@ export default function CadastrarEmpresa({ cnpjLookupEnabled }: CadastrarEmpresa
                 }
                 setData((current) => ({ ...current, ...filled }));
             },
-            onError: (payload: { message?: string }) => {
-                setLookupError(
-                    payload?.message ?? 'Não foi possível consultar o CNPJ. Preencha os dados manualmente.',
-                );
+            onError: (erros: { cnpj?: string | string[]; message?: string }) => {
+                setLookupError(mensagemBuscaCnpj(erros));
+            },
+            onHttpException: (response: { data?: unknown }) => {
+                setLookupError(mensagemBuscaCnpj(response.data));
+
+                return false;
             },
         });
     }

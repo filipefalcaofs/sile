@@ -31,6 +31,13 @@
                     if (window.VLibras) {
                         new window.VLibras.Widget('https://vlibras.gov.br/app');
                     }
+
+                    // O botão oficial nasce fixo no canto inferior direito e cobre
+                    // ações e o texto de confirmação. Fica à esquerda, abaixo dos modais.
+                    var estilo = document.createElement('style');
+                    estilo.id = 'vlibras-posicao';
+                    estilo.textContent = '[vw].enabled{left:1rem !important;right:auto !important;bottom:1rem !important;top:auto !important;z-index:30 !important;}[vw-plugin-wrapper]{z-index:40 !important;}';
+                    document.head.appendChild(estilo);
                 });
             </script>
         @endunless

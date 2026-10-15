@@ -21,7 +21,7 @@ Decisão de produto: **aproximar do legado (abordagem A)** e preencher o branco 
 ## 2. Princípios
 
 1. **Paridade estrutural** com o print do legado (Localização | Polígono → Dados do TVL).
-2. **Melhoria controlada** no design system SILE (cards, tipografia, contraste AA, empty/degraded states).
+2. **Melhoria controlada** no design system VIABILIZA (cards, tipografia, contraste AA, empty/degraded states).
 3. **Sem fachada:** Cadastro indisponível ⇒ aviso explícito + campos “—”; nunca certidão simulada.
 4. **Só leitura no bloco IPTU** — o analista não edita dados do Cadastro/SEFAZ nesta tela.
 5. **Duplicação consciente:** endereço/bairro/CEP/tipo podem aparecer em Localização/TVL (informado na solicitação) e no bloco IPTU (fonte cadastro), com rótulos que deixam a origem clara.

@@ -7,7 +7,7 @@ tags: [laravel, eloquent, cache, crypt, settings, feature-toggles, seeder, hu-01
 # Dependency graph
 requires:
   - phase: 01-identidade-acesso-e-auditoria-transversal
-    provides: "App\\Support\\Settings (wrapper config), config/sile.php, call sites Settings::get (FortifyServiceProvider, AccessHistoryControllers, AppServiceProvider)"
+    provides: "App\\Support\\Settings (wrapper config), config/viabiliza.php, call sites Settings::get (FortifyServiceProvider, AccessHistoryControllers, AppServiceProvider)"
 provides:
   - "Tabela parameters (catálogo como dado: key/group/type/value/default_value/validation_rules/sensitive/description/requires_connection_test)"
   - "Model Parameter: typedValue() por tipo, criptografia condicional de sensíveis (RN-009), invalidação de cache em saved/deleted (núcleo do CA-05)"
@@ -23,7 +23,7 @@ tech-stack:
   patterns:
     - "Registry de parâmetros: catálogo seedado por metadados, value administrado intocável por re-seed"
     - "Criptografia condicional via Attribute::make lendo $this->sensitive (flag fora do fillable, ordenada antes de value)"
-    - "Cache por chave (sile.parameters.{key}) com Cache::forget em saved/deleted — efeito sem deploy"
+    - "Cache por chave (viabiliza.parameters.{key}) com Cache::forget em saved/deleted — efeito sem deploy"
     - "Fallback resiliente: try/catch QueryException no Settings::get (boot/artisan/CI sem banco migrado)"
 
 key-files:
@@ -37,17 +37,17 @@ key-files:
     - tests/Feature/Seeders/ParameterSeederTest.php
   modified:
     - app/Support/Settings.php
-    - config/sile.php
+    - config/viabiliza.php
     - app/Providers/AppServiceProvider.php
 
 key-decisions:
   - "sensitive fora do fillable e ordenado ANTES de value no definition() da factory — o mutator condicional lê $this->sensitive e o fill processa as chaves na ordem do array (Pitfall 3)"
   - "Sem HasAuditoria no Parameter: diff automático vazaria sensível em claro; histórico (RN-008) será auditoria explícita no 02-07"
-  - "TTL do cache é constante técnica (sile.parameters.cache_ttl), não parâmetro do registry (evita recursão)"
+  - "TTL do cache é constante técnica (viabiliza.parameters.cache_ttl), não parâmetro do registry (evita recursão)"
   - "ParameterSeeder fora do DatabaseSeeder — entrada é responsabilidade do 02-08 (evita conflito de arquivo na wave)"
 
 patterns-established:
-  - "Settings::get(key, default): cache → banco (value ?? default do catálogo) → config/sile.php → default do call site"
+  - "Settings::get(key, default): cache → banco (value ?? default do catálogo) → config/viabiliza.php → default do call site"
   - "Settings::enabled(feature): toggle booleano do grupo features com fallback config"
   - "Seeder de catálogo: updateOrCreate(['key' => …], [só metadados]) — NUNCA value"
 
@@ -97,7 +97,7 @@ Cada task TDD produziu commits atômicos (RED → GREEN; REFACTOR sem mudanças 
 - `database/factories/ParameterFactory.php` — definition com `sensitive` antes de `value`; states `sensitive()` e `integer()`
 - `database/seeders/ParameterSeeder.php` — catálogo de 10 entradas com descrições pt-BR; update só de metadados
 - `app/Support/Settings.php` — backend banco+cache+fallback; novo helper `enabled(feature)`
-- `config/sile.php` — adiciona `ui.cnaes.per_page`, `ui.users.per_page`, `features.procuracoes`, `parameters.cache_ttl` (preserva todas as chaves da Fase 1)
+- `config/viabiliza.php` — adiciona `ui.cnaes.per_page`, `ui.users.per_page`, `features.procuracoes`, `parameters.cache_ttl` (preserva todas as chaves da Fase 1)
 - `app/Providers/AppServiceProvider.php` — closure de `Password::defaults()` lê `security.password.*` via `Settings::get`; linha `auth.passwords.users.expire` intocada
 - `tests/Feature/Parameters/ParameterRegistryTest.php` — 5 testes (casts, default, criptografia, claro, invalidação)
 - `tests/Feature/Parameters/SettingsBackendTest.php` — 6 testes (banco, fallback config, fallback catálogo, efeito imediato, enabled, senha)
@@ -108,7 +108,7 @@ Cada task TDD produziu commits atômicos (RED → GREEN; REFACTOR sem mudanças 
 - `sensitive` imutável por interface (fora do fillable) e definido apenas em seed/factory — mitigação estrutural do Pitfall 3.
 - Histórico de alterações (RN-008/CA-07) não entra aqui: sem `HasAuditoria` no model (vazaria sensível); auditoria explícita com mascaramento entra no 02-07 junto com a UI.
 - `requires_connection_test` criado como contrato do RN-010 sem implementação de teste de conexão — sem feature de fachada; implementações reais na Fase 13.
-- TTL do cache como constante técnica em `config/sile.php`, não como parâmetro administrável (parametrizá-lo no próprio registry criaria recursão).
+- TTL do cache como constante técnica em `config/viabiliza.php`, não como parâmetro administrável (parametrizá-lo no próprio registry criaria recursão).
 
 ## Deviations from Plan
 

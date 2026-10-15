@@ -69,7 +69,7 @@ class WhatsAppPipelineIntegrationTest extends TestCase
      */
     private function comWhatsAppNoMapa(): void
     {
-        config()->set('sile.notificacoes.mapa_canais', [
+        config()->set('viabiliza.notificacoes.mapa_canais', [
             'pendencia_aberta' => ['email', 'in_app', 'whatsapp'],
         ]);
     }

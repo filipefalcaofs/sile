@@ -12,7 +12,7 @@ class GovBrIdTokenValidatorTest extends TestCase
 {
     private const BASE_URL = 'https://sso.staging.acesso.gov.br';
 
-    private const CLIENT_ID = 'sile.salvador.ba.gov.br';
+    private const CLIENT_ID = 'viabiliza.salvador.ba.gov.br';
 
     /** @var resource|\OpenSSLAsymmetricKey */
     private $keyPair;

@@ -15,7 +15,7 @@
 - Textos de indeferimento vêm do `DecisionTextCatalog` (editáveis); nunca string solta no serviço.
 - WFS mockado com `Http::fake` nos testes; nenhuma chamada real na suíte.
 - Camada indisponível é registrada como indisponível; nunca omitida, nunca inventada.
-- Sem parâmetro novo no `ParameterSeeder`; raio de logradouros próximos em `config/sile.php`.
+- Sem parâmetro novo no `ParameterSeeder`; raio de logradouros próximos em `config/viabiliza.php`.
 - pt-BR em textos e testes; `vendor/bin/pint --dirty --format agent`; `npm run build` após TSX.
 - Operações em produção (importação WFS, encerrar zona fictícia) só com pedido explícito do usuário.
 

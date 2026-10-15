@@ -17,7 +17,7 @@ requires:
     provides: "revisão 1 pré-analisada (engine_snapshot/engine_rules_versions/per_cnae com status_sugerido); recalcular é ação explícita (nova revisão), a pré-análise NÃO reexecuta ao reabrir (RN-004)"
   - phase: 10-analise-tecnica-sedur
     plan: "01"
-    provides: "permissão analisar-processos + parâmetros analise.* / config sile.analise.autosave.debounce_ms"
+    provides: "permissão analisar-processos + parâmetros analise.* / config viabiliza.analise.autosave.debounce_ms"
   - phase: 09-fluxo-expresso
     plan: "05"
     provides: "padrão server-driven (ResultadoExpressoController) + ViabilityDecisionResource (->resolve() como prop Inertia) + AuditService (RN-002)"
@@ -154,7 +154,7 @@ Compara campos de topo (`parecer`, `conditions`, `parking`) e o `per_cnae` por C
 ```
 
 ### Payload do `show` (Inertia `gestao/ficha-analise/show` — página em 10-17)
-`{ ficha: AnalysisRecordResource, processo: {id, protocol_number, status, status_label}, textosPadrao: [{id, category, content, version}] (só active — HU-085 RN-004), autosaveDebounceMs: int (config sile.analise.autosave.debounce_ms) }`
+`{ ficha: AnalysisRecordResource, processo: {id, protocol_number, status, status_label}, textosPadrao: [{id, category, content, version}] (só active — HU-085 RN-004), autosaveDebounceMs: int (config viabiliza.analise.autosave.debounce_ms) }`
 
 ### Payload de precedentes (`PrecedenteController@show`) — = `PrecedentService::forRecord` (10-06)
 `{ imovel: [{viability_request_id, protocol_number, outcome, decided_at, service_type, analyst}] (SEM CPF — LGPD RN-004), cnae_zona: {disponivel, cnae?, zona?, janela_meses?, deferidos?, indeferidos?, total?} | {disponivel:false, motivo} }`

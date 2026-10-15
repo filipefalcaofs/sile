@@ -8,7 +8,7 @@ tags: [hu-132, tvl, pdf, dompdf, dependencia-nova, storage-nao-publico, assinatu
 requires:
   - phase: 10-analise-tecnica-sedur
     plan: "01"
-    provides: "parâmetros analise.tvl.* (disk/assinatura.modo/assinatura.imagem_path/download.ttl_minutos) + permissão emitir-tvl + fallback config sile.analise.tvl.*"
+    provides: "parâmetros analise.tvl.* (disk/assinatura.modo/assinatura.imagem_path/download.ttl_minutos) + permissão emitir-tvl + fallback config viabiliza.analise.tvl.*"
   - phase: 10-analise-tecnica-sedur
     plan: "02"
     provides: "tabela/model tvl_documents (viability_decision_id, disk, path, verification_code único, generated_by/at) + TvlDocumentFactory"
@@ -26,7 +26,7 @@ provides:
   - "App\\Services\\Analise\\TvlPdfService::generate(ViabilityDecision, ?User): TvlDocument — TVL PDF real (dompdf) só de decisão deferida (FA-01), no disco parametrizado NÃO público, com tvl_documents auditado (analise/tvl-emitido)"
   - "App\\Services\\Analise\\TvlPdfService::montarDados(ViabilityDecision, string, ?DateTimeInterface): array — contrato de dados do documento (insumo de pré-visualização do 10-15)"
   - "resources/views/tvl/documento.blade.php — template do TVL (número de produto, CNAEs deferidas, condicionantes, parecer, fundamentação, assinatura parametrizável, código de verificação) em pt-BR"
-  - "config sile.analise.tvl.paper/orientation — constantes técnicas do dompdf (fora do catálogo HU-014)"
+  - "config viabiliza.analise.tvl.paper/orientation — constantes técnicas do dompdf (fora do catálogo HU-014)"
 affects: [10-15, 10-18]
 
 # Tech tracking
@@ -48,7 +48,7 @@ key-files:
   modified:
     - composer.json
     - composer.lock
-    - config/sile.php
+    - config/viabiliza.php
 
 key-decisions:
   - "dompdf instalado via composer require DE VERDADE (v3.1.2, resolvido pelo composer p/ Laravel 13/PHP 8.5) — pré-aprovada no PROJECT.md, sem aprovação adicional; isolada nesta wave"
@@ -73,7 +73,7 @@ completed: 2026-06-14
 ## Performance
 - **Duration:** ~18 min
 - **Tasks:** 2 (dependência + config; serviço + template + testes)
-- **Files:** 3 criados + 3 modificados (composer.json/lock pela dependência; config/sile.php pelas constantes técnicas)
+- **Files:** 3 criados + 3 modificados (composer.json/lock pela dependência; config/viabiliza.php pelas constantes técnicas)
 
 ## Dependência nova (insumo de 10-15)
 - **`barryvdh/laravel-dompdf` ^3.1 → v3.1.2** instalada via `composer require` (composer resolveu a versão; NÃO inventada). Presente em `composer.json` (require) e `composer.lock`; provider/facade `Barryvdh\DomPDF` descobertos por `php artisan package:discover` sem erro.
@@ -97,9 +97,9 @@ public function montarDados(ViabilityDecision $decision, string $verificationCod
 
 Fluxo de `generate`:
 1. `! $decision->isDeferida()` → **DomainException** (FA-01).
-2. `resolverDisco()` = `Settings::get('analise.tvl.disk', config('sile.analise.tvl.disk','local'))`; disco `public` → **RuntimeException** (guarda anti-vazamento, CA-02/LGPD).
+2. `resolverDisco()` = `Settings::get('analise.tvl.disk', config('viabiliza.analise.tvl.disk','local'))`; disco `public` → **RuntimeException** (guarda anti-vazamento, CA-02/LGPD).
 3. `verification_code` = `'TVL-'.Str::ulid()` (único, monotônico); `generated_at` = `now()`.
-4. `Pdf::loadView('tvl.documento', montarDados(...))->setPaper(paper, orientation)->output()` (paper/orientation de `config('sile.analise.tvl.*')`).
+4. `Pdf::loadView('tvl.documento', montarDados(...))->setPaper(paper, orientation)->output()` (paper/orientation de `config('viabiliza.analise.tvl.*')`).
 5. `Storage::disk($disk)->put("tvl/{decision_id}/{code}.pdf", $pdf)`.
 6. `TvlDocument::create({viability_decision_id, disk, path, verification_code, generated_by_user_id=$ator?->id, generated_at})`.
 7. `audit->log('analise','tvl-emitido', subject=$decision, result='sucesso', rulesVersion=representativa, properties={viability_request_id, viability_decision_id, tvl_document_id, tvl_product_number, verification_code, generated_by})`.
@@ -131,7 +131,7 @@ Fluxo de `generate`:
 | `analise.tvl.assinatura.modo` (`imagem`/`nenhuma`) | embute firma do diretor ou não assina |
 | `analise.tvl.assinatura.imagem_path` (default `''`) | caminho da imagem (base64 data URI; vazio/inexistente → sem firma) |
 | `analise.tvl.download.ttl_minutos` (default 5) | **consumido em 10-15** (URL assinada) — não usado aqui |
-| `sile.analise.tvl.paper`/`orientation` (config) | constantes técnicas do dompdf (`a4`/`portrait`) |
+| `viabiliza.analise.tvl.paper`/`orientation` (config) | constantes técnicas do dompdf (`a4`/`portrait`) |
 
 ## Mapa CA → teste (provado)
 | HU / RN | Teste | Evidência |

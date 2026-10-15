@@ -71,7 +71,7 @@ class ExportFile extends Model
             '<',
             now()->subDays((int) Settings::get(
                 'relatorios.export.retencao_dias',
-                config('sile.relatorios.export.retencao_dias', 7),
+                config('viabiliza.relatorios.export.retencao_dias', 7),
             )),
         );
     }

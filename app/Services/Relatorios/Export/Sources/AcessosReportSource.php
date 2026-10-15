@@ -22,7 +22,7 @@ use Illuminate\Database\Eloquent\Builder;
  * reconstruir a fonte certa via `app($sourceClass)` (INVARIANTE do
  * {@see ReportSource}). Colunas e mapeamento preservados fielmente do controller;
  * personalData=true (HU-101 — e-mail/usuário expostos). Guarda de volume técnica
- * (sile.auditoria.export.max_linhas) aplicada no builder.
+ * (viabiliza.auditoria.export.max_linhas) aplicada no builder.
  */
 final class AcessosReportSource implements ReportSource
 {
@@ -39,7 +39,7 @@ final class AcessosReportSource implements ReportSource
     public function definition(ReportFilters $filtros): ReportDefinition
     {
         $acessoFiltros = $filtros->only(self::CHAVES);
-        $maxLinhas = (int) config('sile.auditoria.export.max_linhas', 50000);
+        $maxLinhas = (int) config('viabiliza.auditoria.export.max_linhas', 50000);
 
         return new ReportDefinition(
             titulo: 'Histórico de acessos',

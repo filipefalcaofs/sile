@@ -50,7 +50,7 @@ class EnviarParaAnaliseService
         ?User $actor = null,
         string $motivo = 'Envio manual para análise (gestão)',
     ): bool {
-        $ttl = (int) config('sile.expresso.lock.ttl_segundos', 10);
+        $ttl = (int) config('viabiliza.expresso.lock.ttl_segundos', 10);
 
         return Cache::lock("analise:enviar:{$request->id}", $ttl)->block(
             $ttl,

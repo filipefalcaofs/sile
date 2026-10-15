@@ -162,7 +162,7 @@ class PrecedentServiceTest extends TestCase
     {
         // RN-003: a quantidade exibida é parametrizável (HU-014). Settings::get
         // cai no fallback de config quando não há linha em parameters.
-        config(['sile.analise.precedentes.max_itens' => 1]);
+        config(['viabiliza.analise.precedentes.max_itens' => 1]);
 
         $ficha = $this->fichaComSnapshot(
             $this->snapshotComZona(['status' => 'indisponivel', 'nome' => null]),
@@ -181,7 +181,7 @@ class PrecedentServiceTest extends TestCase
 
     public function test_estatistica_do_cnae_na_zona_quando_ha_zona(): void
     {
-        config(['sile.analise.precedentes.janela_meses' => 12]);
+        config(['viabiliza.analise.precedentes.janela_meses' => 12]);
 
         $ficha = $this->fichaComSnapshot(
             $this->snapshotComZona(['status' => 'identificado', 'nome' => 'ZR-1'], '4712100'),

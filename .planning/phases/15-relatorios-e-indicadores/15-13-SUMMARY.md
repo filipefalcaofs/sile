@@ -41,7 +41,7 @@ key-files:
     - app/Http/Controllers/Gestao/DashboardController.php
     - resources/js/pages/gestao/dashboard.tsx
     - resources/js/components/app/command-search.tsx
-    - config/sile.php
+    - config/viabiliza.php
     - resources/js/layouts/gestao-layout.tsx (EDITADO no working tree, NÃO COMMITADO — arquivo do dono da Fase 14)
 
 key-decisions:
@@ -142,7 +142,7 @@ A navegação foi refatorada pelo usuário (Fase 14): `app-sidebar.tsx` só REND
 
 - `tests/Feature/Relatorios/DashboardKpisTest.php` — CRIADO: prova KPIs exatos, ausência de `delta`, gating e degradação honesta.
 - `app/Http/Controllers/Gestao/DashboardController.php` — MODIFICADO/COMMITADO: bloco `relatorios` gated + método `relatoriosKpis` (injeção dos 3 serviços no `__invoke`).
-- `config/sile.php` — MODIFICADO/COMMITADO: `relatorios.dashboard.janela_dias=30` (constante técnica).
+- `config/viabiliza.php` — MODIFICADO/COMMITADO: `relatorios.dashboard.janela_dias=30` (constante técnica).
 - `resources/js/pages/gestao/dashboard.tsx` — MODIFICADO/COMMITADO: seção Relatórios (KpiCards + 2 gráficos).
 - `resources/js/pages/gestao/relatorios/indicadores.tsx` — CRIADO: tela de indicadores de viabilidade.
 - `resources/js/components/app/command-search.tsx` — MODIFICADO/COMMITADO: grupo Relatórios no Cmd+K.
@@ -163,7 +163,7 @@ A navegação foi refatorada pelo usuário (Fase 14): `app-sidebar.tsx` só REND
 - **Contexto:** o plano (e seu critério `grep consultar-relatorios app-sidebar.tsx`) foi escrito antes do refactor da navegação. Hoje `app-sidebar.tsx` só renderiza `groups` por props; os grupos vivem no `gestao-layout.tsx`.
 - **Resolução:** grupo "Relatórios" adicionado ao `gestao-layout.tsx` (não tocado o `app-sidebar.tsx`); critério desatualizado ignorado. `gestao-layout.tsx` deixado SEM commit (arquivo do dono da Fase 14) — ver seção (d).
 
-**2. [Refinamento] `config/sile.php` (6º arquivo commitado na Task 1)**
+**2. [Refinamento] `config/viabiliza.php` (6º arquivo commitado na Task 1)**
 - Adicionado `relatorios.dashboard.janela_dias` (constante técnica). Arquivo limpo no repositório (não é trabalho da Fase 14) — commitado junto da implementação (GREEN).
 
 **3. [Refinamento] `indicadores.tsx` não usa `useServerTable`**

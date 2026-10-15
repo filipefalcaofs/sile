@@ -11,7 +11,7 @@ requires:
     provides: "tabela viability_request_documents (disk/path/sha256/original_name/uploaded_by) + ViabilityRequest::documents() (hasMany) + DocumentRequirement (cnaes() belongsToMany) + factories"
   - phase: 08-solicitacao-de-viabilidade
     plan: 02
-    provides: "parâmetros storage.documentos.disk (default local, nunca público), solicitacao.anexos.max_mb (10) e solicitacao.anexos.mime_permitidos (json) com fallback em config/sile.php"
+    provides: "parâmetros storage.documentos.disk (default local, nunca público), solicitacao.anexos.max_mb (10) e solicitacao.anexos.mime_permitidos (json) com fallback em config/viabiliza.php"
   - phase: 08-solicitacao-de-viabilidade
     plan: 04
     provides: "CRUD de DocumentRequirement + contrato do resolver (whereHas('cnaes') ∪ condicionais base; tabela por-CNAE nasce vazia)"
@@ -53,7 +53,7 @@ key-files:
     - routes/portal.php
 
 key-decisions:
-  - "Disk SEMPRE do parâmetro storage.documentos.disk (Settings::get, default inline 'local' via config/sile.php) — NUNCA público. O acesso ao documento é sempre por streaming autenticado (response()->streamDownload + Storage::disk($disk)->readStream), nunca por URL pública/temporária (a consulta pública sem login HU-069 do 08-11 NÃO expõe anexos — LGPD)."
+  - "Disk SEMPRE do parâmetro storage.documentos.disk (Settings::get, default inline 'local' via config/viabiliza.php) — NUNCA público. O acesso ao documento é sempre por streaming autenticado (response()->streamDownload + Storage::disk($disk)->readStream), nunca por URL pública/temporária (a consulta pública sem login HU-069 do 08-11 NÃO expõe anexos — LGPD)."
   - "sha256 REAL gravado: hash_file('sha256', $file->getRealPath()) calculado ANTES do store() (a movimentação do temporário invalida getRealPath/getSize) — integridade do anexo e insumo de auditoria. Metadados (original_name/mime_type/size) também capturados antes do store()."
   - "MIME por mimetypes (não mimes): o parâmetro solicitacao.anexos.mime_permitidos guarda TIPOS MIME completos (application/pdf, image/jpeg, image/png), então a regra é mimetypes:{lista} (checa o MIME real do conteúdo, não a extensão). max em KB = max_mb*1024. Ambos lidos dinamicamente no rules() (HU-014)."
   - "Substituição antes do protocolo: ao anexar com requirement_id, o anexo anterior do MESMO requisito é removido (disk + linha) na mesma transação — mantém um documento por requisito. Anexo avulso (requirement_id null) é permitido e não dispara substituição."

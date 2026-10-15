@@ -162,7 +162,7 @@ class SolicitacaoImovelController extends Controller
 
         $tolerancia = (float) Settings::get(
             'solicitacao.area_poligono.tolerancia_percentual',
-            config('sile.solicitacao.area_poligono.tolerancia_percentual', 10),
+            config('viabiliza.solicitacao.area_poligono.tolerancia_percentual', 10),
         );
 
         $divergencia = ($declaredArea - $polygonArea) / $polygonArea * 100;

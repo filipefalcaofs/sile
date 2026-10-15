@@ -97,7 +97,7 @@ Comando `processos:reprocessar-etapas`, agendado a cada 15 minutos, com `without
 
 - Só elege o processo cujas etapas pendentes são **todas** `indisponivel`. Se houver outro motivo de encaminhamento (risco alto, tipo de imóvel, regra territorial incidente), o retorno do serviço não muda o resultado.
 - Intervalo: a cada 15 minutos nas 4 primeiras tentativas, depois de hora em hora, até 24 horas desde a primeira falha. Depois disso, `esgotada_em` é preenchido e o agendamento deixa de tentar.
-- Parâmetros em `config/sile.php` (`reprocessamento.*`), ajustáveis sem deploy.
+- Parâmetros em `config/viabiliza.php` (`reprocessamento.*`), ajustáveis sem deploy.
 - Aceita `--processo=` e `--limite=` para uso manual em lote.
 
 ### Ficha de análise

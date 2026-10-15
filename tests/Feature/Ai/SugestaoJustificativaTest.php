@@ -99,7 +99,7 @@ class SugestaoJustificativaTest extends TestCase
 
     public function test_sugere_justificativa_conforme_decisao_do_analista_e_preenche_campo_vazio(): void
     {
-        config(['sile.features.ia_justificativa' => true]);
+        config(['viabiliza.features.ia_justificativa' => true]);
         $this->provedorTextoAtivo();
         $processo = $this->processoComDecisao('deferida');
 
@@ -143,7 +143,7 @@ class SugestaoJustificativaTest extends TestCase
 
     public function test_sem_decisao_do_analista_nao_despacha_nem_chama_provedor(): void
     {
-        config(['sile.features.ia_justificativa' => true]);
+        config(['viabiliza.features.ia_justificativa' => true]);
         $this->provedorTextoAtivo();
 
         $processo = ViabilityRequest::factory()->withPrimaryCnae()->create([
@@ -183,7 +183,7 @@ class SugestaoJustificativaTest extends TestCase
 
     public function test_toggle_desligado_nao_chama_provedor_nem_cria_sugestao(): void
     {
-        config(['sile.features.ia_justificativa' => false]);
+        config(['viabiliza.features.ia_justificativa' => false]);
         $this->provedorTextoAtivo();
         $processo = $this->processoComDecisao();
 
@@ -203,7 +203,7 @@ class SugestaoJustificativaTest extends TestCase
 
     public function test_nao_sobrescreve_justificativa_ja_escrita_pelo_analista(): void
     {
-        config(['sile.features.ia_justificativa' => true]);
+        config(['viabiliza.features.ia_justificativa' => true]);
         $this->provedorTextoAtivo();
         $processo = $this->processoComDecisao('indeferida', 'Justificativa já redigida pelo analista.');
 
@@ -223,7 +223,7 @@ class SugestaoJustificativaTest extends TestCase
 
     public function test_endpoint_exige_decisao_do_analista_antes_de_sugerir(): void
     {
-        config(['sile.features.ia_justificativa' => true]);
+        config(['viabiliza.features.ia_justificativa' => true]);
         $this->provedorTextoAtivo();
 
         $processo = ViabilityRequest::factory()->withPrimaryCnae()->create([
@@ -265,7 +265,7 @@ class SugestaoJustificativaTest extends TestCase
 
     public function test_endpoint_sugere_justificativa_e_audita(): void
     {
-        config(['sile.features.ia_justificativa' => true]);
+        config(['viabiliza.features.ia_justificativa' => true]);
         $this->provedorTextoAtivo();
         $processo = $this->processoComDecisao('deferida');
 
@@ -296,7 +296,7 @@ class SugestaoJustificativaTest extends TestCase
 
     public function test_revisao_finalizada_recusa_a_sugestao(): void
     {
-        config(['sile.features.ia_justificativa' => true]);
+        config(['viabiliza.features.ia_justificativa' => true]);
         $this->provedorTextoAtivo();
 
         $processo = ViabilityRequest::factory()->withPrimaryCnae()->create([

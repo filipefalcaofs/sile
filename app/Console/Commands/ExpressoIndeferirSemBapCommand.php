@@ -35,7 +35,7 @@ class ExpressoIndeferirSemBapCommand extends Command
         BusinessDeadlineCalculator $calculator,
         IndeferirSemBapService $service,
     ): int {
-        $prazoHoras = (int) Settings::get('expresso.bap.prazo_horas', config('sile.expresso.bap.prazo_horas', 48));
+        $prazoHoras = (int) Settings::get('expresso.bap.prazo_horas', config('viabiliza.expresso.bap.prazo_horas', 48));
 
         $vencidas = ViabilityRequest::query()
             ->where('status', ViabilityRequestStatus::AguardandoBap)

@@ -108,7 +108,7 @@ resources/js/pages/gestao/relatorios/  # páginas dos relatórios
 **Detalhes:** `echarts/core` + registro explícito (`echarts.use`) dos charts/components/renderers usados; `CanvasRenderer` (default, performático); `ResizeObserver` para responsividade; `chart.dispose()` no unmount; tema escuro/claro via `setTheme` (ECharts 6) sincronizado ao `dark` do Tailwind (a app usa classe `dark` no `<html>`, não `prefers-color-scheme` puro — ver Pitfall 5).
 
 ### Pattern 4: Job de export assíncrono (espelhar `DecidirFluxoExpressoJob`)
-**O quê:** `GerarExportacaoJob` com `tries/timeout/backoff/onQueue` lidos de `config('sile.relatorios.job.*')`, carrega só os parâmetros (filtros serializáveis + classe da definition + id do usuário), gera o arquivo no disco não-público, dispara a Notification de "pronto" e implementa `failed()` que **audita a falha** (RN-002, nunca silenciosa).
+**O quê:** `GerarExportacaoJob` com `tries/timeout/backoff/onQueue` lidos de `config('viabiliza.relatorios.job.*')`, carrega só os parâmetros (filtros serializáveis + classe da definition + id do usuário), gera o arquivo no disco não-público, dispara a Notification de "pronto" e implementa `failed()` que **audita a falha** (RN-002, nunca silenciosa).
 **Download:** `URL::temporarySignedRoute` + `Storage::disk($disk)->download()` com middleware `signed` — cópia de `TvlDocumentController::downloadUrl/download`.
 
 ### Pattern 5: Seam de prazo HU-137 (estender `BusinessDeadlineCalculator`)
@@ -337,7 +337,7 @@ Fonte: `app/Services/Expresso/FluxoExpressoService.php` (método `encaminharAnal
     'description' => 'Acima deste número de linhas a exportação roda em segundo plano',
 ],
 ```
-Fonte: `database/seeders/ParameterSeeder.php::catalog()` (chave => group/type/default_value(string)/validation_rules(array)/description; `sensitive` para credenciais). Espelhar a chave em `config/sile.php` no bloco `relatorios` (fallback sem banco). Constantes técnicas (`max_linhas`, `chunk`, `pdf.paper`, `disk`, `cache_ttl_segundos`, `job.*`) ficam SÓ em `config/sile.php`, fora do catálogo (precedente [02-02]).
+Fonte: `database/seeders/ParameterSeeder.php::catalog()` (chave => group/type/default_value(string)/validation_rules(array)/description; `sensitive` para credenciais). Espelhar a chave em `config/viabiliza.php` no bloco `relatorios` (fallback sem banco). Constantes técnicas (`max_linhas`, `chunk`, `pdf.paper`, `disk`, `cache_ttl_segundos`, `job.*`) ficam SÓ em `config/viabiliza.php`, fora do catálogo (precedente [02-02]).
 
 ## State of the Art
 
@@ -370,7 +370,7 @@ Fonte: `database/seeders/ParameterSeeder.php::catalog()` (chave => group/type/de
 - `app/Services/Expresso/BusinessDeadlineCalculator.php` (dias úteis + feriados + duração entre instantes)
 - `app/Services/Expresso/FluxoExpressoService.php::encaminharAnalise` (captura HU-145)
 - `app/Http/Controllers/Gestao/DashboardController.php` (KPIs do EP15)
-- `database/seeders/ParameterSeeder.php` + `config/sile.php` (bloco `relatorios.*`)
+- `database/seeders/ParameterSeeder.php` + `config/viabiliza.php` (bloco `relatorios.*`)
 - `database/seeders/RolesAndPermissionsSeeder.php` (permissões `consultar-relatorios`, `relatorios.produtividade.nominal`)
 - `routes/gestao.php` (rotas dos relatórios + download assinado; **rota estática antes do wildcard**, dono único por wave)
 - `routes/console.php` (pruning de retenção dos exports, padrão Fase 3.1)
@@ -453,10 +453,10 @@ Estratégia de testes/validação por dimensão (Nyquist). Stack: **PHPUnit** fe
 ## Sources
 
 ### Primárias (HIGH)
-- Repositório (verificado): `app/Services/Analise/ProcessoQueryService.php`, `AnalysisSlaService.php`, `TvlPdfService.php`; `app/Services/Expresso/{BusinessDeadlineCalculator,FluxoExpressoService}.php`; `app/Services/Risco/RiscoClassificationService.php`; `app/Services/Comunicacao/NotificationDispatcher.php`; `app/Support/{Settings,Audit/AuditService}.php`; `app/Jobs/DecidirFluxoExpressoJob.php`; `app/Http/Controllers/Gestao/{DashboardController,AuditoriaController,TvlDocumentController}.php`; `app/Enums/TipoGatilho.php`; `app/Services/Solicitacao/ResolvedViability.php`; `routes/gestao.php`; `config/sile.php`; `database/seeders/ParameterSeeder.php`; migrations de `viability_requests`/`viability_decisions`/`viability_request_transitions`/`analysis_records`/`analysis_divergences`/`notifications`; front `resources/js/components/geo/{map-imovel,mapa-section}.tsx`, `ui/data-table/{use-server-table,table-toolbar,per-page-select}.tsx`, `ui/kpi-card.tsx`; `composer.json`, `package.json`, `vite.config.js`, `resources/js/app.tsx`.
+- Repositório (verificado): `app/Services/Analise/ProcessoQueryService.php`, `AnalysisSlaService.php`, `TvlPdfService.php`; `app/Services/Expresso/{BusinessDeadlineCalculator,FluxoExpressoService}.php`; `app/Services/Risco/RiscoClassificationService.php`; `app/Services/Comunicacao/NotificationDispatcher.php`; `app/Support/{Settings,Audit/AuditService}.php`; `app/Jobs/DecidirFluxoExpressoJob.php`; `app/Http/Controllers/Gestao/{DashboardController,AuditoriaController,TvlDocumentController}.php`; `app/Enums/TipoGatilho.php`; `app/Services/Solicitacao/ResolvedViability.php`; `routes/gestao.php`; `config/viabiliza.php`; `database/seeders/ParameterSeeder.php`; migrations de `viability_requests`/`viability_decisions`/`viability_request_transitions`/`analysis_records`/`analysis_divergences`/`notifications`; front `resources/js/components/geo/{map-imovel,mapa-section}.tsx`, `ui/data-table/{use-server-table,table-toolbar,per-page-select}.tsx`, `ui/kpi-card.tsx`; `composer.json`, `package.json`, `vite.config.js`, `resources/js/app.tsx`.
 - openspout: `composer.json` das branches 4.x e 5.x (raw GitHub) — constraint PHP; doc oficial `docs/documentation.md` 4.x (API Writer/Options/Row/Style).
 - Versões: `npm view echarts version` → 6.1.0; Packagist openspout → v5.7.2; `php -v` → 8.5.4.
-- HUs: `docs/SILE_HUs_Completas_MD/EP15-Relatórios-e-Indicadores/HU-122..131,145.md`; `EP02/HU-137`.
+- HUs: `docs/VIABILIZA_HUs_Completas_MD/EP15-Relatórios-e-Indicadores/HU-122..131,145.md`; `EP02/HU-137`.
 
 ### Secundárias (MEDIUM)
 - WebSearch openspout (laravel-news, nidup.io) — confirmação de streaming/baixa memória.

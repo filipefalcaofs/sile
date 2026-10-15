@@ -7,12 +7,12 @@ tags: [hu-014, parametros, settings, notificacoes, whatsapp, seeders, config-fal
 # Dependency graph
 requires:
   - phase: 10-analise-tecnica-sedur
-    provides: "padrão do catálogo HU-014 (10-01), fallback config/sile.php, analise.pendencia.prazo_resposta_dias (reusado, não recriado)"
+    provides: "padrão do catálogo HU-014 (10-01), fallback config/viabiliza.php, analise.pendencia.prazo_resposta_dias (reusado, não recriado)"
   - phase: 02-administracao
     provides: "Parameter (registry HU-014), Settings::get, criptografia condicional de sensitive, requires_connection_test"
 provides:
   - "11 parâmetros administráveis novos: 3 toggles em features + grupo novo 'notificacoes' (6) + integrations.whatsapp.* (2) (catálogo 67→78)"
-  - "Fallback config/sile.php: features.notificacao_*, bloco 'notificacoes' (negócio) e integrations.whatsapp (base_url/token + constantes técnicas)"
+  - "Fallback config/viabiliza.php: features.notificacao_*, bloco 'notificacoes' (negócio) e integrations.whatsapp (base_url/token + constantes técnicas)"
   - "WhatsApp OFF por default (degradação honesta); credenciais como integração com teste de conexão e segredo criptografado"
 affects: [11-03-whatsapp-gateway, 11-04-dispatcher-canais, 11-05-pendencia-templates, 11-06-resposta-pendencia, 11-07-vencimento-escalonamento]
 
@@ -28,7 +28,7 @@ key-files:
   created: []
   modified:
     - database/seeders/ParameterSeeder.php
-    - config/sile.php
+    - config/viabiliza.php
     - tests/Feature/Seeders/ParameterSeederTest.php
     - tests/Feature/Seeders/DatabaseSeederTest.php
 
@@ -51,7 +51,7 @@ completed: 2026-06-15
 
 # Phase 11 Plan 02: Catálogo de parâmetros HU-014 da comunicação — Summary
 
-**11 parâmetros administráveis da comunicação multicanal (catálogo HU-014 67→78): 3 toggles de canal, grupo novo `notificacoes` e credenciais do WhatsApp (teste de conexão + segredo criptografado), com espelho de fallback em `config/sile.php`, WhatsApp OFF por default, TDD estrito e zero dependência nova.**
+**11 parâmetros administráveis da comunicação multicanal (catálogo HU-014 67→78): 3 toggles de canal, grupo novo `notificacoes` e credenciais do WhatsApp (teste de conexão + segredo criptografado), com espelho de fallback em `config/viabiliza.php`, WhatsApp OFF por default, TDD estrito e zero dependência nova.**
 
 ## Performance
 
@@ -63,7 +63,7 @@ completed: 2026-06-15
 
 ## Accomplishments
 - Registrou no catálogo HU-014 os 11 parâmetros da comunicação (3 toggles em `features` + 6 no grupo novo `notificacoes` + 2 em `integrations.whatsapp`), todos administráveis com tipo, default, validação e `value` null preservável.
-- Espelhou os valores de negócio em `config/sile.php` (toggles em `features`, bloco `notificacoes`, `integrations.whatsapp`) para o fallback do `Settings::get` sem banco, e guardou as constantes técnicas (timeout/tries/backoff) fora do catálogo.
+- Espelhou os valores de negócio em `config/viabiliza.php` (toggles em `features`, bloco `notificacoes`, `integrations.whatsapp`) para o fallback do `Settings::get` sem banco, e guardou as constantes técnicas (timeout/tries/backoff) fora do catálogo.
 - WhatsApp nasce DESLIGADO e suas credenciais já entram como integração com teste de conexão (`base_url`) e segredo criptografado (`token` sensitive) — prontas para a Fase 13 ligar só o binding.
 - Os dois seeder-tests seguem verdes com a contagem atualizada (67→78) e o grupo `notificacoes` na lista ordenada; permissões inalteradas (24).
 
@@ -103,7 +103,7 @@ completed: 2026-06-15
 Olá! Identificamos uma pendência na sua solicitação de viabilidade {protocolo}. Pendência: {pendencia}. Acesse o portal do Viabiliza para responder dentro do prazo informado.
 ```
 
-## Fallback config/sile.php
+## Fallback config/viabiliza.php
 
 ```
 sile.features.notificacao_email = true
@@ -122,10 +122,10 @@ sile.integrations.whatsapp.tries = 3          # CONSTANTE TÉCNICA (fora do cat�
 sile.integrations.whatsapp.backoff_ms = 1000  # CONSTANTE TÉCNICA (fora do catálogo)
 ```
 
-Consumidores das waves seguintes leem via `Settings::get('notificacoes....', config('sile.notificacoes....'))`. Os parâmetros `json` (`mapa_canais`, `escalonamento.tratamento`) voltam como ARRAY tanto pelo `typedValue()` quanto pelo espelho de config — o dispatcher (11-04) sempre recebe array, nunca string. As constantes técnicas do WhatsApp (`timeout`/`tries`/`backoff_ms`) NÃO têm parâmetro no catálogo: leia-as direto de `config('sile.integrations.whatsapp....')` (11-03).
+Consumidores das waves seguintes leem via `Settings::get('notificacoes....', config('viabiliza.notificacoes....'))`. Os parâmetros `json` (`mapa_canais`, `escalonamento.tratamento`) voltam como ARRAY tanto pelo `typedValue()` quanto pelo espelho de config — o dispatcher (11-04) sempre recebe array, nunca string. As constantes técnicas do WhatsApp (`timeout`/`tries`/`backoff_ms`) NÃO têm parâmetro no catálogo: leia-as direto de `config('viabiliza.integrations.whatsapp....')` (11-03).
 
 ## Pontos de leitura por plano consumidor
-- **11-03 (WhatsApp gateway):** `integrations.whatsapp.base_url` + `.token` (sensitive) + constantes técnicas `config('sile.integrations.whatsapp.{timeout,tries,backoff_ms}')`; toggle `features.notificacao_whatsapp`.
+- **11-03 (WhatsApp gateway):** `integrations.whatsapp.base_url` + `.token` (sensitive) + constantes técnicas `config('viabiliza.integrations.whatsapp.{timeout,tries,backoff_ms}')`; toggle `features.notificacao_whatsapp`.
 - **11-04 (dispatcher/canais):** `features.notificacao_email/_in_app/_whatsapp` + `notificacoes.mapa_canais` (intersecção toggles × mapa por tipo).
 - **11-05/06 (templates de pendência):** `notificacoes.pendencia.assunto` + `.corpo` (placeholders {protocolo}/{pendencia}).
 - **11-07 (vencimento/escalonamento):** `notificacoes.vencimento.antecedencia_dias` + `notificacoes.escalonamento.tratamento` + `.gestor_role`.
@@ -139,7 +139,7 @@ _TDD estrito: o commit `test` (RED, 5 falhas confirmadas pelo motivo certo) prec
 
 ## Files Created/Modified
 - `database/seeders/ParameterSeeder.php` - 11 parâmetros novos no catálogo (67→78); `token` com `sensitive => true`, `base_url` com `requires_connection_test => true`
-- `config/sile.php` - toggles em `features`, bloco novo `notificacoes` (negócio) e `integrations.whatsapp` (base_url/token + constantes técnicas)
+- `config/viabiliza.php` - toggles em `features`, bloco novo `notificacoes` (negócio) e `integrations.whatsapp` (base_url/token + constantes técnicas)
 - `tests/Feature/Seeders/ParameterSeederTest.php` - contagem 78, grupo `notificacoes` na lista ordenada, `test_seeder_registra_parametros_de_notificacoes` (11 parâmetros, typedValue dos json)
 - `tests/Feature/Seeders/DatabaseSeederTest.php` - contagem de parâmetros 67→78 (2 asserções); permissões (24) e demais contagens inalteradas
 
@@ -163,7 +163,7 @@ None - no external service configuration required.
 A credencial real do WhatsApp (`integrations.whatsapp.base_url` + `.token`) e o provedor (API comercial) são pendência externa: a feature fica explicitamente bloqueada (toggle off) até a Fase 13, sem adaptador falso.
 
 ## Next Phase Readiness
-- Catálogo e fallback prontos: as waves seguintes leem parâmetros via `Settings::get('notificacoes....', config('sile.notificacoes....'))` e os toggles via `config('sile.features.notificacao_*')` sem acoplar ao seeder.
+- Catálogo e fallback prontos: as waves seguintes leem parâmetros via `Settings::get('notificacoes....', config('viabiliza.notificacoes....'))` e os toggles via `config('viabiliza.features.notificacao_*')` sem acoplar ao seeder.
 - Insumo direto: 11-03 (gateway WhatsApp), 11-04 (dispatcher/canais), 11-05/06 (templates de pendência), 11-07 (vencimento/escalonamento).
 - Pendências SEDUR a registrar: texto oficial dos templates de pendência; roteamento do escalonamento ao "gestor do setor" (hoje role `gestor`); credencial/provedor real de WhatsApp (Fase 13).
 

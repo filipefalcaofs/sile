@@ -2,7 +2,7 @@
 
 **Gathered:** 2026-06-09
 **Status:** Ready for planning
-**Source:** PRD Express Path (HUs do EP01 — `docs/SILE_HUs_Completas_MD/EP01-Identidade-Acesso-e-Seguranca/`)
+**Source:** PRD Express Path (HUs do EP01 — `docs/VIABILIZA_HUs_Completas_MD/EP01-Identidade-Acesso-e-Seguranca/`)
 
 <domain>
 ## Phase Boundary
@@ -81,16 +81,16 @@ Fora do escopo desta fase: CRUD administrativo de usuários/perfis/parâmetros (
 **Downstream agents MUST read these before planning or implementing.**
 
 ### Requisitos da fase (fonte de verdade)
-- `docs/SILE_HUs_Completas_MD/EP01-Identidade-Acesso-e-Seguranca/HU-001-Cadastrar-usuario.md` — cadastro
-- `docs/SILE_HUs_Completas_MD/EP01-Identidade-Acesso-e-Seguranca/HU-002-Autenticar-usuario.md` — autenticação (Viabiliza Cidadão × Viabiliza Gestão)
-- `docs/SILE_HUs_Completas_MD/EP01-Identidade-Acesso-e-Seguranca/HU-003-Recuperar-senha.md` — recuperação de senha
-- `docs/SILE_HUs_Completas_MD/EP01-Identidade-Acesso-e-Seguranca/HU-004-Alterar-senha.md` — alteração de senha
-- `docs/SILE_HUs_Completas_MD/EP01-Identidade-Acesso-e-Seguranca/HU-005-Confirmar-e-mail.md` — confirmação de e-mail
-- `docs/SILE_HUs_Completas_MD/EP01-Identidade-Acesso-e-Seguranca/HU-006-Aceitar-termo-LGPD.md` — termo LGPD
-- `docs/SILE_HUs_Completas_MD/EP01-Identidade-Acesso-e-Seguranca/HU-007-Gerenciar-perfil-do-usuario.md` — perfil
-- `docs/SILE_HUs_Completas_MD/EP01-Identidade-Acesso-e-Seguranca/HU-008-Vincular-procurador.md` — procuração (vincular)
-- `docs/SILE_HUs_Completas_MD/EP01-Identidade-Acesso-e-Seguranca/HU-009-Revogar-procuracao.md` — procuração (revogar)
-- `docs/SILE_HUs_Completas_MD/EP01-Identidade-Acesso-e-Seguranca/HU-010-Consultar-historico-de-acessos.md` — histórico de acessos
+- `docs/VIABILIZA_HUs_Completas_MD/EP01-Identidade-Acesso-e-Seguranca/HU-001-Cadastrar-usuario.md` — cadastro
+- `docs/VIABILIZA_HUs_Completas_MD/EP01-Identidade-Acesso-e-Seguranca/HU-002-Autenticar-usuario.md` — autenticação (Viabiliza Cidadão × Viabiliza Gestão)
+- `docs/VIABILIZA_HUs_Completas_MD/EP01-Identidade-Acesso-e-Seguranca/HU-003-Recuperar-senha.md` — recuperação de senha
+- `docs/VIABILIZA_HUs_Completas_MD/EP01-Identidade-Acesso-e-Seguranca/HU-004-Alterar-senha.md` — alteração de senha
+- `docs/VIABILIZA_HUs_Completas_MD/EP01-Identidade-Acesso-e-Seguranca/HU-005-Confirmar-e-mail.md` — confirmação de e-mail
+- `docs/VIABILIZA_HUs_Completas_MD/EP01-Identidade-Acesso-e-Seguranca/HU-006-Aceitar-termo-LGPD.md` — termo LGPD
+- `docs/VIABILIZA_HUs_Completas_MD/EP01-Identidade-Acesso-e-Seguranca/HU-007-Gerenciar-perfil-do-usuario.md` — perfil
+- `docs/VIABILIZA_HUs_Completas_MD/EP01-Identidade-Acesso-e-Seguranca/HU-008-Vincular-procurador.md` — procuração (vincular)
+- `docs/VIABILIZA_HUs_Completas_MD/EP01-Identidade-Acesso-e-Seguranca/HU-009-Revogar-procuracao.md` — procuração (revogar)
+- `docs/VIABILIZA_HUs_Completas_MD/EP01-Identidade-Acesso-e-Seguranca/HU-010-Consultar-historico-de-acessos.md` — histórico de acessos
 
 ### Contexto do projeto
 - `.planning/PROJECT.md` — restrições e decisões-chave (auditoria transversal, parametrização, sem fachada)

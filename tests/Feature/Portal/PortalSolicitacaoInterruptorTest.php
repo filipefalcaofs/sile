@@ -32,7 +32,7 @@ class PortalSolicitacaoInterruptorTest extends TestCase
 
     public function test_desligado_bloqueia_wizard_de_nova_solicitacao_com_aviso(): void
     {
-        config(['sile.features.portal_solicitacao' => false]);
+        config(['viabiliza.features.portal_solicitacao' => false]);
 
         $this->actingAs($this->portalUser())
             ->get('/portal/solicitacoes/nova')
@@ -42,7 +42,7 @@ class PortalSolicitacaoInterruptorTest extends TestCase
 
     public function test_desligado_bloqueia_criacao_de_solicitacao(): void
     {
-        config(['sile.features.portal_solicitacao' => false]);
+        config(['viabiliza.features.portal_solicitacao' => false]);
 
         $this->actingAs($this->portalUser())
             ->post('/portal/solicitacoes')
@@ -53,7 +53,7 @@ class PortalSolicitacaoInterruptorTest extends TestCase
 
     public function test_desligado_bloqueia_a_renovacao(): void
     {
-        config(['sile.features.portal_solicitacao' => false]);
+        config(['viabiliza.features.portal_solicitacao' => false]);
 
         $this->actingAs($this->portalUser())
             ->get('/portal/renovacao')
@@ -63,7 +63,7 @@ class PortalSolicitacaoInterruptorTest extends TestCase
 
     public function test_desligado_responde_503_em_json(): void
     {
-        config(['sile.features.portal_solicitacao' => false]);
+        config(['viabiliza.features.portal_solicitacao' => false]);
 
         $this->actingAs($this->portalUser())
             ->postJson('/portal/renovacao/consultar-cnpj')
@@ -73,7 +73,7 @@ class PortalSolicitacaoInterruptorTest extends TestCase
 
     public function test_desligado_mantem_a_lista_de_solicitacoes_e_o_painel(): void
     {
-        config(['sile.features.portal_solicitacao' => false]);
+        config(['viabiliza.features.portal_solicitacao' => false]);
 
         $user = $this->portalUser();
 
@@ -83,7 +83,7 @@ class PortalSolicitacaoInterruptorTest extends TestCase
 
     public function test_ligado_o_wizard_abre_normalmente(): void
     {
-        config(['sile.features.portal_solicitacao' => true]);
+        config(['viabiliza.features.portal_solicitacao' => true]);
 
         $this->actingAs($this->portalUser())
             ->get('/portal/solicitacoes/nova')

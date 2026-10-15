@@ -14,7 +14,7 @@ class SedurContatoClientTest extends TestCase
     {
         parent::setUp();
 
-        config(['sile.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
+        config(['viabiliza.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
     }
 
     public function test_consulta_cnpj_le_razao_social_na_raiz(): void

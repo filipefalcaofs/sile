@@ -24,7 +24,7 @@ class DemonstracaoClienteSeederTest extends TestCase
 
     public function test_ignora_quando_demo_data_desligado(): void
     {
-        config(['sile.demo_data' => false]);
+        config(['viabiliza.demo_data' => false]);
 
         $this->seed(RolesAndPermissionsSeeder::class);
         $this->seed(DemonstracaoClienteSeeder::class);
@@ -37,7 +37,7 @@ class DemonstracaoClienteSeederTest extends TestCase
 
     public function test_cria_usuarios_e_perfis_quando_demo_data_ligado(): void
     {
-        config(['sile.demo_data' => true]);
+        config(['viabiliza.demo_data' => true]);
 
         $this->seed(DemonstracaoClienteSeeder::class);
 
@@ -53,7 +53,7 @@ class DemonstracaoClienteSeederTest extends TestCase
 
     public function test_perfis_de_validacao_liberam_crud_de_cnaes(): void
     {
-        config(['sile.demo_data' => true]);
+        config(['viabiliza.demo_data' => true]);
 
         $this->seed(DemonstracaoClienteSeeder::class);
 
@@ -74,7 +74,7 @@ class DemonstracaoClienteSeederTest extends TestCase
 
     public function test_reseed_promove_validadora_existente_para_administrador(): void
     {
-        config(['sile.demo_data' => true]);
+        config(['viabiliza.demo_data' => true]);
 
         $this->seed(RolesAndPermissionsSeeder::class);
 
@@ -93,7 +93,7 @@ class DemonstracaoClienteSeederTest extends TestCase
 
     public function test_nao_planta_processos_de_demonstracao(): void
     {
-        config(['sile.demo_data' => true]);
+        config(['viabiliza.demo_data' => true]);
 
         $this->seed(DemonstracaoClienteSeeder::class);
 
@@ -108,7 +108,7 @@ class DemonstracaoClienteSeederTest extends TestCase
      */
     public function test_carrega_o_catalogo_de_tipos_de_imovel(): void
     {
-        config(['sile.demo_data' => true]);
+        config(['viabiliza.demo_data' => true]);
 
         $this->seed(DemonstracaoClienteSeeder::class);
 
@@ -128,7 +128,7 @@ class DemonstracaoClienteSeederTest extends TestCase
      */
     public function test_carrega_os_catalogos_de_territorio(): void
     {
-        config(['sile.demo_data' => true]);
+        config(['viabiliza.demo_data' => true]);
 
         $this->seed(DemonstracaoClienteSeeder::class);
 
@@ -151,7 +151,7 @@ class DemonstracaoClienteSeederTest extends TestCase
      */
     public function test_carrega_a_planilha_de_tratamento(): void
     {
-        config(['sile.demo_data' => true]);
+        config(['viabiliza.demo_data' => true]);
 
         $this->seed(DemonstracaoClienteSeeder::class);
 
@@ -164,7 +164,7 @@ class DemonstracaoClienteSeederTest extends TestCase
 
     public function test_rotaciona_senhas_dos_usuarios_dev_para_a_senha_demo(): void
     {
-        config(['sile.demo_data' => true]);
+        config(['viabiliza.demo_data' => true]);
 
         $this->seed(DemonstracaoClienteSeeder::class);
 

@@ -48,7 +48,7 @@ Fora do escopo / bloqueado: análise técnica humana (Fase 10, recebe os em_anal
 - Número de produto TVL no deferimento (HU-076 RN-007) é registro INTERNO → entra agora (gerador interno). PDF/TVL (HU-132) é Fase 10. Defere → gera número; não gera PDF, não entrega ao cidadão.
 
 ### Parâmetros / Claude's Discretion
-- Parâmetros: features.fluxo_expresso, features.notificacao_resultado_expresso, expresso.bap.prazo_horas (48), expresso.notificacao.assunto_deferida/_indeferida, expresso.tvl.prefixo/padding. Reusa risco.mapa_encaminhamento (não criar novo). Constantes técnicas (lock timeout, cadência scheduler, fila, tries/backoff) em config/sile.php.
+- Parâmetros: features.fluxo_expresso, features.notificacao_resultado_expresso, expresso.bap.prazo_horas (48), expresso.notificacao.assunto_deferida/_indeferida, expresso.tvl.prefixo/padding. Reusa risco.mapa_encaminhamento (não criar novo). Constantes técnicas (lock timeout, cadência scheduler, fila, tries/backoff) em config/viabiliza.php.
 - Discrição: nomes exatos de migrations/colunas/classes/jobs; shape dos DTOs (ResolvedViability, DecisionOutcome); rotas/estrutura da UI de retaguarda; formato do seed dev de zona fictícia (SÓ dev/teste).
 </decisions>
 
@@ -60,7 +60,7 @@ Fora do escopo / bloqueado: análise técnica humana (Fase 10, recebe os em_anal
 - Agents (2026-06-14): analista-negocio (escopo/sequenciamento, decisão autoritativa, degradação por zona, bloqueios) e arquiteto-tecnico (FluxoExpressoService, ResultadoEmitido, viability_decisions, contratos, scheduler).
 
 ### HUs
-- `docs/SILE_HUs_Completas_MD/EP09-Fluxo-Expresso/HU-073..HU-078.md`, `HU-134`.
+- `docs/VIABILIZA_HUs_Completas_MD/EP09-Fluxo-Expresso/HU-073..HU-078.md`, `HU-134`.
 
 ### Reuso (NÃO recriar — consumir/estender)
 - Evento+listener: `app/Events/SolicitacaoProtocolada.php` + `app/Listeners/RegistrarTrilhaProtocolo.php` (padrão auto-descoberta; ShouldDispatchAfterCommit).
@@ -70,7 +70,7 @@ Fora do escopo / bloqueado: análise técnica humana (Fase 10, recebe os em_anal
 - Número concorrente-seguro: `app/Services/Solicitacao/ProtocolNumberGenerator.php` (padrão p/ TvlNumberGenerator).
 - Contrato bloqueado: `app/Services/Realty/PropertyRegistryLookup.php` + `UnavailablePropertyRegistryLookup.php`.
 - Scheduler/jobs: `routes/console.php` (withoutOverlapping/onOneServer) + jobs da Fase 3.1 (ImportRedesimJob padrão de retry/failed auditado).
-- E-mail: EmailLog + notificações ShouldQueue (VerifyEmailQueued/ResetPasswordQueued) + LogNotificationSent. Auditoria: AuditService. Parametrização: Settings::get + config/sile.php.
+- E-mail: EmailLog + notificações ShouldQueue (VerifyEmailQueued/ResetPasswordQueued) + LogNotificationSent. Auditoria: AuditService. Parametrização: Settings::get + config/viabiliza.php.
 
 ### Testes
 - phpunit.xml SQLite; baseline atual 848 (+ @group postgis). Concorrência (TvlNumberGenerator/idempotência da emissão) usa @group postgis (PostgisTestCase + geo:preparar-banco-de-testes). Motores em SQLite com fake SpatialRepository. Golden cases #[DataProvider] (padrão Fases 5/6/7/8). Estrutura: tests/Feature/Expresso/.

@@ -31,9 +31,9 @@ class SedurSefazPropertyRegistryLookup implements PropertyRegistryLookup
 
         $baseUrl = $this->settings->baseUrl();
 
-        $timeout = (int) config('sile.integrations.inscricao_imobiliaria.timeout', 12);
-        $retries = (int) config('sile.integrations.inscricao_imobiliaria.retries', 3);
-        $backoff = (int) config('sile.integrations.inscricao_imobiliaria.backoff_ms', 500);
+        $timeout = (int) config('viabiliza.integrations.inscricao_imobiliaria.timeout', 12);
+        $retries = (int) config('viabiliza.integrations.inscricao_imobiliaria.retries', 3);
+        $backoff = (int) config('viabiliza.integrations.inscricao_imobiliaria.backoff_ms', 500);
 
         try {
             $response = Http::timeout($timeout)

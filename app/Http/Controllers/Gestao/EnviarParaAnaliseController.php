@@ -121,11 +121,11 @@ class EnviarParaAnaliseController extends Controller
 
     private function mensagemNaoEncontrado(): string
     {
-        return (string) config('sile.analise.enviar_analise.mensagem_nao_encontrado', 'Nenhum processo encontrado para o protocolo informado. Confira o número e tente novamente.');
+        return (string) config('viabiliza.analise.enviar_analise.mensagem_nao_encontrado', 'Nenhum processo encontrado para o protocolo informado. Confira o número e tente novamente.');
     }
 
     private function mensagemConfirmacao(): string
     {
-        return (string) config('sile.analise.enviar_analise.mensagem_confirmacao', 'Confirma o envio deste processo para a análise técnica? A ação é registrada na auditoria.');
+        return (string) config('viabiliza.analise.enviar_analise.mensagem_confirmacao', 'Confirma o envio deste processo para a análise técnica? A ação é registrada na auditoria.');
     }
 }

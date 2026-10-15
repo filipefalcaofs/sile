@@ -10,7 +10,7 @@ class DemoMode
      */
     public static function enabled(): bool
     {
-        return filter_var(config('sile.demo_data', false), FILTER_VALIDATE_BOOL);
+        return filter_var(config('viabiliza.demo_data', false), FILTER_VALIDATE_BOOL);
     }
 
     /**

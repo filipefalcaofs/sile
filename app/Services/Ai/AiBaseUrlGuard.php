@@ -11,7 +11,7 @@ use App\Support\Settings;
  * controle PRIMÁRIO é uma ALLOWLIST de hosts (defesa em profundidade: validada
  * no FormRequest E re-checada no client antes de qualquer chamada). Regras:
  * (1) somente HTTPS; (2) host (case-insensitive) na allowlist; nada de IP cru,
- * http, ftp, file, etc. A allowlist é lida via Settings (fallback config/sile.php)
+ * http, ftp, file, etc. A allowlist é lida via Settings (fallback config/viabiliza.php)
  * — deploy-controlada de propósito: evita SSRF por má configuração do painel.
  */
 class AiBaseUrlGuard
@@ -51,7 +51,7 @@ class AiBaseUrlGuard
     }
 
     /**
-     * Hosts permitidos (sempre minúsculos). Default em config/sile.php com os
+     * Hosts permitidos (sempre minúsculos). Default em config/viabiliza.php com os
      * provedores oficiais; sobrescritível via Settings sem alterar call sites.
      *
      * @return list<string>

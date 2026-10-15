@@ -38,7 +38,7 @@ class CsvExporter implements ReportFormatExporter
      */
     private function escrever(ReportDefinition $definition, $saida): void
     {
-        $chunk = (int) config('sile.relatorios.export.chunk', 200);
+        $chunk = (int) config('viabiliza.relatorios.export.chunk', 200);
         $max = $definition->maxRows;
 
         fputcsv($saida, $definition->columnLabels());

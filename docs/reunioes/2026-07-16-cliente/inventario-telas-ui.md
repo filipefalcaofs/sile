@@ -16,7 +16,7 @@ Legenda de status Viabiliza:
 |---|---|
 | Print | `01-consulta-processo-filtros.jpg` |
 | Legado | `/saps/...` Consulta Processo / Resultado de Pesquisa |
-| SILE hoje | **EXISTE** — `/gestao/processos` + `ProcessoQueryService` (HU-082) |
+| VIABILIZA hoje | **EXISTE** — `/gestao/processos` + `ProcessoQueryService` (HU-082) |
 
 **Como é (legado)**
 - Filtros: Grupo Status, Status Processo, Status Tramitação, Nº Produto, Nº Processo, BAP
@@ -36,7 +36,7 @@ Legenda de status Viabiliza:
 | | |
 |---|---|
 | Print | `02-detalhar-processo-poligono.jpg`, `02b-…cnae.jpg` |
-| SILE hoje | **PARCIAL** — detalhe processo + mapa existem; ficha EV com pergunta sede/CNAE precisa fechar paridade |
+| VIABILIZA hoje | **PARCIAL** — detalhe processo + mapa existem; ficha EV com pergunta sede/CNAE precisa fechar paridade |
 
 **Como é**
 - Abas: SemiExpresso, MalhaFina, Informações, Polígono, Anexos, Histórico, DAM, **Produto**, Vistoria
@@ -55,7 +55,7 @@ Legenda de status Viabiliza:
 | | |
 |---|---|
 | Print | `03-…`, `03b-…`, `04-…`, `05-…` |
-| SILE hoje | **PARCIAL** — `TvlDocument` / visualização interna (spec desfecho 2026-07-14) |
+| VIABILIZA hoje | **PARCIAL** — `TvlDocument` / visualização interna (spec desfecho 2026-07-14) |
 
 **Como é**
 - Cabeçalho: processo, BAP, abertura, status, serviço, requerente, contatos
@@ -74,7 +74,7 @@ Legenda de status Viabiliza:
 | | |
 |---|---|
 | Print | `06-relatorio-sede-escritorio-virtual.jpg` |
-| SILE hoje | **PARCIAL** — export `?relatorio=escritorio-virtual` em Tempo de análise; **sem** tela de lista com filtros do legado |
+| VIABILIZA hoje | **PARCIAL** — export `?relatorio=escritorio-virtual` em Tempo de análise; **sem** tela de lista com filtros do legado |
 
 **Como é**
 - Título: Sede de Escritório Virtual
@@ -98,7 +98,7 @@ Legenda de status Viabiliza:
 | | |
 |---|---|
 | Print | `07-…`, `08-relatorio-tempo-emissao-tvl.jpg` |
-| SILE hoje | **PARCIAL** — KPI/média em `/gestao/relatorios/tempo`; tabela estilo SAPS incompleta |
+| VIABILIZA hoje | **PARCIAL** — KPI/média em `/gestao/relatorios/tempo`; tabela estilo SAPS incompleta |
 
 **Como é**
 - Filtros: Relatório (Tempo de emissão de TVL), Serviço, Data inicial/final, radio Deferido|Indeferido
@@ -122,7 +122,7 @@ Legenda de status Viabiliza:
 | | |
 |---|---|
 | Print | `09-…`, `09b-…`, `10-…` |
-| SILE hoje | **NOVO** (ou fluxo equivalente via status/caixa — confirmar gap) |
+| VIABILIZA hoje | **NOVO** (ou fluxo equivalente via status/caixa — confirmar gap) |
 
 **Como é**
 - Campo Processo + Pesquisar
@@ -141,7 +141,7 @@ Legenda de status Viabiliza:
 | | |
 |---|---|
 | Print | `11-portal-sedur-revista-digital.jpg` |
-| SILE | **FORA DE ESCOPO** — portal institucional; só referência de atalhos (SAPS/SIGS/CLE/SADS) |
+| VIABILIZA | **FORA DE ESCOPO** — portal institucional; só referência de atalhos (SAPS/SIGS/CLE/SADS) |
 
 ---
 

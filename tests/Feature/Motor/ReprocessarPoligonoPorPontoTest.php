@@ -78,7 +78,7 @@ class ReprocessarPoligonoPorPontoTest extends TestCase
 
     public function test_sem_poligono_e_com_ponto_agenda_a_decisao_com_o_ator(): void
     {
-        config(['sile.features.geoserver_enderecamento' => true]);
+        config(['viabiliza.features.geoserver_enderecamento' => true]);
         $ator = User::factory()->create();
         $processo = $this->processoEmAnaliseComPonto();
 
@@ -96,7 +96,7 @@ class ReprocessarPoligonoPorPontoTest extends TestCase
 
     public function test_com_poligono_ja_gravado_reavalia_na_hora_sem_agendar(): void
     {
-        config(['sile.features.geoserver_enderecamento' => true]);
+        config(['viabiliza.features.geoserver_enderecamento' => true]);
         $processo = $this->processoEmAnaliseComPonto([
             'address_polygon_geojson' => ['type' => 'Polygon', 'coordinates' => [[
                 [-38.4803, -12.9738], [-38.4798, -12.9738], [-38.4798, -12.9733], [-38.4803, -12.9733], [-38.4803, -12.9738],
@@ -111,7 +111,7 @@ class ReprocessarPoligonoPorPontoTest extends TestCase
 
     public function test_interruptor_desligado_reavalia_na_hora_sem_agendar(): void
     {
-        config(['sile.features.geoserver_enderecamento' => false]);
+        config(['viabiliza.features.geoserver_enderecamento' => false]);
         $processo = $this->processoEmAnaliseComPonto();
 
         app(ReprocessarEtapasService::class)->reprocessar($processo);

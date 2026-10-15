@@ -37,7 +37,7 @@
 | `app/Services/Expresso/FluxoExpressoService.php` (alterar) | mesma precedência e divergência de zona |
 | `app/Services/Solicitacao/ProtocolarSolicitacaoService.php` (alterar) | busca após o commit |
 | `app/Jobs/ProtocolarRecebimentoReginJob.php` (alterar) | busca antes de decidir |
-| `config/sile.php`, `database/seeders/ParameterSeeder.php`, `app/Support/ApiIntegracaoCatalog.php` (alterar) | interruptor e URL |
+| `config/viabiliza.php`, `database/seeders/ParameterSeeder.php`, `app/Support/ApiIntegracaoCatalog.php` (alterar) | interruptor e URL |
 | `tests/Support/Geo/FakePoligonoLoteFonte.php` (criar) | fake de fonte para a suíte |
 
 ---
@@ -54,13 +54,13 @@
 
 ### Tarefa 2: Interruptor e URL da camada
 
-**Arquivos:** `config/sile.php`, `database/seeders/ParameterSeeder.php`, `app/Support/ApiIntegracaoCatalog.php`, `tests/TestCase.php`, teste `tests/Feature/Geo/SemapParametrosTest.php`.
+**Arquivos:** `config/viabiliza.php`, `database/seeders/ParameterSeeder.php`, `app/Support/ApiIntegracaoCatalog.php`, `tests/TestCase.php`, teste `tests/Feature/Geo/SemapParametrosTest.php`.
 
-- [ ] Teste que falha: `features.arcgis_semap` existe no catálogo de parâmetros com default ligado; `config('sile.integrations.arcgis_semap.query_url')` aponta para a camada 18; a aba de integrações expõe interruptor e URL.
-- [ ] `config/sile.php`: `features.arcgis_semap => true`; bloco `integrations.arcgis_semap` com `query_url` (`https://geo.salvador.ba.gov.br/arcgis/rest/services/MAPA_BASE/MAPA_BASE_SEFAZ/MapServer/18/query`), `timeout => 20`, `user_agent`.
+- [ ] Teste que falha: `features.arcgis_semap` existe no catálogo de parâmetros com default ligado; `config('viabiliza.integrations.arcgis_semap.query_url')` aponta para a camada 18; a aba de integrações expõe interruptor e URL.
+- [ ] `config/viabiliza.php`: `features.arcgis_semap => true`; bloco `integrations.arcgis_semap` com `query_url` (`https://geo.salvador.ba.gov.br/arcgis/rest/services/MAPA_BASE/MAPA_BASE_SEFAZ/MapServer/18/query`), `timeout => 20`, `user_agent`.
 - [ ] `ParameterSeeder`: `features.arcgis_semap` (booleano) e `integrations.arcgis_semap.query_url` (url), com descrição citando a camada e a nota técnica.
 - [ ] `ApiIntegracaoCatalog`: aba ou campos do SEMAP, seguindo o padrão das abas existentes.
-- [ ] `tests/TestCase.php`: desligar `sile.features.arcgis_semap` por padrão, como já é feito com `geoserver_zona`.
+- [ ] `tests/TestCase.php`: desligar `viabiliza.features.arcgis_semap` por padrão, como já é feito com `geoserver_zona`.
 - [ ] Verificar: `php artisan test --compact --filter=SemapParametros`.
 
 ### Tarefa 3: Resultado e contrato de fonte

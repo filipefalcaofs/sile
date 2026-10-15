@@ -51,16 +51,16 @@ class DecidirFluxoExpressoJob implements ShouldBeUnique, ShouldQueue
         public readonly bool $reavaliacao = false,
         public readonly ?int $atorId = null,
     ) {
-        // Resiliência parametrizada por constante técnica (config/sile.php,
+        // Resiliência parametrizada por constante técnica (config/viabiliza.php,
         // precedente [02-02]) — fila/tries/timeout/backoff ajustáveis sem deploy.
-        $this->tries = (int) config('sile.expresso.job.tries', 3);
-        $this->timeout = (int) config('sile.expresso.job.timeout', 120);
-        $this->backoff = config('sile.expresso.job.backoff', [30, 60, 120]);
+        $this->tries = (int) config('viabiliza.expresso.job.tries', 3);
+        $this->timeout = (int) config('viabiliza.expresso.job.timeout', 120);
+        $this->backoff = config('viabiliza.expresso.job.backoff', [30, 60, 120]);
 
         // A fila é fonte única de verdade DO JOB — tanto o gatilho (listener)
         // quanto a rede de segurança (expresso:reavaliar) enfileiram no mesmo
         // lugar. 'default' não sobrescreve a conexão.
-        $fila = (string) config('sile.expresso.fila', 'default');
+        $fila = (string) config('viabiliza.expresso.fila', 'default');
 
         if ($fila !== '' && $fila !== 'default') {
             $this->onQueue($fila);

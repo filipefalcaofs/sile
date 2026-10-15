@@ -26,7 +26,7 @@ affects: [02-administracao-base (HU-012 listagem de usuários), 12-auditoria-e-c
 tech-stack:
   added: []
   patterns:
-    - "Page size de listagem parametrizado via Settings::get('ui.access_history.per_page', 15) — seção ui em config/sile.php"
+    - "Page size de listagem parametrizado via Settings::get('ui.access_history.per_page', 15) — seção ui em config/viabiliza.php"
     - "Filtro de acessos por user_id OR email — titular enxerga falhas/bloqueios pré-login gravados sem user_id"
     - "Consulta relevante a dados de terceiro auditada explicitamente via AuditService (CA-02)"
 
@@ -45,7 +45,7 @@ key-files:
     - routes/settings.php
     - routes/portal.php
     - routes/gestao.php
-    - config/sile.php
+    - config/viabiliza.php
     - resources/js/layouts/portal-layout.tsx
 
 key-decisions:
@@ -55,7 +55,7 @@ key-decisions:
   - "Consulta administrativa auditada com log 'acessos'/'consulta-acessos' e target_user_id nas properties"
 
 patterns-established:
-  - "Parametrização de UI em config/sile.php seção 'ui' lida via Settings::get — HU-014 troca o backend sem tocar call sites"
+  - "Parametrização de UI em config/viabiliza.php seção 'ui' lida via Settings::get — HU-014 troca o backend sem tocar call sites"
   - "Paginação Inertia: paginate()->through() no backend; links renderizados com <Link> e label via dangerouslySetInnerHTML"
 
 # Metrics
@@ -79,7 +79,7 @@ completed: 2026-06-10
 
 - HU-007 (4 CAs): usuário consulta e atualiza name/e-mail/phone em /settings/profile; CPF exibido somente leitura e impossível de alterar; troca de e-mail zera `email_verified_at` e reenvia a notificação de verificação; mudanças auditadas via HasAuditoria com `attribute_changes` sem campos sensíveis; e-mail duplicado bloqueado; visitante redirecionado para /login.
 - HU-010 (4 CAs): usuário vê apenas os próprios acessos (login, saída, falha, bloqueio) com data/hora, IP e canal — inclusive registros pré-login gravados só com e-mail (bloqueio do RecordLockout); administrador consulta qualquer conta em /gestao/acessos/{user} com a permissão `consultar-acessos-de-qualquer-conta` e a consulta é auditada; analista (sem a permissão) recebe 403 auditado como acesso-negado/bloqueado; usuário inexistente retorna 404.
-- Page size do histórico parametrizado (`sile.ui.access_history.per_page`, default 15) — sem valor de negócio hardcoded.
+- Page size do histórico parametrizado (`viabiliza.ui.access_history.per_page`, default 15) — sem valor de negócio hardcoded.
 - Navegação do portal fechada: nav com Meu painel, Procurações e Meus acessos no portal-layout (sem telas órfãs no portal).
 - Suíte completa verde: 119 testes / 464 asserções; typecheck e build OK; pint sem pendências.
 
@@ -102,7 +102,7 @@ _REFACTOR sem commits próprios: pint e typecheck não exigiram mudanças após 
 - `resources/js/pages/settings/profile.tsx` - Tela "Meu perfil" com CPF formatado somente leitura e aviso de re-verificação
 - `app/Http/Controllers/Portal/AccessHistoryController.php` - Acessos do próprio usuário (user_id OR email), paginação parametrizada
 - `app/Http/Controllers/Gestao/AccessHistoryController.php` - Consulta administrativa auditada via AuditService (consulta-acessos)
-- `config/sile.php` - Seção ui.access_history.per_page (15) preservando security
+- `config/viabiliza.php` - Seção ui.access_history.per_page (15) preservando security
 - `routes/portal.php` - GET /portal/acessos (subgrupo protegido)
 - `routes/gestao.php` - GET /gestao/acessos/{user} com middleware permission:consultar-acessos-de-qualquer-conta
 - `resources/js/pages/portal/acessos.tsx` - Tabela com badges por evento (Login/Saída/Tentativa falha/Bloqueio temporário), paginação e estado vazio

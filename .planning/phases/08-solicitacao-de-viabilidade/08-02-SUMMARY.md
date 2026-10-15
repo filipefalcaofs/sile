@@ -8,13 +8,13 @@ tags: [parametrizacao, hu-014, settings, feature-toggle, throttle, spatie-permis
 requires:
   - phase: 02-administracao-base
     plan: 02
-    provides: "Settings::get (banco→cache→config/sile.php) + Parameter (sensitive fora do fillable, typedValue json→array) + ParameterSeeder upsert só de metadados (value administrado preservado)"
+    provides: "Settings::get (banco→cache→config/viabiliza.php) + Parameter (sensitive fora do fillable, typedValue json→array) + ParameterSeeder upsert só de metadados (value administrado preservado)"
   - phase: 02-administracao-base
     plan: 01
     provides: "RolesAndPermissionsSeeder aditivo (givePermissionTo, nunca sync) + papéis cidadao/analista/gestor/administrador no guard web"
 provides:
   - "13 parâmetros novos no catálogo (catálogo 35→48), novo grupo de negócio 'solicitacao'"
-  - "Fallbacks espelhados em config/sile.php (blocos features/solicitacao/storage/seguranca.throttle) — Settings::get lê config('sile.{key}') sem banco"
+  - "Fallbacks espelhados em config/viabiliza.php (blocos features/solicitacao/storage/seguranca.throttle) — Settings::get lê config('viabiliza.{key}') sem banco"
   - "2 feature toggles administráveis (features.solicitacao_viabilidade, features.simulacao_solicitacao)"
   - "Throttle parametrizado da consulta pública de protocolo (seguranca.throttle.consulta_protocolo.por_minuto)"
   - "5 permissões aditivas (14→19) com atribuição por papel (admin/gestor com as 5; analista só consultar-solicitacoes; cidadão por policy)"
@@ -33,7 +33,7 @@ key-files:
     - .planning/phases/08-solicitacao-de-viabilidade/08-02-SUMMARY.md
   modified:
     - database/seeders/ParameterSeeder.php
-    - config/sile.php
+    - config/viabiliza.php
     - database/seeders/RolesAndPermissionsSeeder.php
     - tests/Feature/Seeders/ParameterSeederTest.php
     - tests/Feature/Seeders/DatabaseSeederTest.php
@@ -57,7 +57,7 @@ completed: 2026-06-14
 
 # Phase 8 Plan 02: Fundação de Parametrização e Permissões Summary
 
-**A Fase 8 ganhou sua fundação de parametrização HU-014 (irmã paralela do 08-01, zero sobreposição de arquivos): 13 parâmetros administráveis novos elevam o catálogo de 35→48 sob o novo grupo de negócio `solicitacao` — toggles `features.solicitacao_viabilidade`/`features.simulacao_solicitacao`, formato de protocolo (`solicitacao.protocolo.prefixo='VIA'`/`.padding=6`), anexos (`max_mb`/`mime_permitidos` json/`storage.documentos.disk='local'` nunca público), tolerância área×polígono, prazo estimado, expiração do atendimento presencial e o throttle da consulta pública de protocolo — todos com fallback espelhado em `config/sile.php` (efeito sem deploy via `Settings::get` banco→cache→config). Em paralelo, 5 permissões aditivas (14→19) entram com atribuição por papel (admin/gestor com as 5; analista só `consultar-solicitacoes`; cidadão por policy). ZERO dependência nova. Provado por TDD estrito (RED→GREEN com evidência fresca) nos 3 testes de seeder/permissão (27/27) e suíte verde no meu escopo.**
+**A Fase 8 ganhou sua fundação de parametrização HU-014 (irmã paralela do 08-01, zero sobreposição de arquivos): 13 parâmetros administráveis novos elevam o catálogo de 35→48 sob o novo grupo de negócio `solicitacao` — toggles `features.solicitacao_viabilidade`/`features.simulacao_solicitacao`, formato de protocolo (`solicitacao.protocolo.prefixo='VIA'`/`.padding=6`), anexos (`max_mb`/`mime_permitidos` json/`storage.documentos.disk='local'` nunca público), tolerância área×polígono, prazo estimado, expiração do atendimento presencial e o throttle da consulta pública de protocolo — todos com fallback espelhado em `config/viabiliza.php` (efeito sem deploy via `Settings::get` banco→cache→config). Em paralelo, 5 permissões aditivas (14→19) entram com atribuição por papel (admin/gestor com as 5; analista só `consultar-solicitacoes`; cidadão por policy). ZERO dependência nova. Provado por TDD estrito (RED→GREEN com evidência fresca) nos 3 testes de seeder/permissão (27/27) e suíte verde no meu escopo.**
 
 ## Performance
 
@@ -70,7 +70,7 @@ completed: 2026-06-14
 ## Accomplishments
 
 - **13 parâmetros novos** no `ParameterSeeder` (catálogo 35→48), grupo `solicitacao` nascendo na lista (alfabética, entre `seguranca` e `ui`).
-- **Fallbacks em `config/sile.php`**: blocos `features` (2 toggles), novo `solicitacao` (7 sub-chaves), novo `storage.documentos.disk`, `seguranca.throttle.consulta_protocolo` — `Settings::get` resolve sem banco.
+- **Fallbacks em `config/viabiliza.php`**: blocos `features` (2 toggles), novo `solicitacao` (7 sub-chaves), novo `storage.documentos.disk`, `seguranca.throttle.consulta_protocolo` — `Settings::get` resolve sem banco.
 - **5 permissões aditivas** (14→19) com atribuição por papel, espelhando o padrão risco/louos (givePermissionTo, nunca sync).
 - **Contagens travadas** nos dois seeders (48 em ParameterSeeder/DatabaseSeeder) e nas permissões (19), com caso dedicado para cada domínio.
 - **Anti-fachada**: defaults reais e administráveis sem deploy; ressalvas SEDUR registradas no `description` (formato de protocolo; prazo estimado é estimativa até HU-129/Fase 15).
@@ -122,7 +122,7 @@ TDD estrito (RED→GREEN por domínio):
 ## Files Created/Modified
 
 - `database/seeders/ParameterSeeder.php` — 13 entradas novas no `catalog()` (grupo solicitacao + features + seguranca), nada removido.
-- `config/sile.php` — fallbacks espelhados (features +2, novo bloco solicitacao, novo bloco storage, throttle +1).
+- `config/viabiliza.php` — fallbacks espelhados (features +2, novo bloco solicitacao, novo bloco storage, throttle +1).
 - `database/seeders/RolesAndPermissionsSeeder.php` — 5 permissões + atribuições (analista/gestor/administrador), aditivo.
 - `tests/Feature/Seeders/ParameterSeederTest.php` — contagem 48 (2 pontos), grupo solicitacao, `test_seeder_registra_parametros_da_solicitacao_de_viabilidade`.
 - `tests/Feature/Seeders/DatabaseSeederTest.php` — contagem 48 (2 pontos).
@@ -167,7 +167,7 @@ TDD estrito (RED→GREEN por domínio):
 - **Os 3 testes-alvo juntos:** 27/27 verde (313 asserções).
 - **ManageRoles + 3 seeders:** 39/39 verde (371 asserções).
 - **Suíte completa (`--exclude-group postgis`):** 675 testes, **667 passaram, 0 falhas**, 8 erros — todos no `SolicitacaoSchemaTest` (08-01, fora do escopo). Zero falha atribuível a este plano.
-- `php artisan config:show sile.solicitacao.protocolo.prefixo` → `VIA`; `sile.storage.documentos.disk` → `local`.
+- `php artisan config:show viabiliza.solicitacao.protocolo.prefixo` → `VIA`; `viabiliza.storage.documentos.disk` → `local`.
 - `vendor/bin/pint --dirty --format agent` → passed.
 
 ## Next Phase Readiness

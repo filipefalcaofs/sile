@@ -47,9 +47,9 @@ class ViabilityRequestEtapaTest extends TestCase
 
     public function test_config_traz_os_intervalos_do_reprocessamento(): void
     {
-        $this->assertSame(15, config('sile.reprocessamento.intervalo_inicial_min'));
-        $this->assertSame(4, config('sile.reprocessamento.tentativas_iniciais'));
-        $this->assertSame(60, config('sile.reprocessamento.intervalo_posterior_min'));
-        $this->assertSame(24, config('sile.reprocessamento.janela_horas'));
+        $this->assertSame(15, config('viabiliza.reprocessamento.intervalo_inicial_min'));
+        $this->assertSame(4, config('viabiliza.reprocessamento.tentativas_iniciais'));
+        $this->assertSame(60, config('viabiliza.reprocessamento.intervalo_posterior_min'));
+        $this->assertSame(24, config('viabiliza.reprocessamento.janela_horas'));
     }
 }

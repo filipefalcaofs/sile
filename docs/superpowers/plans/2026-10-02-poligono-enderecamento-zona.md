@@ -33,7 +33,7 @@
 | `database/migrations/2026_10_02_120000_add_address_polygon_and_zona_fonte_to_viability_requests_table.php` (criar) | colunas novas |
 | `app/Enums/ZonaFonte.php` (criar) | `ponto` / `enderecamento_maior_porcao` |
 | `app/Models/ViabilityRequest.php` (alterar) | casts das colunas novas |
-| `config/sile.php`, `database/seeders/ParameterSeeder.php`, `app/Support/ApiIntegracaoCatalog.php`, `tests/TestCase.php` (alterar) | interruptor e `type_name` do endereçamento |
+| `config/viabiliza.php`, `database/seeders/ParameterSeeder.php`, `app/Support/ApiIntegracaoCatalog.php`, `tests/TestCase.php` (alterar) | interruptor e `type_name` do endereçamento |
 | `app/Services/Geo/EnderecamentoHit.php` (criar) | resultado da consulta do endereçamento |
 | `app/Services/Geo/GeoServerEnderecamentoClient.php` (criar) | WFS do endereçamento, desambiguação, memo |
 | `app/Services/Geo/PoligonoEnderecamentoService.php` (criar) | grava o polígono no processo e audita |
@@ -225,7 +225,7 @@ git commit -m "feat: guarda o polígono do endereçamento e a fonte da zona no p
 ### Tarefa 2: Interruptor `features.geoserver_enderecamento`
 
 **Arquivos:**
-- Alterar: `config/sile.php` (bloco `features`, ~linha 42; bloco `integrations.geoserver`, ~linha 325)
+- Alterar: `config/viabiliza.php` (bloco `features`, ~linha 42; bloco `integrations.geoserver`, ~linha 325)
 - Alterar: `database/seeders/ParameterSeeder.php` (ao lado de `features.geoserver_via_classe`, ~linha 308)
 - Alterar: `app/Support/ApiIntegracaoCatalog.php` (aba `geoserver`, ~linha 217)
 - Alterar: `tests/TestCase.php` (~linha 47)
@@ -233,7 +233,7 @@ git commit -m "feat: guarda o polígono do endereçamento e a fonte da zona no p
 - Teste: `tests/Feature/Geo/GeoServerEnderecamentoToggleTest.php`
 
 **Interfaces:**
-- Produz: `Settings::enabled('geoserver_enderecamento')`; `config('sile.integrations.geoserver.enderecamento.type_name')` = `'enderecamento:VM_ENDERECAMENTO'`.
+- Produz: `Settings::enabled('geoserver_enderecamento')`; `config('viabiliza.integrations.geoserver.enderecamento.type_name')` = `'enderecamento:VM_ENDERECAMENTO'`.
 
 - [ ] **Passo 1: Escrever o teste que falha**
 
@@ -272,7 +272,7 @@ class GeoServerEnderecamentoToggleTest extends TestCase
 
     public function test_camada_do_enderecamento_esta_configurada(): void
     {
-        $this->assertSame('enderecamento:VM_ENDERECAMENTO', config('sile.integrations.geoserver.enderecamento.type_name'));
+        $this->assertSame('enderecamento:VM_ENDERECAMENTO', config('viabiliza.integrations.geoserver.enderecamento.type_name'));
     }
 }
 ```
@@ -284,7 +284,7 @@ Esperado: FAIL (parâmetro inexistente).
 
 - [ ] **Passo 3: Implementar**
 
-`config/sile.php`, em `features`, depois de `'geoserver_via_classe' => true,`:
+`config/viabiliza.php`, em `features`, depois de `'geoserver_via_classe' => true,`:
 
 ```php
 // Polígono do endereçamento SEDUR (enderecamento:VM_ENDERECAMENTO) e zona
@@ -318,10 +318,10 @@ Em `integrations.geoserver`, ao lado de `classificacao_viaria`:
 self::interruptor('enderecamento', 'features.geoserver_enderecamento', 'Polígono do endereçamento habilitado'),
 ```
 
-`tests/TestCase.php`, logo abaixo de `config(['sile.features.geoserver_zona' => false]);`:
+`tests/TestCase.php`, logo abaixo de `config(['viabiliza.features.geoserver_zona' => false]);`:
 
 ```php
-config(['sile.features.geoserver_enderecamento' => false]);
+config(['viabiliza.features.geoserver_enderecamento' => false]);
 ```
 
 Contagens de parâmetros: trocar `105` por `106` nas quatro asserções citadas.
@@ -335,7 +335,7 @@ Esperado: PASS. Se `ApiIntegracaoControllerTest` ou `ParameterSeederTest` listar
 
 ```bash
 vendor/bin/pint --dirty --format agent
-git add config/sile.php database/seeders/ParameterSeeder.php app/Support/ApiIntegracaoCatalog.php tests/TestCase.php tests/Feature/Geo/GeoServerEnderecamentoToggleTest.php tests/Feature/Seeders/DatabaseSeederTest.php tests/Feature/Seeders/ParameterSeederTest.php tests/Feature/Gestao/ApiIntegracaoControllerTest.php
+git add config/viabiliza.php database/seeders/ParameterSeeder.php app/Support/ApiIntegracaoCatalog.php tests/TestCase.php tests/Feature/Geo/GeoServerEnderecamentoToggleTest.php tests/Feature/Seeders/DatabaseSeederTest.php tests/Feature/Seeders/ParameterSeederTest.php tests/Feature/Gestao/ApiIntegracaoControllerTest.php
 git commit -m "feat: interruptor do polígono do endereçamento no GeoServer"
 ```
 
@@ -402,7 +402,7 @@ class GeoServerEnderecamentoClientTest extends TestCase
             ],
         );
 
-        cache()->forget('sile.parameters.features.geoserver_enderecamento');
+        cache()->forget('viabiliza.parameters.features.geoserver_enderecamento');
     }
 
     /**
@@ -633,9 +633,9 @@ class GeoServerEnderecamentoClient
 
         try {
             $response = Http::withHeaders([
-                'User-Agent' => (string) config('sile.integrations.geoserver.user_agent', 'Viabiliza-SEDUR-Salvador/1.0'),
+                'User-Agent' => (string) config('viabiliza.integrations.geoserver.user_agent', 'Viabiliza-SEDUR-Salvador/1.0'),
             ])
-                ->timeout((int) config('sile.integrations.geoserver.timeout', 8))
+                ->timeout((int) config('viabiliza.integrations.geoserver.timeout', 8))
                 ->connectTimeout(3)
                 ->acceptJson()
                 ->get($this->url($codLog, $numero));
@@ -722,13 +722,13 @@ class GeoServerEnderecamentoClient
 
     private function url(string $codLog, string $numero): string
     {
-        $base = rtrim((string) Settings::get('integrations.geoserver.base_url', config('sile.integrations.geoserver.base_url')), '/');
+        $base = rtrim((string) Settings::get('integrations.geoserver.base_url', config('viabiliza.integrations.geoserver.base_url')), '/');
 
         return $base.'/wfs?'.http_build_query([
             'service' => 'WFS',
             'version' => '1.1.0',
             'request' => 'GetFeature',
-            'typeName' => (string) config('sile.integrations.geoserver.enderecamento.type_name', 'enderecamento:VM_ENDERECAMENTO'),
+            'typeName' => (string) config('viabiliza.integrations.geoserver.enderecamento.type_name', 'enderecamento:VM_ENDERECAMENTO'),
             'outputFormat' => 'application/json',
             'srsName' => 'EPSG:4326',
             'maxFeatures' => 50,
@@ -814,7 +814,7 @@ private function ligarEnderecamento(bool $ligado = true): void
         ['key' => 'features.geoserver_enderecamento'],
         ['group' => 'features', 'type' => 'boolean', 'value' => $ligado ? '1' : '0', 'default_value' => '1', 'validation_rules' => ['required', 'boolean'], 'description' => 'Polígono do endereçamento.'],
     );
-    cache()->forget('sile.parameters.features.geoserver_enderecamento');
+    cache()->forget('viabiliza.parameters.features.geoserver_enderecamento');
 }
 
 /**
@@ -1168,7 +1168,7 @@ class ZonaMaiorPorcaoResolverTest extends TestCase
 
     public function test_ca_zn_07_fora_do_postgres_e_indisponivel_sem_consultar_o_geoserver(): void
     {
-        config(['sile.features.geoserver_zona' => true, 'sile.features.geoserver_enderecamento' => true]);
+        config(['viabiliza.features.geoserver_zona' => true, 'viabiliza.features.geoserver_enderecamento' => true]);
         GeoServerLayer::factory()->create();
         Http::fake();
 
@@ -1210,7 +1210,7 @@ class ZonaMaiorPorcaoResolverPostgisTest extends PostgisTestCase
     {
         parent::setUp();
 
-        config(['sile.features.geoserver_zona' => true, 'sile.features.geoserver_enderecamento' => true]);
+        config(['viabiliza.features.geoserver_zona' => true, 'viabiliza.features.geoserver_enderecamento' => true]);
 
         GeoServerLayer::factory()->create(['workspace' => 'louos_zpr3', 'type_name' => 'VM_L_Z_USO_ZPR_3', 'ordem' => 1]);
         GeoServerLayer::factory()->create(['workspace' => 'louos_zeis', 'type_name' => 'VM_L_Z_USO_ZEIS', 'ordem' => 2]);
@@ -1507,8 +1507,8 @@ class GeoServerZonaMaiorPorcaoResolver implements ZonaMaiorPorcaoResolver
             $responses = Http::pool(function (Pool $pool) use ($typeNames, $bbox): void {
                 foreach ($typeNames as $typeName) {
                     $pool->as($typeName)
-                        ->withHeaders(['User-Agent' => (string) config('sile.integrations.geoserver.user_agent', 'Viabiliza-SEDUR-Salvador/1.0')])
-                        ->timeout((int) config('sile.integrations.geoserver.timeout', 8))
+                        ->withHeaders(['User-Agent' => (string) config('viabiliza.integrations.geoserver.user_agent', 'Viabiliza-SEDUR-Salvador/1.0')])
+                        ->timeout((int) config('viabiliza.integrations.geoserver.timeout', 8))
                         ->connectTimeout(3)
                         ->acceptJson()
                         ->get($this->url($typeName, $bbox));
@@ -1657,7 +1657,7 @@ class GeoServerZonaMaiorPorcaoResolver implements ZonaMaiorPorcaoResolver
      */
     private function url(string $typeName, array $bbox): string
     {
-        $base = rtrim((string) Settings::get('integrations.geoserver.base_url', config('sile.integrations.geoserver.base_url')), '/');
+        $base = rtrim((string) Settings::get('integrations.geoserver.base_url', config('viabiliza.integrations.geoserver.base_url')), '/');
 
         return $base.'/wfs?'.http_build_query([
             'service' => 'WFS',

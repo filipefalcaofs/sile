@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Cache;
  *
  * Backend da HU-014: banco (tabela parameters) com cache por chave e
  * invalidação na gravação do Parameter — efeito sem deploy (CA-05). Ordem
- * de resolução: cache → banco (value ?? default do catálogo) → config/sile.php
+ * de resolução: cache → banco (value ?? default do catálogo) → config/viabiliza.php
  * → default do call site. Sem banco migrado (build Docker, CI, testes Unit)
  * a QueryException cai no fallback de config — promessa da Fase 1 cumprida
  * sem alterar nenhum call site.
@@ -20,12 +20,12 @@ class Settings
 {
     public static function get(string $key, mixed $default = null): mixed
     {
-        $fallback = config("sile.{$key}", $default);
+        $fallback = config("viabiliza.{$key}", $default);
 
         try {
             return Cache::remember(
-                "sile.parameters.{$key}",
-                (int) config('sile.parameters.cache_ttl', 300),
+                "viabiliza.parameters.{$key}",
+                (int) config('viabiliza.parameters.cache_ttl', 300),
                 function () use ($key, $fallback) {
                     $parameter = Parameter::query()->where('key', $key)->first();
 

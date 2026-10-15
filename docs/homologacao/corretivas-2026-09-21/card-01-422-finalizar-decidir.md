@@ -3,7 +3,7 @@
 ## RESUMO (título do card)
 
 ```text
-[Viabiliza SILE] Caminho: Gestão > Ficha de análise > Finalizar processo / Decidir (HTTP 422 ao concluir a decisão)
+[Viabiliza VIABILIZA] Caminho: Gestão > Ficha de análise > Finalizar processo / Decidir (HTTP 422 ao concluir a decisão)
 ```
 
 ---

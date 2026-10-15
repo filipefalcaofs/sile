@@ -107,7 +107,7 @@ class PoligonoEnderecamentoProtocoloTest extends TestCase
             ['key' => 'features.geoserver_enderecamento'],
             ['group' => 'features', 'type' => 'boolean', 'value' => $ligado ? '1' : '0', 'default_value' => '1', 'validation_rules' => ['required', 'boolean'], 'description' => 'Polígono do endereçamento.'],
         );
-        cache()->forget('sile.parameters.features.geoserver_enderecamento');
+        cache()->forget('viabiliza.parameters.features.geoserver_enderecamento');
     }
 
     /**

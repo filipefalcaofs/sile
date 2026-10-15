@@ -14,7 +14,7 @@ requires:
     provides: "Evento ResultadoEmitido (ShouldDispatchAfterCommit); BapRegistry/UnavailableBapRegistry::findLinkage→null + DTO BapLinkage (vínculo dormente, Fase 13)"
   - phase: 09-fluxo-expresso
     plan: "01"
-    provides: "Parâmetro administrável expresso.bap.prazo_horas (48) + fallback config/sile.php"
+    provides: "Parâmetro administrável expresso.bap.prazo_horas (48) + fallback config/viabiliza.php"
   - phase: 09-fluxo-expresso
     plan: "05"
     provides: "Padrão de emissão (decisão + transição + auditoria síncrona na transação; ResultadoEmitido após o commit)"
@@ -98,7 +98,7 @@ public function indeferir(ViabilityRequest $request): ViabilityDecision
 
 ### Comando `expresso:indeferir-sem-bap` (auto-descoberto)
 
-- Lê `Settings::get('expresso.bap.prazo_horas', config('sile.expresso.bap.prazo_horas', 48))`.
+- Lê `Settings::get('expresso.bap.prazo_horas', config('viabiliza.expresso.bap.prazo_horas', 48))`.
 - Varre `status===aguardando_bap`; vencimento = `bap_due_at ?? dueAt(bap_linked_at, prazo)`; indefere quando `isOverdue`.
 - No-op honesto: nenhuma vencida ⇒ `Nenhum processo aguardando BAP vencido.` + exit 0.
 - Agenda em `routes/console.php`: `Schedule::command('expresso:indeferir-sem-bap')->hourly()->withoutOverlapping()->onOneServer();`

@@ -34,15 +34,15 @@ class RegistrarContingenciaRequest extends FormRequest
     {
         $maxComplementares = (int) Settings::get(
             'solicitacao.cnaes_complementares.max',
-            config('sile.solicitacao.cnaes_complementares.max', 99),
+            config('viabiliza.solicitacao.cnaes_complementares.max', 99),
         );
 
         /** @var array<int, string> $mimes */
-        $mimes = (array) config('sile.solicitacao.anexos.mime_permitidos', ['application/pdf', 'image/jpeg', 'image/png']);
+        $mimes = (array) config('viabiliza.solicitacao.anexos.mime_permitidos', ['application/pdf', 'image/jpeg', 'image/png']);
 
         $maxKb = (int) Settings::get(
             'solicitacao.anexos.max_mb',
-            config('sile.solicitacao.anexos.max_mb', 10),
+            config('viabiliza.solicitacao.anexos.max_mb', 10),
         ) * 1024;
 
         return [

@@ -11,7 +11,7 @@ requires:
     provides: "FluxoExpressoService::decide(ViabilityRequest, ?User): DecisionResult — motor idempotente/autoritativo que o job e o comando consomem"
   - phase: 09-fluxo-expresso
     plan: "01"
-    provides: "config/sile.php expresso.fila / expresso.job.* (tries/timeout/backoff) / expresso.lock — constantes técnicas da resiliência"
+    provides: "config/viabiliza.php expresso.fila / expresso.job.* (tries/timeout/backoff) / expresso.lock — constantes técnicas da resiliência"
   - phase: 08-solicitacao-viabilidade
     plan: "(protocolo)"
     provides: "Evento SolicitacaoProtocolada (after-commit) + padrão de listener auto-descoberto (RegistrarTrilhaProtocolo) + scheduler withoutOverlapping/onOneServer (routes/console.php)"
@@ -27,7 +27,7 @@ tech-stack:
   added: []
   patterns:
     - "Gatilho desacoplado: listener AUTO-DESCOBERTO no evento de domínio apenas DESPACHA um job ShouldQueue (não executa a lógica inline) — protocolo rápido + resiliência da fila; registro único por auto-descoberta, travado por CONTAGEM (1 job por evento), NUNCA Event::listen (lição Fase 8)"
-    - "Fila/retry/timeout/backoff do job lidos de config/sile.php no construtor — fonte ÚNICA da fila no próprio job, de modo que gatilho e rede de segurança enfileiram no mesmo lugar (sem duplicar a escolha da fila)"
+    - "Fila/retry/timeout/backoff do job lidos de config/viabiliza.php no construtor — fonte ÚNICA da fila no próprio job, de modo que gatilho e rede de segurança enfileiram no mesmo lugar (sem duplicar a escolha da fila)"
     - "Rede de segurança idempotente: comando agendado (withoutOverlapping/onOneServer) reusa o MESMO job para reprocessar órfãs (status protocolada SEM decision) — seguro porque o service é idempotente; no-op honesto quando não há órfãs"
     - "Isolamento de side-effect assíncrono em teste: fila sync rodaria o job inline; o TestCase base fakeia SÓ esse job (opt-out por propriedade) — testes de protocolo não acoplam à decisão; nenhum arquivo da fase consumidora alterado"
 
@@ -45,7 +45,7 @@ key-files:
     - tests/Feature/Jobs/ImportRedesimJobTest.php
 
 key-decisions:
-  - "A fila do job é fonte ÚNICA de verdade no construtor do DecidirFluxoExpressoJob (lê config('sile.expresso.fila')); o listener e o comando apenas dispatcham. Evita duplicar a lógica de onQueue no gatilho e na rede de segurança e garante consistência operacional (ambos na mesma fila)."
+  - "A fila do job é fonte ÚNICA de verdade no construtor do DecidirFluxoExpressoJob (lê config('viabiliza.expresso.fila')); o listener e o comando apenas dispatcham. Evita duplicar a lógica de onQueue no gatilho e na rede de segurança e garante consistência operacional (ambos na mesma fila)."
   - "failed() audita logName 'expresso' / event 'decisao-falha' / result 'falha' com viability_request_id + erro (espelha ImportRedesimJob::failed) — RN-002/FA-03: falha esgotada nunca é silenciosa; o job NÃO grava decisão falsa."
   - "Guard idempotente no job (null OU status != Protocolada → no-op) é uma otimização — o FluxoExpressoService também re-checa sob Cache::lock; reprocessar (reavaliar) é sempre seguro."
   - "expresso:reavaliar filtra status===protocolada + whereDoesntHave('decision') (órfãs) e redespacha o MESMO job (não decide inline no comando) — consistência total com o gatilho; --limit protege lotes grandes; no-op honesto."
@@ -61,7 +61,7 @@ completed: 2026-06-14
 
 # Phase 9 Plan 06: Gatilho e Orquestração do Fluxo Expresso (listener → job + rede de segurança)
 
-**O fluxo expresso ganhou seu GATILHO real: o listener AUTO-DESCOBERTO `AvaliarFluxoExpresso` pendura no `SolicitacaoProtocolada` (Fase 8) e apenas DESPACHA o `DecidirFluxoExpressoJob` (ShouldQueue) — não decide inline, mantendo o protocolo rápido e ganhando a resiliência da fila (retry/timeout/backoff de `config/sile.php`). Registro ÚNICO por auto-descoberta (`event:list` mostra `RegistrarTrilhaProtocolo` + `AvaliarFluxoExpresso` ligados ao evento), NUNCA `Event::listen` (lição Fase 8 — RN-002), travado por CONTAGEM (exatamente 1 job por protocolo). O job carrega só o id (serialização segura), recarrega o estado fresco, tem guard idempotente (no-op fora de protocolada — o service também re-checa sob `Cache::lock`) e chama `FluxoExpressoService::decide`; `failed()` audita 'expresso'/'decisao-falha' result 'falha' (FA-03 — nunca silenciosa). O comando/scheduler `expresso:reavaliar {--limit=}` é a REDE DE SEGURANÇA (não o gatilho principal): varre protocoladas SEM decisão (`whereDoesntHave('decision')` — órfãs) e redespacha o MESMO job, agendado `everyTenMinutes()->withoutOverlapping()->onOneServer()` — no-op honesto quando não há órfãs. TDD estrito (RED→GREEN com evidência fresca): listener 3/3 (contagem + id + fila parametrizada), job 6/6 (config; decisão real via service; no-op; failed audita), comando 3/3 (só órfãs; no-op; --limit). Suíte completa SQLite 889/889 (4556 asserções) + grupo postgis 21/21 (121) — zero regressão. ZERO dependência nova.**
+**O fluxo expresso ganhou seu GATILHO real: o listener AUTO-DESCOBERTO `AvaliarFluxoExpresso` pendura no `SolicitacaoProtocolada` (Fase 8) e apenas DESPACHA o `DecidirFluxoExpressoJob` (ShouldQueue) — não decide inline, mantendo o protocolo rápido e ganhando a resiliência da fila (retry/timeout/backoff de `config/viabiliza.php`). Registro ÚNICO por auto-descoberta (`event:list` mostra `RegistrarTrilhaProtocolo` + `AvaliarFluxoExpresso` ligados ao evento), NUNCA `Event::listen` (lição Fase 8 — RN-002), travado por CONTAGEM (exatamente 1 job por protocolo). O job carrega só o id (serialização segura), recarrega o estado fresco, tem guard idempotente (no-op fora de protocolada — o service também re-checa sob `Cache::lock`) e chama `FluxoExpressoService::decide`; `failed()` audita 'expresso'/'decisao-falha' result 'falha' (FA-03 — nunca silenciosa). O comando/scheduler `expresso:reavaliar {--limit=}` é a REDE DE SEGURANÇA (não o gatilho principal): varre protocoladas SEM decisão (`whereDoesntHave('decision')` — órfãs) e redespacha o MESMO job, agendado `everyTenMinutes()->withoutOverlapping()->onOneServer()` — no-op honesto quando não há órfãs. TDD estrito (RED→GREEN com evidência fresca): listener 3/3 (contagem + id + fila parametrizada), job 6/6 (config; decisão real via service; no-op; failed audita), comando 3/3 (só órfãs; no-op; --limit). Suíte completa SQLite 889/889 (4556 asserções) + grupo postgis 21/21 (121) — zero regressão. ZERO dependência nova.**
 
 ## Performance
 - **Duration:** ~23 min
@@ -79,10 +79,10 @@ public function handle(SolicitacaoProtocolada $event): void
 
 ### `App\Jobs\DecidirFluxoExpressoJob` (ShouldQueue)
 ```php
-public int $tries;        // config('sile.expresso.job.tries', 3)
-public int $timeout;      // config('sile.expresso.job.timeout', 120)
-public array $backoff;    // config('sile.expresso.job.backoff', [30,60,120])
-public function __construct(public readonly int $viabilityRequestId) // + onQueue(config('sile.expresso.fila')) se != 'default'
+public int $tries;        // config('viabiliza.expresso.job.tries', 3)
+public int $timeout;      // config('viabiliza.expresso.job.timeout', 120)
+public array $backoff;    // config('viabiliza.expresso.job.backoff', [30,60,120])
+public function __construct(public readonly int $viabilityRequestId) // + onQueue(config('viabiliza.expresso.fila')) se != 'default'
 public function handle(FluxoExpressoService $service): void          // guard: null|status!=Protocolada → no-op; senão decide()
 public function failed(?Throwable $exception): void                  // audita 'expresso'/'decisao-falha'/'falha' (id+erro)
 ```
@@ -118,7 +118,7 @@ TDD estrito (RED→GREEN verificado com evidência fresca antes de cada commit):
 
 ## Decisions Made
 
-- **Fila como fonte única no job**: `DecidirFluxoExpressoJob` lê `config('sile.expresso.fila')` no construtor e faz `onQueue` quando != 'default'. O listener e o comando apenas `dispatch($id)` — sem duplicar a escolha da fila e garantindo que o gatilho e a rede de segurança enfileirem no mesmo lugar. (Refatorado na Task 2; o listener da Task 1 deixou de fazer onQueue.)
+- **Fila como fonte única no job**: `DecidirFluxoExpressoJob` lê `config('viabiliza.expresso.fila')` no construtor e faz `onQueue` quando != 'default'. O listener e o comando apenas `dispatch($id)` — sem duplicar a escolha da fila e garantindo que o gatilho e a rede de segurança enfileirem no mesmo lugar. (Refatorado na Task 2; o listener da Task 1 deixou de fazer onQueue.)
 - **failed() audita pelo AuditService** ('expresso'/'decisao-falha'/'falha', id+erro), espelhando `ImportRedesimJob::failed` — RN-002/FA-03; nunca decisão falsa.
 - **Guard idempotente no job** é otimização; a garantia real é o `Cache::lock` + re-check do service (09-05). Reavaliar é sempre seguro.
 - **`expresso:reavaliar` só órfãs** (`status===protocolada` + `whereDoesntHave('decision')`) e redespacha o MESMO job (não decide inline) — consistência com o gatilho; `--limit` protege lotes grandes.
@@ -151,7 +151,7 @@ TDD estrito (RED→GREEN verificado com evidência fresca antes de cada commit):
 
 - **09-12** (smoke do fluxo automático protocolar→decidir): o caminho real está pronto (protocolo → listener → job → service). Para exercitar a decisão ponta a ponta, o smoke deve processar a fila (`queue:work`) OU desligar o fake do harness (`$fakeExpressoDecisionJob = false`) e rodar com sync.
 - **Wave 4 (09-07/08/09)**: listeners AUTO-DESCOBERTOS no `ResultadoEmitido` (notificação HU-077, Regin HU-104 bloqueado, SEFAZ HU-110 bloqueado) — mesmo padrão de auto-descoberta deste gatilho.
-- **Operação**: em produção a fila NÃO é sync — a decisão roda por worker, fora do request do protocolo (resiliência); `expresso:reavaliar` (a cada 10 min) recupera órfãs por falha/perda. `config('sile.expresso.fila')` permite uma fila dedicada sem deploy.
+- **Operação**: em produção a fila NÃO é sync — a decisão roda por worker, fora do request do protocolo (resiliência); `expresso:reavaliar` (a cada 10 min) recupera órfãs por falha/perda. `config('viabiliza.expresso.fila')` permite uma fila dedicada sem deploy.
 - **Bloqueio honesto mantido (09-05):** sem a zona oficial (Quadro 10/SEDUR) a decisão roteia para `em_analise` SEM decidir/emitir; liga sozinha quando a base entrar (muda a carga, não a lógica).
 
 ---

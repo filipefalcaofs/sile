@@ -108,7 +108,7 @@ class PainelCidadaoTest extends TestCase
             ->get('/portal/painel')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
-                // Limite default (config sile.ui.painel.solicitacoes_recentes = 5).
+                // Limite default (config viabiliza.ui.painel.solicitacoes_recentes = 5).
                 ->has('solicitacoesRecentes', 5)
                 // Mais recente primeiro (i = 0).
                 ->where('solicitacoesRecentes.0.protocol_number', 'VIA-2026-000000')

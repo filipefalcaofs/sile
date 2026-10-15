@@ -45,17 +45,17 @@ abstract class TestCase extends BaseTestCase
 
         // GeoServer SEDUR é integração HTTP real. A suíte desliga o toggle por
         // padrão — testes do cliente WFS ligam e usam Http::fake.
-        config(['sile.features.geoserver_zona' => false]);
-        config(['sile.features.geoserver_enderecamento' => false]);
-        config(['sile.features.geoserver_via_classe' => false]);
+        config(['viabiliza.features.geoserver_zona' => false]);
+        config(['viabiliza.features.geoserver_enderecamento' => false]);
+        config(['viabiliza.features.geoserver_via_classe' => false]);
 
         // ArcGIS municipal (SEMAP) é integração HTTP real: desligada por
         // padrão na suíte; o teste do cliente liga e usa Http::fake.
-        config(['sile.features.arcgis_semap' => false]);
+        config(['viabiliza.features.arcgis_semap' => false]);
 
         // A API de estatísticas da REDESIM é integração HTTP real: desligada
         // por padrão na suíte; os testes do cliente ligam e usam Http::fake.
-        config(['sile.features.benchmark_redesim' => false]);
+        config(['viabiliza.features.benchmark_redesim' => false]);
 
         // O gatilho do fluxo expresso (listener auto-descoberto AvaliarFluxoExpresso)
         // despacha o DecidirFluxoExpressoJob a CADA protocolo (SolicitacaoProtocolada,

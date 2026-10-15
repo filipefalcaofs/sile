@@ -27,7 +27,7 @@ class ReginConnectionTester
         }
 
         try {
-            $response = Http::timeout((int) config('sile.integrations.regin.timeout', 8))
+            $response = Http::timeout((int) config('viabiliza.integrations.regin.timeout', 8))
                 ->acceptJson()
                 ->asJson()
                 ->post($this->settings->baseUrl().'/acesso/auth', [

@@ -123,7 +123,7 @@ class CamadasIncidentesService
             return [];
         }
 
-        $raio = (int) config('sile.geo.logradouros_proximos_metros', 30);
+        $raio = (int) config('viabiliza.geo.logradouros_proximos_metros', 30);
 
         return array_map(fn (array $feicao): array => [
             'cod_log' => isset($feicao['properties']['CODLOG']) ? (string) $feicao['properties']['CODLOG'] : null,

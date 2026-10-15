@@ -11,7 +11,7 @@ requires:
     provides: "aggregate ViabilityRequest (property_polygon_geojson jsonb fonte + property_polygon geometry derivada só pgsql; markSimulationStale) + factory com polígono de 4 pontos"
   - phase: 08-solicitacao-de-viabilidade
     plan: 02
-    provides: "parâmetro solicitacao.area_poligono.tolerancia_percentual (default 10) com fallback em config/sile.php"
+    provides: "parâmetro solicitacao.area_poligono.tolerancia_percentual (default 10) com fallback em config/viabiliza.php"
   - phase: 08-solicitacao-de-viabilidade
     plan: 05
     provides: "ViabilityRequestPolicy::update (dono + status rascunho) + rotas portal.solicitacoes.* (literais)"

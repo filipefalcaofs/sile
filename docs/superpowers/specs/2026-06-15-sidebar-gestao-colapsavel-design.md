@@ -51,7 +51,7 @@ Novo módulo `resources/js/components/app/sidebar-collapse.ts`, espelhando o pad
 - `toggleClosed(closed, label)` → novo array com o label adicionado/removido.
 - `withGroupOpen(closed, label)` → novo array sem aquele label (usado para abrir a categoria ativa).
 
-Chave de storage: `sile.sidebar.gestao.closedGroups`. Guarda-se a lista de categorias **fechadas** (não as abertas): assim o padrão inicial é "tudo aberto" como hoje, e categorias novas adicionadas no futuro nascem abertas.
+Chave de storage: `viabiliza.sidebar.gestao.closedGroups`. Guarda-se a lista de categorias **fechadas** (não as abertas): assim o padrão inicial é "tudo aberto" como hoje, e categorias novas adicionadas no futuro nascem abertas.
 
 Comportamento no componente (quando `collapsibleGroups`):
 - Estado `closedGroups` inicializado por `readClosedGroups()`.

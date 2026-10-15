@@ -25,7 +25,7 @@
 
 **Files:**
 - Modify: `database/seeders/ParameterSeeder.php` (bloco `features.*`, após `features.fluxo_expresso` ~linha 374)
-- Modify: `config/sile.php` (bloco `features`, ~linha 40)
+- Modify: `config/viabiliza.php` (bloco `features`, ~linha 40)
 - Modify: `app/Services/Expresso/FluxoExpressoService.php` (linhas 218-261 e 285-289)
 - Modify: `tests/Feature/Risco/ReginProtocoloSimulacaoTest.php` (o teste do bypass passa a ligar a flag explicitamente)
 - Modify: `tests/Feature/Seeders/ParameterSeederTest.php` e `tests/Feature/Seeders/DatabaseSeederTest.php` (contagem de parâmetros +1 — verificar o valor commitado atual antes de editar; era 116 em 3aaae26)
@@ -33,7 +33,7 @@
 - Test: `tests/Feature/Expresso/SimulacaoProtocoloFlagTest.php` (novo)
 
 **Interfaces:**
-- Consumes: `Settings::enabled(string $feature): bool` (lê `features.{name}`, banco → cache → `config/sile.php` → default false); `ReginProtocoloSimulacaoService::CONTINGENCIA`.
+- Consumes: `Settings::enabled(string $feature): bool` (lê `features.{name}`, banco → cache → `config/viabiliza.php` → default false); `ReginProtocoloSimulacaoService::CONTINGENCIA`.
 - Produces: parâmetro `features.simulacao_protocolo` (boolean, default '0'); predicado renomeado `FluxoExpressoService::bypassSimulacaoHomologacao(ViabilityRequest): bool`.
 
 - [ ] **Step 1: Escrever o teste que falha**
@@ -56,7 +56,7 @@ Espelhar o setup de `tests/Feature/Risco/ReginProtocoloSimulacaoTest.php::test_s
 
     public function test_flag_ligada_preserva_o_caminho_de_homologacao_com_tvl(): void
     {
-        config(['sile.features.simulacao_protocolo' => true]);
+        config(['viabiliza.features.simulacao_protocolo' => true]);
 
         // Mesma simulação de risco baixo.
         // Assert: TVL emitido (espelhar test_simulacao_baixo_cria_processo_expresso_com_tvl).
@@ -70,7 +70,7 @@ Expected: o PRIMEIRO teste FALHA — hoje a simulação pendente/baixa emite TVL
 
 - [ ] **Step 3: Implementar o gate**
 
-`config/sile.php`, bloco `features`, após `'fluxo_expresso' => true,`:
+`config/viabiliza.php`, bloco `features`, após `'fluxo_expresso' => true,`:
 
 ```php
         // Bypass de HOMOLOGAÇÃO do motor de risco (simulação REGIN): ligado,
@@ -116,7 +116,7 @@ Run: `php artisan test --compact tests/Feature/Expresso/SimulacaoProtocoloFlagTe
 Expected: PASS (2 testes).
 
 Run: `php artisan test --compact tests/Feature/Risco/ReginProtocoloSimulacaoTest.php`
-Expected: `test_simulacao_baixo_cria_processo_expresso_com_tvl` FALHA (o bypass agora exige a flag). Corrigir o teste adicionando `config(['sile.features.simulacao_protocolo' => true]);` no início dele — o teste passa a documentar o caminho de homologação explicitamente. NUNCA afrouxar assert.
+Expected: `test_simulacao_baixo_cria_processo_expresso_com_tvl` FALHA (o bypass agora exige a flag). Corrigir o teste adicionando `config(['viabiliza.features.simulacao_protocolo' => true]);` no início dele — o teste passa a documentar o caminho de homologação explicitamente. NUNCA afrouxar assert.
 
 Atualizar as contagens de parâmetros (+1) em `ParameterSeederTest.php` e `DatabaseSeederTest.php`: ANTES de editar, ler o valor commitado em HEAD (`git show HEAD:tests/Feature/Seeders/ParameterSeederTest.php | grep -n "assertSame"`) — trabalho concorrente pode ter mudado; o incremento é sempre +1 sobre o valor commitado, e o comentário itemizado acima da contagem ganha uma linha para a nova flag.
 
@@ -136,7 +136,7 @@ Se o arquivo estiver sendo editado por outra sessão (conteúdo inesperado), nã
 - [ ] **Step 6: Commit**
 
 ```bash
-git add database/seeders/ParameterSeeder.php config/sile.php app/Services/Expresso/FluxoExpressoService.php tests/Feature/Expresso/SimulacaoProtocoloFlagTest.php tests/Feature/Risco/ReginProtocoloSimulacaoTest.php tests/Feature/Seeders/ParameterSeederTest.php tests/Feature/Seeders/DatabaseSeederTest.php .planning/STATE.md
+git add database/seeders/ParameterSeeder.php config/viabiliza.php app/Services/Expresso/FluxoExpressoService.php tests/Feature/Expresso/SimulacaoProtocoloFlagTest.php tests/Feature/Risco/ReginProtocoloSimulacaoTest.php tests/Feature/Seeders/ParameterSeederTest.php tests/Feature/Seeders/DatabaseSeederTest.php .planning/STATE.md
 git commit -m "feat: coloca o bypass de simulação de protocolo atrás de feature flag"
 ```
 

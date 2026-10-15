@@ -7,7 +7,7 @@ tags: [hu-131, export, csv, pdf, queue, notification, report-contract, rn-005, l
 # Dependency graph
 requires:
   - phase: 15-relatorios-e-indicadores (15-01)
-    provides: parâmetros relatorios.* + bloco config/sile.php relatorios.export/job + deps (openspout/echarts) + índices
+    provides: parâmetros relatorios.* + bloco config/viabiliza.php relatorios.export/job + deps (openspout/echarts) + índices
   - phase: 02-cadastros-estruturantes
     provides: App\Support\Settings (banco→config→default) + ParameterSeeder
   - phase: 12-auditoria-e-compliance

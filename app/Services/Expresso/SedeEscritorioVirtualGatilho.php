@@ -44,7 +44,7 @@ class SedeEscritorioVirtualGatilho
     {
         return $this->normalizar((string) Settings::get(
             'analise.escritorio_virtual.cnae_gatilho_sede',
-            config('sile.analise.escritorio_virtual.cnae_gatilho_sede', '8211-3/00'),
+            config('viabiliza.analise.escritorio_virtual.cnae_gatilho_sede', '8211-3/00'),
         ));
     }
 

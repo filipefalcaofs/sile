@@ -117,7 +117,7 @@ Contagem de "em andamento" e demais counts por uma única query `groupBy('status
 ## 7. Parametrização
 
 - **Prazo estimado**: reusa o parâmetro existente `solicitacao.prazo_estimado_dias` (default 30) com ressalva "estimado e não vinculante" (`Settings::get`). Sem novo parâmetro.
-- **Quantidade de itens recentes (N)**: constante **técnica** em `config/sile.php`, no bloco `ui` (ex.: `ui.painel.solicitacoes_recentes`, default 5). É recorte de leitura/UI, não valor de negócio — segue o precedente [02-02] e o uso de `ui.*.per_page` já presente. **Não** entra no catálogo HU-014/`ParameterSeeder` (o `ParameterSeederTest` trava a contagem do catálogo; adicionar parâmetro quebraria o teste sem ganho de negócio).
+- **Quantidade de itens recentes (N)**: constante **técnica** em `config/viabiliza.php`, no bloco `ui` (ex.: `ui.painel.solicitacoes_recentes`, default 5). É recorte de leitura/UI, não valor de negócio — segue o precedente [02-02] e o uso de `ui.*.per_page` já presente. **Não** entra no catálogo HU-014/`ParameterSeeder` (o `ParameterSeederTest` trava a contagem do catálogo; adicionar parâmetro quebraria o teste sem ganho de negócio).
 
 ## 8. Acessibilidade e linguagem (eMAG/WCAG 2.1 AA)
 
@@ -160,4 +160,4 @@ Verificação: `php artisan test --compact` (filtrando os testes do painel), `ve
 ## 12. Referências
 
 - HUs: HU-069 (acompanhamento), HU-090/091 (pendências), HU-060 (consultas), HU-027 (empresas), HU-008/009 (procurações), HU-076/077/119 (resultado/explicação), HU-102 (minimização), HU-014 (parametrização).
-- Código: `app/Http/Controllers/Portal/DashboardController.php`, `resources/js/pages/portal/dashboard.tsx`, `app/Http/Controllers/Portal/SolicitacaoController.php`, `app/Enums/ViabilityRequestStatus.php`, `app/Models/{ViabilityRequest,Company,ViabilityQuery,AnalysisPendency}.php`, `app/Http/Controllers/Gestao/DashboardController.php`, `app/Services/Relatorios/*`, `resources/js/components/ui/{kpi-card,badge,card,empty-state}.tsx`, `config/sile.php`.
+- Código: `app/Http/Controllers/Portal/DashboardController.php`, `resources/js/pages/portal/dashboard.tsx`, `app/Http/Controllers/Portal/SolicitacaoController.php`, `app/Enums/ViabilityRequestStatus.php`, `app/Models/{ViabilityRequest,Company,ViabilityQuery,AnalysisPendency}.php`, `app/Http/Controllers/Gestao/DashboardController.php`, `app/Services/Relatorios/*`, `resources/js/components/ui/{kpi-card,badge,card,empty-state}.tsx`, `config/viabiliza.php`.

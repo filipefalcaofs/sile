@@ -25,8 +25,8 @@ class PoligonoPorPontoTest extends TestCase
         parent::setUp();
 
         config([
-            'sile.features.geoserver_enderecamento' => true,
-            'sile.features.arcgis_semap' => true,
+            'viabiliza.features.geoserver_enderecamento' => true,
+            'viabiliza.features.arcgis_semap' => true,
         ]);
     }
 
@@ -215,7 +215,7 @@ class PoligonoPorPontoTest extends TestCase
 
     public function test_interruptor_desligado_nao_consulta_o_ponto(): void
     {
-        config(['sile.features.geoserver_enderecamento' => false]);
+        config(['viabiliza.features.geoserver_enderecamento' => false]);
         $this->fakeGeoServer($this->colecao($this->quadrado(-38.5, -12.98)));
         $request = $this->processo();
 
@@ -226,7 +226,7 @@ class PoligonoPorPontoTest extends TestCase
 
     public function test_busca_em_andamento_no_mesmo_processo_nao_repete_a_consulta(): void
     {
-        config(['sile.integrations.geoserver.enderecamento.espera_trava_ponto' => 0]);
+        config(['viabiliza.integrations.geoserver.enderecamento.espera_trava_ponto' => 0]);
         $this->fakeGeoServer($this->colecao($this->quadrado(-38.5, -12.98)));
         $request = $this->processo();
         $emAndamento = Cache::lock("poligono-ponto:{$request->id}", 60);

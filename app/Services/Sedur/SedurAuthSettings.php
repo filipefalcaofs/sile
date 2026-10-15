@@ -15,7 +15,7 @@ class SedurAuthSettings
     {
         return rtrim((string) Settings::get(
             'integrations.sedur_auth.base_url',
-            (string) config('sile.integrations.sedur_auth.base_url', ''),
+            (string) config('viabiliza.integrations.sedur_auth.base_url', ''),
         ), '/');
     }
 

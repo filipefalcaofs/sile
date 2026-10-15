@@ -36,7 +36,7 @@ final readonly class TipoImovelCatalog
     public static function vigente(): self
     {
         try {
-            $ttl = (int) config('sile.parameters.cache_ttl', 300);
+            $ttl = (int) config('viabiliza.parameters.cache_ttl', 300);
             $payload = Cache::remember(PropertyType::CACHE_KEY, $ttl, fn (): array => self::payloadDoBanco());
 
             if (! self::payloadValido($payload)) {

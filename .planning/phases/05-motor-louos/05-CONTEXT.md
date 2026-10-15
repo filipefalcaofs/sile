@@ -49,7 +49,7 @@ Nenhuma nova (confirmado pelo arquiteto-tecnico). HU-046 reusa rule_versions/Rul
 - Agents (sessão 2026-06-13/14): analista-negocio (escopo Quadro 7 buildável, Quadro 10 degrada) e arquiteto-tecnico (rule_versions domains, LouosEnquadramentoService, golden cases, degradação).
 
 ### HUs
-- `docs/SILE_HUs_Completas_MD/EP05-Motor-de-Regras-da-LOUOS/HU-038..HU-046.md`.
+- `docs/VIABILIZA_HUs_Completas_MD/EP05-Motor-de-Regras-da-LOUOS/HU-038..HU-046.md`.
 - HU-015 (Quadro 7), HU-016, HU-017, HU-018 (mantenedores) — EP02-Administracao.
 - HU-143 (Simular impacto de parametrização) — EP02-Administracao.
 - `docs/ANALISE-HUs-REUNIAO-SEDUR.md` (Quadro 11↔11B pendente; modelo enquadramento TVL).

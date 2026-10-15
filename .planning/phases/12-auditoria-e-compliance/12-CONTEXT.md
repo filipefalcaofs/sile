@@ -46,7 +46,7 @@ Fora do escopo / bloqueado: export pleno XLSX/PDF → HU-131/Fase 15 (CSV agora)
 - Agents (2026-06-15): analista-negocio (superfície sobre dado real; HU-097 já existe; decision_trace; HU-149 alerta+malha fina nunca punição) e arquiteto-tecnico (AuditTrailQueryService/activity_log; DecisionExplanationService; abuse_alerts/detectores; LgpdMonitorService).
 
 ### HUs
-- `docs/SILE_HUs_Completas_MD/EP12-Auditoria-e-Compliance/HU-097..HU-102.md`, `HU-149`.
+- `docs/VIABILIZA_HUs_Completas_MD/EP12-Auditoria-e-Compliance/HU-097..HU-102.md`, `HU-149`.
 
 ### Reuso (NÃO recriar — consumir/estender)
 - Trilha: `app/Support/Audit/AuditService.php` (log assinatura extensível — add personalData), `app/Concerns/HasAuditoria.php` (attribute_changes), activity_log (spatie via create_activity_log_table), `app/Models/AccessLog.php` + AccessHistoryController (variante global).

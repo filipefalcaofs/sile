@@ -11,9 +11,13 @@ import Button from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import ConfirmDialog from '@/components/ui/confirm-dialog';
 import DataTable from '@/components/ui/data-table/data-table';
-import type { ColumnDef } from '@/components/ui/data-table/types';
+import PerPageSelect from '@/components/ui/data-table/per-page-select';
+import TableToolbar from '@/components/ui/data-table/table-toolbar';
+import type { ColumnDef, SortDirection } from '@/components/ui/data-table/types';
+import { useServerTable } from '@/components/ui/data-table/use-server-table';
 import EmptyState from '@/components/ui/empty-state';
 import { Modal } from '@/components/ui/modal';
+import Pagination, { type PaginationLink } from '@/components/ui/pagination';
 import TableAction from '@/components/ui/table-action';
 import GestaoLayout from '@/layouts/gestao-layout';
 
@@ -33,9 +37,22 @@ interface PermissionOption {
 }
 
 interface RolesIndexProps {
-    roles: RoleItem[];
+    roles: {
+        data: RoleItem[];
+        links: PaginationLink[];
+        from: number | null;
+        to: number | null;
+        total: number;
+    };
     permissions: string[];
     permissionCatalog: PermissionOption[];
+    filters: {
+        search: string;
+        sort: string;
+        direction: SortDirection;
+        per_page: number;
+    };
+    perPageOptions: number[];
 }
 
 function groupPermissionCatalog(catalog: PermissionOption[]): { label: string; items: PermissionOption[] }[] {
@@ -270,7 +287,14 @@ function EditRoleModal({
     );
 }
 
-export default function RolesIndex({ roles, permissionCatalog }: RolesIndexProps) {
+export default function RolesIndex({ roles, permissionCatalog, filters, perPageOptions }: RolesIndexProps) {
+    const table = useServerTable({
+        url: '/gestao/perfis',
+        initialSearch: filters.search,
+        initialSort: { column: filters.sort, direction: filters.direction },
+        initialPerPage: filters.per_page,
+    });
+    const filtering = table.search.trim() !== '';
     const [showCreate, setShowCreate] = useState(false);
     const [editingRole, setEditingRole] = useState<RoleItem | null>(null);
     const [deletingRole, setDeletingRole] = useState<RoleItem | null>(null);
@@ -300,6 +324,7 @@ export default function RolesIndex({ roles, permissionCatalog }: RolesIndexProps
         {
             id: 'name',
             header: 'Perfil',
+            sortable: true,
             cellClassName: 'whitespace-nowrap',
             cell: (role) => (
                 <div className="flex flex-wrap items-center gap-2">
@@ -367,23 +392,56 @@ export default function RolesIndex({ roles, permissionCatalog }: RolesIndexProps
                     }
                 />
                 <CardContent>
-                    <DataTable
-                        columns={columns}
-                        rows={roles}
-                        rowKey={(role) => role.id}
-                        density="compact"
-                        emptyState={
-                            <EmptyState
-                                title="Nenhum perfil cadastrado"
-                                description="Crie o primeiro perfil para organizar as permissões por função."
-                                action={
-                                    <Button size="sm" onClick={() => setShowCreate(true)}>
-                                        Novo perfil
-                                    </Button>
-                                }
-                            />
-                        }
-                    />
+                    <div className="space-y-5">
+                        <TableToolbar
+                            search={{
+                                value: table.search,
+                                onChange: table.setSearch,
+                                placeholder: 'Buscar por nome do perfil...',
+                                label: 'Buscar perfis',
+                            }}
+                            actions={
+                                <PerPageSelect
+                                    value={table.perPage}
+                                    options={perPageOptions}
+                                    onChange={table.setPerPage}
+                                />
+                            }
+                        />
+
+                        <DataTable
+                            columns={columns}
+                            rows={roles.data}
+                            rowKey={(role) => role.id}
+                            sort={table.sort}
+                            onSortChange={table.setSort}
+                            loading={table.processing}
+                            skeletonRows={8}
+                            density="compact"
+                            emptyState={
+                                <EmptyState
+                                    title={filtering ? 'Nenhum resultado para a busca' : 'Nenhum perfil cadastrado'}
+                                    description={
+                                        filtering
+                                            ? 'Ajuste o termo de busca e tente novamente.'
+                                            : 'Crie o primeiro perfil para organizar as permissões por função.'
+                                    }
+                                    action={
+                                        !filtering ? (
+                                            <Button size="sm" onClick={() => setShowCreate(true)}>
+                                                Novo perfil
+                                            </Button>
+                                        ) : undefined
+                                    }
+                                />
+                            }
+                        />
+
+                        <Pagination
+                            links={roles.links}
+                            meta={{ from: roles.from, to: roles.to, total: roles.total }}
+                        />
+                    </div>
                 </CardContent>
             </Card>
 

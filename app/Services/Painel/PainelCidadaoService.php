@@ -60,7 +60,7 @@ class PainelCidadaoService
      */
     private function solicitacoesRecentes(User $efetivo): array
     {
-        $limit = (int) config('sile.ui.painel.solicitacoes_recentes', 5);
+        $limit = (int) config('viabiliza.ui.painel.solicitacoes_recentes', 5);
 
         return SolicitacaoResumoResource::collection(
             ViabilityRequest::query()

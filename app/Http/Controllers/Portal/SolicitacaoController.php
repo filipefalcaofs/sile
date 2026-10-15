@@ -139,7 +139,7 @@ class SolicitacaoController extends Controller
         /** @var array<int, string> $states */
         $states = (array) Settings::get(
             'solicitacao.cancelamento.estados_cancelaveis',
-            config('sile.solicitacao.cancelamento.estados_cancelaveis', ['rascunho', 'protocolada']),
+            config('viabiliza.solicitacao.cancelamento.estados_cancelaveis', ['rascunho', 'protocolada']),
         );
 
         return $states;
@@ -347,8 +347,8 @@ class SolicitacaoController extends Controller
                 'wants_virtual_office_hq' => (bool) $solicitacao->wants_virtual_office_hq,
             ],
             'escritorio_virtual' => [
-                'pergunta_geral' => config('sile.analise.escritorio_virtual.pergunta_geral'),
-                'pergunta_vinculada' => config('sile.analise.escritorio_virtual.pergunta_vinculada'),
+                'pergunta_geral' => config('viabiliza.analise.escritorio_virtual.pergunta_geral'),
+                'pergunta_vinculada' => config('viabiliza.analise.escritorio_virtual.pergunta_vinculada'),
                 // Interpolado AQUI, não no front (achado C1 da revisão da
                 // Task 3): o marcador :cnae é implementação do texto
                 // administrável, e o front não deve conhecer nem o marcador
@@ -357,7 +357,7 @@ class SolicitacaoController extends Controller
                 'mensagem_confirma_perda_sede' => str_replace(
                     ':cnae',
                     app(SedeEscritorioVirtualGatilho::class)->cnaeGatilhoFormatado(),
-                    (string) config('sile.analise.escritorio_virtual.mensagem_confirma_perda_sede'),
+                    (string) config('viabiliza.analise.escritorio_virtual.mensagem_confirma_perda_sede'),
                 ),
                 // Id do CNAE gatilho no cadastro (fonte única em
                 // SedeEscritorioVirtualGatilho::cnaeGatilho()), ou null se ainda
@@ -448,8 +448,8 @@ class SolicitacaoController extends Controller
     private function anexosConfig(): array
     {
         return [
-            'max_mb' => (int) Settings::get('solicitacao.anexos.max_mb', config('sile.solicitacao.anexos.max_mb', 10)),
-            'mime_permitidos' => (array) config('sile.solicitacao.anexos.mime_permitidos', ['application/pdf', 'image/jpeg', 'image/png']),
+            'max_mb' => (int) Settings::get('solicitacao.anexos.max_mb', config('viabiliza.solicitacao.anexos.max_mb', 10)),
+            'mime_permitidos' => (array) config('viabiliza.solicitacao.anexos.mime_permitidos', ['application/pdf', 'image/jpeg', 'image/png']),
         ];
     }
 
@@ -460,7 +460,7 @@ class SolicitacaoController extends Controller
     {
         return (int) Settings::get(
             'solicitacao.cnaes_complementares.max',
-            config('sile.solicitacao.cnaes_complementares.max', 99),
+            config('viabiliza.solicitacao.cnaes_complementares.max', 99),
         );
     }
 

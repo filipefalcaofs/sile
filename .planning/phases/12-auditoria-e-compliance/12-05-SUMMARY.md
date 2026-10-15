@@ -157,7 +157,7 @@ Nenhum. Plano executado exatamente como escrito: apenas os 5 arquivos de `files_
 ## Issues Encountered
 
 - **`pint --dirty` tocaria arquivos dos irmãos paralelos (12-04/12-06):** o `--dirty` formata todo o working tree, que contém arquivos não-commitados de 12-04 (`AuditTrailQueryService`, `ActivityResource`, `AuditoriaConsultaTest`) e 12-06 (`AbusoDetectarCommand`, `routes/console.php`). Resolvido escopando o Pint exclusivamente aos MEUS 5 arquivos e fazendo `git add` por-arquivo (nunca `-A`/`.`).
-- **Suíte completa não executada isoladamente:** durante o paralelismo, a descoberta automática do PHPUnit incluiria arquivos de teste ainda em andamento dos irmãos (ex.: `AuditoriaConsultaTest` do 12-04), poluindo o resultado. Validei meu escopo via filtro do plano + fundação 12-02 + pontos de exposição. Este plano não toca `routes/gestao.php`, `config/sile.php`, `AppServiceProvider` nem `routes/console.php` (sem conflito com 12-04/12-06); o service autowira sem binding.
+- **Suíte completa não executada isoladamente:** durante o paralelismo, a descoberta automática do PHPUnit incluiria arquivos de teste ainda em andamento dos irmãos (ex.: `AuditoriaConsultaTest` do 12-04), poluindo o resultado. Validei meu escopo via filtro do plano + fundação 12-02 + pontos de exposição. Este plano não toca `routes/gestao.php`, `config/viabiliza.php`, `AppServiceProvider` nem `routes/console.php` (sem conflito com 12-04/12-06); o service autowira sem binding.
 
 ## Verificação (evidência fresca)
 

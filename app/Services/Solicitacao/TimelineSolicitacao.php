@@ -125,7 +125,7 @@ class TimelineSolicitacao
         return [
             'dias' => (int) Settings::get(
                 'solicitacao.prazo_estimado_dias',
-                config('sile.solicitacao.prazo_estimado_dias', 30),
+                config('viabiliza.solicitacao.prazo_estimado_dias', 30),
             ),
             'ressalva' => 'Prazo estimado e não vinculante. A medição por etapa com base em '
                 .'processos equivalentes ainda será implementada; até lá este valor é '

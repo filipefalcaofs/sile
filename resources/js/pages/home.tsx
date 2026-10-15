@@ -58,7 +58,7 @@ const legalBasis = [
 function HeroGridPattern() {
     return (
         <svg
-            className="absolute inset-0 size-full text-white/[0.05]"
+            className="pointer-events-none absolute inset-0 size-full text-white/[0.05]"
             xmlns="http://www.w3.org/2000/svg"
             aria-hidden="true"
         >

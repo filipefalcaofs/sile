@@ -14,7 +14,7 @@ requires:
     provides: "transições em_analise→em_pendencia e em_pendencia→em_analise no mapa da ViabilityRequestStateMachine"
   - phase: 10-analise-tecnica-sedur
     plan: "01"
-    provides: "parâmetro analise.pendencia.prazo_resposta_dias (default 15) com fallback em config/sile.php"
+    provides: "parâmetro analise.pendencia.prazo_resposta_dias (default 15) com fallback em config/viabiliza.php"
   - phase: 09-fluxo-expresso
     plan: "07"
     provides: "padrão de notificação ShouldQueue + EmailLog (emailLogId/failed) e degradação honesta 'sem-destinatario'"

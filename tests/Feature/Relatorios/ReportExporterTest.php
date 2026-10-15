@@ -74,7 +74,7 @@ class ReportExporterTest extends TestCase
     public function acima_do_limiar_despacha_o_job_com_o_bag_completo(): void
     {
         Queue::fake();
-        config(['sile.relatorios.export.assincrono_limiar_linhas' => 1]);
+        config(['viabiliza.relatorios.export.assincrono_limiar_linhas' => 1]);
         ViabilityRequest::factory()->create(['address_neighborhood' => 'Pituba']);
         ViabilityRequest::factory()->create(['address_neighborhood' => 'Itapua']);
 
@@ -142,7 +142,7 @@ class ReportExporterTest extends TestCase
     public function source_sync_only_acima_do_limiar_ainda_e_sincrono(): void
     {
         Queue::fake();
-        config(['sile.relatorios.export.assincrono_limiar_linhas' => 1]);
+        config(['viabiliza.relatorios.export.assincrono_limiar_linhas' => 1]);
         ViabilityRequest::factory()->count(3)->create();
 
         $response = $this->exporter()->export(

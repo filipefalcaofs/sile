@@ -30,7 +30,7 @@ Roteiro de Integração do Login Único (acesso.gov.br/roteiro-tecnico, atualiza
 
 ### Backend
 
-1. **`App\Services\GovBr\GovBrProvider`** — Socialite `AbstractProvider` com PKCE habilitado, `nonce` em sessão (gerado no redirect, conferido no callback), endpoints derivados de `Settings::get('integrations.govbr.base_url')`. O `user()` decodifica o `id_token` do token response validando assinatura contra `{base}/jwk` (`firebase/php-jwt`, cache das chaves com TTL técnico em `config/sile.php`). Driver registrado via `Socialite::extend('govbr', ...)` lendo `Settings` em runtime — credenciais/URL mudam sem deploy.
+1. **`App\Services\GovBr\GovBrProvider`** — Socialite `AbstractProvider` com PKCE habilitado, `nonce` em sessão (gerado no redirect, conferido no callback), endpoints derivados de `Settings::get('integrations.govbr.base_url')`. O `user()` decodifica o `id_token` do token response validando assinatura contra `{base}/jwk` (`firebase/php-jwt`, cache das chaves com TTL técnico em `config/viabiliza.php`). Driver registrado via `Socialite::extend('govbr', ...)` lendo `Settings` em runtime — credenciais/URL mudam sem deploy.
 2. **`App\Services\GovBr\GovBrAuthService`** — recebe o usuário Socialite e resolve o `User` local:
    - CPF (`sub`) encontra `User` → atualiza vínculo e autentica.
    - CPF inexistente → cria conta real: `name`/`email` do gov.br, `cpf` = sub, papel `cidadao`, senha aleatória (cast `hashed`), `email_verified_at = now()` somente se `email_verified` true (senão o fluxo `verified` existente cobra a verificação).
@@ -53,7 +53,7 @@ Roteiro de Integração do Login Único (acesso.gov.br/roteiro-tecnico, atualiza
 | `integrations.govbr.client_secret` | string | — | `sensitive` (criptografado) |
 | `auth.govbr.minimum_level` | string | `bronze` | validação `in:bronze,prata,ouro` |
 
-Constantes técnicas (timeout, TTL do cache JWK) em `config/sile.php`, fora do registry (precedente 02-02).
+Constantes técnicas (timeout, TTL do cache JWK) em `config/viabiliza.php`, fora do registry (precedente 02-02).
 
 ### Frontend
 

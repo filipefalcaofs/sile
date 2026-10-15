@@ -55,6 +55,7 @@ class DecisionTextSeeder extends Seeder
         'justificativa.conclusao.nao_permitido_via' => 'Conclusão da justificativa quando o veredito é não permitido por vedação da via (Quadro 11-A). Placeholder: :classe_via.',
         'justificativa.conclusao.padrao' => 'Conclusão da justificativa quando não há elementos para deferir ou indeferir.',
         'justificativa.indeferimento.sem_bap' => 'Justificativa do indeferimento automático por prazo de atuação na Junta (BAP) vencido. Redação oficial pendente SEDUR.',
+        'justificativa.indeferimento.pergunta_sem_resposta' => 'Justificativa do indeferimento expresso quando uma pergunta da planilha, necessária ao enquadramento, chega sem resposta. Placeholders: :numero, :enunciado, :cnae.',
         'justificativa.indeferimento.convite_expirado' => 'Justificativa do indeferimento automático por convite expirado sem resposta do requerente. Redação oficial pendente SEDUR.',
         'explicacao.titulo.entrada' => 'Título do passo de entrada na explicação da decisão.',
         'explicacao.titulo.risco' => 'Título do passo de classificação de risco na explicação da decisão.',

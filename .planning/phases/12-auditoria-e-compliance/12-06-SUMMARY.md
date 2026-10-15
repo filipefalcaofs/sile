@@ -53,7 +53,7 @@ key-files:
 key-decisions:
   - "Fingerprint por (rule_key, identidade) estável e SEM a janela deslizante: incluir a janela quebraria a idempotência diária (cada run mudaria o fingerprint e duplicaria o alerta aberto)"
   - "Detectores de volume usam created_at na janela; severity por faixa (>2× limite → Alta, senão Média); viability_request_id = processo mais recente do grupo (dá à malha fina um processo concreto)"
-  - "abuso.* NÃO têm fallback em config/sile.php (12-03 os colocou no ParameterSeeder, não no config); Settings::get é chamado com defaults literais iguais aos seeds (30/5/20/alta). Em teste (sem seed) valem os defaults; os casos limítrofes criam Parameter rows"
+  - "abuso.* NÃO têm fallback em config/viabiliza.php (12-03 os colocou no ParameterSeeder, não no config); Settings::get é chamado com defaults literais iguais aos seeds (30/5/20/alta). Em teste (sem seed) valem os defaults; os casos limítrofes criam Parameter rows"
   - "encaminharSistema é ADITIVO (reusa motivoObrigatorio; NÃO altera encaminhar/encaminharLote/registrar) — suíte MalhaFina segue verde"
   - "Encaminha à malha fina só quando severity >= limiar E há viability_request_id; NUNCA transiciona status (RN-001)"
 
@@ -148,7 +148,7 @@ Espelha o `registrar()` humano, mas com `referred_by_user_id => null` (ator=sist
 
 ## Deviations from Plan
 
-None — plano executado como escrito. Ajuste de autonomia (não desvio): como `abuso.*` não tem espelho em `config/sile.php` (12-03 os colocou no ParameterSeeder) e `config/sile.php` está FORA do escopo desta wave, `Settings::get` é chamado com defaults literais iguais aos seeds (30/5/20/alta) — comportamento idêntico ao espelho de config, sem tocar arquivo de outro escopo.
+None — plano executado como escrito. Ajuste de autonomia (não desvio): como `abuso.*` não tem espelho em `config/viabiliza.php` (12-03 os colocou no ParameterSeeder) e `config/viabiliza.php` está FORA do escopo desta wave, `Settings::get` é chamado com defaults literais iguais aos seeds (30/5/20/alta) — comportamento idêntico ao espelho de config, sem tocar arquivo de outro escopo.
 
 ## Issues Encountered
 

@@ -153,7 +153,7 @@ Criar `resources/js/components/app/sidebar-collapse.ts`:
  * aberto e categorias novas adicionadas no futuro nascem abertas, sem
  * precisar migrar o valor salvo.
  */
-export const STORAGE_KEY = 'sile.sidebar.gestao.closedGroups';
+export const STORAGE_KEY = 'viabiliza.sidebar.gestao.closedGroups';
 
 interface MenuGroupLike {
     label: string;

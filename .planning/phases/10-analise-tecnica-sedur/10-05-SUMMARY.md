@@ -9,7 +9,7 @@ requires:
   - phase: 09-fluxo-expresso
     provides: "BusinessDeadlineCalculator (seam de prazo dueAt/isOverdue — HU-137 troca só ali)"
   - phase: 10-analise-tecnica-sedur/10-01
-    provides: "parâmetros analise.sla.distribuicao_dias/analise_dias/semaforo.amarelo_percentual + fallback config/sile.php"
+    provides: "parâmetros analise.sla.distribuicao_dias/analise_dias/semaforo.amarelo_percentual + fallback config/viabiliza.php"
   - phase: 10-analise-tecnica-sedur/10-02
     provides: "coluna indexada analysis_due_at + enum AnalysisStage (alinhado a analise.sla.<etapa>_dias)"
 provides:
@@ -90,7 +90,7 @@ Construtor injeta `BusinessDeadlineCalculator` (auto-resolvível pelo container 
 
 ## Parâmetros lidos (HU-014) e defaults inline
 
-| Chave (Settings) | Fallback config/sile.php | Default inline (call site) |
+| Chave (Settings) | Fallback config/viabiliza.php | Default inline (call site) |
 |---|---|---|
 | `analise.sla.distribuicao_dias` | 2 | 2 (via `DEFAULT_DIAS['distribuicao']`) |
 | `analise.sla.analise_dias` | 10 | 10 (via `DEFAULT_DIAS['analise']`) |

@@ -60,8 +60,8 @@ Fora do escopo / bloqueado: transmissão Regin/SEFAZ na conclusão (HU-104/110) 
 - Agents (2026-06-14): analista-negocio (escopo/sequenciamento, núcleo, parciais EP11, bloqueios) e arquiteto-tecnico (reuso ViabilityDecision, analysis_records, PrecedentRepository, TVL PDF, SLA, consulta).
 
 ### HUs
-- `docs/SILE_HUs_Completas_MD/EP10-Análise-Tecnica-SEDUR/HU-079..HU-089.md`, HU-132, HU-135, HU-136, HU-140, HU-142, HU-144.
-- `docs/SILE_HUs_Completas_MD/EP02-Administracao/HU-138-Manter-setores.md` (pré-req).
+- `docs/VIABILIZA_HUs_Completas_MD/EP10-Análise-Tecnica-SEDUR/HU-079..HU-089.md`, HU-132, HU-135, HU-136, HU-140, HU-142, HU-144.
+- `docs/VIABILIZA_HUs_Completas_MD/EP02-Administracao/HU-138-Manter-setores.md` (pré-req).
 - Telas legado SAPS: `docs/legado-saps/01..08,16.jpg` (ficha de análise, filtros, gatilhos, condicionantes, vagas).
 
 ### Reuso (NÃO recriar — consumir/estender)
@@ -69,7 +69,7 @@ Fora do escopo / bloqueado: transmissão Regin/SEFAZ na conclusão (HU-104/110) 
 - Estado: `app/Services/Solicitacao/ViabilityRequestStateMachine.php` (mapa pronto p/ adicionar em_analise→...) + `app/Enums/ViabilityRequestStatus.php`.
 - Ficha pré-analisada: `app/Services/Solicitacao/SolicitacaoViabilityResolver.php` (Fase 9) + `app/Services/Expresso/FluxoExpressoService.php::encaminharAnalise` (só passa a dispatch o evento).
 - Precedentes: `app/Services/Geo/SpatialRepository.php`/`PostgisSpatialRepository.php` (padrão p/ PrecedentRepository) + geometry property_polygon (08-06).
-- Prazo: `app/Services/Expresso/BusinessDeadlineCalculator.php` (Fase 9). Consulta/Resource: `app/Http/Controllers/Gestao/ResultadoExpressoController.php` + `app/Http/Resources/ViabilityDecisionResource.php`. Mapa: Leaflet Fase 4. Auditoria: AuditService. Parametrização: Settings::get + config/sile.php. CRUD console: ViabilityServiceTypeController/RiscoController padrão.
+- Prazo: `app/Services/Expresso/BusinessDeadlineCalculator.php` (Fase 9). Consulta/Resource: `app/Http/Controllers/Gestao/ResultadoExpressoController.php` + `app/Http/Resources/ViabilityDecisionResource.php`. Mapa: Leaflet Fase 4. Auditoria: AuditService. Parametrização: Settings::get + config/viabiliza.php. CRUD console: ViabilityServiceTypeController/RiscoController padrão.
 
 ### Testes
 - phpunit.xml SQLite; baseline atual 955 (+ @group postgis). Precedentes/geometria usam @group postgis (PostgisTestCase + geo:preparar-banco-de-testes). TVL PDF com Storage::fake (assert %PDF). Golden/smoke #[DataProvider]. Estrutura: tests/Feature/Analise/.

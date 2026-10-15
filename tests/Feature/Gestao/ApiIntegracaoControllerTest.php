@@ -4,6 +4,7 @@ namespace Tests\Feature\Gestao;
 
 use App\Models\Parameter;
 use App\Models\User;
+use App\Support\Settings;
 use Database\Seeders\ParameterSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -33,7 +34,7 @@ class ApiIntegracaoControllerTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('gestao/config-apis/index')
                 ->where('aba', 'regin')
-                ->has('abas', 7)
+                ->has('abas', 8)
                 ->where('abas.0.nome', 'REGIN')
                 ->where('abas.1.nome', 'Inscrição imobiliária')
                 ->where('abas.2.nome', 'CPF e CNPJ')
@@ -85,6 +86,37 @@ class ApiIntegracaoControllerTest extends TestCase
             'senha-antiga-8',
             Parameter::query()->where('key', 'integrations.regin.senha')->first()->value,
         );
+    }
+
+    public function test_token_do_semap_e_gravado_criptografado_e_nao_volta_na_tela(): void
+    {
+        $token = str_repeat('a1B2c3D4', 40);
+
+        $this->actingAs($this->admin(), 'gestao')
+            ->put('/gestao/config-apis/arcgis_semap', [
+                'campos' => [
+                    'habilitada' => '1',
+                    'query_url' => 'https://geo.salvador.ba.gov.br/arcgis/rest/services/MAPA_BASE/MAPA_BASE_SEFAZ/MapServer/18/query',
+                    'token' => $token,
+                ],
+            ])
+            ->assertRedirect(route('gestao.config-apis.edit', ['aba' => 'arcgis_semap']));
+
+        $parameter = Parameter::query()->where('key', 'integrations.arcgis_semap.token')->first();
+
+        $this->assertTrue($parameter->sensitive);
+        $this->assertSame($token, $parameter->value);
+        $this->assertNotSame($token, $parameter->getRawOriginal('value'));
+        $this->assertSame($token, Settings::get('integrations.arcgis_semap.token'));
+
+        $this->actingAs($this->admin(), 'gestao')
+            ->get('/gestao/config-apis?aba=arcgis_semap')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('abas.7.id', 'arcgis_semap')
+                ->where('abas.7.campos.2.valor', null)
+                ->where('abas.7.campos.2.tem_valor', true))
+            ->assertDontSee($token);
     }
 
     public function test_url_invalida_e_rejeitada(): void

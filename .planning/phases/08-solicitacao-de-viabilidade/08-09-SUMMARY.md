@@ -20,7 +20,7 @@ requires:
     provides: "ViabilityRequestPolicy::update (dono + rascunho) — autorização da simulação"
   - phase: 08-solicitacao-de-viabilidade
     plan: "02"
-    provides: "toggle features.simulacao_solicitacao (catálogo + fallback config/sile.php)"
+    provides: "toggle features.simulacao_solicitacao (catálogo + fallback config/viabiliza.php)"
 provides:
   - "ConsultaViabilidadeService::consultarPorPontoConhecido(lat,lng,cnae,?area) — entrada PÚBLICA por ponto+CNAE (refactor mínimo, sem geocodificar de novo, sem regressão dos 3 públicos)"
   - "App\\Services\\Solicitacao\\SimulacaoSolicitacaoService::simulate(ViabilityRequest): array — itera CNAEs, propaga o veredito, consolida e persiste o snapshot"

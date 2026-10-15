@@ -162,7 +162,7 @@ Eixo viário cadastral (geometria + hierarquia, não necessariamente Mapa 04):
 
 `logradouro:VM_LOGRADOURO` e `logradouros:VM_LOGRADOURO` — `CODLOG`, `NOME_LOGRADOURO`, `HIERARQUIA`.
 
-**Em uso pelo motor.** `CLASSIFICACAO_VIARIA` alimenta o Quadro 11A: o `GeoServerClassificacaoViariaClient` consulta por `CQL_FILTER=CODLOG=<n>` (casamento por código, não espacial — a camada é de linhas) e `Quadro11aClasseVia` normaliza a grafia (`VC-I` para `VC I`). Interruptor: `features.geoserver_via_classe`. Fonte configurável em `sile.integrations.geoserver.classificacao_viaria`.
+**Em uso pelo motor.** `CLASSIFICACAO_VIARIA` alimenta o Quadro 11A: o `GeoServerClassificacaoViariaClient` consulta por `CQL_FILTER=CODLOG=<n>` (casamento por código, não espacial — a camada é de linhas) e `Quadro11aClasseVia` normaliza a grafia (`VC-I` para `VC I`). Interruptor: `features.geoserver_via_classe`. Fonte configurável em `viabiliza.integrations.geoserver.classificacao_viaria`.
 
 Verificação: `php artisan louos:classe-via 822` devolve `VC I`.
 

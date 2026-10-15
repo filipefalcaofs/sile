@@ -11,7 +11,7 @@ requires:
   - phase: 10-analise-tecnica-sedur
     provides: AnalysisSlaService que reusa o calculator (rede anti-regressão do dueAt)
   - phase: 15-relatorios-e-indicadores
-    provides: 15-01 (config sile.relatorios.cache_ttl_segundos) + HasAuditoria/Settings
+    provides: 15-01 (config viabiliza.relatorios.cache_ttl_segundos) + HasAuditoria/Settings
 provides:
   - "Holiday: cadastro de feriado auditado e versionado (HU-137)"
   - "HolidayProvider (contrato) + DatabaseHolidayProvider cacheado"
@@ -73,7 +73,7 @@ completed: 2026-06-15
 ## Accomplishments
 
 - **Cadastro de feriados (HU-137):** `Holiday` com `HasAuditoria` (RN-002), migration aditiva `holidays` (date unique, `recurring_annually`, `active`), factory e `HolidaySeeder` idempotente que semeia APENAS os 8 feriados nacionais de data fixa — a lista municipal de Salvador é pendência SEDUR (nenhum feriado inventado).
-- **Seam de feriados centralizado:** `HolidayProvider` (contrato `isHoliday`/`hasOfficialCalendar`) + `DatabaseHolidayProvider` (lê os ativos com `Cache::remember`, TTL técnico de `sile.relatorios.cache_ttl_segundos`) + binding singleton no `AppServiceProvider`.
+- **Seam de feriados centralizado:** `HolidayProvider` (contrato `isHoliday`/`hasOfficialCalendar`) + `DatabaseHolidayProvider` (lê os ativos com `Cache::remember`, TTL técnico de `viabiliza.relatorios.cache_ttl_segundos`) + binding singleton no `AppServiceProvider`.
 - **Duração em tempo útil (HU-129):** `BusinessDeadlineCalculator::businessDurationBetween(from, to): int` — minutos úteis decorridos, dia a dia, descontando fim de semana e feriado ativo (parcial nas pontas); `to <= from ⇒ 0`. É a causa-raiz da distorção do legado (19 dias vs 42h reais), resolvida sem tocar o `dueAt` forward.
 - **Anti-regressão:** `dueAt`/`isOverdue` inalterados (horas-calendário); `--filter=AnalysisSlaService` 9/9 e `--filter=IndeferirSemBap` 6/6 verdes graças ao construtor opcional.
 

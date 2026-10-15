@@ -8,7 +8,7 @@ tags: [hu-077, fluxo-expresso, notificacao, email, listener-auto-descoberto, fea
 requires:
   - phase: 09-fluxo-expresso
     plan: "01"
-    provides: "Parâmetro features.notificacao_resultado_expresso (toggle) + expresso.notificacao.assunto_deferida/_indeferida (assuntos parametrizáveis HU-014) com fallback em config/sile.php"
+    provides: "Parâmetro features.notificacao_resultado_expresso (toggle) + expresso.notificacao.assunto_deferida/_indeferida (assuntos parametrizáveis HU-014) com fallback em config/viabiliza.php"
   - phase: 09-fluxo-expresso
     plan: "03"
     provides: "Evento de domínio ResultadoEmitido (ShouldDispatchAfterCommit, request + decision) — base desacoplada dos efeitos da Wave 4"
@@ -83,7 +83,7 @@ public function toMail(object $notifiable): MailMessage; // assunto por outcome;
 public function failed(\Throwable $exception): void;     // EmailLog::markAsFailed
 ```
 
-- Assunto: deferida → `Settings::get('expresso.notificacao.assunto_deferida', config('sile.expresso.notificacao.assunto_deferida'))`; indeferida → `_indeferida`.
+- Assunto: deferida → `Settings::get('expresso.notificacao.assunto_deferida', config('viabiliza.expresso.notificacao.assunto_deferida'))`; indeferida → `_indeferida`.
 - Corpo pt-BR: número de protocolo + resultado (deferida/indeferida) + orientação de acompanhar pelos canais Regin/Junta. **Sem anexo de TVL** (RN-004).
 
 ### `App\Listeners\NotificarResultadoExpresso` (AUTO-DESCOBERTO, síncrono)

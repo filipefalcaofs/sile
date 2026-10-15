@@ -49,7 +49,7 @@ Fora do escopo: processo formal de solicitação (Fase 8), fluxo expresso (Fase 
 - Agents (sessão 2026-06-14): analista-negocio (escopo/CAs→testes, pública×autenticada, degradação honesta, HU-055 bloqueada) e arquiteto-tecnico (ConsultaViabilidadeService, viability_queries, contrato PropertyRegistryLookup, UI).
 
 ### HUs
-- `docs/SILE_HUs_Completas_MD/EP07-*/HU-054..HU-060.md`.
+- `docs/VIABILIZA_HUs_Completas_MD/EP07-*/HU-054..HU-060.md`.
 - `docs/ANALISE-HUs-REUNIAO-SEDUR.md` (consulta pública; throttle EP07).
 
 ### Motores a orquestrar (NÃO recriar — só consumir)

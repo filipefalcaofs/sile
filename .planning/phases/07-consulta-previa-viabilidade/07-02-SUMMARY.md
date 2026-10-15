@@ -139,7 +139,7 @@ _TDD estrito na Task 2: RED (teste primeiro, falha pelo motivo certo — binding
 None - plano executado exatamente como escrito.
 
 ## Issues Encountered
-- **Sessões paralelas no mesmo working directory (esperado):** o working tree continha alterações não commitadas de outros planos da Fase 7 (07-01: `FortifyServiceProvider`, `config/sile.php`, `ParameterSeeder`, seeders de teste; 07-03: `ViabilityQuery` + migration/factory `viability_queries`; 07-04: `ConsultaViabilidadeInput`). Mantive o foco no escopo do 07-02: `git add` por caminho explícito (nunca `-A`) e Pint escopado em `app/Services/Realty` + `app/Providers/AppServiceProvider.php` (evitando reformatar arquivos de outras sessões). Nenhum arquivo fora do `files_modified` do 07-02 entrou nos meus commits.
+- **Sessões paralelas no mesmo working directory (esperado):** o working tree continha alterações não commitadas de outros planos da Fase 7 (07-01: `FortifyServiceProvider`, `config/viabiliza.php`, `ParameterSeeder`, seeders de teste; 07-03: `ViabilityQuery` + migration/factory `viability_queries`; 07-04: `ConsultaViabilidadeInput`). Mantive o foco no escopo do 07-02: `git add` por caminho explícito (nunca `-A`) e Pint escopado em `app/Services/Realty` + `app/Providers/AppServiceProvider.php` (evitando reformatar arquivos de outras sessões). Nenhum arquivo fora do `files_modified` do 07-02 entrou nos meus commits.
 
 ## User Setup Required
 None - sem credenciais nem serviço externo. O contrato está propositalmente bloqueado: a resolução real por inscrição depende da base de lotes/Cadastro Multifinalitário (pendência SEDUR HU-033/HU-106).

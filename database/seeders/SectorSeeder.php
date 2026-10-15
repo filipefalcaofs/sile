@@ -52,7 +52,7 @@ class SectorSeeder extends Seeder
 
         // Usuários de gestão são dados de DEV: nunca em produção (lá os analistas
         // reais são cadastrados pelo administrador e vinculados pelo gestor).
-        if (! app()->environment(['local', 'testing']) && ! filter_var(config('sile.demo_data', false), FILTER_VALIDATE_BOOL)) {
+        if (! app()->environment(['local', 'testing']) && ! filter_var(config('viabiliza.demo_data', false), FILTER_VALIDATE_BOOL)) {
             return;
         }
 

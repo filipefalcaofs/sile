@@ -127,8 +127,6 @@ class AnalysisRecordController extends Controller
             'localizacao' => $this->localizacaoDoImovel($viabilityRequest, $cadastro),
             'dadosTvl' => $this->dadosTvl($viabilityRequest, $record),
             'recepcao' => $this->recepcao($viabilityRequest),
-            'etapasMotor' => $this->etapasDoMotor($viabilityRequest),
-            'podeReprocessar' => (bool) request()->user()?->can('reprocessar-processos'),
             'cadastroImobiliario' => $cadastro,
             'tramitacao' => $this->tramitacao($viabilityRequest),
             'conclusaoOpcoes' => ConclusionOutcome::options(),
@@ -139,7 +137,7 @@ class AnalysisRecordController extends Controller
             // painel de abrigados quando a solicitação é a SEDE ativa da inscrição.
             'escritorioVirtual' => $this->escritorioVirtual($viabilityRequest, $record),
             'textosPadrao' => $this->textosPadraoAtivos(),
-            'autosaveDebounceMs' => (int) config('sile.analise.autosave.debounce_ms', 1500),
+            'autosaveDebounceMs' => (int) config('viabiliza.analise.autosave.debounce_ms', 1500),
             'iaFicha' => $this->iaFicha($viabilityRequest),
             // A consulta na ficha de análise não cria vistoria: só informa se já existe.
             'temFichaVistoria' => $viabilityRequest->inspection()->exists(),
@@ -266,14 +264,6 @@ class AnalysisRecordController extends Controller
     public function concluirProcesso(Request $request, ViabilityRequest $viabilityRequest): JsonResponse
     {
         $record = $this->records->current($viabilityRequest);
-
-        try {
-            $this->decisao->recusarSeAindaEmAnalise($record->per_cnae ?? []);
-        } catch (DomainException $e) {
-            // Erro acionável na própria tela (relatório SEDUR 21/09, item 07):
-            // o useHttp lê errors.ficha e o analista vê quais CNAEs faltam.
-            throw ValidationException::withMessages(['ficha' => $e->getMessage()]);
-        }
 
         if (! $record->isFinalizada()) {
             try {
@@ -839,9 +829,9 @@ class AnalysisRecordController extends Controller
             'abrigados' => $abrigados,
             'cnae_gatilho' => (string) Settings::get(
                 'analise.escritorio_virtual.cnae_gatilho_sede',
-                config('sile.analise.escritorio_virtual.cnae_gatilho_sede', '8211-3/00'),
+                config('viabiliza.analise.escritorio_virtual.cnae_gatilho_sede', '8211-3/00'),
             ),
-            'flag_analise_sede' => (string) config('sile.analise.escritorio_virtual.flag_analise_sede'),
+            'flag_analise_sede' => (string) config('viabiliza.analise.escritorio_virtual.flag_analise_sede'),
         ];
     }
 

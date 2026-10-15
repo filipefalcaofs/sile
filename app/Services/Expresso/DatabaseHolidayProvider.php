@@ -25,7 +25,7 @@ class DatabaseHolidayProvider implements HolidayProvider
      * (efeito sem deploy, limitado ao cache — padrão HU-014); o CRUD futuro de
      * feriados deve esquecê-la na gravação para efeito imediato.
      */
-    private const CACHE_KEY = 'sile.expresso.holidays';
+    private const CACHE_KEY = 'viabiliza.expresso.holidays';
 
     public function isHoliday(DateTimeInterface $date): bool
     {
@@ -49,7 +49,7 @@ class DatabaseHolidayProvider implements HolidayProvider
      */
     private function calendar(): array
     {
-        $ttl = (int) config('sile.relatorios.cache_ttl_segundos', 300);
+        $ttl = (int) config('viabiliza.relatorios.cache_ttl_segundos', 300);
 
         return Cache::remember(self::CACHE_KEY, $ttl, function (): array {
             $recurring = [];

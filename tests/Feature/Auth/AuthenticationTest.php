@@ -128,7 +128,7 @@ class AuthenticationTest extends TestCase
 
     public function test_bloqueio_temporario_apos_tentativas_excedidas(): void
     {
-        config(['sile.security.login.max_attempts' => 3]);
+        config(['viabiliza.security.login.max_attempts' => 3]);
 
         $user = User::factory()->cidadao()->create();
 
@@ -160,7 +160,7 @@ class AuthenticationTest extends TestCase
 
     public function test_mascara_no_cpf_nao_burla_o_limite_de_tentativas(): void
     {
-        config(['sile.security.login.max_attempts' => 3]);
+        config(['viabiliza.security.login.max_attempts' => 3]);
 
         $user = User::factory()->cidadao()->create();
 

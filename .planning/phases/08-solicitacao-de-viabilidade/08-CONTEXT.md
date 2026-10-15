@@ -16,7 +16,7 @@ Fora do escopo / bloqueado: fluxo expresso (Fase 9), análise técnica (Fase 10)
 ## Implementation Decisions
 
 ### Reconciliação dos agents (anti-fachada)
-- **HU-071/072 (DAM):** BLOQUEADO → Fase 13, sem nenhum contrato agora. Escopo revisado SEDUR (DAM é da SEFAZ; SILE só consulta/exibe) e ainda NÃO confirmado — construir interface seria especular. Success criteria 4 da Fase 8 depende da Fase 13 (anotado no ROADMAP).
+- **HU-071/072 (DAM):** BLOQUEADO → Fase 13, sem nenhum contrato agora. Escopo revisado SEDUR (DAM é da SEFAZ; VIABILIZA só consulta/exibe) e ainda NÃO confirmado — construir interface seria especular. Success criteria 4 da Fase 8 depende da Fase 13 (anotado no ROADMAP).
 - **HU-139 (edifício comercial):** ADIADO → pendente SEDUR (valor depende de inscrição/lote bloqueado + semântica pendente). `address_complement` é texto livre por ora.
 - **Origem `regin`:** BLOQUEADO → Fase 13. Enum `origin` extensível existe (`portal`/`contingencia`/`regin`); só `regin` travado. `contingencia` (HU-148) é o caminho real hoje.
 
@@ -59,8 +59,8 @@ Fora do escopo / bloqueado: fluxo expresso (Fase 9), análise técnica (Fase 10)
 - Agents (2026-06-14): analista-negocio (escopo/sequenciamento, núcleo 13 HUs, bloqueios) e arquiteto-tecnico (modelo de dados, máquina de estados, evento, anexos, contratos).
 
 ### HUs
-- `docs/SILE_HUs_Completas_MD/EP08-Solicitacao-de-Viabilidade/HU-061..HU-072.md`, `HU-141`, `HU-148`, `HU-150`.
-- `docs/SILE_HUs_Completas_MD/EP02-Administracao/HU-139` (edifício comercial — adiado).
+- `docs/VIABILIZA_HUs_Completas_MD/EP08-Solicitacao-de-Viabilidade/HU-061..HU-072.md`, `HU-141`, `HU-148`, `HU-150`.
+- `docs/VIABILIZA_HUs_Completas_MD/EP02-Administracao/HU-139` (edifício comercial — adiado).
 - `docs/ANALISE-HUs-REUNIAO-SEDUR.md` (revisão DAM HU-071/072; contingência como caminho real).
 
 ### Reuso (NÃO recriar — consumir)
@@ -68,7 +68,7 @@ Fora do escopo / bloqueado: fluxo expresso (Fase 9), análise técnica (Fase 10)
 - Território/mapa: `app/Services/Geo/TerritoryService.php`, `app/Services/Geo/LocationValidationService.php` (validate(array $polygonGeoJson) @group postgis), `app/Services/Geo/GeoJsonLayerImporter.php` (gravação geometry driver-aware), `app/Services/Geo/PostgisSpatialRepository.php`; mapa em `resources/js/pages/gestao/territorio/*` (MapImovel/MapaSection).
 - Representação: `app/Support/Representation/CurrentRepresentation.php`, `app/Http/Controllers/Portal/RepresentationController.php`, `app/Models/Procuration.php`, `app/Policies/CompanyPolicy.php`/`ProcurationPolicy.php`.
 - Cadastro/CNAEs: `app/Models/Company.php` + pivot `company_cnae` + listagem "Minhas empresas" (escopo do dono) + picker de CNAEs (Fase 3).
-- Auditoria/parametrização: `app/Support/Audit/AuditService.php` + HasAuditoria; Settings::get + `config/sile.php`; throttle via RateLimiter::for (FortifyServiceProvider, Fase 3.1) + parâmetro.
+- Auditoria/parametrização: `app/Support/Audit/AuditService.php` + HasAuditoria; Settings::get + `config/viabiliza.php`; throttle via RateLimiter::for (FortifyServiceProvider, Fase 3.1) + parâmetro.
 
 ### Testes
 - phpunit.xml SQLite; baseline atual 657 (--exclude-group postgis) + 15 @group postgis. Geometria/concorrência usam @group postgis (PostgisTestCase + geo:preparar-banco-de-testes). Golden/smoke #[DataProvider] (padrão Fases 5/6/7). Estrutura: tests/Feature/Solicitacao/ (ou Viabilidade).

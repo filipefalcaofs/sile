@@ -24,8 +24,8 @@ class InscricaoImobiliariaIntegrationSettings
             : 'integrations.inscricao_imobiliaria.url_homologacao';
 
         $fallback = $this->usingProduction()
-            ? (string) config('sile.integrations.inscricao_imobiliaria.url_producao')
-            : (string) config('sile.integrations.inscricao_imobiliaria.url_homologacao');
+            ? (string) config('viabiliza.integrations.inscricao_imobiliaria.url_producao')
+            : (string) config('viabiliza.integrations.inscricao_imobiliaria.url_homologacao');
 
         return rtrim((string) Settings::get($key, $fallback), '/');
     }

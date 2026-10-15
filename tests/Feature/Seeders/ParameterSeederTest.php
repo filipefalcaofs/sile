@@ -15,7 +15,7 @@ class ParameterSeederTest extends TestCase
     {
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(110, Parameter::query()->count());
+        $this->assertSame(113, Parameter::query()->count());
         $this->assertSame(
             ['abuso', 'analise', 'expresso', 'features', 'geo', 'ia', 'integracoes', 'louos', 'notificacoes', 'relatorios', 'retencao', 'risco', 'seguranca', 'solicitacao', 'tll'],
             Parameter::query()->distinct()->orderBy('group')->pluck('group')->all(),
@@ -61,7 +61,7 @@ class ParameterSeederTest extends TestCase
         $this->assertNull(Parameter::query()->where('key', 'seguranca.throttle.cnpj_lookup.por_minuto')->first());
 
         // timeout/retries/backoff_ms são constantes técnicas de HTTP — ficam em
-        // config/sile.php e não aparecem no painel de parâmetros do administrador.
+        // config/viabiliza.php e não aparecem no painel de parâmetros do administrador.
         $this->assertNull(Parameter::query()->where('key', 'integrations.cnpj_lookup.retries')->first());
         $this->assertNull(Parameter::query()->where('key', 'integrations.cnpj_lookup.timeout')->first());
         $this->assertNull(Parameter::query()->where('key', 'integrations.cnpj_lookup.backoff_ms')->first());
@@ -258,7 +258,7 @@ class ParameterSeederTest extends TestCase
         $this->seed(ParameterSeeder::class);
 
         // Tamanhos de página de listagem são constantes técnicas de UI —
-        // ficam em config/sile.php e não poluem o painel do administrador.
+        // ficam em config/viabiliza.php e não poluem o painel do administrador.
         $keysAusentes = [
             'ui.access_history.per_page',
             'ui.cnaes.per_page',
@@ -343,7 +343,7 @@ class ParameterSeederTest extends TestCase
         $this->assertNull(Parameter::query()->where('key', 'geo.zona.atributos_nome')->first());
         $this->assertSame(
             ['ZONA', 'zona', 'SIGLA_ZONA', 'SUBZONA'],
-            config('sile.geo.zona.atributos_nome'),
+            config('viabiliza.geo.zona.atributos_nome'),
         );
     }
 
@@ -362,7 +362,7 @@ class ParameterSeederTest extends TestCase
         $this->assertSame([], $vagas->typedValue());
 
         $this->assertNull(Parameter::query()->where('key', 'louos.sandbox.amostra_padrao')->first());
-        $this->assertSame(50, config('sile.louos.sandbox.amostra_padrao'));
+        $this->assertSame(50, config('viabiliza.louos.sandbox.amostra_padrao'));
     }
 
     public function test_seeder_registra_parametros_da_consulta_de_viabilidade(): void
@@ -371,7 +371,7 @@ class ParameterSeederTest extends TestCase
 
         $this->assertNull(Parameter::query()->where('key', 'features.consulta_viabilidade')->first());
         $this->assertNull(Parameter::query()->where('key', 'seguranca.throttle.consulta_viabilidade.por_minuto')->first());
-        $this->assertSame(20, config('sile.seguranca.throttle.consulta_viabilidade.por_minuto'));
+        $this->assertSame(20, config('viabiliza.seguranca.throttle.consulta_viabilidade.por_minuto'));
     }
 
     public function test_seeder_registra_parametros_da_solicitacao_de_viabilidade(): void
@@ -392,16 +392,16 @@ class ParameterSeederTest extends TestCase
         $this->assertNull(Parameter::query()->where('key', 'solicitacao.anexos.mime_permitidos')->first());
         $this->assertSame(
             ['application/pdf', 'image/jpeg', 'image/png'],
-            config('sile.solicitacao.anexos.mime_permitidos'),
+            config('viabiliza.solicitacao.anexos.mime_permitidos'),
         );
 
-        // storage.documentos.disk é constante de infraestrutura — fica em config/sile.php.
+        // storage.documentos.disk é constante de infraestrutura — fica em config/viabiliza.php.
         $this->assertNull(Parameter::query()->where('key', 'storage.documentos.disk')->first());
 
         $this->assertNull(Parameter::query()->where('key', 'seguranca.throttle.consulta_protocolo.por_minuto')->first());
         $this->assertNull(Parameter::query()->where('key', 'seguranca.throttle.regin_recebe.por_minuto')->first());
-        $this->assertSame(30, config('sile.seguranca.throttle.consulta_protocolo.por_minuto'));
-        $this->assertSame(60, config('sile.seguranca.throttle.regin_recebe.por_minuto'));
+        $this->assertSame(30, config('viabiliza.seguranca.throttle.consulta_protocolo.por_minuto'));
+        $this->assertSame(60, config('viabiliza.seguranca.throttle.regin_recebe.por_minuto'));
     }
 
     public function test_seeder_registra_parametro_de_estados_cancelaveis(): void
@@ -455,7 +455,7 @@ class ParameterSeederTest extends TestCase
         $this->assertNull(Parameter::query()->where('key', 'expresso.notificacao.assunto_indeferida')->first());
         $this->assertSame(
             'Resultado da sua solicitação de viabilidade: deferida',
-            config('sile.expresso.notificacao.assunto_deferida'),
+            config('viabiliza.expresso.notificacao.assunto_deferida'),
         );
 
         $prefixoTvl = Parameter::query()->where('key', 'expresso.tvl.prefixo')->first();
@@ -466,7 +466,7 @@ class ParameterSeederTest extends TestCase
         $this->assertSame(['required', 'string', 'max:10'], $prefixoTvl->validation_rules);
         $this->assertNull($prefixoTvl->value);
 
-        // expresso.tvl.padding é constante de formatação — fica em config/sile.php.
+        // expresso.tvl.padding é constante de formatação — fica em config/viabiliza.php.
         $this->assertNull(Parameter::query()->where('key', 'expresso.tvl.padding')->first());
     }
 
@@ -518,11 +518,11 @@ class ParameterSeederTest extends TestCase
         $this->assertSame(12, $janela->typedValue());
 
         $this->assertNull(Parameter::query()->where('key', 'analise.precedentes.max_itens')->first());
-        $this->assertSame(10, config('sile.analise.precedentes.max_itens'));
+        $this->assertSame(10, config('viabiliza.analise.precedentes.max_itens'));
 
         // analise.tvl.disk, analise.tvl.assinatura.imagem_path e
         // analise.tvl.download.ttl_minutos são constantes de infraestrutura/
-        // formatação — ficam em config/sile.php, não no catálogo administrável.
+        // formatação — ficam em config/viabiliza.php, não no catálogo administrável.
         $this->assertNull(Parameter::query()->where('key', 'analise.tvl.disk')->first());
         $this->assertNull(Parameter::query()->where('key', 'analise.tvl.assinatura.imagem_path')->first());
         $this->assertNull(Parameter::query()->where('key', 'analise.tvl.download.ttl_minutos')->first());
@@ -626,11 +626,11 @@ class ParameterSeederTest extends TestCase
         );
 
         $this->assertNull(Parameter::query()->where('key', 'notificacoes.escalonamento.gestor_role')->first());
-        $this->assertNull(config('sile.notificacoes.escalonamento.gestor_role'));
+        $this->assertNull(config('viabiliza.notificacoes.escalonamento.gestor_role'));
         $this->assertNull(Parameter::query()->where('key', 'notificacoes.pendencia.assunto')->first());
         $this->assertNull(Parameter::query()->where('key', 'notificacoes.pendencia.corpo')->first());
-        $this->assertStringContainsString('{protocolo}', (string) config('sile.notificacoes.pendencia.assunto'));
-        $this->assertStringContainsString('{pendencia}', (string) config('sile.notificacoes.pendencia.corpo'));
+        $this->assertStringContainsString('{protocolo}', (string) config('viabiliza.notificacoes.pendencia.assunto'));
+        $this->assertStringContainsString('{pendencia}', (string) config('viabiliza.notificacoes.pendencia.corpo'));
     }
 
     public function test_seeder_registra_parametros_de_auditoria_e_abuso(): void
@@ -690,9 +690,9 @@ class ParameterSeederTest extends TestCase
         $this->seed(ParameterSeeder::class);
 
         $this->assertNull(Parameter::query()->where('key', 'relatorios.export.assincrono_limiar_linhas')->first());
-        $this->assertSame(5000, config('sile.relatorios.export.assincrono_limiar_linhas'));
+        $this->assertSame(5000, config('viabiliza.relatorios.export.assincrono_limiar_linhas'));
         $this->assertNull(Parameter::query()->where('key', 'relatorios.export.formatos_habilitados')->first());
-        $this->assertSame(['csv', 'xlsx', 'pdf'], config('sile.relatorios.export.formatos_habilitados'));
+        $this->assertSame(['csv', 'xlsx', 'pdf'], config('viabiliza.relatorios.export.formatos_habilitados'));
 
         $retencao = Parameter::query()->where('key', 'relatorios.export.retencao_dias')->first();
         $this->assertNotNull($retencao);
@@ -713,7 +713,7 @@ class ParameterSeederTest extends TestCase
         $this->assertNull($metaTaxa->value);
 
         $this->assertNull(Parameter::query()->where('key', 'relatorios.expresso.janela_dias')->first());
-        $this->assertSame(30, config('sile.relatorios.expresso.janela_dias'));
+        $this->assertSame(30, config('viabiliza.relatorios.expresso.janela_dias'));
     }
 
     public function test_seeder_registra_parametros_de_saturacao(): void
@@ -848,6 +848,6 @@ class ParameterSeederTest extends TestCase
         $this->seed(ParameterSeeder::class);
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(110, Parameter::query()->count());
+        $this->assertSame(113, Parameter::query()->count());
     }
 }

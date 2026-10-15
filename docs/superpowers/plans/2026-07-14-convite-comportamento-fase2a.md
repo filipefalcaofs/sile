@@ -264,11 +264,11 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ### Task 4: Parâmetro do prazo (48h úteis)
 
 **Files:**
-- Modify: `config/sile.php:161` (bloco `analise`)
+- Modify: `config/viabiliza.php:161` (bloco `analise`)
 - Modify: `database/seeders/ParameterSeeder.php`
 - Test: `tests/Feature/Seeders/ParameterSeederTest.php` (se existir; senão, assert em Task 5)
 
-- [ ] **Step 1:** In `config/sile.php`, no bloco `'pendencia' => [...]` (linha 161), adicione a chave: `'prazo_resposta_horas_uteis' => 48,` (mantenha `prazo_resposta_dias` por ora — não quebrar nada que ainda o leia; a Task 5 passa a usar a nova).
+- [ ] **Step 1:** In `config/viabiliza.php`, no bloco `'pendencia' => [...]` (linha 161), adicione a chave: `'prazo_resposta_horas_uteis' => 48,` (mantenha `prazo_resposta_dias` por ora — não quebrar nada que ainda o leia; a Task 5 passa a usar a nova).
 
 - [ ] **Step 2:** In `database/seeders/ParameterSeeder.php`, junto de `analise.pendencia.prazo_resposta_dias` (linha ~386), adicione:
 
@@ -287,7 +287,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - [ ] **Step 4: Commit**
 
 ```bash
-git add config/sile.php database/seeders/ParameterSeeder.php
+git add config/viabiliza.php database/seeders/ParameterSeeder.php
 git commit -m "feat(convite): parâmetro analise.convite.prazo_resposta_horas_uteis=48
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
@@ -343,7 +343,7 @@ class PendenciaPrazoTest extends TestCase
 ```php
         $horasUteis = (int) Settings::get(
             'analise.convite.prazo_resposta_horas_uteis',
-            config('sile.analise.pendencia.prazo_resposta_horas_uteis', 48),
+            config('viabiliza.analise.pendencia.prazo_resposta_horas_uteis', 48),
         );
         // ... dentro do create():
         'due_at' => $this->prazos->businessDueAt(now(), $horasUteis),
@@ -608,7 +608,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - Modify TSX: `resources/js/pages/portal/solicitacoes/pendencias.tsx`, `resources/js/pages/gestao/ficha-analise/show.tsx`, `resources/js/pages/portal/solicitacoes/index.tsx`, `resources/js/pages/portal/solicitacoes/protocolo.tsx`, `resources/js/pages/portal/dashboard.tsx`, `resources/js/pages/gestao/processos/fila.tsx`
 - Modify labels do status `em_pendencia` (função de rótulo em `processos/index.tsx`, `dashboard.tsx`, `portal/solicitacoes/index.tsx`) → "Em convite"
 - Modify Notifications (texto): `app/Notifications/PendenciaSolicitadaNotification.php`, `RespostaPendenciaNotification.php`, `PendenciaExpiradaNotification.php` (já na Task 9)
-- Modify `config/sile.php` templates `notificacoes.pendencia.assunto`/`.corpo`
+- Modify `config/viabiliza.php` templates `notificacoes.pendencia.assunto`/`.corpo`
 - Modify label canônico: `app/Enums/ViabilityRequestStatus.php` — `EmPendencia => label 'Em convite'` e `publicLabel 'Convite — ação necessária do requerente'` (só rótulo, valor `em_pendencia` intacto)
 
 - [ ] **Step 1:** Troque cada string visível "Pendência/pendência/pendências" por "Convite/convite/convites" nos arquivos acima (títulos, botões, descrições, empty-states, labels de status). Use as linhas mapeadas no design/investigação. NÃO altere identificadores de código, rotas, chaves de tradução internas, nem o valor `em_pendencia`.
@@ -623,7 +623,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - [ ] **Step 4: Commit** (liste explicitamente os arquivos alterados; nunca `git add -A`):
 
 ```bash
-git add app/Enums/ViabilityRequestStatus.php app/Notifications/PendenciaSolicitadaNotification.php app/Notifications/RespostaPendenciaNotification.php config/sile.php resources/js/pages/portal/solicitacoes/pendencias.tsx resources/js/pages/gestao/ficha-analise/show.tsx resources/js/pages/portal/solicitacoes/index.tsx resources/js/pages/portal/solicitacoes/protocolo.tsx resources/js/pages/portal/dashboard.tsx resources/js/pages/gestao/processos/fila.tsx
+git add app/Enums/ViabilityRequestStatus.php app/Notifications/PendenciaSolicitadaNotification.php app/Notifications/RespostaPendenciaNotification.php config/viabiliza.php resources/js/pages/portal/solicitacoes/pendencias.tsx resources/js/pages/gestao/ficha-analise/show.tsx resources/js/pages/portal/solicitacoes/index.tsx resources/js/pages/portal/solicitacoes/protocolo.tsx resources/js/pages/portal/dashboard.tsx resources/js/pages/gestao/processos/fila.tsx
 git commit -m "feat(convite): rótulos visíveis pendência -> convite (sem renomear código interno)
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"

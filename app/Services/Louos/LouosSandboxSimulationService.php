@@ -49,7 +49,7 @@ class LouosSandboxSimulationService
     public function simulate(RuleDomain $domain, string $versaoRascunho, ?int $amostra = null): array
     {
         // RN-003 / HU-014: amostra parametrizável, sem hardcode.
-        $amostraUsada = $amostra ?? (int) config('sile.louos.sandbox.amostra_padrao', 50);
+        $amostraUsada = $amostra ?? (int) config('viabiliza.louos.sandbox.amostra_padrao', 50);
 
         $cenarios = $this->montarCenarios($amostraUsada);
 

@@ -93,6 +93,9 @@ class SolicitacaoViabilityResolver
                 'enquadramento_motivo' => $result->enquadramento->ramoResolvido()
                     ? null
                     : ($result->enquadramento->enquadramento['motivo'] ?? null),
+                'pergunta_sem_resposta' => $result->enquadramento->ramoResolvido()
+                    ? null
+                    : ($result->enquadramento->enquadramento['pergunta_sem_resposta'] ?? null),
                 'fluxo' => $result->risco->encaminhamento['fluxo'] ?? Fluxo::Analise->value,
                 'consulta' => $result,
                 'consulta_array' => $result->toArray(),

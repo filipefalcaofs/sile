@@ -28,11 +28,11 @@
 
 **Files:**
 - Modify: `database/seeders/ParameterSeeder.php` (bloco `integrations.regin.*`, ~linha 697)
-- Modify: `config/sile.php` (bloco `integrations.regin`, ~linha 327)
+- Modify: `config/viabiliza.php` (bloco `integrations.regin`, ~linha 327)
 - Test: `tests/Feature/Seeders/ParameterSeederTest.php`
 
 **Interfaces:**
-- Produces: `Settings::get('integrations.regin.cnpj_prefeitura')` → string de 14 dígitos; `config('sile.integrations.regin.cnpj_prefeitura')` como fallback.
+- Produces: `Settings::get('integrations.regin.cnpj_prefeitura')` → string de 14 dígitos; `config('viabiliza.integrations.regin.cnpj_prefeitura')` como fallback.
 
 - [ ] **Step 1: Teste falhando**
 
@@ -72,7 +72,7 @@ Em `database/seeders/ParameterSeeder.php`, logo após o bloco `integrations.regi
 ],
 ```
 
-Em `config/sile.php`, dentro de `integrations.regin`:
+Em `config/viabiliza.php`, dentro de `integrations.regin`:
 
 ```php
 'cnpj_prefeitura' => '13927801000149',
@@ -87,7 +87,7 @@ Expected: PASS
 
 ```bash
 vendor/bin/pint --dirty --format agent
-git add database/seeders/ParameterSeeder.php config/sile.php tests/Feature/Seeders/ParameterSeederTest.php
+git add database/seeders/ParameterSeeder.php config/viabiliza.php tests/Feature/Seeders/ParameterSeederTest.php
 git commit -m "feat: parametriza CNPJ da prefeitura para o envelope REGIN"
 ```
 
@@ -100,7 +100,7 @@ git commit -m "feat: parametriza CNPJ da prefeitura para o envelope REGIN"
 - Test: `tests/Feature/Regin/ReginHttpClientTest.php`
 
 **Interfaces:**
-- Consumes: `ReginIntegrationSettings` (`baseUrl()`, `username()`, `password()`), `config('sile.integrations.regin.timeout')`.
+- Consumes: `ReginIntegrationSettings` (`baseUrl()`, `username()`, `password()`), `config('viabiliza.integrations.regin.timeout')`.
 - Produces:
   - `ReginHttpClient::token(): string` — JWT cru.
   - `ReginHttpClient::enviarParecer(array $resposta): void` — lança `ReginUnavailableException` em qualquer falha.
@@ -127,9 +127,9 @@ class ReginHttpClientTest extends TestCase
 
     private function credenciais(): void
     {
-        config()->set('sile.integrations.regin.url_homologacao', 'http://10.57.247.9:8080/api_integracao');
-        config()->set('sile.integrations.regin.usuario', 'sedur_integracao');
-        config()->set('sile.integrations.regin.senha', 'segredo-forte');
+        config()->set('viabiliza.integrations.regin.url_homologacao', 'http://10.57.247.9:8080/api_integracao');
+        config()->set('viabiliza.integrations.regin.usuario', 'sedur_integracao');
+        config()->set('viabiliza.integrations.regin.senha', 'segredo-forte');
     }
 
     public function test_token_autentica_em_acesso_auth(): void
@@ -198,8 +198,8 @@ class ReginHttpClientTest extends TestCase
 
     public function test_token_sem_credencial_lanca(): void
     {
-        config()->set('sile.integrations.regin.usuario', '');
-        config()->set('sile.integrations.regin.senha', '');
+        config()->set('viabiliza.integrations.regin.usuario', '');
+        config()->set('viabiliza.integrations.regin.senha', '');
 
         $this->expectException(ReginUnavailableException::class);
 
@@ -286,7 +286,7 @@ class ReginHttpClient
 
     private function timeout(): int
     {
-        return (int) config('sile.integrations.regin.timeout', 8);
+        return (int) config('viabiliza.integrations.regin.timeout', 8);
     }
 }
 ```
@@ -450,7 +450,7 @@ class HttpReginParecerNotifier implements ReginParecerNotifier
      */
     private function envelope(ViabilityRequest $request, ViabilityDecision $decision): array
     {
-        $cnpj = (string) Settings::get('integrations.regin.cnpj_prefeitura', config('sile.integrations.regin.cnpj_prefeitura'));
+        $cnpj = (string) Settings::get('integrations.regin.cnpj_prefeitura', config('viabiliza.integrations.regin.cnpj_prefeitura'));
         $protocolo = (string) $request->external_reference;
 
         return [
@@ -525,9 +525,9 @@ Em `ComunicarResultadoReginListenerTest`, trocar o caminho "bloqueado" pelo cami
 ```php
 public function test_binding_real_envia_parecer_e_audita_sucesso(): void
 {
-    config()->set('sile.integrations.regin.url_homologacao', 'http://10.57.247.9:8080/api_integracao');
-    config()->set('sile.integrations.regin.usuario', 'sedur_integracao');
-    config()->set('sile.integrations.regin.senha', 'segredo');
+    config()->set('viabiliza.integrations.regin.url_homologacao', 'http://10.57.247.9:8080/api_integracao');
+    config()->set('viabiliza.integrations.regin.usuario', 'sedur_integracao');
+    config()->set('viabiliza.integrations.regin.senha', 'segredo');
 
     Http::fake([
         '*/acesso/auth' => Http::response(['token' => 'jwt-1']),

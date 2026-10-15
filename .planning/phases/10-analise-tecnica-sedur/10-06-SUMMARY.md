@@ -17,7 +17,7 @@ requires:
     provides: "viability_decisions (outcome deferida/indeferida, decided_at, decided_by_user_id) + DecisionOutcome + ViabilityDecisionFactory"
   - phase: 10-analise-tecnica-sedur
     plan: 01
-    provides: "parâmetros analise.precedentes.janela_meses (12) e analise.precedentes.max_itens (10) + fallback config/sile.php"
+    provides: "parâmetros analise.precedentes.janela_meses (12) e analise.precedentes.max_itens (10) + fallback config/viabiliza.php"
   - phase: 10-analise-tecnica-sedur
     plan: 02
     provides: "analysis_records.engine_snapshot (jsonb) + currentAnalysisRecord (latestOfMany revision)"

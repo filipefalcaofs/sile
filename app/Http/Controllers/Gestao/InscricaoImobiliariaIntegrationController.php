@@ -27,11 +27,11 @@ class InscricaoImobiliariaIntegrationController extends Controller
                 'em_producao' => $this->settings->usingProduction(),
                 'url_homologacao' => (string) Settings::get(
                     'integrations.inscricao_imobiliaria.url_homologacao',
-                    config('sile.integrations.inscricao_imobiliaria.url_homologacao'),
+                    config('viabiliza.integrations.inscricao_imobiliaria.url_homologacao'),
                 ),
                 'url_producao' => (string) Settings::get(
                     'integrations.inscricao_imobiliaria.url_producao',
-                    config('sile.integrations.inscricao_imobiliaria.url_producao'),
+                    config('viabiliza.integrations.inscricao_imobiliaria.url_producao'),
                 ),
                 'url_ativa' => $this->settings->baseUrl(),
             ],

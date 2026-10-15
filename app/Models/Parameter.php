@@ -47,7 +47,7 @@ class Parameter extends Model
 
     protected static function booted(): void
     {
-        $forget = fn (self $parameter) => Cache::forget("sile.parameters.{$parameter->key}");
+        $forget = fn (self $parameter) => Cache::forget("viabiliza.parameters.{$parameter->key}");
 
         static::saved($forget);
         static::deleted($forget);

@@ -308,7 +308,7 @@ class AuditoriaDevSeeder extends Seeder
         }
 
         $original = $toggle->value;
-        $cacheKey = 'sile.parameters.features.deteccao_abuso';
+        $cacheKey = 'viabiliza.parameters.features.deteccao_abuso';
 
         try {
             $toggle->forceFill(['value' => '1'])->save();
@@ -443,7 +443,7 @@ class AuditoriaDevSeeder extends Seeder
 
         $request->documents()->create([
             'requirement_id' => $ctx['fachada']->id,
-            'disk' => (string) Settings::get('storage.documentos.disk', config('sile.storage.documentos.disk', 'local')),
+            'disk' => (string) Settings::get('storage.documentos.disk', config('viabiliza.storage.documentos.disk', 'local')),
             'path' => "solicitacoes/seed/{$request->id}-fachada.jpg",
             'original_name' => 'fachada-exemplo.jpg',
             'mime_type' => 'image/jpeg',

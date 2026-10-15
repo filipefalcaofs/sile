@@ -9,6 +9,8 @@ import { CheckCircleIcon, ListIcon, MapPinIcon } from '@/components/icons';
 import Badge from '@/components/ui/badge';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import Chart from '@/components/ui/chart/chart';
+import ChartDataTable from '@/components/ui/chart/chart-data-table';
+import Alert from '@/components/ui/alert';
 import type { EChartsOption } from '@/components/ui/chart/echarts-core';
 import DataTable from '@/components/ui/data-table/data-table';
 import { ExportMenu } from '@/components/ui/data-table/export-menu';
@@ -76,6 +78,7 @@ interface IndicadoresProps {
     taxaDeferimento: TaxaDeferimento;
     taxaIndeferimento: TaxaIndeferimento;
     filtros: FiltrosAplicados;
+    erroPeriodo?: string | null;
 }
 
 interface FiltrosForm {
@@ -220,6 +223,7 @@ export default function IndicadoresViabilidade({
     taxaDeferimento,
     taxaIndeferimento,
     filtros,
+    erroPeriodo = null,
 }: IndicadoresProps) {
     const { vocabulario } = usePage<SharedProps>().props;
     const [form, setForm] = useState<FiltrosForm>({
@@ -320,6 +324,7 @@ export default function IndicadoresViabilidade({
             />
 
             <div className="space-y-4 md:space-y-6">
+                {erroPeriodo && <Alert variant="error" title="Período inválido" message={erroPeriodo} />}
                 <Card>
                     <CardHeader
                         title="Filtros"
@@ -393,7 +398,17 @@ export default function IndicadoresViabilidade({
                         <CardHeader title="Volume por período" description="Solicitações protocoladas por dia no recorte." />
                         <CardContent>
                             {porPeriodo.length > 0 ? (
-                                <Chart option={periodoChartOption(porPeriodo)} className="h-72 w-full" />
+                                <>
+                                    <div aria-hidden="true">
+                                        <Chart option={periodoChartOption(porPeriodo)} className="h-72 w-full" />
+                                    </div>
+                                    <ChartDataTable
+                                        caption="Volume por período"
+                                        rotuloCabecalho="Dia"
+                                        valorCabecalho="Solicitações"
+                                        linhas={porPeriodo.map((ponto) => ({ rotulo: ponto.dia, valor: ponto.total }))}
+                                    />
+                                </>
                             ) : (
                                 <GraficoSemDados />
                             )}
@@ -404,7 +419,18 @@ export default function IndicadoresViabilidade({
                         <CardContent>
                             {porRisco.length > 0 ? (
                                 <>
-                                    <Chart option={riscoChartOption(porRisco, vocabulario)} className="h-72 w-full" />
+                                    <div aria-hidden="true">
+                                        <Chart option={riscoChartOption(porRisco, vocabulario)} className="h-72 w-full" />
+                                    </div>
+                                    <ChartDataTable
+                                        caption="Distribuição por risco"
+                                        rotuloCabecalho="Nível"
+                                        valorCabecalho="Solicitações"
+                                        linhas={porRisco.map((item) => ({
+                                            rotulo: rotuloRisco(item.nivel, vocabulario),
+                                            valor: item.total,
+                                        }))}
+                                    />
                                     <FonteRiscoLegenda itens={porRisco} />
                                 </>
                             ) : (
@@ -418,7 +444,15 @@ export default function IndicadoresViabilidade({
                     <CardHeader title="Top CNAEs" description="Atividades econômicas com maior volume de solicitações no recorte." />
                     <CardContent>
                         {porCnae.length > 0 ? (
-                            <Chart option={cnaeChartOption(porCnae)} className="h-80 w-full" />
+                            <div aria-hidden="true">
+                                <Chart option={cnaeChartOption(porCnae)} className="h-80 w-full" />
+                            </div>
+                            <ChartDataTable
+                                caption="Top CNAEs"
+                                rotuloCabecalho="CNAE"
+                                valorCabecalho="Solicitações"
+                                linhas={porCnae.map((item) => ({ rotulo: item.cnae, valor: item.total }))}
+                            />
                         ) : (
                             <GraficoSemDados />
                         )}

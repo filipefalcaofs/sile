@@ -31,7 +31,7 @@ use Throwable;
  */
 class AiConfigResolver
 {
-    public const CACHE_KEY = 'sile.ai.runtime_config';
+    public const CACHE_KEY = 'viabiliza.ai.runtime_config';
 
     /**
      * provider administrável → driver do SDK. 'compativel' = endpoint

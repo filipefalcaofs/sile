@@ -52,7 +52,7 @@ class AnalysisSlaService
     /**
      * Prazo (em dias) da etapa: parâmetro administrável analise.sla.<etapa>_dias
      * com default inline (distribuicao=2, analise=10) — Settings resolve
-     * banco → config/sile.php → default do call site.
+     * banco → config/viabiliza.php → default do call site.
      */
     public function diasDaEtapa(AnalysisStage $stage): int
     {
@@ -60,7 +60,7 @@ class AnalysisSlaService
 
         return (int) Settings::get(
             "analise.sla.{$stage->value}_dias",
-            config("sile.analise.sla.{$stage->value}_dias", $default),
+            config("viabiliza.analise.sla.{$stage->value}_dias", $default),
         );
     }
 
@@ -123,7 +123,7 @@ class AnalysisSlaService
     {
         $percentual = (int) Settings::get(
             'analise.sla.semaforo.amarelo_percentual',
-            config('sile.analise.sla.semaforo.amarelo_percentual', 80),
+            config('viabiliza.analise.sla.semaforo.amarelo_percentual', 80),
         );
 
         return $percentual / 100;

@@ -7,20 +7,20 @@ tags: [hu-014, parametros, settings, permissoes, spatie-permission, seeders, con
 # Dependency graph
 requires:
   - phase: 09-fluxo-expresso
-    provides: "padrão do catálogo HU-014, fallback config/sile.php, risco.mapa_encaminhamento, expresso.* (reusados, não recriados)"
+    provides: "padrão do catálogo HU-014, fallback config/viabiliza.php, risco.mapa_encaminhamento, expresso.* (reusados, não recriados)"
   - phase: 02-administracao
     provides: "Parameter (registry HU-014), Settings::get, RolesAndPermissionsSeeder, padrão de permissões aditivas (givePermissionTo)"
 provides:
   - "11 parâmetros administráveis novos: grupo 'analise' (10) + toggle features.analise_tecnica (catálogo 56→67)"
   - "5 permissões aditivas (19→24): analisar-processos, distribuir-processos, emitir-tvl, encaminhar-malha-fina, manter-setores, atribuídas por papel"
-  - "Fallback config/sile.php do bloco 'analise' (negócio) + constantes técnicas (autosave debounce, cache de precedentes)"
+  - "Fallback config/viabiliza.php do bloco 'analise' (negócio) + constantes técnicas (autosave debounce, cache de precedentes)"
 affects: [10-04-manter-setores, 10-05-sla, 10-06-precedentes, 10-07-distribuir-assumir, 10-09, 10-10, 10-11-pendencia, 10-12-malha-fina, 10-13-tvl]
 
 # Tech tracking
 tech-stack:
   added: []
   patterns:
-    - "Parâmetro de negócio no ParameterSeeder + espelho de fallback em config/sile.php (Settings::get lê config sem banco)"
+    - "Parâmetro de negócio no ParameterSeeder + espelho de fallback em config/viabiliza.php (Settings::get lê config sem banco)"
     - "Constante técnica fica SÓ no config, fora do catálogo HU-014 (precedente 02-02)"
     - "Permissão aditiva por papel via givePermissionTo (nunca sync — preserva ajustes do admin)"
 
@@ -28,7 +28,7 @@ key-files:
   created: []
   modified:
     - database/seeders/ParameterSeeder.php
-    - config/sile.php
+    - config/viabiliza.php
     - database/seeders/RolesAndPermissionsSeeder.php
     - tests/Feature/Seeders/ParameterSeederTest.php
     - tests/Feature/Seeders/DatabaseSeederTest.php
@@ -50,7 +50,7 @@ completed: 2026-06-14
 
 # Phase 10 Plan 01: Fundação de parametrização e segurança da análise técnica — Summary
 
-**11 parâmetros administráveis do grupo `analise` (catálogo HU-014 56→67) + 5 permissões aditivas por papel (19→24) + fallback em config/sile.php, com TDD estrito e zero dependência nova.**
+**11 parâmetros administráveis do grupo `analise` (catálogo HU-014 56→67) + 5 permissões aditivas por papel (19→24) + fallback em config/viabiliza.php, com TDD estrito e zero dependência nova.**
 
 ## Performance
 
@@ -62,7 +62,7 @@ completed: 2026-06-14
 
 ## Accomplishments
 - Registrou no catálogo HU-014 os 11 parâmetros da análise técnica (10 do grupo novo `analise` + o toggle `features.analise_tecnica`), todos administráveis com tipo, default, validação e `value` null preservável.
-- Espelhou os valores de negócio em `config/sile.php` (bloco `analise` + `features.analise_tecnica`) para o fallback do `Settings::get` sem banco, e guardou as constantes técnicas (autosave/cache) fora do catálogo.
+- Espelhou os valores de negócio em `config/viabiliza.php` (bloco `analise` + `features.analise_tecnica`) para o fallback do `Settings::get` sem banco, e guardou as constantes técnicas (autosave/cache) fora do catálogo.
 - Adicionou 5 permissões aditivas atribuídas por papel via `givePermissionTo` (nunca `sync`), total 19→24.
 - Os três testes de seeder seguem verdes com as contagens atualizadas (67 parâmetros / 24 permissões).
 
@@ -82,7 +82,7 @@ completed: 2026-06-14
 | `analise.tvl.assinatura.imagem_path` | analise | string | `''` | nullable, string, max:255 |
 | `analise.tvl.download.ttl_minutos` | analise | integer | `5` | required, integer, min:1, max:1440 |
 
-## Fallback config/sile.php — bloco `analise`
+## Fallback config/viabiliza.php — bloco `analise`
 
 ```
 sile.features.analise_tecnica = true
@@ -100,7 +100,7 @@ sile.analise.tvl.download.ttl_minutos = 5
 sile.analise.autosave.debounce_ms = 1500            # CONSTANTE TÉCNICA (fora do catálogo)
 ```
 
-Consumidores das waves seguintes leem via `Settings::get('analise....', config('sile.analise....'))`. As constantes técnicas (`precedentes.cache_ttl_segundos`, `autosave.debounce_ms`) NÃO têm parâmetro no catálogo: leia-as direto de `config('sile.analise....')`.
+Consumidores das waves seguintes leem via `Settings::get('analise....', config('viabiliza.analise....'))`. As constantes técnicas (`precedentes.cache_ttl_segundos`, `autosave.debounce_ms`) NÃO têm parâmetro no catálogo: leia-as direto de `config('viabiliza.analise....')`.
 
 ## Permissões — 5 novas (19→24) e atribuição por papel
 
@@ -125,7 +125,7 @@ _TDD estrito em ambas (RED confirmado antes do GREEN); commit único por task po
 
 ## Files Created/Modified
 - `database/seeders/ParameterSeeder.php` - 11 parâmetros novos no catálogo (56→67)
-- `config/sile.php` - bloco `analise` (negócio + constantes técnicas) + `features.analise_tecnica`
+- `config/viabiliza.php` - bloco `analise` (negócio + constantes técnicas) + `features.analise_tecnica`
 - `database/seeders/RolesAndPermissionsSeeder.php` - 5 permissões aditivas + atribuição por papel
 - `tests/Feature/Seeders/ParameterSeederTest.php` - contagem 67, grupo `analise`, teste dos 11 parâmetros
 - `tests/Feature/Seeders/DatabaseSeederTest.php` - contagem de parâmetros 56→67 (2 asserções)
@@ -146,7 +146,7 @@ Waves paralelas (ex.: 10-03) commitaram no mesmo branch durante a execução. O 
 None - no external service configuration required.
 
 ## Next Phase Readiness
-- Catálogo, fallback e permissões prontos: as waves seguintes podem ler parâmetros via `Settings::get('analise....', config('sile.analise....'))` e proteger rotas via `permission:` sem acoplar ao seeder.
+- Catálogo, fallback e permissões prontos: as waves seguintes podem ler parâmetros via `Settings::get('analise....', config('viabiliza.analise....'))` e proteger rotas via `permission:` sem acoplar ao seeder.
 - Insumo direto: 10-04 (manter-setores), 10-05 (SLA), 10-06 (precedentes — janela/itens + cache_ttl técnico), 10-07 (distribuir/analisar), 10-09/10-10 (analisar), 10-11 (pendência), 10-12 (encaminhar-malha-fina), 10-13 (TVL/emitir-tvl).
 - Pendência SEDUR a registrar: confirmar se a consulta de processos deve ter permissão própria (hoje reusa `consultar-solicitacoes`) e a entrega da imagem de assinatura do TVL.
 

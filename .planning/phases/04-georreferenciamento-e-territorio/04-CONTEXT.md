@@ -37,7 +37,7 @@ Fora do escopo: integração viva com SIGIS/CA 2000 (HU-107 — Fase 13, pendent
 - `integrations.geocoding.base_url` — string url, default Nominatim, requires_connection_test (grupo integracoes).
 - `seguranca.throttle.geocoding.por_minuto` — integer, default 60 (Nominatim ~1 req/s) (grupo seguranca).
 - `geo.validacao.sobreposicao_minima` — integer/decimal (percentual), default 50, faixa válida (grupo novo `geo` ou `territorio`).
-- Constantes técnicas (timeout/cache_ttl) em config/sile.php.
+- Constantes técnicas (timeout/cache_ttl) em config/viabiliza.php.
 
 ### Claude's Discretion
 - Nomes exatos de tabelas/serviços/migrations; SRID (4326 recomendado); estrutura dos testes (com PostGIS — atenção ao banco de teste); organização dos componentes React do mapa.
@@ -50,7 +50,7 @@ Fora do escopo: integração viva com SIGIS/CA 2000 (HU-107 — Fase 13, pendent
 - `docs/superpowers/specs/2026-06-13-georreferenciamento-design.md` — desenho aprovado.
 
 ### HUs (CAs BDD)
-- `docs/SILE_HUs_Completas_MD/EP04-Georreferenciamento-e-Território/HU-029..HU-037.md` — HU-036 (camadas versionadas com vigência, diff auditado) e HU-037 (sobreposição polígono×lote, limiar parametrizado; divergência zona/via) têm as RNs específicas.
+- `docs/VIABILIZA_HUs_Completas_MD/EP04-Georreferenciamento-e-Território/HU-029..HU-037.md` — HU-036 (camadas versionadas com vigência, diff auditado) e HU-037 (sobreposição polígono×lote, limiar parametrizado; divergência zona/via) têm as RNs específicas.
 
 ### Padrões a reusar
 - `app/Services/Cnpj/CnpjLookup.php` + `BrasilApiCnpjLookup.php` — padrão de contrato+provider+cache para o `Geocoder`.

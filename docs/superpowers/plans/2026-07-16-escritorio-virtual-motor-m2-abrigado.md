@@ -185,7 +185,7 @@ git commit -m "feat(ev): VirtualOfficeInscriptionLock::sedeAtiva (resolve sede +
 
 **Files:**
 - Modify: `app/Http/Requests/Portal/UpdateSolicitacaoAtividadesRequest.php` (`after()` hook + mensagem)
-- Modify: `config/sile.php` + `database/seeders/ParameterSeeder.php` (texto parametrizável da mensagem de bloqueio) + count tests
+- Modify: `config/viabiliza.php` + `database/seeders/ParameterSeeder.php` (texto parametrizável da mensagem de bloqueio) + count tests
 - Test: `tests/Feature/EscritorioVirtual/AbrigadoCnaeBlockTest.php`
 
 - [ ] **Step 1:** READ `UpdateSolicitacaoAtividadesRequest.php` (`rules()` + `after()` closures + `messages()`) e como o route model `solicitacao` é resolvido.

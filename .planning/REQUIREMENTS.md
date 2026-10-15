@@ -3,7 +3,7 @@
 **Defined:** 2026-06-09
 **Core Value:** Responder a viabilidade locacional de atividade econômica de forma automática, correta e auditável — fluxo expresso quando a lei permite, fundamentação legal em toda decisão.
 
-Fonte de verdade: 131 Histórias de Usuário em `docs/SILE_HUs_Completas_MD/` (índice: `README-CATALOGO-HUs-SILE.md`). Cada requisito é rastreado pelo ID da HU. Os critérios de aceite BDD (CA) de cada HU viram feature tests PHPUnit — nenhuma HU é concluída sem seus CAs cobertos por testes passando.
+Fonte de verdade: 131 Histórias de Usuário em `docs/VIABILIZA_HUs_Completas_MD/` (índice: `README-CATALOGO-HUs-VIABILIZA.md`). Cada requisito é rastreado pelo ID da HU. Os critérios de aceite BDD (CA) de cada HU viram feature tests PHPUnit — nenhuma HU é concluída sem seus CAs cobertos por testes passando.
 
 ## v1 Requirements
 
@@ -100,7 +100,7 @@ Fonte de verdade: 131 Histórias de Usuário em `docs/SILE_HUs_Completas_MD/` (�
 - [x] **HU-068**: Protocolar solicitação
 - [x] **HU-069**: Consultar protocolo
 - [x] **HU-070**: Cancelar solicitação
-- [~] **HU-071**: Gerar/exibir DAM da solicitação — BLOQUEADA → Fase 13 (DAM é da SEFAZ; SILE consulta/exibe; sem contrato especulativo)
+- [~] **HU-071**: Gerar/exibir DAM da solicitação — BLOQUEADA → Fase 13 (DAM é da SEFAZ; VIABILIZA consulta/exibe; sem contrato especulativo)
 - [~] **HU-072**: Confirmar pagamento do DAM — BLOQUEADA → Fase 13 (sincronização SEFAZ)
 
 ### EP09 — Fluxo Expresso

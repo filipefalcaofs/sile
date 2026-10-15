@@ -98,7 +98,7 @@ O portal do cidadão não ganha o detalhe das porções: continua exibindo o res
 
 - **Cobertura da camada.** A maior parte dos endereços não licenciados não tem polígono; o ganho é incremental e o fallback é o comportamento atual. Mitigação: `zona_fonte` deixa explícito em cada processo qual regra decidiu.
 - **Precisão do polígono do endereçamento.** É o endereço licenciado, não necessariamente o lote cadastral do IPTU. Quando houver divergência de zona com o desenho do requerente, a decisão 8 manda à análise em vez de arbitrar.
-- **Peso da consulta.** Até 20 camadas de zona por polígono, com geometrias de dezenas de KB. Mitigação: `BBOX` do lote (recorte mínimo), memo por execução e `timeout` já configurado em `sile.integrations.geoserver.timeout`.
+- **Peso da consulta.** Até 20 camadas de zona por polígono, com geometrias de dezenas de KB. Mitigação: `BBOX` do lote (recorte mínimo), memo por execução e `timeout` já configurado em `viabiliza.integrations.geoserver.timeout`.
 - **WAF.** O bloqueio de polígono na URL é contornado pelo `BBOX`, mas o WAF pode mudar de regra. Mitigação: falha de camada é `indisponivel` e o processo degrada para o ponto, nunca para zona errada.
 - **Dependência de PostGIS.** O cálculo da maior porção só roda em produção (pgsql). A suíte prova a matemática em testes `@group postgis` e o restante com um fake do resolvedor.
 
