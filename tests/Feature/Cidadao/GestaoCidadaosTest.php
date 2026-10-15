@@ -109,6 +109,21 @@ class GestaoCidadaosTest extends TestCase
         $this->assertFalse($cidadao->fresh()->isInactive());
     }
 
+    public function test_registro_tecnico_do_regin_nao_pode_ser_inativado(): void
+    {
+        $tecnico = Cidadao::factory()->semSenha()->create([
+            'cpf' => Cidadao::CPF_TECNICO,
+            'email' => Cidadao::CPF_TECNICO.Cidadao::SUFIXO_EMAIL_TECNICO,
+        ]);
+
+        $this->actingAs($this->admin(), 'gestao')
+            ->put(route('gestao.cidadaos.inativacao.update', $tecnico))
+            ->assertNotFound();
+
+        $this->assertFalse($tecnico->fresh()->isInactive());
+        $this->assertDatabaseMissing('activity_log', ['event' => 'cidadao-inativado']);
+    }
+
     public function test_reativar_cidadao(): void
     {
         $cidadao = Cidadao::factory()->inactive()->create();
