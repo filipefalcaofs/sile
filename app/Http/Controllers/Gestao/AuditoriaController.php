@@ -160,7 +160,7 @@ class AuditoriaController extends Controller
             'id' => $log->id,
             'created_at' => $log->created_at?->toIso8601String(),
             'event' => $log->event,
-            'usuario' => $log->user?->name,
+            'usuario' => $log->actor?->name,
             'email' => $log->email,
             'ip_address' => $log->ip_address,
             'channel' => $log->channel,

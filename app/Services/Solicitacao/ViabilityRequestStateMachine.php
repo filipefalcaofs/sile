@@ -3,6 +3,7 @@
 namespace App\Services\Solicitacao;
 
 use App\Enums\ViabilityRequestStatus;
+use App\Models\Cidadao;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityRequestTransition;
@@ -56,7 +57,7 @@ class ViabilityRequestStateMachine
     public function transition(
         ViabilityRequest $request,
         ViabilityRequestStatus $to,
-        ?User $actor = null,
+        User|Cidadao|null $actor = null,
         ?string $reason = null,
         ?string $publicLabel = null,
     ): ViabilityRequestTransition {
@@ -73,7 +74,8 @@ class ViabilityRequestStateMachine
             'to_status' => $to,
             'reason' => $reason,
             'public_label' => $publicLabel,
-            'actor_user_id' => $actor?->id,
+            'actor_type' => $actor?->getMorphClass(),
+            'actor_id' => $actor?->id,
         ]);
 
         $this->audit->log(

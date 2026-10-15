@@ -3,6 +3,7 @@
 namespace App\Services\Lgpd;
 
 use App\Models\Activity;
+use App\Models\Cidadao;
 use App\Models\LegalTerm;
 use App\Models\LegalTermAcceptance;
 use App\Models\User;
@@ -34,7 +35,7 @@ class LgpdMonitorService
      */
     public function consentimentos(): array
     {
-        $total = User::query()->count();
+        $total = User::query()->count() + Cidadao::query()->count();
         $term = LegalTerm::current('lgpd');
 
         if ($term === null) {
@@ -52,7 +53,8 @@ class LgpdMonitorService
         $aceitaram = LegalTermAcceptance::query()
             ->where('legal_term_id', $term->id)
             ->distinct()
-            ->count('user_id');
+            ->get(['accepted_by_type', 'accepted_by_id'])
+            ->count();
 
         return [
             'sem_termo_publicado' => false,

@@ -75,7 +75,7 @@ class EscalonarSlaCommand extends Command
             }
 
             foreach ($this->destinatarios($tratamentoFaixa, $processo, $destinatariosEscalonamento) as $destinatario) {
-                if ($this->jaEscalonado($processo->id, $destinatario->id, $processo->analysis_stage_started_at)) {
+                if ($this->jaEscalonado($processo->id, $destinatario, $processo->analysis_stage_started_at)) {
                     continue;
                 }
 
@@ -122,12 +122,13 @@ class EscalonarSlaCommand extends Command
      * Idempotência via ledger: já existe um escalonamento_sla para este processo e
      * destinatário a partir do início da etapa atual (analysis_stage_started_at)?
      */
-    private function jaEscalonado(int $viabilityRequestId, int $recipientUserId, ?DateTimeInterface $desde): bool
+    private function jaEscalonado(int $viabilityRequestId, User $destinatario, ?DateTimeInterface $desde): bool
     {
         $query = Communication::query()
             ->where('viability_request_id', $viabilityRequestId)
             ->where('type', CommunicationType::EscalonamentoSla)
-            ->where('recipient_user_id', $recipientUserId);
+            ->where('recipient_type', $destinatario->getMorphClass())
+            ->where('recipient_id', $destinatario->id);
 
         if ($desde !== null) {
             $query->where('created_at', '>=', $desde);

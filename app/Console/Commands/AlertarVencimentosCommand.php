@@ -6,7 +6,9 @@ use App\Enums\AnalysisPendencyStatus;
 use App\Enums\CommunicationType;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\AnalysisPendency;
+use App\Models\Cidadao;
 use App\Models\Communication;
+use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Notifications\PrazoVencendoNotification;
 use App\Services\Comunicacao\NotificationDispatcher;
@@ -84,7 +86,7 @@ class AlertarVencimentosCommand extends Command
             $analista = $processo->assignedTo;
 
             if ($analista === null
-                || $this->jaAlertado($processo->id, $analista->id, $processo->analysis_stage_started_at)) {
+                || $this->jaAlertado($processo->id, $analista, $processo->analysis_stage_started_at)) {
                 continue;
             }
 
@@ -131,7 +133,7 @@ class AlertarVencimentosCommand extends Command
             // desta janela — a 2ª passada o encontra e não duplica (RN-004).
             $inicioJanela = $pendencia->due_at->copy()->subDays($antecedenciaDias);
 
-            if ($this->jaAlertado($processo->id, $requerente->id, $inicioJanela)) {
+            if ($this->jaAlertado($processo->id, $requerente, $inicioJanela)) {
                 continue;
             }
 
@@ -153,12 +155,13 @@ class AlertarVencimentosCommand extends Command
      * Idempotência via ledger: já existe uma comunicação prazo_vencendo para este
      * processo e destinatário a partir do início da janela informada?
      */
-    private function jaAlertado(int $viabilityRequestId, int $recipientUserId, ?DateTimeInterface $desde): bool
+    private function jaAlertado(int $viabilityRequestId, User|Cidadao $destinatario, ?DateTimeInterface $desde): bool
     {
         $query = Communication::query()
             ->where('viability_request_id', $viabilityRequestId)
             ->where('type', CommunicationType::PrazoVencendo)
-            ->where('recipient_user_id', $recipientUserId);
+            ->where('recipient_type', $destinatario->getMorphClass())
+            ->where('recipient_id', $destinatario->id);
 
         if ($desde !== null) {
             $query->where('created_at', '>=', $desde);

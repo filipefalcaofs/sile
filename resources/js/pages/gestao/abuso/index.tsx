@@ -37,6 +37,8 @@ const EVIDENCIA_LABEL: Record<string, string> = {
     limite: 'Limite',
     ids: 'Processos',
     created_by_user_id: 'Representante',
+    created_by_type: 'Tipo do representante',
+    created_by_id: 'Representante',
     poligono_hash: 'Polígono',
     enderecos: 'Endereços',
     enderecos_distintos: 'Endereços distintos',

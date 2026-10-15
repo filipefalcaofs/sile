@@ -55,7 +55,7 @@ final class AcessosReportSource implements ReportSource
             mapRow: fn (AccessLog $acesso): array => [
                 $acesso->created_at?->toIso8601String(),
                 $acesso->event,
-                $acesso->user?->name,
+                $acesso->actor?->name,
                 $acesso->email,
                 $acesso->ip_address,
                 $acesso->channel,

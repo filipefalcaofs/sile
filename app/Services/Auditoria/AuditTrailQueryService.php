@@ -4,6 +4,7 @@ namespace App\Services\Auditoria;
 
 use App\Models\AccessLog;
 use App\Models\Activity;
+use App\Models\Cidadao;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -73,11 +74,11 @@ class AuditTrailQueryService
     public function acessos(array $filtros): Builder
     {
         return AccessLog::query()
-            ->with('user:id,name')
+            ->with('actor')
             ->when($this->data($filtros, 'data_de'), fn (Builder $q, string $d) => $q->whereDate('created_at', '>=', $d))
             ->when($this->data($filtros, 'data_ate'), fn (Builder $q, string $d) => $q->whereDate('created_at', '<=', $d))
-            ->when($this->inteiro($filtros, 'usuario_id'), fn (Builder $q, int $id) => $q->where('user_id', $id))
-            ->when($this->valor($filtros, 'usuario'), fn (Builder $q, string $v) => $q->whereHas('user', fn ($u) => $u->whereLike('name', "%{$v}%", caseSensitive: false)))
+            ->when($this->inteiro($filtros, 'usuario_id'), fn (Builder $q, int $id) => $q->where('actor_type', User::class)->where('actor_id', $id))
+            ->when($this->valor($filtros, 'usuario'), fn (Builder $q, string $v) => $q->whereHasMorph('actor', [User::class, Cidadao::class], fn ($u) => $u->whereLike('name', "%{$v}%", caseSensitive: false)))
             ->when($this->valor($filtros, 'event'), fn (Builder $q, string $v) => $q->where('event', $v))
             ->orderByDesc('id');
     }

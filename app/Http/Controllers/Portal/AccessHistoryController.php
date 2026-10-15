@@ -13,7 +13,7 @@ class AccessHistoryController extends Controller
 {
     /**
      * Histórico de acessos do próprio usuário (HU-010 CA-01) — o filtro por
-     * user_id OU e-mail inclui falhas e bloqueios pré-login gravados sem user_id.
+     * conta OU e-mail inclui falhas e bloqueios pré-login gravados sem conta.
      */
     public function __invoke(Request $request): Response
     {
@@ -22,7 +22,7 @@ class AccessHistoryController extends Controller
         return Inertia::render('portal/acessos', [
             'logs' => AccessLog::query()
                 ->where(fn ($query) => $query
-                    ->where('user_id', $user->id)
+                    ->where(fn ($q) => $q->where('actor_type', $user->getMorphClass())->where('actor_id', $user->id))
                     ->orWhere('email', $user->email))
                 ->latest('created_at')
                 ->paginate((int) Settings::get('ui.access_history.per_page', 15))

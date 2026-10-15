@@ -10,7 +10,8 @@ class RecordSuccessfulLogin
     public function handle(Login $event): void
     {
         AccessLog::create([
-            'user_id' => $event->user->getAuthIdentifier(),
+            'actor_type' => $event->user->getMorphClass(),
+            'actor_id' => $event->user->getAuthIdentifier(),
             'email' => $event->user->email,
             'event' => 'login',
             'ip_address' => request()->ip(),

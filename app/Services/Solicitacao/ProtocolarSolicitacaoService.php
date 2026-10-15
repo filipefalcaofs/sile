@@ -6,6 +6,7 @@ use App\Enums\ResultadoViabilidade;
 use App\Enums\ViabilityRequestOrigin;
 use App\Enums\ViabilityRequestStatus;
 use App\Events\SolicitacaoProtocolada;
+use App\Models\Cidadao;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Geo\PoligonoEnderecamentoService;
@@ -46,7 +47,7 @@ class ProtocolarSolicitacaoService
         private ZonaProcessoService $zonaProcesso,
     ) {}
 
-    public function protocol(ViabilityRequest $request, User $actor, bool $proceedDespite = false): ViabilityRequest
+    public function protocol(ViabilityRequest $request, User|Cidadao $actor, bool $proceedDespite = false): ViabilityRequest
     {
         $this->guardStatus($request);
         $this->guardMinimumData($request);

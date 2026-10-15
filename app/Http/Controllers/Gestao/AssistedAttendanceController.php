@@ -163,7 +163,8 @@ class AssistedAttendanceController extends Controller
             'service_type_id' => $validated['service_type_id'],
             'company_id' => $validated['company_id'],
             'requester_user_id' => $citizen->id,
-            'created_by_user_id' => $request->user()->id,
+            'created_by_type' => $request->user()->getMorphClass(),
+            'created_by_id' => $request->user()->id,
             'assisted_attendance_id' => $attendance->id,
         ]));
 

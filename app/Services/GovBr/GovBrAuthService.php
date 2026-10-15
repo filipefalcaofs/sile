@@ -107,7 +107,8 @@ class GovBrAuthService
 
         // Paridade com o login local (Fortify::authenticateUsing).
         AccessLog::create([
-            'user_id' => $user->id,
+            'actor_type' => $user->getMorphClass(),
+            'actor_id' => $user->id,
             'email' => $user->email,
             'event' => 'inativada',
             'ip_address' => request()->ip(),

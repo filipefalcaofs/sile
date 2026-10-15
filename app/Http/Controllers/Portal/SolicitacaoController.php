@@ -167,7 +167,8 @@ class SolicitacaoController extends Controller
             'service_type_id' => $request->validated('service_type_id'),
             'company_id' => $company->id,
             'requester_user_id' => $effectiveUser->id,
-            'created_by_user_id' => $request->user()->id,
+            'created_by_type' => $request->user()->getMorphClass(),
+            'created_by_id' => $request->user()->id,
         ]));
 
         $redirect = redirect()
