@@ -154,6 +154,19 @@ class ReginProcessoProtocoladorTest extends TestCase
         $this->assertNotNull($processo->protocol_number);
     }
 
+    public function test_ruc_nao_vincula_o_processo_ao_usuario_logado_nem_ao_primeiro_usuario(): void
+    {
+        $gestor = User::factory()->create();
+        $this->actingAs($gestor, 'gestao');
+
+        $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($this->ruc()));
+
+        $this->assertNotNull($processo);
+        $this->assertNotSame($gestor->id, $processo->requester_user_id);
+        $this->assertNotSame(User::query()->orderBy('id')->value('id'), $processo->requester_user_id);
+        $this->assertFalse($processo->requester->temEmailEntregavel());
+    }
+
     public function test_natureza_juridica_do_ruc_vai_para_a_empresa(): void
     {
         $processo = app(ReginProcessoProtocolador::class)->protocolar(

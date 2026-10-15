@@ -51,9 +51,31 @@ class User extends Authenticatable implements MustVerifyEmail
         ];
     }
 
+    /** E-mail reservado ao requerente técnico dos envelopes REGIN sem solicitante. */
+    public const EMAIL_SOLICITANTE_NAO_IDENTIFICADO = 'solicitante-nao-identificado@regin.invalid';
+
+    public function temEmailEntregavel(): bool
+    {
+        $email = mb_strtolower((string) $this->email);
+
+        return $email !== '' && ! str_ends_with($email, '.invalid');
+    }
+
     public function isAdAccount(): bool
     {
         return $this->auth_type === AuthType::Ad;
+    }
+
+    /**
+     * Conta de desenvolvedor/suporte, omitida como autor na tramitação.
+     */
+    public function isAtorOcultoNaTramitacao(): bool
+    {
+        $emails = array_map('mb_strtolower', (array) config('viabiliza.tramitacao.atores_ocultos.emails'));
+        $usernames = array_map('mb_strtolower', (array) config('viabiliza.tramitacao.atores_ocultos.ad_usernames'));
+
+        return in_array(mb_strtolower((string) $this->email), $emails, true)
+            || ($this->ad_username !== null && in_array(mb_strtolower($this->ad_username), $usernames, true));
     }
 
     /**

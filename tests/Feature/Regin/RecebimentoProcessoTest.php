@@ -15,6 +15,22 @@ class RecebimentoProcessoTest extends TestCase
 {
     use LazilyRefreshDatabase;
 
+    public function test_declaracao_sem_solicitante_nao_vincula_o_processo_a_usuario_existente(): void
+    {
+        $primeiro = User::factory()->create();
+        $declaracao = $this->declaracao($this->cnpjValido());
+        unset($declaracao['cpfSolicitante'], $declaracao['nomeSolicitante'], $declaracao['emailSolicitante']);
+
+        $this->postJson('/api_integracao/recebe', $declaracao)->assertOk();
+
+        $recebimento = ReginRecebimento::query()->where('protocolo', 'BAP-2026-0001')->firstOrFail();
+        $processo = ViabilityRequest::query()->findOrFail($recebimento->viability_request_id);
+
+        $this->assertNotSame($primeiro->id, $processo->requester_user_id);
+        $this->assertNotSame($primeiro->id, $processo->created_by_user_id);
+        $this->assertFalse($processo->requester->temEmailEntregavel());
+    }
+
     public function test_post_da_declaracao_abre_processo_com_os_dados_recebidos(): void
     {
         $cnpj = $this->cnpjValido();

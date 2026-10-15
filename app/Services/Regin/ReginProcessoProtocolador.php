@@ -25,7 +25,6 @@ use App\Services\Tratamento\TratamentoRamoResolver;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
-use RuntimeException;
 use Throwable;
 
 /**
@@ -226,13 +225,24 @@ class ReginProcessoProtocolador
             return $solicitante;
         }
 
-        $existente = User::query()->orderBy('id')->first();
+        return $this->solicitanteNaoIdentificado();
+    }
 
-        if ($existente !== null) {
-            return $existente;
-        }
-
-        throw new RuntimeException('Solicitante ausente e não há usuário para protocolar.');
+    /**
+     * Requerente técnico para envelope sem solicitante: nunca uma pessoa real
+     * (nem o primeiro usuário, nem quem está logado). Sem e-mail entregável.
+     */
+    private function solicitanteNaoIdentificado(): User
+    {
+        return User::query()->firstOrCreate(
+            ['email' => User::EMAIL_SOLICITANTE_NAO_IDENTIFICADO],
+            [
+                'name' => 'Solicitante não identificado (REGIN)',
+                'cpf' => '00000000000',
+                'password' => Hash::make(Str::random(40)),
+                'auth_type' => AuthType::Local,
+            ],
+        );
     }
 
     private function solicitante(RecebimentoProcesso $dados): ?User
@@ -1045,18 +1055,6 @@ class ReginProcessoProtocolador
 
     private function ator(): User
     {
-        $autenticado = auth('gestao')->user();
-
-        if ($autenticado instanceof User) {
-            return $autenticado;
-        }
-
-        $existente = User::query()->orderBy('id')->first();
-
-        if ($existente !== null) {
-            return $existente;
-        }
-
-        return User::factory()->create();
+        return $this->solicitanteNaoIdentificado();
     }
 }
