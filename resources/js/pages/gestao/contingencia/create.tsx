@@ -372,7 +372,7 @@ export default function RegistrarContingencia({ serviceTypes, documentRequiremen
 
             <form onSubmit={submit} className="flex flex-col gap-4 md:gap-6">
                 <Card>
-                    <CardHeader title="Beneficiário e empresa" description="Busque o CPF e o CNPJ na base da SEDUR para conferir o nome. O protocolo exige que o cidadão e a empresa já estejam cadastrados no Viabiliza." />
+                    <CardHeader title="Beneficiário e empresa" description="Busque o CPF e o CNPJ na base da SEDUR para conferir o nome. A empresa precisa estar cadastrada no Viabiliza. Cidadão sem cadastro é registrado no balcão com o nome da SEDUR." />
                     <CardContent>
                         <div className="grid gap-5 sm:grid-cols-2">
                             <div>

@@ -88,7 +88,6 @@ class ContingenciaController extends Controller
     {
         /** @var User $operator */
         $operator = $request->user();
-        $beneficiary = $request->beneficiaryUser();
         $company = $request->beneficiaryCompany();
         $externalReference = $this->externalReference($request);
 
@@ -114,7 +113,9 @@ class ContingenciaController extends Controller
         $storedPaths = [];
 
         try {
-            $solicitacao = DB::transaction(function () use ($request, $operator, $beneficiary, $company, $externalReference, &$storedPaths): ViabilityRequest {
+            $solicitacao = DB::transaction(function () use ($request, $operator, $company, $externalReference, &$storedPaths): ViabilityRequest {
+                $beneficiary = $request->beneficiaryCidadao();
+
                 $solicitacao = ViabilityRequest::create([
                     'origin' => ViabilityRequestOrigin::Contingencia,
                     'service_type_id' => $request->validated('service_type_id'),

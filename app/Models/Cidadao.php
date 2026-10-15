@@ -53,6 +53,33 @@ class Cidadao extends Authenticatable implements MustVerifyEmail
         return $this->password !== null;
     }
 
+    /**
+     * Registro criado pelo servidor (atendimento presencial, contingência ou
+     * recebimento da JUCEB). Sem senha: a pessoa assume o registro ao se
+     * cadastrar no portal com o mesmo CPF. CPF já cadastrado é reaproveitado
+     * sem alterar os dados da pessoa.
+     */
+    public static function criarRegistroDeBalcao(string $cpf, string $nome, ?string $email, ?string $telefone): self
+    {
+        $existente = self::query()->where('cpf', $cpf)->first();
+
+        if ($existente !== null) {
+            return $existente;
+        }
+
+        $emailEmUso = $email !== null && self::query()->where('email', $email)->exists();
+
+        $cidadao = new self([
+            'name' => $nome,
+            'cpf' => $cpf,
+            'email' => ($email === null || $emailEmUso) ? $cpf.'@solicitante.viabiliza.local' : $email,
+            'phone' => $telefone,
+        ]);
+        $cidadao->save();
+
+        return $cidadao;
+    }
+
     public function sendEmailVerificationNotification(): void
     {
         $log = EmailLog::create([

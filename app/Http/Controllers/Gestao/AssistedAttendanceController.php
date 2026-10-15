@@ -10,6 +10,9 @@ use App\Models\Company;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
 use App\Rules\ValidCpf;
+use App\Services\Sedur\SedurContatoIndisponivelException;
+use App\Services\Sedur\SedurContatoNaoEncontradoException;
+use App\Services\Solicitacao\RequerenteDeBalcao;
 use App\Support\Audit\AuditService;
 use App\Support\Representation\CurrentRepresentation;
 use App\Support\Settings;
@@ -32,7 +35,10 @@ use Inertia\Response;
  */
 class AssistedAttendanceController extends Controller
 {
-    public function __construct(private AuditService $audit) {}
+    public function __construct(
+        private AuditService $audit,
+        private RequerenteDeBalcao $requerentes,
+    ) {}
 
     /**
      * Estação de atendimento: iniciar (CPF), banner do atendimento ativo e
@@ -64,9 +70,9 @@ class AssistedAttendanceController extends Controller
     }
 
     /**
-     * Inicia o atendimento informando o CPF do cidadão presente (RN-001). O
-     * cidadão precisa de conta no portal — não fabricamos cidadão (anti-fachada);
-     * sem conta, bloqueia com orientação. O vínculo nasce com expiração curta
+     * Inicia o atendimento informando o CPF do cidadão presente (RN-001). Sem
+     * cadastro, o servidor registra o cidadão no balcão (sem senha) com o nome da
+     * base da SEDUR; sem nome confirmado lá, bloqueia. O vínculo nasce com expiração curta
      * parametrizável (solicitacao.atendimento.expiracao_minutos).
      */
     public function store(Request $request): RedirectResponse
@@ -78,18 +84,17 @@ class AssistedAttendanceController extends Controller
         );
 
         $cpf = (string) preg_replace('/\D/', '', $validated['cpf']);
-        $citizen = Cidadao::query()->where('cpf', $cpf)->first();
 
-        if ($citizen === null) {
-            throw ValidationException::withMessages([
-                'cpf' => 'Não há cidadão cadastrado com este CPF. Oriente o cidadão a criar a conta para ser atendido.',
-            ]);
-        }
-
-        if ($citizen->cpf === $request->user()->cpf) {
+        if ($cpf === $request->user()->cpf) {
             throw ValidationException::withMessages([
                 'cpf' => 'Não é possível iniciar um atendimento para a sua própria conta.',
             ]);
+        }
+
+        try {
+            $citizen = $this->requerentes->resolver($cpf);
+        } catch (SedurContatoNaoEncontradoException|SedurContatoIndisponivelException $e) {
+            throw ValidationException::withMessages(['cpf' => RequerenteDeBalcao::mensagemDeFalha($e)]);
         }
 
         $minutes = (int) Settings::get('solicitacao.atendimento.expiracao_minutos', 30);

@@ -13,6 +13,7 @@ use App\Models\ViabilityRequest;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
@@ -133,6 +134,67 @@ class ContingenciaTest extends TestCase
             'subject_id' => $solicitacao->id,
             'causer_id' => $operador->id,
         ]);
+    }
+
+    public function test_requerente_e_operador_com_o_mesmo_id_ficam_cada_um_no_seu_tipo(): void
+    {
+        $operador = User::factory()->administrador()->withAcceptedLgpdTerm()->create(['id' => 7001]);
+        $beneficiario = Cidadao::factory()->create(['id' => 7001]);
+        $company = Company::factory()->create();
+        $principal = Cnae::factory()->create();
+
+        $this->actingAs($operador, 'gestao')
+            ->post(route('gestao.contingencia.store'), $this->payload($beneficiario, $company, $principal))
+            ->assertSessionHasNoErrors();
+
+        $solicitacao = ViabilityRequest::query()->where('company_id', $company->id)->firstOrFail();
+
+        $this->assertSame($beneficiario->id, $solicitacao->requester_cidadao_id);
+        $this->assertSame(Cidadao::class, $solicitacao->requester->getMorphClass());
+        $this->assertSame(User::class, $solicitacao->created_by_type);
+        $this->assertSame($operador->id, $solicitacao->created_by_id);
+        $this->assertSame($beneficiario->cpf, $solicitacao->requester->cpf);
+    }
+
+    public function test_cpf_sem_cadastro_vira_registro_de_balcao_com_o_nome_da_sedur(): void
+    {
+        config(['sile.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
+        Http::fake(['*/pessoafisica/cpf/*' => Http::response(['nome' => 'Joana do Balcão'])]);
+
+        $operador = $this->operador();
+        $company = Company::factory()->create();
+        $principal = Cnae::factory()->create();
+        $dados = $this->payload(Cidadao::factory()->make(['cpf' => '52998224725']), $company, $principal);
+
+        $this->actingAs($operador, 'gestao')
+            ->post(route('gestao.contingencia.store'), $dados)
+            ->assertSessionHasNoErrors();
+
+        $balcao = Cidadao::query()->where('cpf', '52998224725')->firstOrFail();
+        $solicitacao = ViabilityRequest::query()->where('company_id', $company->id)->firstOrFail();
+
+        $this->assertSame('Joana do Balcão', $balcao->name);
+        $this->assertFalse($balcao->temSenha());
+        $this->assertNull($balcao->email_verified_at);
+        $this->assertSame($balcao->id, $solicitacao->requester_cidadao_id);
+        $this->assertSame(0, User::query()->where('cpf', '52998224725')->count());
+    }
+
+    public function test_cpf_sem_cadastro_e_fora_da_sedur_bloqueia_sem_criar(): void
+    {
+        config(['sile.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
+        Http::fake(['*/pessoafisica/cpf/*' => Http::response([], 404)]);
+
+        $company = Company::factory()->create();
+        $principal = Cnae::factory()->create();
+        $dados = $this->payload(Cidadao::factory()->make(['cpf' => '52998224725']), $company, $principal);
+
+        $this->actingAs($this->operador(), 'gestao')
+            ->post(route('gestao.contingencia.store'), $dados)
+            ->assertSessionHasErrors('beneficiary_cpf');
+
+        $this->assertSame(0, Cidadao::query()->count());
+        $this->assertSame(0, ViabilityRequest::query()->count());
     }
 
     public function test_grava_tipo_imovel_inscricao_e_submete_ao_motor(): void

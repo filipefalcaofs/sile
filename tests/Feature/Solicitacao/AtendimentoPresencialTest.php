@@ -16,6 +16,7 @@ use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Context;
+use Illuminate\Support\Facades\Http;
 use Inertia\Testing\AssertableInertia as Assert;
 use Symfony\Component\HttpFoundation\Response;
 use Tests\TestCase;
@@ -242,17 +243,49 @@ class AtendimentoPresencialTest extends TestCase
         ]);
     }
 
-    public function test_cpf_sem_conta_de_cidadao_bloqueia_sem_criar(): void
+    public function test_cpf_sem_cadastro_vira_registro_de_balcao_com_o_nome_da_sedur(): void
     {
+        config(['sile.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
+        Http::fake(['*/pessoafisica/cpf/*' => Http::response(['nome' => 'Joana do Balcão'])]);
         $attendant = $this->attendant();
 
-        // CPF válido (529.982.247-25), porém sem conta: não fabrica cidadão.
         $this->actingAs($attendant, 'gestao')
+            ->post('/gestao/atendimento', ['cpf' => '52998224725'])
+            ->assertSessionHasNoErrors();
+
+        $balcao = Cidadao::query()->where('cpf', '52998224725')->firstOrFail();
+
+        $this->assertSame('Joana do Balcão', $balcao->name);
+        $this->assertFalse($balcao->temSenha());
+        $this->assertDatabaseHas('assisted_attendances', [
+            'attendant_user_id' => $attendant->id,
+            'citizen_cidadao_id' => $balcao->id,
+        ]);
+    }
+
+    public function test_cpf_sem_cadastro_e_fora_da_sedur_bloqueia_sem_criar(): void
+    {
+        config(['sile.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
+        Http::fake(['*/pessoafisica/cpf/*' => Http::response([], 404)]);
+
+        $this->actingAs($this->attendant(), 'gestao')
             ->from('/gestao/atendimento')
             ->post('/gestao/atendimento', ['cpf' => '52998224725'])
             ->assertSessionHasErrors('cpf');
 
         $this->assertDatabaseCount('assisted_attendances', 0);
+        $this->assertSame(0, Cidadao::query()->count());
+    }
+
+    public function test_servidor_sem_cadastro_de_cidadao_nao_atende_o_proprio_cpf_nem_cria_registro(): void
+    {
+        $attendant = $this->attendant();
+
+        $this->actingAs($attendant, 'gestao')
+            ->post('/gestao/atendimento', ['cpf' => $attendant->cpf])
+            ->assertSessionHasErrors(['cpf' => 'Não é possível iniciar um atendimento para a sua própria conta.']);
+
+        $this->assertSame(0, Cidadao::query()->count());
     }
 
     public function test_acao_em_nome_do_cidadao_registra_os_dois_cpfs(): void

@@ -5,6 +5,7 @@ namespace Tests\Feature\Regin;
 use App\Enums\ViabilityRequestOrigin;
 use App\Enums\ViabilityRequestStatus;
 use App\Jobs\DecidirFluxoExpressoJob;
+use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\ReginRecebimento;
@@ -152,6 +153,22 @@ class ReginProcessoProtocoladorTest extends TestCase
         $this->assertSame(2, $processo->cnaes()->count());
         $this->assertSame('4712100', $processo->primaryCnae()->first()?->code);
         $this->assertNotNull($processo->protocol_number);
+    }
+
+    public function test_ruc_sem_solicitante_usa_requerente_tecnico_e_servidor_como_criador(): void
+    {
+        $servidor = User::query()->orderBy('id')->firstOrFail();
+        Cidadao::factory()->create(['id' => $servidor->id]);
+
+        $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($this->ruc()));
+
+        $requerente = Cidadao::query()->findOrFail($processo->requester_cidadao_id);
+
+        $this->assertSame('00000000000', $requerente->cpf);
+        $this->assertFalse($requerente->temSenha());
+        $this->assertNotSame($servidor->id, $requerente->id);
+        $this->assertSame(User::class, $processo->created_by_type);
+        $this->assertSame($servidor->id, $processo->created_by_id);
     }
 
     public function test_natureza_juridica_do_ruc_vai_para_a_empresa(): void

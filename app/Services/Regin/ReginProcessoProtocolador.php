@@ -2,10 +2,10 @@
 
 namespace App\Services\Regin;
 
-use App\Enums\AuthType;
 use App\Enums\CompanySource;
 use App\Enums\RuleDomain;
 use App\Enums\ViabilityRequestOrigin;
+use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\ReginRecebimento;
@@ -22,10 +22,8 @@ use App\Services\Solicitacao\ProtocolarSolicitacaoService;
 use App\Services\Tratamento\CategoriaEmpresa;
 use App\Services\Tratamento\RespostaPlanilha;
 use App\Services\Tratamento\TratamentoRamoResolver;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
-use RuntimeException;
 use Throwable;
 
 /**
@@ -36,6 +34,9 @@ use Throwable;
 class ReginProcessoProtocolador
 {
     public const CONTINGENCIA_RECEBE = 'regin_recebe';
+
+    /** CPF reservado (inválido) do requerente técnico de processos sem solicitante. */
+    private const CPF_SOLICITANTE_NAO_IDENTIFICADO = '00000000000';
 
     /** TIPO da instituição Prefeitura na tabela do Guia v2.12 (3.27); as demais perguntas do envelope não são da SEDUR. */
     private const INSTITUICAO_PREFEITURA = '2';
@@ -84,7 +85,7 @@ class ReginProcessoProtocolador
             'origin' => ViabilityRequestOrigin::Regin,
             'service_type_id' => $this->tipoServico()->id,
             'company_id' => $this->empresa($rowset)->id,
-            'requester_cidadao_id' => $ator->id,
+            'requester_cidadao_id' => $this->solicitanteNaoIdentificado()->id,
             'created_by_type' => $ator->getMorphClass(),
             'created_by_id' => $ator->id,
             'used_area_m2' => $area,
@@ -116,7 +117,8 @@ class ReginProcessoProtocolador
             return null;
         }
 
-        $ator = $this->atorDaDeclaracao($dados);
+        $ator = $this->ator();
+        $requerente = $this->solicitante($dados) ?? $this->solicitanteNaoIdentificado();
         $cnaePrincipal = $this->cnae((string) $dados->cnaePrincipal);
         $secundarios = [];
 
@@ -132,7 +134,7 @@ class ReginProcessoProtocolador
             'origin' => ViabilityRequestOrigin::Regin,
             'service_type_id' => $this->tipoServicoDeclarado($dados->servico)->id,
             'company_id' => $this->empresaDaDeclaracao($dados, $recebimento->protocolo)->id,
-            'requester_cidadao_id' => $ator->id,
+            'requester_cidadao_id' => $requerente->id,
             'created_by_type' => $ator->getMorphClass(),
             'created_by_id' => $ator->id,
             'used_area_m2' => $dados->area,
@@ -220,24 +222,21 @@ class ReginProcessoProtocolador
         ]);
     }
 
-    private function atorDaDeclaracao(RecebimentoProcesso $dados): User
+    /**
+     * Requerente de um processo sem identificação do solicitante: registro
+     * técnico único (CPF reservado, que nenhuma pessoa tem), nunca um servidor.
+     */
+    private function solicitanteNaoIdentificado(): Cidadao
     {
-        $solicitante = $this->solicitante($dados);
-
-        if ($solicitante !== null) {
-            return $solicitante;
-        }
-
-        $existente = User::query()->orderBy('id')->first();
-
-        if ($existente !== null) {
-            return $existente;
-        }
-
-        throw new RuntimeException('Solicitante ausente e não há usuário para protocolar.');
+        return Cidadao::criarRegistroDeBalcao(
+            self::CPF_SOLICITANTE_NAO_IDENTIFICADO,
+            'Solicitante não identificado (REGIN)',
+            null,
+            null,
+        );
     }
 
-    private function solicitante(RecebimentoProcesso $dados): ?User
+    private function solicitante(RecebimentoProcesso $dados): ?Cidadao
     {
         $cpf = $dados->cpfSolicitante;
         $email = $dados->emailSolicitante;
@@ -256,21 +255,7 @@ class ReginProcessoProtocolador
             return null;
         }
 
-        $porCpf = User::query()->where('cpf', $cpf)->first();
-
-        if ($porCpf !== null) {
-            return $porCpf;
-        }
-
-        $emailEmUso = User::query()->where('email', $email)->exists();
-
-        return User::query()->create([
-            'name' => $nome,
-            'email' => $emailEmUso ? $cpf.'@solicitante.viabiliza.local' : $email,
-            'cpf' => $cpf,
-            'password' => Hash::make(Str::random(40)),
-            'auth_type' => AuthType::Local,
-        ]);
+        return Cidadao::criarRegistroDeBalcao($cpf, $nome, $email, null);
     }
 
     private function tipoServicoDeclarado(?string $servico): ViabilityServiceType
