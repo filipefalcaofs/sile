@@ -100,7 +100,7 @@ class NotificationDispatcher
             'recipient_id' => $recipient->id,
             'channel' => $channel,
             'type' => $type,
-            'status' => CommunicationStatus::Bloqueado,
+            'status' => CommunicationStatus::Desativado,
             'title' => $type->label(),
             'error_message' => 'Destinatário sem e-mail próprio (registro de balcão).',
         ]);

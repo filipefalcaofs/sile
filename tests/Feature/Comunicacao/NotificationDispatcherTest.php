@@ -11,6 +11,8 @@ use App\Models\Parameter;
 use App\Models\User;
 use App\Notifications\Contracts\ProcessNotification;
 use App\Services\Comunicacao\NotificationDispatcher;
+use App\Services\Relatorios\ComunicacoesFalhaService;
+use App\Services\Relatorios\ReportFilters;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
@@ -171,8 +173,10 @@ class NotificationDispatcherTest extends TestCase
         $this->assertDatabaseHas('communications', [
             'recipient_type' => $cidadao->getMorphClass(), 'recipient_id' => $cidadao->id,
             'channel' => CommunicationChannel::Email->value,
-            'status' => CommunicationStatus::Bloqueado->value,
+            'status' => CommunicationStatus::Desativado->value,
         ]);
+        $this->assertSame(0, app(ComunicacoesFalhaService::class)->builder(ReportFilters::fromArray([]))->count());
+        $this->assertDatabaseHas('activity_log', ['log_name' => 'notificacoes', 'result' => 'sem-canal']);
         $this->assertDatabaseHas('communications', [
             'recipient_id' => $cidadao->id,
             'channel' => CommunicationChannel::InApp->value,

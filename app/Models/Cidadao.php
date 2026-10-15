@@ -16,6 +16,7 @@ use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\DB;
 use Spatie\Activitylog\Models\Concerns\CausesActivity;
 
 /**
@@ -81,12 +82,25 @@ class Cidadao extends Authenticatable implements MustVerifyEmail
         ]);
 
         try {
-            $cidadao->save();
+            // Savepoint: no PostgreSQL a violação de unicidade aborta a transação
+            // corrente; aninhada, só o savepoint é desfeito e a releitura segue válida.
+            DB::transaction(fn () => $cidadao->save());
         } catch (UniqueConstraintViolationException $e) {
             // Corrida: outra requisição criou o mesmo CPF (ou e-mail) entre a checagem e o insert.
-            return self::query()->where('cpf', $cpf)->first()
-                ?? self::query()->where('email', $cidadao->email)->first()
-                ?? throw $e;
+            $vencedor = self::query()->where('cpf', $cpf)->first();
+
+            if ($vencedor !== null) {
+                return $vencedor;
+            }
+
+            // Foi o e-mail: refaz uma vez com o endereço técnico; se falhar de novo, relança.
+            $cidadao->email = $cpf.self::SUFIXO_EMAIL_TECNICO;
+
+            try {
+                DB::transaction(fn () => $cidadao->save());
+            } catch (UniqueConstraintViolationException) {
+                return self::query()->where('cpf', $cpf)->first() ?? throw $e;
+            }
         }
 
         return $cidadao;
