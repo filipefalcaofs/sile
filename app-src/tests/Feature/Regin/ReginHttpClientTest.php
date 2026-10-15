@@ -76,6 +76,38 @@ class ReginHttpClientTest extends TestCase
             && ! $request->hasHeader('JWT'));
     }
 
+    public function test_token_que_ja_vem_com_bearer_nao_repete_o_prefixo(): void
+    {
+        Http::fake([
+            '*/acesso/auth' => Http::response(['token' => 'Bearer jwt-abc'], 200),
+            '*/recebe' => Http::response('RECEBIDO_SUCESSO', 200),
+        ]);
+
+        app(ReginHttpClient::class)->enviarParecer(['protocolo' => '1']);
+
+        Http::assertSent(fn ($request) => str_ends_with($request->url(), '/recebe')
+            && $request->hasHeader('Authorization', 'Bearer jwt-abc'));
+    }
+
+    public function test_caminho_da_resposta_vem_do_parametro(): void
+    {
+        Parameter::factory()->create([
+            'key' => 'integrations.regin.caminho_resposta',
+            'group' => 'integracoes',
+            'type' => 'string',
+            'value' => '/resposta/instituicao',
+            'default_value' => '/recebe',
+        ]);
+        Http::fake([
+            '*/acesso/auth' => Http::response(['token' => 'jwt-123'], 200),
+            '*/resposta/instituicao' => Http::response('RECEBIDO_SUCESSO', 200),
+        ]);
+
+        app(ReginHttpClient::class)->enviarParecer(['protocolo' => '1']);
+
+        Http::assertSent(fn ($request) => str_ends_with($request->url(), '/resposta/instituicao'));
+    }
+
     public function test_enviar_parecer_lanca_quando_corpo_nao_e_recebido_sucesso(): void
     {
         Http::fake([

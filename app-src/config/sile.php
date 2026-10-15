@@ -432,6 +432,8 @@ return [
             'usuario' => 'sedur_integracao',
             'senha' => '',
             'cnpj_prefeitura' => '13927801000149',
+            'caminho_resposta' => '/recebe',
+            'codigo_area' => 1,
             'timeout' => 8,
             // Resiliência do job que abre o processo a partir do envelope
             // recebido, espelhando sile.expresso.job. Constante TÉCNICA fora do

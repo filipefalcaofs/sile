@@ -3,6 +3,7 @@
 namespace App\Services\Regin;
 
 use App\Enums\DecisionOutcome;
+use App\Models\ReginRecebimento;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Support\Settings;
@@ -15,7 +16,7 @@ use App\Support\Settings;
  */
 class HttpReginParecerNotifier implements ReginParecerNotifier
 {
-    public function __construct(private ReginHttpClient $client) {}
+    public function __construct(private ReginHttpClient $client, private ReginIntegrationSettings $settings) {}
 
     public function notifyParecer(ViabilityRequest $request, ViabilityDecision $decision): void
     {
@@ -25,7 +26,7 @@ class HttpReginParecerNotifier implements ReginParecerNotifier
     /**
      * @return array<string, mixed>
      */
-    private function envelope(ViabilityRequest $request, ViabilityDecision $decision): array
+    public function envelope(ViabilityRequest $request, ViabilityDecision $decision): array
     {
         $cnpj = (string) Settings::get(
             'integrations.regin.cnpj_prefeitura',
@@ -33,12 +34,15 @@ class HttpReginParecerNotifier implements ReginParecerNotifier
         );
         $protocolo = (string) $request->external_reference;
 
+        // CNPJ/CPF da empresa do processo, como veio no envelope da JUCEB.
+        $cnpjEmpresa = ReginRecebimento::query()->where('protocolo', $protocolo)->latest('id')->value('cnpj_empresa');
+
         return [
             'protocolo' => $protocolo,
             'servico' => 'WsProSol098',
             'cnpjDestino' => $cnpj,
             'cnpjOrigem' => $cnpj,
-            'cnpjEmpresa' => $cnpj,
+            'cnpjEmpresa' => is_string($cnpjEmpresa) && $cnpjEmpresa !== '' ? $cnpjEmpresa : $cnpj,
             'codFuncao' => 110,
             'dataGeracao' => now('America/Bahia')->format('Y-m-d\TH:i:s'),
             'dadosProcesso' => [
@@ -52,6 +56,7 @@ class HttpReginParecerNotifier implements ReginParecerNotifier
                 'ANALISES' => [
                     'AREA' => [
                         [
+                            'CODIGO_AREA' => $this->settings->codigoArea(),
                             'STATUS_ANALISE' => $decision->outcome === DecisionOutcome::Deferida ? 2 : 4,
                             'JUSTIFICATIVA_ANALISE' => $this->justificativa($decision),
                             'DATA_ANALISE' => $decision->decided_at?->format('Ymd') ?? now()->format('Ymd'),
