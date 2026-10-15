@@ -25,7 +25,6 @@ use App\Services\Tratamento\TratamentoRamoResolver;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
-use RuntimeException;
 use Throwable;
 
 /**
@@ -78,7 +77,7 @@ class ReginProcessoProtocolador
             return null;
         }
 
-        $ator = $this->ator();
+        $ator = $this->integracao();
 
         $solicitacao = ViabilityRequest::query()->create([
             'origin' => ViabilityRequestOrigin::Regin,
@@ -115,7 +114,8 @@ class ReginProcessoProtocolador
             return null;
         }
 
-        $ator = $this->atorDaDeclaracao($dados);
+        $ator = $this->integracao();
+        $requerente = $this->requerenteDaDeclaracao($dados);
         $cnaePrincipal = $this->cnae((string) $dados->cnaePrincipal);
         $secundarios = [];
 
@@ -131,7 +131,7 @@ class ReginProcessoProtocolador
             'origin' => ViabilityRequestOrigin::Regin,
             'service_type_id' => $this->tipoServicoDeclarado($dados->servico)->id,
             'company_id' => $this->empresaDaDeclaracao($dados, $recebimento->protocolo)->id,
-            'requester_user_id' => $ator->id,
+            'requester_user_id' => $requerente->id,
             'created_by_user_id' => $ator->id,
             'used_area_m2' => $dados->area,
             'address_street' => $dados->logradouro,
@@ -218,24 +218,42 @@ class ReginProcessoProtocolador
         ]);
     }
 
-    private function atorDaDeclaracao(RecebimentoProcesso $dados): User
+    /**
+     * Quem a JUCEB indicou como solicitante; sem os dados, a conta da integração.
+     */
+    public function requerenteDaDeclaracao(RecebimentoProcesso $dados, bool $criar = true): User
     {
-        $solicitante = $this->solicitante($dados);
+        return $this->solicitante($dados, $criar) ?? $this->integracao();
+    }
 
-        if ($solicitante !== null) {
-            return $solicitante;
-        }
-
-        $existente = User::query()->orderBy('id')->first();
+    /**
+     * Autora técnica dos processos recebidos da JUCEB: nunca uma pessoa real
+     * (nem o primeiro usuário, nem quem está logado). Sem e-mail entregável.
+     */
+    public function integracao(): User
+    {
+        $existente = User::query()->where('email', User::EMAIL_INTEGRACAO_REGIN)->first();
 
         if ($existente !== null) {
             return $existente;
         }
 
-        throw new RuntimeException('Solicitante ausente e não há usuário para protocolar.');
+        $cpf = '00000000000';
+
+        for ($sufixo = 1; User::query()->where('cpf', $cpf)->exists(); $sufixo++) {
+            $cpf = str_pad((string) $sufixo, 11, '0', STR_PAD_LEFT);
+        }
+
+        return User::query()->create([
+            'name' => 'JUCEB (integração REGIN)',
+            'email' => User::EMAIL_INTEGRACAO_REGIN,
+            'cpf' => $cpf,
+            'password' => Hash::make(Str::random(40)),
+            'auth_type' => AuthType::Local,
+        ]);
     }
 
-    private function solicitante(RecebimentoProcesso $dados): ?User
+    private function solicitante(RecebimentoProcesso $dados, bool $criar = true): ?User
     {
         $cpf = $dados->cpfSolicitante;
         $email = $dados->emailSolicitante;
@@ -258,6 +276,10 @@ class ReginProcessoProtocolador
 
         if ($porCpf !== null) {
             return $porCpf;
+        }
+
+        if (! $criar) {
+            return new User;
         }
 
         $emailEmUso = User::query()->where('email', $email)->exists();
@@ -1041,22 +1063,5 @@ class ReginProcessoProtocolador
                 'active' => true,
             ],
         );
-    }
-
-    private function ator(): User
-    {
-        $autenticado = auth('gestao')->user();
-
-        if ($autenticado instanceof User) {
-            return $autenticado;
-        }
-
-        $existente = User::query()->orderBy('id')->first();
-
-        if ($existente !== null) {
-            return $existente;
-        }
-
-        return User::factory()->create();
     }
 }

@@ -15,6 +15,23 @@ class RecebimentoProcessoTest extends TestCase
 {
     use LazilyRefreshDatabase;
 
+    public function test_declaracao_sem_solicitante_nao_vincula_o_processo_a_usuario_existente(): void
+    {
+        $primeiro = User::factory()->create();
+        $declaracao = $this->declaracao($this->cnpjValido());
+        unset($declaracao['cpfSolicitante'], $declaracao['nomeSolicitante'], $declaracao['emailSolicitante']);
+
+        $this->postJson('/api_integracao/recebe', $declaracao)->assertOk();
+
+        $recebimento = ReginRecebimento::query()->where('protocolo', 'BAP-2026-0001')->firstOrFail();
+        $processo = ViabilityRequest::query()->findOrFail($recebimento->viability_request_id);
+
+        $this->assertNotSame($primeiro->id, $processo->requester_user_id);
+        $this->assertNotSame($primeiro->id, $processo->created_by_user_id);
+        $this->assertSame(User::EMAIL_INTEGRACAO_REGIN, $processo->createdBy->email);
+        $this->assertFalse($processo->requester->temEmailEntregavel());
+    }
+
     public function test_post_da_declaracao_abre_processo_com_os_dados_recebidos(): void
     {
         $cnpj = $this->cnpjValido();
@@ -37,6 +54,7 @@ class RecebimentoProcessoTest extends TestCase
         $this->assertSame('Microempresa', $processo->company?->size);
         $this->assertSame('Salvador', $processo->company?->city);
         $this->assertSame('BA', $processo->company?->state);
+        $this->assertSame(User::EMAIL_INTEGRACAO_REGIN, $processo->createdBy?->email);
         $this->assertSame('52998224725', $processo->requester?->cpf);
         $this->assertSame('Maria Souza', $processo->requester?->name);
         $this->assertSame('maria.souza@exemplo.com', $processo->requester?->email);

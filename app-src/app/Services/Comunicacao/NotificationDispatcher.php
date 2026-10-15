@@ -39,6 +39,10 @@ class NotificationDispatcher
 
     public function deliver(User $recipient, ProcessNotification $notification): void
     {
+        if (! $recipient->temEmailEntregavel()) {
+            return;
+        }
+
         $type = $notification->communicationType();
 
         /** @var array<int, CommunicationChannel> $resolved */
@@ -82,7 +86,7 @@ class NotificationDispatcher
      */
     private function mappedChannels(string $type): array
     {
-        $mapa = Settings::get('notificacoes.mapa_canais', config('sile.notificacoes.mapa_canais', []));
+        $mapa = Settings::get('notificacoes.mapa_canais', config('viabiliza.notificacoes.mapa_canais', []));
         $canais = is_array($mapa) ? ($mapa[$type] ?? []) : [];
 
         return array_values(array_filter(array_map(
@@ -94,7 +98,7 @@ class NotificationDispatcher
     private function channelEnabled(CommunicationChannel $channel): bool
     {
         // features.notificacao_email / _in_app / _whatsapp (HU-014). Settings::enabled
-        // já cai no fallback de config/sile.php sem banco migrado.
+        // já cai no fallback de config/viabiliza.php sem banco migrado.
         return Settings::enabled("notificacao_{$channel->value}");
     }
 
