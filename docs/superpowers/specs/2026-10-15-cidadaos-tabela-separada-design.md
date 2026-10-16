@@ -129,9 +129,9 @@ Migrations `2026_10_16_000050` a `2026_10_16_000910`, na ordem:
    a migração para com a lista `tabela.coluna (linhas)` e nada é alterado.
 2. **Critério de conta de cidadão.** Não é AD, não tem `acessar-gestao` por perfil nem como
    permissão direta e não tem perfil além dos de cidadão (`cidadao` e o perfil do parâmetro
-   `portal.perfil_cidadao`, enquanto existir). Conta sem perfil é cidadã. Conta ambígua
-   (perfil herdado sem permissão de gestão, ou `acessar-gestao` só direta) é servidor: fica
-   em `users`, não é copiada nem apagada.
+   `portal.perfil_cidadao`, enquanto existir). Conta sem perfil é cidadã. Conta com
+   `acessar-gestao` direta é servidora com acesso. Conta ambígua (perfil herdado sem
+   permissão de gestão) é servidora: fica em `users`, não é copiada nem apagada.
 3. **Cópia (000300).** As contas de cidadão vão para `cidadaos` com o mesmo `id`. A
    sequência de `cidadaos.id` passa a ficar acima dos ids das duas tabelas.
 4. **Colunas mistas (000350)** viram `*_type` + `*_id`; o tipo vem do critério acima.
@@ -164,8 +164,9 @@ Depois da migração:
   verificado do Gov.br quando não pertence a outro cidadão, e o e-mail passa a verificado.
 - O registro técnico do REGIN (CPF `00000000000`) não é conta: não aparece na gestão e não
   pode ser assumido (o CPF não passa na validação).
-- `down()` de todas as migrations da separação é no-op. A reversão é a restauração do
-  backup do banco feito antes da publicação.
+- `down()` das migrations da separação é no-op, exceto o da 000100, que remove `cidadaos` e
+  `cidadao_password_reset_tokens`. Por isso `migrate:rollback` nunca deve ser usado: a
+  reversão é a restauração do backup do banco feito antes da publicação.
 - O ensaio da migração foi feito em SQLite com dados do schema antigo. Não ficaram provados
   nomes de constraint do PostgreSQL, `setval`, locks e tempo com volume real: ver Rollout.
 
@@ -225,7 +226,7 @@ Depois da migração:
 - **Ator das transições REGIN.** Protocolar e decidir no REGIN continuam registrados em nome
   do primeiro servidor (`FluxoExpressoService::decide` exige `User`); um ator de sistema
   próprio fica como recomendação.
-- **Contas ambíguas ficam em `users`.** Servidor local com perfil sem permissão de gestão
-  (ou só com `acessar-gestao` direta) continua servidor e aparece na aba da gestão com o
-  indicador "sem acesso à gestão". Se for um cidadão de verdade, perde o login do portal até
+- **Contas ambíguas ficam em `users`.** Servidor local com perfil herdado sem permissão de
+  gestão continua servidor e aparece na aba da gestão com o indicador "sem acesso à
+  gestão". Quem tem `acessar-gestao` só direta tem acesso e não recebe o indicador. Se for um cidadão de verdade, perde o login do portal até
   criar conta nova com o mesmo CPF; o histórico dele não se perde.
