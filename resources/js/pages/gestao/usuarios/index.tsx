@@ -32,6 +32,7 @@ interface UserItem {
     auth_type: 'ad' | 'local';
     ad_username: string | null;
     sem_senha: boolean;
+    sem_acesso_gestao: boolean;
 }
 
 interface SolicitacaoItem {
@@ -379,6 +380,11 @@ export default function UsersIndex({ users, filters, counts, roles, solicitacoes
                     {user.sem_senha && (
                         <Badge size="sm" color="light">
                             Registro de balcão
+                        </Badge>
+                    )}
+                    {user.sem_acesso_gestao && (
+                        <Badge size="sm" color="light">
+                            Sem acesso à gestão
                         </Badge>
                     )}
                 </div>

@@ -76,7 +76,7 @@ final class UsuariosReportSource implements ReportSource
     private function query(string $tab, string $search): Builder
     {
         $query = $tab === 'gestao'
-            ? User::query()->equipeSedur()->with('roles:id,name')
+            ? User::query()->with('roles:id,name')
             : Cidadao::query()->semRegistroTecnico();
 
         return $query

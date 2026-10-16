@@ -30,8 +30,8 @@ class UserManagementController extends Controller
 
     /**
      * Listagem com busca por nome ou e-mail (HU-012 CA-01), separada em
-     * abas: equipe SEDUR (servidores, `users`: contas do AD e papéis com a permissão
-     * acessar-gestao, inclusive perfis customizados da HU-013) e usuários do portal
+     * abas: equipe SEDUR (todos os servidores de `users`; quem não tem acessar-gestao vem
+     * com o indicador `sem_acesso_gestao`) e usuários do portal
      * (cidadãos, tabela `cidadaos`, com ou sem senha; sem o registro técnico do REGIN).
      * CPF nunca exposto em claro (LGPD) — apenas os dígitos verificadores.
      */
@@ -79,10 +79,11 @@ class UserManagementController extends Controller
                     'auth_type' => 'local',
                     'ad_username' => null,
                     'sem_senha' => ! $cidadao->temSenha(),
+                    'sem_acesso_gestao' => false,
                 ]);
         } else {
-            $users = $busca(User::query()->equipeSedur())
-                ->with('roles:id,name')
+            $users = $busca(User::query())
+                ->with(['roles:id,name', 'roles.permissions:id,name', 'permissions:id,name'])
                 ->orderBy('name')
                 ->paginate($perPage)
                 ->withQueryString()
@@ -96,6 +97,7 @@ class UserManagementController extends Controller
                     'auth_type' => $user->auth_type->value,
                     'ad_username' => $user->ad_username,
                     'sem_senha' => false,
+                    'sem_acesso_gestao' => $user->semAcessoAGestao(),
                 ]);
         }
 
@@ -106,7 +108,7 @@ class UserManagementController extends Controller
                 'tab' => $tab,
             ],
             'counts' => [
-                'gestao' => User::query()->equipeSedur()->count(),
+                'gestao' => User::query()->count(),
                 'portal' => Cidadao::query()->semRegistroTecnico()->count(),
             ],
             'roles' => Role::orderBy('name')->pluck('name'),

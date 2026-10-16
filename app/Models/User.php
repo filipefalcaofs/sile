@@ -11,7 +11,6 @@ use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
@@ -56,13 +55,12 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Equipe SEDUR: conta do AD corporativo ou com perfil que dá acesso à gestão.
+     * Servidor local sem `acessar-gestao` (nem por perfil nem direta): continua listado na gestão,
+     * mas não entra no console até receber um perfil com acesso. Conta do AD não conta.
      */
-    public function scopeEquipeSedur(Builder $query): Builder
+    public function semAcessoAGestao(): bool
     {
-        return $query->where(fn (Builder $inner) => $inner
-            ->where('auth_type', AuthType::Ad->value)
-            ->orWhereHas('roles.permissions', fn ($permissions) => $permissions->where('name', 'acessar-gestao')));
+        return ! $this->isAdAccount() && ! $this->getAllPermissions()->contains('name', 'acessar-gestao');
     }
 
     public function sendEmailVerificationNotification(): void

@@ -106,6 +106,63 @@ class ManageUsersTest extends TestCase
                 ->where('users.data', fn ($data) => collect($data)->pluck('name')->contains('Fiscal Custom')));
     }
 
+    public function test_servidores_sem_acesso_a_gestao_aparecem_na_aba_gestao_com_indicador(): void
+    {
+        $admin = $this->admin();
+        $fiscal = User::factory()->create(['name' => 'Fiscal Herdado']);
+        $fiscal->assignRole('Fiscal');
+        $direto = User::factory()->create(['name' => 'Permissao Direta']);
+        $direto->givePermissionTo('acessar-gestao');
+        $semPerfil = User::factory()->create(['name' => 'Sem Perfil']);
+        $analista = User::factory()->analista()->create(['name' => 'Analista']);
+        Cidadao::factory()->create(['name' => 'Cidada Portal']);
+
+        $this->actingAs($admin, 'gestao')
+            ->get('/gestao/usuarios')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('users.data', 5)
+                ->where('counts.gestao', 5)
+                ->where('counts.portal', 1)
+                ->where('users.data', fn ($data) => collect($data)->pluck('sem_acesso_gestao', 'name')->sortKeys()->all() === collect([
+                    $admin->name => false,
+                    'Analista' => false,
+                    'Fiscal Herdado' => true,
+                    'Permissao Direta' => false,
+                    'Sem Perfil' => true,
+                ])->sortKeys()->all()));
+
+        $this->actingAs($admin, 'gestao')
+            ->get('/gestao/usuarios?search=fiscal')
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('users.data', 1)
+                ->where('users.data.0.sem_acesso_gestao', true));
+
+        $this->actingAs($admin, 'gestao')
+            ->put("/gestao/usuarios/{$fiscal->id}/inativacao")
+            ->assertRedirect();
+        $this->assertNotNull($fiscal->fresh()->inactivated_at);
+
+        $this->actingAs($admin, 'gestao')
+            ->put("/gestao/usuarios/{$fiscal->id}/papel", ['role' => 'Coordenador'])
+            ->assertRedirect();
+        $this->assertTrue($fiscal->fresh()->hasRole('Coordenador'));
+        $this->assertSame([], $semPerfil->fresh()->getRoleNames()->all());
+        $this->assertTrue($analista->fresh()->hasRole('Analista Terceirizado'));
+    }
+
+    public function test_conta_ad_sem_perfil_nao_leva_o_indicador(): void
+    {
+        $admin = $this->admin();
+        User::factory()->ad('servidor.ad')->create(['name' => 'Servidor AD']);
+
+        $this->actingAs($admin, 'gestao')
+            ->get('/gestao/usuarios?search=Servidor AD')
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('users.data', 1)
+                ->where('users.data.0.sem_acesso_gestao', false));
+    }
+
     public function test_aba_invalida_cai_na_equipe_sedur(): void
     {
         $this->actingAs($this->admin(), 'gestao')

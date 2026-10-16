@@ -3,6 +3,7 @@
 namespace Tests\Feature\Relatorios;
 
 use App\Models\AccessLog;
+use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\Parameter;
 use App\Models\User;
@@ -165,6 +166,23 @@ class RetrofitListagensTest extends TestCase
 
         $this->assertTrue($nomes('gestao')->contains('Servidora AD Sem Papel'));
         $this->assertFalse($nomes('portal')->contains('Servidora AD Sem Papel'));
+    }
+
+    public function test_export_da_aba_gestao_inclui_servidores_sem_acesso_a_gestao(): void
+    {
+        $fiscal = User::factory()->create(['name' => 'Fiscal Herdado Export']);
+        $fiscal->assignRole('Fiscal');
+        User::factory()->create(['name' => 'Sem Perfil Export']);
+        Cidadao::factory()->create(['name' => 'Cidada Export']);
+
+        $conteudo = $this->actingAs($this->admin(), 'gestao')
+            ->get('/gestao/usuarios?formato=csv')
+            ->assertOk()
+            ->streamedContent();
+
+        $this->assertStringContainsString('Fiscal Herdado Export', $conteudo);
+        $this->assertStringContainsString('Sem Perfil Export', $conteudo);
+        $this->assertStringNotContainsString('Cidada Export', $conteudo);
     }
 
     public function test_export_csv_de_usuarios_reflete_busca_rn005(): void
