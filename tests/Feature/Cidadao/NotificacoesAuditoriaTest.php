@@ -6,6 +6,7 @@ use App\Models\Activity;
 use App\Models\Cidadao;
 use App\Models\User;
 use App\Services\Auditoria\AuditTrailQueryService;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -45,10 +46,20 @@ class NotificacoesAuditoriaTest extends TestCase
         return $activity;
     }
 
+    /** Conta de cidadão de antes da separação, já copiada para `cidadaos` com o mesmo id, CPF e senha. */
+    private function contaCopiada(): Cidadao
+    {
+        $conta = User::factory()->create();
+        Cidadao::factory()->create(['id' => $conta->id, 'cpf' => $conta->cpf, 'email' => $conta->email]);
+
+        return Cidadao::query()->findOrFail($conta->id);
+    }
+
     public function test_notificacao_antiga_do_cidadao_passa_a_ser_dele(): void
     {
-        $servidor = User::factory()->create();
-        $cidadao = Cidadao::factory()->create(['id' => $servidor->id + 1000]);
+        $this->seed(RolesAndPermissionsSeeder::class);
+        $servidor = User::factory()->analista()->create();
+        $cidadao = $this->contaCopiada();
 
         $doCidadao = $this->notificar(User::class, $cidadao->id);
         $doServidor = $this->notificar(User::class, $servidor->id);
@@ -61,9 +72,10 @@ class NotificacoesAuditoriaTest extends TestCase
 
     public function test_espelho_de_servidor_com_password_nulo_nao_e_retipado(): void
     {
-        $servidor = User::factory()->create();
-        Cidadao::factory()->semSenha()->create(['id' => $servidor->id]);
-        $migrado = Cidadao::factory()->create(['id' => $servidor->id + 1000]);
+        $this->seed(RolesAndPermissionsSeeder::class);
+        $servidor = User::factory()->analista()->create();
+        Cidadao::factory()->semSenha()->create(['id' => $servidor->id, 'cpf' => $servidor->cpf, 'email' => $servidor->email]);
+        $migrado = $this->contaCopiada();
 
         $doServidor = $this->notificar(User::class, $servidor->id);
         $doMigrado = $this->notificar(User::class, $migrado->id);
@@ -82,6 +94,29 @@ class NotificacoesAuditoriaTest extends TestCase
         $migradoLinha = Activity::query()->findOrFail($atividadeMigrado->id);
         $this->assertSame(Cidadao::class, $migradoLinha->causer_type);
         $this->assertSame(Cidadao::class, $migradoLinha->subject_type);
+    }
+
+    /** Mesma noção de "conta copiada" da migration final: espelho sem senha e par id igual/CPF diferente não são retipados. */
+    public function test_so_retipa_contas_copiadas_com_mesmo_id_e_cpf(): void
+    {
+        $cidadaoSemUsers = Cidadao::factory()->create(['id' => 9000]);
+        $semCopiaDeSenha = User::factory()->create();
+        Cidadao::factory()->semSenha()->create(['id' => $semCopiaDeSenha->id, 'cpf' => $semCopiaDeSenha->cpf, 'email' => $semCopiaDeSenha->email]);
+        $outroCpf = User::factory()->create();
+        Cidadao::factory()->create(['id' => $outroCpf->id, 'cpf' => '52998224725']);
+        $copiado = $this->contaCopiada();
+
+        $notificacoes = [];
+        foreach ([$cidadaoSemUsers->id, $semCopiaDeSenha->id, $outroCpf->id, $copiado->id] as $id) {
+            $notificacoes[$id] = $this->notificar(User::class, $id);
+            $this->atividade(['causer_type' => User::class, 'causer_id' => $id, 'subject_type' => User::class, 'subject_id' => $id]);
+        }
+
+        $this->migrar();
+
+        $this->assertSame([$copiado->id], DB::table('notifications')->where('notifiable_type', Cidadao::class)->pluck('notifiable_id')->map(fn ($id) => (int) $id)->all());
+        $this->assertSame([$copiado->id], DB::table('activity_log')->where('log_name', 'teste')->where('causer_type', Cidadao::class)->pluck('causer_id')->map(fn ($id) => (int) $id)->all());
+        $this->assertSame([$copiado->id], DB::table('activity_log')->where('log_name', 'teste')->where('subject_type', Cidadao::class)->pluck('subject_id')->map(fn ($id) => (int) $id)->all());
     }
 
     public function test_filtro_de_usuario_da_retaguarda_nao_traz_atividades_de_cidadao_com_mesmo_id(): void

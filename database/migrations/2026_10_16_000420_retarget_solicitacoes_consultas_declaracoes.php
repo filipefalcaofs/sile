@@ -8,6 +8,7 @@ return new class extends Migration
     public function up(): void
     {
         IdentidadeSeparada::retargetar('viability_requests', 'requester_user_id', 'requester_cidadao_id', false, 'restrict');
+        IdentidadeSeparada::anularReferenciasDeNaoCidadaos('viability_queries', 'user_id');
         IdentidadeSeparada::retargetar('viability_queries', 'user_id', 'cidadao_id', true, 'set null');
         IdentidadeSeparada::retargetar('service_declaration_acceptances', 'user_id', 'cidadao_id', false, 'cascade');
     }

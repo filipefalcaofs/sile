@@ -2,19 +2,21 @@
 
 use App\Models\Cidadao;
 use App\Models\User;
+use App\Support\Migration\IdentidadeSeparada;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
     /**
-     * Só contas migradas (cidadaos.password preenchido, mesmo id da cópia) são
-     * retipadas; espelhos de servidor (password nulo) continuam como User.
+     * Só contas copiadas (`IdentidadeSeparada::contasCopiadas`, a mesma noção da migration
+     * final: senha em cidadaos e mesmo id e CPF em users) são retipadas; espelhos de
+     * servidor (password nulo) continuam como User.
      * A coluna acting_for_cidadao_id já foi renomeada na migration de colunas mistas.
      */
     public function up(): void
     {
-        $contas = fn () => DB::table('cidadaos')->whereNotNull('password')->select('id');
+        $contas = fn () => IdentidadeSeparada::contasCopiadas();
 
         DB::table('notifications')
             ->where('notifiable_type', User::class)

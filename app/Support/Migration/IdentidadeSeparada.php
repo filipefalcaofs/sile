@@ -24,8 +24,33 @@ final class IdentidadeSeparada
     ];
 
     /**
-     * Contas que não são de servidor: não AD e sem perfil com `acessar-gestao`
-     * (o inverso de `User::scopeEquipeSedur`).
+     * Colunas do schema antigo com FK para `users` que a separação converte (só de cidadão ou
+     * mistas). Podem citar cidadãos legitimamente, então ficam fora da checagem de conflito.
+     */
+    public const COLUNAS_CONVERTIDAS = [
+        'viability_requests.requester_user_id',
+        'viability_requests.created_by_user_id',
+        'viability_requests.cancelled_by_user_id',
+        'viability_request_documents.uploaded_by_user_id',
+        'viability_request_transitions.actor_user_id',
+        'access_logs.user_id',
+        'legal_term_acceptances.user_id',
+        'communications.recipient_user_id',
+        'company_user.user_id',
+        'gov_br_accounts.user_id',
+        'procurations.grantor_user_id',
+        'procurations.attorney_user_id',
+        'procurations.revoked_by_user_id',
+        'assisted_attendances.citizen_user_id',
+        'activity_log.acting_for_user_id',
+        'viability_queries.user_id',
+        'service_declaration_acceptances.user_id',
+    ];
+
+    /**
+     * Contas de cidadão: não AD, sem `acessar-gestao` (por perfil ou permissão direta) e sem
+     * nenhum perfil além dos de cidadão (`perfisDeCidadao`). Conta sem perfil é cidadã. Conta
+     * com outro perfil, mesmo sem permissão (perfil herdado ainda não configurado), é de servidor.
      */
     public static function consultaContasDeCidadao(): Builder
     {
@@ -40,7 +65,108 @@ final class IdentidadeSeparada
                     ->whereColumn('model_has_roles.model_id', 'users.id')
                     ->where('model_has_roles.model_type', User::class)
                     ->where('permissions.name', 'acessar-gestao');
+            })
+            ->whereNotExists(function ($q) {
+                $q->select(DB::raw(1))
+                    ->from('model_has_permissions')
+                    ->join('permissions', 'permissions.id', '=', 'model_has_permissions.permission_id')
+                    ->whereColumn('model_has_permissions.model_id', 'users.id')
+                    ->where('model_has_permissions.model_type', User::class)
+                    ->where('permissions.name', 'acessar-gestao');
+            })
+            ->whereNotExists(function ($q) {
+                $q->select(DB::raw(1))
+                    ->from('model_has_roles')
+                    ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+                    ->whereColumn('model_has_roles.model_id', 'users.id')
+                    ->where('model_has_roles.model_type', User::class)
+                    ->whereNotIn('roles.name', self::perfisDeCidadao());
             });
+    }
+
+    /**
+     * `cidadao` e o perfil do parâmetro `portal.perfil_cidadao` (valor ou, sem valor, o padrão),
+     * enquanto o parâmetro existir (a migration 000910 o remove).
+     *
+     * @return list<string>
+     */
+    public static function perfisDeCidadao(): array
+    {
+        $perfis = ['cidadao'];
+
+        if (Schema::hasTable('parameters')) {
+            $parametro = DB::table('parameters')->where('key', 'portal.perfil_cidadao')->first(['value', 'default_value']);
+            $perfil = trim((string) ($parametro->value ?? $parametro->default_value ?? ''));
+
+            if ($perfil !== '') {
+                $perfis[] = $perfil;
+            }
+        }
+
+        return array_values(array_unique($perfis));
+    }
+
+    /**
+     * Conta copiada: tem senha em `cidadaos` e há em `users` uma conta de cidadão com o mesmo
+     * id E o mesmo CPF. Só o id não basta: as sequências das duas tabelas podem gerar o mesmo
+     * número para pessoas diferentes depois da cópia. Espelhos de servidor (sem senha) e
+     * servidores que assumiram o espelho no portal ficam fora.
+     */
+    public static function contasCopiadas(): Builder
+    {
+        return DB::table('cidadaos')
+            ->select('cidadaos.id')
+            ->whereNotNull('cidadaos.password')
+            ->whereExists(
+                self::consultaContasDeCidadao()
+                    ->select(DB::raw(1))
+                    ->whereColumn('users.id', 'cidadaos.id')
+                    ->whereColumn('users.cpf', 'cidadaos.cpf')
+            );
+    }
+
+    /**
+     * Colunas com FK para `users` (fora de `COLUNAS_CONVERTIDAS`) que citam algum id de `$ids`.
+     *
+     * @return list<string> tabela.coluna (linhas)
+     */
+    public static function colunasDeServidorQueCitam(Builder $ids): array
+    {
+        $conflitos = [];
+
+        foreach (Schema::getTableListing(schemaQualified: false) as $tabela) {
+            foreach (Schema::getForeignKeys($tabela) as $chave) {
+                if ($chave['foreign_table'] !== 'users') {
+                    continue;
+                }
+
+                foreach ($chave['columns'] as $coluna) {
+                    if (in_array("{$tabela}.{$coluna}", self::COLUNAS_CONVERTIDAS, true)) {
+                        continue;
+                    }
+
+                    $linhas = DB::table($tabela)->whereIn($coluna, clone $ids)->count();
+
+                    if ($linhas > 0) {
+                        $conflitos[] = "{$tabela}.{$coluna} ({$linhas})";
+                    }
+                }
+            }
+        }
+
+        return $conflitos;
+    }
+
+    /**
+     * Anula em `$tabela.$coluna` (nullable) as referências a contas que não são de cidadão,
+     * para que o retarget não crie espelho de servidor (ex.: consulta feita por servidor logado).
+     */
+    public static function anularReferenciasDeNaoCidadaos(string $tabela, string $coluna): void
+    {
+        DB::table($tabela)
+            ->whereNotNull($coluna)
+            ->whereNotIn($coluna, self::consultaContasDeCidadao()->select('id'))
+            ->update([$coluna => null]);
     }
 
     public static function copiarContasDeCidadao(): void
@@ -184,7 +310,8 @@ final class IdentidadeSeparada
         Schema::table($tabela, fn (Blueprint $t) => $t->renameColumn($antiga, "{$base}_id"));
 
         if ($indices === []) {
-            Schema::table($tabela, fn (Blueprint $t) => $t->index(["{$base}_type", "{$base}_id"]));
+            $colunas = ["{$base}_type", "{$base}_id"];
+            Schema::table($tabela, fn (Blueprint $t) => $t->index($colunas, self::nomeDeIndice($tabela, $colunas, 'index')));
         } else {
             self::recriarIndices($tabela, $indices, $antiga, ["{$base}_type", "{$base}_id"]);
         }
@@ -214,7 +341,8 @@ final class IdentidadeSeparada
     }
 
     /**
-     * Recria com os nomes padrão do Laravel, trocando `$antiga` por `$substituta` na mesma posição.
+     * Recria trocando `$antiga` por `$substituta` na mesma posição, sempre com nome explícito
+     * (`nomeDeIndice`), para o resultado ser o mesmo no PostgreSQL e no SQLite.
      *
      * @param  list<array{name: string, columns: list<string>, unique: bool, primary: bool}>  $indices
      * @param  list<string>  $substituta
@@ -225,14 +353,35 @@ final class IdentidadeSeparada
             return;
         }
 
-        Schema::table($tabela, function (Blueprint $t) use ($indices, $antiga, $substituta) {
+        Schema::table($tabela, function (Blueprint $t) use ($tabela, $indices, $antiga, $substituta) {
             foreach ($indices as $indice) {
                 $colunas = [];
                 foreach ($indice['columns'] as $coluna) {
                     array_push($colunas, ...($coluna === $antiga ? $substituta : [$coluna]));
                 }
-                $indice['unique'] ? $t->unique($colunas) : $t->index($colunas);
+                $indice['unique']
+                    ? $t->unique($colunas, self::nomeDeIndice($tabela, $colunas, 'unique'))
+                    : $t->index($colunas, self::nomeDeIndice($tabela, $colunas, 'index'));
             }
         });
+    }
+
+    /**
+     * Nome padrão do Laravel quando cabe nos 63 caracteres do PostgreSQL (que trunca o excedente);
+     * senão `<tabela>_<hash das colunas>_<tipo>`, com a tabela encurtada se preciso.
+     *
+     * @param  list<string>  $colunas
+     */
+    private static function nomeDeIndice(string $tabela, array $colunas, string $tipo): string
+    {
+        $padrao = str_replace(['-', '.'], '_', strtolower($tabela.'_'.implode('_', $colunas).'_'.$tipo));
+
+        if (strlen($padrao) <= 63) {
+            return $padrao;
+        }
+
+        $sufixo = '_'.substr(md5(implode(',', $colunas)), 0, 8).'_'.$tipo;
+
+        return substr($tabela, 0, 63 - strlen($sufixo)).$sufixo;
     }
 }

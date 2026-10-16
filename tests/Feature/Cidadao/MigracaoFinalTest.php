@@ -60,6 +60,23 @@ class MigracaoFinalTest extends TestCase
         $this->assertSame([], $servidorAd->fresh()->getRoleNames()->all());
     }
 
+    public function test_servidor_so_com_perfil_herdado_sem_permissao_nao_e_apagado(): void
+    {
+        $fiscal = User::factory()->create();
+        $fiscal->assignRole('Fiscal');
+        DB::table('sector_user')->insert(['user_id' => $fiscal->id, 'sector_id' => Sector::factory()->create()->id]);
+        $diretoComGestao = User::factory()->create();
+        $diretoComGestao->givePermissionTo('acessar-gestao');
+
+        IdentidadeSeparada::copiarContasDeCidadao();
+        $this->rodarMigracao();
+
+        $this->assertSame([$fiscal->id, $diretoComGestao->id], DB::table('users')->orderBy('id')->pluck('id')->all());
+        $this->assertSame(0, DB::table('cidadaos')->count());
+        $this->assertTrue($fiscal->fresh()->hasRole('Fiscal'));
+        $this->assertTrue($diretoComGestao->fresh()->hasDirectPermission('acessar-gestao'));
+    }
+
     public function test_remove_o_papel_cidadao_e_suas_permissoes(): void
     {
         User::factory()->papelCidadaoLegado()->create();

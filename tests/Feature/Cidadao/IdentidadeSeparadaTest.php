@@ -194,13 +194,80 @@ class IdentidadeSeparadaTest extends TestCase
 
     public function test_tabela_real_de_aceites_migrada_tem_o_tipo_no_unique(): void
     {
-        $indices = $this->indices('legal_term_acceptances');
+        $unique = collect($this->indices('legal_term_acceptances'))
+            ->first(fn (array $indice) => $indice['columns'] === ['accepted_by_type', 'accepted_by_id', 'legal_term_id']);
+
+        $this->assertNotNull($unique);
+        $this->assertTrue($unique['unique']);
+        $this->assertFalse(Schema::hasColumn('legal_term_acceptances', 'user_id'));
+    }
+
+    /** O PostgreSQL trunca nomes acima de 63 caracteres; os índices recriados já nascem curtos. */
+    public function test_indices_recriados_nas_tabelas_convertidas_tem_ate_63_caracteres(): void
+    {
+        $tabelas = [
+            'legal_term_acceptances', 'access_logs', 'communications', 'company_user', 'procurations',
+            'viability_requests', 'viability_request_documents', 'viability_request_transitions', 'viability_queries',
+        ];
+        $recriados = 0;
+
+        foreach ($tabelas as $tabela) {
+            foreach ($this->indices($tabela) as $nome => $indice) {
+                $convertido = collect($indice['columns'])->contains(fn (string $coluna) => str_ends_with($coluna, 'cidadao_id') || str_ends_with($coluna, '_type'));
+                if ($convertido) {
+                    $recriados++;
+                    $this->assertLessThanOrEqual(63, strlen($nome), "{$tabela}: {$nome}");
+                }
+            }
+        }
+
+        $this->assertGreaterThan(5, $recriados);
+    }
+
+    public function test_nome_longo_de_indice_recriado_e_encurtado_e_continua_achavel_pelas_colunas(): void
+    {
+        $tabela = 'rascunho_identidade_com_nome_bem_comprido';
+        Schema::create($tabela, function (Blueprint $t) {
+            $t->id();
+            $t->foreignId('user_id')->constrained('users');
+            $t->unsignedBigInteger('termo_juridico_aceito_id');
+            $t->unique(['user_id', 'termo_juridico_aceito_id']);
+        });
+
+        IdentidadeSeparada::paraMorph($tabela, 'user_id', 'aceito_por');
+
+        $indices = $this->indices($tabela);
+        $this->assertCount(1, $indices);
+        $nome = array_key_first($indices);
+        $this->assertLessThanOrEqual(63, strlen($nome));
+        $this->assertSame(['aceito_por_type', 'aceito_por_id', 'termo_juridico_aceito_id'], $indices[$nome]['columns']);
+        $this->assertTrue($indices[$nome]['unique']);
+    }
+
+    public function test_anular_referencias_de_nao_cidadaos_evita_espelho_do_servidor(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+        $this->criarRascunho(true);
+        $cidadao = User::factory()->papelCidadaoLegado()->create();
+        $servidor = User::factory()->analista()->create();
+        $fiscal = User::factory()->create();
+        $fiscal->assignRole('Fiscal');
+        DB::table(self::TABELA)->insert([
+            ['user_id' => $cidadao->id, 'assunto' => 'c'],
+            ['user_id' => $servidor->id, 'assunto' => 's'],
+            ['user_id' => $fiscal->id, 'assunto' => 'f'],
+            ['user_id' => null, 'assunto' => 'n'],
+        ]);
+        IdentidadeSeparada::copiarContasDeCidadao();
+
+        IdentidadeSeparada::anularReferenciasDeNaoCidadaos(self::TABELA, 'user_id');
+        IdentidadeSeparada::retargetar(self::TABELA, 'user_id', 'cidadao_id', true, 'set null');
 
         $this->assertSame(
-            ['accepted_by_type', 'accepted_by_id', 'legal_term_id'],
-            $indices['legal_term_acceptances_accepted_by_type_accepted_by_id_legal_term_id_unique']['columns'],
+            ['c' => $cidadao->id, 'f' => null, 'n' => null, 's' => null],
+            DB::table(self::TABELA)->orderBy('assunto')->pluck('cidadao_id', 'assunto')->map(fn ($id) => $id === null ? null : (int) $id)->all(),
         );
-        $this->assertFalse(Schema::hasColumn('legal_term_acceptances', 'user_id'));
+        $this->assertSame([$cidadao->id], DB::table('cidadaos')->pluck('id')->all());
     }
 
     public function test_espelhar_orfaos_espelha_so_os_ausentes_e_e_idempotente(): void
