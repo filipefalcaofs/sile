@@ -48,7 +48,7 @@ class GovBrAuthService
 
         if ($user !== null) {
             $this->ensureActive($user);
-            $this->garantirSenha($user);
+            $this->assumirRegistroDeBalcao($user, $claims);
             $this->syncAccount($user, $claims, $level);
 
             return $user;
@@ -221,14 +221,32 @@ class GovBrAuthService
         });
     }
 
-    /** O provider de sessão só resolve cidadão com senha; registro de balcão entra por GOV.BR com senha aleatória. */
-    private function garantirSenha(Cidadao $cidadao): void
+    /**
+     * Registro de balcão (sem senha) assumido pelo GOV.BR: ganha senha aleatória, porque o provider
+     * de sessão só resolve cidadão com senha, e o e-mail fica verificado, porque a identidade foi
+     * provada pelo GOV.BR. O e-mail verificado do GOV.BR substitui o do registro quando não é de
+     * outro cidadão.
+     *
+     * @param  array<string, mixed>  $claims
+     */
+    private function assumirRegistroDeBalcao(Cidadao $cidadao, array $claims): void
     {
         if ($cidadao->temSenha()) {
             return;
         }
 
-        $cidadao->forceFill(['password' => Str::password(40)])->save();
+        $email = strtolower(trim((string) ($claims['email'] ?? '')));
+        $emailVerificado = filter_var($claims['email_verified'] ?? false, FILTER_VALIDATE_BOOLEAN);
+        $emailLivre = $email !== '' && $emailVerificado && ! Cidadao::query()
+            ->where('email', $email)
+            ->whereKeyNot($cidadao->getKey())
+            ->exists();
+
+        $cidadao->forceFill([
+            'password' => Str::password(40),
+            'email' => $emailLivre ? $email : $cidadao->email,
+            'email_verified_at' => now(),
+        ])->save();
     }
 
     private function maskCpf(string $cpf): string

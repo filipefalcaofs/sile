@@ -225,6 +225,70 @@ class GovBrLoginTest extends TestCase
         $this->assertNotNull($user->govBrAccount);
     }
 
+    public function test_registro_de_balcao_assumido_pelo_govbr_grava_email_verificado_e_acessa_o_painel(): void
+    {
+        $this->enableGovBr();
+
+        $registro = Cidadao::factory()->semSenha()->withAcceptedLgpdTerm()->create([
+            'email' => self::VALID_CPF.Cidadao::SUFIXO_EMAIL_TECNICO,
+            'cpf' => self::VALID_CPF,
+        ]);
+
+        $this->mockSocialiteUser($this->govBrClaims(['email' => 'Pessoa.Real@Example.com']));
+
+        $this->get('/portal/login/govbr/callback?code=abc&state=xyz')
+            ->assertRedirect(route('portal.dashboard'));
+
+        $this->assertAuthenticatedAs($registro);
+        $registro->refresh();
+        $this->assertSame('pessoa.real@example.com', $registro->email);
+        $this->assertTrue($registro->hasVerifiedEmail());
+        $this->assertTrue($registro->temSenha());
+
+        $this->get('/portal/painel')->assertOk();
+    }
+
+    public function test_registro_de_balcao_assumido_pelo_govbr_mantem_email_se_o_do_govbr_e_de_outro_cidadao(): void
+    {
+        $this->enableGovBr();
+
+        Cidadao::factory()->create(['email' => 'cidada.govbr@example.com']);
+        $registro = Cidadao::factory()->semSenha()->withAcceptedLgpdTerm()->create([
+            'email' => self::VALID_CPF.Cidadao::SUFIXO_EMAIL_TECNICO,
+            'cpf' => self::VALID_CPF,
+        ]);
+
+        $this->mockSocialiteUser($this->govBrClaims());
+
+        $this->get('/portal/login/govbr/callback?code=abc&state=xyz')
+            ->assertRedirect(route('portal.dashboard'));
+
+        $registro->refresh();
+        $this->assertSame(self::VALID_CPF.Cidadao::SUFIXO_EMAIL_TECNICO, $registro->email);
+        $this->assertTrue($registro->hasVerifiedEmail());
+
+        $this->get('/portal/painel')->assertOk();
+    }
+
+    public function test_registro_de_balcao_assumido_sem_email_do_govbr_fica_verificado(): void
+    {
+        $this->enableGovBr();
+
+        $registro = Cidadao::factory()->semSenha()->withAcceptedLgpdTerm()->create(['cpf' => self::VALID_CPF]);
+        $emailOriginal = $registro->email;
+        $claims = $this->govBrClaims();
+        unset($claims['email'], $claims['email_verified']);
+        $this->mockSocialiteUser($claims);
+
+        $this->get('/portal/login/govbr/callback?code=abc&state=xyz')
+            ->assertRedirect(route('portal.dashboard'));
+
+        $registro->refresh();
+        $this->assertSame($emailOriginal, $registro->email);
+        $this->assertTrue($registro->hasVerifiedEmail());
+        $this->get('/portal/painel')->assertOk();
+    }
+
     public function test_login_govbr_de_usuario_existente_dispensa_email_do_govbr(): void
     {
         $this->enableGovBr();
