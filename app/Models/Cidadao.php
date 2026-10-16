@@ -9,7 +9,6 @@ use Database\Factories\CidadaoFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
@@ -34,11 +33,6 @@ class Cidadao extends Authenticatable implements MustVerifyEmail
     /** Sufixo do e-mail técnico de registros de balcão sem e-mail próprio. */
     public const SUFIXO_EMAIL_TECNICO = '@solicitante.viabiliza.local';
 
-    /** CPF reservado do registro técnico "solicitante não identificado" (REGIN); não é conta. */
-    public const CPF_TECNICO = '00000000000';
-
-    public const NOME_TECNICO = 'Solicitante não identificado (REGIN)';
-
     protected $table = 'cidadaos';
 
     /**
@@ -51,17 +45,6 @@ class Cidadao extends Authenticatable implements MustVerifyEmail
             'inactivated_at' => 'datetime',
             'password' => 'hashed',
         ];
-    }
-
-    /**
-     * Contas listáveis na gestão: tudo, menos o registro técnico do REGIN.
-     *
-     * @param  Builder<self>  $query
-     * @return Builder<self>
-     */
-    public function scopeSemRegistroTecnico(Builder $query): Builder
-    {
-        return $query->where('cpf', '!=', self::CPF_TECNICO);
     }
 
     public function isInactive(): bool
@@ -129,13 +112,12 @@ class Cidadao extends Authenticatable implements MustVerifyEmail
         return $cpf.self::SUFIXO_EMAIL_TECNICO;
     }
 
-    /**
-     * Requerente das solicitações do REGIN sem solicitante identificado: registro
-     * técnico único (CPF reservado, que nenhuma pessoa tem), nunca um servidor.
-     */
-    public static function tecnicoDoRegin(): self
+    /** E-mail em domínio reservado (`.invalid`) não recebe mensagem (mesma regra de User). */
+    public function temEmailEntregavel(): bool
     {
-        return self::criarRegistroDeBalcao(self::CPF_TECNICO, self::NOME_TECNICO, null, null);
+        $email = mb_strtolower((string) $this->email);
+
+        return $email !== '' && ! str_ends_with($email, '.invalid');
     }
 
     public function sendEmailVerificationNotification(): void

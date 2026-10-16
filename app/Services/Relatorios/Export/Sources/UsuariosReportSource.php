@@ -77,7 +77,7 @@ final class UsuariosReportSource implements ReportSource
     {
         $query = $tab === 'gestao'
             ? User::query()->with('roles:id,name')
-            : Cidadao::query()->semRegistroTecnico();
+            : Cidadao::query();
 
         return $query
             ->when($search !== '', function ($query) use ($search): void {

@@ -4,7 +4,6 @@ namespace App\Support\Migration;
 
 use App\Models\Cidadao;
 use App\Models\User;
-use Closure;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -245,7 +244,7 @@ final class IdentidadeSeparada
      * Troca `$antiga` (FK para users) por `$nova` (FK para cidadaos), mantendo os valores.
      * Índices que citavam a coluna são derrubados pelo nome real e recriados sobre a coluna nova.
      */
-    public static function retargetar(string $tabela, string $antiga, string $nova, bool $nullable, string $onDelete = 'cascade', ?Closure $semChave = null): void
+    public static function retargetar(string $tabela, string $antiga, string $nova, bool $nullable, string $onDelete = 'cascade'): void
     {
         if (strtolower($onDelete) === 'set null' && ! $nullable) {
             throw new InvalidArgumentException("onDelete 'set null' exige coluna nullable ({$tabela}.{$antiga}).");
@@ -256,10 +255,6 @@ final class IdentidadeSeparada
         self::derrubarIndices($tabela, $indices);
         Schema::table($tabela, fn (Blueprint $t) => $t->dropForeign([$antiga]));
 
-        if ($semChave !== null) {
-            $semChave();
-        }
-
         self::espelharOrfaos($tabela, $antiga);
         Schema::table($tabela, fn (Blueprint $t) => $t->renameColumn($antiga, $nova));
         Schema::table($tabela, function (Blueprint $t) use ($nova, $onDelete) {
@@ -269,52 +264,21 @@ final class IdentidadeSeparada
     }
 
     /**
-     * Requerente das solicitações. O REGIN antigo gravava o primeiro servidor como requerente
-     * de todo recebimento sem solicitante: essas linhas (origem `regin`, requerente que não é
-     * conta de cidadão) passam para o registro técnico do REGIN, sem espelhar o servidor.
+     * Requerente das solicitações (opcional desde 2026_10_15_192821; FK sem cascata, como a
+     * original). O REGIN antigo gravava um servidor (o primeiro, a conta da integração ou de
+     * suporte) como requerente do recebimento sem solicitante: nas linhas de origem `regin`
+     * cujo requerente não é conta de cidadão o requerente vira NULL, como o tronco grava hoje.
      * Servidor requerente de solicitação de outra origem continua com espelho.
      */
     public static function retargetarRequerentes(string $tabela = 'viability_requests'): void
     {
-        self::retargetar($tabela, 'requester_user_id', 'requester_cidadao_id', false, 'restrict', function () use ($tabela) {
-            $doRegin = fn () => DB::table($tabela)
-                ->where('origin', 'regin')
-                ->whereNotIn('requester_user_id', self::consultaContasDeCidadao()->select('id'));
+        DB::table($tabela)
+            ->where('origin', 'regin')
+            ->whereNotNull('requester_user_id')
+            ->whereNotIn('requester_user_id', self::consultaContasDeCidadao()->select('id'))
+            ->update(['requester_user_id' => null]);
 
-            if (! $doRegin()->exists()) {
-                return;
-            }
-
-            $doRegin()->update(['requester_user_id' => self::garantirRegistroTecnico()]);
-        });
-    }
-
-    /**
-     * Mesmo registro de `Cidadao::tecnicoDoRegin()`, criado por SQL e com id acima dos de
-     * `users` e `cidadaos`, para não coincidir com o id de um servidor ainda não espelhado.
-     */
-    public static function garantirRegistroTecnico(): int
-    {
-        $existente = DB::table('cidadaos')->where('cpf', Cidadao::CPF_TECNICO)->value('id');
-
-        if ($existente !== null) {
-            return (int) $existente;
-        }
-
-        $id = max((int) DB::table('cidadaos')->max('id'), (int) DB::table('users')->max('id')) + 1;
-
-        DB::table('cidadaos')->insert([
-            'id' => $id,
-            'name' => Cidadao::NOME_TECNICO,
-            'cpf' => Cidadao::CPF_TECNICO,
-            'email' => Cidadao::emailTecnico(Cidadao::CPF_TECNICO),
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        self::acertarSequencia();
-
-        return $id;
+        self::retargetar($tabela, 'requester_user_id', 'requester_cidadao_id', true, 'restrict');
     }
 
     /**

@@ -5,6 +5,7 @@ namespace Tests\Feature\Cidadao;
 use App\Models\Activity;
 use App\Models\Cidadao;
 use App\Models\User;
+use App\Services\Regin\ReginProcessoProtocolador;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -42,14 +43,10 @@ class GestaoCidadaosTest extends TestCase
                 ->where('counts.gestao', 1));
     }
 
-    public function test_aba_portal_lista_cidadao_sem_senha_marcado_e_exclui_registro_tecnico(): void
+    public function test_aba_portal_lista_cidadao_sem_senha_marcado_e_nao_lista_a_conta_da_integracao(): void
     {
         Cidadao::factory()->semSenha()->create(['name' => 'Registro Balcão']);
-        Cidadao::factory()->semSenha()->create([
-            'name' => 'Solicitante técnico',
-            'cpf' => Cidadao::CPF_TECNICO,
-            'email' => Cidadao::CPF_TECNICO.Cidadao::SUFIXO_EMAIL_TECNICO,
-        ]);
+        app(ReginProcessoProtocolador::class)->integracao();
 
         $this->actingAs($this->admin(), 'gestao')
             ->get('/gestao/usuarios?tab=portal')
@@ -109,18 +106,17 @@ class GestaoCidadaosTest extends TestCase
         $this->assertFalse($cidadao->fresh()->isInactive());
     }
 
-    public function test_registro_tecnico_do_regin_nao_pode_ser_inativado(): void
+    public function test_conta_da_integracao_regin_nao_e_alcancada_pela_rota_de_cidadaos(): void
     {
-        $tecnico = Cidadao::factory()->semSenha()->create([
-            'cpf' => Cidadao::CPF_TECNICO,
-            'email' => Cidadao::CPF_TECNICO.Cidadao::SUFIXO_EMAIL_TECNICO,
-        ]);
+        $admin = $this->admin();
+        $integracao = app(ReginProcessoProtocolador::class)->integracao();
 
-        $this->actingAs($this->admin(), 'gestao')
-            ->put(route('gestao.cidadaos.inativacao.update', $tecnico))
+        $this->actingAs($admin, 'gestao')
+            ->put(route('gestao.cidadaos.inativacao.update', $integracao->id))
             ->assertNotFound();
 
-        $this->assertFalse($tecnico->fresh()->isInactive());
+        $this->assertNull($integracao->fresh()->inactivated_at);
+        $this->assertDatabaseMissing('cidadaos', ['email' => User::EMAIL_INTEGRACAO_REGIN]);
         $this->assertDatabaseMissing('activity_log', ['event' => 'cidadao-inativado']);
     }
 
@@ -151,11 +147,7 @@ class GestaoCidadaosTest extends TestCase
     public function test_export_csv_da_aba_portal_traz_cidadaos_e_nao_servidores(): void
     {
         Cidadao::factory()->create(['name' => 'Maria Exportada', 'cpf' => '52998224725']);
-        Cidadao::factory()->semSenha()->create([
-            'name' => 'Técnico',
-            'cpf' => Cidadao::CPF_TECNICO,
-            'email' => Cidadao::CPF_TECNICO.Cidadao::SUFIXO_EMAIL_TECNICO,
-        ]);
+        app(ReginProcessoProtocolador::class)->integracao();
         User::factory()->analista()->create(['name' => 'Servidor Fora']);
 
         $response = $this->actingAs($this->admin(), 'gestao')
@@ -168,6 +160,6 @@ class GestaoCidadaosTest extends TestCase
         $this->assertStringContainsString('***.***.***-25', $csv);
         $this->assertStringNotContainsString('52998224725', $csv);
         $this->assertStringNotContainsString('Servidor Fora', $csv);
-        $this->assertStringNotContainsString('Técnico', $csv);
+        $this->assertStringNotContainsString('JUCEB (integração REGIN)', $csv);
     }
 }

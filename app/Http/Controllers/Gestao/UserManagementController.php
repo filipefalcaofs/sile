@@ -65,7 +65,7 @@ class UserManagementController extends Controller
             ->orWhereLike('email', "%{$term}%", caseSensitive: false)));
 
         if ($tab === 'portal') {
-            $users = $busca(Cidadao::query()->semRegistroTecnico())
+            $users = $busca(Cidadao::query())
                 ->orderBy('name')
                 ->paginate($perPage)
                 ->withQueryString()
@@ -109,7 +109,7 @@ class UserManagementController extends Controller
             ],
             'counts' => [
                 'gestao' => User::query()->count(),
-                'portal' => Cidadao::query()->semRegistroTecnico()->count(),
+                'portal' => Cidadao::query()->count(),
             ],
             'roles' => Role::orderBy('name')->pluck('name'),
             'solicitacoes' => AccessRequest::query()

@@ -9,6 +9,7 @@ use App\Models\ReginRecebimento;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
+use App\Services\Regin\ReginProcessoProtocolador;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
@@ -107,17 +108,22 @@ class RecebimentoProcessoTest extends TestCase
 
     public function test_requerente_e_criador_com_o_mesmo_id_ficam_cada_um_no_seu_tipo(): void
     {
-        $servidor = User::factory()->create(['id' => 5]);
-        Cidadao::factory()->create(['id' => 4]);
+        User::factory()->create();
+        $integracao = app(ReginProcessoProtocolador::class)->integracao();
+        // O próximo cidadão (o solicitante do envelope) recebe o mesmo id da conta da integração.
+        Cidadao::factory()->create(['id' => $integracao->id - 1]);
 
         $this->postJson('/api_integracao/recebe', $this->declaracao($this->cnpjValido()))->assertOk();
 
         $processo = ViabilityRequest::query()->firstOrFail();
         $requerente = Cidadao::query()->where('cpf', '52998224725')->firstOrFail();
 
+        $this->assertSame($integracao->id, $requerente->id);
         $this->assertSame($requerente->id, $processo->requester_cidadao_id);
+        $this->assertTrue($processo->requester->is($requerente));
         $this->assertSame(User::class, $processo->created_by_type);
-        $this->assertSame($servidor->id, $processo->created_by_id);
+        $this->assertSame($integracao->id, $processo->created_by_id);
+        $this->assertTrue($processo->createdBy->is($integracao));
     }
 
     public function test_cpf_de_cidadao_existente_e_reaproveitado_sem_alterar_os_dados(): void
