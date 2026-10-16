@@ -5,6 +5,7 @@ namespace Tests\Feature\Regin;
 use App\Enums\ViabilityRequestOrigin;
 use App\Enums\ViabilityRequestStatus;
 use App\Jobs\DecidirFluxoExpressoJob;
+use App\Models\Activity;
 use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\IntegrationCall;
@@ -125,6 +126,26 @@ class ReginProcessoProtocoladorTest extends TestCase
             situacao_fiscal: null,
             data_emissao_certidao: null,
         );
+
+        return new PropertyRegistryResult(
+            latitude: null,
+            longitude: null,
+            inscricao: $inscricao,
+            source: 'teste',
+            cadastro: $cadastro,
+        );
+    }
+
+    /**
+     * @param  array<string, string|null>  $campos
+     */
+    private function resultadoComCadastro(string $inscricao, array $campos): PropertyRegistryResult
+    {
+        $cadastro = new PropertyCadastroCampos(...array_replace(
+            PropertyCadastroCampos::vazios()->toArray(),
+            ['inscricao' => $inscricao],
+            $campos,
+        ));
 
         return new PropertyRegistryResult(
             latitude: null,
@@ -710,6 +731,193 @@ XML,
         );
 
         $this->assertNull($processo);
+    }
+
+    public function test_endereco_vazio_no_regin_carrega_da_inscricao_imobiliaria(): void
+    {
+        $this->fakeInscricao(fn (string $inscricao): PropertyRegistryResult => $this->resultadoComCadastro($inscricao, [
+            'endereco' => 'Estrada Campinas Pirajá, 4655',
+            'bairro' => 'CAMPINAS DE PIRAJA',
+            'cep' => '41270-000',
+        ]));
+
+        $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($this->ruc([
+            'RUC_ESTAB' => ['RES_DIRECCION' => '', 'RES_NUME' => '', 'RES_URBANIZACION' => '', 'RES_ZONA_POSTAL' => '41270000'],
+        ])));
+
+        $this->assertNotNull($processo);
+        $this->assertSame('Estrada Campinas Pirajá', $processo->address_street);
+        $this->assertSame('4655', $processo->address_number);
+        $this->assertSame('CAMPINAS DE PIRAJA', $processo->address_neighborhood);
+        $this->assertSame('41270000', $processo->address_zip);
+    }
+
+    public function test_endereco_do_cadastro_descarta_o_sufixo_depois_do_travessao(): void
+    {
+        $this->fakeInscricao(fn (string $inscricao): PropertyRegistryResult => $this->resultadoComCadastro($inscricao, [
+            'endereco' => 'Avenida Luís Viana Filho, 6282 — SUPERMERCADO',
+            'bairro' => 'PATAMARES',
+            'cep' => '41680-400',
+        ]));
+
+        $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($this->ruc([
+            'RUC_ESTAB' => ['RES_DIRECCION' => '', 'RES_NUME' => '', 'RES_URBANIZACION' => ''],
+        ])));
+
+        $this->assertNotNull($processo);
+        $this->assertSame('Avenida Luís Viana Filho', $processo->address_street);
+        $this->assertSame('6282', $processo->address_number);
+    }
+
+    public function test_endereco_do_cadastro_sem_numero_vira_sem_numero(): void
+    {
+        $this->fakeInscricao(fn (string $inscricao): PropertyRegistryResult => $this->resultadoComCadastro($inscricao, [
+            'endereco' => 'Rua Arquiteto Marcos Moreira Solter',
+            'bairro' => 'SAO CRISTOVAO',
+            'cep' => '41510-808',
+        ]));
+
+        $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($this->ruc([
+            'RUC_ESTAB' => ['RES_DIRECCION' => '', 'RES_NUME' => '', 'RES_URBANIZACION' => ''],
+        ])));
+
+        $this->assertNotNull($processo);
+        $this->assertSame('Rua Arquiteto Marcos Moreira Solter', $processo->address_street);
+        $this->assertSame('s/n', $processo->address_number);
+    }
+
+    public function test_cep_do_envelope_prevalece_sobre_o_do_cadastro(): void
+    {
+        $this->fakeInscricao(fn (string $inscricao): PropertyRegistryResult => $this->resultadoComCadastro($inscricao, [
+            'endereco' => 'Rua do Cadastro, 10',
+            'bairro' => 'BAIRRO DO CADASTRO',
+            'cep' => '41270-000',
+        ]));
+
+        $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($this->ruc([
+            'RUC_ESTAB' => ['RES_DIRECCION' => '', 'RES_URBANIZACION' => '', 'RES_ZONA_POSTAL' => '40000000'],
+        ])));
+
+        $this->assertNotNull($processo);
+        $this->assertSame('40000000', $processo->address_zip);
+    }
+
+    public function test_endereco_e_area_do_envelope_prevalecem_sobre_o_cadastro(): void
+    {
+        $this->fakeInscricao(fn (string $inscricao): PropertyRegistryResult => $this->resultadoComCadastro($inscricao, [
+            'endereco' => 'Rua do Cadastro, 10',
+            'bairro' => 'BAIRRO DO CADASTRO',
+            'cep' => '41270-000',
+            'area_construida_m2' => '50',
+            'area_terreno_m2' => '900',
+        ]));
+
+        $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($this->ruc()));
+
+        $this->assertNotNull($processo);
+        $this->assertSame('Rua das Flores', $processo->address_street);
+        $this->assertSame('Centro', $processo->address_neighborhood);
+        $this->assertSame(834.0, (float) $processo->used_area_m2);
+        $this->assertNull(Activity::query()->where('event', 'complementar')->first());
+    }
+
+    public function test_area_zerada_usa_a_do_terreno_quando_a_construida_do_cadastro_e_zero(): void
+    {
+        $this->fakeInscricao(fn (string $inscricao): PropertyRegistryResult => $this->resultadoComCadastro($inscricao, [
+            'area_construida_m2' => '0',
+            'area_terreno_m2' => '300',
+        ]));
+
+        $processo = app(ReginProcessoProtocolador::class)->protocolar(
+            $this->recebimento($this->ruc(['RUC_ESTAB' => ['RES_AREA' => '0']])),
+        );
+
+        $this->assertNotNull($processo);
+        $this->assertSame(300.0, (float) $processo->used_area_m2);
+    }
+
+    public function test_area_construida_do_cadastro_prevalece_sobre_a_do_terreno(): void
+    {
+        $this->fakeInscricao(fn (string $inscricao): PropertyRegistryResult => $this->resultadoComCadastro($inscricao, [
+            'area_construida_m2' => '150,00',
+            'area_terreno_m2' => '800',
+        ]));
+
+        $processo = app(ReginProcessoProtocolador::class)->protocolar(
+            $this->recebimento($this->ruc(['RUC_ESTAB' => ['RES_AREA' => '0']])),
+        );
+
+        $this->assertNotNull($processo);
+        $this->assertSame(150.0, (float) $processo->used_area_m2);
+    }
+
+    public function test_dados_complementados_pelo_cadastro_ficam_auditados(): void
+    {
+        $this->fakeInscricao(fn (string $inscricao): PropertyRegistryResult => $this->resultadoComCadastro($inscricao, [
+            'endereco' => 'Rua do Cadastro, 10',
+            'bairro' => 'BAIRRO DO CADASTRO',
+            'cep' => '41270-000',
+            'area_construida_m2' => '0',
+            'area_terreno_m2' => '300',
+        ]));
+
+        $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($this->ruc([
+            'RUC_ESTAB' => ['RES_AREA' => '0', 'RES_DIRECCION' => '', 'RES_URBANIZACION' => ''],
+        ])));
+
+        $registro = Activity::query()->where('event', 'complementar')->first();
+
+        $this->assertNotNull($registro);
+        $this->assertSame('regin', $registro->log_name);
+        $this->assertSame('43747', $registro->properties['protocolo']);
+        $this->assertEqualsCanonicalizing(['endereco', 'area_terreno'], $registro->properties['campos']);
+        $this->assertSame($processo->id, $registro->subject_id);
+    }
+
+    public function test_recusa_por_cadastro_indisponivel_fica_auditada_com_o_motivo(): void
+    {
+        $this->fakeInscricao(function (string $inscricao): PropertyRegistryResult {
+            throw new PropertyRegistryUnavailableException($inscricao);
+        });
+
+        $processo = app(ReginProcessoProtocolador::class)->protocolar(
+            $this->recebimento($this->ruc(['RUC_ESTAB' => ['RES_AREA' => '0']])),
+        );
+
+        $registro = Activity::query()->where('event', 'protocolar')->first();
+
+        $this->assertNull($processo);
+        $this->assertNotNull($registro);
+        $this->assertSame('falha', $registro->result);
+        $this->assertSame('43747', $registro->properties['protocolo']);
+        $this->assertEqualsCanonicalizing(['sem_area', 'cadastro_indisponivel'], $registro->properties['motivos']);
+    }
+
+    public function test_recusa_sem_inscricao_e_sem_endereco_fica_auditada_com_os_motivos(): void
+    {
+        $corpo = $this->ruc(['RUC_ESTAB' => ['RES_DIRECCION' => '']]);
+        unset($corpo['rowset']['GROUPRUC_GEN_PROTOCOLO']);
+
+        $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($corpo));
+
+        $registro = Activity::query()->where('event', 'protocolar')->first();
+
+        $this->assertNull($processo);
+        $this->assertNotNull($registro);
+        $this->assertEqualsCanonicalizing(['sem_endereco', 'sem_inscricao'], $registro->properties['motivos']);
+    }
+
+    public function test_recusa_sem_cnae_fica_auditada_com_o_motivo(): void
+    {
+        $corpo = $this->ruc();
+        unset($corpo['rowset']['GROUPRUC_ACTV_ECON']);
+
+        app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($corpo));
+
+        $registro = Activity::query()->where('event', 'protocolar')->first();
+
+        $this->assertNotNull($registro);
+        $this->assertSame(['sem_cnae'], $registro->properties['motivos']);
     }
 
     public function test_ruc_sem_area_nao_protocola(): void

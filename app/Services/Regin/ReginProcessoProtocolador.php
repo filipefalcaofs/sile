@@ -17,11 +17,13 @@ use App\Models\ViabilityServiceType;
 use App\Rules\ValidCpf;
 use App\Services\Expresso\FluxoExpressoService;
 use App\Services\Geo\PoligonoEnderecamentoService;
+use App\Services\Realty\PropertyCadastroCampos;
 use App\Services\Realty\PropertyRegistryLookup;
 use App\Services\Solicitacao\ProtocolarSolicitacaoService;
 use App\Services\Tratamento\CategoriaEmpresa;
 use App\Services\Tratamento\RespostaPlanilha;
 use App\Services\Tratamento\TratamentoRamoResolver;
+use App\Support\Audit\AuditService;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -52,6 +54,7 @@ class ReginProcessoProtocolador
         private PoligonoEnderecamentoService $poligonoLote,
         private TratamentoRamoResolver $tratamento,
         private PropertyRegistryLookup $cadastro,
+        private AuditService $audit,
     ) {}
 
     public function protocolar(ReginRecebimento $recebimento): ?ViabilityRequest
@@ -70,10 +73,39 @@ class ReginProcessoProtocolador
 
         $cnaes = $this->cnaes($rowset);
         $inscricao = $this->inscricao($rowset);
-        $area = $this->area($rowset) ?? $this->areaPelaInscricao($inscricao);
+        $area = $this->area($rowset);
         $endereco = $this->endereco($rowset);
 
+        $precisaDoCadastro = $area === null || $endereco === null;
+        $cadastro = $precisaDoCadastro ? $this->cadastroDaInscricao($inscricao) : null;
+        $complementados = [];
+
+        if ($area === null && $cadastro !== null) {
+            [$area, $origemArea] = $this->areaDoCadastro($cadastro) ?? [null, null];
+
+            if ($origemArea !== null) {
+                $complementados[] = $origemArea;
+            }
+        }
+
+        if ($endereco === null && $cadastro !== null) {
+            $endereco = $this->endereco($rowset, $cadastro);
+
+            if ($endereco !== null) {
+                $complementados[] = 'endereco';
+            }
+        }
+
         if ($cnaes === [] || $area === null || $endereco === null) {
+            $this->registrarRecusa($recebimento, $this->motivosDaRecusa(
+                semCnae: $cnaes === [],
+                semArea: $area === null,
+                semEndereco: $endereco === null,
+                consultouCadastro: $precisaDoCadastro,
+                temInscricao: $inscricao !== null,
+                cadastroRespondeu: $cadastro !== null,
+            ));
+
             return null;
         }
 
@@ -103,14 +135,79 @@ class ReginProcessoProtocolador
 
         ReginEventos::gravar($solicitacao, $recebimento);
 
+        if ($complementados !== []) {
+            $this->audit->log(
+                'regin',
+                'complementar',
+                'Dados do estabelecimento complementados pelo Cadastro Imobiliário',
+                ['protocolo' => $recebimento->protocolo, 'campos' => $complementados],
+                $solicitacao,
+            );
+        }
+
         $this->protocolar->protocol($solicitacao->fresh() ?? $solicitacao, $ator);
 
         return $solicitacao->fresh() ?? $solicitacao;
     }
 
+    /**
+     * @return list<string>
+     */
+    private function motivosDaRecusa(
+        bool $semCnae,
+        bool $semArea,
+        bool $semEndereco,
+        bool $consultouCadastro,
+        bool $temInscricao,
+        bool $cadastroRespondeu,
+    ): array {
+        $motivos = [];
+
+        if ($semCnae) {
+            $motivos[] = 'sem_cnae';
+        }
+
+        if ($semArea) {
+            $motivos[] = 'sem_area';
+        }
+
+        if ($semEndereco) {
+            $motivos[] = 'sem_endereco';
+        }
+
+        if ($consultouCadastro && ! $temInscricao) {
+            $motivos[] = 'sem_inscricao';
+        }
+
+        if ($consultouCadastro && $temInscricao && ! $cadastroRespondeu) {
+            $motivos[] = 'cadastro_indisponivel';
+        }
+
+        return $motivos;
+    }
+
+    /**
+     * Recebimento que não vira processo é pendência registrada, nunca silêncio.
+     *
+     * @param  list<string>  $motivos
+     */
+    private function registrarRecusa(ReginRecebimento $recebimento, array $motivos): void
+    {
+        $this->audit->log(
+            'regin',
+            'protocolar',
+            'Processo recebido via REGIN não pôde ser aberto',
+            ['protocolo' => $recebimento->protocolo, 'motivos' => $motivos],
+            $recebimento,
+            'falha',
+        );
+    }
+
     private function protocolarDeclaracao(ReginRecebimento $recebimento, RecebimentoProcesso $dados): ?ViabilityRequest
     {
         if (! $dados->podeProtocolar()) {
+            $this->registrarRecusa($recebimento, $dados->faltamParaProtocolar());
+
             return null;
         }
 
@@ -928,27 +1025,43 @@ class ReginProcessoProtocolador
         return $area > 0 ? $area : null;
     }
 
-    /**
-     * A JUCEB carrega o RES_AREA da inscrição imobiliária; quando vem zerado,
-     * buscamos a mesma área na nossa consulta ao Cadastro Imobiliário (SEFAZ
-     * via SEDUR). Base indisponível ou sem área: segue sem processo, nunca com
-     * área simulada.
-     */
-    private function areaPelaInscricao(?string $inscricao): ?float
+    private function cadastroDaInscricao(?string $inscricao): ?PropertyCadastroCampos
     {
         if ($inscricao === null) {
             return null;
         }
 
         try {
-            $resultado = $this->cadastro->resolve($inscricao);
+            return $this->cadastro->resolve($inscricao)->cadastro;
         } catch (Throwable) {
             return null;
         }
+    }
 
-        $area = $this->paraArea($resultado->cadastro?->area_construida_m2);
+    /**
+     * A JUCEB carrega o RES_AREA da inscrição imobiliária; quando vem zerado,
+     * a área é a do Cadastro: a construída e, sem ela (imóvel sem construção
+     * cadastrada), a do terreno. Base indisponível ou sem área: segue sem
+     * processo, nunca com área simulada.
+     *
+     * @return array{0: float, 1: string}|null área e o campo do Cadastro de onde veio
+     */
+    private function areaDoCadastro(PropertyCadastroCampos $cadastro): ?array
+    {
+        $candidatas = [
+            'area_construida' => $cadastro->area_construida_m2,
+            'area_terreno' => $cadastro->area_terreno_m2,
+        ];
 
-        return $area !== null && $area > 0 ? $area : null;
+        foreach ($candidatas as $origem => $valor) {
+            $area = $this->paraArea($valor);
+
+            if ($area !== null && $area > 0) {
+                return [$area, $origem];
+            }
+        }
+
+        return null;
     }
 
     private function paraArea(?string $valor): ?float
@@ -967,16 +1080,36 @@ class ReginProcessoProtocolador
     }
 
     /**
+     * Endereço do estabelecimento: o que a JUCEB enviou e, campo a campo, o que
+     * faltou vem do Cadastro Imobiliário quando ele foi consultado.
+     *
      * @param  array<string, mixed>  $rowset
      * @return array{street: string, number: string, complement: ?string, neighborhood: string, zip: string}|null
      */
-    private function endereco(array $rowset): ?array
+    private function endereco(array $rowset, ?PropertyCadastroCampos $cadastro = null): ?array
     {
         $estab = is_array($rowset['RUC_ESTAB'] ?? null) ? $rowset['RUC_ESTAB'] : [];
-        $street = trim((string) ($estab['RES_DIRECCION'] ?? ''));
+        $doCadastro = $cadastro !== null ? $this->enderecoDoCadastro($cadastro) : ['street' => '', 'number' => ''];
+
+        $streetEnvio = trim((string) ($estab['RES_DIRECCION'] ?? ''));
+        $street = $streetEnvio !== '' ? $streetEnvio : $doCadastro['street'];
         $number = trim((string) ($estab['RES_NUME'] ?? ''));
+
+        if ($number === '' && $streetEnvio === '') {
+            $number = $doCadastro['number'];
+        }
+
         $neighborhood = trim((string) ($estab['RES_URBANIZACION'] ?? ''));
+
+        if ($neighborhood === '') {
+            $neighborhood = trim((string) $cadastro?->bairro);
+        }
+
         $zip = preg_replace('/\D/', '', (string) ($estab['RES_ZONA_POSTAL'] ?? ''));
+
+        if ($zip === '') {
+            $zip = preg_replace('/\D/', '', (string) $cadastro?->cep);
+        }
 
         if ($street === '' || $neighborhood === '' || $zip === '') {
             return null;
@@ -991,6 +1124,25 @@ class ReginProcessoProtocolador
             'neighborhood' => $neighborhood,
             'zip' => $zip,
         ];
+    }
+
+    /**
+     * O Cadastro entrega logradouro e número numa linha só ("Rua X, 21"), às
+     * vezes com uma observação depois do travessão ("Av. Y, 6282 — SUPERMERCADO").
+     *
+     * @return array{street: string, number: string}
+     */
+    private function enderecoDoCadastro(PropertyCadastroCampos $cadastro): array
+    {
+        $texto = trim((string) preg_split('/\s+[—–]\s+/u', trim((string) $cadastro->endereco))[0]);
+
+        if (preg_match('/^(.*?),\s*(\d+\S*)$/u', $texto, $partes) === 1) {
+            return ['street' => trim($partes[1]), 'number' => $partes[2]];
+        }
+
+        $numero = trim((string) ($cadastro->numero_porta ?? $cadastro->numero_metrico));
+
+        return ['street' => $texto, 'number' => $numero === '0' ? '' : $numero];
     }
 
     /**
