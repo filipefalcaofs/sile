@@ -64,6 +64,7 @@ class HistoricoConsultaTest extends TestCase
             ->postJson('/portal/viabilidade/cnae', [
                 'cnae' => self::CNAE_MINIMERCADO,
                 'area' => 120,
+                'respostas' => [11 => true],
             ])
             ->assertOk();
 
@@ -76,6 +77,7 @@ class HistoricoConsultaTest extends TestCase
         // Sem território (via CNAE), o veredito é PROPAGADO como pendente.
         $this->assertSame('pendente', $query->result['veredito_locacional']['resultado']);
         $this->assertSame('pendente', $query->resultado);
+        $this->assertSame('inconclusiva', $query->result['confiabilidade']['estado']);
         // Versões das regras da época gravadas (reprodução — RN-002/RN-004).
         $this->assertNotEmpty($query->rules_versions);
         $this->assertArrayHasKey('louos', $query->rules_versions);

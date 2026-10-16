@@ -182,12 +182,27 @@ class ConsultaViabilidadeServiceTest extends TestCase
         $this->assertSame('endereco', $activity->properties['tipo']);
         $this->assertSame('4712100', $activity->properties['cnae']);
         $this->assertSame('pendente', $activity->properties['veredito']);
+        $this->assertSame('inconclusiva', $activity->properties['confiabilidade']);
+        $this->assertSame([], $activity->properties['pendencias']);
 
         // Versões de TODAS as regras (RN-002/RN-004) registradas na auditoria.
         $versoes = $activity->properties['versoes'];
         $this->assertArrayHasKey('territorio', $versoes);
         $this->assertArrayHasKey('louos', $versoes);
         $this->assertArrayHasKey('risco', $versoes);
+    }
+
+    public function test_consulta_sem_area_e_auditada_como_incompleta_com_a_pendencia(): void
+    {
+        $this->fakeGeocoder();
+        $this->fakeTerritorioBairroSemZona();
+
+        $this->service()->consultarPorEndereco('Praça Municipal, Salvador', self::CNAE_MINIMERCADO, null, [11 => true]);
+
+        $activity = Activity::query()->where('log_name', 'viabilidade')->where('event', 'consulta')->latest('id')->first();
+
+        $this->assertSame('incompleta', $activity->properties['confiabilidade']);
+        $this->assertSame('area', $activity->properties['pendencias'][0]['campo']);
     }
 
     public function test_endereco_nao_localizado_propaga_excecao_e_nao_inventa_resultado(): void

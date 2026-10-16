@@ -28,9 +28,13 @@ class ConsultaViabilidadeInscricaoRequest extends FormRequest
         return [
             'inscricao' => ['required', 'string', 'max:60'],
             'cnae' => ['required', 'string', 'max:14'],
-            'area' => ['nullable', 'numeric', 'min:0', 'max:9999999'],
+            'area' => ['required', 'numeric', 'gt:0', 'max:9999999'],
             'respostas' => ['nullable', 'array'],
             'respostas.*' => [new RespostaPlanilhaValida],
+            'tipo_imovel' => ['nullable', 'string', 'max:120'],
+            'categoria_empresa' => ['nullable', 'in:orgao_publico,outra'],
+            'vagas' => ['nullable', 'array'],
+            'vagas.*' => ['numeric', 'min:0', 'max:99999'],
         ];
     }
 
@@ -42,7 +46,11 @@ class ConsultaViabilidadeInscricaoRequest extends FormRequest
         return [
             'inscricao.required' => 'Informe a inscrição imobiliária para a consulta.',
             'cnae.required' => 'Informe o CNAE da atividade pretendida.',
+            'area.required' => 'Informe a área da atividade em metros quadrados.',
+            'area.gt' => 'A área deve ser maior que zero.',
             'area.numeric' => 'A área deve ser um número em metros quadrados.',
+            'categoria_empresa.in' => 'Informe uma categoria de empresa válida.',
+            'vagas.*.numeric' => 'As vagas devem ser informadas em número.',
         ];
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Services\Viabilidade;
 
 use App\Enums\ResultadoViabilidade;
+use App\Services\Decisao\DecisionTextCatalog;
 use App\Services\Geo\GeocodeResult;
 use App\Services\Geo\TerritoryResult;
 use App\Services\Louos\EnquadramentoResult;
@@ -57,6 +58,15 @@ final readonly class ConsultaViabilidadeResult
     }
 
     /**
+     * Confiabilidade do resultado (conclusiva, incompleta, inconclusiva), derivada
+     * do que os motores devolveram — não decide veredito.
+     */
+    public function confiabilidade(): ConfiabilidadeConsultaResultado
+    {
+        return (new ConfiabilidadeConsultaResolver(new DecisionTextCatalog))->resolver($this);
+    }
+
+    /**
      * União honesta das referências legais já produzidas pelos motores (LOUOS +
      * risco), sem duplicar — não inventa fundamentação nova.
      *
@@ -103,6 +113,7 @@ final readonly class ConsultaViabilidadeResult
             'risco' => $this->risco->toArray(),
             'restricoes' => $this->territory?->restricoes,
             'veredito_locacional' => $this->vereditoLocacional(),
+            'confiabilidade' => $this->confiabilidade()->toArray(),
             'fundamentacao' => $this->fundamentacao(),
             'avisos' => $this->avisos,
             'versoes' => $this->versoes(),

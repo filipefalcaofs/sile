@@ -59,8 +59,9 @@ class ConsultaViabilidadeService
      */
     /**
      * @param  array<int, bool|int|list<int>>  $respostas
+     * @param  array<string, float>  $vagas
      */
-    public function consultarPorEndereco(string $endereco, string $cnae, ?float $area = null, array $respostas = []): ConsultaViabilidadeResult
+    public function consultarPorEndereco(string $endereco, string $cnae, ?float $area = null, array $respostas = [], ?TipoImovel $tipoImovel = null, ?string $categoriaEmpresa = null, array $vagas = []): ConsultaViabilidadeResult
     {
         $geocode = $this->geocoder->geocode($endereco);
 
@@ -68,7 +69,7 @@ class ConsultaViabilidadeService
             throw new ForaDeSalvadorException($endereco);
         }
 
-        $input = ConsultaViabilidadeInput::paraEndereco($endereco, $cnae, $area, $respostas);
+        $input = ConsultaViabilidadeInput::paraEndereco($endereco, $cnae, $area, $respostas, $tipoImovel, $categoriaEmpresa, $vagas);
 
         return $this->consultarPorPonto($geocode->latitude, $geocode->longitude, $input, $geocode);
     }
@@ -80,10 +81,11 @@ class ConsultaViabilidadeService
      */
     /**
      * @param  array<int, bool|int|list<int>>  $respostas
+     * @param  array<string, float>  $vagas
      */
-    public function consultarPorCnae(string $cnae, ?float $area = null, ?TipoImovel $tipoImovel = null, array $respostas = [], ?string $categoriaEmpresa = null): ConsultaViabilidadeResult
+    public function consultarPorCnae(string $cnae, ?float $area = null, ?TipoImovel $tipoImovel = null, array $respostas = [], ?string $categoriaEmpresa = null, array $vagas = []): ConsultaViabilidadeResult
     {
-        $input = ConsultaViabilidadeInput::paraCnae($cnae, $area, $tipoImovel, $respostas, $categoriaEmpresa);
+        $input = ConsultaViabilidadeInput::paraCnae($cnae, $area, $tipoImovel, $respostas, $categoriaEmpresa, $vagas);
 
         return $this->consultarPorCnaeComEntrada($input, [$this->textos->get('consulta.aviso.cnae_sem_local')]);
     }
@@ -96,10 +98,11 @@ class ConsultaViabilidadeService
      */
     /**
      * @param  array<int, bool|int|list<int>>  $respostas
+     * @param  array<string, float>  $vagas
      */
-    public function consultarPorInscricao(string $inscricao, string $cnae, ?float $area = null, array $respostas = []): ConsultaViabilidadeResult
+    public function consultarPorInscricao(string $inscricao, string $cnae, ?float $area = null, array $respostas = [], ?TipoImovel $tipoImovel = null, ?string $categoriaEmpresa = null, array $vagas = []): ConsultaViabilidadeResult
     {
-        $input = ConsultaViabilidadeInput::paraInscricao($inscricao, $cnae, $area, $respostas);
+        $input = ConsultaViabilidadeInput::paraInscricao($inscricao, $cnae, $area, $respostas, $tipoImovel, $categoriaEmpresa, $vagas);
 
         $localizacao = $this->localizacaoInscricao->localizar($inscricao);
 
@@ -163,6 +166,7 @@ class ConsultaViabilidadeService
                 respostas: $input->respostas,
                 tipoImovel: $input->tipoImovel,
                 categoriaEmpresa: $input->categoriaEmpresa,
+                vagasDeclaradas: $input->vagas,
             ),
         );
 
@@ -187,6 +191,7 @@ class ConsultaViabilidadeService
                 respostas: $input->respostas,
                 tipoImovel: $input->tipoImovel,
                 categoriaEmpresa: $input->categoriaEmpresa,
+                vagasDeclaradas: $input->vagas,
             ),
         );
         $risco = $this->risco->classify($this->riscoInput($input));
@@ -218,6 +223,7 @@ class ConsultaViabilidadeService
                 respostas: $input->respostas,
                 tipoImovel: $input->tipoImovel,
                 categoriaEmpresa: $input->categoriaEmpresa,
+                vagasDeclaradas: $input->vagas,
             ),
         );
         $risco = $this->risco->classify($this->riscoInput($input));
@@ -258,6 +264,8 @@ class ConsultaViabilidadeService
             avisos: $avisos,
         );
 
+        $confiabilidade = $result->confiabilidade();
+
         // Auditoria única por consulta (RN-002), espelhando TerritoryService:
         // causer null quando anônimo (resolvido no AuditService) + origem/IP
         // enriquecidos pela RecordActivityAction.
@@ -272,6 +280,8 @@ class ConsultaViabilidadeService
                 'veredito' => $result->vereditoLocacional()['resultado'],
                 'encaminhamento_risco' => $risco->encaminhamento['fluxo'] ?? null,
                 'avisos' => $result->avisos,
+                'confiabilidade' => $confiabilidade->estado->value,
+                'pendencias' => $confiabilidade->pendencias,
                 'versoes' => $result->versoes(),
             ],
             result: 'sucesso',

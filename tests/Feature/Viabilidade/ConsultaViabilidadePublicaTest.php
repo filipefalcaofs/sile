@@ -3,14 +3,22 @@
 namespace Tests\Feature\Viabilidade;
 
 use App\Enums\GeoLayerType;
+use App\Enums\Quadro10Permissao;
+use App\Enums\RuleDomain;
 use App\Models\Activity;
 use App\Models\GeoLayer;
+use App\Models\LouosQuadro10Permissao;
+use App\Models\Parameter;
+use App\Models\PropertyType;
+use App\Models\RuleVersion;
+use App\Models\User;
 use App\Models\ViabilityQuery;
 use App\Services\Geo\AddressNotFoundException;
 use App\Services\Geo\Geocoder;
 use App\Services\Geo\GeocodeResult;
 use App\Services\Geo\GeocoderException;
 use App\Services\Geo\SpatialRepository;
+use App\Services\Tratamento\TratamentoRamosSedur;
 use Database\Seeders\RiscoMunicipalSeeder;
 use Database\Seeders\RiscoSanitarioSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -129,8 +137,9 @@ class ConsultaViabilidadePublicaTest extends TestCase
             ->assertJsonStructure(['entrada', 'veredito_locacional', 'risco', 'enquadramento', 'avisos', 'versoes'])
             ->assertJsonPath('risco.municipal.status', 'classificado')
             ->assertJsonPath('enquadramento.enquadramento.status', 'identificado')
-            // Sem zona real (pendente SEDUR), o veredito é PROPAGADO como pendente.
-            ->assertJsonPath('veredito_locacional.resultado', 'pendente');
+            // Sem zona real (pendente SEDUR), a consulta é inconclusiva e não exibe veredito.
+            ->assertJsonPath('confiabilidade.estado', 'inconclusiva')
+            ->assertJsonPath('veredito_locacional', null);
 
         $this->assertDatabaseHas('activity_log', [
             'log_name' => 'viabilidade',
@@ -288,7 +297,8 @@ class ConsultaViabilidadePublicaTest extends TestCase
             ->assertOk()
             ->assertJsonPath('risco.municipal.status', 'classificado')
             ->assertJsonPath('enquadramento.enquadramento.status', 'identificado')
-            ->assertJsonPath('veredito_locacional.resultado', 'pendente')
+            ->assertJsonPath('confiabilidade.estado', 'inconclusiva')
+            ->assertJsonPath('veredito_locacional', null)
             ->assertJsonPath('avisos.0', self::AVISO_CNAE_SEM_LOCAL)
             // Sem ponto: nenhum território/geocode inventado.
             ->assertJsonPath('geocode', null)
@@ -320,15 +330,17 @@ class ConsultaViabilidadePublicaTest extends TestCase
             'inscricao' => '123',
             'cnae' => self::CNAE_MINIMERCADO,
             'area' => 120,
+            'respostas' => [11 => true],
         ])
             ->assertOk()
             ->assertJsonPath('avisos.0', self::AVISO_INSCRICAO_INDISPONIVEL)
             // Sem ponto inventado: geocode e território nulos no snapshot.
             ->assertJsonPath('geocode', null)
             ->assertJsonPath('territorio', null)
-            // Risco REAL presente e veredito pendente (sem análise territorial).
+            // Risco REAL presente; sem análise territorial a consulta é inconclusiva, sem veredito.
             ->assertJsonPath('risco.municipal.status', 'classificado')
-            ->assertJsonPath('veredito_locacional.resultado', 'pendente');
+            ->assertJsonPath('confiabilidade.estado', 'inconclusiva')
+            ->assertJsonPath('veredito_locacional', null);
 
         $this->assertDatabaseHas('activity_log', [
             'log_name' => 'viabilidade',
@@ -383,5 +395,248 @@ class ConsultaViabilidadePublicaTest extends TestCase
             'event' => 'consulta',
             'result' => 'sucesso',
         ]);
+    }
+
+    /**
+     * Território com BAIRRO e ZONA identificados e Quadro 10 permitindo o grupo do
+     * minimercado: o motor consolida um veredito real (zoneamento oficial disponível).
+     */
+    private function fakeTerritorioComZona(string $zona = 'ZR-1'): void
+    {
+        GeoLayer::factory()->vigente()->create(['type' => GeoLayerType::Bairro, 'version' => 'bairro-2024']);
+        GeoLayer::factory()->vigente()->create(['type' => GeoLayerType::Zona, 'version' => 'zoneamento-louos-2026']);
+
+        $fake = new FakeSpatialRepository;
+        $fake->setContaining(GeoLayerType::Bairro, ['id' => 1, 'properties' => ['NOME_BAIRRO' => 'Comércio']]);
+        $fake->setContaining(GeoLayerType::Zona, ['id' => 2, 'properties' => ['NOME' => $zona]]);
+        $this->app->instance(SpatialRepository::class, $fake);
+
+        $versao = RuleVersion::vigente(RuleDomain::LouosQuadro10)->first()
+            ?? RuleVersion::factory()->create([
+                'domain' => RuleDomain::LouosQuadro10,
+                'version' => 'lei-9148-2016-quadro10',
+                'rules_version' => 'lei-9148-2016-quadro10',
+            ]);
+
+        LouosQuadro10Permissao::factory()->create([
+            'rule_version_id' => $versao->id,
+            'zona' => $zona,
+            'grupo_uso' => 'nR1',
+            'subgrupo' => '',
+            'permissao' => Quadro10Permissao::Permitido,
+            'condicionante_ref' => null,
+        ]);
+    }
+
+    private function parametrizarVagas(array $exigencia): void
+    {
+        Parameter::query()->create([
+            'key' => 'louos.vagas.exigencia_por_grupo',
+            'group' => 'louos',
+            'type' => 'json',
+            'value' => json_encode($exigencia),
+            'default_value' => '{}',
+            'validation_rules' => ['required', 'json'],
+            'description' => 'Exigência de vagas por grupo de uso (HU-042).',
+        ]);
+    }
+
+    public function test_endereco_sem_area_responde_422_com_mensagem(): void
+    {
+        $this->fakeGeocoder();
+        $this->fakeTerritorioComZona();
+
+        $this->postJson('/portal/viabilidade/endereco', [
+            'endereco' => 'Praça Municipal, Centro, Salvador',
+            'cnae' => self::CNAE_MINIMERCADO,
+        ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('area');
+
+        $this->postJson('/portal/viabilidade/endereco', [
+            'endereco' => 'Praça Municipal, Centro, Salvador',
+            'cnae' => self::CNAE_MINIMERCADO,
+            'area' => 0,
+        ])->assertStatus(422)->assertJsonValidationErrors('area');
+    }
+
+    public function test_inscricao_sem_area_responde_422(): void
+    {
+        $this->postJson('/portal/viabilidade/inscricao', [
+            'inscricao' => '123456',
+            'cnae' => self::CNAE_MINIMERCADO,
+        ])->assertStatus(422)->assertJsonValidationErrors('area');
+    }
+
+    public function test_aba_cnae_continua_com_area_opcional(): void
+    {
+        $this->postJson('/portal/viabilidade/cnae', ['cnae' => self::CNAE_MINIMERCADO])->assertOk();
+    }
+
+    public function test_zona_nao_identificada_devolve_inconclusiva_sem_veredito(): void
+    {
+        $this->fakeGeocoder();
+        $this->fakeTerritorioBairroSemZona();
+
+        $this->postJson('/portal/viabilidade/endereco', [
+            'endereco' => 'Praça Municipal, Centro, Salvador',
+            'cnae' => self::CNAE_MINIMERCADO,
+            'area' => 120,
+            'respostas' => [11 => true],
+        ])
+            ->assertOk()
+            ->assertJsonPath('confiabilidade.estado', 'inconclusiva')
+            ->assertJsonPath('veredito_locacional', null)
+            ->assertJsonPath('aviso_simulacao', fn (string $aviso) => str_contains($aviso, 'simulação informativa'));
+    }
+
+    public function test_resultado_conclusivo_mantem_veredito_e_confiabilidade(): void
+    {
+        $this->fakeGeocoder();
+        $this->fakeTerritorioComZona();
+
+        $this->postJson('/portal/viabilidade/endereco', [
+            'endereco' => 'Praça Municipal, Centro, Salvador',
+            'cnae' => self::CNAE_MINIMERCADO,
+            'area' => 120,
+            'respostas' => [11 => true],
+        ])
+            ->assertOk()
+            ->assertJsonPath('confiabilidade.estado', 'conclusiva')
+            ->assertJsonPath('confiabilidade.pendencias', [])
+            ->assertJsonPath('veredito_locacional.resultado', 'permitido');
+    }
+
+    public function test_pergunta_da_planilha_sem_resposta_devolve_incompleta_sem_veredito(): void
+    {
+        $this->fakeGeocoder();
+        $this->fakeTerritorioComZona();
+
+        $this->postJson('/portal/viabilidade/endereco', [
+            'endereco' => 'Praça Municipal, Centro, Salvador',
+            'cnae' => self::CNAE_MINIMERCADO,
+            'area' => 120,
+        ])
+            ->assertOk()
+            ->assertJsonPath('confiabilidade.estado', 'incompleta')
+            ->assertJsonPath('confiabilidade.pendencias.0.campo', 'pergunta')
+            ->assertJsonPath('veredito_locacional', null);
+    }
+
+    public function test_vagas_declaradas_chegam_ao_motor(): void
+    {
+        $this->fakeGeocoder();
+        $this->fakeTerritorioComZona();
+        $this->parametrizarVagas(['nR1' => ['vagas' => 5]]);
+
+        $payload = [
+            'endereco' => 'Praça Municipal, Centro, Salvador',
+            'cnae' => self::CNAE_MINIMERCADO,
+            'area' => 120,
+            'respostas' => [11 => true],
+        ];
+
+        $this->postJson('/portal/viabilidade/endereco', $payload)
+            ->assertOk()
+            ->assertJsonPath('confiabilidade.estado', 'incompleta')
+            ->assertJsonPath('confiabilidade.pendencias.0.campo', 'vagas')
+            ->assertJsonPath('confiabilidade.pendencias.0.itens', ['vagas']);
+
+        $this->postJson('/portal/viabilidade/endereco', [...$payload, 'vagas' => ['vagas' => 2]])
+            ->assertOk()
+            ->assertJsonPath('confiabilidade.estado', 'conclusiva')
+            ->assertJsonPath('veredito_locacional.resultado', 'permitido_com_condicoes');
+    }
+
+    public function test_categoria_da_empresa_chega_ao_motor(): void
+    {
+        (new TratamentoRamosSedur)->carregar(
+            RuleVersion::vigente(RuleDomain::RiscoTratamento)->firstOrFail(),
+            database_path('data/regras-20-08-26/regras-fluxo-sedur.json'),
+        );
+
+        $base = ['cnae' => '8411-6/00', 'area' => 120, 'respostas' => [7 => true]];
+
+        $this->postJson('/portal/viabilidade/cnae', $base)
+            ->assertOk()
+            ->assertJsonPath('confiabilidade.estado', 'incompleta')
+            ->assertJsonPath('confiabilidade.pendencias.0.campo', 'categoria_empresa');
+
+        $this->postJson('/portal/viabilidade/cnae', [...$base, 'categoria_empresa' => 'outra'])
+            ->assertOk()
+            ->assertJsonPath('enquadramento.enquadramento.bloqueia', true);
+
+        $this->postJson('/portal/viabilidade/cnae', [...$base, 'categoria_empresa' => 'invalida'])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('categoria_empresa');
+    }
+
+    public function test_tipo_do_imovel_chega_ao_motor(): void
+    {
+        (new TratamentoRamosSedur)->carregar(
+            RuleVersion::vigente(RuleDomain::RiscoTratamento)->firstOrFail(),
+            database_path('data/regras-20-08-26/regras-fluxo-sedur.json'),
+        );
+        PropertyType::factory()->drivesRule()->create(['code' => 'galpao', 'label' => 'Galpão']);
+
+        $base = ['cnae' => '0210-1/07', 'area' => 400, 'respostas' => [11 => true]];
+
+        $this->postJson('/portal/viabilidade/cnae', $base)
+            ->assertOk()
+            ->assertJsonPath('confiabilidade.pendencias.0.campo', 'tipo_imovel');
+
+        $this->postJson('/portal/viabilidade/cnae', [...$base, 'tipo_imovel' => 'Galpão'])
+            ->assertOk()
+            ->assertJsonPath('enquadramento.enquadramento.dado_faltante', null);
+    }
+
+    public function test_incompleta_anonima_audita_confiabilidade_e_nao_grava_historico(): void
+    {
+        $this->fakeGeocoder();
+        $this->fakeTerritorioComZona();
+
+        $this->postJson('/portal/viabilidade/endereco', [
+            'endereco' => 'Praça Municipal, Centro, Salvador',
+            'cnae' => self::CNAE_MINIMERCADO,
+            'area' => 120,
+        ])->assertOk()->assertJsonPath('confiabilidade.estado', 'incompleta');
+
+        $this->assertSame(0, ViabilityQuery::count());
+
+        $activity = Activity::query()->where('log_name', 'viabilidade')->where('event', 'consulta')->latest('id')->first();
+        $this->assertSame('incompleta', $activity->properties['confiabilidade']);
+        $this->assertSame('pergunta', $activity->properties['pendencias'][0]['campo']);
+    }
+
+    public function test_incompleta_autenticada_nao_grava_snapshot(): void
+    {
+        $this->fakeGeocoder();
+        $this->fakeTerritorioComZona();
+
+        $this->actingAs(User::factory()->create())
+            ->postJson('/portal/viabilidade/endereco', [
+                'endereco' => 'Praça Municipal, Centro, Salvador',
+                'cnae' => self::CNAE_MINIMERCADO,
+                'area' => 120,
+            ])->assertOk()->assertJsonPath('confiabilidade.estado', 'incompleta');
+
+        $this->assertSame(0, ViabilityQuery::count());
+    }
+
+    public function test_inconclusiva_autenticada_grava_snapshot_com_confiabilidade(): void
+    {
+        $this->fakeGeocoder();
+        $this->fakeTerritorioBairroSemZona();
+
+        $this->actingAs(User::factory()->create())
+            ->postJson('/portal/viabilidade/endereco', [
+                'endereco' => 'Praça Municipal, Centro, Salvador',
+                'cnae' => self::CNAE_MINIMERCADO,
+                'area' => 120,
+                'respostas' => [11 => true],
+            ])->assertOk()->assertJsonPath('confiabilidade.estado', 'inconclusiva');
+
+        $query = ViabilityQuery::query()->latest('id')->first();
+        $this->assertSame('inconclusiva', $query->result['confiabilidade']['estado']);
     }
 }
