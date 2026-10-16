@@ -129,4 +129,38 @@ class PortalServicosInterruptorTest extends TestCase
             ->get('/portal/empresas')
             ->assertOk();
     }
+
+    public function test_desligado_bloqueia_os_tres_endpoints_da_consulta_previa_com_503(): void
+    {
+        $this->desligar();
+
+        foreach ([
+            ['/portal/viabilidade/endereco', ['endereco' => 'Praça da Sé, Salvador', 'cnae' => '4712-1/00', 'area' => 120]],
+            ['/portal/viabilidade/cnae', ['cnae' => '4712-1/00']],
+            ['/portal/viabilidade/inscricao', ['inscricao' => '123456', 'cnae' => '4712-1/00', 'area' => 120]],
+        ] as [$url, $corpo]) {
+            $this->postJson($url, $corpo)
+                ->assertStatus(503)
+                ->assertJson(['message' => EnsurePortalServicosEnabled::MENSAGEM]);
+        }
+    }
+
+    public function test_gestor_liga_e_desliga_a_consulta_previa_pelo_parametro(): void
+    {
+        $this->seed(ParameterSeeder::class);
+        $parametro = Parameter::query()->where('key', 'features.portal_servicos')->firstOrFail();
+
+        $this->get('/portal/viabilidade')->assertRedirect(route('home'));
+        $this->postJson('/portal/viabilidade/cnae', ['cnae' => '4712-1/00'])->assertStatus(503);
+
+        $parametro->update(['value' => '1']);
+
+        $this->get('/portal/viabilidade')->assertOk();
+        $this->postJson('/portal/viabilidade/cnae', ['cnae' => '4712-1/00'])->assertOk();
+
+        $parametro->update(['value' => '0']);
+
+        $this->get('/portal/viabilidade')->assertRedirect(route('home'));
+        $this->postJson('/portal/viabilidade/cnae', ['cnae' => '4712-1/00'])->assertStatus(503);
+    }
 }

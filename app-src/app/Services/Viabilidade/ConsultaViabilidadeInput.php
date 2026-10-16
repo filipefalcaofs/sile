@@ -32,6 +32,7 @@ final readonly class ConsultaViabilidadeInput
 
     /**
      * @param  array<int, bool|int|list<int>>  $respostas
+     * @param  array<string, float>  $vagas  Vagas/carga/descarga declaradas (HU-042).
      */
     public function __construct(
         public string $tipo,
@@ -42,6 +43,7 @@ final readonly class ConsultaViabilidadeInput
         public ?TipoImovel $tipoImovel = null,
         public array $respostas = [],
         public ?string $categoriaEmpresa = null,
+        public array $vagas = [],
     ) {}
 
     /**
@@ -50,15 +52,19 @@ final readonly class ConsultaViabilidadeInput
      */
     /**
      * @param  array<int, bool|int|list<int>>  $respostas
+     * @param  array<string, float>  $vagas
      */
-    public static function paraEndereco(string $endereco, string $cnae, ?float $area = null, array $respostas = []): self
+    public static function paraEndereco(string $endereco, string $cnae, ?float $area = null, array $respostas = [], ?TipoImovel $tipoImovel = null, ?string $categoriaEmpresa = null, array $vagas = []): self
     {
         return new self(
             tipo: self::TIPO_ENDERECO,
             cnae: $cnae,
             area: $area,
             endereco: $endereco,
+            tipoImovel: $tipoImovel,
             respostas: $respostas,
+            categoriaEmpresa: $categoriaEmpresa,
+            vagas: $vagas,
         );
     }
 
@@ -68,8 +74,9 @@ final readonly class ConsultaViabilidadeInput
      */
     /**
      * @param  array<int, bool|int|list<int>>  $respostas
+     * @param  array<string, float>  $vagas
      */
-    public static function paraCnae(string $cnae, ?float $area = null, ?TipoImovel $tipoImovel = null, array $respostas = [], ?string $categoriaEmpresa = null): self
+    public static function paraCnae(string $cnae, ?float $area = null, ?TipoImovel $tipoImovel = null, array $respostas = [], ?string $categoriaEmpresa = null, array $vagas = []): self
     {
         return new self(
             tipo: self::TIPO_CNAE,
@@ -78,6 +85,7 @@ final readonly class ConsultaViabilidadeInput
             tipoImovel: $tipoImovel,
             respostas: $respostas,
             categoriaEmpresa: $categoriaEmpresa,
+            vagas: $vagas,
         );
     }
 
@@ -88,15 +96,19 @@ final readonly class ConsultaViabilidadeInput
      */
     /**
      * @param  array<int, bool|int|list<int>>  $respostas
+     * @param  array<string, float>  $vagas
      */
-    public static function paraInscricao(string $inscricao, string $cnae, ?float $area = null, array $respostas = []): self
+    public static function paraInscricao(string $inscricao, string $cnae, ?float $area = null, array $respostas = [], ?TipoImovel $tipoImovel = null, ?string $categoriaEmpresa = null, array $vagas = []): self
     {
         return new self(
             tipo: self::TIPO_INSCRICAO,
             cnae: $cnae,
             area: $area,
             inscricao: $inscricao,
+            tipoImovel: $tipoImovel,
             respostas: $respostas,
+            categoriaEmpresa: $categoriaEmpresa,
+            vagas: $vagas,
         );
     }
 

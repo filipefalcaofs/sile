@@ -2,15 +2,21 @@
 
 namespace App\Http\Controllers\Portal;
 
+use App\Enums\ConfiabilidadeConsulta;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Portal\ConsultaViabilidadeCnaeRequest;
 use App\Http\Requests\Portal\ConsultaViabilidadeEnderecoRequest;
 use App\Http\Requests\Portal\ConsultaViabilidadeInscricaoRequest;
 use App\Models\Cidadao;
+use App\Models\PropertyType;
 use App\Models\ViabilityQuery;
+use App\Services\Decisao\DecisionTextCatalog;
 use App\Services\Geo\AddressNotFoundException;
 use App\Services\Geo\ForaDeSalvadorException;
 use App\Services\Geo\GeocoderException;
+use App\Services\Risco\TipoImovel;
+use App\Services\Risco\TipoImovelCatalog;
+use App\Services\Tratamento\CategoriaEmpresa;
 use App\Services\Tratamento\RespostaPlanilha;
 use App\Services\Tratamento\TratamentoRamoResolver;
 use App\Services\Viabilidade\ConsultaViabilidadeResult;
@@ -33,6 +39,7 @@ class ConsultaViabilidadeController extends Controller
     public function __construct(
         private ConsultaViabilidadeService $service,
         private TratamentoRamoResolver $ramos,
+        private DecisionTextCatalog $textos,
     ) {}
 
     /**
@@ -43,6 +50,14 @@ class ConsultaViabilidadeController extends Controller
     {
         return Inertia::render('portal/viabilidade/consulta', [
             'consultaEnabled' => true,
+            'tiposImovel' => PropertyType::query()->active()->orderBy('label')->get(['label'])
+                ->map(fn (PropertyType $tipo): array => ['value' => $tipo->label, 'label' => $tipo->label])
+                ->values()
+                ->all(),
+            'categoriasEmpresa' => [
+                ['value' => CategoriaEmpresa::ORGAO_PUBLICO, 'label' => 'Órgão público'],
+                ['value' => CategoriaEmpresa::OUTRA, 'label' => 'Outra'],
+            ],
         ]);
     }
 
@@ -58,6 +73,9 @@ class ConsultaViabilidadeController extends Controller
                 $request->validated('cnae'),
                 $request->validated('area') !== null ? (float) $request->validated('area') : null,
                 $this->respostasInformadas($request->validated('respostas')),
+                $this->tipoImovelInformado($request->validated('tipo_imovel')),
+                $request->validated('categoria_empresa'),
+                $this->vagasInformadas($request->validated('vagas')),
             );
         } catch (ForaDeSalvadorException $exception) {
             return response()->json([
@@ -90,8 +108,10 @@ class ConsultaViabilidadeController extends Controller
         $result = $this->service->consultarPorCnae(
             $request->validated('cnae'),
             $request->validated('area') !== null ? (float) $request->validated('area') : null,
-            null,
+            $this->tipoImovelInformado($request->validated('tipo_imovel')),
             $this->respostasInformadas($request->validated('respostas')),
+            $request->validated('categoria_empresa'),
+            $this->vagasInformadas($request->validated('vagas')),
         );
 
         $this->registrarHistorico($request, $result);
@@ -114,6 +134,9 @@ class ConsultaViabilidadeController extends Controller
             $request->validated('cnae'),
             $request->validated('area') !== null ? (float) $request->validated('area') : null,
             $this->respostasInformadas($request->validated('respostas')),
+            $this->tipoImovelInformado($request->validated('tipo_imovel')),
+            $request->validated('categoria_empresa'),
+            $this->vagasInformadas($request->validated('vagas')),
         );
 
         $this->registrarHistorico($request, $result);
@@ -125,7 +148,8 @@ class ConsultaViabilidadeController extends Controller
      * Histórico pessoal (HU-060): grava o SNAPSHOT imutável da consulta SOMENTE
      * quando o usuário está autenticado (guard web). A consulta anônima segue
      * auditada (RN-002, no serviço), mas NÃO cria histórico pessoal. Chamado
-     * apenas no caminho de SUCESSO — erros honestos (endereço não localizado,
+     * apenas no caminho de SUCESSO e nunca para consulta incompleta (faltou dado,
+     * não houve resultado a comprovar) — erros honestos (endereço não localizado,
      * serviço indisponível, toggle off) nunca viram histórico (sem fachada). O
      * snapshot guarda entrada + resultado + versões da época (reprodução).
      */
@@ -134,7 +158,7 @@ class ConsultaViabilidadeController extends Controller
         $cidadao = $request->user();
 
         // Rota pública: só conta de cidadão tem histórico pessoal (ids de users e cidadaos colidem).
-        if (! $cidadao instanceof Cidadao) {
+        if (! $cidadao instanceof Cidadao || $result->confiabilidade()->estado === ConfiabilidadeConsulta::Incompleta) {
             return;
         }
 
@@ -173,7 +197,28 @@ class ConsultaViabilidadeController extends Controller
     {
         $payload = $result->toArray();
         $payload['perguntas'] = $this->ramos->perguntasExibidas($cnae);
+        $payload['aviso_simulacao'] = $this->textos->get('consulta.aviso.simulacao');
+
+        if (! $result->confiabilidade()->conclusiva()) {
+            $payload['veredito_locacional'] = null;
+        }
 
         return response()->json($payload);
+    }
+
+    private function tipoImovelInformado(?string $label): ?TipoImovel
+    {
+        return $label === null || trim($label) === ''
+            ? null
+            : TipoImovel::fromRegin($label, TipoImovelCatalog::vigente());
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $informadas
+     * @return array<string, float>
+     */
+    private function vagasInformadas(?array $informadas): array
+    {
+        return array_map(floatval(...), $informadas ?? []);
     }
 }

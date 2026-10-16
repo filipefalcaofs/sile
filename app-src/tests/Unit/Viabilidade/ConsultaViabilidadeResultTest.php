@@ -94,6 +94,7 @@ class ConsultaViabilidadeResultTest extends TestCase
                 'risco',
                 'restricoes',
                 'veredito_locacional',
+                'confiabilidade',
                 'fundamentacao',
                 'avisos',
                 'versoes',

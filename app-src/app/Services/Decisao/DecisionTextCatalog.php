@@ -145,6 +145,11 @@ final class DecisionTextCatalog
             'consulta.aviso.zona_pendente' => 'Veredito locacional pendente: zona urbanística pendente da base oficial (SEDUR).',
             'consulta.aviso.cnae_sem_local' => 'Consulta por CNAE não avalia o local: o veredito locacional depende do endereço/zona. Para a viabilidade locacional, consulte por endereço.',
             'consulta.aviso.inscricao_indisponivel' => 'Resolução por inscrição imobiliária indisponível (base de lotes pendente SEDUR). Resultado sem análise territorial; consulte por endereço para o veredito locacional.',
+            'consulta.aviso.simulacao' => 'Esta consulta é uma simulação informativa: não cria processo, não concede viabilidade e não vincula a decisão oficial, que é tomada na análise do processo.',
+            'consulta.pendencia.area' => 'Informe a área da atividade (m²).',
+            'consulta.pendencia.tipo_imovel' => 'Informe o tipo do imóvel.',
+            'consulta.pendencia.categoria_empresa' => 'Informe a categoria da empresa.',
+            'consulta.pendencia.vagas' => 'Informe as vagas disponíveis no imóvel.',
 
             // Análise técnica — pré-análise e justificativa fundamentada.
             'analise.pre_analise.intro' => 'Analisa-se o requerimento à luz da Lei nº 9.148/2016 (LOUOS) e das regras de risco aplicáveis. Veredito locacional consolidado: :resultado.',
