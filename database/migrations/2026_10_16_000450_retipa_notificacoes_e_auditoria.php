@@ -32,6 +32,11 @@ return new class extends Migration
             ->where('subject_type', User::class)
             ->whereIn('subject_id', $contas())
             ->update(['subject_type' => Cidadao::class]);
+
+        DB::table('abuse_alerts')
+            ->where('subject_type', User::class)
+            ->whereIn('subject_id', $contas())
+            ->update(['subject_type' => Cidadao::class]);
     }
 
     public function down(): void

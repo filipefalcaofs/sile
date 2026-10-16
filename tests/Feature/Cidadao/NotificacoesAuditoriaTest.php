@@ -70,6 +70,25 @@ class NotificacoesAuditoriaTest extends TestCase
         $this->assertSame([$doServidor], $servidor->notifications()->pluck('id')->all());
     }
 
+    public function test_alerta_de_abuso_sobre_conta_copiada_passa_a_apontar_para_o_cidadao(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+        $servidor = User::factory()->analista()->create();
+        $cidadao = $this->contaCopiada();
+        $alerta = fn (int $id) => DB::table('abuse_alerts')->insertGetId([
+            'rule_key' => 'regra', 'severity' => 'alta', 'fingerprint' => "f{$id}",
+            'subject_type' => User::class, 'subject_id' => $id, 'detected_at' => now(),
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+        $doCidadao = $alerta($cidadao->id);
+        $doServidor = $alerta($servidor->id);
+
+        $this->migrar();
+
+        $this->assertSame(Cidadao::class, DB::table('abuse_alerts')->where('id', $doCidadao)->value('subject_type'));
+        $this->assertSame(User::class, DB::table('abuse_alerts')->where('id', $doServidor)->value('subject_type'));
+    }
+
     public function test_espelho_de_servidor_com_password_nulo_nao_e_retipado(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
