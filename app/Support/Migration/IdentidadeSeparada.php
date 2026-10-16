@@ -127,16 +127,19 @@ final class IdentidadeSeparada
     }
 
     /**
-     * Colunas com FK para `users` (fora de `COLUNAS_CONVERTIDAS`) que citam algum id de `$ids`.
+     * Colunas com FK para `users` (fora de `COLUNAS_CONVERTIDAS`) que citam algum id de `$ids`,
+     * nas tabelas do schema corrente da conexão.
      *
      * @return list<string> tabela.coluna (linhas)
      */
     public static function colunasDeServidorQueCitam(Builder $ids): array
     {
         $conflitos = [];
+        // Só o schema da aplicação: no PostgreSQL com PostGIS há outros (tiger, topology).
+        $schema = Schema::getCurrentSchemaName();
 
-        foreach (Schema::getTableListing(schemaQualified: false) as $tabela) {
-            foreach (Schema::getForeignKeys($tabela) as $chave) {
+        foreach (Schema::getTableListing($schema, schemaQualified: false) as $tabela) {
+            foreach (Schema::getForeignKeys($schema === null ? $tabela : "{$schema}.{$tabela}") as $chave) {
                 if ($chave['foreign_table'] !== 'users') {
                     continue;
                 }
