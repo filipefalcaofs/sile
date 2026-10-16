@@ -20,19 +20,12 @@ class ProcessoJustificativaReginController extends Controller
 
     public function __invoke(AtualizarJustificativaReginRequest $request, ViabilityRequest $viabilityRequest): RedirectResponse
     {
-        $reenviar = $request->boolean('reenviar');
-
         try {
-            $this->justificativa->salvar($viabilityRequest, $request->validated('justificativa'), $reenviar);
+            $this->justificativa->salvar($viabilityRequest, $request->validated('justificativa'));
         } catch (DomainException $e) {
             throw ValidationException::withMessages(['justificativa' => $e->getMessage()]);
         }
 
-        return back()->with(
-            'status',
-            $reenviar
-                ? 'Justificativa salva e parecer reenviado à JUCEB. Confira o resultado no log de integração.'
-                : 'Justificativa salva.',
-        );
+        return back()->with('status', 'Justificativa salva.');
     }
 }

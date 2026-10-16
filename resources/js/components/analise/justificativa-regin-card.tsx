@@ -25,21 +25,21 @@ const LIMITE = 10000;
  */
 export default function JustificativaReginCard({ processoId, justificativa }: JustificativaReginCardProps) {
     const [texto, setTexto] = useState(justificativa.texto);
-    const [processando, setProcessando] = useState<'salvar' | 'reenviar' | null>(null);
+    const [processando, setProcessando] = useState(false);
     const [erro, setErro] = useState<string | null>(null);
 
     const alterada = texto.trim() !== justificativa.texto.trim();
     const vazia = texto.trim() === '';
 
-    function enviar(reenviar: boolean) {
+    function salvar() {
         setErro(null);
         router.put(
             `/gestao/processos/${processoId}/justificativa-regin`,
-            { justificativa: texto, reenviar },
+            { justificativa: texto },
             {
                 preserveScroll: true,
-                onStart: () => setProcessando(reenviar ? 'reenviar' : 'salvar'),
-                onFinish: () => setProcessando(null),
+                onStart: () => setProcessando(true),
+                onFinish: () => setProcessando(false),
                 onError: (erros) => {
                     const mapa = erros as Record<string, string>;
                     setErro(mapa.justificativa ?? 'Não foi possível salvar a justificativa.');
@@ -77,25 +77,15 @@ export default function JustificativaReginCard({ processoId, justificativa }: Ju
                         />
                     </div>
                     {erro && <FieldError>{erro}</FieldError>}
-                    <div className="flex flex-wrap items-center justify-end gap-3">
+                    <div className="flex justify-end">
                         <Button
                             type="button"
-                            variant="outline"
                             size="sm"
-                            onClick={() => enviar(false)}
-                            disabled={vazia || !alterada || processando !== null}
-                            loading={processando === 'salvar'}
+                            onClick={salvar}
+                            disabled={vazia || !alterada || processando}
+                            loading={processando}
                         >
                             Salvar
-                        </Button>
-                        <Button
-                            type="button"
-                            size="sm"
-                            onClick={() => enviar(true)}
-                            disabled={vazia || processando !== null}
-                            loading={processando === 'reenviar'}
-                        >
-                            Salvar e reenviar à JUCEB
                         </Button>
                     </div>
                 </div>

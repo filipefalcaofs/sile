@@ -24,7 +24,6 @@ class AtualizarJustificativaReginRequest extends FormRequest
     {
         return [
             'justificativa' => ['required', 'string', 'max:10000'],
-            'reenviar' => ['sometimes', 'boolean'],
         ];
     }
 
