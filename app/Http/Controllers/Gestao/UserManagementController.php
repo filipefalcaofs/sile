@@ -30,9 +30,9 @@ class UserManagementController extends Controller
 
     /**
      * Listagem com busca por nome ou e-mail (HU-012 CA-01), separada em
-     * abas: equipe SEDUR (todos os servidores de `users`; quem não tem acessar-gestao vem
-     * com o indicador `sem_acesso_gestao`) e usuários do portal
-     * (cidadãos, tabela `cidadaos`, com ou sem senha; sem o registro técnico do REGIN).
+     * abas: equipe SEDUR (servidores de `users`, sem as contas de sistema; quem não tem
+     * acessar-gestao vem com o indicador `sem_acesso_gestao`) e usuários do portal
+     * (cidadãos, tabela `cidadaos`, com ou sem senha).
      * CPF nunca exposto em claro (LGPD) — apenas os dígitos verificadores.
      */
     public function index(Request $request): Response|HttpResponse
@@ -82,7 +82,7 @@ class UserManagementController extends Controller
                     'sem_acesso_gestao' => false,
                 ]);
         } else {
-            $users = $busca(User::query())
+            $users = $busca(User::query()->semContasDeSistema())
                 ->with(['roles:id,name', 'roles.permissions:id,name', 'permissions:id,name'])
                 ->orderBy('name')
                 ->paginate($perPage)
@@ -108,7 +108,7 @@ class UserManagementController extends Controller
                 'tab' => $tab,
             ],
             'counts' => [
-                'gestao' => User::query()->count(),
+                'gestao' => User::query()->semContasDeSistema()->count(),
                 'portal' => Cidadao::query()->count(),
             ],
             'roles' => Role::orderBy('name')->pluck('name'),

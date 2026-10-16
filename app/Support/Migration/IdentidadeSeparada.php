@@ -57,16 +57,9 @@ final class IdentidadeSeparada
      */
     public static function consultaContasDeCidadao(): Builder
     {
-        $contasDeSistema = array_values(array_unique(array_map('mb_strtolower', [
-            User::EMAIL_INTEGRACAO_REGIN,
-            ...(array) config('viabiliza.tramitacao.atores_ocultos.emails', []),
-        ])));
-
-        return DB::table('users')
+        return User::excluirContasDeSistema(DB::table('users')
             ->select(self::COLUNAS)
-            ->where('auth_type', '!=', 'ad')
-            ->whereNotIn(DB::raw('lower(email)'), $contasDeSistema)
-            ->whereRaw('lower(email) not like ?', ['%.invalid'])
+            ->where('auth_type', '!=', 'ad'), 'users.email')
             ->whereNotExists(function ($q) {
                 $q->select(DB::raw(1))
                     ->from('model_has_roles')
