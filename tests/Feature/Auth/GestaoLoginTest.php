@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Models\Cidadao;
 use App\Models\User;
 use App\Support\Settings;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -51,7 +52,7 @@ class GestaoLoginTest extends TestCase
         $this->assertGuest('web');
 
         $this->assertDatabaseHas('access_logs', [
-            'user_id' => $administrador->id,
+            'actor_type' => $administrador->getMorphClass(), 'actor_id' => $administrador->id,
             'event' => 'login',
             'channel' => 'gestao',
         ]);
@@ -74,10 +75,30 @@ class GestaoLoginTest extends TestCase
 
     public function test_cidadao_nao_loga_no_console_e_tentativa_e_auditada(): void
     {
-        $cidadao = User::factory()->cidadao()->create();
+        $cidadao = Cidadao::factory()->create();
 
         $response = $this->post('/gestao/login', [
             'identifier' => $cidadao->email,
+            'password' => 'password',
+        ]);
+
+        $response->assertSessionHasErrors('identifier');
+
+        $this->assertGuest('gestao');
+
+        $this->assertDatabaseHas('access_logs', [
+            'email' => $cidadao->email,
+            'event' => 'falha',
+            'channel' => 'gestao',
+        ]);
+    }
+
+    public function test_servidor_sem_perfil_de_gestao_nao_loga_e_tentativa_e_auditada(): void
+    {
+        $servidor = User::factory()->create();
+
+        $response = $this->post('/gestao/login', [
+            'identifier' => $servidor->email,
             'password' => 'password',
         ]);
 
@@ -252,7 +273,7 @@ class GestaoLoginTest extends TestCase
     {
         // Com guards separados, a sessão do portal é invisível para a gestão:
         // o formulário de login interno aparece normalmente.
-        $cidadao = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $cidadao = Cidadao::factory()->withAcceptedLgpdTerm()->create();
 
         $this->actingAs($cidadao)->get('/gestao/login')->assertOk();
     }

@@ -4,9 +4,9 @@ namespace Tests\Feature\Solicitacao;
 
 use App\Enums\GeoLayerType;
 use App\Enums\ViabilityRequestStatus;
+use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\GeoLayer;
-use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Geo\SpatialRepository;
 use App\Services\Viabilidade\ConsultaViabilidadeService;
@@ -63,9 +63,9 @@ class SimulacaoSolicitacaoTest extends TestCase
     /**
      * Cidadão habilitado a navegar no portal (papel + termo LGPD aceito).
      */
-    private function portalUser(): User
+    private function portalUser(): Cidadao
     {
-        return User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        return Cidadao::factory()->withAcceptedLgpdTerm()->create();
     }
 
     /**
@@ -75,11 +75,11 @@ class SimulacaoSolicitacaoTest extends TestCase
      *
      * @param  list<string>  $cnaeCodes
      */
-    private function draftFor(User $user, array $cnaeCodes): ViabilityRequest
+    private function draftFor(Cidadao $user, array $cnaeCodes): ViabilityRequest
     {
         $solicitacao = ViabilityRequest::factory()->draft()->create([
-            'requester_user_id' => $user->id,
-            'created_by_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
+            'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
             'used_area_m2' => 120.0,
         ]);
 
@@ -261,8 +261,8 @@ class SimulacaoSolicitacaoTest extends TestCase
         // real + Quadro 7), sem território, veredito pendente. Não inventa local.
         $user = $this->portalUser();
         $solicitacao = ViabilityRequest::factory()->draft()->create([
-            'requester_user_id' => $user->id,
-            'created_by_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
+            'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
             'used_area_m2' => 120.0,
             'property_polygon_geojson' => null,
         ]);

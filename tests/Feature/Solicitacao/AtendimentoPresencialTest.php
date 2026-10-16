@@ -5,6 +5,7 @@ namespace Tests\Feature\Solicitacao;
 use App\Enums\CompanyLinkRole;
 use App\Http\Middleware\ResolveAssistedAttendance;
 use App\Models\AssistedAttendance;
+use App\Models\Cidadao;
 use App\Models\Company;
 use App\Models\Procuration;
 use App\Models\User;
@@ -13,8 +14,11 @@ use App\Models\ViabilityServiceType;
 use App\Support\Representation\CurrentRepresentation;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Http\Client\Factory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Context;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Notification;
 use Inertia\Testing\AssertableInertia as Assert;
 use Symfony\Component\HttpFoundation\Response;
 use Tests\TestCase;
@@ -58,9 +62,9 @@ class AtendimentoPresencialTest extends TestCase
 
     public function test_representacao_resolve_o_cidadao_atendido(): void
     {
-        $citizen = User::factory()->create();
+        $citizen = Cidadao::factory()->create();
         $attendance = AssistedAttendance::factory()->active()->create([
-            'citizen_user_id' => $citizen->id,
+            'citizen_cidadao_id' => $citizen->id,
         ]);
 
         $representation = app(CurrentRepresentation::class);
@@ -76,8 +80,8 @@ class AtendimentoPresencialTest extends TestCase
 
     public function test_procuracao_continua_resolvendo_o_outorgante(): void
     {
-        $grantor = User::factory()->create();
-        $procuration = Procuration::factory()->create(['grantor_user_id' => $grantor->id]);
+        $grantor = Cidadao::factory()->create();
+        $procuration = Procuration::factory()->create(['grantor_cidadao_id' => $grantor->id]);
 
         $representation = app(CurrentRepresentation::class);
         $representation->set($procuration);
@@ -110,16 +114,16 @@ class AtendimentoPresencialTest extends TestCase
     public function test_middleware_resolve_atendimento_ativo_para_representacao(): void
     {
         $attendant = User::factory()->administrador()->create();
-        $citizen = User::factory()->cidadao()->create();
+        $citizen = Cidadao::factory()->create();
         $attendance = AssistedAttendance::factory()->active()->create([
             'attendant_user_id' => $attendant->id,
-            'citizen_user_id' => $citizen->id,
+            'citizen_cidadao_id' => $citizen->id,
         ]);
 
         $this->runMiddleware($attendant, $attendance->id);
 
         $this->assertSame($citizen->id, app(CurrentRepresentation::class)->grantor()?->id);
-        $this->assertSame($citizen->id, Context::get('acting_for_user_id'));
+        $this->assertSame($citizen->id, Context::get('acting_for_cidadao_id'));
     }
 
     public function test_middleware_limpa_estado_quando_expirado(): void
@@ -132,7 +136,7 @@ class AtendimentoPresencialTest extends TestCase
         $request = $this->runMiddleware($attendant, $attendance->id);
 
         $this->assertNull(app(CurrentRepresentation::class)->grantor());
-        $this->assertNull(Context::get('acting_for_user_id'));
+        $this->assertNull(Context::get('acting_for_cidadao_id'));
         // Vínculo expirado some da sessão: a próxima ação exige reabertura (CA-03).
         $this->assertFalse($request->session()->has('attending_attendance_id'));
     }
@@ -149,7 +153,7 @@ class AtendimentoPresencialTest extends TestCase
 
         // Atendimento de outro atendente nunca vira representação do atual.
         $this->assertNull(app(CurrentRepresentation::class)->grantor());
-        $this->assertNull(Context::get('acting_for_user_id'));
+        $this->assertNull(Context::get('acting_for_cidadao_id'));
     }
 
     /**
@@ -165,14 +169,14 @@ class AtendimentoPresencialTest extends TestCase
      * Cidadão atendido + empresa com vínculo ATIVO dele (Fase 3) — pré-condição
      * para abrir a solicitação em nome do cidadão.
      *
-     * @return array{0: User, 1: Company}
+     * @return array{0: Cidadao, 1: Company}
      */
     private function citizenWithCompany(): array
     {
-        $citizen = User::factory()->cidadao()->create();
+        $citizen = Cidadao::factory()->create();
         $company = Company::factory()->create();
         $company->links()->create([
-            'user_id' => $citizen->id,
+            'cidadao_id' => $citizen->id,
             'role' => CompanyLinkRole::Responsavel,
             'started_at' => now(),
         ]);
@@ -190,10 +194,38 @@ class AtendimentoPresencialTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page->component('gestao/atendimento/index'));
     }
 
+    public function test_servidor_nao_atende_o_cidadao_com_o_proprio_cpf(): void
+    {
+        $attendant = $this->attendant();
+        $citizen = Cidadao::factory()->create(['cpf' => $attendant->cpf]);
+
+        $this->actingAs($attendant, 'gestao')
+            ->post('/gestao/atendimento', ['cpf' => $citizen->cpf])
+            ->assertSessionHasErrors(['cpf' => 'Não é possível iniciar um atendimento para a sua própria conta.']);
+
+        $this->assertDatabaseCount('assisted_attendances', 0);
+    }
+
+    public function test_id_igual_ao_do_servidor_nao_impede_atender_cidadao_de_outro_cpf(): void
+    {
+        $attendant = $this->attendant();
+        $citizen = Cidadao::factory()->create(['id' => $attendant->id]);
+        $this->assertNotSame($attendant->cpf, $citizen->cpf);
+
+        $this->actingAs($attendant, 'gestao')
+            ->post('/gestao/atendimento', ['cpf' => $citizen->cpf])
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('assisted_attendances', [
+            'attendant_user_id' => $attendant->id,
+            'citizen_cidadao_id' => $citizen->id,
+        ]);
+    }
+
     public function test_inicia_atendimento_informando_cpf(): void
     {
         $attendant = $this->attendant();
-        $citizen = User::factory()->cidadao()->create();
+        $citizen = Cidadao::factory()->create();
 
         $this->actingAs($attendant, 'gestao')
             ->post('/gestao/atendimento', ['cpf' => $citizen->cpf])
@@ -202,7 +234,7 @@ class AtendimentoPresencialTest extends TestCase
 
         $this->assertDatabaseHas('assisted_attendances', [
             'attendant_user_id' => $attendant->id,
-            'citizen_user_id' => $citizen->id,
+            'citizen_cidadao_id' => $citizen->id,
             'ended_at' => null,
         ]);
 
@@ -213,17 +245,99 @@ class AtendimentoPresencialTest extends TestCase
         ]);
     }
 
-    public function test_cpf_sem_conta_de_cidadao_bloqueia_sem_criar(): void
+    public function test_cpf_sem_cadastro_vira_registro_de_balcao_com_o_nome_da_sedur(): void
     {
+        config(['sile.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
+        Http::fake(['*/pessoafisica/cpf/*' => Http::response(['nome' => 'Joana do Balcão'])]);
         $attendant = $this->attendant();
 
-        // CPF válido (529.982.247-25), porém sem conta: não fabrica cidadão.
         $this->actingAs($attendant, 'gestao')
+            ->post('/gestao/atendimento', ['cpf' => '52998224725'])
+            ->assertSessionHasNoErrors();
+
+        $balcao = Cidadao::query()->where('cpf', '52998224725')->firstOrFail();
+
+        $this->assertSame('Joana do Balcão', $balcao->name);
+        $this->assertFalse($balcao->temSenha());
+        $this->assertDatabaseHas('assisted_attendances', [
+            'attendant_user_id' => $attendant->id,
+            'citizen_cidadao_id' => $balcao->id,
+        ]);
+    }
+
+    public function test_cpf_sem_cadastro_e_fora_da_sedur_bloqueia_sem_criar(): void
+    {
+        config(['sile.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
+        Http::fake(['*/pessoafisica/cpf/*' => Http::response([], 404)]);
+
+        $this->actingAs($this->attendant(), 'gestao')
             ->from('/gestao/atendimento')
             ->post('/gestao/atendimento', ['cpf' => '52998224725'])
             ->assertSessionHasErrors('cpf');
 
         $this->assertDatabaseCount('assisted_attendances', 0);
+        $this->assertSame(0, Cidadao::query()->count());
+    }
+
+    public function test_registro_de_balcao_do_atendimento_nao_dispara_email_de_verificacao(): void
+    {
+        config(['sile.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
+        Http::fake(['*/pessoafisica/cpf/*' => Http::response(['nome' => 'Joana do Balcão'])]);
+        Notification::fake();
+
+        $this->actingAs($this->attendant(), 'gestao')
+            ->post('/gestao/atendimento', ['cpf' => '52998224725'])
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame(1, Cidadao::query()->count());
+        Notification::assertNothingSent();
+    }
+
+    public function test_sedur_indisponivel_bloqueia_o_atendimento_com_mensagem_propria(): void
+    {
+        config(['sile.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
+        Http::fake(['*/pessoafisica/cpf/*' => Http::response([], 500)]);
+
+        $this->actingAs($this->attendant(), 'gestao')
+            ->post('/gestao/atendimento', ['cpf' => '52998224725'])
+            ->assertSessionHasErrors(['cpf' => 'CPF sem cadastro no Viabiliza e a consulta da SEDUR está indisponível. Tente novamente.']);
+
+        $this->assertSame(0, Cidadao::query()->count());
+        $this->assertDatabaseCount('assisted_attendances', 0);
+    }
+
+    public function test_consulta_na_sedur_do_atendimento_e_auditada_com_dado_pessoal(): void
+    {
+        config(['sile.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
+        $attendant = $this->attendant();
+
+        foreach ([
+            [Http::response([], 404), 'falha'],
+            [Http::response([], 500), 'falha'],
+            [Http::response(['nome' => 'Joana']), 'sucesso'],
+        ] as [$resposta, $resultado]) {
+            Http::swap(new Factory);
+            Http::fake(['*/pessoafisica/cpf/*' => $resposta]);
+            $this->actingAs($attendant, 'gestao')->post('/gestao/atendimento', ['cpf' => '52998224725']);
+
+            $this->assertDatabaseHas('activity_log', [
+                'log_name' => 'atendimento',
+                'event' => 'consulta-cpf',
+                'result' => $resultado,
+                'personal_data' => true,
+            ]);
+        }
+    }
+
+    public function test_servidor_sem_cadastro_de_cidadao_nao_atende_o_proprio_cpf_nem_cria_registro(): void
+    {
+        $attendant = $this->attendant();
+
+        $this->actingAs($attendant, 'gestao')
+            ->post('/gestao/atendimento', ['cpf' => $attendant->cpf])
+            ->assertSessionHasErrors(['cpf' => 'Não é possível iniciar um atendimento para a sua própria conta.']);
+
+        $this->assertSame(0, Cidadao::query()->count());
     }
 
     public function test_acao_em_nome_do_cidadao_registra_os_dois_cpfs(): void
@@ -233,7 +347,7 @@ class AtendimentoPresencialTest extends TestCase
         $serviceType = ViabilityServiceType::factory()->create();
         $attendance = AssistedAttendance::factory()->active()->create([
             'attendant_user_id' => $attendant->id,
-            'citizen_user_id' => $citizen->id,
+            'citizen_cidadao_id' => $citizen->id,
         ]);
 
         $this->actingAs($attendant, 'gestao')
@@ -247,8 +361,9 @@ class AtendimentoPresencialTest extends TestCase
         $solicitacao = ViabilityRequest::query()->where('company_id', $company->id)->first();
         $this->assertNotNull($solicitacao);
         // Beneficiário = cidadão; ator real = atendente (CA-01/RN-001).
-        $this->assertSame($citizen->id, $solicitacao->requester_user_id);
-        $this->assertSame($attendant->id, $solicitacao->created_by_user_id);
+        $this->assertSame($citizen->id, $solicitacao->requester_cidadao_id);
+        $this->assertSame($attendant->id, $solicitacao->created_by_id);
+        $this->assertSame(User::class, $solicitacao->created_by_type);
         $this->assertSame('portal', $solicitacao->origin->value);
 
         // Auditoria com os DOIS CPFs: causer = atendente, acting_for = cidadão.
@@ -256,7 +371,7 @@ class AtendimentoPresencialTest extends TestCase
             'subject_type' => $solicitacao->getMorphClass(),
             'event' => 'created',
             'causer_id' => $attendant->id,
-            'acting_for_user_id' => $citizen->id,
+            'acting_for_cidadao_id' => $citizen->id,
         ]);
     }
 
@@ -267,7 +382,7 @@ class AtendimentoPresencialTest extends TestCase
         $serviceType = ViabilityServiceType::factory()->create();
         $attendance = AssistedAttendance::factory()->active()->create([
             'attendant_user_id' => $attendant->id,
-            'citizen_user_id' => $citizen->id,
+            'citizen_cidadao_id' => $citizen->id,
         ]);
 
         $this->actingAs($attendant, 'gestao')
@@ -290,7 +405,7 @@ class AtendimentoPresencialTest extends TestCase
         $serviceType = ViabilityServiceType::factory()->create();
         $expired = AssistedAttendance::factory()->expired()->create([
             'attendant_user_id' => $attendant->id,
-            'citizen_user_id' => $citizen->id,
+            'citizen_cidadao_id' => $citizen->id,
         ]);
 
         // Atendimento expirado: a ação não opera em nome de ninguém.
@@ -355,10 +470,10 @@ class AtendimentoPresencialTest extends TestCase
     public function test_encerra_atendimento(): void
     {
         $attendant = $this->attendant();
-        $citizen = User::factory()->cidadao()->create();
+        $citizen = Cidadao::factory()->create();
         $attendance = AssistedAttendance::factory()->active()->create([
             'attendant_user_id' => $attendant->id,
-            'citizen_user_id' => $citizen->id,
+            'citizen_cidadao_id' => $citizen->id,
         ]);
 
         $this->actingAs($attendant, 'gestao')

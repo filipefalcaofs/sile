@@ -9,8 +9,8 @@ use App\Enums\CommunicationType;
 use App\Events\PendenciaSolicitada;
 use App\Listeners\NotificarPendencia;
 use App\Models\AnalysisPendency;
+use App\Models\Cidadao;
 use App\Models\Communication;
-use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Notifications\PendenciaSolicitadaNotification;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -45,8 +45,8 @@ class NotificarPendenciaListenerTest extends TestCase
     {
         Notification::fake();
 
-        $requester = User::factory()->create();
-        $request = ViabilityRequest::factory()->protocoled()->create(['requester_user_id' => $requester->id]);
+        $requester = Cidadao::factory()->create();
+        $request = ViabilityRequest::factory()->protocoled()->create(['requester_cidadao_id' => $requester->id]);
         $pendency = $this->pendenciaAberta($request);
 
         event(new PendenciaSolicitada($request, $pendency));
@@ -59,14 +59,14 @@ class NotificarPendenciaListenerTest extends TestCase
         // ledger nasce na_fila por canal habilitado (HU-096).
         $this->assertDatabaseHas('communications', [
             'viability_request_id' => $request->id,
-            'recipient_user_id' => $requester->id,
+            'recipient_type' => $requester->getMorphClass(), 'recipient_id' => $requester->id,
             'type' => CommunicationType::PendenciaAberta->value,
             'channel' => CommunicationChannel::Email->value,
             'status' => CommunicationStatus::NaFila->value,
         ]);
         $this->assertDatabaseHas('communications', [
             'viability_request_id' => $request->id,
-            'recipient_user_id' => $requester->id,
+            'recipient_type' => $requester->getMorphClass(), 'recipient_id' => $requester->id,
             'type' => CommunicationType::PendenciaAberta->value,
             'channel' => CommunicationChannel::InApp->value,
             'status' => CommunicationStatus::NaFila->value,
@@ -122,8 +122,8 @@ class NotificarPendenciaListenerTest extends TestCase
             'pendencia_aberta' => ['email', 'in_app', 'whatsapp'],
         ]);
 
-        $requester = User::factory()->create();
-        $request = ViabilityRequest::factory()->protocoled()->create(['requester_user_id' => $requester->id]);
+        $requester = Cidadao::factory()->create();
+        $request = ViabilityRequest::factory()->protocoled()->create(['requester_cidadao_id' => $requester->id]);
         $pendency = $this->pendenciaAberta($request);
 
         event(new PendenciaSolicitada($request, $pendency));

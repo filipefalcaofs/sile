@@ -198,7 +198,8 @@ class ProcessoUiSmokeTest extends TestCase
         $processo->transitions()->create([
             'from_status' => ViabilityRequestStatus::Rascunho,
             'to_status' => ViabilityRequestStatus::Protocolada,
-            'actor_user_id' => $protocolador->id,
+            'actor_type' => $protocolador->getMorphClass(),
+            'actor_id' => $protocolador->id,
         ]);
         $processo->transitions()->create([
             'from_status' => ViabilityRequestStatus::Protocolada,

@@ -5,8 +5,8 @@ namespace Tests\Feature\Renovacao;
 use App\Enums\CompanyLinkRole;
 use App\Enums\TvlKind;
 use App\Enums\ViabilityRequestStatus;
+use App\Models\Cidadao;
 use App\Models\Company;
-use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -28,10 +28,10 @@ class RenovacaoConsultaCnpjTest extends TestCase
 
     public function test_consulta_cnpj_devolve_cadastro_da_sedur_e_a_viabilidade_local(): void
     {
-        $cidadao = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $cidadao = Cidadao::factory()->withAcceptedLgpdTerm()->create();
         $empresa = Company::factory()->create();
         $empresa->links()->create([
-            'user_id' => $cidadao->id,
+            'cidadao_id' => $cidadao->id,
             'role' => CompanyLinkRole::Responsavel,
             'started_at' => now(),
         ]);
@@ -63,7 +63,7 @@ class RenovacaoConsultaCnpjTest extends TestCase
 
     public function test_cnpj_nao_encontrado_na_sedur(): void
     {
-        $cidadao = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $cidadao = Cidadao::factory()->withAcceptedLgpdTerm()->create();
         $empresa = Company::factory()->create();
 
         Http::fake([

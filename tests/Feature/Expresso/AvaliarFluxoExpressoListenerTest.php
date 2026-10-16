@@ -4,8 +4,8 @@ namespace Tests\Feature\Expresso;
 
 use App\Events\SolicitacaoProtocolada;
 use App\Jobs\DecidirFluxoExpressoJob;
+use App\Models\Cidadao;
 use App\Models\Cnae;
-use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Solicitacao\ProtocolarSolicitacaoService;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -33,11 +33,11 @@ class AvaliarFluxoExpressoListenerTest extends TestCase
      */
     private function protocolar(): ViabilityRequest
     {
-        $user = User::factory()->create();
+        $user = Cidadao::factory()->create();
 
         $solicitacao = ViabilityRequest::factory()->draft()->create([
-            'requester_user_id' => $user->id,
-            'created_by_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
+            'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
             'used_area_m2' => 120.0,
         ]);
 

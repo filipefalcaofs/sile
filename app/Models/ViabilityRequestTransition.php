@@ -8,12 +8,13 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
  * Transição de estado registrada pela ViabilityRequestStateMachine — fonte da
  * timeline (HU-069). public_label é o rótulo amigável ao cidadão (RN-004).
  */
-#[Fillable(['from_status', 'to_status', 'reason', 'public_label', 'actor_user_id'])]
+#[Fillable(['from_status', 'to_status', 'reason', 'public_label', 'actor_type', 'actor_id'])]
 class ViabilityRequestTransition extends Model
 {
     /** @use HasFactory<ViabilityRequestTransitionFactory> */
@@ -39,10 +40,10 @@ class ViabilityRequestTransition extends Model
     }
 
     /**
-     * @return BelongsTo<User, $this>
+     * @return MorphTo<Model, $this>
      */
-    public function actor(): BelongsTo
+    public function actor(): MorphTo
     {
-        return $this->belongsTo(User::class, 'actor_user_id');
+        return $this->morphTo('actor');
     }
 }

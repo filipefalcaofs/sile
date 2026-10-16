@@ -5,6 +5,7 @@ namespace Tests\Feature\Regin;
 use App\Enums\ViabilityRequestOrigin;
 use App\Enums\ViabilityRequestStatus;
 use App\Jobs\DecidirFluxoExpressoJob;
+use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\IntegrationCall;
@@ -163,8 +164,25 @@ class ReginProcessoProtocoladorTest extends TestCase
         $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($this->ruc()));
 
         $this->assertNotNull($processo);
-        $this->assertNull($processo->requester_user_id);
-        $this->assertNotSame($gestor->id, $processo->created_by_user_id);
+        $this->assertNull($processo->requester_cidadao_id);
+        $this->assertNull($processo->requester);
+        $this->assertSame(User::class, $processo->created_by_type);
+        $this->assertNotSame($gestor->id, $processo->created_by_id);
+    }
+
+    public function test_ruc_sem_solicitante_nao_confunde_a_integracao_com_cidadao_de_mesmo_id(): void
+    {
+        $integracao = app(ReginProcessoProtocolador::class)->integracao();
+        Cidadao::factory()->create(['id' => $integracao->id]);
+
+        $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($this->ruc()));
+
+        $this->assertNull($processo->requester_cidadao_id);
+        $this->assertSame(User::class, $processo->created_by_type);
+        $this->assertSame($integracao->id, $processo->created_by_id);
+        $this->assertTrue($processo->createdBy->is($integracao));
+        $this->assertSame(0, Cidadao::query()->where('cpf', '00000000000')->count());
+        $this->assertDatabaseHas('users', ['email' => User::EMAIL_INTEGRACAO_REGIN]);
     }
 
     public function test_cpf_ja_usado_nao_impede_o_solicitante_nao_identificado(): void
@@ -183,19 +201,25 @@ class ReginProcessoProtocoladorTest extends TestCase
         config(['viabiliza.tramitacao.atores_ocultos.emails' => ['dev@exemplo.test']]);
         $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($this->ruc()));
         $processo->forceFill([
-            'requester_user_id' => $dev->id,
-            'created_by_user_id' => $dev->id,
+            'requester_cidadao_id' => null,
+            'created_by_type' => $dev->getMorphClass(),
+            'created_by_id' => $dev->id,
             'origem_declarada' => ['cpf_solicitante' => '52998224725', 'nome_solicitante' => 'Maria Souza', 'email_solicitante' => 'maria@exemplo.com'],
         ])->save();
 
         $this->artisan('regin:corrigir-requerentes', ['--dry-run' => true])->assertSuccessful();
-        $this->assertSame($dev->id, $processo->fresh()->requester_user_id);
+        $this->assertNull($processo->fresh()->requester_cidadao_id);
+        $this->assertSame($dev->id, $processo->fresh()->created_by_id);
+        $this->assertSame(0, Cidadao::query()->where('cpf', '52998224725')->count());
 
         $this->artisan('regin:corrigir-requerentes')->assertSuccessful();
 
         $processo = $processo->fresh();
         $this->assertSame('maria@exemplo.com', $processo->requester->email);
+        $this->assertInstanceOf(Cidadao::class, $processo->requester);
+        $this->assertFalse($processo->requester->temSenha());
         $this->assertSame(User::EMAIL_INTEGRACAO_REGIN, $processo->createdBy->email);
+        $this->assertSame(User::class, $processo->created_by_type);
     }
 
     public function test_comando_le_o_solicitante_do_json_do_log_de_integracao_quando_o_processo_nao_guarda_o_envelope(): void
@@ -223,11 +247,11 @@ class ReginProcessoProtocoladorTest extends TestCase
     public function test_comando_deixa_o_requerente_nulo_quando_a_juceb_nao_mandou_solicitante(): void
     {
         $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($this->ruc()));
-        $processo->forceFill(['requester_user_id' => app(ReginProcessoProtocolador::class)->integracao()->id, 'origem_declarada' => null])->save();
+        $processo->forceFill(['requester_cidadao_id' => Cidadao::factory()->create()->id, 'origem_declarada' => null])->save();
 
         $this->artisan('regin:corrigir-requerentes')->assertSuccessful();
 
-        $this->assertNull($processo->fresh()->requester_user_id);
+        $this->assertNull($processo->fresh()->requester_cidadao_id);
     }
 
     public function test_natureza_juridica_do_ruc_vai_para_a_empresa(): void

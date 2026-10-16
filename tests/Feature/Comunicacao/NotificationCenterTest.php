@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Comunicacao;
 
+use App\Models\Cidadao;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -30,9 +31,9 @@ class NotificationCenterTest extends TestCase
         $this->seed(RolesAndPermissionsSeeder::class);
     }
 
-    private function portalUser(): User
+    private function portalUser(): Cidadao
     {
-        return User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        return Cidadao::factory()->withAcceptedLgpdTerm()->create();
     }
 
     private function gestaoUser(): User
@@ -47,7 +48,7 @@ class NotificationCenterTest extends TestCase
      *
      * @param  array<string, mixed>  $data
      */
-    private function notificar(User $user, bool $lida = false, array $data = []): DatabaseNotification
+    private function notificar(User|Cidadao $user, bool $lida = false, array $data = []): DatabaseNotification
     {
         return $user->notifications()->create([
             'id' => (string) Str::uuid(),

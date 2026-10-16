@@ -4,10 +4,10 @@ namespace Database\Seeders;
 
 use App\Enums\ViabilityRequestOrigin;
 use App\Enums\ViabilityRequestStatus;
+use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\DocumentRequirement;
-use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
 use App\Services\Expresso\FluxoExpressoService;
@@ -56,10 +56,10 @@ class ExpressoDevSeeder extends Seeder
             return;
         }
 
-        $cidadao = User::query()->where('email', 'cidadao@sile.dev')->first();
+        $cidadao = Cidadao::query()->where('email', 'cidadao@sile.dev')->first();
 
         $company = $cidadao === null ? null : Company::query()
-            ->whereHas('links', fn ($query) => $query->where('user_id', $cidadao->id)->whereNull('ended_at'))
+            ->whereHas('links', fn ($query) => $query->where('cidadao_id', $cidadao->id)->whereNull('ended_at'))
             ->orderBy('id')
             ->first();
 
@@ -93,7 +93,7 @@ class ExpressoDevSeeder extends Seeder
      * Idempotente pelo marcador em address_reference.
      */
     private function exampleDraft(
-        User $cidadao,
+        Cidadao $cidadao,
         Company $company,
         ViabilityServiceType $type,
         Cnae $cnae,
@@ -102,7 +102,7 @@ class ExpressoDevSeeder extends Seeder
         array $poligono,
     ): ViabilityRequest {
         $existing = ViabilityRequest::query()
-            ->where('requester_user_id', $cidadao->id)
+            ->where('requester_cidadao_id', $cidadao->id)
             ->where('address_reference', $marker)
             ->first();
 
@@ -114,8 +114,9 @@ class ExpressoDevSeeder extends Seeder
             'origin' => ViabilityRequestOrigin::Portal,
             'service_type_id' => $type->id,
             'company_id' => $company->id,
-            'requester_user_id' => $cidadao->id,
-            'created_by_user_id' => $cidadao->id,
+            'requester_cidadao_id' => $cidadao->id,
+            'created_by_type' => $cidadao->getMorphClass(),
+            'created_by_id' => $cidadao->id,
             'used_area_m2' => 120.0,
             'address_street' => 'Avenida Sete de Setembro',
             'address_number' => '2000',
@@ -144,7 +145,8 @@ class ExpressoDevSeeder extends Seeder
             'mime_type' => 'image/jpeg',
             'size' => 51200,
             'sha256' => hash('sha256', "expresso-fachada-{$request->id}"),
-            'uploaded_by_user_id' => $cidadao->id,
+            'uploaded_by_type' => $cidadao->getMorphClass(),
+            'uploaded_by_id' => $cidadao->id,
         ]);
 
         return $request;

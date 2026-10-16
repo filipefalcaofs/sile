@@ -3,6 +3,7 @@
 namespace App\Services\Lgpd;
 
 use App\Models\Activity;
+use App\Models\Cidadao;
 use App\Models\LegalTerm;
 use App\Models\LegalTermAcceptance;
 use App\Models\User;
@@ -34,7 +35,8 @@ class LgpdMonitorService
      */
     public function consentimentos(): array
     {
-        $total = User::query()->count();
+        // Registro de balcão e espelho de servidor não têm senha: não são contas e não aceitam termo.
+        $total = User::query()->count() + Cidadao::query()->whereNotNull('password')->count();
         $term = LegalTerm::current('lgpd');
 
         if ($term === null) {
@@ -49,10 +51,10 @@ class LgpdMonitorService
             ];
         }
 
-        $aceitaram = LegalTermAcceptance::query()
+        $aceitaram = (int) LegalTermAcceptance::query()
             ->where('legal_term_id', $term->id)
-            ->distinct()
-            ->count('user_id');
+            ->selectRaw('count(distinct accepted_by_type || \'#\' || accepted_by_id) as total')
+            ->value('total');
 
         return [
             'sem_termo_publicado' => false,

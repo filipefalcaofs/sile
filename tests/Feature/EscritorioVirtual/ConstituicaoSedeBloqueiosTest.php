@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\EscritorioVirtual;
 
+use App\Models\Cidadao;
 use App\Models\Cnae;
-use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\VirtualOfficeInscriptionLock;
 use Database\Seeders\EscritorioVirtualCnaeSeeder;
@@ -39,20 +39,20 @@ class ConstituicaoSedeBloqueiosTest extends TestCase
     /**
      * Cidadão habilitado a navegar no portal (papel + termo LGPD aceito).
      */
-    private function portalUser(): User
+    private function portalUser(): Cidadao
     {
-        return User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        return Cidadao::factory()->withAcceptedLgpdTerm()->create();
     }
 
     /**
      * Rascunho de solicitação cujo requerente (beneficiário) é o usuário, com a
      * inscrição imobiliária informada (passo do imóvel, anterior às atividades).
      */
-    private function draftFor(User $user, ?string $propertyRegistration, bool $wantsTenant = false, bool $wantsHq = false): ViabilityRequest
+    private function draftFor(Cidadao $user, ?string $propertyRegistration, bool $wantsTenant = false, bool $wantsHq = false): ViabilityRequest
     {
         return ViabilityRequest::factory()->draft()->create([
-            'requester_user_id' => $user->id,
-            'created_by_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
+            'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
             'property_registration' => $propertyRegistration,
             'wants_virtual_office_tenant' => $wantsTenant,
             'wants_virtual_office_hq' => $wantsHq,

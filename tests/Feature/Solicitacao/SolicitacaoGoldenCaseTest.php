@@ -2,9 +2,9 @@
 
 namespace Tests\Feature\Solicitacao;
 
+use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\DocumentRequirement;
-use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Solicitacao\CancelarSolicitacaoService;
 use App\Services\Solicitacao\DocumentacaoIncompletaException;
@@ -132,11 +132,11 @@ class SolicitacaoGoldenCaseTest extends TestCase
      */
     private function buildDraft(array $caso): ViabilityRequest
     {
-        $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $user = Cidadao::factory()->withAcceptedLgpdTerm()->create();
 
         $attributes = [
-            'requester_user_id' => $user->id,
-            'created_by_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
+            'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
             'used_area_m2' => 120.0,
             'is_public_area' => (bool) ($caso['is_public_area'] ?? false),
         ];
@@ -163,7 +163,7 @@ class SolicitacaoGoldenCaseTest extends TestCase
                 'mime_type' => 'image/jpeg',
                 'size' => 4096,
                 'sha256' => hash('sha256', "golden-fachada-{$solicitacao->id}"),
-                'uploaded_by_user_id' => $user->id,
+                'uploaded_by_type' => $user->getMorphClass(), 'uploaded_by_id' => $user->id,
             ]);
         }
 

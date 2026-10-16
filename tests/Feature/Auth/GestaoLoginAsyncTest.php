@@ -87,7 +87,7 @@ class GestaoLoginAsyncTest extends TestCase
         ], ['X-Viabiliza-Login-Async' => '1'])->assertOk();
 
         $this->assertDatabaseHas('access_logs', [
-            'user_id' => $administrador->id,
+            'actor_type' => $administrador->getMorphClass(), 'actor_id' => $administrador->id,
             'event' => 'login',
             'channel' => 'gestao',
         ]);

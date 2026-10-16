@@ -37,7 +37,7 @@ class ResolveAssistedAttendance
                 $request->session()->flash('status', 'O atendimento presencial foi encerrado porque o vínculo expirou. Reabra para continuar.');
                 $this->endAttendance();
             } else {
-                Context::add('acting_for_user_id', $attendance->citizen_user_id);
+                Context::add('acting_for_cidadao_id', $attendance->citizen_cidadao_id);
                 app(CurrentRepresentation::class)->setAttendance($attendance);
             }
         } else {
@@ -54,7 +54,7 @@ class ResolveAssistedAttendance
      */
     private function endAttendance(): void
     {
-        Context::forget('acting_for_user_id');
+        Context::forget('acting_for_cidadao_id');
         app(CurrentRepresentation::class)->clearAttendance();
     }
 }

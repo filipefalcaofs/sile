@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Lgpd;
 
+use App\Models\Cidadao;
 use App\Models\LegalTerm;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -37,7 +38,7 @@ class TermoLgpdPorAmbienteTest extends TestCase
 
     public function test_cidadao_sem_aceite_vai_para_o_termo_do_portal(): void
     {
-        $cidadao = User::factory()->cidadao()->create();
+        $cidadao = Cidadao::factory()->create();
 
         $this->actingAs($cidadao, 'web')
             ->get('/portal/painel')

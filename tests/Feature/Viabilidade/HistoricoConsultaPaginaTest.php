@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Viabilidade;
 
-use App\Models\User;
+use App\Models\Cidadao;
 use App\Models\ViabilityQuery;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -14,7 +14,7 @@ use Tests\TestCase;
  * página existe (resources/js/pages/portal/viabilidade/historico.tsx), o teste
  * reativa a asserção do componente Inertia que o 07-07 deixou pendente. Reforça
  * o contrato server-side da tela: o componente renderizado, o escopo do dono
- * (forUser — precedente "Minhas empresas") e a exigência de autenticação.
+ * (forCidadao — precedente "Minhas empresas") e a exigência de autenticação.
  */
 class HistoricoConsultaPaginaTest extends TestCase
 {
@@ -30,9 +30,9 @@ class HistoricoConsultaPaginaTest extends TestCase
     /**
      * Cidadão do portal com termo LGPD aceito — precedente "Minhas empresas".
      */
-    private function portalUser(): User
+    private function portalUser(): Cidadao
     {
-        return User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        return Cidadao::factory()->withAcceptedLgpdTerm()->create();
     }
 
     public function test_pagina_do_historico_renderiza_consultas_do_dono(): void

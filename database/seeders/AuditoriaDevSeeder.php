@@ -8,6 +8,7 @@ use App\Enums\DecisionOutcome;
 use App\Enums\ViabilityRequestOrigin;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\Activity;
+use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\CompanyUser;
@@ -162,7 +163,7 @@ class AuditoriaDevSeeder extends Seeder
      *
      * @param  AuditoriaDevContexto  $ctx
      */
-    private function decisaoAnaliseTecnica(array $ctx, User $requerente, Company $empresa): void
+    private function decisaoAnaliseTecnica(array $ctx, Cidadao $requerente, Company $empresa): void
     {
         $request = $this->rascunhoInstruido(
             $ctx, $requerente, $empresa, self::MARK_DECISAO,
@@ -206,7 +207,7 @@ class AuditoriaDevSeeder extends Seeder
      *
      * @param  AuditoriaDevContexto  $ctx
      */
-    private function decisaoLegada(array $ctx, User $requerente, Company $empresa): void
+    private function decisaoLegada(array $ctx, Cidadao $requerente, Company $empresa): void
     {
         if (ViabilityRequest::query()->where('address_reference', self::MARK_LEGADO)->exists()) {
             return;
@@ -217,8 +218,9 @@ class AuditoriaDevSeeder extends Seeder
             'origin' => ViabilityRequestOrigin::Portal,
             'service_type_id' => $ctx['type']->id,
             'company_id' => $empresa->id,
-            'requester_user_id' => $requerente->id,
-            'created_by_user_id' => $requerente->id,
+            'requester_cidadao_id' => $requerente->id,
+            'created_by_type' => $requerente->getMorphClass(),
+            'created_by_id' => $requerente->id,
             'protocol_number' => 'VIA-2025-099999',
             'protocoled_at' => now()->subMonths(8),
             'used_area_m2' => 90.0,
@@ -268,8 +270,9 @@ class AuditoriaDevSeeder extends Seeder
                 'origin' => ViabilityRequestOrigin::Portal,
                 'service_type_id' => $ctx['type']->id,
                 'company_id' => $empresa->id,
-                'requester_user_id' => $requerente->id,
-                'created_by_user_id' => $requerente->id,
+                'requester_cidadao_id' => $requerente->id,
+                'created_by_type' => $requerente->getMorphClass(),
+                'created_by_id' => $requerente->id,
                 'used_area_m2' => 80.0,
                 'property_registration' => null,
                 'address_street' => 'Rua do Volume Atípico',
@@ -375,7 +378,7 @@ class AuditoriaDevSeeder extends Seeder
      * nesse caso a transição é pulada e o estado respeitado. Degrada honesto se
      * não chegar a em_analise.
      */
-    private function levarParaEmAnalise(ViabilityRequest $request, User $requerente, User $analista): ?ViabilityRequest
+    private function levarParaEmAnalise(ViabilityRequest $request, Cidadao $requerente, User $analista): ?ViabilityRequest
     {
         if ($request->status === ViabilityRequestStatus::Rascunho) {
             app(ProtocolarSolicitacaoService::class)->protocol($request, $requerente);
@@ -405,7 +408,7 @@ class AuditoriaDevSeeder extends Seeder
      */
     private function rascunhoInstruido(
         array $ctx,
-        User $requerente,
+        Cidadao $requerente,
         Company $empresa,
         string $marker,
         string $street,
@@ -424,8 +427,9 @@ class AuditoriaDevSeeder extends Seeder
             'origin' => ViabilityRequestOrigin::Portal,
             'service_type_id' => $ctx['type']->id,
             'company_id' => $empresa->id,
-            'requester_user_id' => $requerente->id,
-            'created_by_user_id' => $requerente->id,
+            'requester_cidadao_id' => $requerente->id,
+            'created_by_type' => $requerente->getMorphClass(),
+            'created_by_id' => $requerente->id,
             'used_area_m2' => 120.0,
             'property_registration' => null,
             'address_street' => $street,
@@ -449,37 +453,36 @@ class AuditoriaDevSeeder extends Seeder
             'mime_type' => 'image/jpeg',
             'size' => 51200,
             'sha256' => hash('sha256', "auditoria-fachada-{$request->id}"),
-            'uploaded_by_user_id' => $requerente->id,
+            'uploaded_by_type' => $requerente->getMorphClass(),
+            'uploaded_by_id' => $requerente->id,
         ]);
 
         return $request;
     }
 
     /**
-     * Cria (ou reusa) um requerente dedicado de dev (papel cidadão, e-mail
+     * Cria (ou reusa) um requerente dedicado de dev (conta de cidadão, e-mail
      * verificado, termo LGPD aceito). Idempotente por e-mail.
      */
-    private function requerente(string $email, string $name, string $cpf): User
+    private function requerente(string $email, string $name, string $cpf): Cidadao
     {
-        $user = User::firstOrCreate(
+        $cidadao = Cidadao::firstOrCreate(
             ['email' => $email],
             ['name' => $name, 'cpf' => $cpf, 'phone' => null, 'password' => 'password'],
         );
 
-        if ($user->email_verified_at === null) {
-            $user->forceFill(['email_verified_at' => now()])->save();
+        if ($cidadao->email_verified_at === null) {
+            $cidadao->forceFill(['email_verified_at' => now()])->save();
         }
-
-        $user->assignRole('cidadao');
 
         if ($term = LegalTerm::current('lgpd')) {
             LegalTermAcceptance::firstOrCreate(
-                ['user_id' => $user->id, 'legal_term_id' => $term->id],
+                ['accepted_by_type' => $cidadao->getMorphClass(), 'accepted_by_id' => $cidadao->id, 'legal_term_id' => $term->id],
                 ['ip_address' => '127.0.0.1', 'accepted_at' => now()],
             );
         }
 
-        return $user;
+        return $cidadao;
     }
 
     /**
@@ -507,10 +510,10 @@ class AuditoriaDevSeeder extends Seeder
         );
     }
 
-    private function vincular(Company $empresa, User $requerente): void
+    private function vincular(Company $empresa, Cidadao $requerente): void
     {
         CompanyUser::firstOrCreate(
-            ['company_id' => $empresa->id, 'user_id' => $requerente->id, 'role' => CompanyLinkRole::Responsavel],
+            ['company_id' => $empresa->id, 'cidadao_id' => $requerente->id, 'role' => CompanyLinkRole::Responsavel],
             ['started_at' => now()],
         );
     }

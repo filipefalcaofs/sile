@@ -2,13 +2,12 @@
 
 namespace App\Providers;
 
-use App\Actions\Fortify\CreateNewUser;
-use App\Actions\Fortify\ResetUserPassword;
-use App\Actions\Fortify\UpdateUserPassword;
-use App\Actions\Fortify\UpdateUserProfileInformation;
+use App\Actions\Fortify\CreateNewCidadao;
+use App\Actions\Fortify\ResetCidadaoPassword;
+use App\Actions\Fortify\UpdateCidadaoPassword;
 use App\Http\Responses\RespostaRecuperacaoSenhaSemRevelarConta;
 use App\Models\AccessLog;
-use App\Models\User;
+use App\Models\Cidadao;
 use App\Services\GovBr\GovBr;
 use App\Support\PasswordPolicy;
 use App\Support\Settings;
@@ -91,10 +90,9 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Fortify::createUsersUsing(CreateNewUser::class);
-        Fortify::updateUserProfileInformationUsing(UpdateUserProfileInformation::class);
-        Fortify::updateUserPasswordsUsing(UpdateUserPassword::class);
-        Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
+        Fortify::createUsersUsing(CreateNewCidadao::class);
+        Fortify::updateUserPasswordsUsing(UpdateCidadaoPassword::class);
+        Fortify::resetUserPasswordsUsing(ResetCidadaoPassword::class);
         Fortify::redirectUserForTwoFactorAuthenticationUsing(RedirectIfTwoFactorAuthenticatable::class);
 
         Fortify::loginView(fn (Request $request) => Inertia::render('auth/login', [
@@ -134,20 +132,21 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::authenticateUsing(function (Request $request) {
             $cpf = preg_replace('/\D/', '', (string) $request->input('cpf'));
 
-            $user = User::query()->where('cpf', $cpf)->first();
+            $cidadao = Cidadao::query()->where('cpf', $cpf)->first();
 
-            if (! $user || ! Hash::check($request->password, $user->password)) {
+            if (! $cidadao || ! $cidadao->temSenha() || ! Hash::check($request->password, $cidadao->password)) {
                 return null;
             }
 
-            if ($user->isInactive()) {
+            if ($cidadao->isInactive()) {
                 AccessLog::create([
-                    'user_id' => $user->id,
-                    'email' => $user->email,
+                    'actor_type' => Cidadao::class,
+                    'actor_id' => $cidadao->id,
+                    'email' => $cidadao->email,
                     'event' => 'inativada',
                     'ip_address' => $request->ip(),
                     'user_agent' => substr((string) $request->userAgent(), 0, 500),
-                    'channel' => $request->routeIs('gestao.*') ? 'gestao' : 'portal',
+                    'channel' => 'portal',
                 ]);
 
                 throw ValidationException::withMessages([
@@ -155,7 +154,7 @@ class FortifyServiceProvider extends ServiceProvider
                 ]);
             }
 
-            return $user;
+            return $cidadao;
         });
 
         RateLimiter::for('login', function (Request $request) {
@@ -181,28 +180,28 @@ class FortifyServiceProvider extends ServiceProvider
         // sem deploy; estabelece o padrão de throttle parametrizado para HU-069/EP07.
         RateLimiter::for('cnpj-lookup', function (Request $request) {
             return Limit::perMinute(
-                (int) config('viabiliza.seguranca.throttle.cnpj_lookup.por_minuto', 30),
-            )->by($request->user()?->id ?: $request->ip());
+                (int) config('sile.seguranca.throttle.cnpj_lookup.por_minuto', 30),
+            )->by(self::chaveDoLimite($request));
         });
 
         RateLimiter::for('inscricao-lookup', function (Request $request) {
             return Limit::perMinute(
-                (int) config('viabiliza.seguranca.throttle.inscricao_lookup.por_minuto', 30),
-            )->by($request->user()?->id ?: $request->ip());
+                (int) config('sile.seguranca.throttle.inscricao_lookup.por_minuto', 30),
+            )->by(self::chaveDoLimite($request));
         });
 
         RateLimiter::for('sedur-contato', function (Request $request) {
             return Limit::perMinute(
-                (int) config('viabiliza.seguranca.throttle.sedur_contato.por_minuto', 30),
-            )->by($request->user()?->id ?: $request->ip());
+                (int) config('sile.seguranca.throttle.sedur_contato.por_minuto', 30),
+            )->by(self::chaveDoLimite($request));
         });
 
         // Throttle da geocodificação (HU-029) — Nominatim recomenda ~1 req/s;
         // o limite por minuto é administrável sem deploy (espelha cnpj-lookup).
         RateLimiter::for('geocoding', function (Request $request) {
             return Limit::perMinute(
-                (int) config('viabiliza.seguranca.throttle.geocoding.por_minuto', 60),
-            )->by($request->user()?->id ?: $request->ip());
+                (int) config('sile.seguranca.throttle.geocoding.por_minuto', 60),
+            )->by(self::chaveDoLimite($request));
         });
 
         // Throttle da consulta pública de viabilidade (EP07) — limite
@@ -210,16 +209,16 @@ class FortifyServiceProvider extends ServiceProvider
         // estabelecido na Fase 3.1 (cnpj-lookup/geocoding).
         RateLimiter::for('consulta-viabilidade', function (Request $request) {
             return Limit::perMinute(
-                (int) config('viabiliza.seguranca.throttle.consulta_viabilidade.por_minuto', 20),
-            )->by($request->user()?->id ?: $request->ip());
+                (int) config('sile.seguranca.throttle.consulta_viabilidade.por_minuto', 20),
+            )->by(self::chaveDoLimite($request));
         });
 
         // Throttle da consulta PÚBLICA de protocolo por link assinado (HU-069) —
         // limite administrável sem deploy; espelha consulta-viabilidade (EP07).
         RateLimiter::for('consulta-protocolo', function (Request $request) {
             return Limit::perMinute(
-                (int) config('viabiliza.seguranca.throttle.consulta_protocolo.por_minuto', 30),
-            )->by($request->user()?->id ?: $request->ip());
+                (int) config('sile.seguranca.throttle.consulta_protocolo.por_minuto', 30),
+            )->by(self::chaveDoLimite($request));
         });
 
         // Throttle do teste de conexão de IA (Fase 14, Onda 0) — ação interna de
@@ -229,7 +228,7 @@ class FortifyServiceProvider extends ServiceProvider
         RateLimiter::for('ai-connection-test', function (Request $request) {
             return Limit::perMinute(
                 (int) Settings::get('seguranca.throttle.ai_test.por_minuto', 10),
-            )->by($request->user()?->id ?: $request->ip());
+            )->by(self::chaveDoLimite($request));
         });
 
         // Throttle do webhook municipal /api_integracao/recebe (HU-103 RN-010).
@@ -238,5 +237,16 @@ class FortifyServiceProvider extends ServiceProvider
                 (int) config('viabiliza.seguranca.throttle.regin_recebe.por_minuto', 60),
             )->by($request->ip());
         });
+    }
+
+    /**
+     * Chave dos limitadores por conta: tipo + id, porque cidadão e servidor podem ter o mesmo id;
+     * sem conta, o IP.
+     */
+    private static function chaveDoLimite(Request $request): string
+    {
+        $conta = $request->user();
+
+        return $conta !== null ? $conta->getMorphClass().'|'.$conta->getKey() : (string) $request->ip();
     }
 }

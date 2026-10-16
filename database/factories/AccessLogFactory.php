@@ -3,7 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\AccessLog;
-use App\Models\User;
+use App\Models\Cidadao;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -17,7 +17,8 @@ class AccessLogFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => User::factory(),
+            'actor_type' => Cidadao::class,
+            'actor_id' => Cidadao::factory(),
             'email' => fake()->safeEmail(),
             'event' => 'login',
             'ip_address' => fake()->ipv4(),

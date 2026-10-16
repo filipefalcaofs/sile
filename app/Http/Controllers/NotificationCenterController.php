@@ -12,8 +12,8 @@ use Inertia\Response;
 
 /**
  * Central de notificações in-app (HU-090) sobre o canal database NATIVO do
- * Laravel (tabela notifications). Serve os DOIS ambientes com o MESMO User
- * notifiable: o portal (guard web) e a gestão (guard gestao) — o ambiente é
+ * Laravel (tabela notifications). Serve os DOIS ambientes: o portal (guard web,
+ * notifiable Cidadao) e a gestão (guard gestao, notifiable User) — o ambiente é
  * derivado da rota para escolher a página Inertia, mas o dado é sempre do
  * `$request->user()` autenticado.
  *

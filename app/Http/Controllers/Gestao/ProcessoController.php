@@ -313,7 +313,8 @@ class ProcessoController extends Controller
             return null;
         }
 
-        $atorId = $atividade->properties['ator_id'] ?? $atividade->causer_id;
+        $atorId = $atividade->properties['ator_id']
+            ?? ($atividade->causer_type === (new User)->getMorphClass() ? $atividade->causer_id : null);
 
         if ($atorId === null) {
             return null;

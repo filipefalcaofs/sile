@@ -6,10 +6,10 @@ use App\Enums\ViabilityRequestStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Portal\LookupCnpjRequest;
 use App\Http\Requests\Portal\ProtocolarRenovacaoRequest;
+use App\Models\Cidadao;
 use App\Models\Company;
 use App\Models\CompanyUser;
 use App\Models\ServiceDeclaration;
-use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
 use App\Services\Renovacao\RenovacaoElegibilidadeService;
@@ -194,7 +194,7 @@ class RenovacaoController extends Controller
             ->with('status', 'Renovação protocolada. O processo foi encaminhado para análise.');
     }
 
-    private function usuarioEfetivo(Request $request): User
+    private function usuarioEfetivo(Request $request): Cidadao
     {
         return app(CurrentRepresentation::class)->grantor() ?? $request->user();
     }
@@ -202,10 +202,10 @@ class RenovacaoController extends Controller
     /**
      * @return list<int>
      */
-    private function empresasDo(User $usuario): array
+    private function empresasDo(Cidadao $usuario): array
     {
         return CompanyUser::query()
-            ->where('user_id', $usuario->id)
+            ->where('cidadao_id', $usuario->id)
             ->whereNull('ended_at')
             ->pluck('company_id')
             ->map(fn (mixed $id): int => (int) $id)

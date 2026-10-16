@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Enums\ViabilityRequestOrigin;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\AnalysisPendency;
+use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\DocumentRequirement;
@@ -177,8 +178,9 @@ class ComunicacaoDevSeeder extends Seeder
             'origin' => ViabilityRequestOrigin::Portal,
             'service_type_id' => $ctx['type']->id,
             'company_id' => $ctx['company']->id,
-            'requester_user_id' => $ctx['cidadao']->id,
-            'created_by_user_id' => $ctx['cidadao']->id,
+            'requester_cidadao_id' => $ctx['cidadao']->id,
+            'created_by_type' => $ctx['cidadao']->getMorphClass(),
+            'created_by_id' => $ctx['cidadao']->id,
             'used_area_m2' => 90.0,
             'address_street' => 'Rua da Paciência',
             'address_number' => '120',
@@ -201,16 +203,17 @@ class ComunicacaoDevSeeder extends Seeder
             'mime_type' => 'image/jpeg',
             'size' => 51200,
             'sha256' => hash('sha256', "comunicacao-fachada-{$request->id}"),
-            'uploaded_by_user_id' => $ctx['cidadao']->id,
+            'uploaded_by_type' => $ctx['cidadao']->getMorphClass(),
+            'uploaded_by_id' => $ctx['cidadao']->id,
         ]);
 
         return $request;
     }
 
-    private function exemploExistente(User $cidadao): ?ViabilityRequest
+    private function exemploExistente(Cidadao $cidadao): ?ViabilityRequest
     {
         return ViabilityRequest::query()
-            ->where('requester_user_id', $cidadao->id)
+            ->where('requester_cidadao_id', $cidadao->id)
             ->where('address_reference', self::MARK)
             ->first();
     }
@@ -219,16 +222,16 @@ class ComunicacaoDevSeeder extends Seeder
      * Pré-requisitos do seed (cidadão/empresa/tipo/CNAE/fachada + setor/analista do
      * SectorSeeder). Devolve null se faltar algo (degradação honesta).
      *
-     * @phpstan-type ComunicacaoDevContexto array{cidadao: User, company: Company, type: ViabilityServiceType, cnae: Cnae, fachada: DocumentRequirement, sector: Sector, analista: User}
+     * @phpstan-type ComunicacaoDevContexto array{cidadao: Cidadao, company: Company, type: ViabilityServiceType, cnae: Cnae, fachada: DocumentRequirement, sector: Sector, analista: User}
      *
      * @return ComunicacaoDevContexto|null
      */
     private function contexto(): ?array
     {
-        $cidadao = User::query()->where('email', 'cidadao@sile.dev')->first();
+        $cidadao = Cidadao::query()->where('email', 'cidadao@sile.dev')->first();
 
         $company = $cidadao === null ? null : Company::query()
-            ->whereHas('links', fn ($query) => $query->where('user_id', $cidadao->id)->whereNull('ended_at'))
+            ->whereHas('links', fn ($query) => $query->where('cidadao_id', $cidadao->id)->whereNull('ended_at'))
             ->orderBy('id')
             ->first();
 

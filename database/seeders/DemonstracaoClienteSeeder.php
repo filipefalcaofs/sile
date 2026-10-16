@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Cidadao;
 use App\Models\LegalTerm;
 use App\Models\LegalTermAcceptance;
 use App\Models\Sector;
@@ -51,18 +52,17 @@ class DemonstracaoClienteSeeder extends Seeder
 
     private function seedUsuariosCliente(): void
     {
-        $this->seedUsuario(
+        $this->seedServidor(
             self::CLIENTE_GESTAO_EMAIL,
             'Validação SEDUR',
             '70698543032',
             'administrador',
         );
 
-        $this->seedUsuario(
+        $this->seedRequerente(
             self::CLIENTE_PORTAL_EMAIL,
             'Requerente Demo SEDUR',
             '45317828791',
-            'cidadao',
         );
 
         $this->command?->info('Gestão (validação): '.self::CLIENTE_GESTAO_EMAIL.' / '.self::DEMO_PASSWORD);
@@ -72,22 +72,25 @@ class DemonstracaoClienteSeeder extends Seeder
 
     /**
      * O ambiente de demonstração é público: os usuários fictícios de dev
-     * (@sile.dev, senha fraca "password") ganham a senha demo. Roda a cada
-     * seed — recadastros manuais de senha nesses usuários não são esperados.
+     * (@sile.dev, senha fraca "password"), servidores e cidadãos, ganham a
+     * senha demo. Roda a cada seed — recadastros manuais de senha nesses
+     * usuários não são esperados.
      */
     private function rotacionarSenhasDev(): void
     {
-        User::query()
-            ->where('email', 'like', '%@sile.dev')
-            ->get()
-            ->each(function (User $user): void {
-                $user->forceFill(['password' => self::DEMO_PASSWORD])->save();
-            });
+        foreach ([User::class, Cidadao::class] as $model) {
+            $model::query()
+                ->where('email', 'like', '%@sile.dev')
+                ->get()
+                ->each(function (User|Cidadao $conta): void {
+                    $conta->forceFill(['password' => self::DEMO_PASSWORD])->save();
+                });
+        }
 
         $this->command?->info('Usuários @sile.dev com senha demo: '.self::DEMO_PASSWORD);
     }
 
-    private function seedUsuario(string $email, string $name, string $cpf, string $role): User
+    private function seedServidor(string $email, string $name, string $cpf, string $role): User
     {
         $user = User::firstOrCreate(
             ['email' => $email],
@@ -107,14 +110,40 @@ class DemonstracaoClienteSeeder extends Seeder
             $user->syncRoles([$role]);
         }
 
+        $this->aceitarTermoLgpd($user);
+
+        return $user;
+    }
+
+    private function seedRequerente(string $email, string $name, string $cpf): Cidadao
+    {
+        $cidadao = Cidadao::firstOrCreate(
+            ['email' => $email],
+            [
+                'name' => $name,
+                'cpf' => $cpf,
+                'phone' => null,
+                'password' => self::DEMO_PASSWORD,
+            ],
+        );
+
+        if ($cidadao->email_verified_at === null) {
+            $cidadao->forceFill(['email_verified_at' => now()])->save();
+        }
+
+        $this->aceitarTermoLgpd($cidadao);
+
+        return $cidadao;
+    }
+
+    private function aceitarTermoLgpd(User|Cidadao $conta): void
+    {
         if ($term = LegalTerm::current('lgpd')) {
             LegalTermAcceptance::firstOrCreate(
-                ['user_id' => $user->id, 'legal_term_id' => $term->id],
+                ['accepted_by_type' => $conta->getMorphClass(), 'accepted_by_id' => $conta->id, 'legal_term_id' => $term->id],
                 ['ip_address' => '127.0.0.1', 'accepted_at' => now()],
             );
         }
-
-        return $user;
     }
 
     /**

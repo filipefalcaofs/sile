@@ -48,7 +48,7 @@ class EndCompanyLinkRequest extends FormRequest
                 $effectiveUser = app(CurrentRepresentation::class)->grantor() ?? $this->user();
 
                 $link = $company->activeLinks()
-                    ->where('user_id', $effectiveUser->id)
+                    ->where('cidadao_id', $effectiveUser->id)
                     ->first();
 
                 if ($link?->role === CompanyLinkRole::Responsavel

@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\EscritorioVirtual;
 
-use App\Models\User;
+use App\Models\Cidadao;
 use App\Models\ViabilityRequest;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -29,9 +29,9 @@ class ImovelPreservaRespostaSedeTest extends TestCase
         $this->seed(RolesAndPermissionsSeeder::class);
     }
 
-    private function portalUser(): User
+    private function portalUser(): Cidadao
     {
-        return User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        return Cidadao::factory()->withAcceptedLgpdTerm()->create();
     }
 
     /**
@@ -55,8 +55,8 @@ class ImovelPreservaRespostaSedeTest extends TestCase
     {
         $user = $this->portalUser();
         $solicitacao = ViabilityRequest::factory()->draft()->create([
-            'requester_user_id' => $user->id,
-            'created_by_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
+            'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
             'wants_virtual_office_hq' => true,
         ]);
 

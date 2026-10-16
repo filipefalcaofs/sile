@@ -88,7 +88,6 @@ class ContingenciaController extends Controller
     {
         /** @var User $operator */
         $operator = $request->user();
-        $beneficiary = $request->beneficiaryUser();
         $company = $request->beneficiaryCompany();
         $externalReference = $this->externalReference($request);
 
@@ -114,13 +113,16 @@ class ContingenciaController extends Controller
         $storedPaths = [];
 
         try {
-            $solicitacao = DB::transaction(function () use ($request, $operator, $beneficiary, $company, $externalReference, &$storedPaths): ViabilityRequest {
+            $solicitacao = DB::transaction(function () use ($request, $operator, $company, $externalReference, &$storedPaths): ViabilityRequest {
+                $beneficiary = $request->beneficiaryCidadao();
+
                 $solicitacao = ViabilityRequest::create([
                     'origin' => ViabilityRequestOrigin::Contingencia,
                     'service_type_id' => $request->validated('service_type_id'),
                     'company_id' => $company->id,
-                    'requester_user_id' => $beneficiary->id,
-                    'created_by_user_id' => $operator->id,
+                    'requester_cidadao_id' => $beneficiary->id,
+                    'created_by_type' => $operator->getMorphClass(),
+                    'created_by_id' => $operator->id,
                     'contingency_reason' => $request->validated('contingency_reason'),
                     'external_reference' => $externalReference,
                     'used_area_m2' => $request->validated('used_area_m2'),
@@ -230,7 +232,8 @@ class ContingenciaController extends Controller
                 'mime_type' => $mimeType,
                 'size' => $size,
                 'sha256' => $sha256,
-                'uploaded_by_user_id' => $operator->id,
+                'uploaded_by_type' => $operator->getMorphClass(),
+                'uploaded_by_id' => $operator->id,
             ]);
 
             $this->audit->log('solicitacoes', 'documento-anexado', 'Documento anexado em contingência', [

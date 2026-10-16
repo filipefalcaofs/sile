@@ -5,11 +5,11 @@ namespace Tests\Feature\Solicitacao;
 use App\Enums\CompanyLinkRole;
 use App\Enums\GeoLayerType;
 use App\Enums\ViabilityRequestStatus;
+use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\DocumentRequirement;
 use App\Models\GeoLayer;
-use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
 use App\Services\Geo\SpatialRepository;
@@ -84,7 +84,7 @@ class SolicitacaoSmokeTest extends TestCase
 
         $solicitacao = ViabilityRequest::query()
             ->where('company_id', $company->id)
-            ->where('requester_user_id', $user->id)
+            ->where('requester_cidadao_id', $user->id)
             ->latest('id')
             ->firstOrFail();
         $this->assertSame(ViabilityRequestStatus::Rascunho, $solicitacao->status);
@@ -186,8 +186,8 @@ class SolicitacaoSmokeTest extends TestCase
         $solicitacao = ViabilityRequest::factory()->draft()->create([
             'company_id' => $company->id,
             'service_type_id' => $serviceType->id,
-            'requester_user_id' => $user->id,
-            'created_by_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
+            'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
             'used_area_m2' => 120.0,
             'is_public_area' => false,
         ]);
@@ -213,8 +213,8 @@ class SolicitacaoSmokeTest extends TestCase
         // PENDENTE — nunca um permitido/não permitido inventado.
         [$user] = $this->ator();
         $solicitacao = ViabilityRequest::factory()->draft()->create([
-            'requester_user_id' => $user->id,
-            'created_by_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
+            'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
             'used_area_m2' => 120.0,
         ]);
         $cnae = Cnae::factory()->create(['code' => self::CNAE_MINIMERCADO]);
@@ -238,15 +238,15 @@ class SolicitacaoSmokeTest extends TestCase
      * Cidadão habilitado (papel + termo LGPD) com empresa vinculada e um tipo de
      * serviço ativo do catálogo seedado.
      *
-     * @return array{0: User, 1: Company, 2: ViabilityServiceType}
+     * @return array{0: Cidadao, 1: Company, 2: ViabilityServiceType}
      */
     private function ator(): array
     {
-        $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $user = Cidadao::factory()->withAcceptedLgpdTerm()->create();
 
         $company = Company::factory()->create();
         $company->links()->create([
-            'user_id' => $user->id,
+            'cidadao_id' => $user->id,
             'role' => CompanyLinkRole::Responsavel,
             'started_at' => now(),
         ]);

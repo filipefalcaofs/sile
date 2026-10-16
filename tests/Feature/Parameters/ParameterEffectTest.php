@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Parameters;
 
+use App\Models\Cidadao;
 use App\Models\User;
 use App\Support\Settings;
 use Database\Seeders\ParameterSeeder;
@@ -27,9 +28,9 @@ class ParameterEffectTest extends TestCase
         return User::factory()->administrador()->withAcceptedLgpdTerm()->create();
     }
 
-    private function cidadao(): User
+    private function cidadao(): Cidadao
     {
-        return User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        return Cidadao::factory()->withAcceptedLgpdTerm()->create();
     }
 
     public function test_alteracao_de_parametro_tem_efeito_imediato_sem_deploy(): void

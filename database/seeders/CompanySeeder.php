@@ -4,12 +4,12 @@ namespace Database\Seeders;
 
 use App\Enums\CompanyLinkRole;
 use App\Enums\CompanySource;
+use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\CompanyUser;
 use App\Models\LegalTerm;
 use App\Models\LegalTermAcceptance;
-use App\Models\User;
 use App\Services\RedesimImportService;
 use Illuminate\Database\Seeder;
 
@@ -32,9 +32,9 @@ class CompanySeeder extends Seeder
         $this->seedEmpresasRedesim($cidadao);
     }
 
-    private function seedCidadao(): User
+    private function seedCidadao(): Cidadao
     {
-        $cidadao = User::firstOrCreate(
+        $cidadao = Cidadao::firstOrCreate(
             ['email' => 'cidadao@sile.dev'],
             [
                 'name' => 'Cidadão Viabiliza',
@@ -48,11 +48,9 @@ class CompanySeeder extends Seeder
             $cidadao->forceFill(['email_verified_at' => now()])->save();
         }
 
-        $cidadao->assignRole('cidadao');
-
         if ($term = LegalTerm::current('lgpd')) {
             LegalTermAcceptance::firstOrCreate(
-                ['user_id' => $cidadao->id, 'legal_term_id' => $term->id],
+                ['accepted_by_type' => $cidadao->getMorphClass(), 'accepted_by_id' => $cidadao->id, 'legal_term_id' => $term->id],
                 ['ip_address' => '127.0.0.1', 'accepted_at' => now()],
             );
         }
@@ -60,7 +58,7 @@ class CompanySeeder extends Seeder
         return $cidadao;
     }
 
-    private function seedEmpresaManual(User $cidadao): void
+    private function seedEmpresaManual(Cidadao $cidadao): void
     {
         $company = Company::firstOrCreate(
             ['cnpj' => '47960950000121'],
@@ -85,7 +83,7 @@ class CompanySeeder extends Seeder
         );
 
         CompanyUser::firstOrCreate(
-            ['company_id' => $company->id, 'user_id' => $cidadao->id, 'role' => CompanyLinkRole::Responsavel],
+            ['company_id' => $company->id, 'cidadao_id' => $cidadao->id, 'role' => CompanyLinkRole::Responsavel],
             ['started_at' => now()],
         );
 
@@ -98,7 +96,7 @@ class CompanySeeder extends Seeder
         }
     }
 
-    private function seedEmpresasRedesim(User $cidadao): void
+    private function seedEmpresasRedesim(Cidadao $cidadao): void
     {
         // Import REAL do payload de referência (lógica de produção, carga de
         // dev). O serviço NÃO cria vínculo usuário-empresa por design — o
@@ -110,7 +108,7 @@ class CompanySeeder extends Seeder
 
         if ($company) {
             CompanyUser::firstOrCreate(
-                ['company_id' => $company->id, 'user_id' => $cidadao->id, 'role' => CompanyLinkRole::Responsavel],
+                ['company_id' => $company->id, 'cidadao_id' => $cidadao->id, 'role' => CompanyLinkRole::Responsavel],
                 ['started_at' => now()],
             );
         }

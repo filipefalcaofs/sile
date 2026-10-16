@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Cidadao;
 use App\Models\Procuration;
-use App\Models\User;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
@@ -26,7 +26,7 @@ class StoreProcurationRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'attorney_email' => ['required', 'email', 'exists:users,email'],
+            'attorney_email' => ['required', 'email', 'exists:cidadaos,email'],
             'expires_at' => ['nullable', 'date', 'after:now'],
         ];
     }
@@ -45,7 +45,7 @@ class StoreProcurationRequest extends FormRequest
                     return;
                 }
 
-                $attorney = User::query()->where('email', $this->input('attorney_email'))->first();
+                $attorney = Cidadao::query()->where('email', $this->input('attorney_email'))->first();
 
                 if ($attorney === null) {
                     return;
@@ -59,8 +59,8 @@ class StoreProcurationRequest extends FormRequest
 
                 $hasActiveProcuration = Procuration::query()
                     ->active()
-                    ->where('grantor_user_id', $this->user()->id)
-                    ->where('attorney_user_id', $attorney->id)
+                    ->where('grantor_cidadao_id', $this->user()->id)
+                    ->where('attorney_cidadao_id', $attorney->id)
                     ->exists();
 
                 if ($hasActiveProcuration) {

@@ -14,8 +14,8 @@ use Illuminate\Http\JsonResponse;
 /**
  * Pré-consulta de CPF e CNPJ na contingência, na base cadastral da SEDUR
  * (ws-contato). Devolve só o nome para o operador conferir. Telefone, e-mail
- * e endereço não saem nesta resposta. O protocolo continua exigindo cidadão
- * e empresa já cadastrados no Viabiliza.
+ * e endereço não saem nesta resposta. O protocolo continua exigindo a
+ * empresa já cadastrada no Viabiliza.
  */
 class ConsultarDocumentoContingenciaController extends Controller
 {

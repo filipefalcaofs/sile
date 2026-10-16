@@ -34,15 +34,16 @@ class TrilhaProcessoService
             return null;
         }
 
-        $transicoes = $processo->transitions()->oldest()->get();
+        $transicoes = $processo->transitions()->with('actor')->oldest()->get();
         $transicoesAnalise = $processo->analysisStatusTransitions()->oldest()->get();
         $atividades = Activity::query()
             ->where('subject_type', $processo->getMorphClass())
             ->where('subject_id', $processo->id)
+            ->with('causer')
             ->oldest()
             ->get();
 
-        $usuarios = $this->resolverUsuarios($transicoes, $transicoesAnalise, $atividades);
+        $usuarios = $this->resolverUsuarios($transicoesAnalise, $atividades);
 
         $eventos = [];
 
@@ -52,7 +53,7 @@ class TrilhaProcessoService
                 'eixo' => 'status',
                 'eixo_label' => 'Situação do processo',
                 'descricao' => $this->descreverTransicao($t->from_status, $t->to_status, $t->reason),
-                'usuario' => $t->actor_user_id !== null ? ($usuarios[$t->actor_user_id] ?? null) : null,
+                'usuario' => $t->actor?->name,
             ];
         }
 
@@ -76,7 +77,7 @@ class TrilhaProcessoService
                 'eixo' => 'auditoria',
                 'eixo_label' => 'Auditoria',
                 'descricao' => $this->descreverAtividade($a, $usuarios),
-                'usuario' => $a->causer_id !== null ? ($usuarios[$a->causer_id] ?? null) : null,
+                'usuario' => $a->causer?->name,
             ];
         }
 
@@ -106,20 +107,14 @@ class TrilhaProcessoService
     }
 
     /**
-     * Nomes dos atores em batch (transições dos dois eixos + causers da
-     * auditoria) — uma query só, sem N+1.
+     * Nomes dos atores em batch (transições da análise + analistas das
+     * atribuições; o causer vem pela relação polimórfica) — uma query só, sem N+1.
      *
      * @return array<int, string>
      */
-    private function resolverUsuarios(iterable $transicoes, iterable $transicoesAnalise, iterable $atividades): array
+    private function resolverUsuarios(iterable $transicoesAnalise, iterable $atividades): array
     {
         $ids = [];
-
-        foreach ($transicoes as $t) {
-            if ($t->actor_user_id !== null) {
-                $ids[] = $t->actor_user_id;
-            }
-        }
 
         foreach ($transicoesAnalise as $t) {
             if ($t->actor_user_id !== null) {
@@ -128,10 +123,6 @@ class TrilhaProcessoService
         }
 
         foreach ($atividades as $a) {
-            if ($a->causer_id !== null) {
-                $ids[] = $a->causer_id;
-            }
-
             if (in_array($a->event, self::EVENTOS_DE_ATRIBUICAO, true) && isset($a->properties['assigned_user_id'])) {
                 $ids[] = (int) $a->properties['assigned_user_id'];
             }

@@ -21,7 +21,7 @@ class AccessLogOriginTest extends TestCase
         event(new Login('gestao', $user, false));
 
         $this->assertDatabaseHas('access_logs', [
-            'user_id' => $user->id,
+            'actor_type' => $user->getMorphClass(), 'actor_id' => $user->id,
             'event' => 'login',
             'origin' => 'ad',
         ]);
@@ -34,7 +34,7 @@ class AccessLogOriginTest extends TestCase
         event(new Login('gestao', $user, false));
 
         $this->assertDatabaseHas('access_logs', [
-            'user_id' => $user->id,
+            'actor_type' => $user->getMorphClass(), 'actor_id' => $user->id,
             'event' => 'login',
             'origin' => null,
         ]);

@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Enums\ViabilityRequestOrigin;
 use App\Enums\ViabilityRequestStatus;
+use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\DocumentRequirement;
@@ -47,10 +48,10 @@ class SolicitacaoDevSeeder extends Seeder
 
     public function run(): void
     {
-        $cidadao = User::query()->where('email', 'cidadao@sile.dev')->first();
+        $cidadao = Cidadao::query()->where('email', 'cidadao@sile.dev')->first();
 
         $company = $cidadao === null ? null : Company::query()
-            ->whereHas('links', fn ($query) => $query->where('user_id', $cidadao->id)->whereNull('ended_at'))
+            ->whereHas('links', fn ($query) => $query->where('cidadao_id', $cidadao->id)->whereNull('ended_at'))
             ->orderBy('id')
             ->first();
 
@@ -104,8 +105,8 @@ class SolicitacaoDevSeeder extends Seeder
      * @param  array<string, mixed>  $overrides
      */
     private function exampleDraft(
-        User $cidadao,
-        User $creator,
+        Cidadao $cidadao,
+        User|Cidadao $creator,
         Company $company,
         ViabilityServiceType $type,
         Cnae $cnae,
@@ -114,7 +115,7 @@ class SolicitacaoDevSeeder extends Seeder
         array $overrides = [],
     ): ViabilityRequest {
         $existing = ViabilityRequest::query()
-            ->where('requester_user_id', $cidadao->id)
+            ->where('requester_cidadao_id', $cidadao->id)
             ->where('address_reference', $marker)
             ->first();
 
@@ -129,8 +130,9 @@ class SolicitacaoDevSeeder extends Seeder
             'origin' => ViabilityRequestOrigin::Portal,
             'service_type_id' => $type->id,
             'company_id' => $company->id,
-            'requester_user_id' => $cidadao->id,
-            'created_by_user_id' => $creator->id,
+            'requester_cidadao_id' => $cidadao->id,
+            'created_by_type' => $creator->getMorphClass(),
+            'created_by_id' => $creator->id,
             'used_area_m2' => 120.0,
             'address_street' => 'Avenida Sete de Setembro',
             'address_number' => '1000',
@@ -153,7 +155,8 @@ class SolicitacaoDevSeeder extends Seeder
             'mime_type' => 'image/jpeg',
             'size' => 51200,
             'sha256' => hash('sha256', "fachada-exemplo-{$request->id}"),
-            'uploaded_by_user_id' => $creator->id,
+            'uploaded_by_type' => $creator->getMorphClass(),
+            'uploaded_by_id' => $creator->id,
         ]);
 
         return $request;
@@ -163,7 +166,7 @@ class SolicitacaoDevSeeder extends Seeder
      * Protocola o exemplo pelo serviço real (número único + transição auditada).
      * Idempotente: já protocolado/cancelado em re-seed → não gera número novo.
      */
-    private function protocolar(ViabilityRequest $request, User $actor): void
+    private function protocolar(ViabilityRequest $request, User|Cidadao $actor): void
     {
         if ($request->status !== ViabilityRequestStatus::Rascunho) {
             return;
@@ -176,7 +179,7 @@ class SolicitacaoDevSeeder extends Seeder
      * Cancela o exemplo pelo serviço real (transição protocolada→cancelada com
      * motivo). Idempotente: já cancelado em re-seed → não faz nada.
      */
-    private function cancelar(ViabilityRequest $request, User $actor): void
+    private function cancelar(ViabilityRequest $request, User|Cidadao $actor): void
     {
         if ($request->status === ViabilityRequestStatus::Cancelada) {
             return;

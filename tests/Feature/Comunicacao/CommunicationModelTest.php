@@ -47,7 +47,7 @@ class CommunicationModelTest extends TestCase
 
         $communication = Communication::factory()->create([
             'viability_request_id' => $request->id,
-            'recipient_user_id' => $user->id,
+            'recipient_type' => $user->getMorphClass(), 'recipient_id' => $user->id,
         ]);
 
         $this->assertTrue($communication->viabilityRequest->is($request));

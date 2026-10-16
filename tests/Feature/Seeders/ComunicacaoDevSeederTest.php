@@ -7,6 +7,7 @@ use App\Enums\CommunicationChannel;
 use App\Enums\CommunicationType;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\AnalysisPendency;
+use App\Models\Cidadao;
 use App\Models\Communication;
 use App\Models\User;
 use App\Models\ViabilityRequest;
@@ -35,14 +36,14 @@ class ComunicacaoDevSeederTest extends TestCase
 
     private function dedicada(): ?ViabilityRequest
     {
-        $cidadao = User::query()->where('email', 'cidadao@sile.dev')->first();
+        $cidadao = Cidadao::query()->where('email', 'cidadao@sile.dev')->first();
 
         if ($cidadao === null) {
             return null;
         }
 
         return ViabilityRequest::query()
-            ->where('requester_user_id', $cidadao->id)
+            ->where('requester_cidadao_id', $cidadao->id)
             ->where('address_reference', ComunicacaoDevSeeder::MARK)
             ->first();
     }
@@ -104,7 +105,7 @@ class ComunicacaoDevSeederTest extends TestCase
         $request = $this->dedicada();
         $this->assertNotNull($request);
 
-        $requerente = User::query()->where('email', 'cidadao@sile.dev')->firstOrFail();
+        $requerente = Cidadao::query()->where('email', 'cidadao@sile.dev')->firstOrFail();
         $analista = User::query()->where('email', 'analista@sile.dev')->firstOrFail();
 
         // Canal database nativo (in-app): o requerente recebeu a notificação da
@@ -142,7 +143,7 @@ class ComunicacaoDevSeederTest extends TestCase
         $this->assertSame(
             1,
             ViabilityRequest::query()
-                ->where('requester_user_id', $request->requester_user_id)
+                ->where('requester_cidadao_id', $request->requester_cidadao_id)
                 ->where('address_reference', ComunicacaoDevSeeder::MARK)
                 ->count(),
             'O processo dedicado não pode ser duplicado no re-seed.'

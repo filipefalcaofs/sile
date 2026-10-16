@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\EscritorioVirtual;
 
+use App\Models\Cidadao;
 use App\Models\Cnae;
-use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\EscritorioVirtual\SedeAtividadesResolver;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -33,9 +33,9 @@ class SedeAtividadesResolverListaIndisponivelTest extends TestCase
         $this->seed(RolesAndPermissionsSeeder::class);
     }
 
-    private function portalUser(): User
+    private function portalUser(): Cidadao
     {
-        return User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        return Cidadao::factory()->withAcceptedLgpdTerm()->create();
     }
 
     public function test_lista_disponivel_e_falso_sem_versao_vigente_do_anexo_a(): void
@@ -49,8 +49,8 @@ class SedeAtividadesResolverListaIndisponivelTest extends TestCase
     {
         $user = $this->portalUser();
         $solicitacao = ViabilityRequest::factory()->draft()->create([
-            'requester_user_id' => $user->id,
-            'created_by_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
+            'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
             'wants_virtual_office_hq' => true,
         ]);
         // Sem EscritorioVirtualCnaeSeeder: nenhuma versão vigente do Anexo A.

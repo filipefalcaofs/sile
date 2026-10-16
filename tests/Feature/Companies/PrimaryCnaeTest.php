@@ -3,10 +3,10 @@
 namespace Tests\Feature\Companies;
 
 use App\Models\Activity;
+use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\CompanyUser;
-use App\Models\User;
 use App\Services\CompanyCnaeService;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -26,21 +26,21 @@ class PrimaryCnaeTest extends TestCase
     /**
      * Cidadão habilitado a navegar no portal (papel + termo LGPD aceito).
      */
-    private function portalUser(): User
+    private function portalUser(): Cidadao
     {
-        return User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        return Cidadao::factory()->withAcceptedLgpdTerm()->create();
     }
 
     /**
      * Cria uma empresa com vínculo ativo de responsável do usuário informado.
      */
-    private function companyLinkedTo(User $user): Company
+    private function companyLinkedTo(Cidadao $user): Company
     {
         $company = Company::factory()->create();
 
         CompanyUser::factory()->responsavel()->create([
             'company_id' => $company->id,
-            'user_id' => $user->id,
+            'cidadao_id' => $user->id,
         ]);
 
         return $company;

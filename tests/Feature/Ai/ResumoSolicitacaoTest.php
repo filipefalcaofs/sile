@@ -9,8 +9,8 @@ use App\Enums\ViabilityRequestStatus;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Models\AiConfiguration;
 use App\Models\AiSuggestion;
+use App\Models\Cidadao;
 use App\Models\Company;
-use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Ai\ResumoSolicitacaoService;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -48,7 +48,7 @@ class ResumoSolicitacaoTest extends TestCase
      * Rascunho de solicitação com os dados declarados (empresa/CNAE/imóvel) — a
      * entrada real do resumo de conferência. requester = $dono para a policy.
      */
-    private function solicitacaoDeclarada(?User $dono = null): ViabilityRequest
+    private function solicitacaoDeclarada(?Cidadao $dono = null): ViabilityRequest
     {
         $empresa = Company::factory()->create(['legal_name' => 'Comércio Exemplo LTDA']);
 
@@ -62,8 +62,9 @@ class ResumoSolicitacaoTest extends TestCase
         ];
 
         if ($dono !== null) {
-            $atributos['requester_user_id'] = $dono->id;
-            $atributos['created_by_user_id'] = $dono->id;
+            $atributos['requester_cidadao_id'] = $dono->id;
+            $atributos['created_by_type'] = $dono->getMorphClass();
+            $atributos['created_by_id'] = $dono->id;
         }
 
         return ViabilityRequest::factory()->withPrimaryCnae()->create($atributos);
@@ -152,7 +153,7 @@ class ResumoSolicitacaoTest extends TestCase
         config(['viabiliza.features.solicitacao_viabilidade' => true]);
         $this->provedorTextoAtivo();
 
-        $dono = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $dono = Cidadao::factory()->withAcceptedLgpdTerm()->create();
         $solicitacao = $this->solicitacaoDeclarada($dono);
 
         ResumoSolicitacaoAgent::fake([[
@@ -193,7 +194,7 @@ class ResumoSolicitacaoTest extends TestCase
         config(['viabiliza.features.solicitacao_viabilidade' => true]);
         $this->provedorTextoAtivo();
 
-        $dono = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $dono = Cidadao::factory()->withAcceptedLgpdTerm()->create();
         $solicitacao = $this->solicitacaoDeclarada($dono);
 
         ResumoSolicitacaoAgent::fake([[

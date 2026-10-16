@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\User;
 use App\Support\Representation\CurrentRepresentation;
 use App\Support\Vocabulario;
 use Illuminate\Http\Request;
@@ -46,8 +47,8 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'auth' => [
                 'user' => $user?->only('id', 'name', 'email'),
-                'roles' => $user?->getRoleNames() ?? [],
-                'permissions' => $user?->getAllPermissions()->pluck('name') ?? [],
+                'roles' => $user instanceof User ? $user->getRoleNames() : [],
+                'permissions' => $user instanceof User ? $user->getAllPermissions()->pluck('name') : [],
             ],
             // Closure: avaliada na serialização da resposta, depois de o
             // ResolveRepresentation (middleware de rota) resolver o estado.

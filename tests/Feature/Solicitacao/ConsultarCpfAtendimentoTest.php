@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Solicitacao;
 
+use App\Models\Cidadao;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -26,7 +27,7 @@ class ConsultarCpfAtendimentoTest extends TestCase
 
     public function test_consulta_cpf_devolve_o_nome_e_se_ja_esta_cadastrado(): void
     {
-        $cidadao = User::factory()->cidadao()->create();
+        $cidadao = Cidadao::factory()->create();
 
         Http::fake([
             'https://sedur.test/k8s/prd/ws-contato/pessoafisica/cpf/'.$cidadao->cpf => Http::response([
@@ -58,7 +59,7 @@ class ConsultarCpfAtendimentoTest extends TestCase
             '*/pessoafisica/cpf/*' => Http::response([], 404),
         ]);
 
-        $cidadao = User::factory()->cidadao()->create();
+        $cidadao = Cidadao::factory()->create();
 
         $this->actingAs($this->atendente(), 'gestao')
             ->postJson(route('gestao.atendimento.consultar-cpf'), ['cpf' => $cidadao->cpf])

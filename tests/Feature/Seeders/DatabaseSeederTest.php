@@ -7,6 +7,7 @@ use App\Enums\RuleDomain;
 use App\Enums\ViabilityRequestOrigin;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\Activity;
+use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\CompanyUser;
@@ -47,7 +48,7 @@ class DatabaseSeederTest extends TestCase
     {
         $this->seed();
 
-        $this->assertSame(19, Role::query()->count());
+        $this->assertSame(18, Role::query()->count());
         // 33 permissões (HU-013): as 17 base (sem consultar-risco/manter-risco,
         // consolidadas em consultar-cnaes/manter-cnaes) + as 5 da análise técnica
         // (analisar-processos, distribuir-processos, emitir-tvl,
@@ -99,7 +100,10 @@ class DatabaseSeederTest extends TestCase
         // (features.geoserver_territorio — RT-02/03/04, 2026-09-23).
         // + 2 da autenticação AD do console (features.ad_login +
         // integrations.sedur_auth.base_url — 2026-09-24).
-        $this->assertSame(113, Parameter::query()->count());
+        // + 2 do parecer à JUCEB (integrations.regin.caminho_resposta/codigo_area).
+        // + 1 do token ArcGIS da SEMAP (integrations.arcgis_semap.token).
+        // - 1 do perfil do cidadão (portal.perfil_cidadao: cidadão tem tabela própria).
+        $this->assertSame(112, Parameter::query()->count());
         $this->assertTrue(
             Activity::query()
                 ->where('log_name', 'cnaes')
@@ -171,14 +175,16 @@ class DatabaseSeederTest extends TestCase
     {
         $this->seed();
 
-        $cidadao = User::query()->where('email', 'cidadao@sile.dev')->first();
+        $cidadao = Cidadao::query()->where('email', 'cidadao@sile.dev')->first();
 
         $this->assertNotNull($cidadao);
-        $this->assertTrue($cidadao->hasRole('cidadao'));
+        $this->assertTrue($cidadao->temSenha());
+        $this->assertDatabaseMissing('users', ['email' => 'cidadao@sile.dev']);
         $this->assertNotNull($cidadao->email_verified_at);
         $this->assertTrue(
             LegalTermAcceptance::query()
-                ->where('user_id', $cidadao->id)
+                ->where('accepted_by_type', $cidadao->getMorphClass())
+                ->where('accepted_by_id', $cidadao->id)
                 ->where('legal_term_id', LegalTerm::current('lgpd')->id)
                 ->exists()
         );
@@ -188,13 +194,13 @@ class DatabaseSeederTest extends TestCase
         $this->assertTrue(Company::query()->where('source', CompanySource::Redesim)->exists());
 
         $vinculosAtivos = CompanyUser::query()
-            ->where('user_id', $cidadao->id)
+            ->where('cidadao_id', $cidadao->id)
             ->whereNull('ended_at')
             ->count();
         $this->assertGreaterThanOrEqual(2, $vinculosAtivos);
 
         $temPrincipal = Company::query()
-            ->whereHas('links', fn ($q) => $q->where('user_id', $cidadao->id)->whereNull('ended_at'))
+            ->whereHas('links', fn ($q) => $q->where('cidadao_id', $cidadao->id)->whereNull('ended_at'))
             ->whereHas('cnaes', fn ($q) => $q->where('company_cnae.is_primary', true))
             ->exists();
         $this->assertTrue($temPrincipal);
@@ -228,10 +234,10 @@ class DatabaseSeederTest extends TestCase
         // Solicitações de EXEMPLO do cidadão dev (dados fictícios, lógica REAL):
         // rascunho instruído, protocolada (número/timeline reais via serviço),
         // cancelada e contingência.
-        $cidadao = User::query()->where('email', 'cidadao@sile.dev')->firstOrFail();
+        $cidadao = Cidadao::query()->where('email', 'cidadao@sile.dev')->firstOrFail();
 
         $rascunho = ViabilityRequest::query()
-            ->where('requester_user_id', $cidadao->id)
+            ->where('requester_cidadao_id', $cidadao->id)
             ->where('status', ViabilityRequestStatus::Rascunho)
             ->first();
         $this->assertNotNull($rascunho, 'Esperava um rascunho instruído de exemplo.');
@@ -239,7 +245,7 @@ class DatabaseSeederTest extends TestCase
         $this->assertNotNull($rascunho->property_polygon_geojson);
 
         $protocolada = ViabilityRequest::query()
-            ->where('requester_user_id', $cidadao->id)
+            ->where('requester_cidadao_id', $cidadao->id)
             ->where('status', ViabilityRequestStatus::Protocolada)
             ->where('origin', ViabilityRequestOrigin::Portal)
             ->first();
@@ -252,14 +258,14 @@ class DatabaseSeederTest extends TestCase
         );
 
         $cancelada = ViabilityRequest::query()
-            ->where('requester_user_id', $cidadao->id)
+            ->where('requester_cidadao_id', $cidadao->id)
             ->where('status', ViabilityRequestStatus::Cancelada)
             ->first();
         $this->assertNotNull($cancelada, 'Esperava uma solicitação cancelada de exemplo.');
         $this->assertNotNull($cancelada->cancelled_at);
 
         $contingencia = ViabilityRequest::query()
-            ->where('requester_user_id', $cidadao->id)
+            ->where('requester_cidadao_id', $cidadao->id)
             ->where('origin', ViabilityRequestOrigin::Contingencia)
             ->first();
         $this->assertNotNull($contingencia, 'Esperava uma solicitação de contingência de exemplo.');
@@ -271,13 +277,13 @@ class DatabaseSeederTest extends TestCase
     {
         $this->seed();
 
-        $cidadao = User::query()->where('email', 'cidadao@sile.dev')->firstOrFail();
+        $cidadao = Cidadao::query()->where('email', 'cidadao@sile.dev')->firstOrFail();
 
         // Dois exemplos do fluxo expresso (dados fictícios, lógica REAL): um
         // sobre a zona fictícia (deferimento navegável) e um fora dela (em
         // análise honesto). Identificados pelo marcador estável.
         $deferimento = ViabilityRequest::query()
-            ->where('requester_user_id', $cidadao->id)
+            ->where('requester_cidadao_id', $cidadao->id)
             ->where('address_reference', ExpressoDevSeeder::MARK_DEFERIDA)
             ->first();
         $this->assertNotNull($deferimento, 'Esperava o exemplo de deferimento do fluxo expresso.');
@@ -285,7 +291,7 @@ class DatabaseSeederTest extends TestCase
         $this->assertNotNull($deferimento->property_polygon_geojson);
 
         $emAnalise = ViabilityRequest::query()
-            ->where('requester_user_id', $cidadao->id)
+            ->where('requester_cidadao_id', $cidadao->id)
             ->where('address_reference', ExpressoDevSeeder::MARK_EM_ANALISE)
             ->first();
         $this->assertNotNull($emAnalise, 'Esperava o exemplo de em análise (sem zona) do fluxo expresso.');
@@ -393,10 +399,11 @@ class DatabaseSeederTest extends TestCase
         $this->assertSame(4, StandardText::query()->count());
 
         $this->assertSame(1, User::query()->where('email', 'admin@sile.dev')->count());
-        $this->assertSame(1, User::query()->where('email', 'cidadao@sile.dev')->count());
-        $this->assertSame(19, Role::query()->count());
+        $this->assertSame(1, Cidadao::query()->where('email', 'cidadao@sile.dev')->count());
+        $this->assertSame(0, User::query()->where('email', 'cidadao@sile.dev')->count());
+        $this->assertSame(18, Role::query()->count());
         $this->assertSame(1331, Cnae::query()->count());
-        $this->assertSame(113, Parameter::query()->count());
+        $this->assertSame(112, Parameter::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoMunicipal)->count());
         $this->assertSame(1331, RiskClassification::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoSanitario)->count());
@@ -420,7 +427,7 @@ class DatabaseSeederTest extends TestCase
         $this->assertSame(
             2,
             CompanyUser::query()
-                ->where('user_id', User::query()->where('email', 'cidadao@sile.dev')->value('id'))
+                ->where('cidadao_id', Cidadao::query()->where('email', 'cidadao@sile.dev')->value('id'))
                 ->whereNull('ended_at')
                 ->count()
         );
@@ -435,15 +442,15 @@ class DatabaseSeederTest extends TestCase
         // 2 exemplos do fluxo expresso (deferimento/em análise) + 1 exemplo
         // dedicado de comunicação do EP11 (em_analise após o ciclo de pendência,
         // ComunicacaoDevSeeder) = 7, estáveis no re-seed.
-        $cidadaoId = User::query()->where('email', 'cidadao@sile.dev')->value('id');
-        $this->assertSame(7, ViabilityRequest::query()->where('requester_user_id', $cidadaoId)->count());
+        $cidadaoId = Cidadao::query()->where('email', 'cidadao@sile.dev')->value('id');
+        $this->assertSame(7, ViabilityRequest::query()->where('requester_cidadao_id', $cidadaoId)->count());
         // Os exemplos protocolados não ganham número novo a cada re-seed: 1 da
         // Fase 8 + 2 do expresso (em SQLite os exemplos do expresso ficam
         // protocolados — a decisão real exige PostGIS, testes @group postgis).
         $this->assertSame(
             3,
             ViabilityRequest::query()
-                ->where('requester_user_id', $cidadaoId)
+                ->where('requester_cidadao_id', $cidadaoId)
                 ->where('origin', ViabilityRequestOrigin::Portal)
                 ->where('status', ViabilityRequestStatus::Protocolada)
                 ->count()

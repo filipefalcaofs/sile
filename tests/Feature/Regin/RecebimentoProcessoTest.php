@@ -4,6 +4,7 @@ namespace Tests\Feature\Regin;
 
 use App\Enums\ViabilityRequestOrigin;
 use App\Http\Resources\ProcessoResource;
+use App\Models\Cidadao;
 use App\Models\ReginRecebimento;
 use App\Models\User;
 use App\Models\ViabilityRequest;
@@ -92,7 +93,9 @@ class RecebimentoProcessoTest extends TestCase
         $this->assertFalse($respostas[12]);
 
         $this->assertSame(1, ViabilityServiceType::query()->where('name', 'Consulta de viabilidade')->count());
-        $this->assertSame(1, User::query()->where('cpf', '52998224725')->count());
+        $this->assertSame(1, Cidadao::query()->where('cpf', '52998224725')->count());
+        $this->assertSame(0, User::query()->where('cpf', '52998224725')->count());
+        $this->assertFalse($processo->requester?->temSenha());
 
         $tela = (new ProcessoResource($processo->fresh()))->resolve(request());
         $this->assertSame('Maria Souza', $tela['recepcao']['nome_solicitante']);
@@ -100,6 +103,34 @@ class RecebimentoProcessoTest extends TestCase
         $this->assertSame($cnpj, $tela['recepcao']['cnpj_escritorio_virtual']);
         $this->assertStringContainsString('Rua das Flores', $tela['endereco_completo']);
         $this->assertStringContainsString('Salvador/BA', $tela['endereco_completo']);
+    }
+
+    public function test_requerente_e_criador_com_o_mesmo_id_ficam_cada_um_no_seu_tipo(): void
+    {
+        $servidor = User::factory()->create(['id' => 5]);
+        Cidadao::factory()->create(['id' => 4]);
+
+        $this->postJson('/api_integracao/recebe', $this->declaracao($this->cnpjValido()))->assertOk();
+
+        $processo = ViabilityRequest::query()->firstOrFail();
+        $requerente = Cidadao::query()->where('cpf', '52998224725')->firstOrFail();
+
+        $this->assertSame($requerente->id, $processo->requester_cidadao_id);
+        $this->assertSame(User::class, $processo->created_by_type);
+        $this->assertSame($servidor->id, $processo->created_by_id);
+    }
+
+    public function test_cpf_de_cidadao_existente_e_reaproveitado_sem_alterar_os_dados(): void
+    {
+        $existente = Cidadao::factory()->create(['cpf' => '52998224725', 'name' => 'Nome Original']);
+
+        $this->postJson('/api_integracao/recebe', $this->declaracao($this->cnpjValido()))->assertOk();
+
+        $processo = ViabilityRequest::query()->firstOrFail();
+
+        $this->assertSame($existente->id, $processo->requester_cidadao_id);
+        $this->assertSame('Nome Original', $existente->fresh()->name);
+        $this->assertSame(1, Cidadao::query()->count());
     }
 
     public function test_resposta_em_opcoes_do_regin_chega_ao_motor(): void

@@ -8,7 +8,7 @@ use App\Enums\AiSuggestionType;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Models\AiConfiguration;
 use App\Models\AiSuggestion;
-use App\Models\User;
+use App\Models\Cidadao;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Ai\ExplicacaoCidadaoService;
@@ -46,13 +46,14 @@ class ExplicacaoCidadaoTest extends TestCase
      * Processo DECIDIDO (ViabilityDecision deferida) — a fonte REAL da explicação.
      * requester = $dono para a policy view do portal.
      */
-    private function processoDecidido(?User $dono = null): ViabilityRequest
+    private function processoDecidido(?Cidadao $dono = null): ViabilityRequest
     {
         $atributos = [];
 
         if ($dono !== null) {
-            $atributos['requester_user_id'] = $dono->id;
-            $atributos['created_by_user_id'] = $dono->id;
+            $atributos['requester_cidadao_id'] = $dono->id;
+            $atributos['created_by_type'] = $dono->getMorphClass();
+            $atributos['created_by_id'] = $dono->id;
         }
 
         $processo = ViabilityRequest::factory()->protocoled()->withPrimaryCnae()->create($atributos);
@@ -147,7 +148,7 @@ class ExplicacaoCidadaoTest extends TestCase
         config(['viabiliza.features.ia_explicacao' => true]);
         $this->provedorTextoAtivo();
 
-        $dono = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $dono = Cidadao::factory()->withAcceptedLgpdTerm()->create();
         $processo = $this->processoDecidido($dono);
 
         ExplicacaoCidadaoAgent::fake([[
@@ -184,11 +185,12 @@ class ExplicacaoCidadaoTest extends TestCase
         config(['viabiliza.features.ia_explicacao' => true]);
         $this->provedorTextoAtivo();
 
-        $dono = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $dono = Cidadao::factory()->withAcceptedLgpdTerm()->create();
         // Protocolado, sem decisão registrada (em análise): nada a explicar.
         $processo = ViabilityRequest::factory()->protocoled()->withPrimaryCnae()->create([
-            'requester_user_id' => $dono->id,
-            'created_by_user_id' => $dono->id,
+            'requester_cidadao_id' => $dono->id,
+            'created_by_type' => $dono->getMorphClass(),
+            'created_by_id' => $dono->id,
         ]);
 
         ExplicacaoCidadaoAgent::fake([[

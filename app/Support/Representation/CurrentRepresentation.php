@@ -3,8 +3,8 @@
 namespace App\Support\Representation;
 
 use App\Models\AssistedAttendance;
+use App\Models\Cidadao;
 use App\Models\Procuration;
-use App\Models\User;
 
 /**
  * Estado da representação "em nome de" na request corrente (HU-008/009).
@@ -12,7 +12,7 @@ use App\Models\User;
  * portal) ou pelo ResolveAssistedAttendance (atendimento presencial, console —
  * HU-150) a cada request e consumido por controllers, policies e pelo share do
  * Inertia. Os dois mecanismos populam o MESMO estado: grantor() devolve o
- * usuário efetivo (representado/atendido) independentemente da origem.
+ * cidadão efetivo (representado/atendido) independentemente da origem.
  */
 class CurrentRepresentation
 {
@@ -56,10 +56,10 @@ class CurrentRepresentation
     }
 
     /**
-     * Usuário efetivo "em nome de": o cidadão atendido (atendimento presencial)
+     * Cidadão efetivo "em nome de": o cidadão atendido (atendimento presencial)
      * tem precedência; senão o outorgante da procuração; senão ninguém.
      */
-    public function grantor(): ?User
+    public function grantor(): ?Cidadao
     {
         return $this->attendance?->citizen ?? $this->procuration?->grantor;
     }

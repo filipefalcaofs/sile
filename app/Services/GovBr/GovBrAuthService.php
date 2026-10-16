@@ -3,10 +3,9 @@
 namespace App\Services\GovBr;
 
 use App\Models\AccessLog;
+use App\Models\Cidadao;
 use App\Models\GovBrAccount;
-use App\Models\User;
 use App\Support\Audit\AuditService;
-use App\Support\PerfilCidadao;
 use App\Support\Settings;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -30,7 +29,7 @@ class GovBrAuthService
     /**
      * @throws GovBrAuthException
      */
-    public function authenticate(SocialiteUser $govBrUser): User
+    public function authenticate(SocialiteUser $govBrUser): Cidadao
     {
         /** @var array<string, mixed> $claims */
         $claims = $govBrUser->getRaw();
@@ -45,10 +44,11 @@ class GovBrAuthService
 
         $this->ensureMinimumLevel($level, $cpf);
 
-        $user = User::query()->where('cpf', $cpf)->first();
+        $user = Cidadao::query()->where('cpf', $cpf)->first();
 
         if ($user !== null) {
             $this->ensureActive($user);
+            $this->assumirRegistroDeBalcao($user, $claims);
             $this->syncAccount($user, $claims, $level);
 
             return $user;
@@ -99,7 +99,7 @@ class GovBrAuthService
     /**
      * @throws GovBrAuthException
      */
-    private function ensureActive(User $user): void
+    private function ensureActive(Cidadao $user): void
     {
         if (! $user->isInactive()) {
             return;
@@ -107,7 +107,8 @@ class GovBrAuthService
 
         // Paridade com o login local (Fortify::authenticateUsing).
         AccessLog::create([
-            'user_id' => $user->id,
+            'actor_type' => $user->getMorphClass(),
+            'actor_id' => $user->id,
             'email' => $user->email,
             'event' => 'inativada',
             'ip_address' => request()->ip(),
@@ -124,9 +125,9 @@ class GovBrAuthService
     /**
      * @param  array<string, mixed>  $claims
      */
-    private function syncAccount(User $user, array $claims, string $level): void
+    private function syncAccount(Cidadao $user, array $claims, string $level): void
     {
-        $account = GovBrAccount::query()->firstOrNew(['user_id' => $user->id]);
+        $account = GovBrAccount::query()->firstOrNew(['cidadao_id' => $user->id]);
 
         if (! $account->exists) {
             $account->linked_at = now();
@@ -160,7 +161,7 @@ class GovBrAuthService
      *
      * @throws GovBrAuthException
      */
-    private function register(array $claims, string $cpf, string $level): User
+    private function register(array $claims, string $cpf, string $level): Cidadao
     {
         $email = isset($claims['email']) ? strtolower(trim((string) $claims['email'])) : null;
         $emailVerified = filter_var($claims['email_verified'] ?? false, FILTER_VALIDATE_BOOLEAN);
@@ -172,9 +173,9 @@ class GovBrAuthService
             );
         }
 
-        if (User::query()->where('email', $email)->exists()) {
+        if (Cidadao::query()->where('email', $email)->exists()) {
             throw new GovBrAuthException(
-                'E-mail do GOV.BR já pertence a usuário local com outro CPF.',
+                'E-mail do GOV.BR já pertence a cidadão local com outro CPF.',
                 'O e-mail da sua conta GOV.BR já está em uso por outra conta neste portal. Entre com e-mail e senha ou procure o suporte.',
             );
         }
@@ -185,8 +186,8 @@ class GovBrAuthService
             throw new GovBrAuthException('id_token do GOV.BR sem o claim name.');
         }
 
-        return DB::transaction(function () use ($claims, $cpf, $level, $email, $name): User {
-            $user = User::create([
+        return DB::transaction(function () use ($claims, $cpf, $level, $email, $name): Cidadao {
+            $user = Cidadao::create([
                 'name' => $name,
                 'email' => $email,
                 'cpf' => $cpf,
@@ -196,10 +197,8 @@ class GovBrAuthService
             // E-mail já verificado pelo GOV.BR (RN-007) — dispensa reverificação local.
             $user->markEmailAsVerified();
 
-            $user->assignRole(PerfilCidadao::nome());
-
             GovBrAccount::create([
-                'user_id' => $user->id,
+                'cidadao_id' => $user->id,
                 'reliability_level' => $level,
                 'reliability_levels' => $this->reliabilityIds($claims),
                 'linked_at' => now(),
@@ -220,6 +219,34 @@ class GovBrAuthService
 
             return $user;
         });
+    }
+
+    /**
+     * Registro de balcão (sem senha) assumido pelo GOV.BR: ganha senha aleatória, porque o provider
+     * de sessão só resolve cidadão com senha, e o e-mail fica verificado, porque a identidade foi
+     * provada pelo GOV.BR. O e-mail verificado do GOV.BR substitui o do registro quando não é de
+     * outro cidadão.
+     *
+     * @param  array<string, mixed>  $claims
+     */
+    private function assumirRegistroDeBalcao(Cidadao $cidadao, array $claims): void
+    {
+        if ($cidadao->temSenha()) {
+            return;
+        }
+
+        $email = strtolower(trim((string) ($claims['email'] ?? '')));
+        $emailVerificado = filter_var($claims['email_verified'] ?? false, FILTER_VALIDATE_BOOLEAN);
+        $emailLivre = $email !== '' && $emailVerificado && ! Cidadao::query()
+            ->where('email', $email)
+            ->whereKeyNot($cidadao->getKey())
+            ->exists();
+
+        $cidadao->forceFill([
+            'password' => Str::password(40),
+            'email' => $emailLivre ? $email : $cidadao->email,
+            'email_verified_at' => now(),
+        ])->save();
     }
 
     private function maskCpf(string $cpf): string

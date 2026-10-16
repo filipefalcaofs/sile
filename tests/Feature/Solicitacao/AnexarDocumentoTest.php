@@ -2,9 +2,9 @@
 
 namespace Tests\Feature\Solicitacao;
 
+use App\Models\Cidadao;
 use App\Models\DocumentRequirement;
 use App\Models\Parameter;
-use App\Models\User;
 use App\Models\ViabilityRequest;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -31,16 +31,16 @@ class AnexarDocumentoTest extends TestCase
         Storage::fake('local');
     }
 
-    private function portalUser(): User
+    private function portalUser(): Cidadao
     {
-        return User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        return Cidadao::factory()->withAcceptedLgpdTerm()->create();
     }
 
-    private function draftFor(User $user): ViabilityRequest
+    private function draftFor(Cidadao $user): ViabilityRequest
     {
         return ViabilityRequest::factory()->draft()->create([
-            'requester_user_id' => $user->id,
-            'created_by_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
+            'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
         ]);
     }
 
@@ -63,6 +63,8 @@ class AnexarDocumentoTest extends TestCase
         $documento = $solicitacao->documents()->first();
 
         $this->assertNotNull($documento);
+        $this->assertSame(Cidadao::class, $documento->uploaded_by_type);
+        $this->assertSame($user->id, $documento->uploaded_by_id);
         $this->assertSame('local', $documento->disk);
         $this->assertSame('documento.pdf', $documento->original_name);
         $this->assertSame(64, strlen((string) $documento->sha256));
@@ -138,7 +140,7 @@ class AnexarDocumentoTest extends TestCase
             'mime_type' => 'application/pdf',
             'size' => 21,
             'sha256' => hash('sha256', 'conteudo-do-documento'),
-            'uploaded_by_user_id' => $owner->id,
+            'uploaded_by_type' => $owner->getMorphClass(), 'uploaded_by_id' => $owner->id,
         ]);
 
         // O dono baixa por streaming (conteúdo real do disk).

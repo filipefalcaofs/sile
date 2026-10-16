@@ -3,6 +3,7 @@
 namespace App\Services\Relatorios\Export\Sources;
 
 use App\Http\Controllers\Gestao\UserManagementController;
+use App\Models\Cidadao;
 use App\Models\User;
 use App\Services\Relatorios\Export\ReportDefinition;
 use App\Services\Relatorios\Export\ReportExporter;
@@ -51,27 +52,15 @@ final class UsuariosReportSource implements ReportSource
                 ['key' => 'created_at', 'label' => 'Criado em'],
             ],
             // RN-005: a MESMA query (aba + busca + ordem) do index, lida do bag.
-            builder: fn (): Builder => User::query()
-                ->when(
-                    $tab === 'gestao',
-                    fn ($query) => $query->equipeSedur(),
-                    fn ($query) => $query->usuarioPortal(),
-                )
-                ->with('roles:id,name')
-                ->when($search !== '', function ($query) use ($search): void {
-                    $query->where(fn ($inner) => $inner
-                        ->whereLike('name', "%{$search}%", caseSensitive: false)
-                        ->orWhereLike('email', "%{$search}%", caseSensitive: false));
-                })
-                ->orderBy('name'),
-            mapRow: fn (User $user): array => [
-                $user->name,
-                $user->email,
-                $user->getRoleNames()->implode(', '),
+            builder: fn (): Builder => $this->query($tab, $search),
+            mapRow: fn (User|Cidadao $conta): array => [
+                $conta->name,
+                $conta->email,
+                $conta instanceof User ? $conta->getRoleNames()->implode(', ') : '',
                 // RN-007: cpf_masked por default; número completo só com PII liberado.
-                $pii ? $user->cpf : '***.***.***-'.substr((string) $user->cpf, -2),
-                $user->inactivated_at !== null ? 'Inativo' : 'Ativo',
-                $user->created_at?->toIso8601String(),
+                $pii ? $conta->cpf : '***.***.***-'.substr((string) $conta->cpf, -2),
+                $conta->inactivated_at !== null ? 'Inativo' : 'Ativo',
+                $conta->created_at?->toIso8601String(),
             ],
             filtrosAplicados: $filtros->aplicados(),
             logName: 'usuarios',
@@ -79,5 +68,23 @@ final class UsuariosReportSource implements ReportSource
             personalData: true,
             arquivoBase: 'usuarios',
         );
+    }
+
+    /**
+     * @return Builder<User>|Builder<Cidadao>
+     */
+    private function query(string $tab, string $search): Builder
+    {
+        $query = $tab === 'gestao'
+            ? User::query()->with('roles:id,name')
+            : Cidadao::query()->semRegistroTecnico();
+
+        return $query
+            ->when($search !== '', function ($query) use ($search): void {
+                $query->where(fn ($inner) => $inner
+                    ->whereLike('name', "%{$search}%", caseSensitive: false)
+                    ->orWhereLike('email', "%{$search}%", caseSensitive: false));
+            })
+            ->orderBy('name');
     }
 }

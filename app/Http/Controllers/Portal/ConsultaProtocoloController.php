@@ -66,8 +66,8 @@ class ConsultaProtocoloController extends Controller
             // gated/idempotente e SÓ quando há ViabilityDecision (sem decisão ⇒
             // no-op; dedup por entrada evita reprocessar) e então LÊ o ledger.
             // Sempre SUGESTÃO revisável, fiel à decisão registrada (RN-001/004).
-            'explicacaoIa' => Inertia::optional(function () use ($request, $solicitacao): array {
-                $this->explicacoes->processar($solicitacao, $request->user()?->id);
+            'explicacaoIa' => Inertia::optional(function () use ($solicitacao): array {
+                $this->explicacoes->processar($solicitacao);
 
                 return $this->explicacaoIa($solicitacao);
             }),

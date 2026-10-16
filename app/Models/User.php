@@ -11,11 +11,9 @@ use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Notifications\Notification;
@@ -79,23 +77,12 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Equipe SEDUR: conta do AD corporativo ou com perfil que dá acesso à gestão.
+     * Servidor local sem `acessar-gestao` (nem por perfil nem direta): continua listado na gestão,
+     * mas não entra no console até receber um perfil com acesso. Conta do AD não conta.
      */
-    public function scopeEquipeSedur(Builder $query): Builder
+    public function semAcessoAGestao(): bool
     {
-        return $query->where(fn (Builder $inner) => $inner
-            ->where('auth_type', AuthType::Ad->value)
-            ->orWhereHas('roles.permissions', fn ($permissions) => $permissions->where('name', 'acessar-gestao')));
-    }
-
-    /**
-     * Usuário do portal: externo, nunca conta AD e sem perfil com acesso à gestão.
-     */
-    public function scopeUsuarioPortal(Builder $query): Builder
-    {
-        return $query
-            ->where('auth_type', '!=', AuthType::Ad->value)
-            ->whereDoesntHave('roles.permissions', fn ($permissions) => $permissions->where('name', 'acessar-gestao'));
+        return ! $this->isAdAccount() && ! $this->getAllPermissions()->contains('name', 'acessar-gestao');
     }
 
     public function sendEmailVerificationNotification(): void
@@ -165,14 +152,12 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->phone;
     }
 
-    public function termAcceptances(): HasMany
+    /**
+     * @return MorphMany<LegalTermAcceptance, $this>
+     */
+    public function termAcceptances(): MorphMany
     {
-        return $this->hasMany(LegalTermAcceptance::class);
-    }
-
-    public function govBrAccount(): HasOne
-    {
-        return $this->hasOne(GovBrAccount::class);
+        return $this->morphMany(LegalTermAcceptance::class, 'accepted_by');
     }
 
     public function hasAcceptedTerm(LegalTerm $term): bool

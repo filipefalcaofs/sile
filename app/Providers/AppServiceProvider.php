@@ -50,6 +50,8 @@ use App\Support\Audit\AuditService;
 use App\Support\PasswordPolicy;
 use App\Support\Representation\CurrentRepresentation;
 use App\Support\Settings;
+use Illuminate\Auth\EloquentUserProvider;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Validator;
@@ -161,6 +163,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Auth::provider('cidadaos', fn ($app, array $config) => (new EloquentUserProvider($app['hash'], $config['model']))
+            ->withQuery(fn ($query) => $query->whereNotNull('password')));
+
         // Os listeners em app/Listeners são registrados pela auto-descoberta de
         // eventos do Laravel (cada um faz type-hint do evento no handle): a poda
         // de retenção (ModelsPruned → AuditModelsPruned, RN-002/SC#1), o envio de
@@ -222,7 +227,7 @@ class AppServiceProvider extends ServiceProvider
             'O mapa de encaminhamento deve ter as chaves baixo_a, baixo_b e alto com valores expresso ou analise.',
         );
 
-        config(['auth.passwords.users.expire' => (int) Settings::get('security.password_reset_expire', 60)]);
+        self::aplicarPrazoDeRedefinicaoDeSenha();
 
         // Driver Socialite do Login Único (HU-151). Credenciais e URL são
         // lidas dos parâmetros administráveis A CADA resolução do driver —
@@ -239,5 +244,16 @@ class AppServiceProvider extends ServiceProvider
                 ->withBaseUrl((string) Settings::get('integrations.govbr.base_url'))
                 ->withIdTokenValidator($app->make(GovBrIdTokenValidator::class));
         });
+    }
+
+    /** Prazo do link de redefinição (parâmetro security.password_reset_expire) nos brokers do portal e da gestão. */
+    public static function aplicarPrazoDeRedefinicaoDeSenha(): void
+    {
+        $minutos = (int) Settings::get('security.password_reset_expire', 60);
+
+        config([
+            'auth.passwords.users.expire' => $minutos,
+            'auth.passwords.cidadaos.expire' => $minutos,
+        ]);
     }
 }

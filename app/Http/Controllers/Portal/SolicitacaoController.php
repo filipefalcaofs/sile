@@ -10,10 +10,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Portal\StoreSolicitacaoRequest;
 use App\Http\Resources\Portal\SolicitacaoResumoResource;
 use App\Models\AiSuggestion;
+use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\DocumentRequirement;
-use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityRequestDocument;
 use App\Models\ViabilityServiceType;
@@ -86,7 +86,7 @@ class SolicitacaoController extends Controller
         $cancelableStates = $this->cancelableStates();
 
         $solicitacoes = ViabilityRequest::query()
-            ->where('requester_user_id', $effectiveUser->id)
+            ->where('requester_cidadao_id', $effectiveUser->id)
             ->with(['company', 'serviceType'])
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($inner) use ($search) {
@@ -166,8 +166,9 @@ class SolicitacaoController extends Controller
             'origin' => ViabilityRequestOrigin::Portal,
             'service_type_id' => $request->validated('service_type_id'),
             'company_id' => $company->id,
-            'requester_user_id' => $effectiveUser->id,
-            'created_by_user_id' => $request->user()->id,
+            'requester_cidadao_id' => $effectiveUser->id,
+            'created_by_type' => $request->user()->getMorphClass(),
+            'created_by_id' => $request->user()->id,
         ]));
 
         $redirect = redirect()
@@ -251,8 +252,8 @@ class SolicitacaoController extends Controller
             // entrada evita reprocessar) e então LÊ o ledger. Sempre SUGESTÃO de
             // conferência revisável, jamais decisão nem afirmação de desfecho
             // (RN-001/Failure Mode #1).
-            'sugestoesResumo' => Inertia::optional(function () use ($request, $solicitacao): array {
-                $this->resumos->processar($solicitacao, $request->user()?->id);
+            'sugestoesResumo' => Inertia::optional(function () use ($solicitacao): array {
+                $this->resumos->processar($solicitacao);
 
                 return $this->sugestoesResumo($solicitacao);
             }),
@@ -282,10 +283,10 @@ class SolicitacaoController extends Controller
      *
      * @return array<int, array<string, mixed>>
      */
-    private function companyOptions(User $user): array
+    private function companyOptions(Cidadao $user): array
     {
         return Company::query()
-            ->whereHas('links', fn ($query) => $query->where('user_id', $user->id)->whereNull('ended_at'))
+            ->whereHas('links', fn ($query) => $query->where('cidadao_id', $user->id)->whereNull('ended_at'))
             ->orderBy('legal_name')
             ->get()
             ->map(fn (Company $company) => [
@@ -468,7 +469,7 @@ class SolicitacaoController extends Controller
      * Usuário efetivo: o representado em representação ativa, senão o próprio
      * ([01-07]). Resolvido pelo middleware ResolveRepresentation.
      */
-    private function effectiveUser(Request $request): User
+    private function effectiveUser(Request $request): Cidadao
     {
         return app(CurrentRepresentation::class)->grantor() ?? $request->user();
     }

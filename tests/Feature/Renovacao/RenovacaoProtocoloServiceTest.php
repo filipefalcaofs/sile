@@ -5,10 +5,10 @@ namespace Tests\Feature\Renovacao;
 use App\Enums\AnalysisCategory;
 use App\Enums\TvlKind;
 use App\Enums\ViabilityRequestStatus;
+use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\ServiceDeclaration;
 use App\Models\ServiceDeclarationAcceptance;
-use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
@@ -64,7 +64,7 @@ class RenovacaoProtocoloServiceTest extends TestCase
     public function test_recusa_quando_nao_elegivel(): void
     {
         $origem = ViabilityRequest::factory()->create();
-        $ator = User::factory()->create();
+        $ator = Cidadao::factory()->create();
 
         $this->expectException(DomainException::class);
 
@@ -72,7 +72,7 @@ class RenovacaoProtocoloServiceTest extends TestCase
     }
 
     /**
-     * @return array{0: ViabilityRequest, 1: ServiceDeclaration, 2: User}
+     * @return array{0: ViabilityRequest, 1: ServiceDeclaration, 2: Cidadao}
      */
     private function cenarioElegivel(): array
     {
@@ -94,6 +94,6 @@ class RenovacaoProtocoloServiceTest extends TestCase
             'required' => true,
         ]);
 
-        return [$origem->fresh(), $declaracao, User::factory()->create()];
+        return [$origem->fresh(), $declaracao, Cidadao::factory()->create()];
     }
 }

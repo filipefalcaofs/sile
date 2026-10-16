@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Gestao;
 
+use App\Models\Cidadao;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -38,7 +39,7 @@ class ContaConsoleTest extends TestCase
 
     public function test_cidadao_logado_so_no_portal_nao_acessa_conta_do_console(): void
     {
-        $cidadao = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $cidadao = Cidadao::factory()->withAcceptedLgpdTerm()->create();
 
         $this->actingAs($cidadao, 'web')
             ->get('/gestao/conta/perfil')

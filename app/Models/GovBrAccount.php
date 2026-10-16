@@ -9,13 +9,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Vínculo do usuário local com a conta GOV.BR (HU-151).
+ * Vínculo do cidadão local com a conta GOV.BR (HU-151).
  *
  * Sem trait de auditoria automática: cada autenticação atualiza
  * last_authenticated_at e geraria ruído; a trilha fica nos registros
  * explícitos do fluxo de login (access_logs + AuditService).
  */
-#[Fillable(['user_id', 'reliability_level', 'reliability_levels', 'linked_at', 'last_authenticated_at'])]
+#[Fillable(['cidadao_id', 'reliability_level', 'reliability_levels', 'linked_at', 'last_authenticated_at'])]
 class GovBrAccount extends Model
 {
     /** @use HasFactory<GovBrAccountFactory> */
@@ -35,8 +35,11 @@ class GovBrAccount extends Model
         ];
     }
 
-    public function user(): BelongsTo
+    /**
+     * @return BelongsTo<Cidadao, $this>
+     */
+    public function cidadao(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Cidadao::class, 'cidadao_id');
     }
 }

@@ -7,12 +7,13 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
  * Anexo da solicitação (HU-066). Grava o disk DA ÉPOCA (nunca público), path,
  * hash sha256 e metadados — substituível antes do protocolo, imutável depois.
  */
-#[Fillable(['requirement_id', 'disk', 'path', 'original_name', 'mime_type', 'size', 'sha256', 'uploaded_by_user_id'])]
+#[Fillable(['requirement_id', 'disk', 'path', 'original_name', 'mime_type', 'size', 'sha256', 'uploaded_by_type', 'uploaded_by_id'])]
 class ViabilityRequestDocument extends Model
 {
     /** @use HasFactory<ViabilityRequestDocumentFactory> */
@@ -45,10 +46,10 @@ class ViabilityRequestDocument extends Model
     }
 
     /**
-     * @return BelongsTo<User, $this>
+     * @return MorphTo<Model, $this>
      */
-    public function uploader(): BelongsTo
+    public function uploadedBy(): MorphTo
     {
-        return $this->belongsTo(User::class, 'uploaded_by_user_id');
+        return $this->morphTo('uploadedBy', 'uploaded_by_type', 'uploaded_by_id');
     }
 }

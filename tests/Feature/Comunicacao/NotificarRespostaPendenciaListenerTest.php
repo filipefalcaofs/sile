@@ -10,6 +10,7 @@ use App\Enums\ViabilityRequestStatus;
 use App\Events\PendenciaRespondida;
 use App\Listeners\NotificarRespostaPendencia;
 use App\Models\AnalysisPendency;
+use App\Models\Cidadao;
 use App\Models\Communication;
 use App\Models\User;
 use App\Models\ViabilityRequest;
@@ -45,8 +46,8 @@ class NotificarRespostaPendenciaListenerTest extends TestCase
      */
     private function pendenciaParaResponder(?User $analista = null): array
     {
-        $requester = User::factory()->create();
-        $request = ViabilityRequest::factory()->protocoled()->create(['requester_user_id' => $requester->id]);
+        $requester = Cidadao::factory()->create();
+        $request = ViabilityRequest::factory()->protocoled()->create(['requester_cidadao_id' => $requester->id]);
         $request->forceFill([
             'status' => ViabilityRequestStatus::EmPendencia,
             'assigned_user_id' => $analista?->id,
@@ -78,7 +79,7 @@ class NotificarRespostaPendenciaListenerTest extends TestCase
         // Ledger honesto: pendencia_respondida (mapa default = [in_app]).
         $this->assertDatabaseHas('communications', [
             'viability_request_id' => $request->id,
-            'recipient_user_id' => $analista->id,
+            'recipient_type' => $analista->getMorphClass(), 'recipient_id' => $analista->id,
             'type' => CommunicationType::PendenciaRespondida->value,
             'channel' => CommunicationChannel::InApp->value,
             'status' => CommunicationStatus::NaFila->value,

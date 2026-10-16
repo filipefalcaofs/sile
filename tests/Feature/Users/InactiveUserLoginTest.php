@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Users;
 
+use App\Models\Cidadao;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -20,7 +21,7 @@ class InactiveUserLoginTest extends TestCase
 
     public function test_conta_inativada_nao_loga_e_recebe_mensagem_clara(): void
     {
-        $user = User::factory()->cidadao()->inactive()->create();
+        $user = Cidadao::factory()->inactive()->create();
 
         $response = $this->post('/portal/login', [
             'cpf' => $user->cpf,
@@ -40,7 +41,7 @@ class InactiveUserLoginTest extends TestCase
 
     public function test_credencial_invalida_em_conta_inativada_nao_revela_o_estado(): void
     {
-        $user = User::factory()->cidadao()->inactive()->create();
+        $user = Cidadao::factory()->inactive()->create();
 
         $response = $this->post('/portal/login', [
             'cpf' => $user->cpf,
@@ -61,7 +62,7 @@ class InactiveUserLoginTest extends TestCase
 
     public function test_conta_ativa_continua_logando_normalmente(): void
     {
-        $user = User::factory()->cidadao()->create();
+        $user = Cidadao::factory()->create();
 
         $this->post('/portal/login', [
             'cpf' => $user->cpf,
@@ -73,7 +74,7 @@ class InactiveUserLoginTest extends TestCase
 
     public function test_reativacao_volta_a_permitir_login(): void
     {
-        $user = User::factory()->cidadao()->inactive()->create();
+        $user = Cidadao::factory()->inactive()->create();
 
         $user->forceFill(['inactivated_at' => null])->save();
 
@@ -87,7 +88,7 @@ class InactiveUserLoginTest extends TestCase
 
     public function test_sessao_ativa_de_usuario_inativado_e_derrubada(): void
     {
-        $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $user = Cidadao::factory()->withAcceptedLgpdTerm()->create();
 
         $this->actingAs($user);
 
@@ -106,7 +107,7 @@ class InactiveUserLoginTest extends TestCase
 
     public function test_usuario_ativo_navega_normalmente_com_o_middleware(): void
     {
-        $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $user = Cidadao::factory()->withAcceptedLgpdTerm()->create();
 
         $this->actingAs($user)->get('/portal/painel')->assertOk();
     }

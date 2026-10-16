@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Viabilidade;
 
+use App\Models\Cidadao;
 use App\Models\User;
 use App\Models\ViabilityQuery;
 use App\Services\Geo\AddressNotFoundException;
@@ -49,16 +50,16 @@ class HistoricoConsultaTest extends TestCase
     /**
      * Cidadão do portal com termo LGPD aceito — precedente "Minhas empresas".
      */
-    private function portalUser(): User
+    private function portalUser(): Cidadao
     {
-        return User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        return Cidadao::factory()->withAcceptedLgpdTerm()->create();
     }
 
     public function test_consulta_autenticada_grava_snapshot_no_historico(): void
     {
         // HU-060/CA-01: autenticado (guard web), a consulta grava um snapshot
         // imutável da própria consulta — entrada, resultado e versões da época.
-        $user = User::factory()->create();
+        $user = $this->portalUser();
 
         $this->actingAs($user)
             ->postJson('/portal/viabilidade/cnae', [
@@ -71,7 +72,7 @@ class HistoricoConsultaTest extends TestCase
 
         $query = ViabilityQuery::query()->latest('id')->first();
 
-        $this->assertSame($user->id, $query->user_id);
+        $this->assertSame($user->id, $query->cidadao_id);
         $this->assertSame('cnae', $query->entry_type);
         // Sem território (via CNAE), o veredito é PROPAGADO como pendente.
         $this->assertSame('pendente', $query->result['veredito_locacional']['resultado']);
@@ -80,6 +81,25 @@ class HistoricoConsultaTest extends TestCase
         $this->assertNotEmpty($query->rules_versions);
         $this->assertArrayHasKey('louos', $query->rules_versions);
         $this->assertNotEmpty($query->rules_versions['louos']);
+    }
+
+    public function test_conta_de_servidor_nao_grava_historico_no_id_do_cidadao_homonimo(): void
+    {
+        // Rota pública (fora de auth:web): só conta de cidadão tem histórico
+        // pessoal. Um servidor com o mesmo id de um cidadão não pode gravar a
+        // consulta no histórico desse cidadão.
+        $cidadao = Cidadao::factory()->withAcceptedLgpdTerm()->create(['id' => 9003]);
+        $servidor = User::factory()->create(['id' => 9003]);
+
+        $this->actingAs($servidor)
+            ->postJson('/portal/viabilidade/cnae', [
+                'cnae' => self::CNAE_MINIMERCADO,
+                'area' => 120,
+            ])
+            ->assertOk();
+
+        $this->assertSame(0, ViabilityQuery::query()->where('cidadao_id', $cidadao->id)->count());
+        $this->assertSame(0, ViabilityQuery::count());
     }
 
     public function test_consulta_anonima_nao_grava_historico_mas_e_auditada(): void
@@ -112,7 +132,7 @@ class HistoricoConsultaTest extends TestCase
             }
         });
 
-        $user = User::factory()->create();
+        $user = $this->portalUser();
 
         $this->actingAs($user)
             ->postJson('/portal/viabilidade/endereco', [
@@ -128,7 +148,7 @@ class HistoricoConsultaTest extends TestCase
     public function test_historico_lista_so_as_consultas_do_dono(): void
     {
         // HU-060/CA-04 (escopo): o usuário vê SOMENTE as próprias consultas
-        // (forUser — precedente "Minhas empresas"); as de terceiro nunca aparecem.
+        // (forCidadao — precedente "Minhas empresas"); as de terceiro nunca aparecem.
         $userA = $this->portalUser();
         $userB = $this->portalUser();
 

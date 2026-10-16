@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Viabilidade;
 
-use App\Models\User;
+use App\Models\Cidadao;
 use App\Models\ViabilityQuery;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Schema;
@@ -11,7 +11,7 @@ use Tests\TestCase;
 /**
  * O histórico de consultas (HU-060) é uma tabela imutável e TABULAR (json, sem
  * PostGIS) que roda em SQLite. Trava o snapshot com casts array (input/result/
- * rules_versions), o escopo por dono (forUser — precedente "Minhas empresas") e
+ * rules_versions), o escopo por dono (forCidadao — precedente "Minhas empresas") e
  * a imutabilidade (só created_at, sem updated_at).
  */
 class ViabilityQuerySchemaTest extends TestCase
@@ -40,21 +40,21 @@ class ViabilityQuerySchemaTest extends TestCase
     {
         $query = ViabilityQuery::factory()->anonima()->create();
 
-        $this->assertNull($query->user_id);
+        $this->assertNull($query->cidadao_id);
         $this->assertNotNull($query->ip_address);
     }
 
-    public function test_escopo_for_user_retorna_so_do_dono(): void
+    public function test_escopo_for_cidadao_retorna_so_do_dono(): void
     {
-        $dono = User::factory()->create();
-        $outro = User::factory()->create();
+        $dono = Cidadao::factory()->create();
+        $outro = Cidadao::factory()->create();
 
-        ViabilityQuery::factory()->count(2)->create(['user_id' => $dono->id]);
-        $doOutro = ViabilityQuery::factory()->create(['user_id' => $outro->id]);
+        ViabilityQuery::factory()->count(2)->create(['cidadao_id' => $dono->id]);
+        $doOutro = ViabilityQuery::factory()->create(['cidadao_id' => $outro->id]);
 
-        $this->assertSame(2, ViabilityQuery::forUser($dono)->count());
-        $this->assertEquals([$dono->id], ViabilityQuery::forUser($dono)->pluck('user_id')->unique()->values()->all());
-        $this->assertFalse(ViabilityQuery::forUser($dono)->whereKey($doOutro->id)->exists());
+        $this->assertSame(2, ViabilityQuery::forCidadao($dono)->count());
+        $this->assertEquals([$dono->id], ViabilityQuery::forCidadao($dono)->pluck('cidadao_id')->unique()->values()->all());
+        $this->assertFalse(ViabilityQuery::forCidadao($dono)->whereKey($doOutro->id)->exists());
     }
 
     public function test_tabela_e_imutavel_sem_updated_at(): void

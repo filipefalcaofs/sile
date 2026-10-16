@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Companies;
 
-use App\Models\User;
+use App\Models\Cidadao;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -35,11 +35,11 @@ class CnpjThrottleTest extends TestCase
     /**
      * Cidadão habilitado a navegar no portal (papel + termo LGPD aceito).
      */
-    private function portalUser(): User
+    private function portalUser(): Cidadao
     {
         $this->seed(RolesAndPermissionsSeeder::class);
 
-        return User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        return Cidadao::factory()->withAcceptedLgpdTerm()->create();
     }
 
     public function test_excedente_recebe_429(): void

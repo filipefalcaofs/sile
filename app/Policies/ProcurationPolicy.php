@@ -2,16 +2,16 @@
 
 namespace App\Policies;
 
+use App\Models\Cidadao;
 use App\Models\Procuration;
-use App\Models\User;
 
 class ProcurationPolicy
 {
     /**
      * Somente o outorgante revoga a própria procuração (HU-009 CA-04).
      */
-    public function delete(User $user, Procuration $procuration): bool
+    public function delete(Cidadao $cidadao, Procuration $procuration): bool
     {
-        return $user->id === $procuration->grantor_user_id;
+        return $cidadao->id === $procuration->grantor_cidadao_id;
     }
 }

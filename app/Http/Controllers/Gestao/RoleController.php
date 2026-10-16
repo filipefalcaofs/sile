@@ -5,12 +5,14 @@ namespace App\Http\Controllers\Gestao;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Gestao\StoreRoleRequest;
 use App\Http\Requests\Gestao\UpdateRoleRequest;
+use App\Models\User;
 use App\Services\Relatorios\Export\ReportExporter;
 use App\Services\Relatorios\Export\Sources\PerfisReportSource;
 use App\Services\Relatorios\ReportFilters;
 use App\Support\Audit\AuditService;
 use App\Support\PermissionCatalog;
 use App\Support\RoleProtection;
+use App\Support\ServidoresPorPerfil;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -59,7 +61,7 @@ class RoleController extends Controller
         $perPage = in_array($perPage, self::PER_PAGE_OPTIONS, true) ? $perPage : self::DEFAULT_PER_PAGE;
 
         $roles = Role::query()
-            ->withCount('users')
+            ->addSelect(['users_count' => ServidoresPorPerfil::contagem()])
             ->with('permissions:id,name')
             ->when($search !== '', function ($query) use ($search) {
                 // whereLike sem case: LIKE do PostgreSQL é case-sensitive.
@@ -151,7 +153,8 @@ class RoleController extends Controller
             ]);
         }
 
-        if ($role->users()->exists()) {
+        // Role::users() resolve o model pelo guard do papel (web = Cidadao); perfis são de servidor.
+        if (User::role($role)->exists()) {
             throw ValidationException::withMessages([
                 'role' => __('Este perfil possui usuários vinculados e não pode ser excluído.'),
             ]);

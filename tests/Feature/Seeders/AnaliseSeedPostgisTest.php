@@ -6,6 +6,7 @@ use App\Enums\AnalysisPendencyStatus;
 use App\Enums\AnalysisRecordStatus;
 use App\Enums\DecisionOutcome;
 use App\Enums\ViabilityRequestStatus;
+use App\Models\Cidadao;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use Database\Seeders\AnaliseDevSeeder;
@@ -34,7 +35,7 @@ class AnaliseSeedPostgisTest extends PostgisTestCase
 
         $this->assertSame('pgsql', DB::connection()->getDriverName());
 
-        $cidadao = User::query()->where('email', 'cidadao@sile.dev')->firstOrFail();
+        $cidadao = Cidadao::query()->where('email', 'cidadao@sile.dev')->firstOrFail();
         $analista = User::query()->where('email', 'analista@sile.dev')->firstOrFail();
 
         // 1) EM ANÁLISE: distribuído ao analista, na caixa do setor, com a ficha
@@ -84,7 +85,7 @@ class AnaliseSeedPostgisTest extends PostgisTestCase
         $this->seed();
         $this->seed();
 
-        $cidadao = User::query()->where('email', 'cidadao@sile.dev')->firstOrFail();
+        $cidadao = Cidadao::query()->where('email', 'cidadao@sile.dev')->firstOrFail();
 
         // Cada estágio tem um único processo (marcador estável) e uma única
         // decisão/pendência/encaminhamento — re-seed não duplica.
@@ -92,7 +93,7 @@ class AnaliseSeedPostgisTest extends PostgisTestCase
             $this->assertSame(
                 1,
                 ViabilityRequest::query()
-                    ->where('requester_user_id', $cidadao->id)
+                    ->where('requester_cidadao_id', $cidadao->id)
                     ->where('address_reference', $marker)
                     ->count(),
                 "O exemplo '{$marker}' não pode duplicar no re-seed.",
@@ -104,10 +105,10 @@ class AnaliseSeedPostgisTest extends PostgisTestCase
         $this->assertSame(1, $deferido->fineMeshReferrals()->count());
     }
 
-    private function processo(User $cidadao, string $marker): ViabilityRequest
+    private function processo(Cidadao $cidadao, string $marker): ViabilityRequest
     {
         return ViabilityRequest::query()
-            ->where('requester_user_id', $cidadao->id)
+            ->where('requester_cidadao_id', $cidadao->id)
             ->where('address_reference', $marker)
             ->firstOrFail();
     }

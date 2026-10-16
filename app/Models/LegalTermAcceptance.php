@@ -3,14 +3,18 @@
 namespace App\Models;
 
 use App\Concerns\HasAuditoria;
+use Database\Factories\LegalTermAcceptanceFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
-#[Fillable(['user_id', 'legal_term_id', 'ip_address', 'user_agent', 'accepted_at'])]
+#[Fillable(['accepted_by_type', 'accepted_by_id', 'legal_term_id', 'ip_address', 'user_agent', 'accepted_at'])]
 class LegalTermAcceptance extends Model
 {
-    use HasAuditoria;
+    /** @use HasFactory<LegalTermAcceptanceFactory> */
+    use HasAuditoria, HasFactory;
 
     /**
      * Get the attributes that should be cast.
@@ -24,9 +28,12 @@ class LegalTermAcceptance extends Model
         ];
     }
 
-    public function user(): BelongsTo
+    /**
+     * @return MorphTo<Model, $this>
+     */
+    public function acceptedBy(): MorphTo
     {
-        return $this->belongsTo(User::class);
+        return $this->morphTo('acceptedBy', 'accepted_by_type', 'accepted_by_id');
     }
 
     public function term(): BelongsTo

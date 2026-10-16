@@ -9,6 +9,7 @@ use Database\Factories\CommunicationFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
  * Linha do ledger imutável de comunicações de PROCESSO (HU-096). Espelha o
@@ -24,7 +25,8 @@ class Communication extends Model
 
     protected $fillable = [
         'viability_request_id',
-        'recipient_user_id',
+        'recipient_type',
+        'recipient_id',
         'channel',
         'type',
         'status',
@@ -62,11 +64,11 @@ class Communication extends Model
     }
 
     /**
-     * @return BelongsTo<User, $this>
+     * @return MorphTo<Model, $this>
      */
-    public function recipient(): BelongsTo
+    public function recipient(): MorphTo
     {
-        return $this->belongsTo(User::class, 'recipient_user_id');
+        return $this->morphTo('recipient');
     }
 
     /**
