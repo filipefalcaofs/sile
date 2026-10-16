@@ -3,6 +3,7 @@
 namespace Tests\Feature\Comunicacao;
 
 use App\Enums\AnalysisStage;
+use App\Enums\CommunicationChannel;
 use App\Enums\CommunicationStatus;
 use App\Enums\CommunicationType;
 use App\Enums\ViabilityRequestStatus;
@@ -98,6 +99,30 @@ class EscalonarSlaCommandTest extends TestCase
         ], $analysis))->save();
 
         return $request;
+    }
+
+    public function test_escalonamento_notifica_so_no_sistema_sem_email(): void
+    {
+        NotificationFacade::fake();
+        $analista = User::factory()->analista()->create();
+        $processo = $this->processoEmAnalise([
+            'assigned_user_id' => $analista->id,
+            'analysis_stage_started_at' => now()->subDays(9),
+            'analysis_due_at' => now()->addDay(),
+        ]);
+
+        $this->artisan('notificacoes:escalonar-sla')->assertSuccessful();
+
+        $this->assertDatabaseMissing('communications', [
+            'viability_request_id' => $processo->id,
+            'type' => CommunicationType::EscalonamentoSla->value,
+            'channel' => 'email',
+        ]);
+        NotificationFacade::assertSentTo(
+            $analista,
+            ProcessoEscalonadoNotification::class,
+            fn ($notification): bool => $notification->channels() === [CommunicationChannel::InApp],
+        );
     }
 
     public function test_amarelo_alerta_o_analista_responsavel(): void

@@ -598,7 +598,7 @@ class ParameterSeederTest extends TestCase
                 'pendencia_respondida' => ['in_app'],
                 'pendencia_expirada' => ['email', 'in_app'],
                 'prazo_vencendo' => ['email', 'in_app'],
-                'escalonamento_sla' => ['email', 'in_app'],
+                'escalonamento_sla' => ['in_app'],
                 'resultado' => ['email', 'in_app'],
             ],
             $mapaCanais->typedValue(),
