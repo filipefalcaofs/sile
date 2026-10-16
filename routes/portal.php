@@ -49,10 +49,10 @@ Route::middleware('portal.servicos')->prefix('portal')->name('portal.')->group(f
     // ResolveRepresentation: logado, a consulta abre no shell do portal e
     // precisa do mesmo "atuando em nome de" das demais telas.
     Route::get('viabilidade', [ConsultaViabilidadeController::class, 'index'])
-        ->middleware(ResolveRepresentation::class)
+        ->middleware(['consulta.viabilidade', ResolveRepresentation::class])
         ->name('viabilidade.index');
 
-    Route::middleware('throttle:consulta-viabilidade')->group(function () {
+    Route::middleware(['consulta.viabilidade', 'throttle:consulta-viabilidade'])->group(function () {
         Route::post('viabilidade/endereco', [ConsultaViabilidadeController::class, 'endereco'])->name('viabilidade.endereco');
         Route::post('viabilidade/cnae', [ConsultaViabilidadeController::class, 'cnae'])->name('viabilidade.cnae');
         Route::post('viabilidade/inscricao', [ConsultaViabilidadeController::class, 'inscricao'])->name('viabilidade.inscricao');

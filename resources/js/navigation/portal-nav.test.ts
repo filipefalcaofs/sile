@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { portalSidebarGroups } from './portal-nav-icons';
 import {
+    acoesDoPortal,
     acoesPublicas,
     assertPortalNavHealth,
     FILTROS_SOLICITACOES,
@@ -88,5 +90,39 @@ describe('Catálogo de navegação do portal do cidadão', () => {
         expect(erros).toContain('Grupo "Início" tem um único item — absorva em um grupo existente.');
         expect(erros).toContain('Hrefs duplicados no menu: /portal/a.');
         expect(erros).toContain('Ícones repetidos no menu: file.');
+    });
+});
+
+describe('Interruptor da consulta prévia na navegação', () => {
+    const CONSULTA = '/portal/viabilidade';
+
+    it('mantém a consulta no menu e nas ações quando ligada', () => {
+        expect(acoesDoPortal().map((acao) => acao.href)).toContain(CONSULTA);
+        expect(acoesPublicas().map((acao) => acao.href)).toContain(CONSULTA);
+        expect(portalSidebarGroups().flatMap((group) => group.items.map((item) => item.href))).toContain(CONSULTA);
+    });
+
+    it('tira só a consulta das ações do painel e da home quando desligada', () => {
+        const painel = acoesDoPortal(false).map((acao) => acao.href);
+        const home = acoesPublicas(false).map((acao) => acao.href);
+
+        expect(painel).not.toContain(CONSULTA);
+        expect(home).not.toContain(CONSULTA);
+        expect(painel).toContain('/portal/solicitacoes/nova');
+        expect(home).toContain('/portal/renovacao');
+    });
+
+    it('tira só a consulta do menu lateral quando desligada, sem mexer nos outros serviços', () => {
+        const hrefs = portalSidebarGroups(true, false).flatMap((group) => group.items.map((item) => item.href));
+
+        expect(hrefs).not.toContain(CONSULTA);
+        expect(hrefs).toContain('/portal/solicitacoes');
+        expect(hrefs).toContain('/portal/empresas');
+    });
+
+    it('com os serviços do portal desligados o grupo de serviços continua fora do menu', () => {
+        const rotulos = portalSidebarGroups(false, true).map((group) => group.label);
+
+        expect(rotulos).not.toContain('Serviços');
     });
 });

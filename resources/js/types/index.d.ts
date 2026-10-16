@@ -25,4 +25,9 @@ export interface SharedProps extends PageProps {
         enabled: boolean;
         mensagem: string;
     };
+    /** Interruptor da consulta prévia (features.consulta_viabilidade). */
+    consultaViabilidade: {
+        enabled: boolean;
+        mensagem: string;
+    };
 }

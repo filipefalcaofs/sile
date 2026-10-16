@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\ConfigureEnvironmentSession;
+use App\Http\Middleware\EnsureConsultaViabilidadeEnabled;
 use App\Http\Middleware\EnsureLgpdTermAccepted;
 use App\Http\Middleware\EnsurePortalServicosEnabled;
 use App\Http\Middleware\EnsurePortalSolicitacaoEnabled;
@@ -61,6 +62,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'gestao.guest' => RedirectGestaoIfAuthenticated::class,
             'portal.solicitacao' => EnsurePortalSolicitacaoEnabled::class,
             'portal.servicos' => EnsurePortalServicosEnabled::class,
+            'consulta.viabilidade' => EnsureConsultaViabilidadeEnabled::class,
         ]);
 
         // Logins separados por contexto: retaguarda usa /gestao/login,

@@ -64,7 +64,6 @@ class ParameterSeeder extends Seeder
             'seguranca.throttle.geocoding.por_minuto',
             'geo.zona.atributos_nome',
             'louos.sandbox.amostra_padrao',
-            'features.consulta_viabilidade',
             'seguranca.throttle.consulta_viabilidade.por_minuto',
             'features.solicitacao_viabilidade',
             'features.simulacao_solicitacao',
@@ -182,6 +181,13 @@ class ParameterSeeder extends Seeder
                 'default_value' => '1',
                 'validation_rules' => ['required', 'boolean'],
                 'description' => 'Habilita a autenticação de servidores via AD (API institucional SEDUR) no console; desligar bloqueia o login das contas AD com aviso explícito',
+            ],
+            'features.consulta_viabilidade' => [
+                'group' => 'features',
+                'type' => 'boolean',
+                'default_value' => '1',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'Habilita a consulta prévia de viabilidade do portal. Desligada, só a página e as consultas ficam indisponíveis com aviso; os demais serviços do portal e o histórico das consultas já feitas continuam',
             ],
             'features.portal_servicos' => [
                 'group' => 'features',

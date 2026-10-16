@@ -74,6 +74,10 @@ class HandleInertiaRequests extends Middleware
                 'enabled' => Settings::enabled('portal_servicos'),
                 'mensagem' => EnsurePortalServicosEnabled::MENSAGEM,
             ],
+            'consultaViabilidade' => fn (): array => [
+                'enabled' => Settings::enabled('consulta_viabilidade'),
+                'mensagem' => EnsureConsultaViabilidadeEnabled::MENSAGEM,
+            ],
             'vocabulario' => fn (): array => Vocabulario::catalog(),
             'export_formatos' => fn (): array => Vocabulario::exportFormatos(),
         ];

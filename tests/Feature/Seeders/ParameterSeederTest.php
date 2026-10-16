@@ -15,7 +15,7 @@ class ParameterSeederTest extends TestCase
     {
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(114, Parameter::query()->count());
+        $this->assertSame(115, Parameter::query()->count());
         $this->assertSame(
             ['abuso', 'analise', 'expresso', 'features', 'geo', 'ia', 'integracoes', 'louos', 'notificacoes', 'relatorios', 'retencao', 'risco', 'seguranca', 'solicitacao', 'tll'],
             Parameter::query()->distinct()->orderBy('group')->pluck('group')->all(),
@@ -369,7 +369,9 @@ class ParameterSeederTest extends TestCase
     {
         $this->seed(ParameterSeeder::class);
 
-        $this->assertNull(Parameter::query()->where('key', 'features.consulta_viabilidade')->first());
+        $interruptor = Parameter::query()->where('key', 'features.consulta_viabilidade')->first();
+        $this->assertNotNull($interruptor);
+        $this->assertSame('1', $interruptor->default_value);
         $this->assertNull(Parameter::query()->where('key', 'seguranca.throttle.consulta_viabilidade.por_minuto')->first());
         $this->assertSame(20, config('viabiliza.seguranca.throttle.consulta_viabilidade.por_minuto'));
     }
@@ -848,6 +850,6 @@ class ParameterSeederTest extends TestCase
         $this->seed(ParameterSeeder::class);
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(114, Parameter::query()->count());
+        $this->assertSame(115, Parameter::query()->count());
     }
 }

@@ -12,8 +12,8 @@ interface PortalLayoutProps {
 }
 
 export default function PortalLayout({ children }: PortalLayoutProps) {
-    const { actingFor, flash, portalServicos } = usePage<SharedProps>().props;
-    const groups = portalSidebarGroups(portalServicos.enabled);
+    const { actingFor, flash, portalServicos, consultaViabilidade } = usePage<SharedProps>().props;
+    const groups = portalSidebarGroups(portalServicos.enabled, consultaViabilidade.enabled);
     const avisoDeServico = !portalServicos.enabled && flash.warning === portalServicos.mensagem;
 
     return (

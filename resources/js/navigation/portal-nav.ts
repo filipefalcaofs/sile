@@ -102,8 +102,16 @@ export const FILTROS_SOLICITACOES = {
     todas: '/portal/solicitacoes',
 } as const;
 
-export function acoesPublicas(): PortalAcao[] {
-    return PORTAL_ACOES.filter((acao) => acao.publica);
+/** Rota da consulta prévia: some do menu e das ações quando o gestor a desliga. */
+export const ROTA_CONSULTA_VIABILIDADE = '/portal/viabilidade';
+
+/** Ações do painel; sem a consulta quando features.consulta_viabilidade está desligada. */
+export function acoesDoPortal(consultaHabilitada = true): PortalAcao[] {
+    return PORTAL_ACOES.filter((acao) => consultaHabilitada || acao.href !== ROTA_CONSULTA_VIABILIDADE);
+}
+
+export function acoesPublicas(consultaHabilitada = true): PortalAcao[] {
+    return acoesDoPortal(consultaHabilitada).filter((acao) => acao.publica);
 }
 
 /** Invariantes do catálogo. Usado pelos testes para impedir regressão. */

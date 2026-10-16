@@ -16,7 +16,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import EmptyState from '@/components/ui/empty-state';
 import KpiCard, { type KpiTone } from '@/components/ui/kpi-card';
 import PortalLayout from '@/layouts/portal-layout';
-import { FILTROS_SOLICITACOES, PORTAL_ACOES } from '@/navigation/portal-nav';
+import { acoesDoPortal, FILTROS_SOLICITACOES } from '@/navigation/portal-nav';
 import { PORTAL_NAV_ICONS } from '@/navigation/portal-nav-icons';
 import type { SharedProps } from '@/types';
 
@@ -115,7 +115,7 @@ function formatDate(value: string | null): string {
 }
 
 export default function Dashboard({ indicadores, atencao, solicitacoesRecentes }: DashboardProps) {
-    const { auth, portalServicos } = usePage<SharedProps>().props;
+    const { auth, portalServicos, consultaViabilidade } = usePage<SharedProps>().props;
     const servicosHabilitados = portalServicos.enabled;
     const primeiroNome = auth.user?.name.split(' ')[0] ?? 'cidadão';
 
@@ -254,7 +254,7 @@ export default function Dashboard({ indicadores, atencao, solicitacoesRecentes }
                         O que você quer fazer?
                     </h2>
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 xl:grid-cols-3">
-                        {PORTAL_ACOES.map((acao) => {
+                        {acoesDoPortal(consultaViabilidade.enabled).map((acao) => {
                             const Icon = PORTAL_NAV_ICONS[acao.icon];
 
                             return (
