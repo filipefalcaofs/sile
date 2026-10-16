@@ -373,7 +373,7 @@ class CaixaSetorController extends Controller
         $processos = $this->naCaixaDoUsuario(ViabilityRequest::query(), $request->user())
             ->whereIn('id', $pedidos)
             ->where('status', ViabilityRequestStatus::EmAnalise->value)
-            ->whereNull('assigned_user_id')
+            ->where($this->semResponsavelOuParaConclusao(...))
             ->get();
 
         if ($processos->count() !== $pedidos->count()) {
@@ -422,7 +422,7 @@ class CaixaSetorController extends Controller
                 $processos = $this->naCaixaDoUsuario(ViabilityRequest::query(), $request->user())
                     ->whereIn('id', $todosIds->unique())
                     ->where('status', ViabilityRequestStatus::EmAnalise->value)
-                    ->whereNull('assigned_user_id')
+                    ->where($this->semResponsavelOuParaConclusao(...))
                     ->lockForUpdate()
                     ->get()
                     ->keyBy('id');
@@ -552,6 +552,13 @@ class CaixaSetorController extends Controller
      */
     public function assumir(Request $request, ViabilityRequest $viabilityRequest): RedirectResponse
     {
+        // Quem só tramita (apoio) assume apenas o que está para conclusão.
+        abort_unless(
+            $request->user()->can('analisar-processos')
+                || $viabilityRequest->analysis_status === AnalysisStatus::ParaConclusao,
+            403,
+        );
+
         try {
             $this->distribuicao->assumir($viabilityRequest, $request->user());
         } catch (DistribuicaoException) {
@@ -559,6 +566,18 @@ class CaixaSetorController extends Controller
         }
 
         return back()->with('status', 'Processo assumido.');
+    }
+
+    /**
+     * Distribuível: sem responsável, ou na aba "Para conclusão", onde o apoio
+     * também reatribui quem vai concluir.
+     *
+     * @param  Builder<ViabilityRequest>  $query
+     */
+    private function semResponsavelOuParaConclusao(Builder $query): void
+    {
+        $query->whereNull('assigned_user_id')
+            ->orWhere('analysis_status', AnalysisStatus::ParaConclusao->value);
     }
 
     /**

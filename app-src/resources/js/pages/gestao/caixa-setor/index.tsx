@@ -196,7 +196,8 @@ export default function CaixaSetorIndex({
         sector_id: '',
     });
 
-    const selecaoAtiva = visao === 'para_distribuir' && podeDistribuir;
+    const selecaoAtiva = (visao === 'para_distribuir' || visao === 'para_conclusao') && podeDistribuir;
+    const podeAssumirNaAba = podeAssumir || (podeDistribuir && visao === 'para_conclusao');
     const todosSelecionados = linhas.length > 0 && linhas.every((item) => selecionados.includes(item.id));
 
     // Modal em contexto de vistoria quando QUALQUER linha envolvida está no
@@ -399,7 +400,7 @@ export default function CaixaSetorIndex({
             cellClassName: 'whitespace-nowrap',
             cell: (item) => (
                 <div className="flex justify-end gap-2">
-                    {podeAssumir && item.assigned_user_id === null && (!emVistoria(item) || podeVistoria) && (
+                    {podeAssumirNaAba && item.assigned_user_id === null && (!emVistoria(item) || podeVistoria) && (
                         <TableAction
                             tone="brand"
                             onClick={() => assumir(item)}
@@ -492,12 +493,12 @@ export default function CaixaSetorIndex({
 
                         <div className="flex flex-wrap items-center justify-between gap-3">
                             <div className="flex flex-wrap items-center gap-3">
-                                {selecaoAtiva && (
+                                {selecaoAtiva && visao === 'para_distribuir' && (
                                     <Button variant="outline" onClick={() => distribuicaoInteligente(null)}>
                                         Distribuição inteligente de todos os elegíveis
                                     </Button>
                                 )}
-                                {selecaoAtiva && selecionados.length > 0 && (
+                                {selecaoAtiva && visao === 'para_distribuir' && selecionados.length > 0 && (
                                     <Button variant="outline" onClick={() => distribuicaoInteligente(selecionados)}>
                                         Distribuição inteligente ({selecionados.length})
                                     </Button>
@@ -510,7 +511,7 @@ export default function CaixaSetorIndex({
                                                 (linha) => selecionados.includes(linha.id) && emVistoria(linha),
                                             );
 
-                                            if (algumEmVistoria) {
+                                            if (algumEmVistoria || visao === 'para_conclusao') {
                                                 abrirModal({
                                                     tipo: 'distribuir',
                                                     ids: selecionados,
