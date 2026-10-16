@@ -298,6 +298,9 @@ export default function Show({
                                         '—'
                                     )}
                                 </DescItem>
+                                <DescItem label="Data de entrada">
+                                    {formatarDataHora(processo.protocoled_at)}
+                                </DescItem>
                             </dl>
                         </div>
 
