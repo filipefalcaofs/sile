@@ -45,7 +45,6 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
             { name: 'Minhas solicitações', href: '/portal/solicitacoes', icon: 'file' },
             { name: 'Renovar viabilidade', href: '/portal/renovacao', icon: 'check-circle' },
             { name: 'Minhas empresas', href: '/portal/empresas', icon: 'list' },
-            { name: 'Procurações', href: '/portal/procuracoes', icon: 'group' },
         ],
     },
     {

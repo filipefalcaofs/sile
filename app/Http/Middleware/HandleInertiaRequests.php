@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Support\Representation\CurrentRepresentation;
+use App\Support\Settings;
 use App\Support\Vocabulario;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -69,6 +70,10 @@ class HandleInertiaRequests extends Middleware
             ],
             'appVersion' => config('app.version'),
             'appRevision' => config('app.revision'),
+            'portalServicos' => fn (): array => [
+                'enabled' => Settings::enabled('portal_servicos'),
+                'mensagem' => EnsurePortalServicosEnabled::MENSAGEM,
+            ],
             'vocabulario' => fn (): array => Vocabulario::catalog(),
             'export_formatos' => fn (): array => Vocabulario::exportFormatos(),
         ];

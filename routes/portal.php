@@ -45,7 +45,7 @@ Route::middleware('guest')
 // Fora de auth:web: a página não tem throttle; os endpoints JSON têm o throttle
 // parametrizado (07-01) e a guarda do toggle features.consulta_viabilidade no
 // controller (degradação comunicada quando desligado, nunca falha silenciosa).
-Route::prefix('portal')->name('portal.')->group(function () {
+Route::middleware('portal.servicos')->prefix('portal')->name('portal.')->group(function () {
     // ResolveRepresentation: logado, a consulta abre no shell do portal e
     // precisa do mesmo "atuando em nome de" das demais telas.
     Route::get('viabilidade', [ConsultaViabilidadeController::class, 'index'])
@@ -103,140 +103,145 @@ Route::middleware(['auth:web', 'verified'])
 
             Route::get('acessos', AccessHistoryController::class)->name('acessos.index');
 
-            // Histórico autenticado das consultas de viabilidade do próprio
-            // usuário (HU-060) — rota literal, sem conflito com a pública
-            // viabilidade.index (07-06). Escopo do dono no controller (forUser).
-            Route::get('viabilidade/historico', HistoricoConsultaController::class)->name('viabilidade.historico');
-
-            Route::get('procuracoes', [ProcurationController::class, 'index'])->name('procuracoes.index');
-            Route::post('procuracoes', [ProcurationController::class, 'store'])->name('procuracoes.store');
-            Route::delete('procuracoes/{procuration}', [ProcurationController::class, 'destroy'])->name('procuracoes.destroy');
-
-            Route::post('representacao', [RepresentationController::class, 'store'])->name('representacao.store');
+            // Encerrar a representação continua disponível com os serviços
+            // desligados: quem já atua em nome de alguém precisa conseguir sair.
             Route::delete('representacao', [RepresentationController::class, 'destroy'])->name('representacao.destroy');
 
-            // Empresas: rotas literais ANTES de empresas/{company} (03-05).
-            Route::get('empresas', [CompanyController::class, 'index'])->name('empresas.index');
-            Route::get('empresas/cadastrar', [CompanyController::class, 'create'])->name('empresas.create');
-            Route::post('empresas', [CompanyController::class, 'store'])->name('empresas.store');
-            Route::post('empresas/consultar-cnpj', CnpjLookupController::class)
-                ->middleware('throttle:cnpj-lookup')
-                ->name('empresas.consultar-cnpj');
+            Route::middleware('portal.servicos')->group(function () {
+                // Histórico autenticado das consultas de viabilidade do próprio
+                // usuário (HU-060) — rota literal, sem conflito com a pública
+                // viabilidade.index (07-06). Escopo do dono no controller (forUser).
+                Route::get('viabilidade/historico', HistoricoConsultaController::class)->name('viabilidade.historico');
 
-            // Rotas com binding {company} DEPOIS das literais (03-05).
-            Route::get('empresas/{company}', [CompanyController::class, 'show'])->name('empresas.show');
-            Route::put('empresas/{company}', [CompanyController::class, 'update'])->name('empresas.update');
-            Route::delete('empresas/{company}/vinculo', [CompanyLinkController::class, 'destroy'])->name('empresas.vinculo.destroy');
+                Route::get('procuracoes', [ProcurationController::class, 'index'])->name('procuracoes.index');
+                Route::post('procuracoes', [ProcurationController::class, 'store'])->name('procuracoes.store');
+                Route::delete('procuracoes/{procuration}', [ProcurationController::class, 'destroy'])->name('procuracoes.destroy');
 
-            // CNAEs da empresa (HU-025/HU-026) — escrita só via service (03-06).
-            Route::put('empresas/{company}/cnae-principal', [CompanyCnaeController::class, 'updatePrimary'])->name('empresas.cnae-principal');
-            Route::put('empresas/{company}/cnaes-secundarios', [CompanyCnaeController::class, 'updateSecondaries'])->name('empresas.cnaes-secundarios');
+                Route::post('representacao', [RepresentationController::class, 'store'])->name('representacao.store');
 
-            // Busca da tabela oficial para os selects de CNAE (só ativos).
-            Route::get('cnaes', CnaeSearchController::class)->name('cnaes.search');
+                // Empresas: rotas literais ANTES de empresas/{company} (03-05).
+                Route::get('empresas', [CompanyController::class, 'index'])->name('empresas.index');
+                Route::get('empresas/cadastrar', [CompanyController::class, 'create'])->name('empresas.create');
+                Route::post('empresas', [CompanyController::class, 'store'])->name('empresas.store');
+                Route::post('empresas/consultar-cnpj', CnpjLookupController::class)
+                    ->middleware('throttle:cnpj-lookup')
+                    ->name('empresas.consultar-cnpj');
 
-            // Solicitações de viabilidade (HU-061) — rotas literais; as rotas
-            // com {solicitacao} entram em 08-06/08-11. O store degrada de forma
-            // comunicada com o toggle features.solicitacao_viabilidade off.
-            Route::get('renovacao', [RenovacaoController::class, 'index'])->middleware('portal.solicitacao')
-                ->name('renovacao.index');
-            Route::post('renovacao/consultar-cnpj', [RenovacaoController::class, 'consultarCnpj'])->middleware('portal.solicitacao')
-                ->name('renovacao.consultar-cnpj');
-            Route::get('renovacao/{origem}', [RenovacaoController::class, 'show'])->middleware('portal.solicitacao')
-                ->name('renovacao.show');
-            Route::post('renovacao/{origem}', [RenovacaoController::class, 'store'])->middleware('portal.solicitacao')
-                ->name('renovacao.store');
+                // Rotas com binding {company} DEPOIS das literais (03-05).
+                Route::get('empresas/{company}', [CompanyController::class, 'show'])->name('empresas.show');
+                Route::put('empresas/{company}', [CompanyController::class, 'update'])->name('empresas.update');
+                Route::delete('empresas/{company}/vinculo', [CompanyLinkController::class, 'destroy'])->name('empresas.vinculo.destroy');
 
-            Route::get('solicitacoes', [SolicitacaoController::class, 'index'])->name('solicitacoes.index');
-            Route::post('solicitacoes', [SolicitacaoController::class, 'store'])->middleware('portal.solicitacao')
-                ->name('solicitacoes.store');
+                // CNAEs da empresa (HU-025/HU-026) — escrita só via service (03-06).
+                Route::put('empresas/{company}/cnae-principal', [CompanyCnaeController::class, 'updatePrimary'])->name('empresas.cnae-principal');
+                Route::put('empresas/{company}/cnaes-secundarios', [CompanyCnaeController::class, 'updateSecondaries'])->name('empresas.cnaes-secundarios');
 
-            // Wizard multi-etapas (HU-061..067, 141) — rotas GET que RENDERIZAM o
-            // wizard. 'nova' é LITERAL e precisa vir ANTES de solicitacoes/{solicitacao}
-            // (08-11 show) para não ser capturada como id. 'editar' continua um
-            // rascunho existente (policy update, dono + rascunho). São DISTINTAS da
-            // GET solicitacoes/{solicitacao} (página de protocolo/consulta do 08-11).
-            Route::get('solicitacoes/nova', [SolicitacaoController::class, 'create'])->middleware('portal.solicitacao')
-                ->name('solicitacoes.create');
-            Route::get('solicitacoes/{solicitacao}/editar', [SolicitacaoController::class, 'edit'])->middleware('portal.solicitacao')
-                ->name('solicitacoes.edit');
+                // Busca da tabela oficial para os selects de CNAE (só ativos).
+                Route::get('cnaes', CnaeSearchController::class)->name('cnaes.search');
 
-            // Consulta AUTENTICADA do protocolo (HU-069) — rota com {solicitacao}
-            // DEPOIS das literais. Dono/representado (policy view) acompanha a
-            // timeline em linguagem simples + prazo estimado com ressalva e gera o
-            // link público assinado de acompanhamento. Auditada (RN-002).
-            Route::get('solicitacoes/{solicitacao}', [ConsultaProtocoloController::class, 'show'])->name('solicitacoes.show');
+                // Solicitações de viabilidade (HU-061) — rotas literais; as rotas
+                // com {solicitacao} entram em 08-06/08-11. O store degrada de forma
+                // comunicada com o toggle features.solicitacao_viabilidade off.
+                Route::get('renovacao', [RenovacaoController::class, 'index'])->middleware('portal.solicitacao')
+                    ->name('renovacao.index');
+                Route::post('renovacao/consultar-cnpj', [RenovacaoController::class, 'consultarCnpj'])->middleware('portal.solicitacao')
+                    ->name('renovacao.consultar-cnpj');
+                Route::get('renovacao/{origem}', [RenovacaoController::class, 'show'])->middleware('portal.solicitacao')
+                    ->name('renovacao.show');
+                Route::post('renovacao/{origem}', [RenovacaoController::class, 'store'])->middleware('portal.solicitacao')
+                    ->name('renovacao.store');
 
-            // Comprovante de protocolo em PDF (documento formal do cidadão) —
-            // download autenticado do dono/representado (policy view), só de
-            // solicitação protocolada; cada emissão é auditada (RN-002).
-            Route::get('solicitacoes/{solicitacao}/comprovante', [ComprovanteProtocoloController::class, 'show'])->name('solicitacoes.comprovante');
+                Route::get('solicitacoes', [SolicitacaoController::class, 'index'])->name('solicitacoes.index');
+                Route::post('solicitacoes', [SolicitacaoController::class, 'store'])->middleware('portal.solicitacao')
+                    ->name('solicitacoes.store');
 
-            // Atividades da solicitação (HU-064/HU-065) — rota com {solicitacao}
-            // DEPOIS das literais. Define o CNAE principal + complementares
-            // (até o limite parametrizável) só do dono em rascunho (policy).
-            Route::put('solicitacoes/{solicitacao}/atividades', [SolicitacaoAtividadeController::class, 'update'])->middleware('portal.solicitacao')
-                ->name('solicitacoes.atividades');
+                // Wizard multi-etapas (HU-061..067, 141) — rotas GET que RENDERIZAM o
+                // wizard. 'nova' é LITERAL e precisa vir ANTES de solicitacoes/{solicitacao}
+                // (08-11 show) para não ser capturada como id. 'editar' continua um
+                // rascunho existente (policy update, dono + rascunho). São DISTINTAS da
+                // GET solicitacoes/{solicitacao} (página de protocolo/consulta do 08-11).
+                Route::get('solicitacoes/nova', [SolicitacaoController::class, 'create'])->middleware('portal.solicitacao')
+                    ->name('solicitacoes.create');
+                Route::get('solicitacoes/{solicitacao}/editar', [SolicitacaoController::class, 'edit'])->middleware('portal.solicitacao')
+                    ->name('solicitacoes.edit');
 
-            // Imóvel + área da solicitação (HU-062/HU-063) — rota com
-            // {solicitacao} DEPOIS das literais. Grava o polígono (fonte GeoJSON),
-            // identifica o território (Fase 4) e valida área×polígono; só do dono
-            // em rascunho (policy update).
-            Route::put('solicitacoes/{solicitacao}/imovel', [SolicitacaoImovelController::class, 'update'])->middleware('portal.solicitacao')
-                ->name('solicitacoes.imovel');
+                // Consulta AUTENTICADA do protocolo (HU-069) — rota com {solicitacao}
+                // DEPOIS das literais. Dono/representado (policy view) acompanha a
+                // timeline em linguagem simples + prazo estimado com ressalva e gera o
+                // link público assinado de acompanhamento. Auditada (RN-002).
+                Route::get('solicitacoes/{solicitacao}', [ConsultaProtocoloController::class, 'show'])->name('solicitacoes.show');
 
-            // Documentos da solicitação (HU-066) — rotas com {solicitacao} DEPOIS
-            // das literais. Upload via Storage (disk parametrizado, nunca público)
-            // com sha256; download por STREAMING só do dono autenticado (LGPD);
-            // substituição/remoção só em rascunho. {documento} é validado contra a
-            // solicitação no controller (anti-IDOR).
-            Route::post('solicitacoes/{solicitacao}/documentos', [SolicitacaoDocumentoController::class, 'store'])->middleware('portal.solicitacao')
-                ->name('solicitacoes.documentos.store');
-            Route::get('solicitacoes/{solicitacao}/documentos/{documento}/download', [SolicitacaoDocumentoController::class, 'download'])->name('solicitacoes.documentos.download');
-            Route::delete('solicitacoes/{solicitacao}/documentos/{documento}', [SolicitacaoDocumentoController::class, 'destroy'])->middleware('portal.solicitacao')
-                ->name('solicitacoes.documentos.destroy');
+                // Comprovante de protocolo em PDF (documento formal do cidadão) —
+                // download autenticado do dono/representado (policy view), só de
+                // solicitação protocolada; cada emissão é auditada (RN-002).
+                Route::get('solicitacoes/{solicitacao}/comprovante', [ComprovanteProtocoloController::class, 'show'])->name('solicitacoes.comprovante');
 
-            // Simulação pré-protocolo (HU-141) — rota com {solicitacao} DEPOIS
-            // das literais. Reusa o ConsultaViabilidadeService da Fase 7 por
-            // CNAE/ponto, propaga o veredito do motor LOUOS e persiste o snapshot;
-            // ORIENTATIVA, NÃO bloqueia o protocolo. Só do dono em rascunho
-            // (policy update); toggle features.simulacao_solicitacao degrada.
-            Route::post('solicitacoes/{solicitacao}/simular', [SolicitacaoSimulacaoController::class, 'store'])->middleware('portal.solicitacao')
-                ->name('solicitacoes.simular');
+                // Atividades da solicitação (HU-064/HU-065) — rota com {solicitacao}
+                // DEPOIS das literais. Define o CNAE principal + complementares
+                // (até o limite parametrizável) só do dono em rascunho (policy).
+                Route::put('solicitacoes/{solicitacao}/atividades', [SolicitacaoAtividadeController::class, 'update'])->middleware('portal.solicitacao')
+                    ->name('solicitacoes.atividades');
 
-            // Protocolar a solicitação (HU-068) — rota com {solicitacao} DEPOIS
-            // das literais. Valida documentos obrigatórios (bloqueia com aviso se
-            // faltar), gera o número único (lock + unique), transiciona
-            // rascunho→protocolada (timeline + auditoria) e dispara o primeiro
-            // evento de domínio após o commit. Só do dono em rascunho (policy
-            // protocol); toggle features.solicitacao_viabilidade degrada.
-            Route::post('solicitacoes/{solicitacao}/protocolar', [ProtocoloController::class, 'store'])->middleware('portal.solicitacao')
-                ->name('solicitacoes.protocolar');
+                // Imóvel + área da solicitação (HU-062/HU-063) — rota com
+                // {solicitacao} DEPOIS das literais. Grava o polígono (fonte GeoJSON),
+                // identifica o território (Fase 4) e valida área×polígono; só do dono
+                // em rascunho (policy update).
+                Route::put('solicitacoes/{solicitacao}/imovel', [SolicitacaoImovelController::class, 'update'])->middleware('portal.solicitacao')
+                    ->name('solicitacoes.imovel');
 
-            // Cancelar a solicitação (HU-070) — rota com {solicitacao} DEPOIS das
-            // literais. Só o dono enquanto não decidida (policy cancel); o
-            // CancelarSolicitacaoService transiciona para cancelada (timeline +
-            // auditoria) com os estados canceláveis parametrizáveis
-            // (solicitacao.cancelamento.estados_cancelaveis); fora deles, bloqueia
-            // com aviso e audita.
-            Route::delete('solicitacoes/{solicitacao}', [CancelamentoSolicitacaoController::class, 'destroy'])->name('solicitacoes.cancelar');
+                // Documentos da solicitação (HU-066) — rotas com {solicitacao} DEPOIS
+                // das literais. Upload via Storage (disk parametrizado, nunca público)
+                // com sha256; download por STREAMING só do dono autenticado (LGPD);
+                // substituição/remoção só em rascunho. {documento} é validado contra a
+                // solicitação no controller (anti-IDOR).
+                Route::post('solicitacoes/{solicitacao}/documentos', [SolicitacaoDocumentoController::class, 'store'])->middleware('portal.solicitacao')
+                    ->name('solicitacoes.documentos.store');
+                Route::get('solicitacoes/{solicitacao}/documentos/{documento}/download', [SolicitacaoDocumentoController::class, 'download'])->name('solicitacoes.documentos.download');
+                Route::delete('solicitacoes/{solicitacao}/documentos/{documento}', [SolicitacaoDocumentoController::class, 'destroy'])->middleware('portal.solicitacao')
+                    ->name('solicitacoes.documentos.destroy');
 
-            // Pendências da análise técnica (HU-083/084) — resposta do requerente
-            // pelo portal. Rotas com {solicitacao} DEPOIS das literais (padrão
-            // 08-11). Escopo do dono/representado (ViabilityRequestPolicy::view)
-            // no controller; a pendência {pendency} é validada contra a solicitação
-            // (anti-IDOR). Responder reabre a análise (em_pendencia→em_analise) via
-            // PendenciaService; o convite via Simplifica/Regin e os canais plenos
-            // ficam para o EP11 (este é o ciclo interno REAL: portal + e-mail).
-            Route::get('solicitacoes/{solicitacao}/pendencias', [PendenciaRespostaController::class, 'show'])->name('solicitacoes.pendencias');
-            Route::post('solicitacoes/{solicitacao}/pendencias/{pendency}/responder', [PendenciaRespostaController::class, 'responder'])->name('solicitacoes.pendencias.responder');
+                // Simulação pré-protocolo (HU-141) — rota com {solicitacao} DEPOIS
+                // das literais. Reusa o ConsultaViabilidadeService da Fase 7 por
+                // CNAE/ponto, propaga o veredito do motor LOUOS e persiste o snapshot;
+                // ORIENTATIVA, NÃO bloqueia o protocolo. Só do dono em rascunho
+                // (policy update); toggle features.simulacao_solicitacao degrada.
+                Route::post('solicitacoes/{solicitacao}/simular', [SolicitacaoSimulacaoController::class, 'store'])->middleware('portal.solicitacao')
+                    ->name('solicitacoes.simular');
 
-            // Histórico unificado de comunicações do processo (HU-096) — rota com
-            // {solicitacao} DEPOIS das literais. Fonte ÚNICA: o ledger
-            // communications (todos os canais/tipos), gated pela policy view
-            // (dono/representado). LGPD: o portal NÃO expõe o error_message
-            // interno do canal (diagnóstico fica só na gestão). Auditada (RN-002).
-            Route::get('solicitacoes/{solicitacao}/comunicacoes', [ComunicacaoHistoricoController::class, 'portal'])->name('solicitacoes.comunicacoes');
+                // Protocolar a solicitação (HU-068) — rota com {solicitacao} DEPOIS
+                // das literais. Valida documentos obrigatórios (bloqueia com aviso se
+                // faltar), gera o número único (lock + unique), transiciona
+                // rascunho→protocolada (timeline + auditoria) e dispara o primeiro
+                // evento de domínio após o commit. Só do dono em rascunho (policy
+                // protocol); toggle features.solicitacao_viabilidade degrada.
+                Route::post('solicitacoes/{solicitacao}/protocolar', [ProtocoloController::class, 'store'])->middleware('portal.solicitacao')
+                    ->name('solicitacoes.protocolar');
+
+                // Cancelar a solicitação (HU-070) — rota com {solicitacao} DEPOIS das
+                // literais. Só o dono enquanto não decidida (policy cancel); o
+                // CancelarSolicitacaoService transiciona para cancelada (timeline +
+                // auditoria) com os estados canceláveis parametrizáveis
+                // (solicitacao.cancelamento.estados_cancelaveis); fora deles, bloqueia
+                // com aviso e audita.
+                Route::delete('solicitacoes/{solicitacao}', [CancelamentoSolicitacaoController::class, 'destroy'])->name('solicitacoes.cancelar');
+
+                // Pendências da análise técnica (HU-083/084) — resposta do requerente
+                // pelo portal. Rotas com {solicitacao} DEPOIS das literais (padrão
+                // 08-11). Escopo do dono/representado (ViabilityRequestPolicy::view)
+                // no controller; a pendência {pendency} é validada contra a solicitação
+                // (anti-IDOR). Responder reabre a análise (em_pendencia→em_analise) via
+                // PendenciaService; o convite via Simplifica/Regin e os canais plenos
+                // ficam para o EP11 (este é o ciclo interno REAL: portal + e-mail).
+                Route::get('solicitacoes/{solicitacao}/pendencias', [PendenciaRespostaController::class, 'show'])->name('solicitacoes.pendencias');
+                Route::post('solicitacoes/{solicitacao}/pendencias/{pendency}/responder', [PendenciaRespostaController::class, 'responder'])->name('solicitacoes.pendencias.responder');
+
+                // Histórico unificado de comunicações do processo (HU-096) — rota com
+                // {solicitacao} DEPOIS das literais. Fonte ÚNICA: o ledger
+                // communications (todos os canais/tipos), gated pela policy view
+                // (dono/representado). LGPD: o portal NÃO expõe o error_message
+                // interno do canal (diagnóstico fica só na gestão). Auditada (RN-002).
+                Route::get('solicitacoes/{solicitacao}/comunicacoes', [ComunicacaoHistoricoController::class, 'portal'])->name('solicitacoes.comunicacoes');
+            });
 
             // Central de notificações in-app (HU-090) — canal database nativo do
             // próprio usuário (escopo do dono). Listar + marcar uma + marcar

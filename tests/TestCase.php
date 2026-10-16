@@ -5,6 +5,7 @@ namespace Tests;
 use App\Jobs\DecidirFluxoExpressoJob;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Queue;
 
 abstract class TestCase extends BaseTestCase
@@ -56,6 +57,12 @@ abstract class TestCase extends BaseTestCase
         // A API de estatísticas da REDESIM é integração HTTP real: desligada
         // por padrão na suíte; os testes do cliente ligam e usam Http::fake.
         config(['viabiliza.features.benchmark_redesim' => false]);
+
+        // Serviços do portal nascem desligados no catálogo. A suíte liga por
+        // padrão; o teste do interruptor desliga. O forget evita cache de um
+        // teste anterior no driver array.
+        config(['viabiliza.features.portal_servicos' => true]);
+        Cache::forget('viabiliza.parameters.features.portal_servicos');
 
         // O gatilho do fluxo expresso (listener auto-descoberto AvaliarFluxoExpresso)
         // despacha o DecidirFluxoExpressoJob a CADA protocolo (SolicitacaoProtocolada,

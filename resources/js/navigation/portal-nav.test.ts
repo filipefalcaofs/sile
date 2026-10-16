@@ -27,7 +27,6 @@ describe('Catálogo de navegação do portal do cidadão', () => {
             '/portal/solicitacoes',
             '/portal/renovacao',
             '/portal/empresas',
-            '/portal/procuracoes',
         ]);
     });
 

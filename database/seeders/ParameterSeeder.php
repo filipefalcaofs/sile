@@ -183,6 +183,13 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'boolean'],
                 'description' => 'Habilita a autenticação de servidores via AD (API institucional SEDUR) no console; desligar bloqueia o login das contas AD com aviso explícito',
             ],
+            'features.portal_servicos' => [
+                'group' => 'features',
+                'type' => 'boolean',
+                'default_value' => '0',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'Habilita os serviços do portal do cidadão (consulta, solicitação, renovação, empresas e procurações). Desligado, esses serviços ficam indisponíveis com aviso; painel, notificações e conta continuam',
+            ],
             'integrations.govbr.em_producao' => [
                 'group' => 'integracoes',
                 'type' => 'boolean',
