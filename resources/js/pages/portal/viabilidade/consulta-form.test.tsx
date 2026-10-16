@@ -6,6 +6,7 @@ import Consulta from './consulta';
 
 const enviado: { payload: Record<string, unknown> | null; url: string | null } = { payload: null, url: null };
 let transformado: (() => Record<string, unknown>) | null = null;
+let respostaDoServidor: unknown = null;
 
 vi.mock('@inertiajs/react', async (importOriginal) => ({
     ...(await importOriginal<typeof import('@inertiajs/react')>()),
@@ -16,9 +17,12 @@ vi.mock('@inertiajs/react', async (importOriginal) => ({
         transform: (fn: () => Record<string, unknown>) => {
             transformado = fn;
         },
-        post: (url: string) => {
+        post: (url: string, opcoes?: { onSuccess?: (resposta: unknown) => void }) => {
             enviado.url = url;
             enviado.payload = transformado ? transformado() : null;
+            if (respostaDoServidor !== null) {
+                opcoes?.onSuccess?.(respostaDoServidor);
+            }
         },
     }),
 }));
@@ -74,6 +78,7 @@ beforeEach(() => {
     enviado.payload = null;
     enviado.url = null;
     transformado = null;
+    respostaDoServidor = null;
 });
 
 afterEach(() => {
@@ -148,5 +153,45 @@ describe('Consulta — formulário', () => {
         expect(enviado.payload).not.toHaveProperty('tipo_imovel');
         expect(enviado.payload).not.toHaveProperty('categoria_empresa');
         expect(enviado.payload).not.toHaveProperty('vagas');
+    });
+
+    it('ao trocar de aba, limpa o resultado e as pendências da consulta anterior', () => {
+        respostaDoServidor = {
+            entrada: { tipo: 'endereco', cnae: '4712100' },
+            geocode: null,
+            territorio: null,
+            enquadramento: { enquadramento: { status: 'nao_encontrado', grupo: null, subgrupo: null }, quadro10: {}, quadro11a: {}, consolidado: { resultado: 'pendente' }, versoes: {} },
+            risco: {
+                municipal: { status: 'nao_classificado', nivel: null, nivel_label: null },
+                sanitario: { status: 'nao_classificado', nivel_original: null, nivel_final: null, reclassificado: false },
+                encaminhamento: { fluxo: 'analise', dimensao_decisiva: 'municipal', motivo: '' },
+                fundamentacao: [],
+                versoes: {},
+            },
+            restricoes: null,
+            veredito_locacional: null,
+            confiabilidade: {
+                estado: 'incompleta',
+                label: 'Consulta incompleta',
+                pendencias: [{ campo: 'tipo_imovel', rotulo: 'Informe o tipo do imóvel.' }],
+                motivo: null,
+            },
+            fundamentacao: [],
+            avisos: [],
+            versoes: {},
+            perguntas: [],
+        };
+        const el = renderizar();
+
+        digitar(campo(el, 'endereco'), 'Praça da Sé, Salvador');
+        digitar(campo(el, 'cnae'), '4712-1/00');
+        digitar(campo(el, 'area'), '120');
+        act(() => botao(el).click());
+        expect(el.textContent).toContain('Consulta incompleta');
+
+        act(() => aba(el, 'CNAE').click());
+
+        expect(el.textContent).not.toContain('Consulta incompleta');
+        expect(el.textContent).not.toContain('Informe o tipo do imóvel.');
     });
 });

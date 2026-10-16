@@ -99,6 +99,23 @@ describe('ResultadoViabilidade — confiabilidade', () => {
         expect(el.textContent).toContain(AVISO);
     });
 
+    it('incompleta não mostra resultado parcial (risco, enquadramento, fundamentação)', () => {
+        const el = renderizar(
+            resultado('incompleta', { veredito_locacional: null, fundamentacao: ['Lei nº 9.148/2016'] }),
+        );
+
+        expect(el.textContent).not.toContain('Classificação de risco');
+        expect(el.textContent).not.toContain('Enquadramento de uso');
+        expect(el.textContent).not.toContain('Lei nº 9.148/2016');
+    });
+
+    it('inconclusiva continua mostrando risco e enquadramento', () => {
+        const el = renderizar(resultado('inconclusiva', { veredito_locacional: null }));
+
+        expect(el.textContent).toContain('Classificação de risco');
+        expect(el.textContent).toContain('Enquadramento de uso');
+    });
+
     it('inconclusiva mostra o motivo, sem veredito e sem orientar próximo passo', () => {
         const el = renderizar(resultado('inconclusiva', { veredito_locacional: null }));
 

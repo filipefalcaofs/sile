@@ -272,6 +272,11 @@ export default function Consulta({ consultaEnabled, tiposImovel = [], categorias
     function selecionarTipo(novo: TipoEntrada) {
         setTipo(novo);
         setErro(null);
+        setResult(null);
+        setPerguntas([]);
+        setRespostas({});
+        setItensVagas([]);
+        setVagas({});
     }
 
     return (
@@ -549,7 +554,7 @@ export default function Consulta({ consultaEnabled, tiposImovel = [], categorias
 
                         {result && (
                             <>
-                                {result.geocode && (
+                                {result.geocode && result.confiabilidade?.estado !== 'incompleta' && (
                                     <Card>
                                         <CardHeader
                                             title="Localização da consulta"

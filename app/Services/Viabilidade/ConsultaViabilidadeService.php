@@ -47,6 +47,7 @@ class ConsultaViabilidadeService
         private LocalizacaoInscricaoService $localizacaoInscricao,
         private AuditService $audit,
         private DecisionTextCatalog $textos,
+        private ConfiabilidadeConsultaResolver $confiabilidades,
     ) {}
 
     /**
@@ -264,6 +265,7 @@ class ConsultaViabilidadeService
             avisos: $avisos,
         );
 
+        $result = $result->comConfiabilidade($this->confiabilidades->resolver($result));
         $confiabilidade = $result->confiabilidade();
 
         // Auditoria única por consulta (RN-002), espelhando TerritoryService:

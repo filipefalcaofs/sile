@@ -204,4 +204,14 @@ class ConfiabilidadeConsultaTest extends TestCase
         $vagas = collect($confiabilidade['pendencias'])->firstWhere('campo', 'vagas');
         $this->assertSame(['vagas'], $vagas['itens']);
     }
+
+    public function test_confiabilidade_e_calculada_uma_vez_e_guardada_no_resultado(): void
+    {
+        $this->territorioComZona('ZR-1');
+
+        $result = $this->service()->consultarPorEndereco('Praça da Sé', self::CNAE_MINIMERCADO, 120.0, [11 => true]);
+
+        $this->assertSame($result->confiabilidade(), $result->confiabilidade());
+        $this->assertSame($result->confiabilidade()->toArray(), $result->toArray()['confiabilidade']);
+    }
 }

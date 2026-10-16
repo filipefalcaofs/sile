@@ -37,7 +37,25 @@ final readonly class ConsultaViabilidadeResult
         public EnquadramentoResult $enquadramento,
         public RiscoResult $risco,
         public array $avisos = [],
+        private ?ConfiabilidadeConsultaResultado $confiabilidadeResolvida = null,
     ) {}
+
+    /**
+     * Cópia do resultado com a confiabilidade já resolvida (calculada uma única vez
+     * pelo serviço e reutilizada no payload, na auditoria e no histórico).
+     */
+    public function comConfiabilidade(ConfiabilidadeConsultaResultado $confiabilidade): self
+    {
+        return new self(
+            $this->entrada,
+            $this->geocode,
+            $this->territory,
+            $this->enquadramento,
+            $this->risco,
+            $this->avisos,
+            $confiabilidade,
+        );
+    }
 
     /**
      * Veredito locacional PROPAGADO do consolidado do motor LOUOS — não decidido
@@ -63,7 +81,8 @@ final readonly class ConsultaViabilidadeResult
      */
     public function confiabilidade(): ConfiabilidadeConsultaResultado
     {
-        return (new ConfiabilidadeConsultaResolver(new DecisionTextCatalog))->resolver($this);
+        return $this->confiabilidadeResolvida
+            ?? (new ConfiabilidadeConsultaResolver(new DecisionTextCatalog))->resolver($this);
     }
 
     /**

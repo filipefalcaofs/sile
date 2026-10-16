@@ -289,6 +289,17 @@ export function ResultadoViabilidade({ result }: { result: ResultadoConsulta }) 
             ? rotulo(vocabulario.risco_sanitario, sanitario.nivel_final, humanizar(sanitario.nivel_final))
             : null;
 
+    if (confiabilidade?.estado === 'incompleta') {
+        return (
+            <div className="flex flex-col gap-4 md:gap-6">
+                <BlocoConfiabilidade confiabilidade={confiabilidade} />
+                {result.aviso_simulacao && (
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{result.aviso_simulacao}</p>
+                )}
+            </div>
+        );
+    }
+
     return (
         <div className="flex flex-col gap-4 md:gap-6">
             {confiabilidade && <BlocoConfiabilidade confiabilidade={confiabilidade} />}
