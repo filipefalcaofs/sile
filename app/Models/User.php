@@ -61,6 +61,16 @@ class User extends Authenticatable implements MustVerifyEmail
         return $email !== '' && ! str_ends_with($email, '.invalid');
     }
 
+    /**
+     * Retaguarda: conta do AD corporativo ou com perfil que dá acesso à gestão
+     * (espelha scopeEquipeSedur).
+     */
+    public function isEquipeSedur(): bool
+    {
+        return $this->isAdAccount()
+            || $this->getAllPermissions()->contains('name', 'acessar-gestao');
+    }
+
     public function isAdAccount(): bool
     {
         return $this->auth_type === AuthType::Ad;

@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Notifications\ResultadoExpressoNotification;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
@@ -62,15 +63,18 @@ class NotificarResultadoExpressoListenerTest extends TestCase
         Notification::assertSentTo(
             $request->requester,
             ResultadoExpressoNotification::class,
-            fn (ResultadoExpressoNotification $notification): bool => $notification->via($request->requester) === ['database'],
+            fn (ResultadoExpressoNotification $notification): bool => $notification->via($request->requester) === ['mail', 'database'],
         );
 
         // Anti-fachada: o aviso percorre o NotificationDispatcher e ganha o ledger
-        // communications (in-app + histórico HU-096) — não mais email_logs. O aviso
-        // de resultado é só in-app: uma linha na_fila e nenhuma de e-mail.
-        $this->assertDatabaseMissing('communications', [
+        // communications (in-app + histórico HU-096) — não mais email_logs. O mapa
+        // default de 'resultado' = [email, in_app] → duas linhas na_fila.
+        $this->assertDatabaseHas('communications', [
             'viability_request_id' => $request->id,
+            'recipient_user_id' => $request->requester->id,
             'channel' => CommunicationChannel::Email->value,
+            'type' => CommunicationType::Resultado->value,
+            'status' => CommunicationStatus::NaFila->value,
         ]);
         $this->assertDatabaseHas('communications', [
             'viability_request_id' => $request->id,
@@ -107,6 +111,27 @@ class NotificarResultadoExpressoListenerTest extends TestCase
             'result' => 'desativado',
             'subject_type' => $request->getMorphClass(),
             'subject_id' => $request->id,
+        ]);
+    }
+
+    public function test_requerente_da_retaguarda_recebe_o_resultado_so_no_sininho(): void
+    {
+        Notification::fake();
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $analista = User::factory()->analista()->create();
+        [$request, $decision] = $this->decisao(requester: $analista);
+
+        event(new ResultadoEmitido($request, $decision));
+
+        Notification::assertSentTo(
+            $analista,
+            ResultadoExpressoNotification::class,
+            fn (ResultadoExpressoNotification $notification): bool => $notification->via($analista) === ['database'],
+        );
+        $this->assertDatabaseMissing('communications', [
+            'recipient_user_id' => $analista->id,
+            'channel' => CommunicationChannel::Email->value,
         ]);
     }
 
