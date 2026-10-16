@@ -8,6 +8,7 @@ final readonly class TratamentoRamoResult
      * @param  list<int>  $condicionantes
      * @param  array<string, mixed>|null  $planilha  Onde a planilha decidiu: versão, linha da aba CNAES, regra e o que definiu o fluxo
      * @param  array{numero: int, enunciado: string}|null  $perguntaSemResposta  Pergunta necessária ao enquadramento que ficou sem resposta
+     * @param  'area'|'tipo_imovel'|'categoria_empresa'|null  $dadoFaltante  Dado de entrada que impediu o enquadramento do ramo
      */
     public function __construct(
         public string $status,
@@ -24,6 +25,7 @@ final readonly class TratamentoRamoResult
         public bool $cnlu = false,
         public ?array $planilha = null,
         public ?array $perguntaSemResposta = null,
+        public ?string $dadoFaltante = null,
     ) {}
 
     public function resolvido(): bool
@@ -48,6 +50,7 @@ final readonly class TratamentoRamoResult
             'cnlu' => $this->cnlu,
             'planilha' => $this->planilha,
             'pergunta_sem_resposta' => $this->perguntaSemResposta,
+            'dado_faltante' => $this->dadoFaltante,
         ];
     }
 }

@@ -172,6 +172,7 @@ class TratamentoRamoResolver
                 status: 'nao_resolvido',
                 motivo: $this->textos->get('tratamento.motivo.categoria_ausente'),
                 versaoRegra: $versao->version,
+                dadoFaltante: 'categoria_empresa',
             );
         }
 
@@ -266,6 +267,7 @@ class TratamentoRamoResolver
                 status: 'nao_resolvido',
                 motivo: $this->textos->get('tratamento.motivo.area_ausente'),
                 versaoRegra: $versao->version,
+                dadoFaltante: 'area',
             );
         }
 
@@ -292,6 +294,7 @@ class TratamentoRamoResolver
                     grupo: $grupo,
                     subgrupo: $subgrupo,
                     versaoRegra: $versao->version,
+                    dadoFaltante: 'tipo_imovel',
                 );
             }
         }
