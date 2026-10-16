@@ -59,16 +59,18 @@ class NotificarResultadoExpressoListenerTest extends TestCase
         // CONTAGEM: a auto-descoberta registra o listener uma ÚNICA vez — sem
         // duplicar a notificação (lição Fase 8).
         Notification::assertSentToTimes($request->requester, ResultadoExpressoNotification::class, 1);
+        Notification::assertSentTo(
+            $request->requester,
+            ResultadoExpressoNotification::class,
+            fn (ResultadoExpressoNotification $notification): bool => $notification->via($request->requester) === ['database'],
+        );
 
         // Anti-fachada: o aviso percorre o NotificationDispatcher e ganha o ledger
-        // communications (in-app + histórico HU-096) — não mais email_logs. O mapa
-        // default de 'resultado' = [email, in_app] → duas linhas na_fila.
-        $this->assertDatabaseHas('communications', [
+        // communications (in-app + histórico HU-096) — não mais email_logs. O aviso
+        // de resultado é só in-app: uma linha na_fila e nenhuma de e-mail.
+        $this->assertDatabaseMissing('communications', [
             'viability_request_id' => $request->id,
-            'recipient_user_id' => $request->requester->id,
             'channel' => CommunicationChannel::Email->value,
-            'type' => CommunicationType::Resultado->value,
-            'status' => CommunicationStatus::NaFila->value,
         ]);
         $this->assertDatabaseHas('communications', [
             'viability_request_id' => $request->id,

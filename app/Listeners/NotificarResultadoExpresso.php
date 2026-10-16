@@ -2,6 +2,7 @@
 
 namespace App\Listeners;
 
+use App\Enums\CommunicationChannel;
 use App\Events\ResultadoEmitido;
 use App\Notifications\ResultadoExpressoNotification;
 use App\Services\Comunicacao\NotificationDispatcher;
@@ -13,8 +14,8 @@ use App\Support\Settings;
  * requerente do desfecho do fluxo expresso. A partir do EP11 (11-06) o aviso
  * percorre o NotificationDispatcher (HU-090/094) — ganha in-app + histórico
  * (communications) além do e-mail, unificando as notificações de processo num só
- * roteador. O e-mail segue SEM anexo de TVL (o canal oficial de entrega é o
- * Regin/SEFAZ).
+ * roteador. O aviso é só in-app (sem e-mail); o documento oficial é entregue
+ * pelo Regin/SEFAZ.
  *
  * Registro ÚNICO por AUTO-DESCOBERTA (type-hint do evento no handle); NÃO
  * registrar via Event::listen — duplicaria a notificação e a auditoria (lição
@@ -85,6 +86,7 @@ class NotificarResultadoExpresso
         $this->dispatcher->deliver(
             $requester,
             new ResultadoExpressoNotification($request->protocol_number, $decision->outcome, $request->id),
+            [CommunicationChannel::InApp],
         );
     }
 }
