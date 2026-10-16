@@ -247,7 +247,7 @@ class AtendimentoPresencialTest extends TestCase
 
     public function test_cpf_sem_cadastro_vira_registro_de_balcao_com_o_nome_da_sedur(): void
     {
-        config(['sile.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
+        config(['viabiliza.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
         Http::fake(['*/pessoafisica/cpf/*' => Http::response(['nome' => 'Joana do Balcão'])]);
         $attendant = $this->attendant();
 
@@ -267,7 +267,7 @@ class AtendimentoPresencialTest extends TestCase
 
     public function test_cpf_sem_cadastro_e_fora_da_sedur_bloqueia_sem_criar(): void
     {
-        config(['sile.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
+        config(['viabiliza.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
         Http::fake(['*/pessoafisica/cpf/*' => Http::response([], 404)]);
 
         $this->actingAs($this->attendant(), 'gestao')
@@ -281,7 +281,7 @@ class AtendimentoPresencialTest extends TestCase
 
     public function test_registro_de_balcao_do_atendimento_nao_dispara_email_de_verificacao(): void
     {
-        config(['sile.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
+        config(['viabiliza.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
         Http::fake(['*/pessoafisica/cpf/*' => Http::response(['nome' => 'Joana do Balcão'])]);
         Notification::fake();
 
@@ -295,7 +295,7 @@ class AtendimentoPresencialTest extends TestCase
 
     public function test_sedur_indisponivel_bloqueia_o_atendimento_com_mensagem_propria(): void
     {
-        config(['sile.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
+        config(['viabiliza.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
         Http::fake(['*/pessoafisica/cpf/*' => Http::response([], 500)]);
 
         $this->actingAs($this->attendant(), 'gestao')
@@ -308,7 +308,7 @@ class AtendimentoPresencialTest extends TestCase
 
     public function test_consulta_na_sedur_do_atendimento_e_auditada_com_dado_pessoal(): void
     {
-        config(['sile.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
+        config(['viabiliza.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
         $attendant = $this->attendant();
 
         foreach ([

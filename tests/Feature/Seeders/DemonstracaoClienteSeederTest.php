@@ -195,7 +195,7 @@ class DemonstracaoClienteSeederTest extends TestCase
 
     public function test_requerente_do_portal_e_cidadao_com_senha_demo_e_termo_aceito(): void
     {
-        config(['sile.demo_data' => true]);
+        config(['viabiliza.demo_data' => true]);
 
         $this->seed(DemonstracaoClienteSeeder::class);
         $this->seed(DemonstracaoClienteSeeder::class);

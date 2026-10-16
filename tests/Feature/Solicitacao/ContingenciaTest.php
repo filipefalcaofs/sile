@@ -161,7 +161,7 @@ class ContingenciaTest extends TestCase
 
     public function test_cpf_sem_cadastro_vira_registro_de_balcao_com_o_nome_da_sedur(): void
     {
-        config(['sile.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
+        config(['viabiliza.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
         Http::fake(['*/pessoafisica/cpf/*' => Http::response(['nome' => 'Joana do Balcão'])]);
 
         $operador = $this->operador();
@@ -185,7 +185,7 @@ class ContingenciaTest extends TestCase
 
     public function test_cpf_sem_cadastro_e_fora_da_sedur_bloqueia_sem_criar(): void
     {
-        config(['sile.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
+        config(['viabiliza.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
         Http::fake(['*/pessoafisica/cpf/*' => Http::response([], 404)]);
 
         $company = Company::factory()->create();
@@ -355,7 +355,7 @@ class ContingenciaTest extends TestCase
 
     public function test_protocolo_bloqueado_desfaz_o_registro_de_balcao(): void
     {
-        config(['sile.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
+        config(['viabiliza.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
         Http::fake(['*/pessoafisica/cpf/*' => Http::response(['nome' => 'Joana do Balcão'])]);
         Notification::fake();
 
@@ -376,7 +376,7 @@ class ContingenciaTest extends TestCase
 
     public function test_sedur_indisponivel_bloqueia_sem_criar_com_mensagem_propria(): void
     {
-        config(['sile.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
+        config(['viabiliza.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
         Http::fake(['*/pessoafisica/cpf/*' => Http::response([], 500)]);
 
         $company = Company::factory()->create();
@@ -393,7 +393,7 @@ class ContingenciaTest extends TestCase
 
     public function test_consulta_na_sedur_e_auditada_com_dado_pessoal_em_sucesso_nao_encontrado_e_indisponivel(): void
     {
-        config(['sile.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
+        config(['viabiliza.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
         $operador = $this->operador();
         $company = Company::factory()->create();
         $principal = Cnae::factory()->create();
@@ -422,7 +422,7 @@ class ContingenciaTest extends TestCase
 
     public function test_outro_campo_invalido_nao_consulta_a_sedur(): void
     {
-        config(['sile.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
+        config(['viabiliza.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
         Http::fake();
 
         $company = Company::factory()->create();
