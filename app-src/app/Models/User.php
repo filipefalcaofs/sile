@@ -14,11 +14,12 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\DB;
 use Spatie\Activitylog\Models\Concerns\CausesActivity;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -54,6 +55,42 @@ class User extends Authenticatable implements MustVerifyEmail
     /** Conta técnica da integração JUCEB/REGIN: autora (created_by) dos processos recebidos. Sem e-mail entregável. */
     public const EMAIL_INTEGRACAO_REGIN = 'solicitante-nao-identificado@regin.invalid';
 
+    /**
+     * Contas de sistema (integração REGIN, e-mail `.invalid` e atores ocultos do config):
+     * não são pessoas, ficam fora da gestão de usuários e nunca viram cidadãs na separação.
+     * Regra única, aplicada também à consulta de `users` sem model (migrations).
+     *
+     * @template TBuilder of Builder<User>|QueryBuilder
+     *
+     * @param  TBuilder  $query
+     * @return TBuilder
+     */
+    public static function excluirContasDeSistema(Builder|QueryBuilder $query, string $coluna = 'email'): Builder|QueryBuilder
+    {
+        $emails = array_values(array_unique(array_map('mb_strtolower', [
+            self::EMAIL_INTEGRACAO_REGIN,
+            ...(array) config('viabiliza.tramitacao.atores_ocultos.emails', []),
+        ])));
+
+        return $query
+            ->whereNotIn(DB::raw("lower({$coluna})"), $emails)
+            ->whereRaw("lower({$coluna}) not like ?", ['%.invalid']);
+    }
+
+    /**
+     * @param  Builder<User>  $query
+     * @return Builder<User>
+     */
+    public function scopeSemContasDeSistema(Builder $query): Builder
+    {
+        return self::excluirContasDeSistema($query, $query->qualifyColumn('email'));
+    }
+
+    public function isContaDeSistema(): bool
+    {
+        return ! static::query()->whereKey($this->getKey())->semContasDeSistema()->exists();
+    }
+
     public function temEmailEntregavel(): bool
     {
         $email = mb_strtolower((string) $this->email);
@@ -79,23 +116,12 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Equipe SEDUR: conta do AD corporativo ou com perfil que dá acesso à gestão.
+     * Servidor local sem `acessar-gestao` (nem por perfil nem direta): continua listado na gestão,
+     * mas não entra no console até receber um perfil com acesso. Conta do AD não conta.
      */
-    public function scopeEquipeSedur(Builder $query): Builder
+    public function semAcessoAGestao(): bool
     {
-        return $query->where(fn (Builder $inner) => $inner
-            ->where('auth_type', AuthType::Ad->value)
-            ->orWhereHas('roles.permissions', fn ($permissions) => $permissions->where('name', 'acessar-gestao')));
-    }
-
-    /**
-     * Usuário do portal: externo, nunca conta AD e sem perfil com acesso à gestão.
-     */
-    public function scopeUsuarioPortal(Builder $query): Builder
-    {
-        return $query
-            ->where('auth_type', '!=', AuthType::Ad->value)
-            ->whereDoesntHave('roles.permissions', fn ($permissions) => $permissions->where('name', 'acessar-gestao'));
+        return ! $this->isAdAccount() && ! $this->getAllPermissions()->contains('name', 'acessar-gestao');
     }
 
     public function sendEmailVerificationNotification(): void
@@ -165,14 +191,12 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->phone;
     }
 
-    public function termAcceptances(): HasMany
+    /**
+     * @return MorphMany<LegalTermAcceptance, $this>
+     */
+    public function termAcceptances(): MorphMany
     {
-        return $this->hasMany(LegalTermAcceptance::class);
-    }
-
-    public function govBrAccount(): HasOne
-    {
-        return $this->hasOne(GovBrAccount::class);
+        return $this->morphMany(LegalTermAcceptance::class, 'accepted_by');
     }
 
     public function hasAcceptedTerm(LegalTerm $term): bool

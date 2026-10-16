@@ -147,11 +147,17 @@ class TratamentoRamoResolver
                     continue;
                 }
 
+                // Subdivisão do CNAE ausente da planilha é falha de carga, não
+                // falta de resposta: o motivo é outro e nada é indeferido.
+                $subdivisaoAusente = $this->subdivisaoNaoCarregada((int) $numero, (string) ($textosDasPerguntas[(int) $numero] ?? ''), $input->cnae, (int) $versao->getKey());
+
                 return new TratamentoRamoResult(
                     status: 'nao_resolvido',
-                    motivo: $this->subdivisaoNaoCarregada((int) $numero, (string) ($textosDasPerguntas[(int) $numero] ?? ''), $input->cnae, (int) $versao->getKey())
-                        ?? $this->motivoPerguntaSemResposta((int) $numero, (int) $versao->getKey()),
+                    motivo: $subdivisaoAusente ?? $this->motivoPerguntaSemResposta((int) $numero, (int) $versao->getKey()),
                     versaoRegra: $versao->version,
+                    perguntaSemResposta: $subdivisaoAusente === null
+                        ? ['numero' => (int) $numero, 'enunciado' => $this->enunciadoDaPergunta((string) ($textosDasPerguntas[(int) $numero] ?? ''), (int) $numero)]
+                        : null,
                 );
             }
         }
@@ -818,6 +824,25 @@ class TratamentoRamoResolver
         }
 
         return $this->textos->render('tratamento.motivo.subdivisao_ausente', [':cnae' => $formatado]);
+    }
+
+    /**
+     * Enunciado da pergunta sem a condição de exibição ("Exibir apenas SE
+     * RESPONDIDO…") e sem as opções: a primeira linha com a pergunta em si.
+     */
+    private function enunciadoDaPergunta(string $texto, int $numero): string
+    {
+        foreach (preg_split('/\R/u', $texto) ?: [] as $linha) {
+            $linha = trim($linha);
+
+            if ($linha === '' || preg_match('/^exibir apenas/iu', $linha) === 1) {
+                continue;
+            }
+
+            return $linha;
+        }
+
+        return "Pergunta {$numero}";
     }
 
     /**

@@ -13,7 +13,7 @@ use Throwable;
  * RS256 contra o JWK do provedor, expiração, emissor, audiência e nonce.
  *
  * O JWK é buscado em {base}/jwk e cacheado por constante técnica
- * (sile.integrations.govbr.jwk_cache_ttl) — chave única por base_url para
+ * (viabiliza.integrations.govbr.jwk_cache_ttl) — chave única por base_url para
  * staging e produção não se contaminarem.
  */
 class GovBrIdTokenValidator
@@ -27,7 +27,7 @@ class GovBrIdTokenValidator
     {
         $baseUrl = rtrim($baseUrl, '/');
 
-        JWT::$leeway = (int) config('sile.integrations.govbr.jwt_leeway', 60);
+        JWT::$leeway = (int) config('viabiliza.integrations.govbr.jwt_leeway', 60);
 
         try {
             $decoded = JWT::decode($idToken, JWK::parseKeySet($this->jwkSet($baseUrl), 'RS256'));
@@ -62,13 +62,13 @@ class GovBrIdTokenValidator
      */
     private function jwkSet(string $baseUrl): array
     {
-        $cacheKey = 'sile.govbr.jwk.'.sha1($baseUrl);
+        $cacheKey = 'viabiliza.govbr.jwk.'.sha1($baseUrl);
 
         try {
             $jwk = Cache::remember(
                 $cacheKey,
-                (int) config('sile.integrations.govbr.jwk_cache_ttl', 3600),
-                fn (): array => Http::timeout((int) config('sile.integrations.govbr.timeout', 8))
+                (int) config('viabiliza.integrations.govbr.jwk_cache_ttl', 3600),
+                fn (): array => Http::timeout((int) config('viabiliza.integrations.govbr.timeout', 8))
                     ->get("{$baseUrl}/jwk")
                     ->throw()
                     ->json(),

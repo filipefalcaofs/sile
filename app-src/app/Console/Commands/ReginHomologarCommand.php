@@ -63,7 +63,7 @@ class ReginHomologarCommand extends Command
     {
         $cnpj = (string) Settings::get(
             'integrations.regin.cnpj_prefeitura',
-            config('sile.integrations.regin.cnpj_prefeitura'),
+            config('viabiliza.integrations.regin.cnpj_prefeitura'),
         );
 
         return [

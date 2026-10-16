@@ -82,7 +82,7 @@ final class DecisionTextCatalog
             /** @var array<string, string> */
             return Cache::remember(
                 DecisionText::CACHE_KEY,
-                (int) config('sile.parameters.cache_ttl', 300),
+                (int) config('viabiliza.parameters.cache_ttl', 300),
                 fn () => DecisionText::query()->pluck('template', 'key')->all(),
             );
         } catch (QueryException|\Exception $e) {
@@ -153,6 +153,7 @@ final class DecisionTextCatalog
             'justificativa.conclusao.nao_permitido' => 'Diante do enquadramento acima, manifesta-se pelo indeferimento desta atividade, por ser o uso proibido na zona :zona segundo o Quadro 10 da LOUOS.',
             'justificativa.conclusao.nao_permitido_via' => 'Diante do enquadramento acima, manifesta-se pelo indeferimento desta atividade, por ser o uso vedado na classe viária :classe_via pelo Quadro 11-A da LOUOS.',
             'justificativa.indeferimento.sem_bap' => 'Indeferido sem atuação: o prazo de atuação na Junta Comercial (BAP) venceu sem que o requerente concluísse o registro, e a solicitação não pôde prosseguir.',
+            'justificativa.indeferimento.pergunta_sem_resposta' => 'Indeferido: o requerimento recebido não trouxe a resposta da pergunta :numero (":enunciado") da planilha de tratamento, necessária ao enquadramento da atividade :cnae.',
             'justificativa.indeferimento.convite_expirado' => 'Indeferido por prazo do convite expirado sem resposta do requerente: os esclarecimentos solicitados pela análise técnica não foram apresentados no prazo.',
             'justificativa.conclusao.padrao' => 'Não há elementos suficientes para deferir ou indeferir. Encaminha-se a atividade à análise técnica, sem sugerir desfecho locacional.',
 

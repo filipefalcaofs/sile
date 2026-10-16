@@ -57,7 +57,7 @@ class TllCalculoServiceTest extends TestCase
 
     public function test_aplica_o_fator_multiplicador_quando_o_cnae_exige(): void
     {
-        config(['sile.tll.fator_multiplicador' => 2.0]);
+        config(['viabiliza.tll.fator_multiplicador' => 2.0]);
         $this->publicarExercicio(2026);
 
         TllValor::factory()->create(['codigo_tll' => '1.01', 'exercicio' => 2026, 'valor' => 1000.00, 'taxa_servico' => 50.00]);

@@ -53,11 +53,11 @@ class GerarExportacaoJob implements ShouldQueue
         public readonly string $formato,
         public readonly ?int $userId = null,
     ) {
-        $this->tries = (int) config('sile.relatorios.job.tries', 3);
-        $this->timeout = (int) config('sile.relatorios.job.timeout', 300);
-        $this->backoff = config('sile.relatorios.job.backoff', [30, 60, 120]);
+        $this->tries = (int) config('viabiliza.relatorios.job.tries', 3);
+        $this->timeout = (int) config('viabiliza.relatorios.job.timeout', 300);
+        $this->backoff = config('viabiliza.relatorios.job.backoff', [30, 60, 120]);
 
-        $fila = (string) config('sile.relatorios.job.fila', 'default');
+        $fila = (string) config('viabiliza.relatorios.job.fila', 'default');
 
         if ($fila !== '' && $fila !== 'default') {
             $this->onQueue($fila);
@@ -128,7 +128,7 @@ class GerarExportacaoJob implements ShouldQueue
      */
     private function resolverDisco(): string
     {
-        $disk = (string) config('sile.relatorios.export.disk', 'local');
+        $disk = (string) config('viabiliza.relatorios.export.disk', 'local');
 
         if ($disk === 'public') {
             throw new RuntimeException('O disco de exportação não pode ser público (relatorios.export.disk) — o arquivo pode conter dados pessoais (LGPD).');

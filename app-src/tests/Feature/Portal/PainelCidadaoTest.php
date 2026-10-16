@@ -5,9 +5,9 @@ namespace Tests\Feature\Portal;
 use App\Enums\CompanyLinkRole;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\AnalysisPendency;
+use App\Models\Cidadao;
 use App\Models\Company;
 use App\Models\Procuration;
-use App\Models\User;
 use App\Models\ViabilityQuery;
 use App\Models\ViabilityRequest;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -31,18 +31,18 @@ class PainelCidadaoTest extends TestCase
     }
 
     /** Cidadão habilitado a navegar no portal (papel + termo LGPD aceito). */
-    private function portalUser(): User
+    private function portalUser(): Cidadao
     {
-        return User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        return Cidadao::factory()->withAcceptedLgpdTerm()->create();
     }
 
     /** Empresa com vínculo ATIVO do usuário. */
-    private function companyLinkedTo(User $user): Company
+    private function companyLinkedTo(Cidadao $user): Company
     {
         $company = Company::factory()->create();
 
         $company->links()->create([
-            'user_id' => $user->id,
+            'cidadao_id' => $user->id,
             'role' => CompanyLinkRole::Responsavel,
             'started_at' => now(),
         ]);
@@ -57,26 +57,26 @@ class PainelCidadaoTest extends TestCase
 
         // Em andamento (contam): protocolada + em análise = 2.
         ViabilityRequest::factory()->protocoled()->create([
-            'requester_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
             'company_id' => $company->id,
         ]);
         ViabilityRequest::factory()->create([
-            'requester_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
             'company_id' => $company->id,
             'status' => ViabilityRequestStatus::EmAnalise,
         ]);
         // Não contam em "em andamento": rascunho e deferida.
         ViabilityRequest::factory()->draft()->create([
-            'requester_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
             'company_id' => $company->id,
         ]);
         ViabilityRequest::factory()->create([
-            'requester_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
             'company_id' => $company->id,
             'status' => ViabilityRequestStatus::Deferida,
         ]);
 
-        ViabilityQuery::factory()->count(2)->create(['user_id' => $user->id]);
+        ViabilityQuery::factory()->count(2)->create(['cidadao_id' => $user->id]);
 
         $this->actingAs($user)
             ->get('/portal/painel')
@@ -97,7 +97,7 @@ class PainelCidadaoTest extends TestCase
         // 6 solicitações com datas decrescentes (a mais recente primeiro).
         foreach (range(0, 5) as $i) {
             ViabilityRequest::factory()->protocoled()->create([
-                'requester_user_id' => $user->id,
+                'requester_cidadao_id' => $user->id,
                 'company_id' => $company->id,
                 'protocol_number' => sprintf('VIA-2026-%06d', $i),
                 'created_at' => now()->subDays($i),
@@ -108,7 +108,7 @@ class PainelCidadaoTest extends TestCase
             ->get('/portal/painel')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
-                // Limite default (config sile.ui.painel.solicitacoes_recentes = 5).
+                // Limite default (config viabiliza.ui.painel.solicitacoes_recentes = 5).
                 ->has('solicitacoesRecentes', 5)
                 // Mais recente primeiro (i = 0).
                 ->where('solicitacoesRecentes.0.protocol_number', 'VIA-2026-000000')
@@ -124,7 +124,7 @@ class PainelCidadaoTest extends TestCase
 
         // Pendência ABERTA do usuário (aparece).
         $req = ViabilityRequest::factory()->protocoled()->create([
-            'requester_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
             'company_id' => $company->id,
             'protocol_number' => 'VIA-2026-000100',
         ]);
@@ -136,20 +136,20 @@ class PainelCidadaoTest extends TestCase
         // Pendência aberta de OUTRO usuário (NÃO aparece — escopo).
         $otherCompany = $this->companyLinkedTo($other);
         $otherReq = ViabilityRequest::factory()->protocoled()->create([
-            'requester_user_id' => $other->id,
+            'requester_cidadao_id' => $other->id,
             'company_id' => $otherCompany->id,
         ]);
         AnalysisPendency::factory()->create(['viability_request_id' => $otherReq->id]);
 
         // Rascunho do usuário (aparece).
         ViabilityRequest::factory()->draft()->create([
-            'requester_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
             'company_id' => $company->id,
         ]);
 
         // Rascunho de OUTRO usuário (NÃO aparece — escopo).
         ViabilityRequest::factory()->draft()->create([
-            'requester_user_id' => $other->id,
+            'requester_cidadao_id' => $other->id,
             'company_id' => $otherCompany->id,
         ]);
 
@@ -186,14 +186,14 @@ class PainelCidadaoTest extends TestCase
         $attorney = $this->portalUser();
 
         $proc = Procuration::factory()->create([
-            'grantor_user_id' => $grantor->id,
-            'attorney_user_id' => $attorney->id,
+            'grantor_cidadao_id' => $grantor->id,
+            'attorney_cidadao_id' => $attorney->id,
         ]);
 
         // Dados do REPRESENTADO (devem aparecer).
         $grantorCompany = $this->companyLinkedTo($grantor);
         $grantorReq = ViabilityRequest::factory()->protocoled()->create([
-            'requester_user_id' => $grantor->id,
+            'requester_cidadao_id' => $grantor->id,
             'company_id' => $grantorCompany->id,
             'protocol_number' => 'VIA-2026-000200',
         ]);
@@ -201,11 +201,11 @@ class PainelCidadaoTest extends TestCase
         // Dados do PROCURADOR (NÃO devem aparecer no painel do representado).
         $attorneyCompany = $this->companyLinkedTo($attorney);
         ViabilityRequest::factory()->protocoled()->create([
-            'requester_user_id' => $attorney->id,
+            'requester_cidadao_id' => $attorney->id,
             'company_id' => $attorneyCompany->id,
             'protocol_number' => 'VIA-2026-000999',
         ]);
-        ViabilityQuery::factory()->count(3)->create(['user_id' => $attorney->id]);
+        ViabilityQuery::factory()->count(3)->create(['cidadao_id' => $attorney->id]);
 
         $this->actingAs($attorney)
             ->withSession(['acting_procuration_id' => $proc->id])

@@ -37,6 +37,31 @@ final readonly class ResolvedViability
     ) {}
 
     /**
+     * Primeira pergunta da planilha, necessária ao enquadramento, que ficou sem
+     * resposta num CNAE pendente, com o CNAE que a exige.
+     *
+     * @return array{numero: int, enunciado: string, cnae: string}|null
+     */
+    public function perguntaSemResposta(): ?array
+    {
+        foreach ($this->por_cnae as $item) {
+            $pergunta = $item['pergunta_sem_resposta'] ?? null;
+
+            if (($item['tendencia'] ?? null) !== ResultadoViabilidade::Pendente->value || ! is_array($pergunta)) {
+                continue;
+            }
+
+            return [
+                'numero' => (int) $pergunta['numero'],
+                'enunciado' => (string) $pergunta['enunciado'],
+                'cnae' => (string) ($item['cnae_formatado'] ?? $item['cnae']),
+            ];
+        }
+
+        return null;
+    }
+
+    /**
      * Motivo do primeiro CNAE com veredito pendente. Quando o ramo da planilha
      * não foi resolvido, o motivo específico (pergunta sem resposta, área ou
      * tipo de imóvel ausente) vale mais que o consolidado genérico.

@@ -2,9 +2,12 @@
 
 namespace App\Http\Requests\Gestao;
 
+use App\Models\Cidadao;
 use App\Models\Company;
-use App\Models\User;
 use App\Rules\ValidCpf;
+use App\Services\Sedur\SedurContatoIndisponivelException;
+use App\Services\Sedur\SedurContatoNaoEncontradoException;
+use App\Services\Solicitacao\RequerenteDeBalcao;
 use App\Support\Settings;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -15,13 +18,16 @@ use Illuminate\Validation\Validator;
  * Registro de solicitação em CONTINGÊNCIA na retaguarda (HU-148). A permissão é
  * o middleware permission:registrar-contingencia (CA-04); aqui validamos o MESMO
  * conjunto de dados do formulário oficial. O beneficiário (cidadão) é informado
- * por CPF e a empresa por CNPJ — ambos precisam existir no sistema (o protocolo
- * exige empresa, e o requerente é um usuário). Motivo obrigatório (RN-001). Os
+ * por CPF e a empresa por CNPJ. A empresa precisa existir no sistema (o protocolo
+ * a exige); o cidadão sem cadastro vira registro de balcão (sem senha), com o nome
+ * da base da SEDUR. Motivo obrigatório (RN-001). Os
  * tipos aceitos de anexo e o limite de complementares são parametrizados (HU-014)
  * e lidos dinamicamente do catálogo (banco→cache→config), efeito sem deploy.
  */
 class RegistrarContingenciaRequest extends FormRequest
 {
+    private ?string $nomeNaSedur = null;
+
     public function authorize(): bool
     {
         return true;
@@ -34,15 +40,15 @@ class RegistrarContingenciaRequest extends FormRequest
     {
         $maxComplementares = (int) Settings::get(
             'solicitacao.cnaes_complementares.max',
-            config('sile.solicitacao.cnaes_complementares.max', 99),
+            config('viabiliza.solicitacao.cnaes_complementares.max', 99),
         );
 
         /** @var array<int, string> $mimes */
-        $mimes = (array) config('sile.solicitacao.anexos.mime_permitidos', ['application/pdf', 'image/jpeg', 'image/png']);
+        $mimes = (array) config('viabiliza.solicitacao.anexos.mime_permitidos', ['application/pdf', 'image/jpeg', 'image/png']);
 
         $maxKb = (int) Settings::get(
             'solicitacao.anexos.max_mb',
-            config('sile.solicitacao.anexos.max_mb', 10),
+            config('viabiliza.solicitacao.anexos.max_mb', 10),
         ) * 1024;
 
         return [
@@ -103,10 +109,6 @@ class RegistrarContingenciaRequest extends FormRequest
     {
         return [
             function (Validator $validator): void {
-                if (! $validator->errors()->has('beneficiary_cpf') && $this->resolveBeneficiary() === null) {
-                    $validator->errors()->add('beneficiary_cpf', 'Nenhum cidadão cadastrado com este CPF.');
-                }
-
                 if (! $validator->errors()->has('company_cnpj') && $this->resolveCompany() === null) {
                     $validator->errors()->add('company_cnpj', 'Nenhuma empresa cadastrada com este CNPJ.');
                 }
@@ -117,20 +119,52 @@ class RegistrarContingenciaRequest extends FormRequest
                 if ($principal !== 0 && in_array($principal, $complementares, true)) {
                     $validator->errors()->add('complementares', 'A atividade principal não pode estar entre os CNAEs complementares.');
                 }
+
+                // Consulta externa (SEDUR) só com o restante válido: reenvio com erro não bate na SEDUR.
+                if ($validator->errors()->isEmpty()) {
+                    $this->conferirBeneficiario($validator);
+                }
             },
         ];
     }
 
     /**
-     * Beneficiário (cidadão) resolvido por CPF — não nulo após validação.
+     * Beneficiário (cidadão) do CPF informado: o cadastro existente ou um
+     * registro de balcão novo. Chamar dentro da transação do protocolo, para
+     * que o registro não sobreviva a um protocolo bloqueado.
      */
-    public function beneficiaryUser(): User
+    public function beneficiaryCidadao(): Cidadao
     {
-        $user = $this->resolveBeneficiary();
+        $cpf = $this->beneficiaryCpf();
+        $existente = Cidadao::query()->where('cpf', $cpf)->first();
 
-        abort_if($user === null, 422);
+        if ($existente !== null) {
+            return $existente;
+        }
 
-        return $user;
+        abort_if($this->nomeNaSedur === null, 422);
+
+        return Cidadao::criarRegistroDeBalcao($cpf, $this->nomeNaSedur, null, null);
+    }
+
+    private function conferirBeneficiario(Validator $validator): void
+    {
+        $cpf = $this->beneficiaryCpf();
+
+        if (Cidadao::query()->where('cpf', $cpf)->exists()) {
+            return;
+        }
+
+        try {
+            $this->nomeNaSedur = app(RequerenteDeBalcao::class)->nomeNaSedur($cpf, 'contingencia');
+        } catch (SedurContatoNaoEncontradoException|SedurContatoIndisponivelException $e) {
+            $validator->errors()->add('beneficiary_cpf', RequerenteDeBalcao::mensagemDeFalha($e));
+        }
+    }
+
+    private function beneficiaryCpf(): string
+    {
+        return (string) preg_replace('/\D/', '', (string) $this->input('beneficiary_cpf'));
     }
 
     /**
@@ -143,17 +177,6 @@ class RegistrarContingenciaRequest extends FormRequest
         abort_if($company === null, 422);
 
         return $company;
-    }
-
-    private function resolveBeneficiary(): ?User
-    {
-        $cpf = preg_replace('/\D/', '', (string) $this->input('beneficiary_cpf'));
-
-        if ($cpf === '') {
-            return null;
-        }
-
-        return User::query()->where('cpf', $cpf)->first();
     }
 
     private function resolveCompany(): ?Company

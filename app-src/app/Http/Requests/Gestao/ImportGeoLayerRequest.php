@@ -30,7 +30,7 @@ class ImportGeoLayerRequest extends FormRequest
      */
     public function rules(): array
     {
-        $maxKb = (int) config('sile.geo.upload_max_mb', 20) * 1024;
+        $maxKb = (int) config('viabiliza.geo.upload_max_mb', 20) * 1024;
 
         return [
             'tipo' => ['required', Rule::enum(GeoLayerType::class)],

@@ -102,6 +102,19 @@ class ReginReenviarPareceresCommandTest extends TestCase
         $this->assertCount(2, $notifier->enviados);
     }
 
+    public function test_exceto_nao_reenvia_os_protocolos_informados(): void
+    {
+        $this->processoDecidido('BAP2601000001');
+        $this->processoDecidido('BAP2601000002');
+        $notifier = $this->notifier(true);
+
+        $this->artisan('regin:reenviar-pareceres --exceto=BAP2601000001')
+            ->expectsOutputToContain('BAP2601000002: enviado e confirmado pela JUCEB')
+            ->assertSuccessful();
+
+        $this->assertSame(['BAP2601000002'], $notifier->enviados);
+    }
+
     public function test_processo_sem_decisao_nao_e_reenviado(): void
     {
         ViabilityRequest::factory()->protocoled()->create([

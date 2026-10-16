@@ -108,8 +108,8 @@ class ResultadoExpressoNotification extends Notification implements ProcessNotif
         $deferida = $this->outcome === DecisionOutcome::Deferida;
 
         $subject = $deferida
-            ? config('sile.expresso.notificacao.assunto_deferida')
-            : config('sile.expresso.notificacao.assunto_indeferida');
+            ? config('viabiliza.expresso.notificacao.assunto_deferida')
+            : config('viabiliza.expresso.notificacao.assunto_indeferida');
 
         $message = (new EmailViabiliza)
             ->subject($subject)

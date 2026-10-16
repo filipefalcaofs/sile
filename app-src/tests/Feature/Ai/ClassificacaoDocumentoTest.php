@@ -64,7 +64,7 @@ class ClassificacaoDocumentoTest extends TestCase
 
     public function test_classifica_documento_com_categoria_confianca_e_fonte(): void
     {
-        config(['sile.features.ia_classificacao' => true]);
+        config(['viabiliza.features.ia_classificacao' => true]);
         $this->provedorVisaoAtivo();
         $doc = $this->documento();
 
@@ -96,7 +96,7 @@ class ClassificacaoDocumentoTest extends TestCase
 
     public function test_categoria_incompativel_com_a_exigencia_gera_alerta_sem_bloquear(): void
     {
-        config(['sile.features.ia_classificacao' => true]);
+        config(['viabiliza.features.ia_classificacao' => true]);
         $this->provedorVisaoAtivo();
 
         $exigencia = DocumentRequirement::factory()->create([
@@ -129,7 +129,7 @@ class ClassificacaoDocumentoTest extends TestCase
 
     public function test_toggle_desligado_nao_chama_provedor_nem_cria_sugestao(): void
     {
-        config(['sile.features.ia_classificacao' => false]);
+        config(['viabiliza.features.ia_classificacao' => false]);
         $this->provedorVisaoAtivo();
         $doc = $this->documento();
 

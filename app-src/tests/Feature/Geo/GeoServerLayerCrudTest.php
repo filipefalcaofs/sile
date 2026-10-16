@@ -151,7 +151,7 @@ class GeoServerLayerCrudTest extends TestCase
 
     /**
      * A carga inicial espelha as 20 FeatureTypes que hoje vivem hardcoded em
-     * config/sile.php (integrations.geoserver.type_names) — zona nova passa
+     * config/viabiliza.php (integrations.geoserver.type_names) — zona nova passa
      * a entrar por cadastro. Idempotente por workspace+type_name.
      */
     public function test_seeder_carrega_as_camadas_oficiais_de_forma_idempotente(): void

@@ -55,9 +55,9 @@ class GeoServerClassificacaoViariaClient
 
         try {
             $response = Http::withHeaders([
-                'User-Agent' => (string) config('sile.integrations.geoserver.user_agent', 'Viabiliza-SEDUR-Salvador/1.0'),
+                'User-Agent' => (string) config('viabiliza.integrations.geoserver.user_agent', 'Viabiliza-SEDUR-Salvador/1.0'),
             ])
-                ->timeout((int) config('sile.integrations.geoserver.timeout', 8))
+                ->timeout((int) config('viabiliza.integrations.geoserver.timeout', 8))
                 ->connectTimeout(3)
                 ->acceptJson()
                 ->get($this->url($codLog));
@@ -96,7 +96,7 @@ class GeoServerClassificacaoViariaClient
             return $this->auditar($codLog, $this->hierarquiaDoLogradouro($codLog));
         }
 
-        $atributo = (string) config('sile.integrations.geoserver.classificacao_viaria.atributo', 'CLASSIFICACAO_VIARIA');
+        $atributo = (string) config('viabiliza.integrations.geoserver.classificacao_viaria.atributo', 'CLASSIFICACAO_VIARIA');
         $properties = is_array($features[0]['properties'] ?? null) ? $features[0]['properties'] : [];
         $bruta = $properties[$atributo] ?? null;
         $bruta = is_string($bruta) && trim($bruta) !== '' ? trim($bruta) : null;
@@ -157,9 +157,9 @@ class GeoServerClassificacaoViariaClient
 
         try {
             $response = Http::withHeaders([
-                'User-Agent' => (string) config('sile.integrations.geoserver.user_agent', 'Viabiliza-SEDUR-Salvador/1.0'),
+                'User-Agent' => (string) config('viabiliza.integrations.geoserver.user_agent', 'Viabiliza-SEDUR-Salvador/1.0'),
             ])
-                ->timeout((int) config('sile.integrations.geoserver.timeout', 8))
+                ->timeout((int) config('viabiliza.integrations.geoserver.timeout', 8))
                 ->connectTimeout(3)
                 ->acceptJson()
                 ->get($this->url($codLog, $this->typeNameLogradouro()));
@@ -178,7 +178,7 @@ class GeoServerClassificacaoViariaClient
             return $semClasse;
         }
 
-        $atributo = (string) config('sile.integrations.geoserver.logradouro.atributo_hierarquia', 'HIERARQUIA');
+        $atributo = (string) config('viabiliza.integrations.geoserver.logradouro.atributo_hierarquia', 'HIERARQUIA');
         $properties = is_array($features[0]['properties'] ?? null) ? $features[0]['properties'] : [];
         $bruta = $properties[$atributo] ?? null;
         $bruta = is_string($bruta) && trim($bruta) !== '' ? trim($bruta) : null;
@@ -209,7 +209,7 @@ class GeoServerClassificacaoViariaClient
     private function typeNameLogradouro(): string
     {
         return (string) config(
-            'sile.integrations.geoserver.logradouro.type_name',
+            'viabiliza.integrations.geoserver.logradouro.type_name',
             'logradouros:VM_LOGRADOURO',
         );
     }
@@ -218,11 +218,11 @@ class GeoServerClassificacaoViariaClient
     {
         $base = rtrim((string) Settings::get(
             'integrations.geoserver.base_url',
-            config('sile.integrations.geoserver.base_url'),
+            config('viabiliza.integrations.geoserver.base_url'),
         ), '/');
 
         $typeName ??= (string) config(
-            'sile.integrations.geoserver.classificacao_viaria.type_name',
+            'viabiliza.integrations.geoserver.classificacao_viaria.type_name',
             'louos_classificacao_viaria:VM_L_CLASSIF_VIARIA',
         );
 

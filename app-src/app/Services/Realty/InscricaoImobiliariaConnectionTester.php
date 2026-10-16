@@ -18,11 +18,11 @@ class InscricaoImobiliariaConnectionTester
     public function test(): InscricaoImobiliariaConnectionResult
     {
         $ambiente = $this->settings->usingProduction() ? 'produção' : 'homologação';
-        $inscricao = (string) config('sile.integrations.inscricao_imobiliaria.inscricao_teste', '0000000000');
+        $inscricao = (string) config('viabiliza.integrations.inscricao_imobiliaria.inscricao_teste', '0000000000');
         $url = $this->settings->baseUrl().'/'.$inscricao;
 
         try {
-            $response = Http::timeout((int) config('sile.integrations.inscricao_imobiliaria.timeout', 12))
+            $response = Http::timeout((int) config('viabiliza.integrations.inscricao_imobiliaria.timeout', 12))
                 ->connectTimeout(3)
                 ->acceptJson()
                 ->get($url);

@@ -39,11 +39,11 @@ class ProtocolarRecebimentoReginJob implements ShouldQueue
 
     public function __construct(public readonly int $reginRecebimentoId)
     {
-        $this->tries = (int) config('sile.integrations.regin.job.tries', 3);
-        $this->timeout = (int) config('sile.integrations.regin.job.timeout', 120);
-        $this->backoff = config('sile.integrations.regin.job.backoff', [30, 60, 120]);
+        $this->tries = (int) config('viabiliza.integrations.regin.job.tries', 3);
+        $this->timeout = (int) config('viabiliza.integrations.regin.job.timeout', 120);
+        $this->backoff = config('viabiliza.integrations.regin.job.backoff', [30, 60, 120]);
 
-        $fila = (string) config('sile.integrations.regin.job.fila', 'default');
+        $fila = (string) config('viabiliza.integrations.regin.job.fila', 'default');
 
         if ($fila !== '' && $fila !== 'default') {
             $this->onQueue($fila);

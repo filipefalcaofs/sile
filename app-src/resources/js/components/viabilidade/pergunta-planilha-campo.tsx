@@ -22,7 +22,7 @@ const CLASSE_ROTULO = 'inline-flex items-start gap-2 text-sm text-gray-700 dark:
  */
 export default function PerguntaPlanilhaCampo({ pergunta, valor, onChange }: Props) {
     const nome = `pergunta-${pergunta.numero}`;
-    const enunciado = enunciadoSemOpcoes(pergunta.texto, pergunta.tipo === 'sim_nao' ? [] : pergunta.opcoes);
+    const enunciado = enunciadoSemOpcoes(pergunta.texto, pergunta.opcoes);
 
     return (
         <div className="flex flex-col gap-2">

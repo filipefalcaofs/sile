@@ -50,6 +50,7 @@ class ProcessoResource extends JsonResource
             'motivo_da_analise' => $this->motivoDaAnalise(),
             'empresa' => $this->company?->trade_name ?: $this->company?->legal_name,
             'cnpj' => $this->company?->formatted_cnpj,
+            'cnaes' => $this->cnaesRotulo(),
             'imovel' => $this->enderecoResumo(),
             // Endereço completo (com complemento e CEP) para o detalhe do
             // processo (HU-082) — o requisito da SEDUR é sempre mostrar o
@@ -212,6 +213,37 @@ class ProcessoResource extends JsonResource
         $motivo = $this->encaminhamentoAnalise?->reason;
 
         return is_string($motivo) && $motivo !== '' ? $motivo : null;
+    }
+
+    /**
+     * Códigos da solicitação, principal primeiro, separados por vírgula.
+     * O papel só entra quando o vínculo gravou is_primary.
+     */
+    private function cnaesRotulo(): ?string
+    {
+        $this->resource->loadMissing('cnaes');
+
+        $itens = $this->cnaes
+            ->sortBy(fn ($cnae): string => $cnae->code)
+            ->sortBy(fn ($cnae): int => $cnae->pivot->is_primary ? 0 : 1)
+            ->map(function ($cnae): string {
+                $codigo = $cnae->formatted_code;
+
+                if (! isset($cnae->pivot->is_primary) || $cnae->pivot->is_primary === null) {
+                    return $codigo;
+                }
+
+                $papel = $cnae->pivot->is_primary ? 'principal' : 'secundário';
+
+                return "{$codigo} ({$papel})";
+            })
+            ->values();
+
+        if ($itens->isEmpty()) {
+            return null;
+        }
+
+        return $itens->implode(', ');
     }
 
     /**

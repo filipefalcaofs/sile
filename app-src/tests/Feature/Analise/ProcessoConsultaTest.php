@@ -6,6 +6,7 @@ use App\Enums\AnalysisCategory;
 use App\Enums\AnalysisStatus;
 use App\Enums\ViabilityRequestStatus;
 use App\Http\Resources\ProcessoResource;
+use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\User;
 use App\Models\ViabilityDecision;
@@ -506,5 +507,41 @@ class ProcessoConsultaTest extends TestCase
             $linhas[$daJuceb->id]['servicos'],
         );
         $this->assertSame([$servico->name], $linhas[$doPortal->id]['servicos']);
+    }
+
+    public function test_detalhe_lista_cnaes_por_virgula_marcando_principal_e_secundario(): void
+    {
+        $processo = $this->processo();
+        $principal = Cnae::factory()->create(['code' => '9609299']);
+        $secundario = Cnae::factory()->create(['code' => '5611201']);
+        $outro = Cnae::factory()->create(['code' => '5620104']);
+        $processo->cnaes()->attach($secundario->id, ['is_primary' => false]);
+        $processo->cnaes()->attach($outro->id, ['is_primary' => false]);
+        $processo->cnaes()->attach($principal->id, ['is_primary' => true]);
+
+        $payload = (new ProcessoResource($processo->fresh()))->resolve();
+
+        $this->assertSame(
+            '9609-2/99 (principal), 5611-2/01 (secundário), 5620-1/04 (secundário)',
+            $payload['cnaes'],
+        );
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get("/gestao/processos/{$processo->id}")
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where(
+                    'processo.cnaes',
+                    '9609-2/99 (principal), 5611-2/01 (secundário), 5620-1/04 (secundário)',
+                ));
+    }
+
+    public function test_detalhe_sem_cnae_gravado_nao_inventa_lista(): void
+    {
+        $processo = $this->processo();
+
+        $payload = (new ProcessoResource($processo->fresh()))->resolve();
+
+        $this->assertNull($payload['cnaes']);
     }
 }

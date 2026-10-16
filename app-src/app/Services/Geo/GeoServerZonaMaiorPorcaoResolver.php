@@ -58,8 +58,8 @@ class GeoServerZonaMaiorPorcaoResolver implements ZonaMaiorPorcaoResolver
             $responses = Http::pool(function (Pool $pool) use ($typeNames, $bbox): void {
                 foreach ($typeNames as $typeName) {
                     $pool->as($typeName)
-                        ->withHeaders(['User-Agent' => (string) config('sile.integrations.geoserver.user_agent', 'Viabiliza-SEDUR-Salvador/1.0')])
-                        ->timeout((int) config('sile.integrations.geoserver.timeout', 8))
+                        ->withHeaders(['User-Agent' => (string) config('viabiliza.integrations.geoserver.user_agent', 'Viabiliza-SEDUR-Salvador/1.0')])
+                        ->timeout((int) config('viabiliza.integrations.geoserver.timeout', 8))
                         ->connectTimeout(3)
                         ->acceptJson()
                         ->get($this->url($typeName, $bbox));
@@ -208,7 +208,7 @@ class GeoServerZonaMaiorPorcaoResolver implements ZonaMaiorPorcaoResolver
      */
     private function url(string $typeName, array $bbox): string
     {
-        $base = rtrim((string) Settings::get('integrations.geoserver.base_url', config('sile.integrations.geoserver.base_url')), '/');
+        $base = rtrim((string) Settings::get('integrations.geoserver.base_url', config('viabiliza.integrations.geoserver.base_url')), '/');
 
         return $base.'/wfs?'.http_build_query([
             'service' => 'WFS',

@@ -120,7 +120,7 @@ class GeocodeController extends Controller
         return parse_url(
             (string) Settings::get(
                 'integrations.geocoding.base_url',
-                config('sile.integrations.geocoding.base_url'),
+                config('viabiliza.integrations.geocoding.base_url'),
             ),
             PHP_URL_HOST,
         );

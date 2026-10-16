@@ -26,7 +26,7 @@ class GestaoLoginAdTest extends TestCase
 
         $this->seed(RolesAndPermissionsSeeder::class);
 
-        config(['sile.integrations.sedur_auth.base_url' => 'https://sedur.test/k8s/prd']);
+        config(['viabiliza.integrations.sedur_auth.base_url' => 'https://sedur.test/k8s/prd']);
 
         // Settings e RateLimiter usam cache de processo; cada teste começa limpo
         // para o interruptor features.ad_login e o throttle por IP valerem.
@@ -107,7 +107,7 @@ class GestaoLoginAdTest extends TestCase
         $this->assertDatabaseMissing('users', ['remember_token' => 'tk-fake']);
     }
 
-    public function test_usuario_ad_autentica_pela_api_e_sincroniza_o_nome(): void
+    public function test_usuario_ad_autentica_pela_api_e_sincroniza_o_cadastro(): void
     {
         $this->fakeAdSucesso();
 
@@ -128,10 +128,10 @@ class GestaoLoginAdTest extends TestCase
             && $request['senha'] === 'senha-corporativa');
 
         $this->assertSame('Nome Sincronizado', $servidor->fresh()->name);
-        $this->assertSame($servidor->phone, $servidor->fresh()->phone);
+        $this->assertSame('71999990000', $servidor->fresh()->phone);
 
         $this->assertDatabaseHas('access_logs', [
-            'user_id' => $servidor->id,
+            'actor_type' => $servidor->getMorphClass(), 'actor_id' => $servidor->id,
             'event' => 'login',
             'channel' => 'gestao',
             'origin' => 'ad',
@@ -193,7 +193,7 @@ class GestaoLoginAdTest extends TestCase
 
     public function test_integracao_ad_desligada_bloqueia_com_aviso_e_auditoria(): void
     {
-        config(['sile.features.ad_login' => false]);
+        config(['viabiliza.features.ad_login' => false]);
         Http::fake();
 
         $servidor = User::factory()->administrador()->ad('seuusuarioad')->create();
@@ -230,7 +230,7 @@ class GestaoLoginAdTest extends TestCase
         Http::assertNothingSent();
 
         $this->assertDatabaseHas('access_logs', [
-            'user_id' => $servidor->id,
+            'actor_type' => $servidor->getMorphClass(), 'actor_id' => $servidor->id,
             'event' => 'login',
             'origin' => 'local',
         ]);
@@ -238,7 +238,7 @@ class GestaoLoginAdTest extends TestCase
 
     public function test_throttle_bloqueia_antes_de_chamar_a_api_ad(): void
     {
-        config(['sile.security.login.max_attempts' => 3]);
+        config(['viabiliza.security.login.max_attempts' => 3]);
         Http::fake(['*/ws-autenticacao/auth' => Http::response([], 401)]);
 
         $servidor = User::factory()->administrador()->ad('seuusuarioad')->create();
@@ -262,10 +262,11 @@ class GestaoLoginAdTest extends TestCase
     {
         $this->fakeAdSucesso();
 
-        $cidadao = User::factory()->cidadao()->ad('seuusuarioad')->create();
+        // Conta AD válida, mas sem perfil com acessar-gestao.
+        $servidor = User::factory()->ad('seuusuarioad')->create();
 
         $this->post('/gestao/login', [
-            'identifier' => $cidadao->email,
+            'identifier' => $servidor->email,
             'password' => 'senha-corporativa',
         ])->assertSessionHasErrors('identifier');
 
@@ -312,7 +313,7 @@ class GestaoLoginAdTest extends TestCase
         $this->assertAuthenticatedAs($servidor, 'gestao');
 
         $this->assertDatabaseHas('access_logs', [
-            'user_id' => $servidor->id,
+            'actor_type' => $servidor->getMorphClass(), 'actor_id' => $servidor->id,
             'event' => 'ad-sincronizacao-falhou',
             'channel' => 'gestao',
         ]);

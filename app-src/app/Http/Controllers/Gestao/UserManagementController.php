@@ -8,6 +8,7 @@ use App\Http\Requests\Gestao\ToggleUserActivationRequest;
 use App\Http\Requests\Gestao\UpdateUserAuthTypeRequest;
 use App\Http\Requests\Gestao\UpdateUserRoleRequest;
 use App\Models\AccessRequest;
+use App\Models\Cidadao;
 use App\Models\User;
 use App\Services\Relatorios\Export\ReportExporter;
 use App\Services\Relatorios\Export\Sources\UsuariosReportSource;
@@ -29,9 +30,9 @@ class UserManagementController extends Controller
 
     /**
      * Listagem com busca por nome ou e-mail (HU-012 CA-01), separada em
-     * abas: equipe SEDUR (contas do AD e papéis com a permissão acessar-gestao,
-     * inclusive perfis customizados da HU-013) e usuários do portal (externos,
-     * nunca contas AD).
+     * abas: equipe SEDUR (servidores de `users`, sem as contas de sistema; quem não tem
+     * acessar-gestao vem com o indicador `sem_acesso_gestao`) e usuários do portal
+     * (cidadãos, tabela `cidadaos`, com ou sem senha).
      * CPF nunca exposto em claro (LGPD) — apenas os dígitos verificadores.
      */
     public function index(Request $request): Response|HttpResponse
@@ -55,33 +56,50 @@ class UserManagementController extends Controller
             $tab = 'gestao';
         }
 
-        $scopeTab = fn ($query, string $which) => $which === 'gestao'
-            ? $query->equipeSedur()
-            : $query->usuarioPortal();
+        $term = $request->string('search')->isNotEmpty() ? (string) $request->string('search')->trim() : null;
+        $perPage = (int) Settings::get('ui.users.per_page', 15);
 
-        $users = $scopeTab(User::query(), $tab)
-            ->with('roles:id,name')
-            ->when($request->string('search')->isNotEmpty(), function ($query) use ($request) {
-                $term = (string) $request->string('search')->trim();
+        // whereLike sem case: LIKE do PostgreSQL é case-sensitive.
+        $busca = fn ($query) => $query->when($term !== null, fn ($q) => $q->where(fn ($inner) => $inner
+            ->whereLike('name', "%{$term}%", caseSensitive: false)
+            ->orWhereLike('email', "%{$term}%", caseSensitive: false)));
 
-                // whereLike sem case: LIKE do PostgreSQL é case-sensitive.
-                $query->where(fn ($inner) => $inner
-                    ->whereLike('name', "%{$term}%", caseSensitive: false)
-                    ->orWhereLike('email', "%{$term}%", caseSensitive: false));
-            })
-            ->orderBy('name')
-            ->paginate((int) Settings::get('ui.users.per_page', 15))
-            ->withQueryString()
-            ->through(fn (User $user) => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'roles' => $user->getRoleNames(),
-                'inactivated_at' => $user->inactivated_at?->toIso8601String(),
-                'cpf_masked' => '***.***.***-'.substr($user->cpf, -2),
-                'auth_type' => $user->auth_type->value,
-                'ad_username' => $user->ad_username,
-            ]);
+        if ($tab === 'portal') {
+            $users = $busca(Cidadao::query())
+                ->orderBy('name')
+                ->paginate($perPage)
+                ->withQueryString()
+                ->through(fn (Cidadao $cidadao) => [
+                    'id' => $cidadao->id,
+                    'name' => $cidadao->name,
+                    'email' => $cidadao->email,
+                    'roles' => [],
+                    'inactivated_at' => $cidadao->inactivated_at?->toIso8601String(),
+                    'cpf_masked' => '***.***.***-'.substr($cidadao->cpf, -2),
+                    'auth_type' => 'local',
+                    'ad_username' => null,
+                    'sem_senha' => ! $cidadao->temSenha(),
+                    'sem_acesso_gestao' => false,
+                ]);
+        } else {
+            $users = $busca(User::query()->semContasDeSistema())
+                ->with(['roles:id,name', 'roles.permissions:id,name', 'permissions:id,name'])
+                ->orderBy('name')
+                ->paginate($perPage)
+                ->withQueryString()
+                ->through(fn (User $user) => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'roles' => $user->getRoleNames(),
+                    'inactivated_at' => $user->inactivated_at?->toIso8601String(),
+                    'cpf_masked' => '***.***.***-'.substr($user->cpf, -2),
+                    'auth_type' => $user->auth_type->value,
+                    'ad_username' => $user->ad_username,
+                    'sem_senha' => false,
+                    'sem_acesso_gestao' => $user->semAcessoAGestao(),
+                ]);
+        }
 
         return Inertia::render('gestao/usuarios/index', [
             'users' => $users,
@@ -90,8 +108,8 @@ class UserManagementController extends Controller
                 'tab' => $tab,
             ],
             'counts' => [
-                'gestao' => $scopeTab(User::query(), 'gestao')->count(),
-                'portal' => $scopeTab(User::query(), 'portal')->count(),
+                'gestao' => User::query()->semContasDeSistema()->count(),
+                'portal' => Cidadao::query()->count(),
             ],
             'roles' => Role::orderBy('name')->pluck('name'),
             'solicitacoes' => AccessRequest::query()

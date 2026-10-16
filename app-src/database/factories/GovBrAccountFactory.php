@@ -2,8 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Models\Cidadao;
 use App\Models\GovBrAccount;
-use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -17,7 +17,7 @@ class GovBrAccountFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => User::factory(),
+            'cidadao_id' => Cidadao::factory(),
             'reliability_level' => 'bronze',
             'reliability_levels' => [1],
             'linked_at' => now(),

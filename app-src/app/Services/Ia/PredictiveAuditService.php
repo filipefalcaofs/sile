@@ -44,7 +44,7 @@ class PredictiveAuditService
         $defaults = ['volume' => 40, 'inscricao' => 30, 'prosseguiu' => 40];
         $configured = Settings::get(
             'ia.auditoria_preditiva.pesos',
-            config('sile.ia.auditoria_preditiva.pesos', $defaults),
+            config('viabiliza.ia.auditoria_preditiva.pesos', $defaults),
         );
 
         if (! is_array($configured)) {
@@ -66,7 +66,7 @@ class PredictiveAuditService
         $defaults = ['alta' => 80, 'media' => 60];
         $configured = Settings::get(
             'ia.auditoria_preditiva.cortes_severidade',
-            config('sile.ia.auditoria_preditiva.cortes_severidade', $defaults),
+            config('viabiliza.ia.auditoria_preditiva.cortes_severidade', $defaults),
         );
 
         if (! is_array($configured)) {

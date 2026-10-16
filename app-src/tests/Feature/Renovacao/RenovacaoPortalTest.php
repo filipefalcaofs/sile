@@ -5,9 +5,9 @@ namespace Tests\Feature\Renovacao;
 use App\Enums\CompanyLinkRole;
 use App\Enums\TvlKind;
 use App\Enums\ViabilityRequestStatus;
+use App\Models\Cidadao;
 use App\Models\Company;
 use App\Models\ServiceDeclaration;
-use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
@@ -120,16 +120,16 @@ class RenovacaoPortalTest extends TestCase
             ->assertForbidden();
     }
 
-    private function portalUser(): User
+    private function portalUser(): Cidadao
     {
-        return User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        return Cidadao::factory()->withAcceptedLgpdTerm()->create();
     }
 
-    private function empresaDe(User $user): Company
+    private function empresaDe(Cidadao $user): Company
     {
         $empresa = Company::factory()->create();
         $empresa->links()->create([
-            'user_id' => $user->id,
+            'cidadao_id' => $user->id,
             'role' => CompanyLinkRole::Responsavel,
             'started_at' => now(),
         ]);

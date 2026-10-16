@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Audit;
 
+use App\Models\Cidadao;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Auth\Events\PasswordReset;
@@ -15,7 +16,7 @@ class AccessLogRecordingTest extends TestCase
 
     public function test_login_bem_sucedido_registra_acesso(): void
     {
-        $user = User::factory()->create();
+        $user = Cidadao::factory()->create();
 
         $this->post('/portal/login', [
             'cpf' => $user->cpf,
@@ -25,7 +26,7 @@ class AccessLogRecordingTest extends TestCase
         $this->assertAuthenticated();
 
         $this->assertDatabaseHas('access_logs', [
-            'user_id' => $user->id,
+            'actor_type' => $user->getMorphClass(), 'actor_id' => $user->id,
             'email' => $user->email,
             'event' => 'login',
             'ip_address' => '127.0.0.1',
@@ -35,7 +36,7 @@ class AccessLogRecordingTest extends TestCase
 
     public function test_falha_de_login_registra_tentativa_com_usuario_conhecido(): void
     {
-        $user = User::factory()->create();
+        $user = Cidadao::factory()->create();
 
         $this->post('/portal/login', [
             'cpf' => $user->cpf,
@@ -45,7 +46,7 @@ class AccessLogRecordingTest extends TestCase
         $this->assertGuest();
 
         $this->assertDatabaseHas('access_logs', [
-            'user_id' => $user->id,
+            'actor_type' => $user->getMorphClass(), 'actor_id' => $user->id,
             'email' => $user->email,
             'event' => 'falha',
         ]);
@@ -62,7 +63,7 @@ class AccessLogRecordingTest extends TestCase
 
         // Sem conta correspondente, a trilha guarda o CPF digitado (dígitos).
         $this->assertDatabaseHas('access_logs', [
-            'user_id' => null,
+            'actor_type' => null, 'actor_id' => null,
             'email' => '52998224725',
             'event' => 'falha',
         ]);
@@ -70,19 +71,19 @@ class AccessLogRecordingTest extends TestCase
 
     public function test_logout_registra_saida(): void
     {
-        $user = User::factory()->create();
+        $user = Cidadao::factory()->create();
 
         $this->actingAs($user)->post('/portal/logout');
 
         $this->assertDatabaseHas('access_logs', [
-            'user_id' => $user->id,
+            'actor_type' => $user->getMorphClass(), 'actor_id' => $user->id,
             'event' => 'logout',
         ]);
     }
 
     public function test_bloqueio_temporario_registra_evento(): void
     {
-        $user = User::factory()->create();
+        $user = Cidadao::factory()->create();
 
         foreach (range(1, 5) as $tentativa) {
             $this->post('/portal/login', [
@@ -115,7 +116,7 @@ class AccessLogRecordingTest extends TestCase
             'password_confirmation' => 'SenhaForte1',
         ]);
 
-        $user = User::firstWhere('email', 'maria@example.com');
+        $user = Cidadao::firstWhere('email', 'maria@example.com');
 
         $this->assertNotNull($user, 'Esperava usuário criado pelo cadastro');
 

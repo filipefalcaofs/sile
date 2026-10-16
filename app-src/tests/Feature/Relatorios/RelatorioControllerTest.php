@@ -10,6 +10,7 @@ use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 /**
@@ -163,6 +164,22 @@ class RelatorioControllerTest extends TestCase
             'event' => 'exporta-solicitacoes-csv',
             'result' => 'sucesso',
         ]);
+    }
+
+    public function test_indicadores_com_periodo_invertido_avisam_e_nao_consultam(): void
+    {
+        $this->protocolada(['protocoled_at' => '2026-10-03']);
+
+        $this->actingAs($this->gestor(), 'gestao')
+            ->get('/gestao/relatorios/indicadores?data_de=2026-10-05&data_ate=2026-10-01')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('gestao/relatorios/indicadores')
+                ->where('erroPeriodo', 'A data inicial não pode ser posterior à data final.')
+                ->where('filtros.data_de', '2026-10-05')
+                ->where('filtros.data_ate', '2026-10-01')
+                ->has('porPeriodo', 0)
+                ->where('taxaDeferimento.total', 0));
     }
 
     public function test_tempo_renderiza_inertia_com_props_reais(): void

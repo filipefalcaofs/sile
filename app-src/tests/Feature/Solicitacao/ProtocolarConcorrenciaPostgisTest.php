@@ -4,6 +4,7 @@ namespace Tests\Feature\Solicitacao;
 
 use App\Enums\ViabilityRequestStatus;
 use App\Events\SolicitacaoProtocolada;
+use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\ProtocolSequence;
 use App\Models\User;
@@ -34,7 +35,7 @@ class ProtocolarConcorrenciaPostgisTest extends PostgisTestCase
         // síncrona (timeline + auditoria) continua rodando de verdade.
         Event::fake([SolicitacaoProtocolada::class]);
 
-        $user = User::factory()->create();
+        $user = Cidadao::factory()->create();
         $primeira = $this->completeDraft($user);
         $segunda = $this->completeDraft($user);
 
@@ -70,8 +71,8 @@ class ProtocolarConcorrenciaPostgisTest extends PostgisTestCase
     private function completeDraft(User $user): ViabilityRequest
     {
         $solicitacao = ViabilityRequest::factory()->draft()->create([
-            'requester_user_id' => $user->id,
-            'created_by_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
+            'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
             'used_area_m2' => 120.0,
         ]);
 

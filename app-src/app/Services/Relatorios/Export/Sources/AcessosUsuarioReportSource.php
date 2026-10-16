@@ -21,7 +21,7 @@ use Illuminate\Database\Eloquent\Builder;
  * {@see ReportSource}); o e-mail do alvo é derivado do id (não entra no bag, para
  * não vazar PII na auditoria).
  *
- * RN-005: reproduz EXATAMENTE a query do controller (acessos com user_id do alvo
+ * RN-005: reproduz EXATAMENTE a query do controller (acessos da conta do alvo
  * OU e-mail do alvo — inclui falhas/bloqueios pré-login sem user_id), na mesma
  * ordem (mais recentes primeiro). Colunas espelham a listagem da tela
  * (evento/ip/canal/data-hora). personalData=true (IP é dado pessoal — LGPD HU-102).
@@ -41,14 +41,14 @@ final class AcessosUsuarioReportSource implements ReportSource
                 ['key' => 'channel', 'label' => 'Canal'],
                 ['key' => 'created_at', 'label' => 'Data/hora'],
             ],
-            // RN-005: a MESMA query do AccessHistoryController (user_id OU e-mail do
-            // alvo), reconstruída a partir do id que veio no bag.
+            // RN-005: a MESMA query do AccessHistoryController (conta do alvo OU e-mail do
+            // alvo em linhas sem conta), reconstruída a partir do id que veio no bag.
             builder: fn (): Builder => AccessLog::query()
                 ->where(function ($query) use ($userId, $alvo): void {
-                    $query->where('user_id', $userId);
+                    $query->where(fn ($q) => $q->where('actor_type', User::class)->where('actor_id', $userId));
 
                     if ($alvo !== null) {
-                        $query->orWhere('email', $alvo->email);
+                        $query->orWhere(fn ($q) => $q->whereNull('actor_id')->where('email', $alvo->email)->where('channel', 'gestao'));
                     }
                 })
                 ->latest('created_at'),

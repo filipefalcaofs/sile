@@ -4,8 +4,8 @@ namespace Tests\Feature\Solicitacao;
 
 use App\Enums\ViabilityRequestStatus;
 use App\Models\Activity;
+use App\Models\Cidadao;
 use App\Models\Company;
-use App\Models\User;
 use App\Models\ViabilityRequest;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -36,7 +36,8 @@ class ConsultarProtocoloPublicoTest extends TestCase
             'from_status' => ViabilityRequestStatus::Rascunho,
             'to_status' => ViabilityRequestStatus::Protocolada,
             'public_label' => ViabilityRequestStatus::Protocolada->publicLabel(),
-            'actor_user_id' => null,
+            'actor_type' => null,
+            'actor_id' => null,
         ]);
 
         return $solicitacao;
@@ -84,11 +85,11 @@ class ConsultarProtocoloPublicoTest extends TestCase
     {
         // LGPD: a página pública mostra SÓ situação/timeline/prazo — nunca CPF,
         // CNPJ completo, endereço detalhado nem anexos.
-        $user = User::factory()->create();
+        $user = Cidadao::factory()->create();
         $company = Company::factory()->create(['legal_name' => 'Empresa Confidencial LTDA']);
         $solicitacao = $this->protocolada([
-            'requester_user_id' => $user->id,
-            'created_by_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
+            'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
             'company_id' => $company->id,
             'address_street' => 'Rua Secreta dos Testes',
             'address_number' => '777',
@@ -117,7 +118,7 @@ class ConsultarProtocoloPublicoTest extends TestCase
     {
         // HU-014: o limite por minuto é administrável sem deploy. Com 2/min, a 3ª
         // consulta pública dentro da janela é bloqueada (429).
-        config(['sile.seguranca.throttle.consulta_protocolo.por_minuto' => 2]);
+        config(['viabiliza.seguranca.throttle.consulta_protocolo.por_minuto' => 2]);
 
         $solicitacao = $this->protocolada();
         $url = $this->signedUrl($solicitacao);

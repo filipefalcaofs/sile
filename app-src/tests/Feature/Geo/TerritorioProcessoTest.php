@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Geo;
 
-use App\Models\User;
+use App\Models\Cidadao;
 use App\Models\ViabilityRequest;
 use App\Services\Geo\TerritorioProcessoService;
 use App\Services\Geo\TerritoryResult;
@@ -174,10 +174,10 @@ class TerritorioProcessoTest extends TestCase
     {
         $this->mockTerritorio($this->territorioIdentificado('ZPR-1', 'Pituba'));
 
-        $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $user = Cidadao::factory()->withAcceptedLgpdTerm()->create();
         $solicitacao = ViabilityRequest::factory()->draft()->withPrimaryCnae()->create([
-            'requester_user_id' => $user->id,
-            'created_by_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
+            'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
             'used_area_m2' => 120.0,
         ]);
 

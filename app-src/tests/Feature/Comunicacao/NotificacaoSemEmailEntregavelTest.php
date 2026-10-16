@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Comunicacao;
 
+use App\Models\Cidadao;
 use App\Models\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
@@ -14,5 +15,7 @@ class NotificacaoSemEmailEntregavelTest extends TestCase
     {
         $this->assertFalse(User::factory()->make(['email' => 'x@regin.invalid'])->temEmailEntregavel());
         $this->assertTrue(User::factory()->make(['email' => 'maria@exemplo.com'])->temEmailEntregavel());
+        $this->assertFalse(Cidadao::factory()->make(['email' => 'x@regin.invalid'])->temEmailEntregavel());
+        $this->assertTrue(Cidadao::factory()->make(['email' => 'maria@exemplo.com'])->temEmailEntregavel());
     }
 }

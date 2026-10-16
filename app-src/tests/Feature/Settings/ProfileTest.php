@@ -3,6 +3,7 @@
 namespace Tests\Feature\Settings;
 
 use App\Models\Activity;
+use App\Models\Cidadao;
 use App\Models\User;
 use App\Notifications\VerifyEmailQueued;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -24,7 +25,7 @@ class ProfileTest extends TestCase
 
     public function test_pagina_de_perfil_renderiza_com_dados(): void
     {
-        $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $user = Cidadao::factory()->withAcceptedLgpdTerm()->create();
 
         $this->actingAs($user)
             ->get('/portal/conta/perfil')
@@ -39,7 +40,7 @@ class ProfileTest extends TestCase
 
     public function test_atualiza_nome_e_telefone(): void
     {
-        $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $user = Cidadao::factory()->withAcceptedLgpdTerm()->create();
 
         $response = $this->actingAs($user)->patch('/portal/conta/perfil', [
             'name' => 'Nome Novo',
@@ -57,7 +58,7 @@ class ProfileTest extends TestCase
 
     public function test_telefone_sem_ddd_e_rejeitado(): void
     {
-        $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $user = Cidadao::factory()->withAcceptedLgpdTerm()->create();
 
         $this->actingAs($user)->patch('/portal/conta/perfil', [
             'name' => $user->name,
@@ -70,7 +71,7 @@ class ProfileTest extends TestCase
 
     public function test_atualizacao_gera_auditoria_sem_campos_sensiveis(): void
     {
-        $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $user = Cidadao::factory()->withAcceptedLgpdTerm()->create();
 
         $this->actingAs($user)->patch('/portal/conta/perfil', [
             'name' => 'Nome Auditado',
@@ -80,7 +81,7 @@ class ProfileTest extends TestCase
 
         $activity = Activity::query()
             ->where('event', 'updated')
-            ->where('subject_type', User::class)
+            ->where('subject_type', Cidadao::class)
             ->where('subject_id', $user->id)
             ->latest('id')
             ->first();
@@ -100,7 +101,7 @@ class ProfileTest extends TestCase
     {
         Notification::fake();
 
-        $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $user = Cidadao::factory()->withAcceptedLgpdTerm()->create();
 
         $response = $this->actingAs($user)->patch('/portal/conta/perfil', [
             'name' => $user->name,
@@ -120,7 +121,7 @@ class ProfileTest extends TestCase
 
     public function test_cpf_nao_e_alteravel(): void
     {
-        $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create(['cpf' => '11144477735']);
+        $user = Cidadao::factory()->withAcceptedLgpdTerm()->create(['cpf' => '11144477735']);
 
         $this->actingAs($user)->patch('/portal/conta/perfil', [
             'name' => $user->name,
@@ -134,8 +135,8 @@ class ProfileTest extends TestCase
 
     public function test_email_duplicado_bloqueia(): void
     {
-        $other = User::factory()->create();
-        $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $other = Cidadao::factory()->create();
+        $user = Cidadao::factory()->withAcceptedLgpdTerm()->create();
 
         $response = $this->actingAs($user)->patch('/portal/conta/perfil', [
             'name' => $user->name,
@@ -146,6 +147,22 @@ class ProfileTest extends TestCase
         $response->assertSessionHasErrors('email');
 
         $this->assertSame($user->email, $user->fresh()->email);
+    }
+
+    public function test_email_de_servidor_nao_bloqueia_o_cidadao(): void
+    {
+        // E-mail é único dentro de cada tabela, não entre cidadaos e users.
+        $servidor = User::factory()->create();
+        $user = Cidadao::factory()->withAcceptedLgpdTerm()->create();
+
+        $this->actingAs($user)->patch('/portal/conta/perfil', [
+            'name' => $user->name,
+            'email' => $servidor->email,
+            'phone' => $user->phone,
+        ])->assertSessionHasNoErrors();
+
+        $this->assertSame($servidor->email, $user->fresh()->email);
+        $this->assertSame($servidor->email, $servidor->fresh()->email);
     }
 
     public function test_visitante_nao_acessa_perfil(): void

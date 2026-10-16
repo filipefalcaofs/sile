@@ -19,7 +19,7 @@ class DecisionText extends Model
 {
     use HasAuditoria;
 
-    public const CACHE_KEY = 'sile.decision_texts.catalogo';
+    public const CACHE_KEY = 'viabiliza.decision_texts.catalogo';
 
     protected static function booted(): void
     {

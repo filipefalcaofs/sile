@@ -72,7 +72,7 @@ class GeoLayerController extends Controller
             'tipos' => collect(GeoLayerType::cases())
                 ->map(fn (GeoLayerType $tipo): array => ['value' => $tipo->value, 'label' => $tipo->label()])
                 ->all(),
-            'uploadMaxMb' => (int) config('sile.geo.upload_max_mb', 20),
+            'uploadMaxMb' => (int) config('viabiliza.geo.upload_max_mb', 20),
         ]);
     }
 

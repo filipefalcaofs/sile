@@ -3,11 +3,13 @@
 namespace Tests\Feature\Expresso;
 
 use App\Enums\DecisionOutcome;
+use App\Enums\EtapaMotor;
 use App\Enums\GeoLayerType;
 use App\Enums\PropertyLocationSource;
 use App\Enums\Quadro10Permissao;
 use App\Enums\RiscoMunicipal;
 use App\Enums\RuleDomain;
+use App\Enums\SituacaoEtapa;
 use App\Enums\TipoGatilho;
 use App\Enums\ViabilityRequestStatus;
 use App\Events\ResultadoEmitido;
@@ -38,8 +40,9 @@ use Tests\TestCase;
  * 2026-08-28): RT-01 indefere com o texto legal do art. 172-A (CA-RT-01) e
  * CNAE fora da lista segue o fluxo normal (CA-RT-02); poligonal incidente
  * encaminha à análise com o motivo exato da regra e queda
- * regra_territorial (CA-RT-03/06/07); camada indisponível também encaminha,
- * registrando a indisponibilidade (CA-RT-09).
+ * regra_territorial (CA-RT-03/06/07); camada indisponível espera o motor na fila e,
+ * esgotada a janela de tentativas, encaminha registrando a indisponibilidade
+ * (CA-RT-09).
  */
 class FluxoExpressoTerritorialTest extends TestCase
 {
@@ -262,14 +265,66 @@ class FluxoExpressoTerritorialTest extends TestCase
         $this->assertSame('Solicitação cadastrada na Zona de Exploração Mineral.', $queda->motivo);
     }
 
-    // CA-RT-09 — camada indisponível: análise, nunca deferimento por omissão
-    public function test_camada_territorial_indisponivel_encaminha_analise(): void
+    // CA-RT-09 — camada indisponível: nem defere nem encaminha; espera o motor rodar
+    public function test_camada_territorial_indisponivel_mantem_o_processo_na_fila_do_motor(): void
     {
         Http::fake(fn () => Http::response('erro', 500));
 
         $request = $this->setupDeferivelSemHttp('4712100');
 
         $result = $this->service()->decide($request);
+
+        $this->assertSame(ViabilityRequestStatus::Protocolada, $result->status);
+        $this->assertNull($result->decision);
+        $this->assertStringContainsString('indisponível', (string) $result->reason);
+
+        $request->refresh();
+
+        $this->assertSame(ViabilityRequestStatus::Protocolada, $request->status);
+        $this->assertNull($request->decision);
+        $this->assertSame(0, $request->expressoQuedas()->count());
+
+        $etapa = $request->etapas()->where('etapa', EtapaMotor::RegraTerritorial->value)->sole();
+
+        $this->assertSame(SituacaoEtapa::Indisponivel, $etapa->situacao);
+        $this->assertNotNull($etapa->proxima_tentativa_em);
+        $this->assertNull($etapa->esgotada_em);
+    }
+
+    public function test_processo_que_esperava_o_geoserver_defere_quando_a_camada_volta(): void
+    {
+        $geoserverNoAr = false;
+        Http::fake(function () use (&$geoserverNoAr) {
+            return $geoserverNoAr
+                ? Http::response(['type' => 'FeatureCollection', 'features' => []])
+                : Http::response('erro', 500);
+        });
+
+        $request = $this->setupDeferivelSemHttp('4712100');
+
+        $this->service()->decide($request);
+
+        $geoserverNoAr = true;
+        $this->app->forgetScopedInstances();
+
+        $result = $this->service()->reavaliar($request);
+
+        $this->assertSame(ViabilityRequestStatus::Deferida, $result->status);
+        $this->assertSame(DecisionOutcome::Deferida, $request->fresh()->decision->outcome);
+    }
+
+    public function test_camada_indisponivel_esgotada_a_janela_encaminha_analise(): void
+    {
+        Http::fake(fn () => Http::response('erro', 500));
+
+        $request = $this->setupDeferivelSemHttp('4712100');
+
+        $this->service()->decide($request);
+
+        $this->travel(25)->hours();
+        $this->app->forgetScopedInstances();
+
+        $result = $this->service()->reavaliar($request);
 
         $this->assertSame(ViabilityRequestStatus::EmAnalise, $result->status);
 

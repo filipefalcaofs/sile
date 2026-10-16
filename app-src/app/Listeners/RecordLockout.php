@@ -3,6 +3,7 @@
 namespace App\Listeners;
 
 use App\Models\AccessLog;
+use App\Models\Cidadao;
 use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Support\Str;
@@ -22,20 +23,24 @@ class RecordLockout
         $cpf = preg_replace('/\D/', '', (string) $event->request->input('cpf', ''));
 
         $user = null;
+        $modelo = $event->request->routeIs('gestao.*') ? User::class : Cidadao::class;
 
-        if ($identifier !== '') {
+        if ($identifier !== '' && $modelo === User::class) {
             $user = User::query()
                 ->where(function ($query) use ($identifier) {
                     $query->where('email', $identifier)
                         ->orWhere('ad_username', $identifier);
                 })
                 ->first();
+        } elseif ($identifier !== '') {
+            $user = Cidadao::query()->where('email', $identifier)->first();
         } elseif ($cpf !== '') {
-            $user = User::query()->where('cpf', $cpf)->first();
+            $user = $modelo::query()->where('cpf', $cpf)->first();
         }
 
         AccessLog::create([
-            'user_id' => $user?->id,
+            'actor_type' => $user?->getMorphClass(),
+            'actor_id' => $user?->id,
             'email' => $user?->email ?? ($identifier !== '' ? $identifier : $cpf),
             'event' => 'bloqueio',
             'ip_address' => $event->request->ip(),

@@ -84,7 +84,7 @@ class InconsistenciasTest extends TestCase
 
     public function test_detecta_inconsistencias_com_fonte_como_sugestao(): void
     {
-        config(['sile.features.ia_inconsistencias' => true]);
+        config(['viabiliza.features.ia_inconsistencias' => true]);
         $this->provedorVisaoAtivo();
         $processo = $this->processoComFachada();
 
@@ -133,7 +133,7 @@ class InconsistenciasTest extends TestCase
 
     public function test_inconsistencia_sem_fonte_escala_para_humano(): void
     {
-        config(['sile.features.ia_inconsistencias' => true]);
+        config(['viabiliza.features.ia_inconsistencias' => true]);
         $this->provedorVisaoAtivo();
         $processo = $this->processoComFachada();
 
@@ -159,7 +159,7 @@ class InconsistenciasTest extends TestCase
 
     public function test_toggle_desligado_nao_chama_provedor_nem_cria_sugestao(): void
     {
-        config(['sile.features.ia_inconsistencias' => false]);
+        config(['viabiliza.features.ia_inconsistencias' => false]);
         $this->provedorVisaoAtivo();
         $processo = $this->processoComFachada();
 

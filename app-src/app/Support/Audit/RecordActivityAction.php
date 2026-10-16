@@ -21,7 +21,7 @@ class RecordActivityAction extends LogActivityAction
             $activity->ip_address ??= request()->ip();
             $activity->user_agent ??= substr((string) request()->userAgent(), 0, 500);
             $activity->channel ??= request()->routeIs('gestao.*') ? 'gestao' : 'portal';
-            $activity->acting_for_user_id ??= Context::get('acting_for_user_id');
+            $activity->acting_for_cidadao_id ??= Context::get('acting_for_cidadao_id');
         }
 
         $activity->result ??= 'sucesso';

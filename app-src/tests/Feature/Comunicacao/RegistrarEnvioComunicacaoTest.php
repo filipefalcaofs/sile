@@ -112,7 +112,7 @@ class RegistrarEnvioComunicacaoTest extends TestCase
     {
         $user = User::factory()->create();
         $communication = Communication::factory()->inApp()->create([
-            'recipient_user_id' => $user->id,
+            'recipient_type' => $user->getMorphClass(), 'recipient_id' => $user->id,
             'status' => CommunicationStatus::NaFila,
         ]);
         $notification = $this->notificacao(
@@ -141,7 +141,7 @@ class RegistrarEnvioComunicacaoTest extends TestCase
     {
         $user = User::factory()->create();
         $communication = Communication::factory()->inApp()->create([
-            'recipient_user_id' => $user->id,
+            'recipient_type' => $user->getMorphClass(), 'recipient_id' => $user->id,
             'status' => CommunicationStatus::NaFila,
         ]);
         $notification = $this->notificacao(
@@ -164,7 +164,7 @@ class RegistrarEnvioComunicacaoTest extends TestCase
         // caminho degradado o Laravel dispara NotificationSent('whatsapp') — este
         // listener NÃO pode tocar a linha (sobrescreveria bloqueado→enviado).
         $whatsapp = Communication::factory()->whatsapp()->create([
-            'recipient_user_id' => $user->id,
+            'recipient_type' => $user->getMorphClass(), 'recipient_id' => $user->id,
             'status' => CommunicationStatus::NaFila,
         ]);
         $notification = $this->notificacao(

@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\EscritorioVirtual;
 
+use App\Models\Cidadao;
 use App\Models\Cnae;
-use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\VirtualOfficeInscriptionLock;
 use Database\Seeders\EscritorioVirtualCnaeSeeder;
@@ -39,20 +39,20 @@ class ConstituicaoSedeBloqueiosTest extends TestCase
     /**
      * Cidadão habilitado a navegar no portal (papel + termo LGPD aceito).
      */
-    private function portalUser(): User
+    private function portalUser(): Cidadao
     {
-        return User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        return Cidadao::factory()->withAcceptedLgpdTerm()->create();
     }
 
     /**
      * Rascunho de solicitação cujo requerente (beneficiário) é o usuário, com a
      * inscrição imobiliária informada (passo do imóvel, anterior às atividades).
      */
-    private function draftFor(User $user, ?string $propertyRegistration, bool $wantsTenant = false, bool $wantsHq = false): ViabilityRequest
+    private function draftFor(Cidadao $user, ?string $propertyRegistration, bool $wantsTenant = false, bool $wantsHq = false): ViabilityRequest
     {
         return ViabilityRequest::factory()->draft()->create([
-            'requester_user_id' => $user->id,
-            'created_by_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
+            'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
             'property_registration' => $propertyRegistration,
             'wants_virtual_office_tenant' => $wantsTenant,
             'wants_virtual_office_hq' => $wantsHq,
@@ -120,7 +120,7 @@ class ConstituicaoSedeBloqueiosTest extends TestCase
         $errors = $this->app['session']->get('errors')->getBag('default')->get('principal_cnae_id');
         $this->assertCount(1, $errors);
         $this->assertSame(
-            str_replace(':cnae', '8211-3/00', config('sile.analise.escritorio_virtual.mensagem_cnae_sede_em_abrigado')),
+            str_replace(':cnae', '8211-3/00', config('viabiliza.analise.escritorio_virtual.mensagem_cnae_sede_em_abrigado')),
             $errors[0],
         );
     }
@@ -148,7 +148,7 @@ class ConstituicaoSedeBloqueiosTest extends TestCase
         $errors = $this->app['session']->get('errors')->getBag('default')->get('principal_cnae_id');
         $this->assertCount(1, $errors);
         $this->assertSame(
-            config('sile.analise.escritorio_virtual.mensagem_bloqueio_abrigado'),
+            config('viabiliza.analise.escritorio_virtual.mensagem_bloqueio_abrigado'),
             $errors[0],
         );
     }
@@ -196,7 +196,7 @@ class ConstituicaoSedeBloqueiosTest extends TestCase
         $errors = $this->app['session']->get('errors')->getBag('default')->get('principal_cnae_id');
         $this->assertCount(1, $errors);
         $this->assertSame(
-            config('sile.analise.escritorio_virtual.mensagem_sede_duplicada'),
+            config('viabiliza.analise.escritorio_virtual.mensagem_sede_duplicada'),
             $errors[0],
         );
     }
@@ -318,7 +318,7 @@ class ConstituicaoSedeBloqueiosTest extends TestCase
 
         $errors = $this->app['session']->get('errors')->getBag('default')->get('principal_cnae_id');
         $this->assertSame(
-            config('sile.analise.escritorio_virtual.mensagem_sede_duplicada'),
+            config('viabiliza.analise.escritorio_virtual.mensagem_sede_duplicada'),
             $errors[0],
         );
     }

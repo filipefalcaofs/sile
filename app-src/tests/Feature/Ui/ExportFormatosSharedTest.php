@@ -21,7 +21,7 @@ class ExportFormatosSharedTest extends TestCase
 
     public function test_inertia_expoe_formatos_habilitados_do_catalogo(): void
     {
-        config(['sile.relatorios.export.formatos_habilitados' => ['csv']]);
+        config(['viabiliza.relatorios.export.formatos_habilitados' => ['csv']]);
 
         $admin = User::factory()->administrador()->withAcceptedLgpdTerm()->create();
 

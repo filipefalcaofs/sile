@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /**
  * Registro do aceite de uma declaração na versão exibida ao cidadão.
  */
-#[Fillable(['service_declaration_id', 'viability_request_id', 'user_id', 'version', 'accepted_at'])]
+#[Fillable(['service_declaration_id', 'viability_request_id', 'cidadao_id', 'version', 'accepted_at'])]
 class ServiceDeclarationAcceptance extends Model
 {
     /**
@@ -40,10 +40,10 @@ class ServiceDeclarationAcceptance extends Model
     }
 
     /**
-     * @return BelongsTo<User, $this>
+     * @return BelongsTo<Cidadao, $this>
      */
-    public function user(): BelongsTo
+    public function cidadao(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Cidadao::class);
     }
 }

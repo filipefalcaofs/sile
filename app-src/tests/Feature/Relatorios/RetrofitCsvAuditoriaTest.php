@@ -151,7 +151,7 @@ class RetrofitCsvAuditoriaTest extends TestCase
     {
         $gestor = $this->administrador();
         $user = User::factory()->create(['name' => 'Eduarda Acesso']);
-        AccessLog::factory()->create(['user_id' => $user->id, 'email' => 'eduarda@example.test', 'event' => 'login']);
+        AccessLog::factory()->create(['actor_type' => $user->getMorphClass(), 'actor_id' => $user->id, 'email' => 'eduarda@example.test', 'event' => 'login']);
 
         $response = $this->actingAs($gestor, 'gestao')
             ->get('/gestao/auditoria/export?fonte=acessos&formato=xlsx')
@@ -169,7 +169,7 @@ class RetrofitCsvAuditoriaTest extends TestCase
         // bag carrega o filtro e faz round-trip, então o worker reconstrói SÓ o
         // recorte filtrado — nunca a trilha inteira com PII.
         Queue::fake();
-        config(['sile.relatorios.export.assincrono_limiar_linhas' => 1]);
+        config(['viabiliza.relatorios.export.assincrono_limiar_linhas' => 1]);
 
         $gestor = $this->administrador();
         // 2 registros DENTRO do filtro (total filtrado > limiar → async) + 1 FORA.

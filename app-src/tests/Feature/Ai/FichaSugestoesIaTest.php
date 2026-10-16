@@ -153,8 +153,8 @@ class FichaSugestoesIaTest extends TestCase
     public function test_ficha_marca_ia_disponivel_com_toggle_provedor_e_motor(): void
     {
         config([
-            'sile.features.ia_resumo' => true,
-            'sile.features.ia_parecer' => true,
+            'viabiliza.features.ia_resumo' => true,
+            'viabiliza.features.ia_parecer' => true,
         ]);
         AiConfiguration::factory()->create([
             'capability' => 'text',
@@ -177,8 +177,8 @@ class FichaSugestoesIaTest extends TestCase
     public function test_ficha_bloqueia_minuta_sem_pre_analise_do_motor(): void
     {
         config([
-            'sile.features.ia_resumo' => true,
-            'sile.features.ia_parecer' => true,
+            'viabiliza.features.ia_resumo' => true,
+            'viabiliza.features.ia_parecer' => true,
         ]);
         AiConfiguration::factory()->create([
             'capability' => 'text',

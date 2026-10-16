@@ -36,7 +36,7 @@ class GeoServerEnderecamentoClientTest extends TestCase
             ],
         );
 
-        cache()->forget('sile.parameters.features.geoserver_enderecamento');
+        cache()->forget('viabiliza.parameters.features.geoserver_enderecamento');
     }
 
     /**
@@ -365,6 +365,6 @@ class GeoServerEnderecamentoClientTest extends TestCase
 
     public function test_timeout_da_consulta_por_ponto_e_de_45_segundos(): void
     {
-        $this->assertSame(45, config('sile.integrations.geoserver.enderecamento.timeout_ponto'));
+        $this->assertSame(45, config('viabiliza.integrations.geoserver.enderecamento.timeout_ponto'));
     }
 }

@@ -3,8 +3,8 @@
 namespace Tests\Feature\EscritorioVirtual;
 
 use App\Enums\CompanyLinkRole;
+use App\Models\Cidadao;
 use App\Models\Company;
-use App\Models\User;
 use App\Models\ViabilityRequest;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -26,17 +26,17 @@ class PerguntaGeralPortalTest extends TestCase
         $this->seed(RolesAndPermissionsSeeder::class);
     }
 
-    private function portalUser(): User
+    private function portalUser(): Cidadao
     {
-        return User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        return Cidadao::factory()->withAcceptedLgpdTerm()->create();
     }
 
-    private function companyLinkedTo(User $user): Company
+    private function companyLinkedTo(Cidadao $user): Company
     {
         $company = Company::factory()->create();
 
         $company->links()->create([
-            'user_id' => $user->id,
+            'cidadao_id' => $user->id,
             'role' => CompanyLinkRole::Responsavel,
             'started_at' => now(),
         ]);
@@ -44,11 +44,11 @@ class PerguntaGeralPortalTest extends TestCase
         return $company;
     }
 
-    private function draftFor(User $user, array $overrides = []): ViabilityRequest
+    private function draftFor(Cidadao $user, array $overrides = []): ViabilityRequest
     {
         return ViabilityRequest::factory()->draft()->create(array_merge([
-            'requester_user_id' => $user->id,
-            'created_by_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
+            'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
             'company_id' => $this->companyLinkedTo($user)->id,
             'used_area_m2' => null,
             'address_reference' => null,

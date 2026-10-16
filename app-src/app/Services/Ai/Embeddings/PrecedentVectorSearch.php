@@ -74,6 +74,6 @@ class PrecedentVectorSearch
 
     private function dimensions(): int
     {
-        return (int) config('sile.ai.embeddings.dimensions', 1536);
+        return (int) config('viabiliza.ai.embeddings.dimensions', 1536);
     }
 }

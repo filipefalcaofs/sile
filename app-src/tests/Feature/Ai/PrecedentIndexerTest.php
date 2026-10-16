@@ -4,8 +4,8 @@ namespace Tests\Feature\Ai;
 
 use App\Enums\ViabilityRequestStatus;
 use App\Models\AiConfiguration;
+use App\Models\Cidadao;
 use App\Models\Cnae;
-use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Ai\Embeddings\PrecedentIndexer;
@@ -53,7 +53,7 @@ class PrecedentIndexerTest extends TestCase
      */
     private function precedenteDecidido(string $protocol = 'VIA-2026-000900', bool $deferida = true): ViabilityRequest
     {
-        $requester = User::factory()->create(['name' => 'João da Silva Sigiloso']);
+        $requester = Cidadao::factory()->create(['name' => 'João da Silva Sigiloso']);
 
         $cnae = Cnae::factory()->create([
             'code' => '4712100',
@@ -64,7 +64,7 @@ class PrecedentIndexerTest extends TestCase
             'status' => ViabilityRequestStatus::Protocolada,
             'protocol_number' => $protocol,
             'protocoled_at' => now(),
-            'requester_user_id' => $requester->id,
+            'requester_cidadao_id' => $requester->id,
             'address_street' => 'Rua Secreta do Requerente',
             'address_number' => '123',
             'address_neighborhood' => 'Pituba',

@@ -3,9 +3,9 @@
 namespace Database\Factories;
 
 use App\Enums\CompanyLinkRole;
+use App\Models\Cidadao;
 use App\Models\Company;
 use App\Models\CompanyUser;
-use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -20,7 +20,7 @@ class CompanyUserFactory extends Factory
     {
         return [
             'company_id' => Company::factory(),
-            'user_id' => User::factory(),
+            'cidadao_id' => Cidadao::factory(),
             'role' => CompanyLinkRole::Responsavel,
             'started_at' => now(),
         ];

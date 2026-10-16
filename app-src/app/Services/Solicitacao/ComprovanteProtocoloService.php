@@ -2,6 +2,7 @@
 
 namespace App\Services\Solicitacao;
 
+use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\User;
 use App\Models\ViabilityRequest;
@@ -42,7 +43,7 @@ class ComprovanteProtocoloService
      * Gera o PDF do comprovante (binário). Solicitação sem protocolo →
      * DomainException (o endpoint traduz para 422). A emissão é auditada.
      */
-    public function generate(ViabilityRequest $solicitacao, ?User $ator = null): string
+    public function generate(ViabilityRequest $solicitacao, User|Cidadao|null $ator = null): string
     {
         if ($solicitacao->protocol_number === null || $solicitacao->protocoled_at === null) {
             throw new DomainException('A solicitação ainda não foi protocolada — não há comprovante a emitir.');
@@ -63,6 +64,7 @@ class ComprovanteProtocoloService
                 'protocol_number' => $solicitacao->protocol_number,
                 'verification_code' => $this->codigoVerificacao($solicitacao),
                 'generated_by' => $ator?->id,
+                'generated_by_type' => $ator?->getMorphClass(),
             ],
             subject: $solicitacao,
             result: 'sucesso',

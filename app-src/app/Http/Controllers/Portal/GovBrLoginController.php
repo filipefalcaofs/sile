@@ -67,9 +67,7 @@ class GovBrLoginController extends Controller
             $user,
         );
 
-        // Mesma resposta do login local: destino por perfil e descarte de
-        // URL pretendida incompatível (um servidor com conta GOV.BR vai
-        // para a gestão, não para o painel do cidadão).
+        // Mesma resposta do login local: descarte de URL pretendida incompatível.
         return app(LoginResponse::class)->toResponse($request);
     }
 

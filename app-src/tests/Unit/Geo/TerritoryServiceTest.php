@@ -134,7 +134,7 @@ class TerritoryServiceTest extends TestCase
     public function test_zona_pendente_usa_geoserver_quando_o_wfs_identifica(): void
     {
         $this->seedPendente(GeoLayerType::Zona);
-        config(['sile.features.geoserver_zona' => true]);
+        config(['viabiliza.features.geoserver_zona' => true]);
 
         $client = $this->createMock(GeoServerWfsZonaClient::class);
         $client->expects($this->once())
@@ -161,8 +161,8 @@ class TerritoryServiceTest extends TestCase
     public function test_container_consulta_o_geoserver_quando_a_zona_local_esta_pendente(): void
     {
         Http::preventStrayRequests();
-        config(['sile.features.geoserver_zona' => true]);
-        Cache::forget('sile.parameters.features.geoserver_zona');
+        config(['viabiliza.features.geoserver_zona' => true]);
+        Cache::forget('viabiliza.parameters.features.geoserver_zona');
 
         GeoServerLayer::factory()->create([
             'workspace' => 'louos_zcme',

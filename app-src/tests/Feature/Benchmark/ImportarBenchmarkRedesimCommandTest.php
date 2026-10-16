@@ -19,7 +19,7 @@ class ImportarBenchmarkRedesimCommandTest extends TestCase
 
     private function fingirDownloadDaFixture(): void
     {
-        config(['sile.features.benchmark_redesim' => true]);
+        config(['viabiliza.features.benchmark_redesim' => true]);
 
         Http::fake([
             '*' => Http::response(
@@ -57,7 +57,7 @@ class ImportarBenchmarkRedesimCommandTest extends TestCase
      */
     private function fingirFixtureDepoisErro(): void
     {
-        config(['sile.features.benchmark_redesim' => true]);
+        config(['viabiliza.features.benchmark_redesim' => true]);
 
         Http::fakeSequence()
             ->push((string) file_get_contents(base_path('tests/Fixtures/Benchmark/redesim-ba-202608.xlsx')), 200)
@@ -90,7 +90,7 @@ class ImportarBenchmarkRedesimCommandTest extends TestCase
 
     public function test_competencia_que_falha_devolve_codigo_de_erro(): void
     {
-        config(['sile.features.benchmark_redesim' => true]);
+        config(['viabiliza.features.benchmark_redesim' => true]);
 
         Http::fake(['*' => Http::response('', 500)]);
 

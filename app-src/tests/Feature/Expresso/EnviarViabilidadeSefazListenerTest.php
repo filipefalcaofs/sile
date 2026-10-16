@@ -28,6 +28,13 @@ class EnviarViabilidadeSefazListenerTest extends TestCase
 {
     use LazilyRefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        config(['viabiliza.features.envio_sefaz_viabilidade' => true]);
+    }
+
     /**
      * Solicitação protocolada + decisão DEFERIDA (default da factory) — o payload
      * do evento no caminho que envia à SEFAZ.
@@ -93,6 +100,24 @@ class EnviarViabilidadeSefazListenerTest extends TestCase
 
         $gateway->shouldHaveReceived('sendViabilidade')->once();
         $this->assertSame(1, $this->auditoriasSefaz('sucesso'));
+        $this->assertSame(0, $this->auditoriasSefaz('bloqueado'));
+    }
+
+    public function test_com_o_envio_desativado_nao_aciona_a_sefaz_e_audita_desativado(): void
+    {
+        // Pausa operacional (tela de APIs): com features.envio_sefaz_viabilidade
+        // desligado o listener nem toca o gateway e registra a degradação
+        // comunicada ('desativado') exatamente 1× — nunca falha silenciosa e
+        // nunca um 'bloqueado' ou 'sucesso' fictício.
+        config(['viabiliza.features.envio_sefaz_viabilidade' => false]);
+        $gateway = $this->spy(SefazViabilidadeGateway::class);
+        [$request, $decision] = $this->deferida();
+
+        event(new ResultadoEmitido($request, $decision));
+
+        $gateway->shouldNotHaveReceived('sendViabilidade');
+        $this->assertSame(1, $this->auditoriasSefaz('desativado'));
+        $this->assertSame(0, $this->auditoriasSefaz('sucesso'));
         $this->assertSame(0, $this->auditoriasSefaz('bloqueado'));
     }
 

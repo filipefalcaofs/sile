@@ -87,7 +87,7 @@ class TvlDocumentController extends Controller
     {
         $ttl = (int) Settings::get(
             'analise.tvl.download.ttl_minutos',
-            config('sile.analise.tvl.download.ttl_minutos', 5),
+            config('viabiliza.analise.tvl.download.ttl_minutos', 5),
         );
 
         return URL::temporarySignedRoute(

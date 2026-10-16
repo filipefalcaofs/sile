@@ -2,11 +2,11 @@
 
 namespace Tests\Feature\Companies;
 
+use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\CompanyUser;
 use App\Models\Procuration;
-use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Cache;
@@ -30,15 +30,15 @@ class MyCompaniesTest extends TestCase
         $this->seed(RolesAndPermissionsSeeder::class);
     }
 
-    private function portalUser(): User
+    private function portalUser(): Cidadao
     {
-        return User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        return Cidadao::factory()->withAcceptedLgpdTerm()->create();
     }
 
     /**
      * Cria uma empresa vinculada ao usuário (responsável ativo por padrão).
      */
-    private function companyFor(User $user, array $companyAttributes = [], ?callable $linkState = null): Company
+    private function companyFor(Cidadao $user, array $companyAttributes = [], ?callable $linkState = null): Company
     {
         $company = Company::factory()->create($companyAttributes);
 
@@ -132,9 +132,9 @@ class MyCompaniesTest extends TestCase
 
     public function test_paginacao_e_parametrizada(): void
     {
-        // ui.companies.per_page e constante tecnica de UI em config/sile.php (fora
+        // ui.companies.per_page e constante tecnica de UI em config/viabiliza.php (fora
         // do catalogo HU-014); o controller a le via Settings::get com fallback.
-        config(['sile.ui.companies.per_page' => 5]);
+        config(['viabiliza.ui.companies.per_page' => 5]);
         Cache::flush();
 
         $user = $this->portalUser();
@@ -162,8 +162,8 @@ class MyCompaniesTest extends TestCase
         $this->companyFor($grantor);
 
         $proc = Procuration::factory()->create([
-            'grantor_user_id' => $grantor->id,
-            'attorney_user_id' => $attorney->id,
+            'grantor_cidadao_id' => $grantor->id,
+            'attorney_cidadao_id' => $attorney->id,
         ]);
 
         // Com a representação ativa: vê a empresa do representado.

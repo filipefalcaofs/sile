@@ -28,6 +28,29 @@ class TratamentoRamoResolverTest extends TestCase
         (new TratamentoRegrasImportService)->import($versao, database_path('data/regras-20-08-26'));
     }
 
+    public function test_pergunta_sem_resposta_identifica_numero_e_enunciado(): void
+    {
+        $ramo = $this->resolver()->resolver(new TratamentoRamoInput(
+            cnae: '0111-3/01',
+            respostas: [],
+            areaUtilizada: 800.0,
+        ));
+
+        $this->assertSame('nao_resolvido', $ramo->status);
+        $this->assertSame(['numero' => 11, 'enunciado' => 'A atividade será desenvolvida no local?'], $ramo->perguntaSemResposta);
+    }
+
+    public function test_pergunta_condicional_sem_resposta_usa_o_enunciado_e_nao_a_condicao(): void
+    {
+        $ramo = $this->resolver()->resolver(new TratamentoRamoInput(
+            cnae: '1091-1/02',
+            respostas: [2 => true],
+            areaUtilizada: 200.0,
+        ));
+
+        $this->assertSame(['numero' => 3, 'enunciado' => 'A atividade será desenvolvida de modo artesanal?'], $ramo->perguntaSemResposta);
+    }
+
     public function test_pergunta_5_nao_trava_quando_a_4_e_sim(): void
     {
         $ramo = $this->resolver()->resolver(new TratamentoRamoInput(

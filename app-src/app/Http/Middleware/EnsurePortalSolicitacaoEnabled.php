@@ -21,7 +21,7 @@ class EnsurePortalSolicitacaoEnabled
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (config('sile.features.portal_solicitacao', true)) {
+        if (config('viabiliza.features.portal_solicitacao', true)) {
             return $next($request);
         }
 

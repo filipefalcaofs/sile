@@ -3,9 +3,9 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\Activity;
+use App\Models\Cidadao;
 use App\Models\GovBrAccount;
 use App\Models\Parameter;
-use App\Models\User;
 use Database\Seeders\ParameterSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -15,7 +15,6 @@ use Laravel\Socialite\Two\InvalidStateException;
 use Laravel\Socialite\Two\User as SocialiteUser;
 use Mockery;
 use Mockery\MockInterface;
-use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class GovBrLoginTest extends TestCase
@@ -152,16 +151,16 @@ class GovBrLoginTest extends TestCase
         $this->assertStringStartsWith('https://sso.acesso.gov.br/authorize?', $location);
     }
 
-    public function test_callback_usa_o_perfil_definido_no_parametro(): void
+    public function test_callback_nao_cria_conta_de_servidor_nem_atribui_perfil(): void
     {
-        Role::create(['name' => 'municipe', 'guard_name' => 'web']);
         $this->enableGovBr();
-        $this->setParameter('portal.perfil_cidadao', 'municipe');
         $this->mockSocialiteUser($this->govBrClaims());
 
         $this->get('/portal/login/govbr/callback?code=abc&state=xyz');
 
-        $this->assertTrue(User::query()->where('cpf', self::VALID_CPF)->first()->hasRole('municipe'));
+        $this->assertNotNull(Cidadao::query()->where('cpf', self::VALID_CPF)->first());
+        $this->assertDatabaseCount('users', 0);
+        $this->assertDatabaseCount('model_has_roles', 0);
     }
 
     public function test_callback_cria_conta_real_no_primeiro_acesso(): void
@@ -174,23 +173,22 @@ class GovBrLoginTest extends TestCase
         $response->assertRedirect(route('portal.dashboard'));
         $this->assertAuthenticated();
 
-        $user = User::query()->where('cpf', self::VALID_CPF)->first();
+        $user = Cidadao::query()->where('cpf', self::VALID_CPF)->first();
 
         $this->assertNotNull($user);
         $this->assertSame('Cidadã GOV.BR', $user->name);
         $this->assertSame('cidada.govbr@example.com', $user->email);
         $this->assertNotNull($user->email_verified_at);
-        $this->assertTrue($user->hasRole('cidadao'));
         $this->assertNotNull($user->password);
 
-        $account = GovBrAccount::query()->where('user_id', $user->id)->first();
+        $account = GovBrAccount::query()->where('cidadao_id', $user->id)->first();
 
         $this->assertNotNull($account);
         $this->assertSame('bronze', $account->reliability_level);
         $this->assertNotNull($account->last_authenticated_at);
 
         $this->assertDatabaseHas('access_logs', [
-            'user_id' => $user->id,
+            'actor_type' => $user->getMorphClass(), 'actor_id' => $user->id,
             'event' => 'login',
             'channel' => 'portal',
         ]);
@@ -207,7 +205,7 @@ class GovBrLoginTest extends TestCase
     {
         $this->enableGovBr();
 
-        $user = User::factory()->create();
+        $user = Cidadao::factory()->create();
 
         $this->mockSocialiteUser($this->govBrClaims([
             'sub' => $user->cpf,
@@ -218,7 +216,7 @@ class GovBrLoginTest extends TestCase
             ->assertRedirect(route('portal.dashboard'));
 
         $this->assertAuthenticatedAs($user);
-        $this->assertSame(1, User::query()->count());
+        $this->assertSame(1, Cidadao::query()->count());
 
         $user->refresh();
 
@@ -227,11 +225,75 @@ class GovBrLoginTest extends TestCase
         $this->assertNotNull($user->govBrAccount);
     }
 
+    public function test_registro_de_balcao_assumido_pelo_govbr_grava_email_verificado_e_acessa_o_painel(): void
+    {
+        $this->enableGovBr();
+
+        $registro = Cidadao::factory()->semSenha()->withAcceptedLgpdTerm()->create([
+            'email' => self::VALID_CPF.Cidadao::SUFIXO_EMAIL_TECNICO,
+            'cpf' => self::VALID_CPF,
+        ]);
+
+        $this->mockSocialiteUser($this->govBrClaims(['email' => 'Pessoa.Real@Example.com']));
+
+        $this->get('/portal/login/govbr/callback?code=abc&state=xyz')
+            ->assertRedirect(route('portal.dashboard'));
+
+        $this->assertAuthenticatedAs($registro);
+        $registro->refresh();
+        $this->assertSame('pessoa.real@example.com', $registro->email);
+        $this->assertTrue($registro->hasVerifiedEmail());
+        $this->assertTrue($registro->temSenha());
+
+        $this->get('/portal/painel')->assertOk();
+    }
+
+    public function test_registro_de_balcao_assumido_pelo_govbr_mantem_email_se_o_do_govbr_e_de_outro_cidadao(): void
+    {
+        $this->enableGovBr();
+
+        Cidadao::factory()->create(['email' => 'cidada.govbr@example.com']);
+        $registro = Cidadao::factory()->semSenha()->withAcceptedLgpdTerm()->create([
+            'email' => self::VALID_CPF.Cidadao::SUFIXO_EMAIL_TECNICO,
+            'cpf' => self::VALID_CPF,
+        ]);
+
+        $this->mockSocialiteUser($this->govBrClaims());
+
+        $this->get('/portal/login/govbr/callback?code=abc&state=xyz')
+            ->assertRedirect(route('portal.dashboard'));
+
+        $registro->refresh();
+        $this->assertSame(self::VALID_CPF.Cidadao::SUFIXO_EMAIL_TECNICO, $registro->email);
+        $this->assertTrue($registro->hasVerifiedEmail());
+
+        $this->get('/portal/painel')->assertOk();
+    }
+
+    public function test_registro_de_balcao_assumido_sem_email_do_govbr_fica_verificado(): void
+    {
+        $this->enableGovBr();
+
+        $registro = Cidadao::factory()->semSenha()->withAcceptedLgpdTerm()->create(['cpf' => self::VALID_CPF]);
+        $emailOriginal = $registro->email;
+        $claims = $this->govBrClaims();
+        unset($claims['email'], $claims['email_verified']);
+        $this->mockSocialiteUser($claims);
+
+        $this->get('/portal/login/govbr/callback?code=abc&state=xyz')
+            ->assertRedirect(route('portal.dashboard'));
+
+        $registro->refresh();
+        $this->assertSame($emailOriginal, $registro->email);
+        $this->assertTrue($registro->hasVerifiedEmail());
+        $this->get('/portal/painel')->assertOk();
+    }
+
     public function test_login_govbr_de_usuario_existente_dispensa_email_do_govbr(): void
     {
         $this->enableGovBr();
 
-        $user = User::factory()->create();
+        $user = Cidadao::factory()->create();
 
         $claims = $this->govBrClaims(['sub' => $user->cpf]);
         unset($claims['email'], $claims['email_verified']);
@@ -258,14 +320,14 @@ class GovBrLoginTest extends TestCase
             ->assertSessionHasErrors('email');
 
         $this->assertGuest();
-        $this->assertSame(0, User::query()->count());
+        $this->assertSame(0, Cidadao::query()->count());
     }
 
     public function test_email_de_outro_cpf_nunca_vincula_automaticamente(): void
     {
         $this->enableGovBr();
 
-        User::factory()->create(['email' => 'em-uso@example.com']);
+        Cidadao::factory()->create(['email' => 'em-uso@example.com']);
 
         $this->mockSocialiteUser($this->govBrClaims(['email' => 'em-uso@example.com']));
 
@@ -274,7 +336,7 @@ class GovBrLoginTest extends TestCase
             ->assertSessionHasErrors('email');
 
         $this->assertGuest();
-        $this->assertNull(User::query()->where('cpf', self::VALID_CPF)->first());
+        $this->assertNull(Cidadao::query()->where('cpf', self::VALID_CPF)->first());
         $this->assertSame(0, GovBrAccount::query()->count());
     }
 
@@ -282,7 +344,7 @@ class GovBrLoginTest extends TestCase
     {
         $this->enableGovBr();
 
-        $user = User::factory()->create();
+        $user = Cidadao::factory()->create();
         $user->forceFill(['inactivated_at' => now()])->save();
 
         $this->mockSocialiteUser($this->govBrClaims(['sub' => $user->cpf]));
@@ -294,7 +356,7 @@ class GovBrLoginTest extends TestCase
         $this->assertGuest();
 
         $this->assertDatabaseHas('access_logs', [
-            'user_id' => $user->id,
+            'actor_type' => $user->getMorphClass(), 'actor_id' => $user->id,
             'event' => 'inativada',
         ]);
     }
@@ -311,7 +373,7 @@ class GovBrLoginTest extends TestCase
             ->assertSessionHasErrors('email');
 
         $this->assertGuest();
-        $this->assertSame(0, User::query()->count());
+        $this->assertSame(0, Cidadao::query()->count());
 
         $this->assertTrue(
             Activity::query()

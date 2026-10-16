@@ -7,6 +7,7 @@ use App\Services\Relatorios\Export\ReportDefinition;
 use App\Services\Relatorios\Export\ReportExporter;
 use App\Services\Relatorios\Export\ReportSource;
 use App\Services\Relatorios\ReportFilters;
+use App\Support\ServidoresPorPerfil;
 use Illuminate\Database\Eloquent\Builder;
 use Spatie\Permission\Models\Role;
 
@@ -14,9 +15,9 @@ use Spatie\Permission\Models\Role;
  * Fonte da listagem de perfis (HU-013) para o contrato único de exportação
  * (HU-131/RN-009): o index do {@see RoleController}
  * ganha um branch ?formato= delegando ao {@see ReportExporter}
- * sem rota nova. A listagem não tem filtros; o conjunto exportado é o de perfis
- * ordenado por nome (RN-005 — mesma ordem da tela), com os totais de permissões
- * e de usuários vinculados. personalData=false; reconstrutível só pelo bag.
+ * sem rota nova. A busca por nome da tela entra no bag e recorta o mesmo
+ * conjunto (RN-005), ordenado por nome, com os totais de permissões e de
+ * usuários vinculados. personalData=false; reconstrutível só pelo bag.
  */
 final class PerfisReportSource implements ReportSource
 {
@@ -29,9 +30,18 @@ final class PerfisReportSource implements ReportSource
                 ['key' => 'permissions_total', 'label' => 'Permissões'],
                 ['key' => 'users_total', 'label' => 'Usuários'],
             ],
-            // RN-005: mesma ordem por nome da tela; totais agregados no banco.
+            // RN-005: mesma busca e a mesma ordem por nome da tela.
             builder: fn (): Builder => Role::query()
-                ->withCount(['permissions', 'users'])
+                ->withCount('permissions')
+                ->addSelect(['users_count' => ServidoresPorPerfil::contagem()])
+                ->when(
+                    isset($filtros->bag['search']),
+                    fn (Builder $query) => $query->whereLike(
+                        'name',
+                        '%'.$filtros->bag['search'].'%',
+                        caseSensitive: false,
+                    ),
+                )
                 ->orderBy('name'),
             mapRow: fn (Role $role): array => [
                 $role->name,

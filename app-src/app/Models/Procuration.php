@@ -11,10 +11,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Procuração user→user (HU-008/009): outorgante autoriza procurador com
+ * Procuração cidadão→cidadão (HU-008/009): outorgante autoriza procurador com
  * vigência opcional; revogação interrompe a representação de imediato.
  */
-#[Fillable(['grantor_user_id', 'attorney_user_id', 'starts_at', 'expires_at', 'revoked_at', 'revoked_by_user_id'])]
+#[Fillable(['grantor_cidadao_id', 'attorney_cidadao_id', 'starts_at', 'expires_at', 'revoked_at', 'revoked_by_cidadao_id'])]
 class Procuration extends Model
 {
     /** @use HasFactory<ProcurationFactory> */
@@ -34,19 +34,22 @@ class Procuration extends Model
         ];
     }
 
+    /** @return BelongsTo<Cidadao, $this> */
     public function grantor(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'grantor_user_id');
+        return $this->belongsTo(Cidadao::class, 'grantor_cidadao_id');
     }
 
+    /** @return BelongsTo<Cidadao, $this> */
     public function attorney(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'attorney_user_id');
+        return $this->belongsTo(Cidadao::class, 'attorney_cidadao_id');
     }
 
+    /** @return BelongsTo<Cidadao, $this> */
     public function revokedBy(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'revoked_by_user_id');
+        return $this->belongsTo(Cidadao::class, 'revoked_by_cidadao_id');
     }
 
     /**

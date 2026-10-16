@@ -41,7 +41,8 @@ class TermoLgpdController extends Controller
 
         LegalTermAcceptance::firstOrCreate(
             [
-                'user_id' => $request->user('gestao')->id,
+                'accepted_by_type' => $request->user('gestao')->getMorphClass(),
+                'accepted_by_id' => $request->user('gestao')->id,
                 'legal_term_id' => $term->id,
             ],
             [

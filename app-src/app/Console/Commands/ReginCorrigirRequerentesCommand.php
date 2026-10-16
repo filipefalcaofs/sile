@@ -15,8 +15,12 @@ use Illuminate\Console\Command;
  * integração JUCEB e o requerente é o solicitante que veio no envelope (ou nulo
  * quando o envelope não trouxe solicitante). O envelope vem de
  * origem_declarada; sem ele, do JSON de entrada guardado no log de integração
- * (a chamada mais recente do protocolo que trouxe cpfSolicitante). Só toca
- * processo hoje ligado à conta da integração ou a conta de desenvolvedor/suporte.
+ * (a chamada mais recente do protocolo que trouxe cpfSolicitante). O requerente
+ * é um registro de balcão em cidadaos (Cidadao::criarRegistroDeBalcao). Só toca
+ * processo sem requerente (a separação das contas anulou o servidor que figurava
+ * como requerente do REGIN antigo) ou criado pela conta da integração ou por conta
+ * de sistema (integração, e-mail .invalid, desenvolvedor/suporte). Sem solicitante
+ * recuperável, mantém o requerente atual.
  */
 class ReginCorrigirRequerentesCommand extends Command
 {
@@ -28,14 +32,18 @@ class ReginCorrigirRequerentesCommand extends Command
     {
         $dryRun = (bool) $this->option('dry-run');
         $integracao = $protocolador->integracao();
-        $suspeitos = User::query()->get()->filter(fn (User $u): bool => $u->isAtorOcultoNaTramitacao())->pluck('id')->push($integracao->id)->all();
+        $suspeitos = User::query()->whereNotIn('id', User::query()->semContasDeSistema()->select('id'))->pluck('id')->push($integracao->id)->unique()->all();
 
         $contagem = ['com_solicitante' => 0, 'sem_solicitante' => 0];
         $doLog = $this->solicitantesDoLog();
 
         ViabilityRequest::query()
             ->where('origin', ViabilityRequestOrigin::Regin)
-            ->where(fn ($q) => $q->whereIn('requester_user_id', $suspeitos)->orWhereIn('created_by_user_id', $suspeitos))
+            ->where(fn ($q) => $q
+                ->whereNull('requester_cidadao_id')
+                ->orWhere(fn ($criador) => $criador
+                    ->where('created_by_type', (new User)->getMorphClass())
+                    ->whereIn('created_by_id', $suspeitos)))
             ->orderBy('id')
             ->each(function (ViabilityRequest $processo) use ($protocolador, $integracao, $dryRun, $doLog, &$contagem): void {
                 $declarada = is_array($processo->origem_declarada) ? RecebimentoProcesso::fromStored($processo->origem_declarada) : null;
@@ -48,15 +56,16 @@ class ReginCorrigirRequerentesCommand extends Command
                     ? $protocolador->requerenteDaDeclaracao($declarada, ! $dryRun)
                     : null;
 
-                $contagem[$requerente !== null && $requerente->id !== $integracao->id ? 'com_solicitante' : 'sem_solicitante']++;
+                $contagem[$requerente !== null ? 'com_solicitante' : 'sem_solicitante']++;
 
                 if ($dryRun) {
                     return;
                 }
 
                 $processo->forceFill([
-                    'requester_user_id' => $requerente?->id,
-                    'created_by_user_id' => $integracao->id,
+                    'requester_cidadao_id' => $requerente?->id ?? $processo->requester_cidadao_id,
+                    'created_by_type' => $integracao->getMorphClass(),
+                    'created_by_id' => $integracao->id,
                 ])->save();
             });
 

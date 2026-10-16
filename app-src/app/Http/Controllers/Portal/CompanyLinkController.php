@@ -22,7 +22,7 @@ class CompanyLinkController extends Controller
         $effectiveUser = app(CurrentRepresentation::class)->grantor() ?? $request->user();
 
         $link = $company->activeLinks()
-            ->where('user_id', $effectiveUser->id)
+            ->where('cidadao_id', $effectiveUser->id)
             ->firstOrFail();
 
         $reason = $request->validated('ended_reason');

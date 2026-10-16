@@ -4,9 +4,9 @@ namespace Tests\Feature\Solicitacao;
 
 use App\Enums\ViabilityRequestStatus;
 use App\Events\SolicitacaoProtocolada;
+use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\DocumentRequirement;
-use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Solicitacao\DocumentacaoIncompletaException;
 use App\Services\Solicitacao\InvalidStatusTransitionException;
@@ -46,20 +46,20 @@ class ProtocolarSolicitacaoTest extends TestCase
     /**
      * Cidadão habilitado a navegar no portal (papel + termo LGPD aceito).
      */
-    private function portalUser(): User
+    private function portalUser(): Cidadao
     {
-        return User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        return Cidadao::factory()->withAcceptedLgpdTerm()->create();
     }
 
     /**
      * Rascunho COMPLETO (empresa, imóvel/polígono, área e CNAE principal) cujo
      * requerente é o usuário — pronto para protocolar.
      */
-    private function completeDraft(User $user): ViabilityRequest
+    private function completeDraft(Cidadao $user): ViabilityRequest
     {
         $solicitacao = ViabilityRequest::factory()->draft()->create([
-            'requester_user_id' => $user->id,
-            'created_by_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
+            'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
             'used_area_m2' => 120.0,
         ]);
 
@@ -137,8 +137,8 @@ class ProtocolarSolicitacaoTest extends TestCase
         // (SolicitacaoIncompletaException) ANTES de consumir número — anti-fachada.
         $user = $this->portalUser();
         $solicitacao = ViabilityRequest::factory()->draft()->create([
-            'requester_user_id' => $user->id,
-            'created_by_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
+            'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
             'used_area_m2' => 120.0,
         ]);
 
@@ -255,8 +255,8 @@ class ProtocolarSolicitacaoTest extends TestCase
         // InvalidStatusTransitionException e NÃO consome novo número.
         $user = $this->portalUser();
         $solicitacao = ViabilityRequest::factory()->protocoled()->withPrimaryCnae()->create([
-            'requester_user_id' => $user->id,
-            'created_by_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
+            'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
         ]);
         $numeroAntes = $solicitacao->protocol_number;
 
@@ -391,8 +391,8 @@ class ProtocolarSolicitacaoTest extends TestCase
         // Já protocolada → bloqueado pela policy (status != rascunho) → 403; o
         // número anterior permanece (nenhum novo é gerado).
         $protocolada = ViabilityRequest::factory()->protocoled()->withPrimaryCnae()->create([
-            'requester_user_id' => $owner->id,
-            'created_by_user_id' => $owner->id,
+            'requester_cidadao_id' => $owner->id,
+            'created_by_type' => $owner->getMorphClass(), 'created_by_id' => $owner->id,
         ]);
         $numeroAntes = $protocolada->protocol_number;
 

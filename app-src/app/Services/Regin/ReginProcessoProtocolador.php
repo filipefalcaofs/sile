@@ -6,6 +6,7 @@ use App\Enums\AuthType;
 use App\Enums\CompanySource;
 use App\Enums\RuleDomain;
 use App\Enums\ViabilityRequestOrigin;
+use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\ReginRecebimento;
@@ -83,8 +84,9 @@ class ReginProcessoProtocolador
             'origin' => ViabilityRequestOrigin::Regin,
             'service_type_id' => $this->tipoServico()->id,
             'company_id' => $this->empresa($rowset)->id,
-            'requester_user_id' => null,
-            'created_by_user_id' => $ator->id,
+            'requester_cidadao_id' => null,
+            'created_by_type' => $ator->getMorphClass(),
+            'created_by_id' => $ator->id,
             'used_area_m2' => $area,
             'address_street' => $endereco['street'],
             'address_number' => $endereco['number'],
@@ -131,8 +133,9 @@ class ReginProcessoProtocolador
             'origin' => ViabilityRequestOrigin::Regin,
             'service_type_id' => $this->tipoServicoDeclarado($dados->servico)->id,
             'company_id' => $this->empresaDaDeclaracao($dados, $recebimento->protocolo)->id,
-            'requester_user_id' => $requerente?->id,
-            'created_by_user_id' => $ator->id,
+            'requester_cidadao_id' => $requerente?->id,
+            'created_by_type' => $ator->getMorphClass(),
+            'created_by_id' => $ator->id,
             'used_area_m2' => $dados->area,
             'address_street' => $dados->logradouro,
             'address_number' => $dados->numero ?? 's/n',
@@ -220,8 +223,9 @@ class ReginProcessoProtocolador
 
     /**
      * Quem a JUCEB indicou como solicitante; sem os dados, ninguém (null).
+     * Sem $criar (simulação), não grava: devolve o registro do CPF ou um modelo vazio.
      */
-    public function requerenteDaDeclaracao(RecebimentoProcesso $dados, bool $criar = true): ?User
+    public function requerenteDaDeclaracao(RecebimentoProcesso $dados, bool $criar = true): ?Cidadao
     {
         return $this->solicitante($dados, $criar);
     }
@@ -253,7 +257,7 @@ class ReginProcessoProtocolador
         ]);
     }
 
-    private function solicitante(RecebimentoProcesso $dados, bool $criar = true): ?User
+    private function solicitante(RecebimentoProcesso $dados, bool $criar = true): ?Cidadao
     {
         $cpf = $dados->cpfSolicitante;
         $email = $dados->emailSolicitante;
@@ -272,25 +276,11 @@ class ReginProcessoProtocolador
             return null;
         }
 
-        $porCpf = User::query()->where('cpf', $cpf)->first();
-
-        if ($porCpf !== null) {
-            return $porCpf;
-        }
-
         if (! $criar) {
-            return new User;
+            return Cidadao::query()->where('cpf', $cpf)->first() ?? new Cidadao;
         }
 
-        $emailEmUso = User::query()->where('email', $email)->exists();
-
-        return User::query()->create([
-            'name' => $nome,
-            'email' => $emailEmUso ? $cpf.'@solicitante.viabiliza.local' : $email,
-            'cpf' => $cpf,
-            'password' => Hash::make(Str::random(40)),
-            'auth_type' => AuthType::Local,
-        ]);
+        return Cidadao::criarRegistroDeBalcao($cpf, $nome, $email, null);
     }
 
     private function tipoServicoDeclarado(?string $servico): ViabilityServiceType

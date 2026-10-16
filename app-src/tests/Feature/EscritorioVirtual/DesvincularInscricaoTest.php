@@ -3,6 +3,7 @@
 namespace Tests\Feature\EscritorioVirtual;
 
 use App\Enums\CommunicationType;
+use App\Models\Cidadao;
 use App\Models\Communication;
 use App\Models\User;
 use App\Models\ViabilityDecision;
@@ -25,10 +26,10 @@ class DesvincularInscricaoTest extends TestCase
 
     private function abrigado(string $inscricao): ViabilityRequest
     {
-        $requester = User::factory()->create();
+        $requester = Cidadao::factory()->create();
         $abrigado = ViabilityRequest::factory()->protocoled()->create([
             'property_registration' => $inscricao,
-            'requester_user_id' => $requester->id,
+            'requester_cidadao_id' => $requester->id,
             'protocol_number' => 'VIA-2026-'.str_pad((string) ++$this->seq, 6, '0', STR_PAD_LEFT),
         ]);
         ViabilityDecision::factory()->create([

@@ -52,7 +52,7 @@ class SectorSeeder extends Seeder
 
         // Usuários de gestão são dados de DEV: nunca em produção (lá os analistas
         // reais são cadastrados pelo administrador e vinculados pelo gestor).
-        if (! app()->environment(['local', 'testing']) && ! filter_var(config('sile.demo_data', false), FILTER_VALIDATE_BOOL)) {
+        if (! app()->environment(['local', 'testing']) && ! filter_var(config('viabiliza.demo_data', false), FILTER_VALIDATE_BOOL)) {
             return;
         }
 
@@ -98,7 +98,7 @@ class SectorSeeder extends Seeder
 
         if ($term = LegalTerm::current('lgpd')) {
             LegalTermAcceptance::firstOrCreate(
-                ['user_id' => $user->id, 'legal_term_id' => $term->id],
+                ['accepted_by_type' => $user->getMorphClass(), 'accepted_by_id' => $user->id, 'legal_term_id' => $term->id],
                 ['ip_address' => '127.0.0.1', 'accepted_at' => now()],
             );
         }

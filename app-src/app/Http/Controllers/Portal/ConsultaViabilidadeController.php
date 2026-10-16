@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Portal\ConsultaViabilidadeCnaeRequest;
 use App\Http\Requests\Portal\ConsultaViabilidadeEnderecoRequest;
 use App\Http\Requests\Portal\ConsultaViabilidadeInscricaoRequest;
+use App\Models\Cidadao;
 use App\Models\ViabilityQuery;
 use App\Services\Geo\AddressNotFoundException;
 use App\Services\Geo\ForaDeSalvadorException;
@@ -130,16 +131,17 @@ class ConsultaViabilidadeController extends Controller
      */
     private function registrarHistorico(Request $request, ConsultaViabilidadeResult $result): void
     {
-        $user = $request->user();
+        $cidadao = $request->user();
 
-        if ($user === null) {
+        // Rota pública: só conta de cidadão tem histórico pessoal (ids de users e cidadaos colidem).
+        if (! $cidadao instanceof Cidadao) {
             return;
         }
 
         $payload = $result->toArray();
 
         ViabilityQuery::create([
-            'user_id' => $user->id,
+            'cidadao_id' => $cidadao->id,
             'entry_type' => $payload['entrada']['tipo'],
             'input' => $payload['entrada'],
             'result' => $payload,

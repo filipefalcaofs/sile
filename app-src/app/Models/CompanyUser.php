@@ -11,11 +11,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Vínculo usuário-empresa com ciclo de vida (HU-023/HU-028). Encerramento
+ * Vínculo cidadão-empresa com ciclo de vida (HU-023/HU-028). Encerramento
  * via ended_at/ended_reason (nunca delete físico — histórico preservado).
  * Auditoria automática via HasAuditoria.
  */
-#[Fillable(['company_id', 'user_id', 'role', 'started_at', 'ended_at', 'ended_reason'])]
+#[Fillable(['company_id', 'cidadao_id', 'role', 'started_at', 'ended_at', 'ended_reason'])]
 class CompanyUser extends Model
 {
     use HasAuditoria;
@@ -46,10 +46,10 @@ class CompanyUser extends Model
     }
 
     /**
-     * @return BelongsTo<User, $this>
+     * @return BelongsTo<Cidadao, $this>
      */
-    public function user(): BelongsTo
+    public function cidadao(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Cidadao::class, 'cidadao_id');
     }
 }

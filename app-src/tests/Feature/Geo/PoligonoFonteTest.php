@@ -22,8 +22,8 @@ class PoligonoFonteTest extends TestCase
         parent::setUp();
 
         config([
-            'sile.features.geoserver_enderecamento' => true,
-            'sile.features.arcgis_semap' => true,
+            'viabiliza.features.geoserver_enderecamento' => true,
+            'viabiliza.features.arcgis_semap' => true,
         ]);
     }
 

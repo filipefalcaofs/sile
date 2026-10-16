@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Portal;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreProcurationRequest;
+use App\Models\Cidadao;
 use App\Models\Procuration;
-use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -19,11 +19,11 @@ class ProcurationController extends Controller
      */
     public function index(Request $request): Response
     {
-        $userId = $request->user()->id;
+        $cidadaoId = $request->user()->id;
 
         $granted = Procuration::query()
             ->with('attorney')
-            ->where('grantor_user_id', $userId)
+            ->where('grantor_cidadao_id', $cidadaoId)
             ->latest()
             ->get()
             ->map(fn (Procuration $procuration) => [
@@ -38,7 +38,7 @@ class ProcurationController extends Controller
 
         $received = Procuration::query()
             ->with('grantor')
-            ->where('attorney_user_id', $userId)
+            ->where('attorney_cidadao_id', $cidadaoId)
             ->latest()
             ->get()
             ->map(fn (Procuration $procuration) => [
@@ -66,11 +66,11 @@ class ProcurationController extends Controller
      */
     public function store(StoreProcurationRequest $request): RedirectResponse
     {
-        $attorney = User::query()->where('email', $request->validated('attorney_email'))->firstOrFail();
+        $attorney = Cidadao::query()->where('email', $request->validated('attorney_email'))->firstOrFail();
 
         Procuration::create([
-            'grantor_user_id' => $request->user()->id,
-            'attorney_user_id' => $attorney->id,
+            'grantor_cidadao_id' => $request->user()->id,
+            'attorney_cidadao_id' => $attorney->id,
             'starts_at' => now(),
             'expires_at' => $request->validated('expires_at'),
         ]);
@@ -87,7 +87,7 @@ class ProcurationController extends Controller
 
         $procuration->update([
             'revoked_at' => now(),
-            'revoked_by_user_id' => $request->user()->id,
+            'revoked_by_cidadao_id' => $request->user()->id,
         ]);
 
         return back()->with('status', 'Procuração revogada.');

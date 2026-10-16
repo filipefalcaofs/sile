@@ -27,7 +27,7 @@ class BenchmarkIngestionServiceTest extends TestCase
 
     private function fingirDownloadDaFixture(): void
     {
-        config(['sile.features.benchmark_redesim' => true]);
+        config(['viabiliza.features.benchmark_redesim' => true]);
 
         Http::fake([
             '*' => Http::response(
@@ -117,7 +117,7 @@ class BenchmarkIngestionServiceTest extends TestCase
 
     public function test_falha_no_download_registra_a_competencia_sem_gravar_agregado(): void
     {
-        config(['sile.features.benchmark_redesim' => true]);
+        config(['viabiliza.features.benchmark_redesim' => true]);
 
         Http::fake(['*' => Http::response('', 500)]);
 
@@ -154,7 +154,7 @@ class BenchmarkIngestionServiceTest extends TestCase
 
     public function test_audita_a_falha_da_ingestao(): void
     {
-        config(['sile.features.benchmark_redesim' => true]);
+        config(['viabiliza.features.benchmark_redesim' => true]);
 
         Http::fake(['*' => Http::response('', 500)]);
 

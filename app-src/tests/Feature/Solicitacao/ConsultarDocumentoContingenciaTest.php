@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Solicitacao;
 
+use App\Models\Cidadao;
 use App\Models\Company;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -22,12 +23,12 @@ class ConsultarDocumentoContingenciaTest extends TestCase
         parent::setUp();
 
         $this->seed(RolesAndPermissionsSeeder::class);
-        config(['sile.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
+        config(['viabiliza.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
     }
 
     public function test_consulta_cpf_devolve_o_nome_e_se_ja_esta_cadastrado(): void
     {
-        $cidadao = User::factory()->cidadao()->create();
+        $cidadao = Cidadao::factory()->create();
 
         Http::fake([
             'https://sedur.test/k8s/prd/ws-contato/pessoafisica/cpf/'.$cidadao->cpf => Http::response([
@@ -81,7 +82,7 @@ class ConsultarDocumentoContingenciaTest extends TestCase
             '*/pessoafisica/cpf/*' => Http::response([], 404),
         ]);
 
-        $cidadao = User::factory()->cidadao()->create();
+        $cidadao = Cidadao::factory()->create();
 
         $this->actingAs($this->operador(), 'gestao')
             ->postJson(route('gestao.contingencia.consultar-cpf'), ['cpf' => $cidadao->cpf])

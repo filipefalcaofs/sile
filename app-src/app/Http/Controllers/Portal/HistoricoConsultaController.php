@@ -14,7 +14,7 @@ use Inertia\Response;
 /**
  * Histórico autenticado da consulta prévia de viabilidade (HU-060): lista
  * server-driven, paginada e ordenada da mais recente, das consultas do PRÓPRIO
- * usuário (escopo forUser — precedente "Minhas empresas"). A consulta a dado do
+ * usuário (escopo forCidadao — precedente "Minhas empresas"). A consulta a dado do
  * próprio usuário é auditada (RN-002, precedente do histórico de acessos). Cada
  * item carrega o snapshot completo (result) para a reprodução na UI (07-09).
  */
@@ -24,9 +24,9 @@ class HistoricoConsultaController extends Controller
 
     public function __invoke(Request $request): Response
     {
-        $user = $request->user();
+        $cidadao = $request->user();
 
-        $consultas = ViabilityQuery::forUser($user)
+        $consultas = ViabilityQuery::forCidadao($cidadao)
             ->latest('created_at')
             ->latest('id')
             ->paginate((int) Settings::get('ui.companies.per_page', 15))

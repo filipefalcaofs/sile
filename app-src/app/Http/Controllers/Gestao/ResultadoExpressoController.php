@@ -13,6 +13,7 @@ use App\Support\Audit\AuditService;
 use App\Support\Settings;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -57,45 +58,51 @@ class ResultadoExpressoController extends Controller
 
         $dataDe = $this->dataFiltro($request->string('data_de')->toString());
         $dataAte = $this->dataFiltro($request->string('data_ate')->toString());
+        $periodoInvertido = $dataDe !== null && $dataAte !== null && $dataDe > $dataAte;
 
-        $decisoes = ViabilityRequest::query()
-            ->join('viability_decisions', 'viability_decisions.viability_request_id', '=', 'viability_requests.id')
-            ->with('company')
-            ->select([
-                'viability_requests.*',
-                'viability_decisions.outcome as decision_outcome',
-                'viability_decisions.consolidated_result as decision_consolidated',
-                'viability_decisions.tvl_product_number as decision_tvl',
-                'viability_decisions.decided_at as decision_decided_at',
+        $decisoes = $periodoInvertido
+            ? new LengthAwarePaginator([], 0, $perPage, 1, [
+                'path' => $request->url(),
+                'query' => $request->query(),
             ])
-            ->when($outcomeFiltro !== '', fn ($query) => $query->where('viability_decisions.outcome', $outcomeFiltro))
-            ->when($request->string('search')->isNotEmpty(), function ($query) use ($request) {
-                $term = (string) $request->string('search')->trim();
+            : (ViabilityRequest::query()
+                ->join('viability_decisions', 'viability_decisions.viability_request_id', '=', 'viability_requests.id')
+                ->with('company')
+                ->select([
+                    'viability_requests.*',
+                    'viability_decisions.outcome as decision_outcome',
+                    'viability_decisions.consolidated_result as decision_consolidated',
+                    'viability_decisions.tvl_product_number as decision_tvl',
+                    'viability_decisions.decided_at as decision_decided_at',
+                ])
+                ->when($outcomeFiltro !== '', fn ($query) => $query->where('viability_decisions.outcome', $outcomeFiltro))
+                ->when($request->string('search')->isNotEmpty(), function ($query) use ($request) {
+                    $term = (string) $request->string('search')->trim();
 
-                $query->where(function ($inner) use ($term) {
-                    $inner->whereLike('viability_requests.protocol_number', "%{$term}%", caseSensitive: false)
-                        ->orWhereLike('viability_decisions.tvl_product_number', "%{$term}%", caseSensitive: false);
-                });
-            })
-            ->when($dataDe !== null, fn ($query) => $query->whereDate('viability_decisions.decided_at', '>=', $dataDe))
-            ->when($dataAte !== null, fn ($query) => $query->whereDate('viability_decisions.decided_at', '<=', $dataAte))
-            ->orderByDesc('viability_decisions.decided_at')
-            ->orderByDesc('viability_decisions.id')
-            ->paginate($perPage)
-            ->withQueryString()
-            ->through(fn (ViabilityRequest $solicitacao): array => [
-                'id' => $solicitacao->id,
-                'protocol_number' => $solicitacao->protocol_number,
-                'status' => $solicitacao->status->value,
-                'status_label' => $solicitacao->status->label(),
-                'empresa' => $solicitacao->company?->trade_name ?: $solicitacao->company?->legal_name,
-                'cnpj' => $solicitacao->company?->formatted_cnpj,
-                'outcome' => $solicitacao->decision_outcome,
-                'outcome_label' => DecisionOutcome::from((string) $solicitacao->decision_outcome)->label(),
-                'consolidated_result' => $solicitacao->decision_consolidated,
-                'tvl_product_number' => $solicitacao->decision_tvl,
-                'decided_at' => $this->paraIso($solicitacao->decision_decided_at),
-            ]);
+                    $query->where(function ($inner) use ($term) {
+                        $inner->whereLike('viability_requests.protocol_number', "%{$term}%", caseSensitive: false)
+                            ->orWhereLike('viability_decisions.tvl_product_number', "%{$term}%", caseSensitive: false);
+                    });
+                })
+                ->when($dataDe !== null, fn ($query) => $query->whereDate('viability_decisions.decided_at', '>=', $dataDe))
+                ->when($dataAte !== null, fn ($query) => $query->whereDate('viability_decisions.decided_at', '<=', $dataAte))
+                ->orderByDesc('viability_decisions.decided_at')
+                ->orderByDesc('viability_decisions.id')
+                ->paginate($perPage)
+                ->withQueryString()
+                ->through(fn (ViabilityRequest $solicitacao): array => [
+                    'id' => $solicitacao->id,
+                    'protocol_number' => $solicitacao->protocol_number,
+                    'status' => $solicitacao->status->value,
+                    'status_label' => $solicitacao->status->label(),
+                    'empresa' => $solicitacao->company?->trade_name ?: $solicitacao->company?->legal_name,
+                    'cnpj' => $solicitacao->company?->formatted_cnpj,
+                    'outcome' => $solicitacao->decision_outcome,
+                    'outcome_label' => DecisionOutcome::from((string) $solicitacao->decision_outcome)->label(),
+                    'consolidated_result' => $solicitacao->decision_consolidated,
+                    'tvl_product_number' => $solicitacao->decision_tvl,
+                    'decided_at' => $this->paraIso($solicitacao->decision_decided_at),
+                ]));
 
         $this->audit->log(
             logName: 'expresso',
@@ -118,6 +125,9 @@ class ResultadoExpressoController extends Controller
                 'per_page' => $perPage,
             ],
             'perPageOptions' => self::PER_PAGE_OPTIONS,
+            'erroPeriodo' => $periodoInvertido
+                ? 'A data inicial não pode ser posterior à data final.'
+                : null,
             'outcomeOptions' => array_map(
                 fn (DecisionOutcome $o): array => ['value' => $o->value, 'label' => $o->label()],
                 DecisionOutcome::cases(),

@@ -6,6 +6,7 @@ use App\Enums\CommunicationChannel;
 use App\Enums\CommunicationStatus;
 use App\Enums\CommunicationType;
 use App\Enums\ViabilityRequestStatus;
+use App\Models\Cidadao;
 use App\Models\Communication;
 use App\Models\User;
 use App\Models\ViabilityRequest;
@@ -40,9 +41,9 @@ class NotificationCenterUiSmokeTest extends TestCase
         $this->seed(RolesAndPermissionsSeeder::class);
     }
 
-    private function portalUser(): User
+    private function portalUser(): Cidadao
     {
-        return User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        return Cidadao::factory()->withAcceptedLgpdTerm()->create();
     }
 
     private function gestaoUser(): User
@@ -54,7 +55,7 @@ class NotificationCenterUiSmokeTest extends TestCase
      * Notificação real no canal database nativo do usuário (espelha o que o
      * toDatabase() das Notifications de processo grava: title/summary/url).
      */
-    private function notificar(User $user, bool $lida = false): DatabaseNotification
+    private function notificar(User|Cidadao $user, bool $lida = false): DatabaseNotification
     {
         return $user->notifications()->create([
             'id' => (string) Str::uuid(),
@@ -68,11 +69,11 @@ class NotificationCenterUiSmokeTest extends TestCase
         ]);
     }
 
-    private function processo(?User $owner = null): ViabilityRequest
+    private function processo(?Cidadao $owner = null): ViabilityRequest
     {
         $attrs = $owner === null ? [] : [
-            'requester_user_id' => $owner->id,
-            'created_by_user_id' => $owner->id,
+            'requester_cidadao_id' => $owner->id,
+            'created_by_type' => $owner->getMorphClass(), 'created_by_id' => $owner->id,
         ];
 
         $request = ViabilityRequest::factory()->create($attrs);

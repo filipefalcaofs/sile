@@ -5,11 +5,14 @@ namespace Tests\Feature\Comunicacao;
 use App\Enums\CommunicationChannel;
 use App\Enums\CommunicationStatus;
 use App\Enums\CommunicationType;
+use App\Models\Cidadao;
 use App\Models\Communication;
 use App\Models\Parameter;
 use App\Models\User;
 use App\Notifications\Contracts\ProcessNotification;
 use App\Services\Comunicacao\NotificationDispatcher;
+use App\Services\Relatorios\ComunicacoesFalhaService;
+use App\Services\Relatorios\ReportFilters;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
@@ -133,13 +136,13 @@ class NotificationDispatcherTest extends TestCase
         // Duas linhas na_fila (mapa default pendencia_aberta = [email, in_app]).
         $this->assertSame(2, Communication::query()->where('status', CommunicationStatus::NaFila)->count());
         $this->assertDatabaseHas('communications', [
-            'recipient_user_id' => $user->id,
+            'recipient_type' => $user->getMorphClass(), 'recipient_id' => $user->id,
             'channel' => CommunicationChannel::Email->value,
             'type' => CommunicationType::PendenciaAberta->value,
             'status' => CommunicationStatus::NaFila->value,
         ]);
         $this->assertDatabaseHas('communications', [
-            'recipient_user_id' => $user->id,
+            'recipient_type' => $user->getMorphClass(), 'recipient_id' => $user->id,
             'channel' => CommunicationChannel::InApp->value,
             'status' => CommunicationStatus::NaFila->value,
         ]);
@@ -157,6 +160,34 @@ class NotificationDispatcherTest extends TestCase
         $emailId = Communication::query()->where('channel', CommunicationChannel::Email->value)->value('id');
         $inAppId = Communication::query()->where('channel', CommunicationChannel::InApp->value)->value('id');
         $this->assertSame(['mail' => $emailId, 'database' => $inAppId], $notification->communicationIds);
+    }
+
+    public function test_destinatario_com_email_tecnico_de_balcao_nao_recebe_email_e_fica_sem_canal(): void
+    {
+        NotificationFacade::fake();
+        $cidadao = Cidadao::factory()->semSenha()->create(['email' => '52998224725@solicitante.viabiliza.local']);
+        $notification = $this->notificacao(CommunicationType::PendenciaAberta);
+
+        $this->dispatcher()->deliver($cidadao, $notification);
+
+        $this->assertDatabaseHas('communications', [
+            'recipient_type' => $cidadao->getMorphClass(), 'recipient_id' => $cidadao->id,
+            'channel' => CommunicationChannel::Email->value,
+            'status' => CommunicationStatus::Desativado->value,
+        ]);
+        $this->assertSame(0, app(ComunicacoesFalhaService::class)->builder(ReportFilters::fromArray([]))->count());
+        $this->assertDatabaseHas('activity_log', ['log_name' => 'notificacoes', 'result' => 'sem-canal']);
+        $this->assertDatabaseHas('communications', [
+            'recipient_id' => $cidadao->id,
+            'channel' => CommunicationChannel::InApp->value,
+            'status' => CommunicationStatus::NaFila->value,
+        ]);
+        NotificationFacade::assertSentTo(
+            $cidadao,
+            get_class($notification),
+            fn (object $sent, array $channels): bool => $channels === ['database'],
+        );
+        $this->assertSame(['database' => Communication::query()->where('channel', 'in_app')->value('id')], $notification->communicationIds);
     }
 
     public function test_toggle_in_app_off_gera_linha_desativada_com_auditoria_e_so_mail_na_fila(): void
@@ -198,7 +229,7 @@ class NotificationDispatcherTest extends TestCase
     {
         NotificationFacade::fake();
         // Mapa custom inclui whatsapp (toggle off por default, 11-02).
-        config()->set('sile.notificacoes.mapa_canais', [
+        config()->set('viabiliza.notificacoes.mapa_canais', [
             'pendencia_aberta' => ['email', 'in_app', 'whatsapp'],
         ]);
         $user = User::factory()->create();

@@ -108,9 +108,9 @@ class PendenciaSolicitadaNotification extends Notification implements ProcessNot
     {
         $url = route('portal.solicitacoes.pendencias', $this->viabilityRequestId);
 
-        $assunto = $this->withPlaceholders((string) config('sile.notificacoes.pendencia.assunto', "Convite na sua solicitação de viabilidade {$this->protocolNumber}"));
+        $assunto = $this->withPlaceholders((string) config('viabiliza.notificacoes.pendencia.assunto', "Convite na sua solicitação de viabilidade {$this->protocolNumber}"));
 
-        $corpo = $this->withPlaceholders((string) config('sile.notificacoes.pendencia.corpo', "A análise técnica registrou um convite na sua solicitação {$this->protocolNumber}: {$this->descricao}."));
+        $corpo = $this->withPlaceholders((string) config('viabiliza.notificacoes.pendencia.corpo', "A análise técnica registrou um convite na sua solicitação {$this->protocolNumber}: {$this->descricao}."));
 
         // O corpo parametrizado pode abrir com a saudação; evita duplicar o greeting.
         $corpo = preg_replace('/^Olá!\s*/u', '', $corpo) ?? $corpo;

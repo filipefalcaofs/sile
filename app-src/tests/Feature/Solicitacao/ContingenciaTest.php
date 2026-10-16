@@ -4,6 +4,7 @@ namespace Tests\Feature\Solicitacao;
 
 use App\Enums\ViabilityRequestOrigin;
 use App\Enums\ViabilityRequestStatus;
+use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\DocumentRequirement;
@@ -11,7 +12,11 @@ use App\Models\User;
 use App\Models\ViabilityRequest;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Http\Client\Factory;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
@@ -49,9 +54,9 @@ class ContingenciaTest extends TestCase
     /**
      * Cidadão beneficiário informado pelo operador (referenciado por CPF).
      */
-    private function beneficiario(): User
+    private function beneficiario(): Cidadao
     {
-        return User::factory()->cidadao()->create();
+        return Cidadao::factory()->create();
     }
 
     /**
@@ -80,7 +85,7 @@ class ContingenciaTest extends TestCase
      *
      * @return array<string, mixed>
      */
-    private function payload(User $beneficiario, Company $company, Cnae $principal, array $overrides = []): array
+    private function payload(Cidadao $beneficiario, Company $company, Cnae $principal, array $overrides = []): array
     {
         return array_merge([
             'beneficiary_cpf' => $beneficiario->cpf,
@@ -118,8 +123,9 @@ class ContingenciaTest extends TestCase
         $this->assertNotSame(ViabilityRequestStatus::Rascunho, $solicitacao->status);
         $this->assertMatchesRegularExpression('/^VIA-\d{4}-\d{6}$/', (string) $solicitacao->protocol_number);
         $this->assertNotNull($solicitacao->protocoled_at);
-        $this->assertSame($beneficiario->id, $solicitacao->requester_user_id);
-        $this->assertSame($operador->id, $solicitacao->created_by_user_id);
+        $this->assertSame($beneficiario->id, $solicitacao->requester_cidadao_id);
+        $this->assertSame($operador->id, $solicitacao->created_by_id);
+        $this->assertSame(User::class, $solicitacao->created_by_type);
         $this->assertNotNull($solicitacao->contingency_reason);
 
         // MESMO motor: a transição rascunho→protocolada foi gravada e auditada.
@@ -131,6 +137,67 @@ class ContingenciaTest extends TestCase
             'subject_id' => $solicitacao->id,
             'causer_id' => $operador->id,
         ]);
+    }
+
+    public function test_requerente_e_operador_com_o_mesmo_id_ficam_cada_um_no_seu_tipo(): void
+    {
+        $operador = User::factory()->administrador()->withAcceptedLgpdTerm()->create(['id' => 7001]);
+        $beneficiario = Cidadao::factory()->create(['id' => 7001]);
+        $company = Company::factory()->create();
+        $principal = Cnae::factory()->create();
+
+        $this->actingAs($operador, 'gestao')
+            ->post(route('gestao.contingencia.store'), $this->payload($beneficiario, $company, $principal))
+            ->assertSessionHasNoErrors();
+
+        $solicitacao = ViabilityRequest::query()->where('company_id', $company->id)->firstOrFail();
+
+        $this->assertSame($beneficiario->id, $solicitacao->requester_cidadao_id);
+        $this->assertSame(Cidadao::class, $solicitacao->requester->getMorphClass());
+        $this->assertSame(User::class, $solicitacao->created_by_type);
+        $this->assertSame($operador->id, $solicitacao->created_by_id);
+        $this->assertSame($beneficiario->cpf, $solicitacao->requester->cpf);
+    }
+
+    public function test_cpf_sem_cadastro_vira_registro_de_balcao_com_o_nome_da_sedur(): void
+    {
+        config(['viabiliza.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
+        Http::fake(['*/pessoafisica/cpf/*' => Http::response(['nome' => 'Joana do Balcão'])]);
+
+        $operador = $this->operador();
+        $company = Company::factory()->create();
+        $principal = Cnae::factory()->create();
+        $dados = $this->payload(Cidadao::factory()->make(['cpf' => '52998224725']), $company, $principal);
+
+        $this->actingAs($operador, 'gestao')
+            ->post(route('gestao.contingencia.store'), $dados)
+            ->assertSessionHasNoErrors();
+
+        $balcao = Cidadao::query()->where('cpf', '52998224725')->firstOrFail();
+        $solicitacao = ViabilityRequest::query()->where('company_id', $company->id)->firstOrFail();
+
+        $this->assertSame('Joana do Balcão', $balcao->name);
+        $this->assertFalse($balcao->temSenha());
+        $this->assertNull($balcao->email_verified_at);
+        $this->assertSame($balcao->id, $solicitacao->requester_cidadao_id);
+        $this->assertSame(0, User::query()->where('cpf', '52998224725')->count());
+    }
+
+    public function test_cpf_sem_cadastro_e_fora_da_sedur_bloqueia_sem_criar(): void
+    {
+        config(['viabiliza.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
+        Http::fake(['*/pessoafisica/cpf/*' => Http::response([], 404)]);
+
+        $company = Company::factory()->create();
+        $principal = Cnae::factory()->create();
+        $dados = $this->payload(Cidadao::factory()->make(['cpf' => '52998224725']), $company, $principal);
+
+        $this->actingAs($this->operador(), 'gestao')
+            ->post(route('gestao.contingencia.store'), $dados)
+            ->assertSessionHasErrors('beneficiary_cpf');
+
+        $this->assertSame(0, Cidadao::query()->count());
+        $this->assertSame(0, ViabilityRequest::query()->count());
     }
 
     public function test_grava_tipo_imovel_inscricao_e_submete_ao_motor(): void
@@ -240,7 +307,7 @@ class ContingenciaTest extends TestCase
         // Processo já registrado com a mesma referência externa.
         $existente = ViabilityRequest::factory()->protocoled()->create([
             'company_id' => $company->id,
-            'requester_user_id' => $beneficiario->id,
+            'requester_cidadao_id' => $beneficiario->id,
             'external_reference' => 'REGIN-2026-0001',
         ]);
 
@@ -286,6 +353,89 @@ class ContingenciaTest extends TestCase
         $this->assertDatabaseCount('viability_requests', 0);
     }
 
+    public function test_protocolo_bloqueado_desfaz_o_registro_de_balcao(): void
+    {
+        config(['viabiliza.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
+        Http::fake(['*/pessoafisica/cpf/*' => Http::response(['nome' => 'Joana do Balcão'])]);
+        Notification::fake();
+
+        $company = Company::factory()->create();
+        $principal = Cnae::factory()->create();
+        DocumentRequirement::factory()->required()->create()->cnaes()->attach($principal->id);
+        $dados = $this->payload(Cidadao::factory()->make(['cpf' => '52998224725']), $company, $principal);
+
+        $this->actingAs($this->operador(), 'gestao')
+            ->from(route('gestao.contingencia.create'))
+            ->post(route('gestao.contingencia.store'), $dados)
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseCount('viability_requests', 0);
+        $this->assertSame(0, Cidadao::query()->count());
+        Notification::assertNothingSent();
+    }
+
+    public function test_sedur_indisponivel_bloqueia_sem_criar_com_mensagem_propria(): void
+    {
+        config(['viabiliza.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
+        Http::fake(['*/pessoafisica/cpf/*' => Http::response([], 500)]);
+
+        $company = Company::factory()->create();
+        $principal = Cnae::factory()->create();
+        $dados = $this->payload(Cidadao::factory()->make(['cpf' => '52998224725']), $company, $principal);
+
+        $this->actingAs($this->operador(), 'gestao')
+            ->post(route('gestao.contingencia.store'), $dados)
+            ->assertSessionHasErrors(['beneficiary_cpf' => 'CPF sem cadastro no Viabiliza e a consulta da SEDUR está indisponível. Tente novamente.']);
+
+        $this->assertSame(0, Cidadao::query()->count());
+        $this->assertDatabaseCount('viability_requests', 0);
+    }
+
+    public function test_consulta_na_sedur_e_auditada_com_dado_pessoal_em_sucesso_nao_encontrado_e_indisponivel(): void
+    {
+        config(['viabiliza.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
+        $operador = $this->operador();
+        $company = Company::factory()->create();
+        $principal = Cnae::factory()->create();
+        $dados = $this->payload(Cidadao::factory()->make(['cpf' => '52998224725']), $company, $principal);
+
+        foreach ([
+            ['resposta' => Http::response([], 404), 'resultado' => 'falha'],
+            ['resposta' => Http::response([], 500), 'resultado' => 'falha'],
+            ['resposta' => Http::response(['nome' => 'Joana']), 'resultado' => 'sucesso'],
+        ] as $caso) {
+            Http::swap(new Factory);
+            Http::fake(['*/pessoafisica/cpf/*' => $caso['resposta']]);
+
+            $this->actingAs($operador, 'gestao')->post(route('gestao.contingencia.store'), $dados);
+
+            $this->assertDatabaseHas('activity_log', [
+                'log_name' => 'contingencia',
+                'event' => 'consulta-cpf',
+                'result' => $caso['resultado'],
+                'personal_data' => true,
+            ]);
+        }
+
+        $this->assertSame(2, DB::table('activity_log')->where('log_name', 'contingencia')->where('event', 'consulta-cpf')->where('result', 'falha')->count());
+    }
+
+    public function test_outro_campo_invalido_nao_consulta_a_sedur(): void
+    {
+        config(['viabiliza.integrations.sedur_contato.base_url' => 'https://sedur.test/k8s/prd/ws-contato']);
+        Http::fake();
+
+        $company = Company::factory()->create();
+        $principal = Cnae::factory()->create();
+        $dados = $this->payload(Cidadao::factory()->make(['cpf' => '52998224725']), $company, $principal, ['contingency_reason' => '']);
+
+        $this->actingAs($this->operador(), 'gestao')
+            ->post(route('gestao.contingencia.store'), $dados)
+            ->assertSessionHasErrors('contingency_reason');
+
+        Http::assertNothingSent();
+    }
+
     public function test_anexo_satisfaz_requisito_e_protocola(): void
     {
         // Anti-fachada (ponta a ponta): com o documento obrigatório anexado, o
@@ -317,6 +467,8 @@ class ContingenciaTest extends TestCase
 
         $documento = $solicitacao->documents()->where('requirement_id', $requisito->id)->firstOrFail();
         $this->assertNotNull($documento->sha256);
+        $this->assertSame(User::class, $documento->uploaded_by_type);
+        $this->assertSame($operador->id, $documento->uploaded_by_id);
         Storage::disk('local')->assertExists($documento->path);
     }
 

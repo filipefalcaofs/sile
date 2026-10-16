@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Companies;
 
-use App\Models\User;
+use App\Models\Cidadao;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -35,18 +35,18 @@ class CnpjThrottleTest extends TestCase
     /**
      * Cidadão habilitado a navegar no portal (papel + termo LGPD aceito).
      */
-    private function portalUser(): User
+    private function portalUser(): Cidadao
     {
         $this->seed(RolesAndPermissionsSeeder::class);
 
-        return User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        return Cidadao::factory()->withAcceptedLgpdTerm()->create();
     }
 
     public function test_excedente_recebe_429(): void
     {
         Http::fake(['*/00000000000191' => Http::response($this->brasilApiFixture(), 200)]);
 
-        config(['sile.seguranca.throttle.cnpj_lookup.por_minuto' => 2]);
+        config(['viabiliza.seguranca.throttle.cnpj_lookup.por_minuto' => 2]);
 
         $user = $this->portalUser();
 
@@ -66,7 +66,7 @@ class CnpjThrottleTest extends TestCase
     {
         Http::fake(['*/00000000000191' => Http::response($this->brasilApiFixture(), 200)]);
 
-        config(['sile.seguranca.throttle.cnpj_lookup.por_minuto' => 5]);
+        config(['viabiliza.seguranca.throttle.cnpj_lookup.por_minuto' => 5]);
 
         $user = $this->portalUser();
 

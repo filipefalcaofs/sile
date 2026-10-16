@@ -3,7 +3,7 @@
 namespace App\Services\Abuso\Detectors;
 
 use App\Enums\AbuseSeverity;
-use App\Models\User;
+use App\Models\Cidadao;
 use App\Models\ViabilityRequest;
 use App\Services\Abuso\AbuseFinding;
 use App\Services\Abuso\Contracts\AbuseDetector;
@@ -48,10 +48,10 @@ class CondicionanteEvasaoDetector implements AbuseDetector
     {
         $solicitacoes = ViabilityRequest::query()
             ->whereNotNull('simulation_snapshot')
-            ->whereNotNull('requester_user_id')
+            ->whereNotNull('requester_cidadao_id')
             ->whereBetween('created_at', [$window->start, $window->end])
             ->orderBy('id')
-            ->get(['id', 'requester_user_id', 'simulation_snapshot']);
+            ->get(['id', 'requester_cidadao_id', 'simulation_snapshot']);
 
         /** @var array<int, array{evasivos: list<int>, honestos: int}> $grupos */
         $grupos = [];
@@ -63,7 +63,7 @@ class CondicionanteEvasaoDetector implements AbuseDetector
                 continue;
             }
 
-            $requerenteId = (int) $solicitacao->requester_user_id;
+            $requerenteId = (int) $solicitacao->requester_cidadao_id;
 
             if (! isset($grupos[$requerenteId])) {
                 $grupos[$requerenteId] = ['evasivos' => [], 'honestos' => 0];
@@ -90,13 +90,13 @@ class CondicionanteEvasaoDetector implements AbuseDetector
                 severity: $total > self::MINIMO_PROCESSOS * 2 ? AbuseSeverity::Alta : AbuseSeverity::Media,
                 fingerprint: hash('sha256', $this->key().'|'.$requerenteId),
                 evidence: [
-                    'requester_user_id' => $requerenteId,
+                    'requester_cidadao_id' => $requerenteId,
                     'processos' => $total,
                     'minimo' => self::MINIMO_PROCESSOS,
                     'ids' => $evasivos,
                 ],
                 viabilityRequestId: $evasivos === [] ? null : max($evasivos),
-                subject: User::query()->find($requerenteId),
+                subject: Cidadao::query()->find($requerenteId),
                 windowStart: $window->start,
                 windowEnd: $window->end,
             );

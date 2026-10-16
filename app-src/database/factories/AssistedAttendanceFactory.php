@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\AssistedAttendance;
+use App\Models\Cidadao;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -18,7 +19,7 @@ class AssistedAttendanceFactory extends Factory
     {
         return [
             'attendant_user_id' => User::factory(),
-            'citizen_user_id' => User::factory(),
+            'citizen_cidadao_id' => Cidadao::factory(),
             'started_at' => now(),
             'expires_at' => now()->addMinutes(30),
             'ended_at' => null,

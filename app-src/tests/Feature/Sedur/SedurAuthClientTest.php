@@ -18,7 +18,7 @@ class SedurAuthClientTest extends TestCase
     {
         parent::setUp();
 
-        config(['sile.integrations.sedur_auth.base_url' => 'https://sedur.test/k8s/prd']);
+        config(['viabiliza.integrations.sedur_auth.base_url' => 'https://sedur.test/k8s/prd']);
     }
 
     private function client(): SedurAuthClient
@@ -87,7 +87,7 @@ class SedurAuthClientTest extends TestCase
         }
     }
 
-    public function test_pessoa_por_cpf_retorna_apenas_o_nome(): void
+    public function test_pessoa_por_cpf_retorna_cadastro_sem_dados_extras(): void
     {
         Http::fake(['*/pessoaView/buscarPorCPF/*' => Http::response([
             'nome' => 'Filipe Falcao',
@@ -101,11 +101,77 @@ class SedurAuthClientTest extends TestCase
             'nome' => 'Filipe Falcao',
             'email' => null,
             'telefone' => '71999990000',
+            'lotacaoCodigo' => null,
+            'lotacaoNome' => null,
         ], $pessoa);
         $this->assertArrayNotHasKey('endereco', $pessoa);
 
         Http::assertSent(fn ($request) => $request->url() === 'https://sedur.test/k8s/prd/ws-gp/view/pessoaView/buscarPorCPF/12345678901'
             && $request->hasHeader('Authorization', 'Bearer tk-123'));
+    }
+
+    public function test_pessoa_por_cpf_extrai_o_centro_de_informacao_como_lotacao(): void
+    {
+        Http::fake(['*/pessoaView/buscarPorCPF/*' => Http::response([
+            'nome' => 'Maria Analista',
+            'email' => 'maria@salvador.ba.gov.br',
+            'centroInformacao' => [
+                'codigo' => '0231400300',
+                'descricao' => 'SEDUR-DLI-CAP-ATIV-Subcoordenadoria de Atividade',
+            ],
+        ])]);
+
+        $pessoa = $this->client()->pessoaPorCpf('tk-123', '12345678901');
+
+        $this->assertSame('0231400300', $pessoa['lotacaoCodigo']);
+        $this->assertSame('SEDUR-DLI-CAP-ATIV-Subcoordenadoria de Atividade', $pessoa['lotacaoNome']);
+        $this->assertSame('maria@salvador.ba.gov.br', $pessoa['email']);
+    }
+
+    public function test_pessoa_por_cpf_le_o_formato_real_da_pessoa_view(): void
+    {
+        Http::fake(['*/pessoaView/buscarPorCPF/*' => Http::response([
+            'nome' => 'Talita Analista',
+            'cpf' => '12345678901',
+            'dataNascimento' => '1990-01-01',
+            'cargo' => 'Analista',
+            'email' => 'talita@salvador.ba.gov.br',
+            'ramal' => null,
+            'centroInformacaoNumero' => '5914032500',
+            'centroInformacaoDescricao' => 'SEDUR-DLI-CAP-ATIV-Convite',
+        ])]);
+
+        $pessoa = $this->client()->pessoaPorCpf('tk-123', '12345678901');
+
+        $this->assertSame('5914032500', $pessoa['lotacaoCodigo']);
+        $this->assertSame('SEDUR-DLI-CAP-ATIV-Convite', $pessoa['lotacaoNome']);
+        $this->assertSame('Talita Analista', $pessoa['nome']);
+    }
+
+    public function test_pessoa_por_cpf_aceita_cein_no_root_e_em_lista(): void
+    {
+        $this->assertSame(
+            ['codigo' => '8888888888', 'nome' => 'Setor Raiz'],
+            $this->client()->extractLotacaoPessoa(['nome' => 'Pessoa', 'ceinNumero' => '8888888888', 'ceinDescricao' => 'Setor Raiz']),
+        );
+
+        $this->assertSame(
+            ['codigo' => '7777777777', 'nome' => 'Setor Da Lista'],
+            $this->client()->extractLotacaoPessoa(['nome' => 'Pessoa', 'lotacoes' => [['codigo' => '7777777777', 'descricao' => 'Setor Da Lista']]]),
+        );
+
+        $this->assertSame(
+            ['codigo' => null, 'nome' => 'Setor Como Texto'],
+            $this->client()->extractLotacaoPessoa(['nome' => 'Pessoa', 'centroInformacao' => 'Setor Como Texto']),
+        );
+    }
+
+    public function test_pessoa_por_cpf_nao_confunde_o_nome_da_pessoa_com_setor(): void
+    {
+        $this->assertSame(
+            ['codigo' => null, 'nome' => null],
+            $this->client()->extractLotacaoPessoa(['nome' => 'Maria Analista', 'codigo' => '123', 'email' => 'x@y.z']),
+        );
     }
 
     public function test_pessoa_por_cpf_com_falha_e_indisponibilidade(): void

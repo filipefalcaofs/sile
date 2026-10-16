@@ -20,26 +20,26 @@ class BrasilApiCnpjLookup implements CnpjLookup
     {
         $baseUrl = rtrim((string) Settings::get(
             'integrations.cnpj_lookup.base_url',
-            config('sile.integrations.cnpj_lookup.base_url'),
+            config('viabiliza.integrations.cnpj_lookup.base_url'),
         ), '/');
 
-        $key = "sile.cnpj_lookup.{$cnpj}";
-        $ttl = (int) config('sile.integrations.cnpj_lookup.cache_ttl', 86400);
+        $key = "viabiliza.cnpj_lookup.{$cnpj}";
+        $ttl = (int) config('viabiliza.integrations.cnpj_lookup.cache_ttl', 86400);
         $buscar = function () use ($baseUrl, $cnpj): array {
             try {
                 $response = Http::timeout((int) Settings::get(
                     'integrations.cnpj_lookup.timeout',
-                    config('sile.integrations.cnpj_lookup.timeout', 8),
+                    config('viabiliza.integrations.cnpj_lookup.timeout', 8),
                 ))
                     ->connectTimeout(3)
                     ->retry(
                         (int) Settings::get(
                             'integrations.cnpj_lookup.retries',
-                            config('sile.integrations.cnpj_lookup.retries', 2),
+                            config('viabiliza.integrations.cnpj_lookup.retries', 2),
                         ),
                         (int) Settings::get(
                             'integrations.cnpj_lookup.backoff_ms',
-                            config('sile.integrations.cnpj_lookup.backoff_ms', 200),
+                            config('viabiliza.integrations.cnpj_lookup.backoff_ms', 200),
                         ),
                         throw: false,
                     )

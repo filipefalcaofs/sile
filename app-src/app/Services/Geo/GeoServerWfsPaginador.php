@@ -40,12 +40,12 @@ class GeoServerWfsPaginador
     {
         $base = rtrim((string) Settings::get(
             'integrations.geoserver.base_url',
-            config('sile.integrations.geoserver.base_url'),
+            config('viabiliza.integrations.geoserver.base_url'),
         ), '/');
 
         try {
             $resposta = Http::withHeaders([
-                'User-Agent' => (string) config('sile.integrations.geoserver.user_agent', 'Viabiliza-SEDUR-Salvador/1.0'),
+                'User-Agent' => (string) config('viabiliza.integrations.geoserver.user_agent', 'Viabiliza-SEDUR-Salvador/1.0'),
             ])
                 ->timeout(self::TIMEOUT_SEGUNDOS)
                 ->acceptJson()

@@ -3,8 +3,8 @@
 namespace Tests\Feature\EscritorioVirtual;
 
 use App\Enums\IntencaoAtividade;
+use App\Models\Cidadao;
 use App\Models\Cnae;
-use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
 use App\Services\Expresso\SedeEscritorioVirtualGatilho;
@@ -31,9 +31,9 @@ class AtividadesPortalEscritorioVirtualTest extends TestCase
         $this->seed(RolesAndPermissionsSeeder::class);
     }
 
-    private function portalUser(): User
+    private function portalUser(): Cidadao
     {
-        return User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        return Cidadao::factory()->withAcceptedLgpdTerm()->create();
     }
 
     /**
@@ -55,11 +55,11 @@ class AtividadesPortalEscritorioVirtualTest extends TestCase
         );
     }
 
-    private function draftAlteracaoAtividade(User $user): ViabilityRequest
+    private function draftAlteracaoAtividade(Cidadao $user): ViabilityRequest
     {
         return ViabilityRequest::factory()->draft()->create([
-            'requester_user_id' => $user->id,
-            'created_by_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
+            'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
             'service_type_id' => $this->alteracaoAtividade()->id,
         ]);
     }
@@ -75,7 +75,7 @@ class AtividadesPortalEscritorioVirtualTest extends TestCase
         $response->assertInertia(fn ($page) => $page
             ->where('solicitacao.escritorio_virtual.pergunta_vinculada', Settings::get(
                 'analise.escritorio_virtual.pergunta_vinculada',
-                config('sile.analise.escritorio_virtual.pergunta_vinculada'),
+                config('viabiliza.analise.escritorio_virtual.pergunta_vinculada'),
             ))
             ->where('solicitacao.escritorio_virtual.cnae_gatilho_id', $gatilho->id));
     }
@@ -137,8 +137,8 @@ class AtividadesPortalEscritorioVirtualTest extends TestCase
         $user = $this->portalUser();
         // Primeiro estabelecimento — não é alteração de atividade.
         $solicitacao = ViabilityRequest::factory()->draft()->create([
-            'requester_user_id' => $user->id,
-            'created_by_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
+            'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
         ]);
         $principal = Cnae::factory()->create();
         $complementar = Cnae::factory()->create();

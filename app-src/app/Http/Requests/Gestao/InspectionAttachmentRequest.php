@@ -27,12 +27,12 @@ class InspectionAttachmentRequest extends FormRequest
         /** @var array<int, string> $mimes */
         $mimes = (array) Settings::get(
             'vistoria.anexos.mime_permitidos',
-            config('sile.vistoria.anexos.mime_permitidos', ['application/pdf', 'image/jpeg', 'image/png', 'image/webp']),
+            config('viabiliza.vistoria.anexos.mime_permitidos', ['application/pdf', 'image/jpeg', 'image/png', 'image/webp']),
         );
 
         $maxMb = (int) Settings::get(
             'vistoria.anexos.max_mb',
-            config('sile.vistoria.anexos.max_mb', 10),
+            config('viabiliza.vistoria.anexos.max_mb', 10),
         );
 
         $maxKb = $maxMb * 1024;

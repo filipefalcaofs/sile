@@ -2,9 +2,9 @@
 
 namespace Tests\Feature\Solicitacao;
 
+use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\Parameter;
-use App\Models\User;
 use App\Models\ViabilityRequest;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -32,19 +32,19 @@ class InformarAtividadesTest extends TestCase
     /**
      * Cidadão habilitado a navegar no portal (papel + termo LGPD aceito).
      */
-    private function portalUser(): User
+    private function portalUser(): Cidadao
     {
-        return User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        return Cidadao::factory()->withAcceptedLgpdTerm()->create();
     }
 
     /**
      * Rascunho de solicitação cujo requerente (beneficiário) é o usuário.
      */
-    private function draftFor(User $user): ViabilityRequest
+    private function draftFor(Cidadao $user): ViabilityRequest
     {
         return ViabilityRequest::factory()->draft()->create([
-            'requester_user_id' => $user->id,
-            'created_by_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
+            'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
         ]);
     }
 
@@ -191,8 +191,8 @@ class InformarAtividadesTest extends TestCase
     {
         $user = $this->portalUser();
         $solicitacao = ViabilityRequest::factory()->draft()->create([
-            'requester_user_id' => $user->id,
-            'created_by_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
+            'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
             'simulation_resultado' => 'permitido',
             'simulated_at' => now(),
         ]);
@@ -230,8 +230,8 @@ class InformarAtividadesTest extends TestCase
     {
         $owner = $this->portalUser();
         $solicitacao = ViabilityRequest::factory()->protocoled()->create([
-            'requester_user_id' => $owner->id,
-            'created_by_user_id' => $owner->id,
+            'requester_cidadao_id' => $owner->id,
+            'created_by_type' => $owner->getMorphClass(), 'created_by_id' => $owner->id,
         ]);
         $principal = Cnae::factory()->create();
 

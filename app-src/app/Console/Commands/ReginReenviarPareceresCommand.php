@@ -23,6 +23,7 @@ class ReginReenviarPareceresCommand extends Command
 {
     protected $signature = 'regin:reenviar-pareceres
         {--protocolo=* : Só estes protocolos (BAP…); sem a opção, todos os pendentes}
+        {--exceto=* : Protocolos que não entram nesta passada}
         {--limite= : Máximo de processos nesta passada}
         {--parar-apos=3 : Interrompe após esta quantidade de falhas seguidas}
         {--dry-run : Lista o que seria reenviado, sem enviar}';
@@ -54,6 +55,12 @@ class ReginReenviarPareceresCommand extends Command
 
         if ($protocolos !== []) {
             $query->whereIn('external_reference', $protocolos);
+        }
+
+        $exceto = array_filter((array) $this->option('exceto'));
+
+        if ($exceto !== []) {
+            $query->whereNotIn('external_reference', $exceto);
         }
 
         if ($this->option('limite') !== null && (int) $this->option('limite') > 0) {

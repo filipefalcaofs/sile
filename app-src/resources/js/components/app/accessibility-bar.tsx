@@ -51,9 +51,9 @@ export default function AccessibilityBar() {
     useEffect(() => {
         const aoTrocarTema = () => setContrast(false);
 
-        window.addEventListener('sile:theme-usuario', aoTrocarTema);
+        window.addEventListener('viabiliza:theme-usuario', aoTrocarTema);
 
-        return () => window.removeEventListener('sile:theme-usuario', aoTrocarTema);
+        return () => window.removeEventListener('viabiliza:theme-usuario', aoTrocarTema);
     }, []);
 
     useEffect(() => {

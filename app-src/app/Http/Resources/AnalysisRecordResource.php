@@ -100,6 +100,13 @@ class AnalysisRecordResource extends JsonResource
             // Checklist ilustrativo dos quadros (Q10 × Q11-A) lido do snapshot.
             $item['quadros'] = $quadros->para($consulta);
 
+            // Enquadramento específico do CNAE (subgrupo, ex.: NR1-09) lido do
+            // snapshot — o grupo sozinho (NR1) é genérico demais para o analista.
+            $uso = is_array($consulta['enquadramento']['enquadramento'] ?? null) ? $consulta['enquadramento']['enquadramento'] : [];
+            $item['subgrupo_uso'] = is_string($uso['subgrupo'] ?? null) && trim($uso['subgrupo']) !== ''
+                ? trim($uso['subgrupo'])
+                : null;
+
             // Risco por atividade lido do snapshot (usabilidade SEDUR item 24) —
             // alimenta a justificativa consolidada no início da análise.
             $risco = is_array($consulta['risco'] ?? null) ? $consulta['risco'] : [];

@@ -75,7 +75,7 @@ class ExpressoQuedaService
      */
     public function serieTemporal(ReportFilters $f): array
     {
-        $dias = (int) config('sile.relatorios.expresso.janela_dias', 30);
+        $dias = (int) config('viabiliza.relatorios.expresso.janela_dias', 30);
         $inicio = $f->from() ?? Carbon::now()->subDays($dias)->startOfDay();
         $fim = $f->to() ?? Carbon::now()->endOfDay();
 
