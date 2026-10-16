@@ -4,6 +4,7 @@ namespace Tests\Feature\Comunicacao;
 
 use App\Enums\AnalysisPendencyStatus;
 use App\Enums\AnalysisStage;
+use App\Enums\CommunicationChannel;
 use App\Enums\CommunicationStatus;
 use App\Enums\CommunicationType;
 use App\Enums\ViabilityRequestStatus;
@@ -82,7 +83,11 @@ class AlertarVencimentosCommandTest extends TestCase
             'type' => CommunicationType::PrazoVencendo->value,
             'status' => CommunicationStatus::NaFila->value,
         ]);
-        NotificationFacade::assertSentTo($analista, PrazoVencendoNotification::class);
+        NotificationFacade::assertSentTo(
+            $analista,
+            PrazoVencendoNotification::class,
+            fn (PrazoVencendoNotification $notification): bool => $notification->channels() === [CommunicationChannel::InApp],
+        );
 
         // SÓ notifica: o status do processo não muda (anti-dupla-contagem HU-129).
         $this->assertSame(ViabilityRequestStatus::EmAnalise, $processo->refresh()->status);
@@ -129,7 +134,11 @@ class AlertarVencimentosCommandTest extends TestCase
             'recipient_user_id' => $requerente->id,
             'type' => CommunicationType::PrazoVencendo->value,
         ]);
-        NotificationFacade::assertSentTo($requerente, PrazoVencendoNotification::class);
+        NotificationFacade::assertSentTo(
+            $requerente,
+            PrazoVencendoNotification::class,
+            fn (PrazoVencendoNotification $notification): bool => $notification->channels() === [CommunicationChannel::Email, CommunicationChannel::InApp],
+        );
     }
 
     public function test_rodar_duas_vezes_nao_duplica_communications(): void

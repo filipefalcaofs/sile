@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Enums\AnalysisPendencyStatus;
+use App\Enums\CommunicationChannel;
 use App\Enums\CommunicationType;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\AnalysisPendency;
@@ -94,7 +95,7 @@ class AlertarVencimentosCommand extends Command
                 assunto: "Prazo de análise próximo do vencimento — {$processo->protocol_number}",
                 detalhe: "O prazo de análise da solicitação {$processo->protocol_number} vence em {$processo->analysis_due_at->format('d/m/Y')}.",
                 url: route('gestao.processos.show', $processo->id),
-            ));
+            ), [CommunicationChannel::InApp]);
 
             $alertados++;
         }
