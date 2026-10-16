@@ -85,6 +85,21 @@ class AuditoriaConsultaTest extends TestCase
         $this->assertSame([$daAna->id], $porNome);
     }
 
+    public function test_busca_por_nome_inclui_cidadao_e_servidor_de_mesmo_nome(): void
+    {
+        $servidor = User::factory()->create(['name' => 'Joana Homonima']);
+        $cidada = Cidadao::factory()->create(['name' => 'Joana Homonima']);
+        $outro = Cidadao::factory()->create(['name' => 'Pedro Outro']);
+
+        $doServidor = $this->atividade(['causer_type' => $servidor->getMorphClass(), 'causer_id' => $servidor->id]);
+        $daCidada = $this->atividade(['causer_type' => $cidada->getMorphClass(), 'causer_id' => $cidada->id]);
+        $this->atividade(['causer_type' => $outro->getMorphClass(), 'causer_id' => $outro->id]);
+
+        $porNome = $this->service()->filtered(['log_name' => 'teste', 'usuario' => 'joana homo'])->pluck('id')->sort()->values()->all();
+
+        $this->assertSame([$doServidor->id, $daCidada->id], $porNome);
+    }
+
     public function test_filtra_por_entidade_subject_tipo_e_id(): void
     {
         $alvo = $this->atividade(['subject_type' => 'App\\Models\\ViabilityRequest', 'subject_id' => 4242]);

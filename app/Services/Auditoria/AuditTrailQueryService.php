@@ -40,7 +40,7 @@ class AuditTrailQueryService
             ->when($this->data($filtros, 'data_de'), fn (Builder $q, string $d) => $q->whereDate('created_at', '>=', $d))
             ->when($this->data($filtros, 'data_ate'), fn (Builder $q, string $d) => $q->whereDate('created_at', '<=', $d))
             ->when($this->inteiro($filtros, 'usuario_id'), fn (Builder $q, int $id) => $q->where('causer_type', User::class)->where('causer_id', $id))
-            ->when($this->valor($filtros, 'usuario'), fn (Builder $q, string $v) => $q->whereHasMorph('causer', [User::class], fn ($c) => $c->whereLike('name', "%{$v}%", caseSensitive: false)))
+            ->when($this->valor($filtros, 'usuario'), fn (Builder $q, string $v) => $q->whereHasMorph('causer', [User::class, Cidadao::class], fn ($c) => $c->whereLike('name', "%{$v}%", caseSensitive: false)))
             ->when($this->valor($filtros, 'entidade_tipo'), fn (Builder $q, string $v) => $q->whereLike('subject_type', "%{$v}%", caseSensitive: false))
             ->when($this->inteiro($filtros, 'entidade_id'), fn (Builder $q, int $id) => $q->where('subject_id', $id))
             ->when($this->valor($filtros, 'log_name'), fn (Builder $q, string $v) => $q->where('log_name', $v))
