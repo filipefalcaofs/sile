@@ -14,8 +14,8 @@ class GovBrSenhaCidadaoTest extends TestCase
 
     private function garantirSenha(Cidadao $cidadao): void
     {
-        $metodo = new ReflectionMethod(GovBrAuthService::class, 'garantirSenha');
-        $metodo->invoke(app(GovBrAuthService::class), $cidadao);
+        $metodo = new ReflectionMethod(GovBrAuthService::class, 'assumirRegistroDeBalcao');
+        $metodo->invoke(app(GovBrAuthService::class), $cidadao, []);
     }
 
     public function test_registro_de_balcao_recebe_senha_aleatoria_ao_entrar_por_govbr(): void
