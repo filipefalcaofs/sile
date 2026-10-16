@@ -82,7 +82,7 @@ class ReginProcessoProtocolador
             'origin' => ViabilityRequestOrigin::Regin,
             'service_type_id' => $this->tipoServico()->id,
             'company_id' => $this->empresa($rowset)->id,
-            'requester_cidadao_id' => $this->solicitanteNaoIdentificado()->id,
+            'requester_cidadao_id' => Cidadao::tecnicoDoRegin()->id,
             'created_by_type' => $ator->getMorphClass(),
             'created_by_id' => $ator->id,
             'used_area_m2' => $area,
@@ -115,7 +115,7 @@ class ReginProcessoProtocolador
         }
 
         $ator = $this->ator();
-        $requerente = $this->solicitante($dados) ?? $this->solicitanteNaoIdentificado();
+        $requerente = $this->solicitante($dados) ?? Cidadao::tecnicoDoRegin();
         $cnaePrincipal = $this->cnae((string) $dados->cnaePrincipal);
         $secundarios = [];
 
@@ -217,20 +217,6 @@ class ReginProcessoProtocolador
             'legal_nature_code' => CategoriaEmpresa::separar($dados->complemento->naturezaJuridica)['codigo'],
             'legal_nature' => CategoriaEmpresa::separar($dados->complemento->naturezaJuridica)['descricao'],
         ]);
-    }
-
-    /**
-     * Requerente de um processo sem identificação do solicitante: registro
-     * técnico único (CPF reservado, que nenhuma pessoa tem), nunca um servidor.
-     */
-    private function solicitanteNaoIdentificado(): Cidadao
-    {
-        return Cidadao::criarRegistroDeBalcao(
-            Cidadao::CPF_TECNICO,
-            'Solicitante não identificado (REGIN)',
-            null,
-            null,
-        );
     }
 
     private function solicitante(RecebimentoProcesso $dados): ?Cidadao

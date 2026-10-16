@@ -37,6 +37,8 @@ class Cidadao extends Authenticatable implements MustVerifyEmail
     /** CPF reservado do registro técnico "solicitante não identificado" (REGIN); não é conta. */
     public const CPF_TECNICO = '00000000000';
 
+    public const NOME_TECNICO = 'Solicitante não identificado (REGIN)';
+
     protected $table = 'cidadaos';
 
     /**
@@ -92,7 +94,7 @@ class Cidadao extends Authenticatable implements MustVerifyEmail
         $cidadao = new self([
             'name' => $nome,
             'cpf' => $cpf,
-            'email' => ($email === null || $emailEmUso) ? $cpf.self::SUFIXO_EMAIL_TECNICO : $email,
+            'email' => ($email === null || $emailEmUso) ? self::emailTecnico($cpf) : $email,
             'phone' => $telefone,
         ]);
 
@@ -109,7 +111,7 @@ class Cidadao extends Authenticatable implements MustVerifyEmail
             }
 
             // Foi o e-mail: refaz uma vez com o endereço técnico; se falhar de novo, relança.
-            $cidadao->email = $cpf.self::SUFIXO_EMAIL_TECNICO;
+            $cidadao->email = self::emailTecnico($cpf);
 
             try {
                 DB::transaction(fn () => $cidadao->save());
@@ -119,6 +121,21 @@ class Cidadao extends Authenticatable implements MustVerifyEmail
         }
 
         return $cidadao;
+    }
+
+    /** E-mail técnico de registro sem e-mail próprio (não recebe mensagens). */
+    public static function emailTecnico(string $cpf): string
+    {
+        return $cpf.self::SUFIXO_EMAIL_TECNICO;
+    }
+
+    /**
+     * Requerente das solicitações do REGIN sem solicitante identificado: registro
+     * técnico único (CPF reservado, que nenhuma pessoa tem), nunca um servidor.
+     */
+    public static function tecnicoDoRegin(): self
+    {
+        return self::criarRegistroDeBalcao(self::CPF_TECNICO, self::NOME_TECNICO, null, null);
     }
 
     public function sendEmailVerificationNotification(): void
