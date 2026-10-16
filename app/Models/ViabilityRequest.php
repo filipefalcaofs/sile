@@ -172,13 +172,27 @@ class ViabilityRequest extends Model
     /**
      * Ponto (lat, lng) usado pelos motores. O polígono desenhado manda: o
      * centroide do anel exterior. Sem polígono, vale o ponto gravado (Cadastro
-     * Imobiliário ou catálogo da simulação). Sem os dois, não há ponto.
+     * Imobiliário ou catálogo da simulação). Sem os dois, o centroide do lote
+     * encontrado no endereçamento (address_polygon_geojson). Sem nenhum, não há
+     * ponto.
      *
      * @return array{lat: float, lng: float}|null
      */
     public function pontoDoImovel(): ?array
     {
-        $centroide = $this->centroideDoPoligono();
+        return $this->pontoGravadoOuDesenhado() ?? $this->centroideDoPoligono($this->address_polygon_geojson);
+    }
+
+    /**
+     * Ponto que o requerente desenhou ou que a inscrição/simulação gravou, sem
+     * o lote do endereçamento. É o critério de "já localizado pela inscrição":
+     * o lote achado depois não substitui a busca do ponto no Cadastro.
+     *
+     * @return array{lat: float, lng: float}|null
+     */
+    public function pontoGravadoOuDesenhado(): ?array
+    {
+        $centroide = $this->centroideDoPoligono($this->property_polygon_geojson);
 
         if ($centroide !== null) {
             return $centroide;
@@ -196,13 +210,13 @@ class ViabilityRequest extends Model
 
     /**
      * Centroide pela média dos vértices do anel exterior, sem o vértice de
-     * fechamento. Mesmo cálculo que o resolver de viabilidade usava.
+     * fechamento. Mesmo cálculo que o resolver de viabilidade usava. Em lote
+     * côncavo a média pode cair fora do polígono.
      *
      * @return array{lat: float, lng: float}|null
      */
-    private function centroideDoPoligono(): ?array
+    private function centroideDoPoligono(mixed $geojson): ?array
     {
-        $geojson = $this->property_polygon_geojson;
         $ring = is_array($geojson) ? ($geojson['coordinates'][0] ?? null) : null;
 
         if (! is_array($ring) || $ring === []) {

@@ -138,7 +138,7 @@ class TerritorioProcessoService
      */
     public function localizarPelaInscricao(ViabilityRequest $request): string
     {
-        if ($request->pontoDoImovel() !== null) {
+        if ($request->pontoGravadoOuDesenhado() !== null) {
             return LocalizacaoInscricao::LOCALIZADA;
         }
 
