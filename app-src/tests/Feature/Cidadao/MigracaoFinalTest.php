@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Cidadao;
 
+use App\Models\AiSuggestion;
 use App\Models\Cidadao;
 use App\Models\Sector;
 use App\Models\User;
@@ -111,25 +112,55 @@ class MigracaoFinalTest extends TestCase
         $this->assertNadaFoiApagado($usuario);
     }
 
-    public function test_conflito_e_detectado_em_qualquer_chave_para_users(): void
+    public function test_referencia_de_cidadao_copiado_em_coluna_set_null_e_anulada(): void
     {
-        $usuario = User::factory()->papelCidadaoLegado()->create();
-        $outro = User::factory()->create();
+        $cidadao = User::factory()->papelCidadaoLegado()->create();
+        $servidor = User::factory()->analista()->create();
         IdentidadeSeparada::copiarContasDeCidadao();
-        DB::table('regin_simulacao_execucoes')->insert([
-            ['codigo' => 'a', 'relatorio' => '{}', 'user_id' => $usuario->id],
-            ['codigo' => 'b', 'relatorio' => '{}', 'user_id' => $outro->id],
-        ]);
-        DB::table('passkeys')->insert([
-            'user_id' => $usuario->id, 'name' => 'chave', 'credential_id' => 'c1', 'credential' => '{}',
-        ]);
+        $doCidadao = AiSuggestion::factory()->create(['created_by_user_id' => $cidadao->id]);
+        $doServidor = AiSuggestion::factory()->create(['created_by_user_id' => $servidor->id]);
+
+        $this->rodarMigracao();
+
+        $this->assertNull($doCidadao->fresh()->created_by_user_id);
+        $this->assertSame($servidor->id, $doServidor->fresh()->created_by_user_id);
+        $this->assertFalse(DB::table('users')->where('id', $cidadao->id)->exists());
+    }
+
+    public function test_conflito_sem_set_null_aborta_sem_anular_as_demais_colunas(): void
+    {
+        $cidadao = User::factory()->papelCidadaoLegado()->create();
+        IdentidadeSeparada::copiarContasDeCidadao();
+        $sugestao = AiSuggestion::factory()->create(['created_by_user_id' => $cidadao->id]);
+        DB::table('sector_user')->insert(['user_id' => $cidadao->id, 'sector_id' => Sector::factory()->create()->id]);
 
         try {
             $this->rodarMigracao();
             $this->fail('A migration deveria recusar a remoção.');
         } catch (RuntimeException $e) {
-            $this->assertStringContainsString('regin_simulacao_execucoes.user_id (2)', $e->getMessage());
-            $this->assertStringContainsString('passkeys.user_id (1)', $e->getMessage());
+            $this->assertStringContainsString('sector_user.user_id (1)', $e->getMessage());
+        }
+
+        $this->assertSame($cidadao->id, $sugestao->fresh()->created_by_user_id);
+    }
+
+    public function test_conflito_e_detectado_em_qualquer_chave_para_users(): void
+    {
+        $usuario = User::factory()->papelCidadaoLegado()->create();
+        $outro = User::factory()->create();
+        IdentidadeSeparada::copiarContasDeCidadao();
+        DB::table('passkeys')->insert([
+            ['user_id' => $usuario->id, 'name' => 'chave', 'credential_id' => 'c1', 'credential' => '{}'],
+            ['user_id' => $outro->id, 'name' => 'outra', 'credential_id' => 'c2', 'credential' => '{}'],
+        ]);
+        DB::table('sector_user')->insert(['user_id' => $usuario->id, 'sector_id' => Sector::factory()->create()->id]);
+
+        try {
+            $this->rodarMigracao();
+            $this->fail('A migration deveria recusar a remoção.');
+        } catch (RuntimeException $e) {
+            $this->assertStringContainsString('passkeys.user_id (2)', $e->getMessage());
+            $this->assertStringContainsString('sector_user.user_id (1)', $e->getMessage());
         }
 
         $this->assertSame(2, DB::table('users')->count());

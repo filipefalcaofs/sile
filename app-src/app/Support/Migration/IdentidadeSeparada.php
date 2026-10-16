@@ -130,18 +130,73 @@ final class IdentidadeSeparada
 
     /**
      * Colunas com FK para `users` (fora de `COLUNAS_CONVERTIDAS`) que citam algum id de `$ids`,
-     * nas tabelas do schema corrente da conexão.
+     * nas tabelas do schema corrente da conexão. Com `$ignorarSetNull`, as colunas nullable com
+     * `ON DELETE SET NULL` ficam de fora (`anularReferenciasDeCidadaosEmColunasSetNull` cuida delas).
      *
      * @return list<string> tabela.coluna (linhas)
      */
-    public static function colunasDeServidorQueCitam(Builder $ids): array
+    public static function colunasDeServidorQueCitam(Builder $ids, bool $ignorarSetNull = false): array
     {
         $conflitos = [];
+
+        foreach (self::colunasComChaveParaUsers() as $alvo) {
+            if ($ignorarSetNull && $alvo['setNull']) {
+                continue;
+            }
+
+            $linhas = DB::table($alvo['tabela'])->whereIn($alvo['coluna'], clone $ids)->count();
+
+            if ($linhas > 0) {
+                $conflitos[] = "{$alvo['tabela']}.{$alvo['coluna']} ({$linhas})";
+            }
+        }
+
+        return $conflitos;
+    }
+
+    /**
+     * Anula as referências a `$ids` nas colunas nullable com `ON DELETE SET NULL` (o que a
+     * exclusão da conta faria). O código antigo gravava o cidadão como autor de sugestões de IA
+     * e de transições da renovação nessas colunas de servidor.
+     *
+     * @return list<string> tabela.coluna (linhas anuladas)
+     */
+    public static function anularReferenciasDeCidadaosEmColunasSetNull(Builder $ids): array
+    {
+        $anuladas = [];
+
+        foreach (self::colunasComChaveParaUsers() as $alvo) {
+            if (! $alvo['setNull']) {
+                continue;
+            }
+
+            $linhas = DB::table($alvo['tabela'])->whereIn($alvo['coluna'], clone $ids)->update([$alvo['coluna'] => null]);
+
+            if ($linhas > 0) {
+                $anuladas[] = "{$alvo['tabela']}.{$alvo['coluna']} ({$linhas})";
+            }
+        }
+
+        return $anuladas;
+    }
+
+    /**
+     * Colunas com FK para `users` fora de `COLUNAS_CONVERTIDAS`, no schema corrente.
+     * `setNull`: a FK é `ON DELETE SET NULL` e a coluna aceita NULL.
+     *
+     * @return list<array{tabela: string, coluna: string, setNull: bool}>
+     */
+    private static function colunasComChaveParaUsers(): array
+    {
+        $colunas = [];
         // Só o schema da aplicação: no PostgreSQL com PostGIS há outros (tiger, topology).
         $schema = Schema::getCurrentSchemaName();
 
         foreach (Schema::getTableListing($schema, schemaQualified: false) as $tabela) {
-            foreach (Schema::getForeignKeys($schema === null ? $tabela : "{$schema}.{$tabela}") as $chave) {
+            $nome = $schema === null ? $tabela : "{$schema}.{$tabela}";
+            $anulaveis = collect(Schema::getColumns($nome))->where('nullable', true)->pluck('name')->all();
+
+            foreach (Schema::getForeignKeys($nome) as $chave) {
                 if ($chave['foreign_table'] !== 'users') {
                     continue;
                 }
@@ -151,16 +206,18 @@ final class IdentidadeSeparada
                         continue;
                     }
 
-                    $linhas = DB::table($tabela)->whereIn($coluna, clone $ids)->count();
-
-                    if ($linhas > 0) {
-                        $conflitos[] = "{$tabela}.{$coluna} ({$linhas})";
-                    }
+                    $colunas[] = [
+                        'tabela' => $tabela,
+                        'coluna' => $coluna,
+                        'setNull' => strtolower((string) $chave['on_delete']) === 'set null'
+                            && count($chave['columns']) === 1
+                            && in_array($coluna, $anulaveis, true),
+                    ];
                 }
             }
         }
 
-        return $conflitos;
+        return $colunas;
     }
 
     /**
