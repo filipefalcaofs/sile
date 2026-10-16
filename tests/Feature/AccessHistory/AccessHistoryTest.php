@@ -243,4 +243,39 @@ class AccessHistoryTest extends TestCase
         $this->assertStringContainsString('10.2.2.2', $csv);
         $this->assertStringNotContainsString('10.9.9.9', $csv);
     }
+
+    public function test_falha_sem_conta_de_um_ambiente_nao_aparece_no_outro(): void
+    {
+        $admin = User::factory()->administrador()->withAcceptedLgpdTerm()->create();
+        $servidor = User::factory()->create(['email' => 'mesma@pessoa.test']);
+        $cidadao = Cidadao::factory()->withAcceptedLgpdTerm()->create(['email' => 'mesma@pessoa.test']);
+
+        AccessLog::factory()->create([
+            'actor_type' => null, 'actor_id' => null, 'email' => 'mesma@pessoa.test',
+            'event' => 'falha', 'channel' => 'gestao', 'ip_address' => '10.1.1.1',
+        ]);
+        AccessLog::factory()->create([
+            'actor_type' => null, 'actor_id' => null, 'email' => 'mesma@pessoa.test',
+            'event' => 'falha', 'channel' => 'portal', 'ip_address' => '10.3.3.3',
+        ]);
+
+        $this->actingAs($cidadao)
+            ->get('/portal/acessos')
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('logs.data', 1)
+                ->where('logs.data.0.ip_address', '10.3.3.3'));
+
+        $this->actingAs($admin, 'gestao')
+            ->get("/gestao/acessos/{$servidor->id}")
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('logs.data', 1)
+                ->where('logs.data.0.ip_address', '10.1.1.1'));
+
+        $csv = $this->actingAs($admin, 'gestao')
+            ->get("/gestao/acessos/{$servidor->id}?formato=csv")
+            ->streamedContent();
+
+        $this->assertStringContainsString('10.1.1.1', $csv);
+        $this->assertStringNotContainsString('10.3.3.3', $csv);
+    }
 }

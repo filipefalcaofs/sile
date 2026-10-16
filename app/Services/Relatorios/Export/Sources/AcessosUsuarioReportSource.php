@@ -48,7 +48,7 @@ final class AcessosUsuarioReportSource implements ReportSource
                     $query->where(fn ($q) => $q->where('actor_type', User::class)->where('actor_id', $userId));
 
                     if ($alvo !== null) {
-                        $query->orWhere(fn ($q) => $q->whereNull('actor_id')->where('email', $alvo->email));
+                        $query->orWhere(fn ($q) => $q->whereNull('actor_id')->where('email', $alvo->email)->where('channel', 'gestao'));
                     }
                 })
                 ->latest('created_at'),

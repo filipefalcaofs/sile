@@ -54,7 +54,7 @@ class AccessHistoryController extends Controller
             'logs' => AccessLog::query()
                 ->where(fn ($query) => $query
                     ->where(fn ($q) => $q->where('actor_type', $user->getMorphClass())->where('actor_id', $user->id))
-                    ->orWhere(fn ($q) => $q->whereNull('actor_id')->where('email', $user->email)))
+                    ->orWhere(fn ($q) => $q->whereNull('actor_id')->where('email', $user->email)->where('channel', 'gestao')))
                 ->latest('created_at')
                 ->paginate((int) Settings::get('ui.access_history.per_page', 15))
                 ->through(fn (AccessLog $log) => [
