@@ -46,6 +46,7 @@ class TramitacaoProcessoService
             ->where('subject_type', $processo->getMorphClass())
             ->where('subject_id', $processo->getKey())
             ->whereIn('event', [...array_keys(self::EVENTOS), 'regin-parecer', 'sefaz-viabilidade'])
+            ->with('causer')
             ->oldest('id')
             ->get();
 
@@ -88,7 +89,7 @@ class TramitacaoProcessoService
                 titulo: $resultado === 'sucesso' ? 'Parecer enviado à JUCEB (REGIN)' : 'Envio do parecer à JUCEB não confirmado',
                 detalhe: $a->description,
                 em: $a->created_at?->toIso8601String(),
-                ator: $this->nomeDoAtor($usuarios, $a->causer_id),
+                ator: $this->atorDaAtividade($a, $usuarios),
                 resultado: $resultado,
             );
         }
@@ -103,7 +104,7 @@ class TramitacaoProcessoService
                 titulo: $resultado === 'sucesso' ? 'Viabilidade enviada à SEFAZ' : 'Envio à SEFAZ pendente',
                 detalhe: $a->description,
                 em: $a->created_at?->toIso8601String(),
-                ator: $this->nomeDoAtor($usuarios, $a->causer_id),
+                ator: $this->atorDaAtividade($a, $usuarios),
                 resultado: $resultado,
             );
         }
@@ -128,7 +129,7 @@ class TramitacaoProcessoService
             titulo: $evento['titulo'],
             detalhe: $detalhe !== '' ? $detalhe : null,
             em: $a->created_at?->toIso8601String(),
-            ator: $this->nomeDoAtor($usuarios, $a->properties['ator_id'] ?? $a->causer_id),
+            ator: $this->atorDaAtividade($a, $usuarios),
         );
     }
 
@@ -153,6 +154,28 @@ class TramitacaoProcessoService
     }
 
     /**
+     * Autor da atividade: o `ator_id` gravado pelo serviço (sempre servidor) ou o
+     * causer pelo par (causer_type, causer_id). Só conta de servidor pode ser
+     * ator oculto; cidadão aparece sempre pelo próprio nome.
+     *
+     * @param  array<int, User>  $usuarios
+     */
+    private function atorDaAtividade(Activity $a, array $usuarios): ?string
+    {
+        if (isset($a->properties['ator_id'])) {
+            return $this->nomeDoAtor($usuarios, $a->properties['ator_id']);
+        }
+
+        $causer = $a->causer;
+
+        if ($causer instanceof User) {
+            return $causer->isAtorOcultoNaTramitacao() ? null : $causer->name;
+        }
+
+        return $causer?->name;
+    }
+
+    /**
      * @param  array<int, User>  $usuarios
      */
     private function nomeDoAtor(array $usuarios, mixed $id): ?string
@@ -171,7 +194,7 @@ class TramitacaoProcessoService
         $ids = [];
 
         foreach ($atividades as $a) {
-            foreach ([$a->causer_id, $a->properties['ator_id'] ?? null, $a->properties['assigned_user_id'] ?? null] as $id) {
+            foreach ([$a->properties['ator_id'] ?? null, $a->properties['assigned_user_id'] ?? null] as $id) {
                 if ($id !== null) {
                     $ids[] = (int) $id;
                 }
