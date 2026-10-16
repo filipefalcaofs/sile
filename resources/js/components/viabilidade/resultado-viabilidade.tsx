@@ -21,6 +21,23 @@ export interface VereditoLocacional {
     motivo: string | null;
 }
 
+/** Quanto o resultado da consulta é confiável: só `conclusiva` carrega veredito. */
+export type EstadoConfiabilidade = 'conclusiva' | 'incompleta' | 'inconclusiva';
+
+/** Dado que o cidadão ainda precisa informar. `itens` lista os campos de `vagas`. */
+export interface PendenciaConsulta {
+    campo: string;
+    rotulo: string;
+    itens?: string[];
+}
+
+export interface ConfiabilidadeConsulta {
+    estado: EstadoConfiabilidade;
+    label: string;
+    pendencias: PendenciaConsulta[];
+    motivo: string | null;
+}
+
 export interface EnquadramentoUso {
     status: DimensaoStatus;
     grupo: string | null;
@@ -126,7 +143,11 @@ export interface ResultadoConsulta {
     enquadramento: Enquadramento;
     risco: Risco;
     restricoes: RestricoesTerritoriais | null;
-    veredito_locacional: VereditoLocacional;
+    veredito_locacional: VereditoLocacional | null;
+    /** Ausente em snapshots antigos do histórico. */
+    confiabilidade?: ConfiabilidadeConsulta;
+    /** Aviso fixo de simulação; ausente em snapshots antigos do histórico. */
+    aviso_simulacao?: string;
     fundamentacao: string[];
     avisos: string[];
     versoes: Record<string, Record<string, string | null>>;
@@ -208,6 +229,44 @@ function DimensaoItem({ rotulo, dimensao }: { rotulo: string; dimensao: Dimensao
     );
 }
 
+const CONFIABILIDADE_STYLES: Record<EstadoConfiabilidade, { container: string; chip: string }> = {
+    conclusiva: VEREDITO_STYLES.permitido,
+    incompleta: VEREDITO_STYLES.permitido_com_condicoes,
+    inconclusiva: VEREDITO_STYLES.pendente,
+};
+
+/**
+ * Estado de confiabilidade da consulta: dado faltando (incompleta) ou motivo da
+ * inconclusão, sem orientar próximo passo — a consulta é só informativa.
+ */
+function BlocoConfiabilidade({ confiabilidade }: { confiabilidade: ConfiabilidadeConsulta }) {
+    const estilo = CONFIABILIDADE_STYLES[confiabilidade.estado];
+
+    if (confiabilidade.estado === 'conclusiva') {
+        return (
+            <p aria-label="Confiabilidade da consulta" className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                {confiabilidade.label}
+            </p>
+        );
+    }
+
+    return (
+        <section aria-label="Confiabilidade da consulta" className={`rounded-2xl border p-5 sm:p-6 ${estilo.container}`}>
+            <h2 className="text-xl font-semibold text-gray-800 dark:text-white/90">{confiabilidade.label}</h2>
+            {confiabilidade.estado === 'incompleta' && (
+                <ul className="mt-3 flex list-disc flex-col gap-1 pl-5 text-sm leading-6 text-gray-600 dark:text-gray-300">
+                    {confiabilidade.pendencias.map((pendencia) => (
+                        <li key={`${pendencia.campo}-${pendencia.rotulo}`}>{pendencia.rotulo}</li>
+                    ))}
+                </ul>
+            )}
+            {confiabilidade.estado === 'inconclusiva' && confiabilidade.motivo && (
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-600 dark:text-gray-300">{confiabilidade.motivo}</p>
+            )}
+        </section>
+    );
+}
+
 /**
  * Renderiza o resultado REAL da consulta de viabilidade (HU-057/058/059) sem
  * fachada: o veredito locacional vem propagado do motor LOUOS — quando
@@ -217,12 +276,13 @@ function DimensaoItem({ rotulo, dimensao }: { rotulo: string; dimensao: Dimensao
 export function ResultadoViabilidade({ result }: { result: ResultadoConsulta }) {
     const { vocabulario } = usePage<SharedProps>().props;
     const veredito = result.veredito_locacional;
-    const estilo = VEREDITO_STYLES[veredito.resultado];
+    const confiabilidade = result.confiabilidade;
+    const vereditoVisivel = veredito !== null && (confiabilidade === undefined || confiabilidade.estado === 'conclusiva');
     const { municipal, sanitario, encaminhamento } = result.risco;
     const { enquadramento } = result.enquadramento;
-    const motivoVeredito =
-        veredito.motivo ??
-        (veredito.resultado === 'pendente' ? 'Depende de análise técnica da SEDUR.' : null);
+    const motivoVeredito = veredito
+        ? (veredito.motivo ?? (veredito.resultado === 'pendente' ? 'Depende de análise técnica da SEDUR.' : null))
+        : null;
 
     const sanitarioLabel =
         sanitario.nivel_final !== null
@@ -231,17 +291,21 @@ export function ResultadoViabilidade({ result }: { result: ResultadoConsulta }) 
 
     return (
         <div className="flex flex-col gap-4 md:gap-6">
-            <section aria-label="Veredito locacional" className={`rounded-2xl border p-5 sm:p-6 ${estilo.container}`}>
-                <span
-                    className={`inline-flex items-center rounded-full px-3 py-1 text-theme-xs font-semibold uppercase tracking-wide ${estilo.chip}`}
-                >
-                    Viabilidade locacional
-                </span>
-                <h2 className="mt-3 text-xl font-semibold text-gray-800 dark:text-white/90">{veredito.label}</h2>
-                {motivoVeredito && (
-                    <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-600 dark:text-gray-300">{motivoVeredito}</p>
-                )}
-            </section>
+            {confiabilidade && <BlocoConfiabilidade confiabilidade={confiabilidade} />}
+
+            {vereditoVisivel && veredito && (
+                <section aria-label="Veredito locacional" className={`rounded-2xl border p-5 sm:p-6 ${VEREDITO_STYLES[veredito.resultado].container}`}>
+                    <span
+                        className={`inline-flex items-center rounded-full px-3 py-1 text-theme-xs font-semibold uppercase tracking-wide ${VEREDITO_STYLES[veredito.resultado].chip}`}
+                    >
+                        Viabilidade locacional
+                    </span>
+                    <h2 className="mt-3 text-xl font-semibold text-gray-800 dark:text-white/90">{veredito.label}</h2>
+                    {motivoVeredito && (
+                        <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-600 dark:text-gray-300">{motivoVeredito}</p>
+                    )}
+                </section>
+            )}
 
             <div className="grid gap-4 md:gap-6 lg:grid-cols-2">
                 <Card>
@@ -386,6 +450,10 @@ export function ResultadoViabilidade({ result }: { result: ResultadoConsulta }) 
                         <Alert key={aviso} variant="warning" title="Aviso" message={aviso} />
                     ))}
                 </div>
+            )}
+
+            {result.aviso_simulacao && (
+                <p className="text-sm text-gray-500 dark:text-gray-400">{result.aviso_simulacao}</p>
             )}
         </div>
     );

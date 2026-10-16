@@ -8,6 +8,7 @@ import Logo from '@/components/app/logo';
 import Input from '@/components/form/input';
 import MaskedInput from '@/components/form/masked-input';
 import Label from '@/components/form/label';
+import Select from '@/components/form/select';
 import { MapaSection } from '@/components/geo/mapa-section';
 import { ArrowRightIcon, FileIcon, MapPinIcon, MoonIcon, SearchIcon, SunIcon } from '@/components/icons';
 import Alert from '@/components/ui/alert';
@@ -20,8 +21,15 @@ import PortalLayout from '@/layouts/portal-layout';
 import type { SharedProps } from '@/types';
 import { shellDaConsulta } from './shell-da-consulta';
 
+interface OpcaoConsulta {
+    value: string;
+    label: string;
+}
+
 interface ConsultaProps {
     consultaEnabled: boolean;
+    tiposImovel: OpcaoConsulta[];
+    categoriasEmpresa: OpcaoConsulta[];
 }
 
 type TipoEntrada = 'endereco' | 'cnae' | 'inscricao';
@@ -35,6 +43,9 @@ interface ConsultaPayload {
     cnae: string;
     area: number | null;
     respostas?: Record<number, RespostaPlanilha>;
+    tipo_imovel?: string;
+    categoria_empresa?: string;
+    vagas?: Record<string, number>;
 }
 
 const ENTRADAS: Array<{ tipo: TipoEntrada; rotulo: string; icon: ComponentType<SVGProps<SVGSVGElement>> }> = [
@@ -145,13 +156,18 @@ function PublicShell({ children }: { children: ReactNode }) {
  * nada simulado no front). O veredito locacional é honesto: pendente com motivo
  * quando sem zona, nunca Permitido/Não permitido sem o dado oficial.
  */
-export default function Consulta({ consultaEnabled }: ConsultaProps) {
+export default function Consulta({ consultaEnabled, tiposImovel = [], categoriasEmpresa = [] }: ConsultaProps) {
     const { auth } = usePage<SharedProps>().props;
     const [tipo, setTipo] = useState<TipoEntrada>('endereco');
     const [endereco, setEndereco] = useState('');
     const [inscricao, setInscricao] = useState('');
     const [cnae, setCnae] = useState('');
     const [area, setArea] = useState('');
+    const [tipoImovel, setTipoImovel] = useState('');
+    const [categoriaEmpresa, setCategoriaEmpresa] = useState('');
+    const [vagas, setVagas] = useState<Record<string, string>>({});
+    const [itensVagas, setItensVagas] = useState<string[]>([]);
+    const [refinoAberto, setRefinoAberto] = useState(false);
     const [perguntas, setPerguntas] = useState<PerguntaConsulta[]>([]);
     const [respostas, setRespostas] = useState<Record<number, RespostaPlanilha>>({});
     const [result, setResult] = useState<ResultadoConsulta | null>(null);
@@ -159,9 +175,14 @@ export default function Consulta({ consultaEnabled }: ConsultaProps) {
 
     const consulta = useHttp<ConsultaPayload, ResultadoConsulta>({ cnae: '', area: null });
 
+    const exigeArea = tipo !== 'cnae';
+    const pendencias = result?.confiabilidade?.pendencias ?? [];
+    const pendente = (campo: string) => pendencias.find((pendencia) => pendencia.campo === campo);
+
     const podeConsultar =
         consultaEnabled &&
         cnae.trim().length > 0 &&
+        (!exigeArea || Number(area) > 0) &&
         (tipo === 'endereco'
             ? endereco.trim().length >= 3
             : tipo === 'inscricao'
@@ -193,6 +214,16 @@ export default function Consulta({ consultaEnabled }: ConsultaProps) {
         if (perguntas.length > 0) {
             payload.respostas = respostas;
         }
+        if (tipoImovel !== '') {
+            payload.tipo_imovel = tipoImovel;
+        }
+        if (categoriaEmpresa !== '') {
+            payload.categoria_empresa = categoriaEmpresa;
+        }
+        const vagasInformadas = Object.entries(vagas).filter(([, quantidade]) => quantidade.trim() !== '');
+        if (vagasInformadas.length > 0) {
+            payload.vagas = Object.fromEntries(vagasInformadas.map(([item, quantidade]) => [item, Number(quantidade)]));
+        }
 
         // transform() é síncrono: garante o envio do corpo fresco da aba ativa
         // (o dataRef do useHttp só atualiza no efeito pós-render) — precedente 04-07.
@@ -202,6 +233,17 @@ export default function Consulta({ consultaEnabled }: ConsultaProps) {
                 const corpo = response as ResultadoConsulta & { perguntas?: PerguntaConsulta[] };
                 setResult(corpo);
                 setPerguntas(Array.isArray(corpo.perguntas) ? corpo.perguntas : []);
+                const itens = corpo.confiabilidade?.pendencias.find((pendencia) => pendencia.campo === 'vagas')?.itens;
+                if (itens) {
+                    setItensVagas(itens);
+                }
+                if (
+                    corpo.confiabilidade?.pendencias.some((pendencia) =>
+                        ['tipo_imovel', 'categoria_empresa', 'vagas'].includes(pendencia.campo),
+                    )
+                ) {
+                    setRefinoAberto(true);
+                }
                 setErro(null);
             },
             onError: (errors) => {
@@ -331,7 +373,7 @@ export default function Consulta({ consultaEnabled }: ConsultaProps) {
                                         {tipo === 'cnae' && (
                                             <Alert
                                                 variant="info"
-                                                title="Consulta por CNAE"
+                                                title="Consulta por CNAE — sem análise do local"
                                                 message="A consulta por CNAE não avalia o local: o veredito locacional depende do endereço. Para a viabilidade do ponto, consulte por endereço."
                                             />
                                         )}
@@ -381,7 +423,9 @@ export default function Consulta({ consultaEnabled }: ConsultaProps) {
                                         </div>
 
                                         <div>
-                                            <Label htmlFor="area">Área da atividade (m²)</Label>
+                                            <Label htmlFor="area" required={exigeArea}>
+                                                Área da atividade (m²)
+                                            </Label>
                                             <Input
                                                 id="area"
                                                 type="number"
@@ -389,11 +433,71 @@ export default function Consulta({ consultaEnabled }: ConsultaProps) {
                                                 min={0}
                                                 value={area}
                                                 onChange={(event) => setArea(event.target.value)}
-                                                placeholder="Opcional"
+                                                placeholder={exigeArea ? 'Ex.: 120' : 'Opcional'}
                                                 disabled={!consultaEnabled}
-                                                hint="Usada no enquadramento pela planilha vigente (área utilizada)."
+                                                error={pendente('area') !== undefined}
+                                                hint={pendente('area')?.rotulo ?? 'Usada no enquadramento pela planilha vigente (área utilizada).'}
                                             />
                                         </div>
+
+                                        <details
+                                            open={refinoAberto}
+                                            onToggle={(event) => setRefinoAberto(event.currentTarget.open)}
+                                            className="rounded-lg border border-gray-200 p-3 dark:border-gray-800"
+                                        >
+                                            <summary className="cursor-pointer text-sm font-medium text-gray-800 dark:text-white/90">
+                                                Refinar consulta
+                                            </summary>
+                                            <div className="mt-3 flex flex-col gap-4">
+                                                <div>
+                                                    <Label htmlFor="tipo_imovel">Tipo do imóvel</Label>
+                                                    <Select
+                                                        id="tipo_imovel"
+                                                        name="tipo_imovel"
+                                                        options={tiposImovel}
+                                                        value={tipoImovel}
+                                                        onChange={setTipoImovel}
+                                                        placeholder="Não informado"
+                                                        disabled={!consultaEnabled}
+                                                        error={pendente('tipo_imovel') !== undefined}
+                                                        hint={pendente('tipo_imovel')?.rotulo}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <Label htmlFor="categoria_empresa">Categoria da empresa</Label>
+                                                    <Select
+                                                        id="categoria_empresa"
+                                                        name="categoria_empresa"
+                                                        options={categoriasEmpresa}
+                                                        value={categoriaEmpresa}
+                                                        onChange={setCategoriaEmpresa}
+                                                        placeholder="Não informada"
+                                                        disabled={!consultaEnabled}
+                                                        error={pendente('categoria_empresa') !== undefined}
+                                                        hint={pendente('categoria_empresa')?.rotulo}
+                                                    />
+                                                </div>
+                                                {itensVagas.map((item) => (
+                                                    <div key={item}>
+                                                        <Label htmlFor={`vaga-${item}`}>
+                                                            {item.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase())} (quantidade)
+                                                        </Label>
+                                                        <Input
+                                                            id={`vaga-${item}`}
+                                                            type="number"
+                                                            min={0}
+                                                            value={vagas[item] ?? ''}
+                                                            onChange={(event) =>
+                                                                setVagas((atual) => ({ ...atual, [item]: event.target.value }))
+                                                            }
+                                                            disabled={!consultaEnabled}
+                                                            error={pendente('vagas') !== undefined}
+                                                            hint={pendente('vagas')?.rotulo}
+                                                        />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </details>
 
                                         {perguntas.length > 0 && (
                                             <fieldset className="flex flex-col gap-3">
