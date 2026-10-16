@@ -212,10 +212,18 @@ class DistribuicaoService
                 'sector_id' => $setorDestino,
                 'assigned_user_id' => $analista->id,
                 'assigned_at' => $startedAt,
-                'analysis_stage' => AnalysisStage::Analise,
-                'analysis_stage_started_at' => $startedAt,
-                'analysis_due_at' => $this->sla->dueAtFor(AnalysisStage::Analise, $startedAt),
-            ])->save();
+            ]);
+
+            // Para conclusão o processo já passou pela análise: trocar quem conclui não reinicia o prazo.
+            if ($request->analysis_status !== AnalysisStatus::ParaConclusao) {
+                $request->forceFill([
+                    'analysis_stage' => AnalysisStage::Analise,
+                    'analysis_stage_started_at' => $startedAt,
+                    'analysis_due_at' => $this->sla->dueAtFor(AnalysisStage::Analise, $startedAt),
+                ]);
+            }
+
+            $request->save();
 
             $this->audit->log('analise', $evento, "{$descricao} (solicitação #{$request->id}).", [
                 'viability_request_id' => $request->id,
