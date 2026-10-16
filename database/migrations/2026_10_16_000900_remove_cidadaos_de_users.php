@@ -5,6 +5,7 @@ use App\Models\User;
 use App\Support\Migration\IdentidadeSeparada;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Spatie\Permission\PermissionRegistrar;
 
 return new class extends Migration
@@ -16,13 +17,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        $conflitos = IdentidadeSeparada::colunasDeServidorQueCitam(IdentidadeSeparada::contasCopiadas());
+        $conflitos = IdentidadeSeparada::colunasDeServidorQueCitam(IdentidadeSeparada::contasCopiadas(), ignorarSetNull: true);
 
         if ($conflitos !== []) {
             throw new RuntimeException(
                 'Colunas de servidor apontam para contas de cidadão que sairiam de users: '
                 .implode(', ', $conflitos).'. Revisar antes de migrar.'
             );
+        }
+
+        $anuladas = IdentidadeSeparada::anularReferenciasDeCidadaosEmColunasSetNull(IdentidadeSeparada::contasCopiadas());
+
+        if ($anuladas !== []) {
+            Log::info('Remoção de cidadãos de users anulou referências de cidadão: '.implode(', ', $anuladas));
         }
 
         DB::table('model_has_roles')->where('model_type', User::class)

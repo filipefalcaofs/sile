@@ -2,8 +2,10 @@
 
 namespace Tests\Feature\Cidadao;
 
+use App\Models\AiSuggestion;
 use App\Models\Sector;
 use App\Models\User;
+use App\Models\ViabilityRequest;
 use App\Support\Migration\IdentidadeSeparada;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Database\Schema\Blueprint;
@@ -56,9 +58,9 @@ class MigracaoPreflightTest extends TestCase
         $semPerfil = User::factory()->create();
         $setor = Sector::factory()->create();
         DB::table('sector_user')->insert(['user_id' => $cidadao->id, 'sector_id' => $setor->id]);
-        DB::table('regin_simulacao_execucoes')->insert([
-            ['codigo' => 'a', 'relatorio' => '{}', 'user_id' => $cidadao->id],
-            ['codigo' => 'b', 'relatorio' => '{}', 'user_id' => $semPerfil->id],
+        DB::table('passkeys')->insert([
+            ['user_id' => $cidadao->id, 'name' => 'a', 'credential_id' => 'c1', 'credential' => '{}'],
+            ['user_id' => $semPerfil->id, 'name' => 'b', 'credential_id' => 'c2', 'credential' => '{}'],
         ]);
         $papeisAntes = DB::table('model_has_roles')->count();
 
@@ -67,7 +69,7 @@ class MigracaoPreflightTest extends TestCase
             $this->fail('O pré-voo deveria recusar a migração.');
         } catch (RuntimeException $e) {
             $this->assertStringContainsString('sector_user.user_id (1)', $e->getMessage());
-            $this->assertStringContainsString('regin_simulacao_execucoes.user_id (2)', $e->getMessage());
+            $this->assertStringContainsString('passkeys.user_id (2)', $e->getMessage());
         }
 
         $this->assertSame([$cidadao->id, $semPerfil->id], DB::table('users')->orderBy('id')->pluck('id')->all());
@@ -110,6 +112,59 @@ class MigracaoPreflightTest extends TestCase
             $this->assertTrue(Schema::hasTable($tabela), $coluna);
             $this->assertFalse(Schema::hasColumn($tabela, $nome), $coluna);
         }
+    }
+
+    public function test_referencia_de_cidadao_em_coluna_set_null_e_anulada_e_a_de_servidor_fica(): void
+    {
+        $cidadao = User::factory()->papelCidadaoLegado()->create();
+        $servidor = User::factory()->analista()->create();
+        $solicitacao = ViabilityRequest::factory()->create();
+        $sugestaoDoCidadao = AiSuggestion::factory()->create(['created_by_user_id' => $cidadao->id]);
+        $sugestaoDoServidor = AiSuggestion::factory()->create(['created_by_user_id' => $servidor->id]);
+        $this->inserirTransicao($solicitacao->id, $cidadao->id);
+        $this->inserirTransicao($solicitacao->id, $servidor->id);
+
+        $this->rodarMigracao();
+
+        $this->assertNull($sugestaoDoCidadao->fresh()->created_by_user_id);
+        $this->assertSame($servidor->id, $sugestaoDoServidor->fresh()->created_by_user_id);
+        $this->assertSame(1, DB::table('analysis_status_transitions')->whereNull('actor_user_id')->count());
+        $this->assertSame(1, DB::table('analysis_status_transitions')->where('actor_user_id', $servidor->id)->count());
+    }
+
+    public function test_conflito_em_coluna_sem_set_null_aborta_sem_anular_nada(): void
+    {
+        $cidadao = User::factory()->papelCidadaoLegado()->create();
+        $sugestao = AiSuggestion::factory()->create(['created_by_user_id' => $cidadao->id]);
+        DB::table('sector_user')->insert(['user_id' => $cidadao->id, 'sector_id' => Sector::factory()->create()->id]);
+
+        try {
+            $this->rodarMigracao();
+            $this->fail('O pré-voo deveria recusar a migração.');
+        } catch (RuntimeException $e) {
+            $this->assertStringContainsString('sector_user.user_id (1)', $e->getMessage());
+            $this->assertStringNotContainsString('ai_suggestions', $e->getMessage());
+        }
+
+        $this->assertSame($cidadao->id, $sugestao->fresh()->created_by_user_id);
+    }
+
+    public function test_conta_de_integracao_nao_conta_como_cidada_e_mantem_a_referencia(): void
+    {
+        $integracao = User::factory()->create(['email' => User::EMAIL_INTEGRACAO_REGIN]);
+        $sugestao = AiSuggestion::factory()->create(['created_by_user_id' => $integracao->id]);
+
+        $this->rodarMigracao();
+
+        $this->assertSame($integracao->id, $sugestao->fresh()->created_by_user_id);
+    }
+
+    private function inserirTransicao(int $solicitacaoId, int $atorId): void
+    {
+        DB::table('analysis_status_transitions')->insert([
+            'viability_request_id' => $solicitacaoId, 'to_status' => 'x', 'actor_user_id' => $atorId,
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
     }
 
     private function rodarMigracao(): void

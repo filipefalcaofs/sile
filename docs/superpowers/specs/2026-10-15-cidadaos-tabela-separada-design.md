@@ -127,6 +127,9 @@ Migrations `2026_10_16_000050` a `2026_10_16_000910`, na ordem:
    `users` fora das colunas que a separação converte (lista derivada de
    `Schema::getForeignKeys`, só no schema corrente). Se alguma citar uma conta de cidadão,
    a migração para com a lista `tabela.coluna (linhas)` e nada é alterado.
+   Referências de cidadão em colunas de servidor nullable com `ON DELETE SET NULL` são anuladas
+   pelo pré-voo (o código antigo gravava o cidadão como autor de sugestões de IA e de transições
+   da renovação), só depois de confirmar que não resta conflito nas demais colunas; a 000900 repete isso.
 2. **Critério de conta de cidadão.** Não é AD, não tem `acessar-gestao` por perfil nem como
    permissão direta e não tem perfil além dos de cidadão (`cidadao` e o perfil do parâmetro
    `portal.perfil_cidadao`, enquanto existir). Conta sem perfil é cidadã. Conta com
