@@ -38,7 +38,10 @@ class NotificationDispatcher
 
     public function __construct(private AuditService $audit) {}
 
-    public function deliver(User|Cidadao $recipient, ProcessNotification $notification): void
+    /**
+     * @param  array<int, CommunicationChannel>|null  $apenasCanais  restringe os canais do mapa (ex.: aviso interno só in-app); null = mapa completo
+     */
+    public function deliver(User|Cidadao $recipient, ProcessNotification $notification, ?array $apenasCanais = null): void
     {
         if (! $recipient->temEmailEntregavel()) {
             return;
@@ -52,6 +55,10 @@ class NotificationDispatcher
         $communicationIds = [];
 
         foreach ($this->mappedChannels($type->value) as $channel) {
+            if ($apenasCanais !== null && ! in_array($channel, $apenasCanais, true)) {
+                continue;
+            }
+
             if ($channel === CommunicationChannel::Email && $this->semCanalDeEmail($recipient)) {
                 $this->registrarSemCanal($recipient, $notification, $channel);
 
