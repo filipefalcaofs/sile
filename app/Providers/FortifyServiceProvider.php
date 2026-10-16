@@ -181,19 +181,19 @@ class FortifyServiceProvider extends ServiceProvider
         RateLimiter::for('cnpj-lookup', function (Request $request) {
             return Limit::perMinute(
                 (int) config('sile.seguranca.throttle.cnpj_lookup.por_minuto', 30),
-            )->by($request->user()?->id ?: $request->ip());
+            )->by(self::chaveDoLimite($request));
         });
 
         RateLimiter::for('inscricao-lookup', function (Request $request) {
             return Limit::perMinute(
                 (int) config('sile.seguranca.throttle.inscricao_lookup.por_minuto', 30),
-            )->by($request->user()?->id ?: $request->ip());
+            )->by(self::chaveDoLimite($request));
         });
 
         RateLimiter::for('sedur-contato', function (Request $request) {
             return Limit::perMinute(
                 (int) config('sile.seguranca.throttle.sedur_contato.por_minuto', 30),
-            )->by($request->user()?->id ?: $request->ip());
+            )->by(self::chaveDoLimite($request));
         });
 
         // Throttle da geocodificação (HU-029) — Nominatim recomenda ~1 req/s;
@@ -201,7 +201,7 @@ class FortifyServiceProvider extends ServiceProvider
         RateLimiter::for('geocoding', function (Request $request) {
             return Limit::perMinute(
                 (int) config('sile.seguranca.throttle.geocoding.por_minuto', 60),
-            )->by($request->user()?->id ?: $request->ip());
+            )->by(self::chaveDoLimite($request));
         });
 
         // Throttle da consulta pública de viabilidade (EP07) — limite
@@ -210,7 +210,7 @@ class FortifyServiceProvider extends ServiceProvider
         RateLimiter::for('consulta-viabilidade', function (Request $request) {
             return Limit::perMinute(
                 (int) config('sile.seguranca.throttle.consulta_viabilidade.por_minuto', 20),
-            )->by($request->user()?->id ?: $request->ip());
+            )->by(self::chaveDoLimite($request));
         });
 
         // Throttle da consulta PÚBLICA de protocolo por link assinado (HU-069) —
@@ -218,7 +218,7 @@ class FortifyServiceProvider extends ServiceProvider
         RateLimiter::for('consulta-protocolo', function (Request $request) {
             return Limit::perMinute(
                 (int) config('sile.seguranca.throttle.consulta_protocolo.por_minuto', 30),
-            )->by($request->user()?->id ?: $request->ip());
+            )->by(self::chaveDoLimite($request));
         });
 
         // Throttle do teste de conexão de IA (Fase 14, Onda 0) — ação interna de
@@ -228,7 +228,7 @@ class FortifyServiceProvider extends ServiceProvider
         RateLimiter::for('ai-connection-test', function (Request $request) {
             return Limit::perMinute(
                 (int) Settings::get('seguranca.throttle.ai_test.por_minuto', 10),
-            )->by($request->user()?->id ?: $request->ip());
+            )->by(self::chaveDoLimite($request));
         });
 
         // Throttle do webhook municipal /api_integracao/recebe (HU-103 RN-010).
@@ -237,5 +237,16 @@ class FortifyServiceProvider extends ServiceProvider
                 (int) config('sile.seguranca.throttle.regin_recebe.por_minuto', 60),
             )->by($request->ip());
         });
+    }
+
+    /**
+     * Chave dos limitadores por conta: tipo + id, porque cidadão e servidor podem ter o mesmo id;
+     * sem conta, o IP.
+     */
+    private static function chaveDoLimite(Request $request): string
+    {
+        $conta = $request->user();
+
+        return $conta !== null ? $conta->getMorphClass().'|'.$conta->getKey() : (string) $request->ip();
     }
 }
