@@ -25,9 +25,16 @@ export const PORTAL_NAV_ICONS: Record<PortalNavIcon, ComponentType<SVGProps<SVGS
     shield: ShieldIcon,
 };
 
-/** Grupos da sidebar do portal montados a partir do catálogo único. */
-export function portalSidebarGroups(): SidebarGroup[] {
-    return PORTAL_NAV_GROUPS.map((group) => ({
+/**
+ * Grupos da sidebar do portal montados a partir do catálogo único.
+ * Com os serviços desligados, o grupo some: o aviso fica no layout.
+ */
+export function portalSidebarGroups(servicosHabilitados = true): SidebarGroup[] {
+    const groups = servicosHabilitados
+        ? PORTAL_NAV_GROUPS
+        : PORTAL_NAV_GROUPS.filter((group) => group.id !== 'servicos');
+
+    return groups.map((group) => ({
         label: group.label,
         items: group.items.map((item) => {
             const Icon = PORTAL_NAV_ICONS[item.icon];

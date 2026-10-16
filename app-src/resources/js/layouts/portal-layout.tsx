@@ -11,10 +11,10 @@ interface PortalLayoutProps {
     children: ReactNode;
 }
 
-const groups = portalSidebarGroups();
-
 export default function PortalLayout({ children }: PortalLayoutProps) {
-    const { actingFor, flash } = usePage<SharedProps>().props;
+    const { actingFor, flash, portalServicos } = usePage<SharedProps>().props;
+    const groups = portalSidebarGroups(portalServicos.enabled);
+    const avisoDeServico = !portalServicos.enabled && flash.warning === portalServicos.mensagem;
 
     return (
         <ThemeProvider>
@@ -47,9 +47,19 @@ export default function PortalLayout({ children }: PortalLayoutProps) {
                         </div>
                     </div>
                 )}
+                {!portalServicos.enabled && (
+                    <div className="mb-6">
+                        <Alert variant="warning" title="Serviços indisponíveis" message={portalServicos.mensagem} />
+                    </div>
+                )}
                 {flash.status && (
                     <div className="mb-6">
                         <Alert variant="success" title="Sucesso" message={flash.status} />
+                    </div>
+                )}
+                {flash.warning && !avisoDeServico && (
+                    <div className="mb-6">
+                        <Alert variant="warning" title="Atenção" message={flash.warning} />
                     </div>
                 )}
                 <div className="pb-24">{children}</div>

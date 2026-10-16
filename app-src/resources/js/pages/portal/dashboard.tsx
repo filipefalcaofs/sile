@@ -115,7 +115,8 @@ function formatDate(value: string | null): string {
 }
 
 export default function Dashboard({ indicadores, atencao, solicitacoesRecentes }: DashboardProps) {
-    const { auth } = usePage<SharedProps>().props;
+    const { auth, portalServicos } = usePage<SharedProps>().props;
+    const servicosHabilitados = portalServicos.enabled;
     const primeiroNome = auth.user?.name.split(' ')[0] ?? 'cidadão';
 
     const temAtencao = atencao.pendencias.length > 0 || atencao.rascunhos.length > 0;
@@ -128,7 +129,7 @@ export default function Dashboard({ indicadores, atencao, solicitacoesRecentes }
             note: 'aguardando a sua resposta',
             icon: <BellIcon className="size-6" aria-hidden="true" />,
             tone: 'warning',
-            href: FILTROS_SOLICITACOES.convites,
+            href: servicosHabilitados ? FILTROS_SOLICITACOES.convites : undefined,
         },
         {
             key: 'analise',
@@ -137,7 +138,7 @@ export default function Dashboard({ indicadores, atencao, solicitacoesRecentes }
             note: 'sendo analisadas pela SEDUR',
             icon: <SearchIcon className="size-6" aria-hidden="true" />,
             tone: 'brand',
-            href: FILTROS_SOLICITACOES.emAnalise,
+            href: servicosHabilitados ? FILTROS_SOLICITACOES.emAnalise : undefined,
         },
         {
             key: 'processos',
@@ -146,7 +147,7 @@ export default function Dashboard({ indicadores, atencao, solicitacoesRecentes }
             note: 'todas as suas solicitações',
             icon: <FileIcon className="size-6" aria-hidden="true" />,
             tone: 'info',
-            href: FILTROS_SOLICITACOES.todas,
+            href: servicosHabilitados ? FILTROS_SOLICITACOES.todas : undefined,
         },
     ];
 
@@ -192,13 +193,15 @@ export default function Dashboard({ indicadores, atencao, solicitacoesRecentes }
                                                         {pendencia.due_at ? ` · responda até ${formatDate(pendencia.due_at)}` : ''}
                                                     </p>
                                                 </div>
-                                                <Link
-                                                    href={`/portal/solicitacoes/${pendencia.solicitacao_id}/pendencias`}
-                                                    className="inline-flex items-center gap-1.5 rounded-lg bg-warning-500 px-3 py-2 text-theme-sm font-medium text-white transition hover:bg-warning-600"
-                                                >
-                                                    Responder
-                                                    <ArrowRightIcon className="size-4" aria-hidden="true" />
-                                                </Link>
+                                                {servicosHabilitados && (
+                                                    <Link
+                                                        href={`/portal/solicitacoes/${pendencia.solicitacao_id}/pendencias`}
+                                                        className="inline-flex items-center gap-1.5 rounded-lg bg-warning-500 px-3 py-2 text-theme-sm font-medium text-white transition hover:bg-warning-600"
+                                                    >
+                                                        Responder
+                                                        <ArrowRightIcon className="size-4" aria-hidden="true" />
+                                                    </Link>
+                                                )}
                                             </li>
                                         ))}
 
@@ -215,13 +218,15 @@ export default function Dashboard({ indicadores, atencao, solicitacoesRecentes }
                                                         {rascunho.company_legal_name ?? rascunho.service_type ?? 'Solicitação em preenchimento'}
                                                     </p>
                                                 </div>
-                                                <Link
-                                                    href={`/portal/solicitacoes/${rascunho.id}/editar`}
-                                                    className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-2 text-theme-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.03]"
-                                                >
-                                                    <PencilIcon className="size-4" aria-hidden="true" />
-                                                    Retomar e protocolar
-                                                </Link>
+                                                {servicosHabilitados && (
+                                                    <Link
+                                                        href={`/portal/solicitacoes/${rascunho.id}/editar`}
+                                                        className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-2 text-theme-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.03]"
+                                                    >
+                                                        <PencilIcon className="size-4" aria-hidden="true" />
+                                                        Retomar e protocolar
+                                                    </Link>
+                                                )}
                                             </li>
                                         ))}
                                     </ul>
@@ -243,6 +248,7 @@ export default function Dashboard({ indicadores, atencao, solicitacoesRecentes }
                     )}
                 </div>
 
+                {servicosHabilitados && (
                 <section className="col-span-12" aria-labelledby="painel-acoes">
                     <h2 id="painel-acoes" className="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">
                         O que você quer fazer?
@@ -279,6 +285,7 @@ export default function Dashboard({ indicadores, atencao, solicitacoesRecentes }
                         })}
                     </div>
                 </section>
+                )}
 
                 <div className="col-span-12">
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 xl:grid-cols-3">
@@ -314,21 +321,23 @@ export default function Dashboard({ indicadores, atencao, solicitacoesRecentes }
                             title="Minhas solicitações recentes"
                             description="Acompanhe o andamento dos seus pedidos de viabilidade."
                             actions={
-                                <div className="flex flex-wrap items-center gap-4">
-                                    <Link
-                                        href="/portal/viabilidade/historico"
-                                        className="text-theme-sm font-medium text-gray-600 transition hover:text-brand-500 dark:text-gray-300 dark:hover:text-brand-400"
-                                    >
-                                        Minhas consultas de viabilidade
-                                    </Link>
-                                    <Link
-                                        href={FILTROS_SOLICITACOES.todas}
-                                        className="inline-flex items-center gap-1.5 text-theme-sm font-medium text-brand-500 transition hover:text-brand-600 dark:text-brand-400"
-                                    >
-                                        Ver todas
-                                        <ArrowRightIcon className="size-4" aria-hidden="true" />
-                                    </Link>
-                                </div>
+                                servicosHabilitados ? (
+                                    <div className="flex flex-wrap items-center gap-4">
+                                        <Link
+                                            href="/portal/viabilidade/historico"
+                                            className="text-theme-sm font-medium text-gray-600 transition hover:text-brand-500 dark:text-gray-300 dark:hover:text-brand-400"
+                                        >
+                                            Minhas consultas de viabilidade
+                                        </Link>
+                                        <Link
+                                            href={FILTROS_SOLICITACOES.todas}
+                                            className="inline-flex items-center gap-1.5 text-theme-sm font-medium text-brand-500 transition hover:text-brand-600 dark:text-brand-400"
+                                        >
+                                            Ver todas
+                                            <ArrowRightIcon className="size-4" aria-hidden="true" />
+                                        </Link>
+                                    </div>
+                                ) : undefined
                             }
                         />
                         <CardContent flush>
@@ -338,23 +347,22 @@ export default function Dashboard({ indicadores, atencao, solicitacoesRecentes }
                                     title="Você ainda não tem solicitações"
                                     description="Comece verificando se a atividade é permitida no endereço desejado."
                                     action={
-                                        <Link
-                                            href="/portal/viabilidade"
-                                            className="inline-flex items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2.5 text-theme-sm font-medium text-white transition hover:bg-brand-600"
-                                        >
-                                            Fazer consulta de viabilidade
-                                            <ArrowRightIcon className="size-4" aria-hidden="true" />
-                                        </Link>
+                                        servicosHabilitados ? (
+                                            <Link
+                                                href="/portal/viabilidade"
+                                                className="inline-flex items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2.5 text-theme-sm font-medium text-white transition hover:bg-brand-600"
+                                            >
+                                                Fazer consulta de viabilidade
+                                                <ArrowRightIcon className="size-4" aria-hidden="true" />
+                                            </Link>
+                                        ) : undefined
                                     }
                                 />
                             ) : (
                                 <ul className="divide-y divide-gray-100 dark:divide-gray-800">
-                                    {solicitacoesRecentes.map((solicitacao) => (
-                                        <li key={solicitacao.id}>
-                                            <Link
-                                                href={`/portal/solicitacoes/${solicitacao.id}`}
-                                                className="flex flex-wrap items-center justify-between gap-3 px-4 py-4 transition hover:bg-gray-50 dark:hover:bg-white/[0.02] sm:px-6"
-                                            >
+                                    {solicitacoesRecentes.map((solicitacao) => {
+                                        const corpo = (
+                                            <>
                                                 <div className="min-w-0">
                                                     <p className="font-medium text-gray-800 dark:text-white/90">
                                                         {solicitacao.protocol_number ?? 'Em preenchimento'}
@@ -367,9 +375,26 @@ export default function Dashboard({ indicadores, atencao, solicitacoesRecentes }
                                                 <Badge size="sm" color={statusColor(solicitacao.status.value)}>
                                                     {solicitacao.status.public_label}
                                                 </Badge>
-                                            </Link>
-                                        </li>
-                                    ))}
+                                            </>
+                                        );
+
+                                        return (
+                                            <li key={solicitacao.id}>
+                                                {servicosHabilitados ? (
+                                                    <Link
+                                                        href={`/portal/solicitacoes/${solicitacao.id}`}
+                                                        className="flex flex-wrap items-center justify-between gap-3 px-4 py-4 transition hover:bg-gray-50 dark:hover:bg-white/[0.02] sm:px-6"
+                                                    >
+                                                        {corpo}
+                                                    </Link>
+                                                ) : (
+                                                    <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6">
+                                                        {corpo}
+                                                    </div>
+                                                )}
+                                            </li>
+                                        );
+                                    })}
                                 </ul>
                             )}
                         </CardContent>

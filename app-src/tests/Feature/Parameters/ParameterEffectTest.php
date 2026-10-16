@@ -3,6 +3,7 @@
 namespace Tests\Feature\Parameters;
 
 use App\Models\Cidadao;
+use App\Models\Parameter;
 use App\Models\User;
 use App\Support\Settings;
 use Database\Seeders\ParameterSeeder;
@@ -51,6 +52,8 @@ class ParameterEffectTest extends TestCase
     {
         $cidadao = $this->cidadao();
         $attorney = $this->cidadao();
+
+        Parameter::query()->where('key', 'features.portal_servicos')->first()->update(['value' => '1']);
 
         $this->actingAs($cidadao)
             ->post('/portal/procuracoes', [

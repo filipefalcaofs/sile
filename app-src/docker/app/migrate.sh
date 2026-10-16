@@ -20,3 +20,6 @@ php /var/www/html/artisan migrate --force --no-interaction -vvv
 
 echo "[migrate] semeando servidor de e-mail..."
 php /var/www/html/artisan db:seed --class=EmailServerSeeder --force --no-interaction
+
+echo "[migrate] atualizando catalogo de parametros..."
+php /var/www/html/artisan db:seed --class=ParameterSeeder --force --no-interaction

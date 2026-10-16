@@ -3,6 +3,7 @@ import AccessibilityBar from '@/components/app/accessibility-bar';
 import { MotionProvider, RevealLink, RevealScope } from '@/components/motion';
 import Logo from '@/components/app/logo';
 import { ArrowRightIcon, MoonIcon, SunIcon } from '@/components/icons';
+import Alert from '@/components/ui/alert';
 import { ThemeProvider, useTheme } from '@/contexts/theme-context';
 import { acoesPublicas } from '@/navigation/portal-nav';
 import { PORTAL_NAV_ICONS } from '@/navigation/portal-nav-icons';
@@ -213,6 +214,8 @@ function HeroSection() {
 }
 
 function ServicesSection() {
+    const { portalServicos } = usePage<SharedProps>().props;
+
     return (
         <section id="servicos" className="scroll-mt-24">
             <div className="mx-auto w-full max-w-(--breakpoint-xl) px-4 py-16 sm:px-6 sm:py-20">
@@ -226,6 +229,13 @@ function ServicesSection() {
                     </p>
                 </div>
 
+                {!portalServicos.enabled && (
+                    <div className="mt-10">
+                        <Alert variant="warning" title="Serviços indisponíveis" message={portalServicos.mensagem} />
+                    </div>
+                )}
+
+                {portalServicos.enabled && (
                 <MotionProvider>
                 <RevealScope>
                 <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -253,6 +263,7 @@ function ServicesSection() {
                 </div>
                 </RevealScope>
                 </MotionProvider>
+                )}
             </div>
         </section>
     );
@@ -459,6 +470,9 @@ function SiteFooter() {
 }
 
 export default function Home() {
+    const { flash, portalServicos } = usePage<SharedProps>().props;
+    const avisoRepetido = !portalServicos.enabled && flash.warning === portalServicos.mensagem;
+
     return (
         <ThemeProvider>
             <Head title="Viabiliza Salvador — A viabilidade certa, no lugar certo" />
@@ -466,6 +480,11 @@ export default function Home() {
                 <AccessibilityBar />
                 <SiteHeader />
                 <main id="conteudo" className="flex-1">
+                    {flash.warning && !avisoRepetido && (
+                        <div className="mx-auto w-full max-w-(--breakpoint-xl) px-4 pt-6 sm:px-6">
+                            <Alert variant="warning" title="Atenção" message={flash.warning} />
+                        </div>
+                    )}
                     <HeroSection />
                     <ServicesSection />
                     <HowItWorksSection />

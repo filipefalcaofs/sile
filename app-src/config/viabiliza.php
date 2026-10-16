@@ -64,6 +64,10 @@ return [
         // e renovação de viabilidade). SILE_PORTAL_SOLICITACAO=false tira do ar
         // sem deploy; consulta e acompanhamento de processos existentes seguem.
         'portal_solicitacao' => env('SILE_PORTAL_SOLICITACAO', true),
+        // Interruptor de todos os serviços do portal do cidadão. Nasce
+        // desligado. O gestor religa em Parâmetros (features.portal_servicos)
+        // sem deploy. Painel, notificações e conta não passam por este gate.
+        'portal_servicos' => env('SILE_PORTAL_SERVICOS', false),
         'consulta_viabilidade' => true,
         'solicitacao_viabilidade' => true,
         'simulacao_solicitacao' => true,

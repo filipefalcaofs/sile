@@ -265,6 +265,8 @@ class CnpjLookupTest extends TestCase
 
         $this->seed(ParameterSeeder::class);
 
+        Parameter::query()->where('key', 'features.portal_servicos')->first()->update(['value' => '1']);
+
         Parameter::query()
             ->where('key', 'features.cnpj_lookup')
             ->first()

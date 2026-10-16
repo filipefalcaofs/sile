@@ -102,7 +102,7 @@ class DatabaseSeederTest extends TestCase
         // + 2 do parecer à JUCEB (integrations.regin.caminho_resposta/codigo_area).
         // + 1 do token ArcGIS da SEMAP (integrations.arcgis_semap.token).
         // - 1 do perfil do cidadão (portal.perfil_cidadao: cidadão tem tabela própria).
-        $this->assertSame(112, Parameter::query()->count());
+        $this->assertSame(113, Parameter::query()->count());
         $this->assertTrue(
             Activity::query()
                 ->where('log_name', 'cnaes')
@@ -402,7 +402,7 @@ class DatabaseSeederTest extends TestCase
         $this->assertSame(0, User::query()->where('email', 'cidadao@sile.dev')->count());
         $this->assertSame(18, Role::query()->count());
         $this->assertSame(1331, Cnae::query()->count());
-        $this->assertSame(112, Parameter::query()->count());
+        $this->assertSame(113, Parameter::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoMunicipal)->count());
         $this->assertSame(1331, RiskClassification::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoSanitario)->count());
