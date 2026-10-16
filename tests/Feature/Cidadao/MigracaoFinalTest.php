@@ -176,6 +176,35 @@ class MigracaoFinalTest extends TestCase
             ->where('model_type', User::class)->where('model_id', $usuario->id)->where('role_id', $papel->id)->exists());
     }
 
+    public function test_apaga_tokens_de_redefinicao_das_contas_copiadas(): void
+    {
+        $copiado = User::factory()->papelCidadaoLegado()->create();
+        $servidor = User::factory()->analista()->create();
+        IdentidadeSeparada::copiarContasDeCidadao();
+        DB::table('password_reset_tokens')->insert([
+            ['email' => $copiado->email, 'token' => 'a', 'created_at' => now()],
+            ['email' => $servidor->email, 'token' => 'b', 'created_at' => now()],
+        ]);
+
+        $this->rodarMigracao();
+
+        $this->assertSame([$servidor->email], DB::table('password_reset_tokens')->pluck('email')->all());
+    }
+
+    public function test_solicitante_do_regin_antigo_fica_sem_senha_e_conta_normal_mantem(): void
+    {
+        $solicitante = User::factory()->create(['email' => '52998224725'.Cidadao::SUFIXO_EMAIL_TECNICO]);
+        $normal = User::factory()->papelCidadaoLegado()->create();
+        IdentidadeSeparada::copiarContasDeCidadao();
+
+        $this->rodarMigracao();
+
+        $this->assertFalse(DB::table('users')->where('id', $solicitante->id)->exists());
+        $this->assertNull(DB::table('cidadaos')->where('id', $solicitante->id)->value('password'));
+        $this->assertNotNull(DB::table('cidadaos')->where('id', $normal->id)->value('password'));
+        $this->assertFalse(DB::table('users')->where('id', $normal->id)->exists());
+    }
+
     public function test_down_nao_altera_nada(): void
     {
         $copiado = User::factory()->create();

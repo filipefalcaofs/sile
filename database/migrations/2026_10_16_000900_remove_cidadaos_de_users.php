@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Cidadao;
 use App\Models\User;
 use App\Support\Migration\IdentidadeSeparada;
 use Illuminate\Database\Migrations\Migration;
@@ -30,6 +31,11 @@ return new class extends Migration
         DB::table('model_has_permissions')->where('model_type', User::class)
             ->whereIn('model_id', IdentidadeSeparada::contasCopiadas())->delete();
 
+        // Links de redefinição pedidos no portal antigo (broker users) deixam de existir.
+        DB::table('password_reset_tokens')
+            ->whereIn('email', DB::table('users')->whereIn('id', IdentidadeSeparada::contasCopiadas())->select('email'))
+            ->delete();
+
         DB::table('users')->whereIn('id', IdentidadeSeparada::contasCopiadas())->delete();
 
         $papel = DB::table('roles')->where('name', 'cidadao')->pluck('id');
@@ -39,6 +45,13 @@ return new class extends Migration
             DB::table('model_has_roles')->whereIn('role_id', $papel)->delete();
             DB::table('roles')->whereIn('id', $papel)->delete();
         }
+
+        // Solicitantes criados pelo REGIN antigo vieram com senha aleatória que ninguém conhece:
+        // sem senha, viram registro de balcão assumível. Fica depois do delete de users, que usa
+        // a senha em cidadaos para reconhecer as contas copiadas.
+        DB::table('cidadaos')
+            ->where('email', 'like', '%'.Cidadao::SUFIXO_EMAIL_TECNICO)
+            ->update(['password' => null, 'remember_token' => null]);
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
     }
