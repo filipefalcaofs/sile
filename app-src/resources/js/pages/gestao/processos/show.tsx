@@ -177,6 +177,7 @@ export default function Show({
     const fichaExpresso = processo.fluxo === 'expresso';
     const podeAbrirFicha = podeAnalisar || fichaExpresso;
     const podeConcluirAnalise =
+        !fichaExpresso &&
         auth.permissions.includes('concluir-analise') &&
         (processo.status === 'em_analise' || processo.status === 'deferida');
 
