@@ -19,7 +19,8 @@ use Illuminate\Console\Command;
  * é um registro de balcão em cidadaos (Cidadao::criarRegistroDeBalcao). Só toca
  * processo sem requerente (a separação das contas anulou o servidor que figurava
  * como requerente do REGIN antigo) ou criado pela conta da integração ou por conta
- * de desenvolvedor/suporte.
+ * de sistema (integração, e-mail .invalid, desenvolvedor/suporte). Sem solicitante
+ * recuperável, mantém o requerente atual.
  */
 class ReginCorrigirRequerentesCommand extends Command
 {
@@ -31,7 +32,7 @@ class ReginCorrigirRequerentesCommand extends Command
     {
         $dryRun = (bool) $this->option('dry-run');
         $integracao = $protocolador->integracao();
-        $suspeitos = User::query()->get()->filter(fn (User $u): bool => $u->isAtorOcultoNaTramitacao())->pluck('id')->push($integracao->id)->all();
+        $suspeitos = User::query()->whereNotIn('id', User::query()->semContasDeSistema()->select('id'))->pluck('id')->push($integracao->id)->unique()->all();
 
         $contagem = ['com_solicitante' => 0, 'sem_solicitante' => 0];
         $doLog = $this->solicitantesDoLog();
@@ -62,7 +63,7 @@ class ReginCorrigirRequerentesCommand extends Command
                 }
 
                 $processo->forceFill([
-                    'requester_cidadao_id' => $requerente?->id,
+                    'requester_cidadao_id' => $requerente?->id ?? $processo->requester_cidadao_id,
                     'created_by_type' => $integracao->getMorphClass(),
                     'created_by_id' => $integracao->id,
                 ])->save();

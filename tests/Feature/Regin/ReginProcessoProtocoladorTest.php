@@ -244,14 +244,41 @@ class ReginProcessoProtocoladorTest extends TestCase
         $this->assertSame(User::EMAIL_INTEGRACAO_REGIN, $processo->createdBy->email);
     }
 
-    public function test_comando_deixa_o_requerente_nulo_quando_a_juceb_nao_mandou_solicitante(): void
+    public function test_comando_preserva_o_requerente_existente_quando_nao_ha_solicitante_recuperavel(): void
     {
         $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($this->ruc()));
-        $processo->forceFill(['requester_cidadao_id' => Cidadao::factory()->create()->id, 'origem_declarada' => null])->save();
+        $requerente = Cidadao::factory()->create();
+        $processo->forceFill(['requester_cidadao_id' => $requerente->id, 'origem_declarada' => null])->save();
 
         $this->artisan('regin:corrigir-requerentes')->assertSuccessful();
 
-        $this->assertNull($processo->fresh()->requester_cidadao_id);
+        $this->assertSame($requerente->id, $processo->fresh()->requester_cidadao_id);
+        $this->assertSame(User::EMAIL_INTEGRACAO_REGIN, $processo->fresh()->createdBy->email);
+    }
+
+    public function test_comando_reatribui_processo_criado_por_conta_de_sistema_invalid_e_e_idempotente(): void
+    {
+        $sistema = User::factory()->create(['email' => 'robo@sistema.invalid']);
+        $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($this->ruc()));
+        $processo->forceFill([
+            'requester_cidadao_id' => Cidadao::factory()->create()->id,
+            'created_by_type' => $sistema->getMorphClass(),
+            'created_by_id' => $sistema->id,
+            'origem_declarada' => ['cpf_solicitante' => '52998224725', 'nome_solicitante' => 'Maria Souza', 'email_solicitante' => 'maria@exemplo.com'],
+        ])->save();
+
+        $this->artisan('regin:corrigir-requerentes', ['--dry-run' => true])->assertSuccessful();
+        $this->assertSame($sistema->id, $processo->fresh()->created_by_id);
+        $this->assertNotSame($processo->fresh()->requester_cidadao_id, Cidadao::query()->where('cpf', '52998224725')->value('id'));
+
+        $this->artisan('regin:corrigir-requerentes')->assertSuccessful();
+        $primeiro = $processo->fresh();
+        $this->assertSame(User::EMAIL_INTEGRACAO_REGIN, $primeiro->createdBy->email);
+        $this->assertSame('maria@exemplo.com', $primeiro->requester->email);
+
+        $this->artisan('regin:corrigir-requerentes')->assertSuccessful();
+        $this->assertSame($primeiro->requester_cidadao_id, $processo->fresh()->requester_cidadao_id);
+        $this->assertSame(1, Cidadao::query()->where('cpf', '52998224725')->count());
     }
 
     public function test_natureza_juridica_do_ruc_vai_para_a_empresa(): void
