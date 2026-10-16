@@ -52,12 +52,22 @@ final class IdentidadeSeparada
      * Contas de cidadão: não AD, sem `acessar-gestao` (por perfil ou permissão direta) e sem
      * nenhum perfil além dos de cidadão (`perfisDeCidadao`). Conta sem perfil é cidadã. Conta
      * com outro perfil, mesmo sem permissão (perfil herdado ainda não configurado), é de servidor.
+     * Contas de sistema nunca são cidadãs, mesmo sem perfil: a da integração JUCEB/REGIN
+     * (`User::EMAIL_INTEGRACAO_REGIN`, autora dos processos recebidos), qualquer e-mail em
+     * domínio `.invalid` e as contas de desenvolvedor/suporte (`viabiliza.tramitacao.atores_ocultos`).
      */
     public static function consultaContasDeCidadao(): Builder
     {
+        $contasDeSistema = array_values(array_unique(array_map('mb_strtolower', [
+            User::EMAIL_INTEGRACAO_REGIN,
+            ...(array) config('viabiliza.tramitacao.atores_ocultos.emails', []),
+        ])));
+
         return DB::table('users')
             ->select(self::COLUNAS)
             ->where('auth_type', '!=', 'ad')
+            ->whereNotIn(DB::raw('lower(email)'), $contasDeSistema)
+            ->whereRaw('lower(email) not like ?', ['%.invalid'])
             ->whereNotExists(function ($q) {
                 $q->select(DB::raw(1))
                     ->from('model_has_roles')
