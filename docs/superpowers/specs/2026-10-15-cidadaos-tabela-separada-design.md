@@ -132,6 +132,11 @@ Migrations `2026_10_16_000050` a `2026_10_16_000910`, na ordem:
    `portal.perfil_cidadao`, enquanto existir). Conta sem perfil é cidadã. Conta com
    `acessar-gestao` direta é servidora com acesso. Conta ambígua (perfil herdado sem
    permissão de gestão) é servidora: fica em `users`, não é copiada nem apagada.
+   Contas de sistema nunca são cidadãs, mesmo sem perfil e sem AD: a conta da integração
+   JUCEB/REGIN (`User::EMAIL_INTEGRACAO_REGIN`, autora dos processos recebidos), qualquer
+   e-mail em domínio `.invalid` e as contas de desenvolvedor/suporte
+   (`viabiliza.tramitacao.atores_ocultos.emails`). Elas ficam em `users` e o que criaram fica
+   com autor do tipo `User`; o pré-voo não as trata como cidadãs.
 3. **Cópia (000300).** As contas de cidadão vão para `cidadaos` com o mesmo `id`. A
    sequência de `cidadaos.id` passa a ficar acima dos ids das duas tabelas.
 4. **Colunas mistas (000350)** viram `*_type` + `*_id`; o tipo vem do critério acima.
@@ -140,10 +145,15 @@ Migrations `2026_10_16_000050` a `2026_10_16_000910`, na ordem:
      têm as referências a servidores anuladas, sem espelho.
    - Procurações ainda vigentes em que o outorgante ou o procurador é servidor são revogadas
      (`revoked_at` = agora, sem autor).
-   - Solicitações de origem `regin` cujo requerente não é conta de cidadão passam para o
-     registro técnico do REGIN (`Cidadao::CPF_TECNICO`, criado se não existir, sem senha).
-     O REGIN antigo gravava o primeiro servidor como requerente de todo recebimento sem
-     solicitante; sem isso o espelho desse servidor herdaria todo o histórico REGIN.
+   - `viability_requests.requester_user_id` vira `requester_cidadao_id` **opcional** (o tronco
+     já o tornou opcional na `2026_10_15_192821`), com chave para `cidadaos` sem cascata, como a
+     original. Solicitações de origem `regin` cujo requerente não é conta de cidadão (o primeiro
+     servidor do REGIN antigo, a conta da integração ou a de suporte) ficam com requerente NULL,
+     sem espelho: é o que o recebimento grava hoje quando o envelope da JUCEB não traz
+     solicitante. O comando `regin:corrigir-requerentes` refaz depois o requerente a partir do
+     envelope (`origem_declarada` ou o JSON de entrada no log de integração), criando o
+     registro de balcão do solicitante (`Cidadao::criarRegistroDeBalcao`), e grava a conta da
+     integração como autora.
    - Nas demais colunas obrigatórias, servidor citado ganha espelho em `cidadaos` com o mesmo
      `id` e sem senha (ex.: solicitação que o próprio servidor fez no portal).
 6. **Notificações e auditoria (000450).** `notifications.notifiable_type`,
@@ -162,12 +172,14 @@ Depois da migração:
   servidor, solicitante do REGIN antigo) é assumido quando a pessoa se cadastra no portal com
   o mesmo CPF ou entra pelo Gov.br. Pelo Gov.br, o registro ganha senha aleatória, o e-mail
   verificado do Gov.br quando não pertence a outro cidadão, e o e-mail passa a verificado.
-- O registro técnico do REGIN (CPF `00000000000`) não é conta: não aparece na gestão e não
-  pode ser assumido (o CPF não passa na validação).
+- REGIN: o recebimento grava requerente NULL quando o envelope não traz solicitante e o
+  registro de balcão do solicitante quando traz CPF, nome e e-mail; o autor (`created_by_*`) é
+  sempre a conta da integração (`User`). Notificação a requerente nulo não tem destinatário.
+  Não existe registro técnico compartilhado em `cidadaos`.
 - `down()` das migrations da separação é no-op, exceto o da 000100, que remove `cidadaos` e
   `cidadao_password_reset_tokens`. Por isso `migrate:rollback` nunca deve ser usado: a
   reversão é a restauração do backup do banco feito antes da publicação.
-- O ensaio da migração foi feito em SQLite com dados do schema antigo. Não ficaram provados
+- O ensaio da migração foi feito em SQLite com dados do schema do tronco (7bbd3810). Não ficaram provados
   nomes de constraint do PostgreSQL, `setval`, locks e tempo com volume real: ver Rollout.
 
 ### 6. Código, por camada
@@ -194,14 +206,17 @@ Depois da migração:
 - A migração toca dados reais na homologação e na produção do SEMIT. Publicar primeiro em
   `homologa`, validar com contagens e login real, e só então em `main`.
 - Fazer em janela de baixo uso: durante a migração, o portal fica em manutenção. O
-  interruptor `SILE_PORTAL_SOLICITACAO` não cobre o login; usar o modo manutenção do
+  interruptor `SILE_PORTAL_SOLICITACAO` (o nome da variável de ambiente ficou o mesmo no
+  renome) não cobre o login; usar o modo manutenção do
   Laravel.
 - No OKD as imagens web, agendador e filas rodam `migrate` ao subir, e o modo de manutenção
   `file` não vale entre pods: escalar os três a zero, rodar a migração uma vez, conferir as
   contagens e só então subir de novo.
-- Trabalho feito em worktree limpa a partir de `softwell/main`, separada do renome
-  `sile` → `viabiliza` que está sem commit na árvore principal. Quando esse renome for
-  integrado, esta branch recebe o merge.
+- Trabalho feito a partir de `softwell/main` e integrado ao tronco `feat/portal-servicos-navegacao`
+  (7bbd3810), que já tem o renome `sile` → `viabiliza`: o código da separação usa
+  `config/viabiliza.php` (`viabiliza.*`); variáveis de ambiente `SILE_*` e e-mails de
+  desenvolvimento `@sile.dev` seguem como no tronco. Depois da migração, rodar
+  `php artisan regin:corrigir-requerentes --dry-run` e, conferidas as contagens, sem `--dry-run`.
 
 ## Questões que o plano resolve com evidência
 
@@ -216,16 +231,20 @@ Depois da migração:
   por quem se cadastra no portal com o mesmo CPF, sem outra prova de identidade. Recomendação:
   manter; exigir Gov.br bloquearia a assunção quando o login Gov.br estiver desligado.
 - **Espelhos de servidor assumíveis.** O servidor que já tinha pedido algo pelo portal ganha
-  espelho sem senha; quem cadastrar esse CPF assume o espelho e o histórico dele (pouco,
-  depois que as solicitações REGIN foram para o registro técnico).
+  espelho sem senha; quem cadastrar esse CPF assume o espelho e o histórico dele (pouco:
+  as solicitações REGIN que citavam servidor ficam sem requerente).
 - **Atendimento e contingência criam registro com o nome da SEDUR.** O formulário não tem
   campo de nome: CPF novo depende da consulta à SEDUR; sem a SEDUR, o atendimento é
   bloqueado sem criar registro.
-- **Registro técnico compartilhado do REGIN.** Toda solicitação REGIN sem solicitante
-  identificado fica no mesmo registro técnico (CPF `00000000000`), em vez de num servidor.
-- **Ator das transições REGIN.** Protocolar e decidir no REGIN continuam registrados em nome
-  do primeiro servidor (`FluxoExpressoService::decide` exige `User`); um ator de sistema
-  próprio fica como recomendação.
+- **REGIN sem solicitante: requerente nulo (decidido pelo usuário).** "Se vem null, salva
+  null": substitui o registro técnico compartilhado que esta branch tinha proposto. Os
+  processos REGIN antigos com servidor como requerente também ficam nulos na migração, até o
+  `regin:corrigir-requerentes` refazê-los pelo envelope.
+- **Ator das transições REGIN.** Protocolar e decidir no REGIN ficam em nome da conta da
+  integração (`User::EMAIL_INTEGRACAO_REGIN`), como no tronco; ninguém real figura como autor.
+- **Contas de sistema fora da classificação de cidadão.** Por e-mail (`EMAIL_INTEGRACAO_REGIN`,
+  domínio `.invalid`, atores ocultos da tramitação). Uma conta de sistema nova precisa seguir
+  uma dessas regras para não ser tratada como cidadã numa migração futura.
 - **Contas ambíguas ficam em `users`.** Servidor local com perfil herdado sem permissão de
   gestão continua servidor e aparece na aba da gestão com o indicador "sem acesso à
   gestão". Quem tem `acessar-gestao` só direta tem acesso e não recebe o indicador. Se for um cidadão de verdade, perde o login do portal até
