@@ -12,7 +12,8 @@ use Throwable;
 
 /**
  * Traz a geometria das zonas candidatas por BBOX do polígono em cada camada de
- * zona ativa (o WAF da Prefeitura bloqueia polígono na URL) e calcula a área de
+ * zona ativa (o WAF da Prefeitura bloqueia polígono na URL; se também recusar o
+ * BBOX do CQL_FILTER, a camada é repetida pelo parâmetro bbox) e calcula a área de
  * cada interseção no PostGIS da aplicação. Uma camada sem resposta torna o
  * resultado indisponível: sem ela a maior porção não é verificável. Camada que
  * responde linha (centralidade linear) não disputa. Nada é persistido.
@@ -55,16 +56,16 @@ class GeoServerZonaMaiorPorcaoResolver implements ZonaMaiorPorcaoResolver
         }
 
         try {
-            $responses = Http::pool(function (Pool $pool) use ($typeNames, $bbox): void {
-                foreach ($typeNames as $typeName) {
-                    $pool->as($typeName)
-                        ->withHeaders(['User-Agent' => (string) config('viabiliza.integrations.geoserver.user_agent', 'Viabiliza-SEDUR-Salvador/1.0')])
-                        ->timeout((int) config('viabiliza.integrations.geoserver.timeout', 8))
-                        ->connectTimeout(3)
-                        ->acceptJson()
-                        ->get($this->url($typeName, $bbox));
-                }
-            });
+            $payloads = $this->consultarCamadas($typeNames, fn (string $typeName): string => $this->url($typeName, $bbox));
+
+            $recusadas = array_keys(array_filter($payloads, fn (?array $payload): bool => $payload === null));
+
+            if ($recusadas !== []) {
+                $payloads = array_merge(
+                    $payloads,
+                    $this->consultarCamadas($recusadas, fn (string $typeName): string => $this->urlBboxParametro($typeName, $bbox)),
+                );
+            }
         } catch (Throwable $e) {
             return ZonaMaiorPorcao::indisponivel('GeoServer SEDUR indisponível: '.$e->getMessage());
         }
@@ -74,10 +75,9 @@ class GeoServerZonaMaiorPorcaoResolver implements ZonaMaiorPorcaoResolver
         $falhas = [];
 
         foreach ($typeNames as $typeName) {
-            $response = $responses[$typeName] ?? null;
-            $payload = $response instanceof Response && $response->successful() ? $response->json() : null;
+            $payload = $payloads[$typeName] ?? null;
 
-            if (! is_array($payload) || ($payload['type'] ?? null) !== 'FeatureCollection') {
+            if ($payload === null) {
                 $falhas[] = $typeName;
                 $camadas[] = ['type_name' => $typeName, 'geometria' => null, 'status' => 'falha'];
 
@@ -218,6 +218,60 @@ class GeoServerZonaMaiorPorcaoResolver implements ZonaMaiorPorcaoResolver
             'outputFormat' => 'application/json',
             'srsName' => 'EPSG:4326',
             'CQL_FILTER' => $this->filtroBbox($bbox),
+        ]);
+    }
+
+    /**
+     * Consulta as camadas em paralelo. Resposta que não seja uma
+     * FeatureCollection (erro HTTP, página de bloqueio do WAF) vira null.
+     *
+     * @param  list<string>  $typeNames
+     * @param  callable(string): string  $urlDe
+     * @return array<string, array<string, mixed>|null>
+     */
+    private function consultarCamadas(array $typeNames, callable $urlDe): array
+    {
+        $responses = Http::pool(function (Pool $pool) use ($typeNames, $urlDe): void {
+            foreach ($typeNames as $typeName) {
+                $pool->as($typeName)
+                    ->withHeaders(['User-Agent' => (string) config('viabiliza.integrations.geoserver.user_agent', 'Viabiliza-SEDUR-Salvador/1.0')])
+                    ->timeout((int) config('viabiliza.integrations.geoserver.timeout', 8))
+                    ->connectTimeout(3)
+                    ->acceptJson()
+                    ->get($urlDe($typeName));
+            }
+        });
+
+        $payloads = [];
+
+        foreach ($typeNames as $typeName) {
+            $response = $responses[$typeName] ?? null;
+            $payload = $response instanceof Response && $response->successful() ? $response->json() : null;
+
+            $payloads[$typeName] = is_array($payload) && ($payload['type'] ?? null) === 'FeatureCollection' ? $payload : null;
+        }
+
+        return $payloads;
+    }
+
+    /**
+     * Mesmo recorte do BBOX do CQL_FILTER, pelo parâmetro bbox do WFS: sem
+     * expressão no valor, usado quando o WAF recusa o CQL_FILTER.
+     *
+     * @param  array{0: float, 1: float, 2: float, 3: float}  $bbox
+     */
+    private function urlBboxParametro(string $typeName, array $bbox): string
+    {
+        $base = rtrim((string) Settings::get('integrations.geoserver.base_url', config('viabiliza.integrations.geoserver.base_url')), '/');
+
+        return $base.'/wfs?'.http_build_query([
+            'service' => 'WFS',
+            'version' => '1.1.0',
+            'request' => 'GetFeature',
+            'typeName' => $typeName,
+            'outputFormat' => 'application/json',
+            'srsName' => 'EPSG:4326',
+            'bbox' => sprintf('%.7f,%.7f,%.7f,%.7f,EPSG:4326', $bbox[0], $bbox[1], $bbox[2], $bbox[3]),
         ]);
     }
 

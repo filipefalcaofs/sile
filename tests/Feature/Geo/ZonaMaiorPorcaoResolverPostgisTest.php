@@ -151,4 +151,47 @@ class ZonaMaiorPorcaoResolverPostgisTest extends PostgisTestCase
             return str_starts_with((string) ($query['CQL_FILTER'] ?? ''), 'BBOX(GEOMETRY,');
         });
     }
+
+    public function test_ca_zn_09_waf_bloqueando_o_cql_filter_cai_no_parametro_bbox(): void
+    {
+        $zona = $this->retangulo(-38.5010, -38.4980, -12.9810, -12.9780);
+
+        Http::fake(function (Request $request) use ($zona) {
+            parse_str((string) parse_url($request->url(), PHP_URL_QUERY), $query);
+
+            if (isset($query['CQL_FILTER'])) {
+                return Http::response('URL Bloqueada', 500);
+            }
+
+            $feicao = ($query['typeName'] ?? '') === 'louos_zpr3:VM_L_Z_USO_ZPR_3'
+                ? [['type' => 'Feature', 'geometry' => $zona, 'properties' => []]]
+                : [];
+
+            return Http::response(['type' => 'FeatureCollection', 'features' => $feicao]);
+        });
+
+        $resultado = app(ZonaMaiorPorcaoResolver::class)->resolver($this->lote());
+
+        $this->assertSame(ZonaMaiorPorcao::IDENTIFICADO, $resultado->status);
+        Http::assertSent(function (Request $request): bool {
+            parse_str((string) parse_url($request->url(), PHP_URL_QUERY), $query);
+
+            return ! isset($query['CQL_FILTER']) && ($query['bbox'] ?? null) === '-38.5000000,-12.9800000,-38.4990000,-12.9790000,EPSG:4326';
+        });
+    }
+
+    public function test_ca_zn_10_sem_bloqueio_o_parametro_bbox_nao_e_usado(): void
+    {
+        $this->geoserver([
+            'louos_zpr3:VM_L_Z_USO_ZPR_3' => $this->retangulo(-38.5010, -38.4980, -12.9810, -12.9780),
+        ]);
+
+        app(ZonaMaiorPorcaoResolver::class)->resolver($this->lote());
+
+        Http::assertNotSent(function (Request $request): bool {
+            parse_str((string) parse_url($request->url(), PHP_URL_QUERY), $query);
+
+            return isset($query['bbox']);
+        });
+    }
 }
