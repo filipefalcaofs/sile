@@ -30,7 +30,8 @@ Critérios de sucesso:
 3. Recuperação de senha de cada ambiente só enxerga as contas do seu ambiente.
 4. Todo dado de cidadão existente (empresas, procurações, solicitações, consultas,
    notificações, aceites) continua ligado à mesma pessoa depois da migração.
-5. A suíte de testes passa, e a migração tem teste de ida e de volta.
+5. A suíte de testes passa, e a migração tem teste com dados do schema antigo. A volta é
+   pelo backup do banco (`down()` sem efeito).
 
 ## Fora de escopo
 
@@ -120,26 +121,53 @@ existe (`$request->is('gestao*') ? 'gestao' : 'web'`).
 
 ### 5. Migração de dados
 
-Uma migration, em transação, na ordem:
+Migrations `2026_10_16_000050` a `2026_10_16_000910`, na ordem:
 
-1. Cria `cidadaos`.
-2. Copia de `users` para `cidadaos` **preservando o `id`** as contas que não são AD e
-   não têm perfil com a permissão `acessar-gestao` (mesmo critério de
-   `User::scopeUsuarioPortal`). Como o `id` não muda, as colunas "só cidadão" mantêm os
-   valores e só trocam o alvo da chave estrangeira; não há tabela de mapeamento.
-3. Nas colunas "mistas", grava o tipo antes de qualquer outra mudança: `id` que existe em
-   `cidadaos` vira `App\Models\Cidadao`, o restante `App\Models\User`. Nas colunas "só
-   cidadão" que apontam para um servidor (por exemplo o ator de fallback do recebimento
-   REGIN), o servidor ganha um espelho em `cidadaos` com o mesmo `id` e sem senha, e a
-   chave estrangeira é retargetada. A sequência de `cidadaos.id` é reajustada ao final.
-4. Reescreve `notifications` e `activity_log` dos cidadãos.
-5. Remove de `users` as linhas migradas e o papel `cidadao` do catálogo de papéis.
+1. **Pré-voo (000050).** Antes de qualquer mudança, confere toda chave estrangeira para
+   `users` fora das colunas que a separação converte (lista derivada de
+   `Schema::getForeignKeys`, só no schema corrente). Se alguma citar uma conta de cidadão,
+   a migração para com a lista `tabela.coluna (linhas)` e nada é alterado.
+2. **Critério de conta de cidadão.** Não é AD, não tem `acessar-gestao` por perfil nem como
+   permissão direta e não tem perfil além dos de cidadão (`cidadao` e o perfil do parâmetro
+   `portal.perfil_cidadao`, enquanto existir). Conta sem perfil é cidadã. Conta ambígua
+   (perfil herdado sem permissão de gestão, ou `acessar-gestao` só direta) é servidor: fica
+   em `users`, não é copiada nem apagada.
+3. **Cópia (000300).** As contas de cidadão vão para `cidadaos` com o mesmo `id`. A
+   sequência de `cidadaos.id` passa a ficar acima dos ids das duas tabelas.
+4. **Colunas mistas (000350)** viram `*_type` + `*_id`; o tipo vem do critério acima.
+5. **Colunas só de cidadão (000400 a 000420)** trocam o alvo da chave para `cidadaos`.
+   - Colunas que aceitam nulo (`viability_queries.user_id`, `procurations.revoked_by_user_id`)
+     têm as referências a servidores anuladas, sem espelho.
+   - Procurações ainda vigentes em que o outorgante ou o procurador é servidor são revogadas
+     (`revoked_at` = agora, sem autor).
+   - Solicitações de origem `regin` cujo requerente não é conta de cidadão passam para o
+     registro técnico do REGIN (`Cidadao::CPF_TECNICO`, criado se não existir, sem senha).
+     O REGIN antigo gravava o primeiro servidor como requerente de todo recebimento sem
+     solicitante; sem isso o espelho desse servidor herdaria todo o histórico REGIN.
+   - Nas demais colunas obrigatórias, servidor citado ganha espelho em `cidadaos` com o mesmo
+     `id` e sem senha (ex.: solicitação que o próprio servidor fez no portal).
+6. **Notificações e auditoria (000450).** `notifications.notifiable_type`,
+   `activity_log.causer_type`/`subject_type` e `abuse_alerts.subject_type` das contas
+   copiadas passam a `App\Models\Cidadao`.
+7. **Remoção (000900).** Repete a checagem de conflito sobre as contas copiadas (id e CPF
+   iguais nas duas tabelas e senha em `cidadaos`) e só então remove de `users` essas contas,
+   seus papéis e permissões diretas, os tokens de `password_reset_tokens` dos seus e-mails e o
+   papel `cidadao`. Por último, os solicitantes criados pelo REGIN antigo (e-mail
+   `@solicitante.viabiliza.local`, senha aleatória) ficam sem senha.
+8. **Parâmetro (000910).** Remove `portal.perfil_cidadao` do catálogo.
 
-O espelho de um servidor em `cidadaos` não tem senha: ele não entra no portal, mas o
-histórico que ele tenha como requerente continua íntegro. A migração falha com mensagem
-clara se alguma coluna "só servidor" apontar para um cidadão migrado. O `down()` devolve
-as contas para `users` pelo mesmo `id`. Ela roda antes numa cópia do banco de
-homologação, com contagem de linhas por tabela antes e depois.
+Depois da migração:
+
+- O provider `cidadaos` só autentica cidadão com senha. Registro sem senha (balcão, espelho de
+  servidor, solicitante do REGIN antigo) é assumido quando a pessoa se cadastra no portal com
+  o mesmo CPF ou entra pelo Gov.br. Pelo Gov.br, o registro ganha senha aleatória, o e-mail
+  verificado do Gov.br quando não pertence a outro cidadão, e o e-mail passa a verificado.
+- O registro técnico do REGIN (CPF `00000000000`) não é conta: não aparece na gestão e não
+  pode ser assumido (o CPF não passa na validação).
+- `down()` de todas as migrations da separação é no-op. A reversão é a restauração do
+  backup do banco feito antes da publicação.
+- O ensaio da migração foi feito em SQLite com dados do schema antigo. Não ficaram provados
+  nomes de constraint do PostgreSQL, `setval`, locks e tempo com volume real: ver Rollout.
 
 ### 6. Código, por camada
 
@@ -154,7 +182,7 @@ homologação, com contagem de linhas por tabela antes e depois.
 
 ## Testes
 
-- Migração: dados de antes e depois, ida e volta, conta mista, conta sem senha.
+- Migração: dados de antes e depois, conta mista, conta ambígua, conta sem senha, REGIN.
 - Auth: CPF e e-mail de servidor cadastram cidadão; login e reset de senha isolados por
   ambiente; assumir registro criado no balcão.
 - Os testes do portal trocam `User::factory()->cidadao()` por `Cidadao::factory()`.
@@ -167,6 +195,9 @@ homologação, com contagem de linhas por tabela antes e depois.
 - Fazer em janela de baixo uso: durante a migração, o portal fica em manutenção. O
   interruptor `SILE_PORTAL_SOLICITACAO` não cobre o login; usar o modo manutenção do
   Laravel.
+- No OKD as imagens web, agendador e filas rodam `migrate` ao subir, e o modo de manutenção
+  `file` não vale entre pods: escalar os três a zero, rodar a migração uma vez, conferir as
+  contagens e só então subir de novo.
 - Trabalho feito em worktree limpa a partir de `softwell/main`, separada do renome
   `sile` → `viabiliza` que está sem commit na árvore principal. Quando esse renome for
   integrado, esta branch recebe o merge.
@@ -177,3 +208,24 @@ homologação, com contagem de linhas por tabela antes e depois.
 - (Resolvida na escrita do plano: `revoked_by_user_id` é só de cidadão.)
 - Se existem contas hoje em `users` com papel de servidor e papel `cidadao` ao mesmo
   tempo, e quantas são.
+
+## Decisões a ratificar
+
+- **Assumir registro por CPF.** Registro sem senha (balcão ou espelho de servidor) é assumido
+  por quem se cadastra no portal com o mesmo CPF, sem outra prova de identidade. Recomendação:
+  manter; exigir Gov.br bloquearia a assunção quando o login Gov.br estiver desligado.
+- **Espelhos de servidor assumíveis.** O servidor que já tinha pedido algo pelo portal ganha
+  espelho sem senha; quem cadastrar esse CPF assume o espelho e o histórico dele (pouco,
+  depois que as solicitações REGIN foram para o registro técnico).
+- **Atendimento e contingência criam registro com o nome da SEDUR.** O formulário não tem
+  campo de nome: CPF novo depende da consulta à SEDUR; sem a SEDUR, o atendimento é
+  bloqueado sem criar registro.
+- **Registro técnico compartilhado do REGIN.** Toda solicitação REGIN sem solicitante
+  identificado fica no mesmo registro técnico (CPF `00000000000`), em vez de num servidor.
+- **Ator das transições REGIN.** Protocolar e decidir no REGIN continuam registrados em nome
+  do primeiro servidor (`FluxoExpressoService::decide` exige `User`); um ator de sistema
+  próprio fica como recomendação.
+- **Contas ambíguas ficam em `users`.** Servidor local com perfil sem permissão de gestão
+  (ou só com `acessar-gestao` direta) continua servidor e aparece na aba da gestão com o
+  indicador "sem acesso à gestão". Se for um cidadão de verdade, perde o login do portal até
+  criar conta nova com o mesmo CPF; o histórico dele não se perde.
