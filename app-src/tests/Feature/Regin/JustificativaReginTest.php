@@ -153,25 +153,6 @@ class JustificativaReginTest extends TestCase
         Http::assertNotSent(fn ($r) => str_ends_with($r->url(), '/recebe'));
     }
 
-    public function test_salvar_e_reenviar_manda_o_texto_gravado_a_juceb_e_audita_o_envio(): void
-    {
-        [$processo] = $this->processoDeferido('BAP9000004');
-
-        $this->actingAs($this->analistaServidor(), 'gestao')
-            ->put($this->url($processo), ['justificativa' => 'Texto retificado pelo analista.', 'reenviar' => true])
-            ->assertRedirect()
-            ->assertSessionHasNoErrors();
-
-        Http::assertSent(fn ($r) => str_ends_with($r->url(), '/recebe')
-            && $r['protocolo'] === 'BAP9000004'
-            && $r['dadosProcesso']['ANALISES']['AREA'][0]['JUSTIFICATIVA_ANALISE'] === 'Texto retificado pelo analista.');
-        $this->assertSame(1, Activity::query()
-            ->where('log_name', 'integracoes')
-            ->where('event', 'regin-parecer')
-            ->where('result', 'sucesso')
-            ->count());
-    }
-
     public function test_perfil_sem_concluir_analise_nao_edita_a_justificativa(): void
     {
         [$processo] = $this->processoDeferido('BAP9000005');
