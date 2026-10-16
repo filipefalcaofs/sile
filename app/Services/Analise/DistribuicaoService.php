@@ -101,7 +101,10 @@ class DistribuicaoService
      */
     public function assumir(ViabilityRequest $request, User $analista): void
     {
-        if ($request->assigned_user_id !== null && (int) $request->assigned_user_id !== $analista->id) {
+        // Para conclusão o processo está na fila de quem conclui: qualquer analista do setor o pega.
+        $paraConclusao = $request->analysis_status === AnalysisStatus::ParaConclusao;
+
+        if (! $paraConclusao && $request->assigned_user_id !== null && (int) $request->assigned_user_id !== $analista->id) {
             throw DistribuicaoException::jaAtribuido($request);
         }
 

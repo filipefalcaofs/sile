@@ -197,7 +197,6 @@ export default function CaixaSetorIndex({
     });
 
     const selecaoAtiva = (visao === 'para_distribuir' || visao === 'para_conclusao') && podeDistribuir;
-    const podeAssumirNaAba = podeAssumir || (podeDistribuir && visao === 'para_conclusao');
     const todosSelecionados = linhas.length > 0 && linhas.every((item) => selecionados.includes(item.id));
 
     // Modal em contexto de vistoria quando QUALQUER linha envolvida está no
@@ -237,6 +236,15 @@ export default function CaixaSetorIndex({
 
     function alternarTodos() {
         setSelecionados(todosSelecionados ? [] : linhas.map((item) => item.id));
+    }
+
+    // Em "Para conclusão" o analista pega o processo mesmo com o responsável anterior.
+    function podeAssumirItem(item: ProcessoItem): boolean {
+        if (item.assigned_user_id === null) {
+            return true;
+        }
+
+        return visao === 'para_conclusao' && item.assigned_user_id !== auth.user?.id;
     }
 
     function assumir(item: ProcessoItem) {
@@ -400,7 +408,7 @@ export default function CaixaSetorIndex({
             cellClassName: 'whitespace-nowrap',
             cell: (item) => (
                 <div className="flex justify-end gap-2">
-                    {podeAssumirNaAba && item.assigned_user_id === null && (!emVistoria(item) || podeVistoria) && (
+                    {podeAssumir && podeAssumirItem(item) && (!emVistoria(item) || podeVistoria) && (
                         <TableAction
                             tone="brand"
                             onClick={() => assumir(item)}

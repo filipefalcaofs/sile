@@ -690,7 +690,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
                 Route::get('/', [CaixaSetorController::class, 'index'])->name('index');
             });
 
-            Route::middleware('permission:analisar-processos|distribuir-processos')->group(function () {
+            Route::middleware('permission:analisar-processos')->group(function () {
                 Route::post('{viabilityRequest}/assumir', [CaixaSetorController::class, 'assumir'])->name('assumir');
             });
 

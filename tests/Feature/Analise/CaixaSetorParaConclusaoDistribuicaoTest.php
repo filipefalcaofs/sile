@@ -14,7 +14,7 @@ use Tests\TestCase;
 
 /**
  * Aba "Para conclusão" da caixa do setor: o apoio distribui (inclusive os que
- * já têm responsável) e assume o processo, sem mexer na situação nem no prazo.
+ * já têm responsável) e o analista assume o processo, sem mexer na situação nem no prazo.
  */
 class CaixaSetorParaConclusaoDistribuicaoTest extends TestCase
 {
@@ -116,29 +116,58 @@ class CaixaSetorParaConclusaoDistribuicaoTest extends TestCase
         $this->assertSame($anterior->id, $processo->refresh()->assigned_user_id);
     }
 
-    public function test_apoio_assume_processo_para_conclusao_sem_responsavel(): void
+    public function test_analista_assume_processo_para_conclusao_sem_responsavel(): void
     {
         $setor = Sector::factory()->create();
-        $apoio = $this->apoio($setor);
+        $analista = $this->analista($setor);
         $processo = $this->processoParaConclusao($setor);
         $prazo = $processo->analysis_due_at;
 
-        $this->actingAs($apoio, 'gestao')
+        $this->actingAs($analista, 'gestao')
             ->post("/gestao/caixa-setor/{$processo->id}/assumir")
             ->assertSessionHas('status')
             ->assertSessionMissing('error');
 
         $processo->refresh();
-        $this->assertSame($apoio->id, $processo->assigned_user_id);
+        $this->assertSame($analista->id, $processo->assigned_user_id);
         $this->assertSame(AnalysisStatus::ParaConclusao, $processo->analysis_status);
         $this->assertTrue($prazo->equalTo($processo->analysis_due_at));
     }
 
-    public function test_apoio_nao_assume_processo_fora_de_para_conclusao(): void
+    public function test_analista_assume_processo_para_conclusao_que_ficou_com_o_responsavel_anterior(): void
+    {
+        $setor = Sector::factory()->create();
+        $anterior = $this->analista($setor);
+        $analista = $this->analista($setor);
+        $processo = $this->processoParaConclusao($setor, $anterior);
+
+        $this->actingAs($analista, 'gestao')
+            ->post("/gestao/caixa-setor/{$processo->id}/assumir")
+            ->assertSessionHas('status')
+            ->assertSessionMissing('error');
+
+        $this->assertSame($analista->id, $processo->refresh()->assigned_user_id);
+    }
+
+    public function test_analista_nao_assume_processo_em_analise_de_outro_analista(): void
+    {
+        $setor = Sector::factory()->create();
+        $anterior = $this->analista($setor);
+        $analista = $this->analista($setor);
+        $processo = $this->processoParaConclusao($setor, $anterior, AnalysisStatus::EmAnalise);
+
+        $this->actingAs($analista, 'gestao')
+            ->post("/gestao/caixa-setor/{$processo->id}/assumir")
+            ->assertSessionHas('error');
+
+        $this->assertSame($anterior->id, $processo->refresh()->assigned_user_id);
+    }
+
+    public function test_apoio_nao_assume_processo(): void
     {
         $setor = Sector::factory()->create();
         $apoio = $this->apoio($setor);
-        $processo = $this->processoParaConclusao($setor, null, AnalysisStatus::EmAnalise);
+        $processo = $this->processoParaConclusao($setor);
 
         $this->actingAs($apoio, 'gestao')
             ->post("/gestao/caixa-setor/{$processo->id}/assumir")
