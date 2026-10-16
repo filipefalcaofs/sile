@@ -5,6 +5,7 @@ namespace Tests\Feature\Analise;
 use App\Enums\AnalysisStage;
 use App\Enums\PropertyLocationSource;
 use App\Enums\ViabilityRequestStatus;
+use App\Models\Cidadao;
 use App\Models\Sector;
 use App\Models\User;
 use App\Models\ViabilityDecision;
@@ -233,12 +234,22 @@ class ProcessoUiSmokeTest extends TestCase
         $processo->transitions()->create([
             'from_status' => ViabilityRequestStatus::Rascunho,
             'to_status' => ViabilityRequestStatus::Protocolada,
-            'actor_user_id' => $dev->id,
+            'actor_type' => $dev->getMorphClass(),
+            'actor_id' => $dev->id,
         ]);
         $processo->transitions()->create([
             'from_status' => ViabilityRequestStatus::Protocolada,
             'to_status' => ViabilityRequestStatus::EmAnalise,
-            'actor_user_id' => $outro->id,
+            'actor_type' => $outro->getMorphClass(),
+            'actor_id' => $outro->id,
+        ]);
+        // Cidadão de mesmo id que o dev: não é ator oculto (o oculto é só a conta de servidor).
+        $cidadao = Cidadao::factory()->create(['name' => 'Cidadã Requerente']);
+        $processo->transitions()->create([
+            'from_status' => ViabilityRequestStatus::EmAnalise,
+            'to_status' => ViabilityRequestStatus::EmPendencia,
+            'actor_type' => $cidadao->getMorphClass(),
+            'actor_id' => $cidadao->id,
         ]);
 
         $timeline = $this->actingAs($this->analista(), 'gestao')
@@ -248,6 +259,7 @@ class ProcessoUiSmokeTest extends TestCase
 
         $this->assertNull(collect($timeline)->firstWhere('to', ViabilityRequestStatus::Protocolada->value)['ator']);
         $this->assertSame('Filipe Protocolo', collect($timeline)->firstWhere('to', ViabilityRequestStatus::EmAnalise->value)['ator']);
+        $this->assertSame('Cidadã Requerente', collect($timeline)->firstWhere('to', ViabilityRequestStatus::EmPendencia->value)['ator']);
     }
 
     public function test_detalhe_mostra_o_ponto_do_cadastro_quando_nao_ha_poligono(): void

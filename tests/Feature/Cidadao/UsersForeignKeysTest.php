@@ -17,6 +17,7 @@ class UsersForeignKeysTest extends TestCase
     /** @var list<string> tabela.coluna que, por decisão, apontam para users (servidor). */
     private const SERVIDOR = [
         'viability_requests.assigned_user_id',
+        'viability_requests.conclusao_encaminhada_para_user_id',
         'analysis_records.analyst_user_id',
         'viability_decisions.decided_by_user_id',
         'inspections.vistoriador_user_id',

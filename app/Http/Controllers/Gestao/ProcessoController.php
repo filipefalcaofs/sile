@@ -280,7 +280,8 @@ class ProcessoController extends Controller
             'to_label' => $transicao->to_status->label(),
             'reason' => $transicao->reason,
             'em' => $transicao->created_at?->toIso8601String(),
-            'ator' => $transicao->actor?->isAtorOcultoNaTramitacao() ? null : $transicao->actor?->name,
+            // Ator é User ou Cidadao (morph); só conta de servidor pode ser ator oculto.
+            'ator' => $transicao->actor instanceof User && $transicao->actor->isAtorOcultoNaTramitacao() ? null : $transicao->actor?->name,
             'atribuido' => $transicao->to_status === ViabilityRequestStatus::EmAnalise
                 ? $viabilityRequest->assignedTo?->name
                 : null,

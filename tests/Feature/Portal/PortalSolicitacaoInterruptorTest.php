@@ -3,7 +3,7 @@
 namespace Tests\Feature\Portal;
 
 use App\Http\Middleware\EnsurePortalSolicitacaoEnabled;
-use App\Models\User;
+use App\Models\Cidadao;
 use App\Models\ViabilityRequest;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -25,9 +25,9 @@ class PortalSolicitacaoInterruptorTest extends TestCase
         $this->seed(RolesAndPermissionsSeeder::class);
     }
 
-    private function portalUser(): User
+    private function portalUser(): Cidadao
     {
-        return User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        return Cidadao::factory()->withAcceptedLgpdTerm()->create();
     }
 
     public function test_desligado_bloqueia_wizard_de_nova_solicitacao_com_aviso(): void

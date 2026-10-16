@@ -41,10 +41,10 @@ class ContagemServidoresPorPerfilTest extends TestCase
 
     public function test_listagem_de_perfis_conta_servidores_com_guard_padrao_web(): void
     {
-        $request = Request::create('/gestao/perfis', 'GET', server: ['HTTP_X_INERTIA' => 'true']);
+        $request = Request::create('/gestao/perfis', 'GET', ['per_page' => 50], server: ['HTTP_X_INERTIA' => 'true']);
 
         $props = app(RoleController::class)->index($request)->toResponse($request)->getData(true)['props'];
-        $perfis = collect($props['roles'])->keyBy('name');
+        $perfis = collect($props['roles']['data'])->keyBy('name');
 
         $this->assertSame(1, $perfis['administrador']['users_count']);
         $this->assertSame(0, $perfis['apoio']['users_count']);
