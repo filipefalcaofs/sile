@@ -552,13 +552,6 @@ class CaixaSetorController extends Controller
      */
     public function assumir(Request $request, ViabilityRequest $viabilityRequest): RedirectResponse
     {
-        // Quem só tramita (apoio) assume apenas o que está para conclusão.
-        abort_unless(
-            $request->user()->can('analisar-processos')
-                || $viabilityRequest->analysis_status === AnalysisStatus::ParaConclusao,
-            403,
-        );
-
         try {
             $this->distribuicao->assumir($viabilityRequest, $request->user());
         } catch (DistribuicaoException) {
