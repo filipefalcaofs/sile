@@ -237,8 +237,9 @@ class RelatorioController extends Controller
      * estabelecimentos deferidos por bairro×CNAE vs capacidade recomendada
      * (parâmetro HU-014), classificando ok/saturando/saturado. Insumo de política
      * urbana da SEDUR (adensamento/externalidades). Degradação honesta: CNAE sem
-     * capacidade vira "sem_capacidade"; recorte por bairro até a zona oficial
-     * (GIS). Com ?formato=, exporta as solicitações filtradas (contrato único).
+     * capacidade vira "sem_capacidade"; recorte pelo bairro oficial, com o
+     * digitado de reserva. Com ?formato=, exporta as solicitações filtradas
+     * (contrato único).
      */
     public function saturacao(RelatorioFiltersRequest $request): InertiaResponse|Response
     {
