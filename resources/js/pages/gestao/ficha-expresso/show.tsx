@@ -1,6 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
 import type { ReactNode } from 'react';
-import { EtapasMotorCard, type EtapaMotor } from '@/components/analise/etapas-motor';
 import { QuadrosChecklist, type QuadroChecklist } from '@/components/analise/quadros-checklist';
 import { rotuloFluxoRisco } from '@/components/analise/processo-ui';
 import DecisionExplanation, { type DecisionExplanationData } from '@/components/auditoria/decision-explanation';
@@ -53,9 +52,7 @@ interface FichaExpressoProps {
     };
     decisao: Decisao;
     explicacao: DecisionExplanationData;
-    etapasMotor: EtapaMotor[];
     localizacao: Localizacao;
-    podeReprocessar: boolean;
 }
 
 function outcomeColor(outcome: string): 'success' | 'error' | 'light' {
@@ -127,9 +124,7 @@ export default function FichaExpressoShow({
     processo,
     decisao,
     explicacao,
-    etapasMotor,
     localizacao,
-    podeReprocessar,
 }: FichaExpressoProps) {
     const perCnae = Array.isArray(decisao.per_cnae) ? decisao.per_cnae : [];
     const titulo = `Ficha ${processo.protocol_number ?? `#${processo.id}`}`;
@@ -243,8 +238,6 @@ export default function FichaExpressoShow({
                         )}
                     </CardContent>
                 </Card>
-
-                <EtapasMotorCard processoId={processo.id} etapas={etapasMotor ?? []} podeReprocessar={podeReprocessar} />
 
                 <Card>
                     <CardHeader title="Localização" description="Endereço e enquadramento territorial usados na decisão." />

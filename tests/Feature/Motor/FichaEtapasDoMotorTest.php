@@ -7,6 +7,7 @@ use App\Enums\EtapaMotor;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\AnalysisRecord;
 use App\Models\User;
+use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityRequestEtapa;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -64,6 +65,30 @@ class FichaEtapasDoMotorTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('gestao/ficha-analise/show')
+                ->missing('etapasMotor')
+                ->missing('podeReprocessar'));
+
+        $this->assertSame(2, ViabilityRequestEtapa::query()->where('viability_request_id', $processo->id)->count());
+    }
+
+    public function test_ficha_do_expresso_nao_exibe_as_etapas_do_motor_mas_elas_seguem_gravadas(): void
+    {
+        $processo = ViabilityRequest::factory()->create([
+            'status' => ViabilityRequestStatus::Deferida,
+            'protocol_number' => 'VIA-'.now()->year.'-000301',
+        ]);
+        ViabilityDecision::factory()->create(['viability_request_id' => $processo->id]);
+        ViabilityRequestEtapa::factory()->create(['viability_request_id' => $processo->id, 'etapa' => EtapaMotor::Zona]);
+        ViabilityRequestEtapa::factory()->indisponivel()->create([
+            'viability_request_id' => $processo->id,
+            'etapa' => EtapaMotor::LocalizacaoInscricao,
+        ]);
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get("/gestao/processos/{$processo->id}/ficha")
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('gestao/ficha-expresso/show')
                 ->missing('etapasMotor')
                 ->missing('podeReprocessar'));
 
