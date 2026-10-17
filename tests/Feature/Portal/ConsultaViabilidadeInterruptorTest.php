@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Portal;
 
+use App\Enums\ParameterGovernance;
 use App\Http\Middleware\EnsureConsultaViabilidadeEnabled;
 use App\Models\Parameter;
 use App\Models\User;
@@ -38,8 +39,31 @@ class ConsultaViabilidadeInterruptorTest extends TestCase
 
     private function desligar(): void
     {
-        config(['viabiliza.features.consulta_viabilidade' => false]);
+        Parameter::query()->where('key', 'features.consulta_viabilidade')->update(['value' => '0']);
         Cache::forget('viabiliza.parameters.features.consulta_viabilidade');
+    }
+
+    public function test_migration_cria_o_parametro_sem_depender_do_seed(): void
+    {
+        $parametro = Parameter::query()->where('key', 'features.consulta_viabilidade')->first();
+
+        $this->assertNotNull($parametro, 'Ambiente que só roda migrate (OKD) precisa ter o parâmetro na tela.');
+        $this->assertSame('features', $parametro->group);
+        $this->assertSame('boolean', $parametro->type);
+        $this->assertSame('1', $parametro->default_value);
+        $this->assertNull($parametro->value);
+        $this->assertSame(ParameterGovernance::Operational, $parametro->governance);
+        $this->assertTrue(Settings::enabled('consulta_viabilidade'));
+    }
+
+    public function test_migration_nao_sobrescreve_o_valor_que_o_gestor_gravou(): void
+    {
+        Parameter::query()->where('key', 'features.consulta_viabilidade')->update(['value' => '0']);
+
+        (require database_path('migrations/2026_10_17_100000_cria_parametro_consulta_viabilidade.php'))->up();
+
+        $this->assertSame('0', Parameter::query()->where('key', 'features.consulta_viabilidade')->value('value'));
+        $this->assertSame(1, Parameter::query()->where('key', 'features.consulta_viabilidade')->count());
     }
 
     public function test_parametro_nasce_ligado_e_sem_valor_proprio(): void
