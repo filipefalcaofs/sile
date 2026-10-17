@@ -51,7 +51,7 @@ class SaturacaoServiceTest extends TestCase
         return ReportFilters::fromArray($bag);
     }
 
-    private function deferidaComCnae(string $bairro, Cnae $cnae): void
+    private function deferidaComCnae(string $bairro, Cnae $cnae, ?string $bairroOficial = null): void
     {
         $protocolo = 'VIA-'.now()->year.'-'.str_pad((string) ++$this->seq, 6, '0', STR_PAD_LEFT);
 
@@ -60,6 +60,7 @@ class SaturacaoServiceTest extends TestCase
             'protocol_number' => $protocolo,
             'protocoled_at' => now(),
             'address_neighborhood' => $bairro,
+            'bairro_oficial' => $bairroOficial,
         ]);
 
         $request->cnaes()->attach($cnae->id, ['is_primary' => true]);
@@ -152,5 +153,36 @@ class SaturacaoServiceTest extends TestCase
         $linhas = $this->service()->porBairroCnae($this->filtros());
 
         $this->assertSame([], $linhas);
+    }
+
+    public function test_agrupa_pelo_bairro_oficial_com_o_digitado_de_reserva(): void
+    {
+        $comercio = Cnae::factory()->create(['code' => '4712100']);
+
+        $this->deferidaComCnae('Pituba', $comercio, 'PITUBA');
+        $this->deferidaComCnae('Pitub', $comercio, 'PITUBA');
+        $this->deferidaComCnae('Barra', $comercio);
+
+        $linhas = collect($this->service()->porBairroCnae($this->filtros()));
+
+        $this->assertSame(['PITUBA', 'Barra'], $linhas->pluck('bairro')->all());
+        $this->assertSame(2, $linhas->firstWhere('bairro', 'PITUBA')['ativos']);
+        $this->assertSame(1, $linhas->firstWhere('bairro', 'Barra')['ativos']);
+    }
+
+    public function test_filtro_de_bairro_usa_o_bairro_oficial_quando_existe(): void
+    {
+        $comercio = Cnae::factory()->create(['code' => '4712100']);
+
+        $this->deferidaComCnae('Ondina', $comercio, 'RIO VERMELHO');
+        $this->deferidaComCnae('Barra', $comercio);
+
+        $porOficial = $this->service()->porBairroCnae($this->filtros(['bairro' => 'rio vermelho']));
+        $porDigitadoSubstituido = $this->service()->porBairroCnae($this->filtros(['bairro' => 'Ondina']));
+        $porDigitadoSemOficial = $this->service()->porBairroCnae($this->filtros(['bairro' => 'barra']));
+
+        $this->assertSame(['RIO VERMELHO'], array_column($porOficial, 'bairro'));
+        $this->assertSame([], $porDigitadoSubstituido);
+        $this->assertSame(['Barra'], array_column($porDigitadoSemOficial, 'bairro'));
     }
 }

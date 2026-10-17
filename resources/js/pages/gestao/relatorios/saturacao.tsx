@@ -5,7 +5,7 @@ import PageHeader from '@/components/app/page-header';
 import Input from '@/components/form/input';
 import IsoDateInput from '@/components/form/iso-date-input';
 import Select from '@/components/form/select';
-import { AlertIcon, CheckCircleIcon, ListIcon, MapPinIcon } from '@/components/icons';
+import { AlertIcon, CheckCircleIcon, ListIcon } from '@/components/icons';
 import Badge from '@/components/ui/badge';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import Chart from '@/components/ui/chart/chart';
@@ -275,15 +275,7 @@ export default function SaturacaoPainel({ resumo, porBairroCnae, limiares, filtr
                 <Card>
                     <CardHeader
                         title="Maiores saturações"
-                        description={`Top ${TOP_PARES} pares bairro × CNAE por percentual da capacidade (apenas com capacidade definida).`}
-                        actions={
-                            <span className="inline-flex items-center gap-1.5">
-                                <MapPinIcon className="size-4 text-warning-500" />
-                                <Badge color="warning" size="sm">
-                                    Zona oficial (GIS) pendente — recorte por bairro
-                                </Badge>
-                            </span>
-                        }
+                        description={`Top ${TOP_PARES} pares bairro × CNAE por percentual da capacidade (apenas com capacidade definida). Bairro oficial do imóvel; sem identificação, o bairro do endereço informado.`}
                     />
                     <CardContent>
                         {porBairroCnae.some((item) => item.percentual !== null) ? (

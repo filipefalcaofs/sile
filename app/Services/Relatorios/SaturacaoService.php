@@ -18,14 +18,18 @@ use Illuminate\Support\Facades\DB;
  * parametrizados. Insumo de política urbana da SEDUR (controle de adensamento e
  * externalidades — Estatuto da Cidade).
  *
- * Degradação HONESTA (entrega funcional sem fachada): a zona urbanística oficial
- * (GIS) está pendente; o recorte é por `address_neighborhood`. CNAE sem
- * capacidade definida vira "sem_capacidade" — nunca inventa um percentual de
- * saturação. Route-free e sem estado; população = solicitações com decisão
- * DEFERIDA (estabelecimento efetivamente autorizado).
+ * O recorte é pelo bairro oficial materializado na identificação do imóvel
+ * (`bairro_oficial`, camada GeoSalvador), com o bairro digitado de reserva,
+ * como no {@see GeoBairroIndicadorService}. CNAE sem capacidade definida vira
+ * "sem_capacidade" — nunca inventa um percentual de saturação. Route-free e
+ * sem estado; população = solicitações com decisão DEFERIDA (estabelecimento
+ * efetivamente autorizado).
  */
 class SaturacaoService
 {
+    /** Bairro oficial com o digitado de reserva (coalesce portável). */
+    private const BAIRRO = 'coalesce(viability_requests.bairro_oficial, viability_requests.address_neighborhood)';
+
     /**
      * Saturação por par bairro×CNAE (estabelecimentos deferidos vs capacidade).
      *
@@ -39,19 +43,19 @@ class SaturacaoService
         $deferida = DecisionOutcome::Deferida->value;
 
         return $this->baseQuery($f)
-            ->whereNotNull('viability_requests.address_neighborhood')
+            ->whereNotNull(DB::raw(self::BAIRRO))
             ->join('viability_decisions as vd', function (JoinClause $join) use ($deferida): void {
                 $join->on('vd.viability_request_id', '=', 'viability_requests.id')
                     ->where('vd.outcome', $deferida);
             })
             ->join('viability_request_cnaes as vrc', 'vrc.viability_request_id', '=', 'viability_requests.id')
             ->join('cnaes as c', 'c.id', '=', 'vrc.cnae_id')
-            ->groupBy('viability_requests.address_neighborhood', 'c.code')
+            ->groupBy('bairro', 'c.code')
             ->orderByDesc('ativos')
-            ->orderBy('viability_requests.address_neighborhood')
+            ->orderBy('bairro')
             ->limit($limite)
             ->get([
-                'viability_requests.address_neighborhood as bairro',
+                DB::raw(self::BAIRRO.' as bairro'),
                 'c.code as cnae_code',
                 DB::raw('count(distinct viability_requests.id) as ativos'),
             ])
@@ -178,7 +182,7 @@ class SaturacaoService
             ->when($f->from(), fn (Builder $q, $from): Builder => $q->where('viability_requests.protocoled_at', '>=', $from))
             ->when($f->to(), fn (Builder $q, $to): Builder => $q->where('viability_requests.protocoled_at', '<=', $to))
             ->when($f->setorId(), fn (Builder $q, int $id): Builder => $q->where('viability_requests.sector_id', $id))
-            ->when($f->bairro(), fn (Builder $q, string $b): Builder => $q->whereLike('viability_requests.address_neighborhood', "%{$b}%", caseSensitive: false))
+            ->when($f->bairro(), fn (Builder $q, string $b): Builder => $q->whereLike(DB::raw(self::BAIRRO), "%{$b}%", caseSensitive: false))
             ->when($f->categoria(), fn (Builder $q, string $c): Builder => $this->aplicarCategoria($q, $c));
     }
 
