@@ -214,7 +214,7 @@ function HeroSection() {
 }
 
 function ServicesSection() {
-    const { portalServicos } = usePage<SharedProps>().props;
+    const { portalServicos, consultaViabilidade } = usePage<SharedProps>().props;
 
     return (
         <section id="servicos" className="scroll-mt-24">
@@ -239,7 +239,7 @@ function ServicesSection() {
                 <MotionProvider>
                 <RevealScope>
                 <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                    {acoesPublicas().map((acao) => {
+                    {acoesPublicas(consultaViabilidade.enabled).map((acao) => {
                         const Icon = PORTAL_NAV_ICONS[acao.icon];
 
                         return (
