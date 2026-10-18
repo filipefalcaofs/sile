@@ -5,7 +5,12 @@ namespace App\Http\Controllers\Gestao;
 use App\Enums\AnalysisStatus;
 use App\Enums\InspectionStatus;
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Models\ViabilityRequest;
+use App\Models\ViabilityRequestEvento;
+use App\Models\ViabilityServiceType;
+use App\Services\Analise\DistribuicaoService;
+use App\Services\Analise\ProcessoQueryService;
 use App\Support\Audit\AuditService;
 use App\Support\Settings;
 use Illuminate\Database\Eloquent\Builder;
@@ -18,21 +23,28 @@ use Inertia\Response;
  * processos no eixo operacional de vistoria (AnalysisStatus Vistoriar/
  * Vistoriado). A situação é DERIVADA da ficha (nunca inventada): a designar
  * (ninguém abriu a ficha), em campo (ficha em preenchimento), concluída.
- * KPIs do universo total; abas e busca server-driven. Gated por
- * preencher-ficha-vistoria; a consulta é auditada (RN-002).
+ * KPIs do universo total; abas e busca server-driven. No padrão da caixa do
+ * setor: abas Para distribuir e Distribuídos, os filtros das caixas e a
+ * distribuição aos vistoriadores (a gravação é do POST da caixa do setor).
+ * Gated por preencher-ficha-vistoria ou distribuir-processos; a consulta é
+ * auditada (RN-002).
  */
 class VistoriaConsultaController extends Controller
 {
     /** Itens por página aceitos — padrão do console (ui.cnaes.per_page). */
     private const PER_PAGE_OPTIONS = [10, 15, 25, 50];
 
-    public function __construct(private AuditService $audit) {}
+    public function __construct(
+        private AuditService $audit,
+        private ProcessoQueryService $processos,
+        private DistribuicaoService $distribuicao,
+    ) {}
 
     public function __invoke(Request $request): Response
     {
         $situacao = (string) $request->input('situacao', 'todas');
 
-        if (! in_array($situacao, ['todas', 'designar', 'campo', 'concluida'], true)) {
+        if (! in_array($situacao, ['todas', 'designar', 'distribuidos', 'campo', 'concluida'], true)) {
             $situacao = 'todas';
         }
 
@@ -51,10 +63,14 @@ class VistoriaConsultaController extends Controller
                     ->orWhereHas('inspection');
             });
 
+        $filtros = $this->filtrosDaCaixa($request);
+
+        $universo = $this->processos->aplicarFiltros($universo, $filtros);
+
         $kpis = $this->kpis($universo);
 
         $consulta = (clone $universo)
-            ->with(['company', 'sector:id,name', 'assignedTo:id,name', 'inspection.vistoriador:id,name']);
+            ->with(['company', 'sector:id,name', 'assignedTo:id,name', 'inspection.vistoriador:id,name', 'serviceType:id,name', 'eventos']);
 
         $this->aplicarSituacao($consulta, $situacao);
         $this->aplicarBusca($consulta, $busca);
@@ -73,25 +89,38 @@ class VistoriaConsultaController extends Controller
             properties: [
                 'situacao' => $situacao,
                 'busca' => $busca !== '' ? $busca : null,
+                'filtros' => array_filter($filtros, fn ($valor): bool => $valor !== ''),
                 'total' => $vistorias->total(),
             ],
         );
+
+        $usuario = $request->user();
+        $podeDistribuir = $usuario->can('distribuir-processos');
+        $qualquerSetor = $this->distribuicao->distribuiEmQualquerSetor($usuario);
 
         return Inertia::render('gestao/vistorias/index', [
             'vistorias' => $vistorias,
             'kpis' => $kpis,
             'abas' => [
                 ['id' => 'todas', 'label' => 'Todas', 'total' => $kpis['encaminhadas']],
-                ['id' => 'designar', 'label' => 'A designar', 'total' => $kpis['a_designar']],
+                ['id' => 'designar', 'label' => 'Para distribuir', 'total' => $kpis['a_designar']],
+                ['id' => 'distribuidos', 'label' => 'Distribuídos', 'total' => $kpis['distribuidos']],
                 ['id' => 'campo', 'label' => 'Em campo', 'total' => $kpis['em_campo']],
                 ['id' => 'concluida', 'label' => 'Concluídas', 'total' => $kpis['concluidas']],
             ],
-            'filtros' => [
+            'filtros' => $filtros + [
                 'situacao' => $situacao,
                 'busca' => $busca,
                 'per_page' => $perPage,
             ],
             'perPageOptions' => self::PER_PAGE_OPTIONS,
+            'servicoOptions' => $this->servicoOptions(),
+            'analysisStatusOptions' => AnalysisStatus::options(),
+            'categoriaOptions' => $this->categoriaOptions(),
+            'analistaOptions' => $this->processos->analistasParaFiltro($usuario),
+            'podeDistribuir' => $podeDistribuir,
+            'distribuiEmQualquerSetor' => $qualquerSetor,
+            'vistoriadores' => $podeDistribuir ? $this->vistoriadores($usuario, $qualquerSetor) : [],
         ]);
     }
 
@@ -99,7 +128,7 @@ class VistoriaConsultaController extends Controller
      * KPIs do universo total (não do recorte filtrado) — o painel mostra a
      * fila inteira mesmo com aba/busca aplicadas.
      *
-     * @return array{encaminhadas: int, a_designar: int, em_campo: int, concluidas: int, concluidas_mes: int, prazo_vencido: int}
+     * @return array{encaminhadas: int, a_designar: int, distribuidos: int, em_campo: int, concluidas: int, concluidas_mes: int, prazo_vencido: int}
      */
     private function kpis(Builder $universo): array
     {
@@ -108,7 +137,8 @@ class VistoriaConsultaController extends Controller
 
         return [
             'encaminhadas' => (clone $universo)->count(),
-            'a_designar' => (clone $universo)->whereDoesntHave('inspection')->count(),
+            'a_designar' => $this->semVistoriador(clone $universo)->count(),
+            'distribuidos' => $this->comVistoriadorAtribuido(clone $universo)->count(),
             'em_campo' => (clone $universo)->whereHas(
                 'inspection',
                 fn (Builder $q) => $q->where('status', $emPreenchimento),
@@ -137,7 +167,8 @@ class VistoriaConsultaController extends Controller
     private function aplicarSituacao(Builder $consulta, string $situacao): void
     {
         match ($situacao) {
-            'designar' => $consulta->whereDoesntHave('inspection'),
+            'designar' => $this->semVistoriador($consulta),
+            'distribuidos' => $this->comVistoriadorAtribuido($consulta),
             'campo' => $consulta->whereHas(
                 'inspection',
                 fn (Builder $q) => $q->where('status', InspectionStatus::EmPreenchimento->value),
@@ -148,6 +179,111 @@ class VistoriaConsultaController extends Controller
             ),
             default => null,
         };
+    }
+
+    /**
+     * Para distribuir: ninguém abriu a ficha e nenhum vistoriador recebeu o processo.
+     *
+     * @param  Builder<ViabilityRequest>  $consulta
+     * @return Builder<ViabilityRequest>
+     */
+    private function semVistoriador(Builder $consulta): Builder
+    {
+        return $consulta->whereDoesntHave('inspection')->whereNull('assigned_user_id');
+    }
+
+    /**
+     * Distribuídos: o processo já foi entregue a um vistoriador e a ficha ainda não foi concluída.
+     *
+     * @param  Builder<ViabilityRequest>  $consulta
+     * @return Builder<ViabilityRequest>
+     */
+    private function comVistoriadorAtribuido(Builder $consulta): Builder
+    {
+        return $consulta
+            ->whereNotNull('assigned_user_id')
+            ->where(fn (Builder $q) => $q
+                ->whereDoesntHave('inspection')
+                ->orWhereHas('inspection', fn (Builder $f) => $f->where('status', '!=', InspectionStatus::Concluida->value)));
+    }
+
+    /**
+     * Filtros de pesquisa das caixas, crus da query string — o
+     * ProcessoQueryService normaliza e ignora os vazios.
+     *
+     * @return array<string, string>
+     */
+    private function filtrosDaCaixa(Request $request): array
+    {
+        $filtros = [];
+
+        foreach (ProcessoQueryService::CHAVES_FILTRO_CAIXA as $chave) {
+            $filtros[$chave] = $request->string($chave)->toString();
+        }
+
+        return $filtros;
+    }
+
+    /**
+     * Vistoriadores que recebem o processo: os do(s) setor(es) do usuário, ou
+     * todos para quem distribui em qualquer setor.
+     *
+     * @return list<array{id: int, name: string, setores: list<array{id: int, name: string}>}>
+     */
+    private function vistoriadores(User $usuario, bool $qualquerSetor): array
+    {
+        $setores = $usuario->sectors()->pluck('sectors.id');
+
+        return User::query()
+            ->permission('preencher-ficha-vistoria')
+            ->when(! $qualquerSetor, fn (Builder $q) => $q->whereHas('sectors', fn ($s) => $s->whereIn('sectors.id', $setores)))
+            ->with('sectors:id,name')
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn (User $vistoriador): array => [
+                'id' => $vistoriador->id,
+                'name' => $vistoriador->name,
+                'setores' => $vistoriador->sectors
+                    ->sortBy('name')
+                    ->map(fn ($setor): array => ['id' => $setor->id, 'name' => $setor->name])
+                    ->values()
+                    ->all(),
+            ])
+            ->all();
+    }
+
+    /**
+     * @return list<array{value: string, label: string}>
+     */
+    private function servicoOptions(): array
+    {
+        $eventos = ViabilityRequestEvento::query()
+            ->selectRaw('codigo, min(nome) as nome')
+            ->groupBy('codigo')
+            ->orderBy('nome')
+            ->get()
+            ->map(fn ($evento): array => ['value' => ProcessoQueryService::PREFIXO_EVENTO.$evento->codigo, 'label' => $evento->nome]);
+
+        $tipos = ViabilityServiceType::query()
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn ($servico): array => ['value' => (string) $servico->id, 'label' => $servico->name]);
+
+        return $eventos->concat($tipos)->values()->all();
+    }
+
+    /**
+     * @return list<array{value: string, label: string}>
+     */
+    private function categoriaOptions(): array
+    {
+        $opcoes = [];
+
+        foreach (ProcessoQueryService::CATEGORIAS as $value => $label) {
+            $opcoes[] = ['value' => $value, 'label' => $label];
+        }
+
+        return $opcoes;
     }
 
     private function aplicarBusca(Builder $consulta, string $busca): void
@@ -179,7 +315,7 @@ class VistoriaConsultaController extends Controller
         $ficha = $processo->inspection;
 
         [$situacao, $situacaoLabel] = match (true) {
-            $ficha === null => ['designar', 'A designar'],
+            $ficha === null => ['designar', 'Para distribuir'],
             $ficha->status === InspectionStatus::Concluida => ['concluida', 'Concluída'],
             default => ['em_campo', 'Em campo'],
         };
@@ -193,8 +329,12 @@ class VistoriaConsultaController extends Controller
                 trim(implode(', ', array_filter([$processo->address_street, $processo->address_number]))),
                 $processo->address_neighborhood,
             ])),
+            'servicos' => $processo->eventos->isNotEmpty()
+                ? $processo->eventos->pluck('nome')->values()->all()
+                : array_values(array_filter([$processo->serviceType?->name])),
             'zona' => $processo->zona_codigo,
             'setor' => $processo->sector?->name,
+            'sector_id' => $processo->sector_id,
             'situacao' => $situacao,
             'situacao_label' => $situacaoLabel,
             'vistoriador' => $ficha?->vistoriador?->name,

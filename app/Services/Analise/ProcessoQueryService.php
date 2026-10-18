@@ -3,6 +3,7 @@
 namespace App\Services\Analise;
 
 use App\Enums\AnalysisCategory;
+use App\Enums\AnalysisRecordStatus;
 use App\Enums\AnalysisStatus;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\User;
@@ -33,13 +34,14 @@ class ProcessoQueryService
         'semi_expresso' => 'Semi-expresso',
         'malha_fina' => 'Malha Fina',
         'sede_escritorio' => 'Sede de Escritório',
+        'abrigado_escritorio' => 'Abrigado de Virtual',
     ];
 
     /** Filtros oferecidos nas caixas (setor e analista) — subconjunto do SAPS. */
     /** Prefixo do valor do filtro `servico` que aponta para um evento da JUCEB, e não para o tipo interno. */
     public const PREFIXO_EVENTO = 'e';
 
-    public const CHAVES_FILTRO_CAIXA = ['analysis_status', 'servico', 'protocolo', 'bap', 'data_de', 'data_ate', 'nome', 'cnpj', 'bairro', 'categoria'];
+    public const CHAVES_FILTRO_CAIXA = ['analysis_status', 'servico', 'protocolo', 'bap', 'data_de', 'data_ate', 'nome', 'cnpj', 'bairro', 'categoria', 'analista', 'cnae', 'complemento'];
 
     /**
      * Grupo de status (filtro macro do SAPS) → conjunto de status do enum.
@@ -108,7 +110,9 @@ class ProcessoQueryService
             ->when($this->valor($filtros, 'logradouro'), fn (Builder $q, string $v) => $q->whereLike('address_street', "%{$v}%", caseSensitive: false))
             ->when($this->valor($filtros, 'bairro'), fn (Builder $q, string $v) => $q->whereLike('address_neighborhood', "%{$v}%", caseSensitive: false))
             ->when($this->valor($filtros, 'nome'), fn (Builder $q, string $v) => $this->aplicarNome($q, $v))
-            ->when($this->valor($filtros, 'cnpj'), fn (Builder $q, string $v) => $q->whereHas('company', fn ($c) => $c->whereLike('cnpj', "%{$v}%", caseSensitive: false)))
+            ->when($this->valor($filtros, 'cnpj'), fn (Builder $q, string $v) => $this->aplicarDocumento($q, $v))
+            ->when($this->valor($filtros, 'cnae'), fn (Builder $q, string $v) => $this->aplicarCnae($q, $v))
+            ->when($this->valor($filtros, 'complemento'), fn (Builder $q, string $v) => $q->whereLike('address_complement', "%{$v}%", caseSensitive: false))
             ->when($this->data($filtros, 'data_de'), fn (Builder $q, string $d) => $q->whereDate('protocoled_at', '>=', $d))
             ->when($this->data($filtros, 'data_ate'), fn (Builder $q, string $d) => $q->whereDate('protocoled_at', '<=', $d))
             ->when($this->categoria($filtros), fn (Builder $q, string $cat) => $this->aplicarCategoria($q, $cat));
@@ -155,6 +159,45 @@ class ProcessoQueryService
     }
 
     /**
+     * Processos que o analista analisou: com ficha finalizada por ele ou com
+     * decisão registrada por ele. Do mais recente para o mais antigo.
+     *
+     * @return Builder<ViabilityRequest>
+     */
+    public function analisados(User $user): Builder
+    {
+        return $this->analisadosPor($user)
+            ->with(['company', 'sector:id,name', 'assignedTo:id,name', 'decision', 'encaminhamentoAnalise', 'serviceType:id,name', 'eventos'])
+            ->orderByDesc('id');
+    }
+
+    /**
+     * Quantos processos o analista analisou nos últimos `$dias` dias.
+     */
+    public function contadorAnalisados(User $user, int $dias): int
+    {
+        $desde = now()->subDays($dias)->startOfDay();
+
+        return $this->analisadosPor($user, $desde)->count();
+    }
+
+    /**
+     * @return Builder<ViabilityRequest>
+     */
+    private function analisadosPor(User $user, ?\DateTimeInterface $desde = null): Builder
+    {
+        return ViabilityRequest::query()->where(function (Builder $q) use ($user, $desde): void {
+            $q->whereHas('analysisRecords', fn (Builder $ficha) => $ficha
+                ->where('analyst_user_id', $user->id)
+                ->where('status', AnalysisRecordStatus::Finalizada->value)
+                ->when($desde, fn (Builder $f) => $f->where('finalized_at', '>=', $desde)))
+                ->orWhereHas('decision', fn (Builder $decisao) => $decisao
+                    ->where('decided_by_user_id', $user->id)
+                    ->when($desde, fn (Builder $d) => $d->where('decided_at', '>=', $desde)));
+        });
+    }
+
+    /**
      * Contadores da caixa de entrada por status (HU-144), no escopo do usuário:
      * aguardando análise (em_analise sem analista — fica zerado aqui, porque a
      * fila só tem o que já está atribuído), em análise, em pendência e vencendo
@@ -177,6 +220,27 @@ class ProcessoQueryService
                 ->where('analysis_due_at', '<=', now()->endOfDay())
                 ->count(),
         ];
+    }
+
+    /**
+     * Analistas do(s) setor(es) do usuário, para o filtro "Analista" das telas de
+     * consulta. Quem distribui em qualquer setor, ou não tem setor vinculado,
+     * enxerga todos os analistas.
+     *
+     * @return list<array{value: string, label: string}>
+     */
+    public function analistasParaFiltro(User $user): array
+    {
+        $setores = $user->sectors()->pluck('sectors.id');
+        $todos = $user->can('distribuir-qualquer-setor') || $setores->isEmpty();
+
+        return User::query()
+            ->permission(['analisar-processos', 'preencher-ficha-vistoria'])
+            ->when(! $todos, fn (Builder $q) => $q->whereHas('sectors', fn ($s) => $s->whereIn('sectors.id', $setores)))
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn (User $analista): array => ['value' => (string) $analista->id, 'label' => $analista->name])
+            ->all();
     }
 
     /**
@@ -252,6 +316,10 @@ class ProcessoQueryService
 
         if ($request->is_virtual_office) {
             $categorias[] = ['value' => 'sede_escritorio', 'label' => self::CATEGORIAS['sede_escritorio']];
+        }
+
+        if ($request->ehAbrigadoDeEscritorioVirtual()) {
+            $categorias[] = ['value' => 'abrigado_escritorio', 'label' => self::CATEGORIAS['abrigado_escritorio']];
         }
 
         if ($request->analysis_category instanceof AnalysisCategory) {
@@ -343,10 +411,55 @@ class ProcessoQueryService
         return match ($categoria) {
             'malha_fina' => $query->where('in_fine_mesh', true),
             'sede_escritorio' => $query->where('is_virtual_office', true),
+            'abrigado_escritorio' => $query->where(fn (Builder $q) => $q
+                ->where('wants_virtual_office_tenant', true)
+                ->orWhereHas('decision', fn (Builder $decisao) => $decisao->where('is_virtual_office_tenant', true))),
             'expresso' => $query->where('analysis_category', AnalysisCategory::Expresso->value),
             'semi_expresso' => $query->where('analysis_category', AnalysisCategory::SemiExpresso->value),
             default => $query,
         };
+    }
+
+    /**
+     * Documento do requerente: CNPJ da empresa ou CPF do requerente, no mesmo
+     * campo. A comparação ignora a pontuação digitada.
+     *
+     * @param  Builder<ViabilityRequest>  $query
+     * @return Builder<ViabilityRequest>
+     */
+    private function aplicarDocumento(Builder $query, string $documento): Builder
+    {
+        $digitos = preg_replace('/\D/', '', $documento) ?? '';
+
+        if ($digitos === '') {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where(function (Builder $inner) use ($digitos) {
+            $inner->whereHas('company', fn ($c) => $c->whereLike('cnpj', "%{$digitos}%", caseSensitive: false))
+                ->orWhereHas('requester', fn ($r) => $r->whereLike('cpf', "%{$digitos}%", caseSensitive: false));
+        });
+    }
+
+    /**
+     * CNAE do processo, pelo código (com ou sem pontuação) ou por parte da descrição.
+     *
+     * @param  Builder<ViabilityRequest>  $query
+     * @return Builder<ViabilityRequest>
+     */
+    private function aplicarCnae(Builder $query, string $cnae): Builder
+    {
+        $digitos = preg_replace('/\D/', '', $cnae) ?? '';
+
+        return $query->whereHas('cnaes', function (Builder $inner) use ($cnae, $digitos) {
+            $inner->where(function (Builder $q) use ($cnae, $digitos) {
+                $q->whereLike('cnaes.description', "%{$cnae}%", caseSensitive: false);
+
+                if ($digitos !== '') {
+                    $q->orWhereLike('cnaes.code', "%{$digitos}%", caseSensitive: false);
+                }
+            });
+        });
     }
 
     /**

@@ -77,12 +77,20 @@ class CaixaSetorController extends Controller
 
         $filtros = $this->filtrosDaCaixa($request);
 
+        $paraConclusao = AnalysisStatus::ParaConclusao->value;
+
         $base = $this->naCaixaDoUsuario(ViabilityRequest::query(), $request->user())
             ->where('status', ViabilityRequestStatus::EmAnalise->value);
 
         $base = $this->processos->aplicarFiltros($base, $filtros);
 
-        $paraConclusao = AnalysisStatus::ParaConclusao->value;
+        // Para conclusão é cross-setor para quem distribui: a conclusão não fica presa ao setor.
+        $baseConclusao = $this->processos->aplicarFiltros(
+            $this->paraConclusaoDoUsuario(ViabilityRequest::query(), $request->user())
+                ->where('status', ViabilityRequestStatus::EmAnalise->value)
+                ->where('analysis_status', $paraConclusao),
+            $filtros,
+        );
         $foraDaConclusao = fn ($query) => $query->where(
             fn ($q) => $q->whereNull('analysis_status')->orWhere('analysis_status', '!=', $paraConclusao),
         );
@@ -90,13 +98,12 @@ class CaixaSetorController extends Controller
         $contadores = [
             'para_distribuir' => $foraDaConclusao((clone $base)->whereNull('assigned_user_id'))->count(),
             'distribuidos' => $foraDaConclusao((clone $base)->whereNotNull('assigned_user_id'))->count(),
-            'para_conclusao' => (clone $base)->where('analysis_status', $paraConclusao)->count(),
+            'para_conclusao' => (clone $baseConclusao)->count(),
         ];
 
-        $processos = $base
+        $processos = ($visao === 'para_conclusao' ? $baseConclusao : $base)
             ->when($visao === 'para_distribuir', fn ($query) => $foraDaConclusao($query->whereNull('assigned_user_id')))
             ->when($visao === 'distribuidos', fn ($query) => $foraDaConclusao($query->whereNotNull('assigned_user_id')))
-            ->when($visao === 'para_conclusao', fn ($query) => $query->where('analysis_status', $paraConclusao))
             ->with(['company', 'serviceType:id,name', 'eventos', 'cnaes', 'sector:id,name', 'assignedTo:id,name', 'conclusaoEncaminhadaPara:id,name'])
             ->orderBy('analysis_due_at')
             ->orderBy('id')
@@ -129,6 +136,9 @@ class CaixaSetorController extends Controller
                 'cnpj' => $processo->company?->formatted_cnpj,
                 'status' => $processo->status->value,
                 'status_label' => $processo->status->label(),
+                'tipo_imovel' => $processo->tipo_imovel,
+                'status_tramitacao' => $processo->analysis_status?->label(),
+                'data_entrada' => $processo->protocoled_at?->toIso8601String(),
                 // Eixo operacional: a linha em vistoria distribui para a lista
                 // de vistoriadores, não para a lista geral de analistas.
                 'analysis_status' => $processo->analysis_status?->value,
@@ -153,8 +163,10 @@ class CaixaSetorController extends Controller
         $podeDistribuir = $request->user()->can('distribuir-processos');
         $podeAssumir = $request->user()->can('analisar-processos');
 
+        $distribuiEmQualquerSetor = $qualquerSetor || ($podeDistribuir && $visao === 'para_conclusao');
+
         $analistas = $podeDistribuir
-            ? $this->destinatarios('analisar-processos', $sectorIds, $qualquerSetor)
+            ? $this->destinatarios('analisar-processos', $sectorIds, $distribuiEmQualquerSetor)
             : [];
 
         // Vistoriadores do(s) setor(es): o seletor da distribuição usa ESTA
@@ -177,10 +189,11 @@ class CaixaSetorController extends Controller
             'servicoOptions' => $this->servicoOptions(),
             'analysisStatusOptions' => AnalysisStatus::options(),
             'categoriaOptions' => $this->categoriaOptions(),
+            'analistaOptions' => $this->processos->analistasParaFiltro($request->user()),
             'perPageOptions' => self::PER_PAGE_OPTIONS,
             'podeDistribuir' => $podeDistribuir,
             'podeAssumir' => $podeAssumir,
-            'distribuiEmQualquerSetor' => $qualquerSetor,
+            'distribuiEmQualquerSetor' => $distribuiEmQualquerSetor,
             'analistas' => $analistas,
             'vistoriadores' => $vistoriadores,
         ]);
@@ -370,10 +383,14 @@ class CaixaSetorController extends Controller
             ->map(fn ($id): int => (int) $id)
             ->unique();
 
-        $processos = $this->naCaixaDoUsuario(ViabilityRequest::query(), $request->user())
+        $processos = ViabilityRequest::query()
             ->whereIn('id', $pedidos)
             ->where('status', ViabilityRequestStatus::EmAnalise->value)
-            ->where($this->semResponsavelOuParaConclusao(...))
+            ->where(fn (Builder $q) => $q
+                ->where(fn (Builder $naCaixa) => $this->naCaixaDoUsuario($naCaixa, $request->user())
+                    ->where($this->semResponsavelOuParaConclusao(...)))
+                ->orWhere(fn (Builder $conclusao) => $this->paraConclusaoDoUsuario($conclusao, $request->user())
+                    ->where('analysis_status', AnalysisStatus::ParaConclusao->value)))
             ->get();
 
         if ($processos->count() !== $pedidos->count()) {
@@ -587,6 +604,22 @@ class CaixaSetorController extends Controller
         }
 
         return $query->whereIn('sector_id', $user->sectors()->pluck('sectors.id'));
+    }
+
+    /**
+     * Recorte da aba Para conclusão: quem distribui vê os processos de todos os
+     * setores, porque a conclusão não depende do setor de origem.
+     *
+     * @param  Builder<ViabilityRequest>  $query
+     * @return Builder<ViabilityRequest>
+     */
+    private function paraConclusaoDoUsuario(Builder $query, User $user): Builder
+    {
+        if ($user->can('distribuir-processos')) {
+            return $query;
+        }
+
+        return $this->naCaixaDoUsuario($query, $user);
     }
 
     /**

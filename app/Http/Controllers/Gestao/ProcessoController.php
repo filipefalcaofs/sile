@@ -23,6 +23,7 @@ use App\Services\Geo\DivergenciaLogradouroInscricao;
 use App\Services\Regin\HttpReginParecerNotifier;
 use App\Services\Relatorios\Export\ReportExporter;
 use App\Services\Relatorios\Export\Sources\ProcessosReportSource;
+use App\Services\Relatorios\PainelOperacaoService;
 use App\Services\Relatorios\ReportFilters;
 use App\Support\Audit\AuditService;
 use App\Support\ParecerDecisao;
@@ -96,7 +97,7 @@ class ProcessoController extends Controller
                 'concluido' => 0,
             ];
         } else {
-            $processos = $this->processos->consulta($consulta)
+            $processos = $this->processos->filtered($consulta)
                 ->paginate($perPage)
                 ->withQueryString()
                 ->through(fn (ViabilityRequest $processo): array => (new ProcessoResource($processo))->resolve());
@@ -119,6 +120,7 @@ class ProcessoController extends Controller
             'statusOptions' => $this->statusOptions(),
             'analysisStatusOptions' => AnalysisStatus::options(),
             'categoriaOptions' => $this->categoriaOptions(),
+            'analistaOptions' => $this->processos->analistasParaFiltro($request->user()),
         ]);
     }
 
@@ -138,8 +140,12 @@ class ProcessoController extends Controller
             $filtros[$chave] = $request->string($chave)->toString();
         }
         $perPage = $this->perPage($request);
+        $visao = $request->string('visao')->toString() === 'analisados' ? 'analisados' : 'analise';
+        $janela = $this->janelaDeAnalisados($request);
 
-        $processos = $this->processos->aplicarFiltros($this->processos->fila($user), $filtros)
+        $base = $visao === 'analisados' ? $this->processos->analisados($user) : $this->processos->fila($user);
+
+        $processos = $this->processos->aplicarFiltros($base, $filtros)
             ->paginate($perPage)
             ->withQueryString()
             ->through(fn (ViabilityRequest $processo): array => (new ProcessoResource($processo))->resolve());
@@ -151,14 +157,20 @@ class ProcessoController extends Controller
 
         return Inertia::render('gestao/processos/fila', [
             'modo' => 'meus',
+            'visao' => $visao,
+            'janela' => $janela,
+            'janelas' => PainelOperacaoService::JANELAS,
             'processos' => $processos,
-            'contadores' => $this->processos->contadores($user),
+            'contadores' => $this->processos->contadores($user) + [
+                'analisados' => $this->processos->contadorAnalisados($user, $janela),
+            ],
             'visaoSetor' => $user->can('distribuir-processos') ? $this->processos->visaoSetor($user) : null,
             'filtros' => $filtros + ['per_page' => $perPage],
             'perPageOptions' => self::PER_PAGE_OPTIONS,
             'servicoOptions' => $this->servicoOptions(),
             'analysisStatusOptions' => AnalysisStatus::options(),
             'categoriaOptions' => $this->categoriaOptions(),
+            'analistaOptions' => $this->processos->analistasParaFiltro($user),
         ]);
     }
 
@@ -399,7 +411,7 @@ class ProcessoController extends Controller
         $chaves = [
             'grupo', 'status', 'analysis_status', 'protocolo', 'bap', 'produto_tvl', 'servico', 'setor',
             'analista', 'categoria', 'inscricao', 'nome', 'cnpj', 'cep', 'logradouro',
-            'bairro', 'data_de', 'data_ate', 'busca', 'fluxo',
+            'bairro', 'data_de', 'data_ate', 'busca', 'fluxo', 'cnae', 'complemento',
         ];
 
         $filtros = [];
@@ -409,6 +421,19 @@ class ProcessoController extends Controller
         }
 
         return $filtros;
+    }
+
+    /**
+     * Janela do quadro Analisados: as do Painel (7, 30 ou 90 dias); qualquer
+     * outro valor cai na janela padrão.
+     */
+    private function janelaDeAnalisados(Request $request): int
+    {
+        $pedida = $request->integer('janela');
+
+        return in_array($pedida, PainelOperacaoService::JANELAS, true)
+            ? $pedida
+            : (int) Settings::get('relatorios.dashboard.janela_dias', 30);
     }
 
     /**

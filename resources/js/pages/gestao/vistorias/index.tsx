@@ -1,8 +1,11 @@
 import { Head, router } from '@inertiajs/react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import DistribuirModal, { type DestinatarioDaDistribuicao } from '@/components/analise/distribuir-modal';
+import ProcessoFiltros, { FILTROS_VAZIOS, type ProcessoFiltrosValores } from '@/components/analise/processo-filtros';
 import PageHeader from '@/components/app/page-header';
 import { ArrowRightIcon } from '@/components/icons';
 import Badge from '@/components/ui/badge';
+import Button from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import DataTable from '@/components/ui/data-table/data-table';
 import PerPageSelect from '@/components/ui/data-table/per-page-select';
@@ -19,6 +22,8 @@ interface VistoriaItem {
     bap: string | null;
     empresa: string | null;
     imovel: string;
+    servicos: string[];
+    sector_id: number | null;
     zona: string | null;
     setor: string | null;
     situacao: 'designar' | 'em_campo' | 'concluida';
@@ -29,9 +34,12 @@ interface VistoriaItem {
     ficha_url: string;
 }
 
+type OpcaoDeFiltro = { value: string; label: string };
+
 interface Kpis {
     encaminhadas: number;
     a_designar: number;
+    distribuidos: number;
     em_campo: number;
     concluidas: number;
     concluidas_mes: number;
@@ -56,12 +64,19 @@ interface VistoriasIndexProps {
     vistorias: Paginado<VistoriaItem>;
     kpis: Kpis;
     abas: Aba[];
-    filtros: {
+    filtros: Partial<ProcessoFiltrosValores> & {
         situacao: string;
         busca: string;
         per_page: number;
     };
     perPageOptions: number[];
+    servicoOptions: OpcaoDeFiltro[];
+    analysisStatusOptions: OpcaoDeFiltro[];
+    categoriaOptions: OpcaoDeFiltro[];
+    analistaOptions: OpcaoDeFiltro[];
+    podeDistribuir: boolean;
+    distribuiEmQualquerSetor: boolean;
+    vistoriadores: DestinatarioDaDistribuicao[];
 }
 
 const tomSituacao: Record<VistoriaItem['situacao'], 'warning' | 'info' | 'success'> = {
@@ -91,17 +106,51 @@ function formatarPrazo(iso: string | null): string {
     });
 }
 
-export default function VistoriasIndex({ vistorias, kpis, abas, filtros, perPageOptions }: VistoriasIndexProps) {
+export default function VistoriasIndex({
+    vistorias,
+    kpis,
+    abas,
+    filtros,
+    perPageOptions,
+    servicoOptions,
+    analysisStatusOptions,
+    categoriaOptions,
+    analistaOptions,
+    podeDistribuir,
+    distribuiEmQualquerSetor,
+    vistoriadores,
+}: VistoriasIndexProps) {
     const linhas = Array.isArray(vistorias?.data) ? vistorias.data : [];
     const [busca, setBusca] = useState(filtros.busca);
     const primeiraBusca = useRef(true);
+    const [selecionados, setSelecionados] = useState<number[]>([]);
+    const [modalAberto, setModalAberto] = useState(false);
 
-    function navegar(params: Record<string, string | number>) {
+    const { situacao: _situacao, busca: _busca, per_page: _perPage, ...filtrosDeCampo } = filtros;
+    const selecaoAtiva = podeDistribuir && (filtros.situacao === 'designar' || filtros.situacao === 'todas');
+    const todosSelecionados = linhas.length > 0 && linhas.every((item) => selecionados.includes(item.id));
+
+    function navegar(params: Record<string, string | number>, camposDoFiltro: Partial<ProcessoFiltrosValores> = filtrosDeCampo) {
+        setSelecionados([]);
         router.get(
             '/gestao/vistorias',
-            { situacao: filtros.situacao, busca: filtros.busca, per_page: filtros.per_page, ...params },
+            {
+                situacao: filtros.situacao,
+                busca: filtros.busca,
+                per_page: filtros.per_page,
+                ...Object.fromEntries(Object.entries(camposDoFiltro).filter(([, valor]) => valor !== '' && valor !== undefined)),
+                ...params,
+            },
             { preserveScroll: true, preserveState: true },
         );
+    }
+
+    function alternarSelecao(id: number) {
+        setSelecionados((atual) => (atual.includes(id) ? atual.filter((item) => item !== id) : [...atual, id]));
+    }
+
+    function alternarTodos() {
+        setSelecionados(todosSelecionados ? [] : linhas.map((item) => item.id));
     }
 
     // Busca com debounce — server-driven, sem recarregar a página inteira.
@@ -119,6 +168,32 @@ export default function VistoriasIndex({ vistorias, kpis, abas, filtros, perPage
     }, [busca]);
 
     const columns: ColumnDef<VistoriaItem>[] = [
+        ...(selecaoAtiva
+            ? [
+                  {
+                      id: 'selecao',
+                      header: (
+                          <input
+                              type="checkbox"
+                              aria-label="Selecionar todos os processos da página"
+                              checked={todosSelecionados}
+                              onChange={alternarTodos}
+                              className="size-4 rounded border-gray-300 bg-white text-brand-600 scheme-light focus:ring-brand-500 dark:border-gray-400 dark:bg-gray-900 dark:scheme-dark"
+                          />
+                      ),
+                      cellClassName: 'w-10 whitespace-nowrap',
+                      cell: (item: VistoriaItem) => (
+                          <input
+                              type="checkbox"
+                              aria-label={`Selecionar processo ${item.bap ?? item.protocol_number ?? item.id}`}
+                              checked={selecionados.includes(item.id)}
+                              onChange={() => alternarSelecao(item.id)}
+                              className="size-4 rounded border-gray-300 bg-white text-brand-600 scheme-light focus:ring-brand-500 dark:border-gray-400 dark:bg-gray-900 dark:scheme-dark"
+                          />
+                      ),
+                  } satisfies ColumnDef<VistoriaItem>,
+              ]
+            : []),
         {
             id: 'processo',
             header: 'Processo',
@@ -152,6 +227,23 @@ export default function VistoriasIndex({ vistorias, kpis, abas, filtros, perPage
             ),
         },
         {
+            id: 'servico',
+            header: 'Serviço',
+            cellClassName: 'min-w-56 max-w-xs',
+            cell: (item) =>
+                item.servicos.length === 0 ? (
+                    <span className="text-gray-400 dark:text-gray-500">—</span>
+                ) : (
+                    <ul className="flex flex-col gap-1">
+                        {item.servicos.map((servico) => (
+                            <li key={servico} className="leading-snug text-gray-700 dark:text-gray-300">
+                                {servico}
+                            </li>
+                        ))}
+                    </ul>
+                ),
+        },
+        {
             id: 'situacao',
             header: 'Situação',
             cellClassName: 'whitespace-nowrap',
@@ -166,7 +258,7 @@ export default function VistoriasIndex({ vistorias, kpis, abas, filtros, perPage
             header: 'Vistoriador',
             cellClassName: 'whitespace-nowrap',
             cell: (item) =>
-                item.vistoriador ?? <span className="text-gray-400 dark:text-gray-500">Não designado</span>,
+                item.vistoriador ?? item.responsavel ?? <span className="text-gray-400 dark:text-gray-500">Não designado</span>,
         },
         {
             id: 'prazo',
@@ -199,7 +291,7 @@ export default function VistoriasIndex({ vistorias, kpis, abas, filtros, perPage
 
             <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
                 <KpiCard label="Encaminhadas" value={kpis.encaminhadas} tone="brand" note="no eixo de vistoria" />
-                <KpiCard label="A designar" value={kpis.a_designar} tone="warning" note="sem ficha aberta" />
+                <KpiCard label="Para distribuir" value={kpis.a_designar} tone="warning" note="sem vistoriador" />
                 <KpiCard label="Em campo" value={kpis.em_campo} tone="info" note="ficha em preenchimento" />
                 <KpiCard label="Prazo vencido" value={kpis.prazo_vencido} tone="error" note="exigem atenção" />
                 <KpiCard label="Concluídas no mês" value={kpis.concluidas_mes} tone="success" note={`${kpis.concluidas} no total`} />
@@ -208,6 +300,16 @@ export default function VistoriasIndex({ vistorias, kpis, abas, filtros, perPage
             <Card>
                 <CardContent className="border-t-0">
                     <div className="space-y-5">
+                        <ProcessoFiltros
+                            valores={filtrosDeCampo}
+                            servicoOptions={servicoOptions}
+                            analysisStatusOptions={analysisStatusOptions}
+                            categoriaOptions={categoriaOptions}
+                            analistaOptions={analistaOptions}
+                            onAplicar={(valores) => navegar({}, valores)}
+                            onLimpar={() => navegar({}, FILTROS_VAZIOS)}
+                        />
+
                         <div className="flex flex-wrap items-center justify-between gap-3">
                             <div className="flex flex-wrap items-center gap-2" role="tablist" aria-label="Situação da vistoria">
                                 {abas.map((aba) => (
@@ -253,6 +355,14 @@ export default function VistoriasIndex({ vistorias, kpis, abas, filtros, perPage
                             </div>
                         </div>
 
+                        {selecaoAtiva && selecionados.length > 0 && (
+                            <div className="flex flex-wrap items-center gap-3">
+                                <Button variant="primary" onClick={() => setModalAberto(true)}>
+                                    Distribuir selecionados ({selecionados.length})
+                                </Button>
+                            </div>
+                        )}
+
                         <DataTable
                             columns={columns}
                             rows={linhas}
@@ -273,6 +383,23 @@ export default function VistoriasIndex({ vistorias, kpis, abas, filtros, perPage
                     </div>
                 </CardContent>
             </Card>
+
+            {modalAberto && (
+                <DistribuirModal
+                    tipo="distribuir"
+                    ids={selecionados}
+                    descricao={`${selecionados.length} processo(s) selecionado(s)`}
+                    destinatarios={vistoriadores}
+                    papel="Vistoriador"
+                    distribuiEmQualquerSetor={distribuiEmQualquerSetor}
+                    setoresDosProcessos={linhas.filter((linha) => selecionados.includes(linha.id)).map((linha) => linha.sector_id)}
+                    onClose={() => setModalAberto(false)}
+                    onSuccess={() => {
+                        setModalAberto(false);
+                        setSelecionados([]);
+                    }}
+                />
+            )}
         </>
     );
 }

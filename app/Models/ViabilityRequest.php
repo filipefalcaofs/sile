@@ -276,6 +276,16 @@ class ViabilityRequest extends Model
     }
 
     /**
+     * Abrigado de escritório virtual: declarou a intenção no portal ou o
+     * produto já foi decidido como abrigado.
+     */
+    public function ehAbrigadoDeEscritorioVirtual(): bool
+    {
+        return $this->wants_virtual_office_tenant === true
+            || $this->decision?->is_virtual_office_tenant === true;
+    }
+
+    /**
      * Tipo de serviço (HU-061 RN-005).
      *
      * @return BelongsTo<ViabilityServiceType, $this>

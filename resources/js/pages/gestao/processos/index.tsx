@@ -2,6 +2,7 @@ import FieldError from '@/components/form/field-error';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import type { FormEvent, ReactNode } from 'react';
 import { useEffect, useState } from 'react';
+import { mascararDocumento } from '@/components/analise/processo-filtros';
 import { rotuloSemSla, type ProcessoItem } from '@/components/analise/processo-ui';
 import PageHeader from '@/components/app/page-header';
 import Checkbox from '@/components/form/checkbox';
@@ -47,6 +48,8 @@ interface FiltrosTexto {
     analysis_status: string;
     busca: string;
     fluxo: string;
+    cnae: string;
+    complemento: string;
 }
 
 interface AbasContagem {
@@ -74,6 +77,7 @@ interface ConsultaProps {
     statusOptions: SelectOption[];
     categoriaOptions: SelectOption[];
     analysisStatusOptions: SelectOption[];
+    analistaOptions: SelectOption[];
 }
 
 /** Grupos macro de status (espelham GRUPOS_STATUS do ProcessoQueryService). */
@@ -114,7 +118,9 @@ const ROTULOS_FILTRO: Record<keyof FiltrosTexto, string> = {
     bap: 'BAP',
     produto_tvl: 'Nº da viabilidade',
     nome: 'Empresa / requerente',
-    cnpj: 'CNPJ',
+    cnpj: 'CNPJ / CPF',
+    cnae: 'CNAE',
+    complemento: 'Complemento',
     inscricao: 'Inscrição imobiliária',
     logradouro: 'Logradouro',
     bairro: 'Bairro',
@@ -148,6 +154,8 @@ const CHAVES_FILTRO: (keyof FiltrosTexto)[] = [
     'analysis_status',
     'busca',
     'fluxo',
+    'cnae',
+    'complemento',
 ];
 
 const CHAVES_AVANCADAS = CHAVES_FILTRO.filter((chave) => chave !== 'busca');
@@ -257,6 +265,7 @@ export default function ConsultaProcessos({
     statusOptions,
     categoriaOptions,
     analysisStatusOptions,
+    analistaOptions,
 }: ConsultaProps) {
     const { auth } = usePage<SharedProps>().props;
     const podeMalhaFina = auth.permissions.includes('encaminhar-malha-fina');
@@ -414,6 +423,7 @@ export default function ConsultaProcessos({
         analysis_status: analysisStatusOptions,
         categoria: categoriaOptions,
         fluxo: FLUXO_OPTIONS,
+        analista: analistaOptions,
     };
 
     const chips = CHAVES_AVANCADAS.filter((chave) => (filtros[chave] ?? '') !== '' && !chavesDaAba.includes(chave)).map(
@@ -483,7 +493,17 @@ export default function ConsultaProcessos({
                         <CampoTexto id="filtro-bap" label="BAP" value={form.bap} onChange={(valor) => definir('bap', valor)} />
                         <CampoTexto id="filtro-produto-tvl" label="Nº da viabilidade" value={form.produto_tvl} onChange={(valor) => definir('produto_tvl', valor)} />
                         <CampoTexto id="filtro-nome" label="Empresa / requerente" value={form.nome} onChange={(valor) => definir('nome', valor)} />
-                        <CampoMascara id="filtro-cnpj" label="CNPJ" mask="cnpj" value={form.cnpj} onChange={(valor) => definir('cnpj', valor)} />
+                        <div>
+                            <Label htmlFor="filtro-cnpj">CNPJ / CPF</Label>
+                            <Input
+                                id="filtro-cnpj"
+                                inputMode="numeric"
+                                value={mascararDocumento(form.cnpj)}
+                                onChange={(evento) => definir('cnpj', mascararDocumento(evento.target.value))}
+                            />
+                        </div>
+                        <CampoTexto id="filtro-cnae" label="CNAE" value={form.cnae} onChange={(valor) => definir('cnae', valor)} />
+                        <CampoTexto id="filtro-complemento" label="Complemento" value={form.complemento} onChange={(valor) => definir('complemento', valor)} />
                         <CampoMascara id="filtro-inscricao" label="Inscrição imobiliária" mask="inscricao" value={form.inscricao} onChange={(valor) => definir('inscricao', valor)} />
                         <CampoTexto id="filtro-logradouro" label="Logradouro" value={form.logradouro} onChange={(valor) => definir('logradouro', valor)} />
                         <CampoTexto id="filtro-bairro" label="Bairro" value={form.bairro} onChange={(valor) => definir('bairro', valor)} />
@@ -510,7 +530,10 @@ export default function ConsultaProcessos({
                         </div>
                         <CampoTexto id="filtro-servico" label="Serviço (ID)" type="number" value={form.servico} onChange={(valor) => definir('servico', valor)} />
                         <CampoTexto id="filtro-setor" label="Setor (ID)" type="number" value={form.setor} onChange={(valor) => definir('setor', valor)} />
-                        <CampoTexto id="filtro-analista" label="Analista (ID)" type="number" value={form.analista} onChange={(valor) => definir('analista', valor)} />
+                        <div>
+                            <Label htmlFor="filtro-analista">Analista</Label>
+                            <Select id="filtro-analista" value={form.analista} onChange={(valor) => definir('analista', valor)} placeholder="Todos" options={analistaOptions} />
+                        </div>
                         <CampoData id="filtro-data-de" label="Protocolado de" value={form.data_de} onChange={(valor) => definir('data_de', valor)} />
                         <CampoData id="filtro-data-ate" label="Protocolado até" value={form.data_ate} onChange={(valor) => definir('data_ate', valor)} />
                     </div>
@@ -697,6 +720,26 @@ export default function ConsultaProcessos({
     );
 }
 
+function formatarDataHora(iso: string | null): string {
+    if (!iso) {
+        return '—';
+    }
+
+    const data = new Date(iso);
+
+    if (Number.isNaN(data.getTime())) {
+        return iso;
+    }
+
+    return data.toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+    });
+}
+
 function colunasProcessos(opcoes: {
     selecionavel: boolean;
     selecionado: (id: number) => boolean;
@@ -730,6 +773,18 @@ function colunasProcessos(opcoes: {
             ),
         },
         {
+            id: 'data_entrada',
+            header: 'Data de entrada',
+            cellClassName: 'whitespace-nowrap',
+            cell: (item) => formatarDataHora(item.protocoled_at),
+        },
+        {
+            id: 'tipo_imovel',
+            header: 'Tipo do imóvel',
+            cellClassName: 'min-w-32',
+            cell: (item) => item.tipo_imovel ?? <span className="text-gray-400 dark:text-gray-500">—</span>,
+        },
+        {
             id: 'status',
             header: 'Status',
             cell: (item) => (
@@ -737,6 +792,9 @@ function colunasProcessos(opcoes: {
                     <Badge color={statusColor(item.status)} size="sm">
                         {item.status_label}
                     </Badge>
+                    {item.analysis_status_label && (
+                        <span className="text-xs text-gray-500 dark:text-gray-400">{item.analysis_status_label}</span>
+                    )}
                     {item.sem_decisao_automatica && item.motivo_encaminhamento && (
                         <p title={item.motivo_encaminhamento} className="line-clamp-2 text-xs text-gray-500 dark:text-gray-400">
                             Sem decisão automática — {item.motivo_encaminhamento}

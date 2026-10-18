@@ -41,7 +41,7 @@ class DistribuicaoService
     {
         $ator ??= $analista;
 
-        $this->atribuir($request, $analista, $ator, 'distribuir', "Processo distribuído a {$analista->name}", $this->distribuiEmQualquerSetor($ator), $setorEscolhido);
+        $this->atribuir($request, $analista, $ator, 'distribuir', "Processo distribuído a {$analista->name}", $this->distribuiEmQualquerSetorPara($ator, $request), $setorEscolhido);
     }
 
     /**
@@ -159,6 +159,20 @@ class DistribuicaoService
     public function distribuiEmQualquerSetor(User $ator): bool
     {
         return $ator->can('distribuir-qualquer-setor');
+    }
+
+    /**
+     * Para conclusão não fica preso ao setor: quem distribui entrega a qualquer
+     * analista, e o processo passa para o setor dele. Nos demais casos vale a
+     * regra do setor, salvo para quem distribui em qualquer setor.
+     */
+    public function distribuiEmQualquerSetorPara(User $ator, ViabilityRequest $request): bool
+    {
+        if ($this->distribuiEmQualquerSetor($ator)) {
+            return true;
+        }
+
+        return $request->analysis_status === AnalysisStatus::ParaConclusao && $ator->can('distribuir-processos');
     }
 
     /**

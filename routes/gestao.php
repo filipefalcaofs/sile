@@ -707,7 +707,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
         // operacional Vistoriar/Vistoriado, situação derivada da ficha). KPIs
         // do universo, abas e busca server-driven; a consulta é auditada.
         Route::get('vistorias', VistoriaConsultaController::class)
-            ->middleware('permission:preencher-ficha-vistoria')
+            ->middleware('permission:preencher-ficha-vistoria|distribuir-processos')
             ->name('vistorias.index');
 
         // Caixa de Malha Fina: a fila do revisor — processos com in_fine_mesh

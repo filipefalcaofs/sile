@@ -1,9 +1,9 @@
-import FieldError from '@/components/form/field-error';
-import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { type ReactNode, useState } from 'react';
+import CnaesDoProcesso from '@/components/analise/cnaes-do-processo';
+import DistribuirModal from '@/components/analise/distribuir-modal';
 import ProcessoFiltros, { FILTROS_VAZIOS, type ProcessoFiltrosValores } from '@/components/analise/processo-filtros';
 import PageHeader from '@/components/app/page-header';
-import Select from '@/components/form/select';
 import { ArrowRightIcon, GroupIcon, UserCircleIcon } from '@/components/icons';
 import Button from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -11,12 +11,11 @@ import DataTable from '@/components/ui/data-table/data-table';
 import PerPageSelect from '@/components/ui/data-table/per-page-select';
 import type { ColumnDef } from '@/components/ui/data-table/types';
 import EmptyState from '@/components/ui/empty-state';
-import { Modal } from '@/components/ui/modal';
 import Pagination, { type PaginationLink } from '@/components/ui/pagination';
 import TableAction from '@/components/ui/table-action';
 import GestaoLayout from '@/layouts/gestao-layout';
 import type { SharedProps } from '@/types';
-import { escolhaDeSetor, type SetorDoAnalista } from './setor-destino';
+import type { SetorDoAnalista } from './setor-destino';
 
 type Visao = 'para_distribuir' | 'distribuidos' | 'para_conclusao';
 
@@ -32,6 +31,9 @@ interface ProcessoItem {
     cnpj: string | null;
     status: string;
     status_label: string;
+    tipo_imovel: string | null;
+    status_tramitacao: string | null;
+    data_entrada: string | null;
     analysis_status: string | null;
     analysis_stage: string | null;
     analysis_stage_label: string | null;
@@ -72,6 +74,7 @@ interface CaixaSetorIndexProps {
     servicoOptions: { value: string; label: string }[];
     analysisStatusOptions: { value: string; label: string }[];
     categoriaOptions: { value: string; label: string }[];
+    analistaOptions: { value: string; label: string }[];
     perPageOptions: number[];
     podeDistribuir: boolean;
     podeAssumir: boolean;
@@ -83,52 +86,6 @@ interface CaixaSetorIndexProps {
 /** Linha no eixo operacional de vistoria — a distribuição é só a vistoriadores. */
 function emVistoria(item: ProcessoItem): boolean {
     return item.analysis_status === 'vistoriar' || item.analysis_status === 'vistoriado';
-}
-
-const CNAES_VISIVEIS = 3;
-
-/** Lista de CNAEs da linha: principal primeiro; acima de 3, o restante expande sob demanda. */
-function CnaesDoProcesso({ cnaes }: { cnaes: ProcessoItem['cnaes'] }) {
-    const [expandido, setExpandido] = useState(false);
-
-    if (cnaes.length === 0) {
-        return <span className="text-gray-400 dark:text-gray-500">—</span>;
-    }
-
-    const excedente = cnaes.length - CNAES_VISIVEIS;
-    const visiveis = expandido || excedente <= 0 ? cnaes : cnaes.slice(0, CNAES_VISIVEIS);
-
-    return (
-        <ul className="flex flex-col gap-1.5">
-            {visiveis.map((cnae) => (
-                <li key={cnae.codigo} className="flex flex-col leading-snug">
-                    <span className="flex items-center gap-1.5">
-                        <span className="font-medium tabular-nums text-gray-800 dark:text-white/90">{cnae.codigo}</span>
-                        {cnae.principal && (
-                            <span className="rounded-full bg-brand-50 px-1.5 py-px text-[10px] font-medium text-brand-600 dark:bg-brand-500/15 dark:text-brand-400">
-                                Principal
-                            </span>
-                        )}
-                    </span>
-                    <span className="line-clamp-2 text-theme-xs text-gray-500 dark:text-gray-400" title={cnae.descricao}>
-                        {cnae.descricao}
-                    </span>
-                </li>
-            ))}
-            {excedente > 0 && (
-                <li>
-                    <button
-                        type="button"
-                        onClick={() => setExpandido((atual) => !atual)}
-                        aria-expanded={expandido}
-                        className="text-theme-xs font-medium text-brand-600 hover:underline dark:text-brand-400"
-                    >
-                        {expandido ? 'Mostrar menos' : `+${excedente} ${excedente === 1 ? 'atividade' : 'atividades'}`}
-                    </button>
-                </li>
-            )}
-        </ul>
-    );
 }
 
 /** Formata a data-hora ISO do prazo para o padrão pt-BR (dd/mm/aaaa hh:mm). */
@@ -166,6 +123,7 @@ export default function CaixaSetorIndex({
     servicoOptions,
     analysisStatusOptions,
     categoriaOptions,
+    analistaOptions,
     perPageOptions,
     podeDistribuir,
     podeAssumir,
@@ -177,24 +135,9 @@ export default function CaixaSetorIndex({
     const podeVistoria = auth.permissions.includes('preencher-ficha-vistoria');
 
     const linhas = Array.isArray(processos?.data) ? processos.data : [];
-    const opcoesAnalista = (Array.isArray(analistas) ? analistas : []).map((analista) => ({
-        value: String(analista.id),
-        label: analista.name,
-    }));
-    const opcoesVistoriador = (Array.isArray(vistoriadores) ? vistoriadores : []).map((vistoriador) => ({
-        value: String(vistoriador.id),
-        label: vistoriador.name,
-    }));
-
     const [assumindoId, setAssumindoId] = useState<number | null>(null);
     const [selecionados, setSelecionados] = useState<number[]>([]);
     const [modal, setModal] = useState<ModalTramitacao | null>(null);
-
-    const tramitacao = useForm<{ request_ids: number[]; analista_id: string; sector_id: string }>({
-        request_ids: [],
-        analista_id: '',
-        sector_id: '',
-    });
 
     const selecaoAtiva = (visao === 'para_distribuir' || visao === 'para_conclusao') && podeDistribuir;
     const todosSelecionados = linhas.length > 0 && linhas.every((item) => selecionados.includes(item.id));
@@ -204,15 +147,6 @@ export default function CaixaSetorIndex({
     // enforced pelo DistribuicaoService; aqui é a conveniência da tela).
     const modalEmVistoria =
         modal !== null && linhas.some((linha) => modal.ids.includes(linha.id) && emVistoria(linha));
-    const opcoesDoModal = modalEmVistoria ? opcoesVistoriador : opcoesAnalista;
-    const destinatarioDoModal = (modalEmVistoria ? vistoriadores : analistas)?.find(
-        (pessoa) => String(pessoa.id) === tramitacao.data.analista_id,
-    );
-    const escolhaDoSetor = escolhaDeSetor(
-        distribuiEmQualquerSetor,
-        destinatarioDoModal?.setores ?? [],
-        linhas.filter((linha) => modal?.ids.includes(linha.id)).map((linha) => linha.sector_id),
-    );
 
     const { per_page: _perPage, ...filtrosDeCampo } = filtros;
 
@@ -260,8 +194,6 @@ export default function CaixaSetorIndex({
     }
 
     function abrirModal(novo: ModalTramitacao) {
-        tramitacao.clearErrors();
-        tramitacao.setData({ request_ids: novo.ids, analista_id: '', sector_id: '' });
         setModal(novo);
     }
 
@@ -287,19 +219,6 @@ export default function CaixaSetorIndex({
             return;
         }
         router.get('/gestao/caixa-setor/distribuicao-inteligente', params, { preserveScroll: true });
-    }
-
-    function confirmarTramitacao() {
-        const rota = modal?.tipo === 'redistribuir' ? '/gestao/caixa-setor/redistribuir' : '/gestao/caixa-setor/distribuir';
-
-        tramitacao.post(rota, {
-            preserveScroll: true,
-            onSuccess: () => {
-                setModal(null);
-                setSelecionados([]);
-                tramitacao.reset();
-            },
-        });
     }
 
     const columns: ColumnDef<ProcessoItem>[] = [
@@ -343,11 +262,23 @@ export default function CaixaSetorIndex({
             ),
         },
         {
+            id: 'data_entrada',
+            header: 'Data de entrada',
+            cellClassName: 'whitespace-nowrap',
+            cell: (item) => formatarPrazo(item.data_entrada),
+        },
+        {
             id: 'endereco',
             header: 'Endereço',
             cell: (item) => (
                 <span className="text-gray-700 dark:text-gray-300">{item.imovel !== '' ? item.imovel : '—'}</span>
             ),
+        },
+        {
+            id: 'tipo_imovel',
+            header: 'Tipo do imóvel',
+            cellClassName: 'min-w-32',
+            cell: (item) => item.tipo_imovel ?? <span className="text-gray-400 dark:text-gray-500">—</span>,
         },
         {
             id: 'servico',
@@ -384,6 +315,12 @@ export default function CaixaSetorIndex({
             cellClassName: 'whitespace-nowrap',
             cell: (item) =>
                 item.assigned_to ?? <span className="text-gray-400 dark:text-gray-500">Não atribuído</span>,
+        },
+        {
+            id: 'status_tramitacao',
+            header: 'Status',
+            cellClassName: 'whitespace-nowrap',
+            cell: (item) => item.status_tramitacao ?? <span className="text-gray-400 dark:text-gray-500">—</span>,
         },
         ...(visao === 'para_conclusao'
             ? [
@@ -463,6 +400,7 @@ export default function CaixaSetorIndex({
                             servicoOptions={servicoOptions}
                             analysisStatusOptions={analysisStatusOptions}
                             categoriaOptions={categoriaOptions}
+                            analistaOptions={analistaOptions}
                             onAplicar={(valores) => navegar({ filtros: valores })}
                             onLimpar={() => navegar({ filtros: FILTROS_VAZIOS })}
                         />
@@ -576,81 +514,22 @@ export default function CaixaSetorIndex({
                 </CardContent>
             </Card>
 
-            <Modal
-                isOpen={modal !== null}
-                onClose={() => setModal(null)}
-                className="m-4 max-w-lg p-6 sm:p-8"
-            >
-                <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-                    {modal?.tipo === 'redistribuir' ? 'Redistribuir processo' : 'Tramitar processo(s)'}
-                </h3>
-                <p className="mt-1 text-theme-sm text-gray-500 dark:text-gray-400">
-                    {modal?.descricao} —{' '}
-                    {modalEmVistoria
-                        ? 'processo em vistoria: selecione o vistoriador responsável pela ficha.'
-                        : distribuiEmQualquerSetor
-                          ? 'selecione a analista responsável pela análise; o processo passa para o setor dela.'
-                          : 'selecione a analista do setor responsável pela análise.'}
-                </p>
-
-                <div className="mt-6">
-                    <label htmlFor="tramitar-analista" className="mb-1.5 block text-theme-sm font-medium text-gray-700 dark:text-gray-300">
-                        {modalEmVistoria ? 'Vistoriador' : 'Analista'}
-                    </label>
-                    <Select
-                        id="tramitar-analista"
-                        value={tramitacao.data.analista_id}
-                        onChange={(value) => tramitacao.setData({ ...tramitacao.data, analista_id: value, sector_id: '' })}
-                        placeholder={
-                            modalEmVistoria
-                                ? opcoesDoModal.length > 0
-                                    ? 'Selecione o vistoriador'
-                                    : 'Nenhum vistoriador vinculado ao setor'
-                                : opcoesDoModal.length > 0
-                                  ? 'Selecione a analista'
-                                  : 'Nenhuma analista vinculada ao setor'
-                        }
-                        options={opcoesDoModal}
-                        disabled={opcoesDoModal.length === 0}
-                    />
-                    {tramitacao.errors.analista_id && (
-                        <FieldError>{tramitacao.errors.analista_id}</FieldError>
-                    )}
-                </div>
-
-                {escolhaDoSetor !== 'nenhuma' && destinatarioDoModal && (
-                    <div className="mt-4">
-                        <label htmlFor="tramitar-setor" className="mb-1.5 block text-theme-sm font-medium text-gray-700 dark:text-gray-300">
-                            Setor que recebe o processo
-                        </label>
-                        <Select
-                            id="tramitar-setor"
-                            value={tramitacao.data.sector_id}
-                            onChange={(value) => tramitacao.setData('sector_id', value)}
-                            placeholder={escolhaDoSetor === 'opcional' ? 'Manter o setor atual do processo' : 'Selecione o setor'}
-                            options={destinatarioDoModal.setores.map((setor) => ({ value: String(setor.id), label: setor.name }))}
-                        />
-                        {tramitacao.errors.sector_id && <FieldError>{tramitacao.errors.sector_id}</FieldError>}
-                    </div>
-                )}
-
-                <div className="mt-8 flex justify-end gap-3">
-                    <Button variant="outline" onClick={() => setModal(null)} disabled={tramitacao.processing}>
-                        Cancelar
-                    </Button>
-                    <Button
-                        variant="primary"
-                        onClick={confirmarTramitacao}
-                        loading={tramitacao.processing}
-                        disabled={
-                            tramitacao.data.analista_id === '' ||
-                            (escolhaDoSetor === 'obrigatoria' && tramitacao.data.sector_id === '')
-                        }
-                    >
-                        Confirmar envio
-                    </Button>
-                </div>
-            </Modal>
+            {modal !== null && (
+                <DistribuirModal
+                    tipo={modal.tipo}
+                    ids={modal.ids}
+                    descricao={modal.descricao}
+                    destinatarios={modalEmVistoria ? vistoriadores : analistas}
+                    papel={modalEmVistoria ? 'Vistoriador' : 'Analista'}
+                    distribuiEmQualquerSetor={distribuiEmQualquerSetor}
+                    setoresDosProcessos={linhas.filter((linha) => modal.ids.includes(linha.id)).map((linha) => linha.sector_id)}
+                    onClose={() => setModal(null)}
+                    onSuccess={() => {
+                        setModal(null);
+                        setSelecionados([]);
+                    }}
+                />
+            )}
         </>
     );
 }

@@ -1,13 +1,15 @@
 import { Head, router } from '@inertiajs/react';
 import type { ReactNode } from 'react';
+import CnaesDoProcesso from '@/components/analise/cnaes-do-processo';
 import ProcessoFiltros, { FILTROS_VAZIOS, type ProcessoFiltrosValores } from '@/components/analise/processo-filtros';
+import JanelaDiasToggle from '@/components/app/janela-dias-toggle';
 import PageHeader from '@/components/app/page-header';
 import {
     CategoriaBadges,
     type ProcessoItem,
     SemaforoBadge,
 } from '@/components/analise/processo-ui';
-import { AlertIcon, ArrowRightIcon, FileIcon, InfoIcon, ListIcon } from '@/components/icons';
+import { AlertIcon, ArrowRightIcon, CheckCircleIcon, FileIcon, InfoIcon, ListIcon } from '@/components/icons';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import DataTable from '@/components/ui/data-table/data-table';
 import PerPageSelect from '@/components/ui/data-table/per-page-select';
@@ -24,7 +26,15 @@ interface Contadores {
     em_analise: number;
     em_pendencia: number;
     vencendo_hoje: number;
+    analisados: number;
 }
+
+type Visao = 'analise' | 'analisados';
+
+const ABAS: { id: Visao; rotulo: string }[] = [
+    { id: 'analise', rotulo: 'Análise' },
+    { id: 'analisados', rotulo: 'Analisados' },
+];
 
 interface CargaAnalista {
     analista_id: number;
@@ -46,6 +56,9 @@ interface Paginado<T> {
 }
 
 interface FilaProps {
+    visao: Visao;
+    janela: number;
+    janelas: number[];
     processos: Paginado<ProcessoItem>;
     contadores: Contadores;
     visaoSetor: VisaoSetor | null;
@@ -54,11 +67,35 @@ interface FilaProps {
     servicoOptions: { value: string; label: string }[];
     analysisStatusOptions: { value: string; label: string }[];
     categoriaOptions: { value: string; label: string }[];
+    analistaOptions: { value: string; label: string }[];
 }
 
 const numberFormat = new Intl.NumberFormat('pt-BR');
 
+function formatarDataHora(iso: string | null): string {
+    if (!iso) {
+        return '—';
+    }
+
+    const data = new Date(iso);
+
+    if (Number.isNaN(data.getTime())) {
+        return iso;
+    }
+
+    return data.toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+    });
+}
+
 export default function Fila({
+    visao,
+    janela,
+    janelas,
     processos,
     contadores,
     filtros,
@@ -66,14 +103,17 @@ export default function Fila({
     servicoOptions,
     analysisStatusOptions,
     categoriaOptions,
+    analistaOptions,
 }: FilaProps) {
     const { per_page: _perPage, ...filtrosDeCampo } = filtros;
 
-    function navegar(params: { per_page?: number; filtros?: ProcessoFiltrosValores }) {
+    function navegar(params: { visao?: Visao; janela?: number; per_page?: number; filtros?: ProcessoFiltrosValores }) {
         const filtrosAtuais = params.filtros ?? filtrosDeCampo;
         router.get(
             '/gestao/processos/fila',
             {
+                visao: params.visao ?? visao,
+                janela: params.janela ?? janela,
                 per_page: params.per_page ?? filtros.per_page,
                 ...Object.fromEntries(Object.entries(filtrosAtuais).filter(([, v]) => v !== '')),
             },
@@ -110,6 +150,13 @@ export default function Fila({
             icon: <AlertIcon className="size-6" />,
             tone: 'error',
         },
+        {
+            key: 'analisados',
+            label: `Analisados (${janela} dias)`,
+            value: contadores.analisados,
+            icon: <CheckCircleIcon className="size-6" />,
+            tone: 'success',
+        },
     ];
 
     const columns: ColumnDef<ProcessoItem>[] = [
@@ -127,6 +174,12 @@ export default function Fila({
             ),
         },
         {
+            id: 'data_entrada',
+            header: 'Data de entrada',
+            cellClassName: 'whitespace-nowrap',
+            cell: (item) => formatarDataHora(item.protocoled_at),
+        },
+        {
             id: 'endereco',
             header: 'Endereço',
             cell: (item) => (
@@ -134,27 +187,74 @@ export default function Fila({
             ),
         },
         {
+            id: 'tipo_imovel',
+            header: 'Tipo do imóvel',
+            cellClassName: 'min-w-32',
+            cell: (item) => item.tipo_imovel ?? <span className="text-gray-400 dark:text-gray-500">—</span>,
+        },
+        {
+            id: 'servico',
+            header: 'Serviço',
+            cellClassName: 'min-w-56 max-w-xs',
+            cell: (item) =>
+                item.servicos.length === 0 ? (
+                    <span className="text-gray-400 dark:text-gray-500">—</span>
+                ) : (
+                    <ul className="flex flex-col gap-1">
+                        {item.servicos.map((servico) => (
+                            <li key={servico} className="leading-snug text-gray-700 dark:text-gray-300">
+                                {servico}
+                            </li>
+                        ))}
+                    </ul>
+                ),
+        },
+        {
+            id: 'cnae',
+            header: 'CNAE',
+            cellClassName: 'min-w-64 max-w-sm',
+            cell: (item) => <CnaesDoProcesso cnaes={item.cnaes_detalhe ?? []} />,
+        },
+        {
             id: 'etapa',
             header: 'Etapa',
+            cellClassName: 'whitespace-nowrap',
+            cell: (item) => item.analysis_stage_label ?? '—',
+        },
+        {
+            id: 'analise',
+            header: 'Análise',
             cellClassName: 'max-w-64 align-top whitespace-normal',
             cell: (item) => (
                 <div className="flex w-64 max-w-full flex-col items-start gap-1">
-                    <span className="text-gray-700 dark:text-gray-300">{item.analysis_stage_label ?? '—'}</span>
                     <CategoriaBadges categorias={item.categorias} />
-                    {item.sem_decisao_automatica && item.motivo_encaminhamento && (
+                    {item.motivo_da_analise ? (
                         <span className="min-w-0 whitespace-normal text-theme-xs leading-snug text-gray-500 dark:text-gray-400">
-                            Sem decisão automática — {item.motivo_encaminhamento}
+                            {item.motivo_da_analise}
                         </span>
+                    ) : (
+                        <span className="text-gray-400 dark:text-gray-500">—</span>
                     )}
                 </div>
             ),
         },
         {
-            id: 'semaforo',
-            header: 'SLA',
+            id: 'status_tramitacao',
+            header: 'Status',
             cellClassName: 'whitespace-nowrap',
-            cell: (item) => <SemaforoBadge sla={item.sla} />,
+            cell: (item) =>
+                item.analysis_status_label ?? item.status_label ?? <span className="text-gray-400 dark:text-gray-500">—</span>,
         },
+        ...(visao === 'analise'
+            ? [
+                  {
+                      id: 'semaforo',
+                      header: 'SLA',
+                      cellClassName: 'whitespace-nowrap',
+                      cell: (item: ProcessoItem) => <SemaforoBadge sla={item.sla} />,
+                  } satisfies ColumnDef<ProcessoItem>,
+              ]
+            : []),
         {
             id: 'actions',
             header: 'Ações',
@@ -179,7 +279,10 @@ export default function Fila({
             <PageHeader title="Caixa de entrada" breadcrumbs={[{ label: 'Painel', href: '/gestao' }]} />
 
             <div className="space-y-6">
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 xl:grid-cols-4">
+                <div className="flex justify-end">
+                    <JanelaDiasToggle janelas={janelas} ativa={janela} onSelecionar={(dias) => navegar({ janela: dias })} />
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 xl:grid-cols-5">
                     {indicadores.map((indicador) => (
                         <KpiCard
                             key={indicador.key}
@@ -194,7 +297,11 @@ export default function Fila({
                 <Card>
                     <CardHeader
                         title="Processos a tratar"
-                        description="Fila de trabalho do analista."
+                        description={
+                            visao === 'analise'
+                                ? 'Fila de trabalho do analista.'
+                                : 'Todos os processos que você analisou.'
+                        }
                     />
                     <CardContent>
                         <div className="space-y-5">
@@ -203,9 +310,33 @@ export default function Fila({
                                 servicoOptions={servicoOptions}
                                 analysisStatusOptions={analysisStatusOptions}
                                 categoriaOptions={categoriaOptions}
+                                analistaOptions={analistaOptions}
                                 onAplicar={(valores) => navegar({ filtros: valores })}
                                 onLimpar={() => navegar({ filtros: FILTROS_VAZIOS })}
                             />
+
+                            <div role="tablist" aria-label="Visões da caixa de entrada" className="flex border-b border-gray-200 dark:border-gray-800">
+                                {ABAS.map((aba) => {
+                                    const ativa = aba.id === visao;
+
+                                    return (
+                                        <button
+                                            key={aba.id}
+                                            type="button"
+                                            role="tab"
+                                            aria-selected={ativa}
+                                            onClick={() => navegar({ visao: aba.id })}
+                                            className={`border-b-2 px-4 py-2.5 text-sm font-medium transition-colors ${
+                                                ativa
+                                                    ? 'border-brand-500 text-brand-600 dark:border-brand-400 dark:text-brand-400'
+                                                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-700 dark:hover:text-gray-200'
+                                            }`}
+                                        >
+                                            {aba.rotulo}
+                                        </button>
+                                    );
+                                })}
+                            </div>
 
                             <DataTable
                                 columns={columns}
@@ -213,10 +344,17 @@ export default function Fila({
                                 rowKey={(item) => item.id}
                                 density="compact"
                                 emptyState={
-                                    <EmptyState
-                                        title="Sua fila está limpa"
-                                        description="Você não tem processos atribuídos em análise ou convite. Assuma processos pela caixa do setor."
-                                    />
+                                    visao === 'analise' ? (
+                                        <EmptyState
+                                            title="Sua fila está limpa"
+                                            description="Você não tem processos atribuídos em análise ou convite. Assuma processos pela caixa do setor."
+                                        />
+                                    ) : (
+                                        <EmptyState
+                                            title="Nenhum processo analisado"
+                                            description="Os processos aparecem aqui depois que você finaliza a ficha de análise."
+                                        />
+                                    )
                                 }
                             />
 

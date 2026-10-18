@@ -127,6 +127,7 @@ export interface ProcessoItem {
     cnpj: string | null;
     /** Códigos separados por vírgula, com papel quando o vínculo gravou is_primary. */
     cnaes?: string | null;
+    cnaes_detalhe?: { codigo: string; descricao: string; principal: boolean }[];
     imovel: string;
     endereco_completo: string;
     inscricao: string | null;
