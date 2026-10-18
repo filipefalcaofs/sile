@@ -135,6 +135,45 @@ class PrecedentServiceTest extends TestCase
         $this->assertSame(1, $painel['em_analise']);
     }
 
+    public function test_lista_os_processos_em_analise_do_imovel_para_abrir_em_outra_aba(): void
+    {
+        $ficha = $this->fichaComSnapshot(null);
+        $ficha->viabilityRequest->forceFill(['property_registration' => '123456'])->save();
+
+        $emAnalise = ViabilityRequest::factory()->create([
+            'property_registration' => '123456',
+            'protocol_number' => 'VIA-2026-000555',
+            'external_reference' => 'BAP2601000555',
+            'analysis_status' => AnalysisStatus::EmAnalise,
+        ]);
+        ViabilityRequest::factory()->create([
+            'property_registration' => '123456',
+            'analysis_status' => AnalysisStatus::AnaliseConcluida,
+        ]);
+
+        $this->app->instance(PrecedentRepository::class, new FakePrecedentRepository);
+
+        $painel = $this->service()->forRecord($ficha->fresh());
+
+        $this->assertSame([
+            [
+                'viability_request_id' => $emAnalise->id,
+                'protocol_number' => 'VIA-2026-000555',
+                'bap' => 'BAP2601000555',
+            ],
+        ], $painel['em_analise_processos']);
+    }
+
+    public function test_sem_inscricao_nao_lista_processos_em_analise(): void
+    {
+        $ficha = $this->fichaComSnapshot(null);
+        $this->app->instance(PrecedentRepository::class, new FakePrecedentRepository);
+
+        $painel = $this->service()->forRecord($ficha->fresh());
+
+        $this->assertSame([], $painel['em_analise_processos']);
+    }
+
     public function test_precedentes_do_imovel_sem_cpf_no_payload(): void
     {
         $cpf = '52998224725';

@@ -49,17 +49,29 @@ function textoCamada(camada: CamadaPoligonal): string {
  * Camadas geográficas do imóvel: cada camada e o elemento identificado nela
  * (logradouro, bairro, zona, trecho da borda marítima, loteamento...).
  */
-export default function CamadasImovelLista({ camadas }: { camadas: CamadasImovel }) {
+export default function CamadasImovelLista({
+    camadas,
+    somentePoligonais = false,
+}: {
+    camadas: CamadasImovel;
+    /** Oculta logradouro, bairro, zona e via — a ficha já os mostra na localização. */
+    somentePoligonais?: boolean;
+}) {
+    const identificacao: { camada: string; elemento: string; destaque?: boolean }[] = somentePoligonais
+        ? []
+        : [
+              {
+                  camada: 'Logradouro da inscrição (SEFAZ)',
+                  elemento: camadas.logradouro_tributario
+                      ? `${camadas.logradouro_tributario.cod_log} — ${camadas.logradouro_tributario.nome ?? ''}`.trim()
+                      : '—',
+              },
+              { camada: 'Bairro', elemento: textoDimensao(camadas.bairro) },
+              { camada: 'Zona', elemento: textoZona(camadas.zona) },
+              { camada: 'Via', elemento: camadas.via?.trim() ? camadas.via : '—' },
+          ];
     const linhas: { camada: string; elemento: string; destaque?: boolean }[] = [
-        {
-            camada: 'Logradouro da inscrição (SEFAZ)',
-            elemento: camadas.logradouro_tributario
-                ? `${camadas.logradouro_tributario.cod_log} — ${camadas.logradouro_tributario.nome ?? ''}`.trim()
-                : '—',
-        },
-        { camada: 'Bairro', elemento: textoDimensao(camadas.bairro) },
-        { camada: 'Zona', elemento: textoZona(camadas.zona) },
-        { camada: 'Via', elemento: camadas.via?.trim() ? camadas.via : '—' },
+        ...identificacao,
         ...(camadas.camadas ?? []).map((camada) => ({
             camada: camada.titulo ?? camada.regra,
             elemento: textoCamada(camada),

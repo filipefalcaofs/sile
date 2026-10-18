@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Enums\RuleDomain;
 use App\Models\AnalysisRecord;
+use App\Models\Cnae;
 use App\Models\RuleVersion;
 use App\Models\TllValor;
 use App\Services\Analise\PerguntaLocalFicha;
@@ -73,8 +74,13 @@ class AnalysisRecordResource extends JsonResource
         $porCnae = is_array($this->engine_snapshot['por_cnae'] ?? null)
             ? $this->engine_snapshot['por_cnae']
             : [];
+        $descricoes = Cnae::query()
+            ->whereIn('code', collect($itens)->map(fn (array $item): string => preg_replace('/\D/', '', (string) ($item['cnae'] ?? '')) ?? '')->filter()->all())
+            ->pluck('description', 'code');
 
-        return array_map(function (array $item) use ($porCnae, $local, $solicitacao, $quadros): array {
+        return array_map(function (array $item) use ($porCnae, $local, $solicitacao, $quadros, $descricoes): array {
+            $item['descricao'] = $descricoes[preg_replace('/\D/', '', (string) ($item['cnae'] ?? ''))] ?? null;
+
             // A sugestão do motor não sai do servidor (relatório SEDUR 21/09,
             // item 02) — fica gravada só para a divergência auditada.
             unset($item['status_sugerido']);

@@ -69,10 +69,12 @@ class AnalysisRecordService
      * escolhido por CNAE, condicionantes, vagas e parecer). A revisão finalizada é
      * imutável (RN-003) — autosave nela lança AnalysisRecordImutavelException
      * (422 no caller). A sugestão do motor (status_sugerido) é preservada.
+     * Quem salva passa a ser o analista responsável pela revisão: é isso que
+     * distingue a ficha salva da que só nasceu pré-analisada pelo motor.
      *
      * @param  array<string, mixed>  $data
      */
-    public function autosave(AnalysisRecord $record, array $data): AnalysisRecord
+    public function autosave(AnalysisRecord $record, array $data, ?User $ator = null): AnalysisRecord
     {
         if ($record->isFinalizada()) {
             throw AnalysisRecordImutavelException::finalizada($record);
@@ -100,6 +102,10 @@ class AnalysisRecordService
 
         if (array_key_exists('address_confirmed', $data)) {
             $record->address_confirmed = $data['address_confirmed'];
+        }
+
+        if ($ator !== null) {
+            $record->analyst_user_id = $ator->id;
         }
 
         $record->save();

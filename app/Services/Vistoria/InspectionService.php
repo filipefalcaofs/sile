@@ -48,7 +48,9 @@ class InspectionService
             ->first();
 
         if ($existente !== null) {
-            return $existente;
+            return $existente->status === InspectionStatus::EmPreenchimento
+                ? $this->completarLocalizacao($existente, $processo)
+                : $existente;
         }
 
         $this->garantirPodeAssumir($processo, $vistoriador);
@@ -83,18 +85,77 @@ class InspectionService
             'status' => InspectionStatus::EmPreenchimento,
             'vistoriador_user_id' => $vistoriador->id,
             'opened_at' => now(),
-            'logradouro' => $processo->address_street,
+            'cod_logradouro' => $this->texto($processo->cod_log),
+            'logradouro' => $this->logradouroComTipo($processo),
             'numero_metrico' => $processo->address_number,
             'bairro' => $processo->address_neighborhood,
             'cep' => $processo->address_zip,
             'ponto_referencia' => $processo->address_reference,
             'zona' => $processo->zona_codigo ?? data_get($snapshot, 'zona'),
-            'via' => data_get($snapshot, 'via'),
+            'via' => $this->viaDoProcesso($processo),
             'polygon_geojson' => $processo->property_polygon_geojson,
         ]);
         $ficha->save();
 
         return $ficha;
+    }
+
+    /**
+     * Ficha ainda em preenchimento aberta antes de CodLog, Via e tipo do
+     * logradouro entrarem no snapshot: completa só o que está em branco. A
+     * ficha concluída não é tocada.
+     */
+    private function completarLocalizacao(Inspection $ficha, ViabilityRequest $processo): Inspection
+    {
+        $logradouro = $this->logradouroComTipo($processo);
+
+        $ficha->cod_logradouro ??= $this->texto($processo->cod_log);
+        $ficha->via ??= $this->viaDoProcesso($processo);
+
+        if ($logradouro !== null && $ficha->logradouro === $processo->address_street) {
+            $ficha->logradouro = $logradouro;
+        }
+
+        if ($ficha->isDirty()) {
+            $ficha->save();
+        }
+
+        return $ficha;
+    }
+
+    /**
+     * Logradouro com o tipo declarado (rua, avenida, travessa...), sem repeti-lo
+     * quando o nome já começa por ele.
+     */
+    private function logradouroComTipo(ViabilityRequest $processo): ?string
+    {
+        $rua = $this->texto($processo->address_street);
+        $declarado = is_array($processo->origem_declarada) ? $processo->origem_declarada : [];
+        $tipo = $this->texto($declarado['tipo_logradouro'] ?? null);
+
+        if ($rua === null || $tipo === null || str_starts_with(mb_strtolower($rua), mb_strtolower($tipo))) {
+            return $rua;
+        }
+
+        return $tipo.' '.$rua;
+    }
+
+    private function viaDoProcesso(ViabilityRequest $processo): ?string
+    {
+        $snapshot = is_array($processo->simulation_snapshot) ? $processo->simulation_snapshot : [];
+
+        return $this->texto(data_get($snapshot, 'via')) ?? $this->texto(data_get($processo->camadas_incidentes, 'via'));
+    }
+
+    private function texto(mixed $valor): ?string
+    {
+        if (! is_string($valor) && ! is_numeric($valor)) {
+            return null;
+        }
+
+        $texto = trim((string) $valor);
+
+        return $texto === '' ? null : $texto;
     }
 
     /**

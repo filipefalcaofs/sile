@@ -38,6 +38,7 @@ type StatusFicha = 'deferida' | 'indeferida';
 interface PerCnae {
     cnae: string;
     cnae_formatado?: string | null;
+    descricao?: string | null;
     is_primary?: boolean;
     tendencia?: string | null;
     tendencia_label?: string | null;
@@ -99,6 +100,9 @@ interface Processo {
     status_label: string;
     renovacao?: boolean;
     tvl_numero?: string | null;
+    bap: string | null;
+    servicos: string[];
+    empresa: string | null;
 }
 
 interface TextoPadrao {
@@ -123,6 +127,7 @@ interface Localizacao {
     is_public_area: boolean | null;
     categoria_uso_lote: string | null;
     padrao_construtivo_lote: string | null;
+    tipo_imovel: string | null;
     camadas?: CamadasImovel | null;
 }
 
@@ -175,7 +180,14 @@ interface CnaeZona {
     motivo?: string;
 }
 
+interface ProcessoEmAnaliseNoImovel {
+    viability_request_id: number;
+    protocol_number: string | null;
+    bap: string | null;
+}
+
 interface PrecedentesResponse {
+    em_analise_processos?: ProcessoEmAnaliseNoImovel[];
     imovel: PrecedenteImovel[];
     cnae_zona: CnaeZona;
     em_analise?: number;
@@ -247,6 +259,9 @@ interface EnquadramentoOpcao {
     codigo_tll: string | null;
     especificacao_tll: string | null;
     valor_tll: string | null;
+    risco_nivel: string | null;
+    risco_label: string | null;
+    fluxo: string;
 }
 
 interface FichaAnaliseShowProps {
@@ -477,6 +492,7 @@ function cepMascarado(valor: string | null | undefined): string {
  */
 const CAMPOS_IPTU = [
     'inscricao',
+    'bairro',
     'loteamento',
     'quadra',
     'lote',
@@ -490,8 +506,6 @@ const CAMPOS_IPTU = [
     'situacao_cadastral',
     'numero_porta',
     'area_terreno_m2',
-    'valor_venal_iptu',
-    'logradouro_tributario',
     'situacao_fiscal',
     'data_emissao_certidao',
 ] as const;
@@ -773,10 +787,14 @@ export default function FichaAnaliseShow({
     const editavel = ficha.editavel;
 
     const [perCnae, setPerCnae] = useState<PerCnae[]>(() => ficha.per_cnae ?? []);
+    const [deferirTodos, setDeferirTodos] = useState(false);
+    const statusAntesDeDeferirTodos = useRef<Record<string, PerCnae['status_escolhido']> | null>(null);
+    // Enquadramento com que a ficha abriu: enquanto o analista não troca, vale o encaminhamento do motor.
+    const [enquadramentoInicial] = useState<Record<string, string>>(() =>
+        Object.fromEntries((ficha.per_cnae ?? []).map((item) => [item.cnae, `${item.codigo_louos ?? ''}|${item.codigo_tll ?? ''}`])),
+    );
     // Regra de decisão: só o indeferimento é marcado por CNAE. Nenhum indeferido
     // → o processo é deferido; ao menos um indeferido → o processo é indeferido.
-    const cnaesIndeferidos = perCnae.filter((item) => item.status_escolhido === 'indeferida');
-    const resultadoPrevisto = cnaesIndeferidos.length > 0 ? 'indeferido' : 'deferido';
     const [conditions, setConditions] = useState<string[]>(() => ficha.conditions ?? []);
     const [parecer, setParecer] = useState<string>(() => ficha.parecer ?? '');
     const [tvlKind, setTvlKind] = useState<'provisoria' | 'definitiva'>('provisoria');
@@ -977,6 +995,32 @@ export default function FichaAnaliseShow({
         setPerCnae((atual) => atual.map((item, i) => (i === indice ? { ...item, ...patch } : item)));
     }
 
+    /**
+     * Marca todas as atividades como deferidas de uma vez. Sem a marcação, cada
+     * atividade segue exigindo a escolha individual; ao desmarcar, voltam as
+     * escolhas que existiam antes.
+     */
+    function alternarDeferirTodos(marcar: boolean) {
+        if (marcar) {
+            statusAntesDeDeferirTodos.current = Object.fromEntries(perCnae.map((item) => [item.cnae, item.status_escolhido ?? null]));
+            setPerCnae((atual) => atual.map((item) => ({ ...item, status_escolhido: 'deferida' })));
+        } else {
+            const anteriores = statusAntesDeDeferirTodos.current;
+            setPerCnae((atual) => atual.map((item) => ({ ...item, status_escolhido: anteriores?.[item.cnae] ?? null })));
+            statusAntesDeDeferirTodos.current = null;
+        }
+
+        setDeferirTodos(marcar);
+    }
+
+    // Trocar o resultado de uma atividade na mão desfaz a marcação de "todos".
+    useEffect(() => {
+        if (deferirTodos && !perCnae.every((item) => item.status_escolhido === 'deferida')) {
+            setDeferirTodos(false);
+            statusAntesDeDeferirTodos.current = null;
+        }
+    }, [perCnae, deferirTodos]);
+
     function adicionarCondicao(texto: string) {
         const limpo = texto.trim();
 
@@ -1009,26 +1053,13 @@ export default function FichaAnaliseShow({
         setErroAcao(null);
 
         if (!editavel) {
-            acao.post(`${fichaUrl}/concluir-processo`, {
-                onSuccess: () => {
-                    setShowFinalizar(false);
-                    router.reload();
-                },
-                onError: (erros) =>
-                    setErroAcao(
-                        (erros as Record<string, string>).ficha ??
-                            'Não foi possível concluir o processo. Revise a ficha e tente novamente.',
-                    ),
-                onHttpException: () => false,
-            });
-
             return;
         }
 
         autosave.transform(() => construirPayload());
         autosave.patch(fichaUrl, {
             onSuccess: () => {
-                acao.post(`${fichaUrl}/concluir-processo`, {
+                acao.post(`${fichaUrl}/finalizar`, {
                     onSuccess: () => {
                         setShowFinalizar(false);
                         router.reload();
@@ -1036,7 +1067,7 @@ export default function FichaAnaliseShow({
                     onError: (erros) =>
                         setErroAcao(
                             (erros as Record<string, string>).ficha ??
-                                'Não foi possível concluir o processo. Revise a ficha e tente novamente.',
+                                'Não foi possível finalizar a ficha. Revise os dados e tente novamente.',
                         ),
                     onHttpException: () => false,
                 });
@@ -1571,6 +1602,19 @@ export default function FichaAnaliseShow({
                     </div>
                 )}
 
+                <ResumoProcessoCard
+                    processo={processo}
+                    sugestoes={sugestoesIa ?? []}
+                    iaFicha={iaFicha}
+                    restricoes={[]}
+                    status={resumoStatus}
+                    mensagem={resumoMensagem}
+                    gerando={resumoHttp.processing || resumoStatus === 'aguardando'}
+                    onGerar={gerarResumo}
+                    editavel={editavel}
+                    onAplicarMinuta={aplicarMinutaAoParecer}
+                />
+
                 <SinteseLeitura sintese={sintese} />
 
                 {/* Topo no padrão legado SAPS (design 2026-07-22): Localização + Cadastro
@@ -1580,7 +1624,7 @@ export default function FichaAnaliseShow({
                     <Card>
                         <CardHeader
                             title="Localização / Endereço Inscrição Imobiliária"
-                            description="Endereço da solicitação. O bairro vem da inscrição imobiliária; a zona urbanística aparece no polígono."
+                            description="Endereço da solicitação, cadastro imobiliário e camadas geográficas do imóvel. O bairro vem da inscrição imobiliária; a zona urbanística aparece no polígono."
                         />
                         <CardContent>
                             <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -1592,6 +1636,7 @@ export default function FichaAnaliseShow({
                                 <DescItem label="Ponto de Referência">
                                     {valorOuTraco(localizacao?.ponto_referencia)}
                                 </DescItem>
+                                <DescItem label="Tipo de imóvel (categoria)">{valorOuTraco(localizacao?.tipo_imovel)}</DescItem>
                                 <DescItem label="Categoria de uso do lote">{valorOuTraco(localizacao?.categoria_uso_lote)}</DescItem>
                                 <DescItem label="Padrão construtivo do lote">
                                     {valorOuTraco(localizacao?.padrao_construtivo_lote)}
@@ -1602,6 +1647,18 @@ export default function FichaAnaliseShow({
                             </p>
 
                             <CadastroImobiliarioPanel cadastro={cadastroImobiliario} />
+
+                            {localizacao?.camadas && (
+                                <div className="mt-6 border-t border-gray-100 pt-6 dark:border-gray-800">
+                                    <h4 className="text-theme-sm font-medium text-gray-800 dark:text-white/90">Camadas do imóvel</h4>
+                                    <p className="mt-1 text-theme-xs text-gray-400 dark:text-gray-500">
+                                        Elemento identificado em cada camada geográfica no ponto do imóvel.
+                                    </p>
+                                    <div className="mt-2">
+                                        <CamadasImovelLista camadas={localizacao.camadas} somentePoligonais />
+                                    </div>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
 
@@ -1706,18 +1763,6 @@ export default function FichaAnaliseShow({
                     </Card>
                 </div>
 
-                {localizacao?.camadas && (
-                    <Card>
-                        <CardHeader
-                            title="Camadas do imóvel"
-                            description="Elemento identificado em cada camada geográfica no ponto do imóvel."
-                        />
-                        <CardContent>
-                            <CamadasImovelLista camadas={localizacao.camadas} />
-                        </CardContent>
-                    </Card>
-                )}
-
                 <Card>
                     <CardHeader title="Dados da Viabilidade" description="Empresa e imóvel desta solicitação." />
                     <CardContent>
@@ -1755,31 +1800,15 @@ export default function FichaAnaliseShow({
 
                 <div className="grid gap-6 lg:grid-cols-3">
                     <div className="space-y-6 lg:col-span-2">
-                        <WhenVisible data="sugestoesIa" buffer={200} fallback={<SugestoesIaSkeleton />}>
-                            <div className="space-y-6">
-                                <ResumoProcessoCard
-                                    sugestoes={sugestoesIa ?? []}
-                                    iaFicha={iaFicha}
-                                    restricoes={[]}
-                                    status={resumoStatus}
-                                    mensagem={resumoMensagem}
-                                    gerando={resumoHttp.processing || resumoStatus === 'aguardando'}
-                                    onGerar={gerarResumo}
-                                />
-                                <MinutaParecerCard
-                                    sugestoes={sugestoesIa ?? []}
-                                    editavel={editavel}
-                                    onAplicar={aplicarMinutaAoParecer}
-                                />
-                                <MinutaJustificativaCard
-                                    sugestoes={sugestoesIa ?? []}
-                                    editavel={editavel}
-                                    perCnae={perCnae}
-                                    onAplicar={aplicarMinutaJustificativa}
-                                />
-                                <AlertasIaCard sugestoes={sugestoesIa ?? []} />
-                            </div>
-                        </WhenVisible>
+                        <div className="space-y-6">
+                            <MinutaJustificativaCard
+                                sugestoes={sugestoesIa ?? []}
+                                editavel={editavel}
+                                perCnae={perCnae}
+                                onAplicar={aplicarMinutaJustificativa}
+                            />
+                            <AlertasIaCard sugestoes={sugestoesIa ?? []} />
+                        </div>
 
                         {/* Motivo de Análise — só entra na tela quando o sistema
                             registrou motivo. Vazio, a caixa some (não polui). */}
@@ -1809,7 +1838,18 @@ export default function FichaAnaliseShow({
 
                         {/* Enquadramento por CNAE (espelha a ficha SAPS) */}
                         <Card>
-                            <CardHeader title="Enquadramento por atividade (CNAE)" />
+                            <CardHeader
+                                title="Enquadramento por atividade (CNAE)"
+                                actions={
+                                    editavel && perCnae.length > 0 ? (
+                                        <Checkbox
+                                            label="Para Deferir todos os CNAEs"
+                                            checked={deferirTodos}
+                                            onChange={alternarDeferirTodos}
+                                        />
+                                    ) : undefined
+                                }
+                            />
                             <CardContent>
                                 {perCnae.length === 0 ? (
                                     <EmptyState
@@ -1823,6 +1863,13 @@ export default function FichaAnaliseShow({
                                             const digitosCnae = item.cnae.replace(/\D/g, '');
                                             const opcoesCnae = enquadramentoOpcoes[item.cnae] ?? enquadramentoOpcoes[digitosCnae] ?? [];
                                             const enquadramentoAtual = `${item.codigo_louos ?? ''}|${item.codigo_tll ?? ''}`;
+                                            const opcaoSelecionada = opcoesCnae.find(
+                                                (opcao) => `${opcao.codigo_louos}|${opcao.codigo_tll ?? ''}` === enquadramentoAtual,
+                                            );
+                                            const trocouEnquadramento = enquadramentoAtual !== (enquadramentoInicial[item.cnae] ?? enquadramentoAtual);
+                                            const fluxoDoEnquadramento =
+                                                trocouEnquadramento && opcaoSelecionada ? opcaoSelecionada.fluxo : item.fluxo;
+                                            const riscoDaAtividade = opcaoSelecionada?.risco_label ?? item.risco_municipal ?? null;
                                             const atualForaDaPlanilha =
                                                 item.codigo_louos != null &&
                                                 !opcoesCnae.some(
@@ -1847,6 +1894,11 @@ export default function FichaAnaliseShow({
                                                                         Principal
                                                                     </Badge>
                                                                 )}
+                                                                {item.descricao && (
+                                                                    <span className="text-theme-sm text-gray-600 dark:text-gray-300">
+                                                                        {item.descricao}
+                                                                    </span>
+                                                                )}
                                                             </div>
                                                             {(item.subgrupo_uso || item.grupo_uso || item.codigo_louos) && (
                                                                 <p className="mt-1 text-theme-xs text-gray-500 dark:text-gray-400">
@@ -1854,9 +1906,6 @@ export default function FichaAnaliseShow({
                                                                     {[item.subgrupo_uso ?? item.grupo_uso, item.codigo_louos]
                                                                         .filter(Boolean)
                                                                         .join(' · ')}
-                                                                    {item.subgrupo_uso && item.grupo_uso
-                                                                        ? ` (grupo ${item.grupo_uso})`
-                                                                        : ''}
                                                                 </p>
                                                             )}
                                                         </div>
@@ -1915,14 +1964,6 @@ export default function FichaAnaliseShow({
                                                         </div>
                                                     )}
 
-                                                    {(item.fundamentacao?.length ?? 0) > 0 && (
-                                                        <ul className="mt-3 list-inside list-disc text-theme-xs text-gray-500 dark:text-gray-400">
-                                                            {item.fundamentacao?.map((ref, i) => (
-                                                                <li key={i}>{ref}</li>
-                                                            ))}
-                                                        </ul>
-                                                    )}
-
                                                     <div className="mt-3 rounded-lg bg-gray-50 p-3 dark:bg-white/5">
                                                         <p className="text-theme-xs font-medium text-gray-500 dark:text-gray-400">
                                                             Pergunta: {item.pergunta_local?.pergunta ?? 'A atividade será desenvolvida no local?'}
@@ -1941,7 +1982,7 @@ export default function FichaAnaliseShow({
                                                         </p>
                                                     </div>
 
-                                                    <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                                                    <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
                                                         {editavel ? (
                                                             <div className="sm:col-span-2">
                                                                 <Label htmlFor={`enquadramento-${indice}`} className="mb-1.5">
@@ -2017,8 +2058,11 @@ export default function FichaAnaliseShow({
                                                                 </span>
                                                             )}
                                                         </DescItem>
-                                                        <DescItem label="Encaminhamento por risco">
-                                                            {rotuloFluxoRisco(item.fluxo)}
+                                                        <DescItem label="Enquadramento">{rotuloFluxoRisco(fluxoDoEnquadramento)}</DescItem>
+                                                        <DescItem label="Risco da atividade">
+                                                            {riscoDaAtividade ?? (
+                                                                <span className="text-gray-400 dark:text-gray-500">—</span>
+                                                            )}
                                                         </DescItem>
                                                     </div>
 
@@ -2060,7 +2104,10 @@ export default function FichaAnaliseShow({
                                                         className="border-b border-gray-100 last:border-0 dark:border-gray-800"
                                                     >
                                                         <td className="py-2 pr-4 text-gray-700 dark:text-gray-300">
-                                                            {item.cnae_formatado ?? item.cnae}
+                                                            <span className="font-medium">{item.cnae_formatado ?? item.cnae}</span>
+                                                            {item.descricao && (
+                                                                <span className="ml-2 text-gray-500 dark:text-gray-400">{item.descricao}</span>
+                                                            )}
                                                         </td>
                                                         <td className="py-2 pr-4 text-gray-600 dark:text-gray-400">
                                                             {item.codigo_louos ?? '—'}
@@ -2434,9 +2481,9 @@ export default function FichaAnaliseShow({
                                     >
                                         {minutaStatus === 'solicitando' && 'Solicitando minuta à IA…'}
                                         {minutaStatus === 'aguardando' &&
-                                            'Minuta solicitada — aguardando o processamento da IA. Ela aparecerá em “Minuta de parecer (IA)” no topo, como sugestão a revisar.'}
+                                            'Minuta solicitada — aguardando o processamento da IA. Ela aparecerá no “Resumo do processo”, no topo, como sugestão a revisar.'}
                                         {minutaStatus === 'pronta' &&
-                                            'Minuta sugerida disponível em “Minuta de parecer (IA)” no topo — revise e use “Aplicar ao parecer”.'}
+                                            'Minuta sugerida disponível no “Resumo do processo”, no topo — revise e use “Aplicar ao parecer”.'}
                                         {minutaStatus === 'indisponivel' &&
                                             (minutaMensagem ?? 'Sugestão de minuta indisponível no momento.')}
                                     </p>
@@ -2476,26 +2523,9 @@ export default function FichaAnaliseShow({
                                             <Button onClick={salvarRascunho} variant="outline" size="sm">
                                                 Salvar Ficha
                                             </Button>
-                                            {podeConcluir ? (
-                                                <>
-                                                    <Button
-                                                        onClick={() => setShowFinalizar(true)}
-                                                        size="sm"
-                                                    >
-                                                        Finalizar processo
-                                                    </Button>
-                                                    <p className="text-theme-xs text-gray-500 dark:text-gray-400">
-                                                        {cnaesIndeferidos.length > 0
-                                                            ? `Será indeferido: ${cnaesIndeferidos.map((i) => i.cnae_formatado ?? i.cnae).join(', ')} marcado(s) como indeferido(s).`
-                                                            : 'Será deferido: nenhum CNAE marcado como indeferido.'}
-                                                    </p>
-                                                </>
-                                            ) : (
-                                                <p className="text-theme-xs text-gray-500 dark:text-gray-400">
-                                                    Sem permissão para concluir: ao terminar a ficha, altere a situação do processo para
-                                                    “Para conclusão”.
-                                                </p>
-                                            )}
+                                            <Button onClick={() => setShowFinalizar(true)} size="sm">
+                                                Finalizar Ficha de Análise
+                                            </Button>
                                         </>
                                     ) : (
                                         <>
@@ -2599,13 +2629,11 @@ export default function FichaAnaliseShow({
             <ConfirmDialog
                 isOpen={showFinalizar}
                 variant="info"
-                title="Finalizar processo?"
+                title="Finalizar a ficha de análise?"
                 description={
                     <>
-                        A ficha fica imutável e o processo será {resultadoPrevisto}
-                        {cnaesIndeferidos.length > 0
-                            ? ` — há ${cnaesIndeferidos.length} CNAE(s) marcado(s) como indeferido(s).`
-                            : ' — nenhum CNAE está marcado como indeferido.'}
+                        A ficha fica bloqueada para edição e só poderá ser consultada. Para novos registros, abra uma nova
+                        ficha: ela vem preenchida com os dados desta. A finalização não conclui o processo.
                         {erroAcao && (
                             <span className="mt-2 block font-medium text-error-600 dark:text-error-500">
                                 {erroAcao}
@@ -2613,7 +2641,7 @@ export default function FichaAnaliseShow({
                         )}
                     </>
                 }
-                confirmLabel="Finalizar processo"
+                confirmLabel="Finalizar ficha"
                 processing={acao.processing}
                 onConfirm={finalizarFicha}
                 onClose={() => {
@@ -2694,6 +2722,7 @@ export default function FichaAnaliseShow({
                             opcoes={conclusaoOpcoes}
                             parecer={parecerConclusao}
                             onParecer={setParecerConclusao}
+                            parecerDaFicha={parecer}
                             erro={erroConclusao}
                             processing={conclusaoProcessing}
                             onConfirm={concluirAnalise}
@@ -2977,7 +3006,6 @@ function marcaLeitura(estado: EstadoLeitura): { Icone: typeof CheckCircleIcon; c
 function SinteseLeitura({ sintese }: { sintese: ReturnType<typeof sinteseDaFicha> }) {
     return (
         <Card>
-            <CardHeader title="Decisão" description={sintese.contexto} />
             <CardContent>
                 <p
                     className={`text-2xl font-semibold tracking-tight ${
@@ -3005,19 +3033,6 @@ function SinteseLeitura({ sintese }: { sintese: ReturnType<typeof sinteseDaFicha
                         })}
                     </ul>
                 )}
-
-                <div className="mt-5 border-t border-gray-200 pt-4 dark:border-gray-800">
-                    <p className="text-theme-xs font-medium tracking-wide text-gray-400 uppercase dark:text-gray-500">Base</p>
-                    {sintese.base.length === 0 ? (
-                        <p className="mt-1 text-theme-sm text-gray-500 dark:text-gray-400">Não registrada nesta leitura.</p>
-                    ) : (
-                        <ul className="mt-1 space-y-1 text-theme-sm text-gray-700 dark:text-gray-300">
-                            {sintese.base.map((item) => (
-                                <li key={item}>{item}</li>
-                            ))}
-                        </ul>
-                    )}
-                </div>
 
                 <button
                     type="button"
@@ -3075,6 +3090,7 @@ function destinoIndisponibilidadeIa(motivo: string | null): { href: string; rotu
  * síntese mais recente primeiro (o controller ordena por id desc).
  */
 function ResumoProcessoCard({
+    processo,
     sugestoes,
     iaFicha,
     restricoes,
@@ -3082,8 +3098,13 @@ function ResumoProcessoCard({
     mensagem,
     gerando,
     onGerar,
+    editavel,
+    onAplicarMinuta,
 }: {
+    processo: Processo;
     sugestoes: SugestaoIa[];
+    editavel: boolean;
+    onAplicarMinuta: (minuta: string) => void;
     iaFicha: IaFicha;
     restricoes: string[];
     status: 'idle' | 'solicitando' | 'aguardando' | 'pronta' | 'indisponivel' | 'timeout';
@@ -3092,14 +3113,15 @@ function ResumoProcessoCard({
     onGerar: () => void;
 }) {
     const resumos = sugestoes.filter((sugestao) => sugestao.type === 'resumo_processo');
+    const minutas = sugestoes.filter((sugestao) => sugestao.type === 'parecer');
     const podeManterIa = usePage<SharedProps>().props.auth.permissions.includes('manter-config-ia');
     const destinoIa = destinoIndisponibilidadeIa(iaFicha.resumo_motivo);
 
     return (
         <Card>
             <CardHeader
-                title="Apoio de leitura"
-                description="Texto da IA para apoiar a leitura do parecer. Não decide nem antecipa o desfecho."
+                title="Resumo do processo"
+                description="Identificação do processo e leitura de apoio da IA. A IA sugere, não decide nem antecipa o desfecho."
                 actions={
                     resumos.length === 0 ? (
                         <Button
@@ -3115,6 +3137,25 @@ function ResumoProcessoCard({
                 }
             />
             <CardContent>
+                <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <DescItem label="Protocolo BAP">{valorOuTraco(processo.bap)}</DescItem>
+                    <DescItem label="Processo">{valorOuTraco(processo.protocol_number)}</DescItem>
+                    <DescItem label="Serviço">
+                        {processo.servicos.length === 0 ? (
+                            '—'
+                        ) : (
+                            <ul className="space-y-0.5">
+                                {processo.servicos.map((servico) => (
+                                    <li key={servico}>{servico}</li>
+                                ))}
+                            </ul>
+                        )}
+                    </DescItem>
+                    <DescItem label="Empresa">{valorOuTraco(processo.empresa)}</DescItem>
+                </dl>
+
+                <div className="mt-5 border-t border-gray-100 pt-5 dark:border-gray-800">
+                <WhenVisible data="sugestoesIa" buffer={200} fallback={<SugestoesIaSkeleton />}>
                 {restricoes.length > 0 && (
                     <ul className="mb-4 space-y-2" aria-label="Restrições do processo">
                         {restricoes.map((restricao) => (
@@ -3212,9 +3253,43 @@ function ResumoProcessoCard({
                     </ul>
                 )}
 
+                {minutas.length > 0 && (
+                    <div className="mt-4 space-y-3" aria-label="Minuta de parecer sugerida pela IA">
+                        {minutas.map((sugestao) => {
+                            const minutaTexto = typeof sugestao.output.minuta === 'string' ? sugestao.output.minuta : '';
+
+                            if (minutaTexto === '') {
+                                return null;
+                            }
+
+                            return (
+                                <details
+                                    key={sugestao.id}
+                                    className="rounded-xl border border-brand-200 bg-brand-50 p-4 dark:border-brand-500/30 dark:bg-brand-500/10"
+                                >
+                                    <summary className="cursor-pointer text-theme-sm font-medium text-gray-800 dark:text-white/90">
+                                        Minuta de parecer (sugestão, revise)
+                                        {sugestao.confianca ? ` · confiança ${confiancaLabel(sugestao.confianca).toLowerCase()}` : ''}
+                                    </summary>
+                                    <p className="mt-3 text-theme-sm whitespace-pre-line text-gray-800 dark:text-white/90">{minutaTexto}</p>
+                                    {editavel && (
+                                        <div className="mt-3">
+                                            <Button size="sm" variant="outline" onClick={() => onAplicarMinuta(minutaTexto)}>
+                                                Aplicar ao parecer
+                                            </Button>
+                                        </div>
+                                    )}
+                                </details>
+                            );
+                        })}
+                    </div>
+                )}
+
                 <p className="mt-4 text-theme-xs text-gray-400 dark:text-gray-500">
                     Apoio à leitura, sempre revisável — não substitui a análise nem antecipa a decisão (RN-001/RN-004).
                 </p>
+                </WhenVisible>
+                </div>
             </CardContent>
         </Card>
     );
@@ -3235,112 +3310,6 @@ function confiancaLabel(confianca: string): string {
     }
 
     return confianca;
-}
-
-/**
- * Card "Minuta de parecer" (HU-118 — Failure Mode #1): exibe os rascunhos de
- * parecer sugeridos pela IA (minuta + fundamentação do motor + confiança +
- * fonte), sempre marcados como "sugestão — revise". A ação "Aplicar ao parecer"
- * copia o texto para o editor do parecer (client-side, editável) — NUNCA grava
- * decisão nem finaliza (RN-001/RN-003). Só aparece quando há minuta sugerida,
- * para não poluir a ficha; lê do mesmo ledger ai_suggestions (prop deferida).
- */
-function MinutaParecerCard({
-    sugestoes,
-    editavel,
-    onAplicar,
-}: {
-    sugestoes: SugestaoIa[];
-    editavel: boolean;
-    onAplicar: (minuta: string) => void;
-}) {
-    const minutas = sugestoes.filter((sugestao) => sugestao.type === 'parecer');
-
-    if (minutas.length === 0) {
-        return null;
-    }
-
-    return (
-        <Card>
-            <CardHeader
-                title="Minuta de parecer (IA — sugestão, revise)"
-                description="Rascunho de parecer proposto pela IA com base na pré-análise do motor. É apoio, não decisão: revise, edite e valide."
-            />
-            <CardContent>
-                <ul className="space-y-4" aria-label="Minutas de parecer sugeridas pela IA">
-                    {minutas.map((sugestao) => {
-                        const minutaTexto = typeof sugestao.output.minuta === 'string' ? sugestao.output.minuta : '';
-                        const fundamentacao =
-                            typeof sugestao.output.fundamentacao === 'string' ? sugestao.output.fundamentacao : null;
-                        const fonte = typeof sugestao.output.fonte === 'string' ? sugestao.output.fonte : null;
-
-                        return (
-                            <li
-                                key={sugestao.id}
-                                className="rounded-xl border border-brand-200 bg-brand-50 p-4 dark:border-brand-500/30 dark:bg-brand-500/10"
-                            >
-                                <div className="flex flex-wrap items-center justify-between gap-2">
-                                    <Badge color="info" size="sm">
-                                        Sugestão — revise
-                                    </Badge>
-                                    <div className="flex flex-wrap items-center gap-2">
-                                        {sugestao.confianca && (
-                                            <Badge color="light" size="sm">
-                                                Confiança: {confiancaLabel(sugestao.confianca)}
-                                            </Badge>
-                                        )}
-                                        <Badge color={sugestao.status === 'escalada_humano' ? 'error' : 'light'} size="sm">
-                                            {sugestao.status_label}
-                                        </Badge>
-                                    </div>
-                                </div>
-
-                                {minutaTexto === '' ? (
-                                    <p className="mt-3 text-theme-sm text-gray-600 dark:text-gray-300">
-                                        A IA não retornou texto de minuta nesta geração.
-                                    </p>
-                                ) : (
-                                    <p className="mt-3 text-theme-sm whitespace-pre-line text-gray-800 dark:text-white/90">
-                                        {minutaTexto}
-                                    </p>
-                                )}
-
-                                {fundamentacao && (
-                                    <div className="mt-3">
-                                        <p className="text-theme-xs font-medium tracking-wide text-gray-400 uppercase dark:text-gray-500">
-                                            Fundamentação (do motor)
-                                        </p>
-                                        <p className="mt-1 text-theme-sm whitespace-pre-line text-gray-700 dark:text-gray-300">
-                                            {fundamentacao}
-                                        </p>
-                                    </div>
-                                )}
-
-                                {fonte && (
-                                    <p className="mt-3 text-theme-xs text-gray-500 dark:text-gray-400">
-                                        Fonte: {fonte}
-                                    </p>
-                                )}
-
-                                {editavel && minutaTexto !== '' && (
-                                    <div className="mt-4">
-                                        <Button size="sm" variant="outline" onClick={() => onAplicar(minutaTexto)}>
-                                            Aplicar ao parecer
-                                        </Button>
-                                    </div>
-                                )}
-                            </li>
-                        );
-                    })}
-                </ul>
-
-                <p className="mt-4 text-theme-xs text-gray-400 dark:text-gray-500">
-                    “Aplicar ao parecer” copia o texto para o editor do parecer, onde você revisa e ajusta — nada é gravado
-                    nem decidido automaticamente (RN-001).
-                </p>
-            </CardContent>
-        </Card>
-    );
 }
 
 /**
@@ -3694,6 +3663,28 @@ function PrecedentesPanel({
                             <p className="mt-1 text-theme-sm text-gray-700 dark:text-gray-300">
                                 Em análise neste imóvel: {dados.em_analise ?? 0}
                             </p>
+                            {(dados.em_analise_processos ?? []).length > 0 && (
+                                <ul className="mt-2 space-y-1" aria-label="Processos em análise neste imóvel">
+                                    {(dados.em_analise_processos ?? []).map((processoEmAnalise) => (
+                                        <li key={processoEmAnalise.viability_request_id}>
+                                            <a
+                                                href={`/gestao/processos/${processoEmAnalise.viability_request_id}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-theme-sm font-medium text-brand-500 hover:text-brand-600 hover:underline dark:text-brand-400"
+                                            >
+                                                {processoEmAnalise.bap ?? processoEmAnalise.protocol_number ?? `#${processoEmAnalise.viability_request_id}`}
+                                                <span className="sr-only"> (abre em nova aba)</span>
+                                            </a>
+                                            {processoEmAnalise.bap && processoEmAnalise.protocol_number && (
+                                                <span className="ml-2 text-theme-xs text-gray-400 dark:text-gray-500">
+                                                    {processoEmAnalise.protocol_number}
+                                                </span>
+                                            )}
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
                             {dados.imovel.length === 0 ? (
                                 <p className="mt-1 text-theme-sm text-gray-500 dark:text-gray-400">
                                     Sem precedentes para este imóvel.

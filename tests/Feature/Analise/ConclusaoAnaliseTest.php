@@ -131,6 +131,11 @@ class ConclusaoAnaliseTest extends TestCase
                 'status' => ViabilityRequestStatus::EmAnalise,
                 'analysis_status' => AnalysisStatus::EmAnalise,
             ])->save();
+            AnalysisRecord::factory()->create([
+                'viability_request_id' => $processo->id,
+                'revision' => 1,
+                'analyst_user_id' => User::factory()->create()->id,
+            ]);
 
             $this->actingAs($this->analista(), 'gestao')
                 ->post("/gestao/processos/{$processo->id}/conclusao-analise", [

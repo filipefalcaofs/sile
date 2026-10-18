@@ -34,6 +34,7 @@ class ConclusaoAnaliseController extends Controller
                 $ator,
                 $resultado,
                 $request->validated('parecer'),
+                exigirFichaSalva: true,
             );
         } catch (DomainException $e) {
             throw ValidationException::withMessages(['conclusao' => $e->getMessage()]);

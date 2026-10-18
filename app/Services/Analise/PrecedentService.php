@@ -26,7 +26,7 @@ class PrecedentService
     public function __construct(private readonly PrecedentRepository $precedents) {}
 
     /**
-     * @return array{imovel: list<array{viability_request_id: int, protocol_number: ?string, outcome: string, decided_at: ?string, service_type: ?string, analyst: ?string}>, cnae_zona: array<string, mixed>}
+     * @return array{imovel: list<array{viability_request_id: int, protocol_number: ?string, outcome: string, decided_at: ?string, service_type: ?string, analyst: ?string}>, cnae_zona: array<string, mixed>, em_analise: int, em_analise_processos: list<array{viability_request_id: int, protocol_number: ?string, bap: ?string}>}
      */
     public function forRecord(AnalysisRecord $record): array
     {
@@ -44,26 +44,42 @@ class PrecedentService
             $request?->address_number,
         );
 
+        $emAnalise = $this->emAnaliseNoImovel($request);
+
         return [
             'imovel' => $imovel,
             'cnae_zona' => $this->cnaeZoneSection($record, $janelaMeses),
-            'em_analise' => $this->emAnaliseNoImovel($request),
+            'em_analise' => count($emAnalise),
+            'em_analise_processos' => $emAnalise,
         ];
     }
 
-    private function emAnaliseNoImovel(?ViabilityRequest $request): int
+    /**
+     * Outros processos em análise na mesma inscrição imobiliária, para a ficha
+     * abri-los em outra aba.
+     *
+     * @return list<array{viability_request_id: int, protocol_number: ?string, bap: ?string}>
+     */
+    private function emAnaliseNoImovel(?ViabilityRequest $request): array
     {
         $inscricao = $request?->property_registration;
 
         if (! is_string($inscricao) || trim($inscricao) === '') {
-            return 0;
+            return [];
         }
 
         return ViabilityRequest::query()
             ->where('property_registration', $inscricao)
             ->where('analysis_status', AnalysisStatus::EmAnalise)
             ->when($request !== null, fn ($query) => $query->whereKeyNot($request->id))
-            ->count();
+            ->orderBy('id')
+            ->get(['id', 'protocol_number', 'external_reference'])
+            ->map(fn (ViabilityRequest $processo): array => [
+                'viability_request_id' => $processo->id,
+                'protocol_number' => $processo->protocol_number,
+                'bap' => $processo->external_reference,
+            ])
+            ->all();
     }
 
     /**
