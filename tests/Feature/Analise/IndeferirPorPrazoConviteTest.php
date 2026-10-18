@@ -38,8 +38,8 @@ class IndeferirPorPrazoConviteTest extends TestCase
         $this->assertNull($decision->decided_by_user_id);
         $this->assertSame('indeferida', $decision->outcome->value);
         $this->assertSame('convite_expirado', $decision->consolidated_result);
-        $this->assertStringStartsWith('Indeferido por prazo do convite expirado', (string) $decision->reason);
-        $this->assertStringContainsString('esclarecimentos solicitados', (string) $decision->reason);
+        $this->assertStringStartsWith('Processo indeferido pelo não atendimento ao convite no prazo estabelecido', (string) $decision->reason);
+        $this->assertStringContainsString('Resolução CGSIM nº 61/2020', (string) $decision->reason);
     }
 
     public function test_exige_status_em_pendencia(): void

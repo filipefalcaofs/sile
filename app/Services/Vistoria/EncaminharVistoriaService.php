@@ -4,6 +4,7 @@ namespace App\Services\Vistoria;
 
 use App\Enums\AnalysisStatus;
 use App\Enums\ViabilityRequestStatus;
+use App\Models\Inspection;
 use App\Models\InspectionReferral;
 use App\Models\Sector;
 use App\Models\User;
@@ -19,8 +20,8 @@ use Illuminate\Support\Facades\DB;
  * caindo em "Para distribuir" para o apoio distribuir a um vistoriador.
  *
  * A vistoria COMPÕE o processo (sem número novo): a origem (setor/analista) é
- * registrada no referral e a conclusão da ficha devolve o processo à origem
- * (devolverAoAnalista, chamado pelo InspectionService).
+ * registrada no referral. Concluída a ficha, o processo fica Vistoriado com o
+ * vistoriador, que o encaminha de volta à Caixa do Setor (encaminharAoSetor).
  */
 class EncaminharVistoriaService
 {
@@ -111,46 +112,47 @@ class EncaminharVistoriaService
     }
 
     /**
-     * Retorno automático da vistoria concluída: com referral registrado, o
-     * processo volta ao setor e ao analista de origem e o eixo operacional
-     * retorna a EmAnalise (aresta Vistoriado → EmAnalise da state machine).
-     * Sem referral (vistoria marcada manualmente), não faz nada — o retorno
-     * é manual pelo dropdown.
+     * Encaminha à Caixa do Setor o processo cuja ficha de vistoria foi concluída,
+     * para a análise continuar. Com a origem registrada, volta ao setor e à
+     * analista de origem; sem ela (vistoria marcada à mão), segue no setor atual
+     * sem responsável, para distribuir. O status continua Vistoriado até a
+     * analista retomar a ficha.
      */
-    public function devolverAoAnalista(ViabilityRequest $processo, User $vistoriador): void
+    public function encaminharAoSetor(ViabilityRequest $processo, User $ator): void
     {
+        $ficha = Inspection::query()
+            ->where('viability_request_id', $processo->id)
+            ->latest('id')
+            ->first();
+
+        if ($processo->analysis_status !== AnalysisStatus::Vistoriado || $ficha === null || ! $ficha->isConcluida()) {
+            throw EncaminharVistoriaException::vistoriaNaoConcluida($processo);
+        }
+
         $referral = InspectionReferral::query()
             ->where('viability_request_id', $processo->id)
             ->latest('id')
             ->first();
 
-        if ($referral === null) {
-            return;
-        }
+        DB::transaction(function () use ($processo, $referral, $ator): void {
+            $analista = $referral?->analista_origem_user_id;
 
-        DB::transaction(function () use ($processo, $referral, $vistoriador): void {
             $processo->forceFill([
-                'sector_id' => $referral->setor_origem_id ?? $processo->sector_id,
-                'assigned_user_id' => $referral->analista_origem_user_id,
-                'assigned_at' => now(),
+                'sector_id' => $referral?->setor_origem_id ?? $processo->sector_id,
+                'assigned_user_id' => $analista,
+                'assigned_at' => $analista === null ? null : now(),
             ])->save();
-
-            $this->statusMachine->transition(
-                $processo,
-                AnalysisStatus::EmAnalise,
-                $vistoriador,
-                'Vistoria concluída — retorno à análise de origem.',
-            );
 
             $this->audit->log(
                 logName: 'vistoria',
                 event: 'vistoria-devolver',
-                description: "Processo #{$processo->id} devolvido à análise após a conclusão da vistoria",
+                description: "Processo #{$processo->id} encaminhado à Caixa do Setor após a conclusão da vistoria",
                 properties: [
                     'viability_request_id' => $processo->id,
-                    'inspection_referral_id' => $referral->id,
-                    'setor_origem_id' => $referral->setor_origem_id,
-                    'analista_origem_user_id' => $referral->analista_origem_user_id,
+                    'inspection_referral_id' => $referral?->id,
+                    'setor_origem_id' => $referral?->setor_origem_id,
+                    'analista_origem_user_id' => $analista,
+                    'ator_id' => $ator->id,
                 ],
                 subject: $processo,
             );

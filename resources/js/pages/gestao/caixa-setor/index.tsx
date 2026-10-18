@@ -83,9 +83,9 @@ interface CaixaSetorIndexProps {
     vistoriadores: Analista[];
 }
 
-/** Linha no eixo operacional de vistoria — a distribuição é só a vistoriadores. */
+/** Linha a vistoriar — a distribuição é só a vistoriadores. Depois de vistoriada, volta a analista. */
 function emVistoria(item: ProcessoItem): boolean {
-    return item.analysis_status === 'vistoriar' || item.analysis_status === 'vistoriado';
+    return item.analysis_status === 'vistoriar';
 }
 
 /** Formata a data-hora ISO do prazo para o padrão pt-BR (dd/mm/aaaa hh:mm). */

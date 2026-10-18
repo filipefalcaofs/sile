@@ -137,7 +137,7 @@ class CaixaSetorController extends Controller
                 'status' => $processo->status->value,
                 'status_label' => $processo->status->label(),
                 'tipo_imovel' => $processo->tipo_imovel,
-                'status_tramitacao' => $processo->analysis_status?->label(),
+                'status_tramitacao' => $processo->rotuloStatusTramitacao(),
                 'data_entrada' => $processo->protocoled_at?->toIso8601String(),
                 // Eixo operacional: a linha em vistoria distribui para a lista
                 // de vistoriadores, não para a lista geral de analistas.
@@ -477,11 +477,7 @@ class CaixaSetorController extends Controller
                     }
 
                     $grupoTemVistoria = $requests->contains(
-                        fn (ViabilityRequest $processo): bool => in_array(
-                            $processo->analysis_status,
-                            [AnalysisStatus::Vistoriar, AnalysisStatus::Vistoriado],
-                            true,
-                        ),
+                        fn (ViabilityRequest $processo): bool => $processo->analysis_status === AnalysisStatus::Vistoriar,
                     );
 
                     if ($grupoTemVistoria && ! $analista->can('preencher-ficha-vistoria')) {

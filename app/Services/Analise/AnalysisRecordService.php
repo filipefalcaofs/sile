@@ -3,6 +3,7 @@
 namespace App\Services\Analise;
 
 use App\Enums\AnalysisRecordStatus;
+use App\Enums\AnalysisStatus;
 use App\Models\AnalysisDivergence;
 use App\Models\AnalysisRecord;
 use App\Models\User;
@@ -35,7 +36,16 @@ class AnalysisRecordService
     public function __construct(
         private readonly AuditService $audit,
         private readonly PreAnaliseService $preAnalise,
+        private readonly AnalysisStatusStateMachine $status,
     ) {}
+
+    /** Estados em que salvar a ficha é começar (ou retomar) a análise: o status passa a "Em análise". */
+    private const ESTADOS_QUE_INICIAM_ANALISE = [
+        AnalysisStatus::Analisar,
+        AnalysisStatus::Vistoriado,
+        AnalysisStatus::ConviteRespondido,
+        AnalysisStatus::ConviteCancelado,
+    ];
 
     /**
      * Revisão vigente da ficha (a de maior revisão). Defensivamente cria a revisão
@@ -110,7 +120,30 @@ class AnalysisRecordService
 
         $record->save();
 
+        if ($ator !== null) {
+            $this->iniciarAnaliseSePreciso($record, $ator);
+        }
+
         return $record;
+    }
+
+    /**
+     * Quem salva a ficha começa a análise: o processo que estava só distribuído
+     * (ou voltou da vistoria ou do convite) passa a "Em análise" sem ação manual.
+     */
+    private function iniciarAnaliseSePreciso(AnalysisRecord $record, User $ator): void
+    {
+        $request = $record->viabilityRequest()->first();
+
+        if ($request === null || ! in_array($request->analysis_status, self::ESTADOS_QUE_INICIAM_ANALISE, true)) {
+            return;
+        }
+
+        if (! $this->status->canTransition($request->analysis_status, AnalysisStatus::EmAnalise)) {
+            return;
+        }
+
+        $this->status->transition($request, AnalysisStatus::EmAnalise, $ator, 'Analista iniciou o preenchimento da ficha de análise.');
     }
 
     /**

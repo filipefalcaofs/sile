@@ -30,7 +30,6 @@ class InspectionService
     public function __construct(
         private PropertyGeometryWriter $geometry,
         private AnalysisStatusStateMachine $statusMachine,
-        private EncaminharVistoriaService $encaminhamento,
         private AuditService $audit,
     ) {}
 
@@ -54,27 +53,6 @@ class InspectionService
         }
 
         $this->garantirPodeAssumir($processo, $vistoriador);
-
-        // Self-service coerente: abrir a ficha de um processo SEM responsável
-        // atribui o processo a quem abriu — ele sai de "Para distribuir" na
-        // caixa do setor de vistoria e a autoria fica registrada (RN-002).
-        if ($processo->assigned_user_id === null) {
-            $processo->forceFill([
-                'assigned_user_id' => $vistoriador->id,
-                'assigned_at' => now(),
-            ])->save();
-
-            $this->audit->log(
-                logName: 'vistoria',
-                event: 'vistoria-assumir',
-                description: "Vistoriador assumiu o processo #{$processo->id} ao abrir a ficha de vistoria",
-                properties: [
-                    'viability_request_id' => $processo->id,
-                    'vistoriador_user_id' => $vistoriador->id,
-                ],
-                subject: $processo,
-            );
-        }
 
         $snapshot = is_array($processo->simulation_snapshot) ? $processo->simulation_snapshot : [];
 
@@ -200,8 +178,8 @@ class InspectionService
     /**
      * Conclui a ficha: grava os dados finais (o parecer obrigatório é exigido
      * pelo Form Request) e sela status/concluded_at. Imutável a partir daí.
-     * Processo em Vistoriar transiciona para Vistoriado (retorno ao analista
-     * é a transição manual Vistoriado → EmAnalise, já existente).
+     * Processo em Vistoriar transiciona para Vistoriado e fica com o vistoriador
+     * até ele encaminhá-lo à Caixa do Setor (EncaminharVistoriaService).
      *
      * @param  array<string, mixed>  $dados
      */
@@ -226,11 +204,6 @@ class InspectionService
                 $ator,
                 'Ficha de vistoria concluída.',
             );
-
-            // Retorno automático: com referral registrado, o processo volta ao
-            // setor e ao analista de origem (Vistoriado → EmAnalise). Sem
-            // referral (vistoria manual), permanece Vistoriado — retorno manual.
-            $this->encaminhamento->devolverAoAnalista($processo->refresh(), $ator);
         }
 
         return $ficha;
@@ -257,7 +230,13 @@ class InspectionService
     {
         $responsavel = $processo->assigned_user_id;
 
-        if ($responsavel !== null && $responsavel !== $vistoriador->id) {
+        if ($responsavel === null) {
+            throw new InspectionAtribuidaException(
+                'O processo ainda não foi distribuído a um vistoriador. A atribuição é feita pela distribuição, na Caixa de vistoria.'
+            );
+        }
+
+        if ($responsavel !== $vistoriador->id) {
             throw new InspectionAtribuidaException(
                 'O processo está atribuído a outro responsável. A ficha de vistoria só pode ser aberta por ele.'
             );

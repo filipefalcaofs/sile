@@ -154,6 +154,7 @@ class ProcessoQueryService
         return $this->escopo($user)
             ->with(['company', 'sector:id,name', 'assignedTo:id,name', 'decision', 'encaminhamentoAnalise', 'serviceType:id,name', 'eventos'])
             ->whereIn('status', self::STATUS_FILA)
+            ->orderByRaw('case when analysis_status = ? then 0 else 1 end', [AnalysisStatus::ConviteRespondido->value])
             ->orderBy('analysis_due_at')
             ->orderBy('id');
     }

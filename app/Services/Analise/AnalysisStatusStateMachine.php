@@ -21,8 +21,8 @@ class AnalysisStatusStateMachine
     private const array TRANSITIONS = [
         'para_distribuir' => ['encaminhado'],
         'encaminhado' => ['analisar'],
-        'analisar' => ['em_analise'],
-        'em_analise' => ['para_conclusao', 'analise_concluida', 'em_convite', 'vistoriar'],
+        'analisar' => ['em_analise', 'encaminhado'],
+        'em_analise' => ['para_conclusao', 'analise_concluida', 'em_convite', 'vistoriar', 'encaminhado'],
         'para_conclusao' => ['analise_concluida', 'em_analise'],
         'em_convite' => ['convite_respondido', 'convite_cancelado', 'convite_expirado'],
         'convite_respondido' => ['em_analise'],

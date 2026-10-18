@@ -26,7 +26,7 @@ interface VistoriaItem {
     sector_id: number | null;
     zona: string | null;
     setor: string | null;
-    situacao: 'designar' | 'em_campo' | 'concluida';
+    situacao: 'designar' | 'distribuido' | 'em_campo' | 'concluida';
     situacao_label: string;
     vistoriador: string | null;
     responsavel: string | null;
@@ -79,8 +79,9 @@ interface VistoriasIndexProps {
     vistoriadores: DestinatarioDaDistribuicao[];
 }
 
-const tomSituacao: Record<VistoriaItem['situacao'], 'warning' | 'info' | 'success'> = {
+const tomSituacao: Record<VistoriaItem['situacao'], 'warning' | 'info' | 'success' | 'light'> = {
     designar: 'warning',
+    distribuido: 'light',
     em_campo: 'info',
     concluida: 'success',
 };
@@ -273,12 +274,16 @@ export default function VistoriasIndex({
             cellClassName: 'whitespace-nowrap',
             cell: (item) => (
                 <div className="flex justify-end">
-                    <TableAction
-                        tone="brand"
-                        href={item.ficha_url}
-                        icon={<ArrowRightIcon className="size-4.5" />}
-                        label={item.situacao === 'concluida' ? 'Ver ficha' : 'Abrir ficha'}
-                    />
+                    {item.situacao === 'designar' ? (
+                        <span className="text-theme-xs text-gray-400 dark:text-gray-500">Aguarda distribuição</span>
+                    ) : (
+                        <TableAction
+                            tone="brand"
+                            href={item.ficha_url}
+                            icon={<ArrowRightIcon className="size-4.5" />}
+                            label={item.situacao === 'concluida' ? 'Ver ficha' : 'Abrir ficha'}
+                        />
+                    )}
                 </div>
             ),
         },

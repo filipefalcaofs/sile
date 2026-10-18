@@ -33,9 +33,10 @@ class InspectionLocalizacaoCompletaTest extends TestCase
     /**
      * @param  array<string, mixed>  $atributos
      */
-    private function processo(array $atributos = []): ViabilityRequest
+    private function processo(array $atributos = [], ?User $vistoriador = null): ViabilityRequest
     {
         $processo = ViabilityRequest::factory()->create(array_merge([
+            'assigned_user_id' => $vistoriador?->id,
             'address_street' => 'DOUTOR JORGE COSTA ANDRADE',
             'address_number' => '9',
             'address_neighborhood' => 'ÁGUAS CLARAS',
@@ -52,9 +53,10 @@ class InspectionLocalizacaoCompletaTest extends TestCase
 
     public function test_ficha_nova_traz_codlog_via_e_logradouro_com_tipo(): void
     {
-        $processo = $this->processo();
+        $vistoriador = $this->vistoriador();
+        $processo = $this->processo(vistoriador: $vistoriador);
 
-        $this->actingAs($this->vistoriador(), 'gestao')
+        $this->actingAs($vistoriador, 'gestao')
             ->get("/gestao/processos/{$processo->id}/vistoria")
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
@@ -65,19 +67,21 @@ class InspectionLocalizacaoCompletaTest extends TestCase
 
     public function test_tipo_nao_se_repete_quando_o_logradouro_ja_o_traz(): void
     {
-        $processo = $this->processo(['address_street' => 'Rua Cabo Astrogildo Saldanha']);
+        $vistoriador = $this->vistoriador();
+        $processo = $this->processo(['address_street' => 'Rua Cabo Astrogildo Saldanha'], $vistoriador);
 
-        $this->actingAs($this->vistoriador(), 'gestao')
+        $this->actingAs($vistoriador, 'gestao')
             ->get("/gestao/processos/{$processo->id}/vistoria")
             ->assertInertia(fn (Assert $page) => $page->where('ficha.logradouro', 'Rua Cabo Astrogildo Saldanha'));
     }
 
     public function test_sem_tipo_declarado_o_logradouro_fica_como_no_cadastro(): void
     {
-        $processo = $this->processo();
+        $vistoriador = $this->vistoriador();
+        $processo = $this->processo(vistoriador: $vistoriador);
         $processo->forceFill(['origem_declarada' => null])->save();
 
-        $this->actingAs($this->vistoriador(), 'gestao')
+        $this->actingAs($vistoriador, 'gestao')
             ->get("/gestao/processos/{$processo->id}/vistoria")
             ->assertInertia(fn (Assert $page) => $page->where('ficha.logradouro', 'DOUTOR JORGE COSTA ANDRADE'));
     }

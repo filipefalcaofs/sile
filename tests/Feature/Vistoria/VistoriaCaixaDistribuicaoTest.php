@@ -96,6 +96,20 @@ class VistoriaCaixaDistribuicaoTest extends TestCase
                 ->where('vistorias.data.0.responsavel', 'Vera Vistoriadora'));
     }
 
+    public function test_processo_distribuido_sem_ficha_aparece_como_distribuido_e_abre_a_ficha(): void
+    {
+        $setor = Sector::factory()->create();
+        $chefia = $this->chefia($setor);
+        $vera = $this->vistoriador($setor);
+        $this->processoEmVistoria($setor, $vera);
+
+        $this->actingAs($chefia, 'gestao')
+            ->get('/gestao/vistorias')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('vistorias.data.0.situacao', 'distribuido')
+                ->where('vistorias.data.0.situacao_label', 'Distribuído'));
+    }
+
     public function test_abas_incluem_para_distribuir_e_distribuidos_com_totais(): void
     {
         $setor = Sector::factory()->create();

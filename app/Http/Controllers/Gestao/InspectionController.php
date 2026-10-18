@@ -255,6 +255,29 @@ class InspectionController extends Controller
     }
 
     /**
+     * Encaminha o processo de volta à Caixa do Setor depois da vistoria
+     * concluída, para a análise continuar. Só quem fez a vistoria ou quem
+     * distribui processos faz o encaminhamento.
+     */
+    public function encaminharAoSetor(Request $request, ViabilityRequest $viabilityRequest): RedirectResponse
+    {
+        $ator = $request->user();
+        abort_unless($ator instanceof User, 401);
+
+        $ficha = $this->fichaDo($viabilityRequest);
+
+        abort_unless($ficha->vistoriador_user_id === $ator->id || $ator->can('distribuir-processos'), 403);
+
+        try {
+            $this->encaminhamento->encaminharAoSetor($viabilityRequest, $ator);
+        } catch (EncaminharVistoriaException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return back()->with('status', 'Processo encaminhado à Caixa do Setor para a continuidade da análise.');
+    }
+
+    /**
      * Persiste o polígono redesenhado e validado pelo vistoriador (com área
      * calculada e marca de validação).
      */

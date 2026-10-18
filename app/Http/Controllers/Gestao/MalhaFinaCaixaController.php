@@ -131,7 +131,7 @@ class MalhaFinaCaixaController extends Controller
             'status' => $processo->status->value,
             'status_label' => $processo->status->label(),
             'analysis_status' => $processo->analysis_status?->value,
-            'analysis_status_label' => $processo->analysis_status?->label(),
+            'analysis_status_label' => $processo->rotuloStatusTramitacao(),
             'setor' => $processo->sector?->name,
             'responsavel' => $processo->assignedTo?->name,
             'analysis_due_at' => $processo->analysis_due_at?->toIso8601String(),

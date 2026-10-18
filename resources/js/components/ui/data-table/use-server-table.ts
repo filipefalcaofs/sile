@@ -130,6 +130,16 @@ export function useServerTable({
         [visit],
     );
 
+    /** Troca vários filtros de uma vez, com uma só navegação (formulários com botão Pesquisar). */
+    const setFilters = useCallback(
+        (changes: Record<string, string>) => {
+            const next = { ...stateRef.current.filters, ...changes };
+            setFiltersState(next);
+            visit({ ...stateRef.current, filters: next });
+        },
+        [visit],
+    );
+
     // Mesmo snapshot enviado na navegação — exposto para o ExportMenu montar a
     // URL de exportação (?formato=...) preservando os filtros atuais (RN-004).
     const currentParams = useMemo(
@@ -137,5 +147,5 @@ export function useServerTable({
         [search, sort, perPage, filters],
     );
 
-    return { search, setSearch, sort, setSort, perPage, setPerPage, filters, setFilter, processing, currentParams };
+    return { search, setSearch, sort, setSort, perPage, setPerPage, filters, setFilter, setFilters, processing, currentParams };
 }

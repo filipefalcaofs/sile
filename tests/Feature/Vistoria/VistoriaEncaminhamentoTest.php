@@ -208,8 +208,21 @@ class VistoriaEncaminhamentoTest extends TestCase
             ])
             ->assertRedirect();
 
-        // 2. Vistoriador abre a ficha (processo sem responsável → ele assume
-        //    o processo junto com a ficha) e conclui com o parecer.
+        // 2. Abrir o processo não o atribui: sem distribuição, a ficha não abre.
+        $this->actingAs($vistoriador, 'gestao')
+            ->get("/gestao/processos/{$processo->id}/vistoria")
+            ->assertForbidden();
+        $this->assertNull($processo->refresh()->assigned_user_id);
+
+        // O apoio distribui ao vistoriador; só então ele abre a ficha e conclui com o parecer.
+        $apoio = User::factory()->apoio()->withAcceptedLgpdTerm()->create();
+        $this->actingAs($apoio, 'gestao')
+            ->post('/gestao/caixa-setor/distribuir', [
+                'request_ids' => [$processo->id],
+                'analista_id' => $vistoriador->id,
+            ])
+            ->assertSessionMissing('error');
+
         $this->actingAs($vistoriador, 'gestao')
             ->get("/gestao/processos/{$processo->id}/vistoria")
             ->assertOk();
@@ -222,18 +235,103 @@ class VistoriaEncaminhamentoTest extends TestCase
             ])
             ->assertOk();
 
-        // 3. Retorno automático: processo de volta ao setor e ao analista de
-        //    origem, eixo operacional em EmAnalise, ficha concluída.
+        // 3. A conclusão da ficha deixa o processo Vistoriado, ainda com o
+        //    vistoriador; o retorno à análise é um encaminhamento feito por ele.
         $fresh = $processo->refresh();
-        $this->assertSame(AnalysisStatus::EmAnalise, $fresh->analysis_status);
+        $this->assertSame(AnalysisStatus::Vistoriado, $fresh->analysis_status);
+        $this->assertSame($setorVistoria->id, $fresh->sector_id);
+        $this->assertSame($vistoriador->id, $fresh->assigned_user_id);
+        $this->assertSame(InspectionStatus::Concluida, Inspection::query()->sole()->status);
+
+        // 4. Encaminhar para a Caixa do Setor: volta ao setor e ao analista de
+        //    origem e segue Vistoriado, até o analista retomar a ficha.
+        $this->actingAs($vistoriador, 'gestao')
+            ->post("/gestao/processos/{$processo->id}/vistoria/encaminhar-ao-setor")
+            ->assertRedirect()
+            ->assertSessionMissing('error');
+
+        $fresh = $processo->refresh();
+        $this->assertSame(AnalysisStatus::Vistoriado, $fresh->analysis_status);
         $this->assertSame($setorAnalise->id, $fresh->sector_id);
         $this->assertSame($analista->id, $fresh->assigned_user_id);
-        $this->assertSame(InspectionStatus::Concluida, Inspection::query()->sole()->status);
+        $this->assertDatabaseHas('activity_log', [
+            'log_name' => 'vistoria',
+            'event' => 'vistoria-devolver',
+        ]);
 
         $transicoes = $processo->analysisStatusTransitions()->get()
             ->map(fn ($transicao) => $transicao->to_status->value)
             ->all();
         $this->assertContains(AnalysisStatus::Vistoriado->value, $transicoes);
+    }
+
+    public function test_encaminhar_ao_setor_exige_ficha_concluida(): void
+    {
+        $vistoriador = $this->analista();
+        $processo = ViabilityRequest::factory()->create();
+        $processo->forceFill([
+            'status' => ViabilityRequestStatus::EmAnalise,
+            'analysis_status' => AnalysisStatus::Vistoriar,
+            'assigned_user_id' => $vistoriador->id,
+        ])->save();
+        $this->actingAs($vistoriador, 'gestao')->get("/gestao/processos/{$processo->id}/vistoria");
+
+        $this->actingAs($vistoriador, 'gestao')
+            ->post("/gestao/processos/{$processo->id}/vistoria/encaminhar-ao-setor")
+            ->assertSessionHas('error');
+
+        $this->assertSame($vistoriador->id, $processo->refresh()->assigned_user_id);
+    }
+
+    public function test_encaminhar_ao_setor_sem_origem_registrada_devolve_sem_responsavel_para_distribuir(): void
+    {
+        $setor = Sector::factory()->create();
+        $vistoriador = $this->analista();
+        $processo = ViabilityRequest::factory()->create();
+        $processo->forceFill([
+            'status' => ViabilityRequestStatus::EmAnalise,
+            'analysis_status' => AnalysisStatus::Vistoriar,
+            'sector_id' => $setor->id,
+            'assigned_user_id' => $vistoriador->id,
+        ])->save();
+        $this->actingAs($vistoriador, 'gestao')->get("/gestao/processos/{$processo->id}/vistoria");
+        $this->actingAs($vistoriador, 'gestao')
+            ->postJson("/gestao/processos/{$processo->id}/vistoria/concluir", ['parecer' => 'Parecer da vistoria.'])
+            ->assertOk();
+
+        $this->actingAs($vistoriador, 'gestao')
+            ->post("/gestao/processos/{$processo->id}/vistoria/encaminhar-ao-setor")
+            ->assertSessionMissing('error');
+
+        $fresh = $processo->refresh();
+        $this->assertSame($setor->id, $fresh->sector_id);
+        $this->assertNull($fresh->assigned_user_id);
+        $this->assertSame(AnalysisStatus::Vistoriado, $fresh->analysis_status);
+    }
+
+    public function test_processo_vistoriado_na_caixa_do_setor_vai_a_analista_e_nao_a_vistoriador(): void
+    {
+        $setor = Sector::factory()->create();
+        $analista = User::factory()->withAcceptedLgpdTerm()->create();
+        $analista->givePermissionTo(['acessar-gestao', 'analisar-processos']);
+        $analista->sectors()->attach($setor);
+        $apoio = User::factory()->apoio()->withAcceptedLgpdTerm()->create();
+        $processo = ViabilityRequest::factory()->create();
+        $processo->forceFill([
+            'status' => ViabilityRequestStatus::EmAnalise,
+            'analysis_status' => AnalysisStatus::Vistoriado,
+            'sector_id' => $setor->id,
+        ])->save();
+
+        $this->actingAs($apoio, 'gestao')
+            ->post('/gestao/caixa-setor/distribuir', [
+                'request_ids' => [$processo->id],
+                'analista_id' => $analista->id,
+            ])
+            ->assertSessionMissing('error');
+
+        $this->assertSame($analista->id, $processo->refresh()->assigned_user_id);
+        $this->assertSame(AnalysisStatus::Vistoriado, $processo->analysis_status);
     }
 
     public function test_concluir_ficha_sem_encaminhamento_registrado_permanece_vistoriado(): void
@@ -245,6 +343,7 @@ class VistoriaEncaminhamentoTest extends TestCase
         $processo->forceFill([
             'status' => ViabilityRequestStatus::EmAnalise,
             'analysis_status' => AnalysisStatus::Vistoriar,
+            'assigned_user_id' => $vistoriador->id,
         ])->save();
 
         $this->actingAs($vistoriador, 'gestao')->get("/gestao/processos/{$processo->id}/vistoria");
@@ -271,12 +370,13 @@ class VistoriaEncaminhamentoTest extends TestCase
                 'setor_vistoria_id' => $setorVistoria->id,
                 'motivo' => 'GLP de alto risco.',
             ]);
+        $processo->refresh()->forceFill(['assigned_user_id' => $vistoriador->id])->save();
 
         $this->actingAs($vistoriador, 'gestao')->get("/gestao/processos/{$processo->id}/vistoria");
         $this->actingAs($vistoriador, 'gestao')
             ->postJson("/gestao/processos/{$processo->id}/vistoria/concluir", ['parecer' => 'Parecer da vistoria.']);
 
-        $this->assertSame(AnalysisStatus::EmAnalise, $processo->refresh()->analysis_status);
+        $this->assertSame(AnalysisStatus::Vistoriado, $processo->refresh()->analysis_status);
 
         $this->actingAs($vistoriador, 'gestao')
             ->get('/gestao/vistorias?situacao=concluida')

@@ -315,7 +315,8 @@ class VistoriaConsultaController extends Controller
         $ficha = $processo->inspection;
 
         [$situacao, $situacaoLabel] = match (true) {
-            $ficha === null => ['designar', 'Para distribuir'],
+            $ficha === null && $processo->assigned_user_id === null => ['designar', 'Para distribuir'],
+            $ficha === null => ['distribuido', 'Distribuído'],
             $ficha->status === InspectionStatus::Concluida => ['concluida', 'Concluída'],
             default => ['em_campo', 'Em campo'],
         };

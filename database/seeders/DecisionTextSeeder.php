@@ -61,7 +61,7 @@ class DecisionTextSeeder extends Seeder
         'justificativa.conclusao.padrao' => 'Conclusão da justificativa quando não há elementos para deferir ou indeferir.',
         'justificativa.indeferimento.sem_bap' => 'Justificativa do indeferimento automático por prazo de atuação na Junta (BAP) vencido. Redação oficial pendente SEDUR.',
         'justificativa.indeferimento.pergunta_sem_resposta' => 'Justificativa do indeferimento expresso quando uma pergunta da planilha, necessária ao enquadramento, chega sem resposta. Placeholders: :numero, :enunciado, :cnae.',
-        'justificativa.indeferimento.convite_expirado' => 'Justificativa do indeferimento automático por convite expirado sem resposta do requerente. Redação oficial pendente SEDUR.',
+        'justificativa.indeferimento.convite_expirado' => 'Justificativa do indeferimento automático por convite expirado sem resposta do requerente (Lei Federal nº 11.598/2007 e Resolução CGSIM nº 61/2020).',
         'explicacao.titulo.entrada' => 'Título do passo de entrada na explicação da decisão.',
         'explicacao.titulo.risco' => 'Título do passo de classificação de risco na explicação da decisão.',
         'explicacao.titulo.enquadramento' => 'Título do passo de enquadramento de uso na explicação da decisão.',

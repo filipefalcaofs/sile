@@ -783,6 +783,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::get('/', [InspectionController::class, 'show'])->name('show');
             Route::patch('/', [InspectionController::class, 'update'])->name('update');
             Route::post('concluir', [InspectionController::class, 'concluir'])->name('concluir');
+            Route::post('encaminhar-ao-setor', [InspectionController::class, 'encaminharAoSetor'])->name('encaminhar-ao-setor');
             Route::post('poligono', [InspectionController::class, 'validarPoligono'])->name('poligono');
             Route::post('anexos', [InspectionController::class, 'storeAnexo'])->name('anexos.store');
             Route::delete('anexos/{attachment}', [InspectionController::class, 'destroyAnexo'])->name('anexos.destroy');

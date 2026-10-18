@@ -1,5 +1,6 @@
 import { Head } from '@inertiajs/react';
-import type { ReactNode } from 'react';
+import { type ReactNode, useState } from 'react';
+import ProcessoFiltros, { FILTROS_VAZIOS, type ProcessoFiltrosValores } from '@/components/analise/processo-filtros';
 import PageHeader from '@/components/app/page-header';
 import Input from '@/components/form/input';
 import IsoDateInput from '@/components/form/iso-date-input';
@@ -45,17 +46,27 @@ interface ResultadosExpressoIndexProps {
         to: number | null;
         total: number;
     };
-    filtros: {
+    filtros: Partial<ProcessoFiltrosValores> & {
         search: string;
         outcome: string;
         data_de: string;
         data_ate: string;
         per_page: number;
+        protocolado_de?: string;
+        protocolado_ate?: string;
     };
     perPageOptions: number[];
     outcomeOptions: SelectOption[];
+    servicoOptions: SelectOption[];
+    analysisStatusOptions: SelectOption[];
+    categoriaOptions: SelectOption[];
+    statusOptions: SelectOption[];
+    analistaOptions: SelectOption[];
     erroPeriodo?: string | null;
 }
+
+/** Filtros da Consulta de processos (os mesmos), menos as datas, que aqui têm chave própria. */
+const CHAVES_DA_CONSULTA = Object.keys(FILTROS_VAZIOS).filter((chave) => chave !== 'data_de' && chave !== 'data_ate');
 
 /** Cor do badge por desfecho: deferida=verde, indeferida=vermelho. */
 function outcomeColor(outcome: string): 'success' | 'error' | 'light' {
@@ -96,21 +107,62 @@ export default function ResultadosExpressoIndex({
     filtros,
     perPageOptions,
     outcomeOptions,
+    servicoOptions,
+    analysisStatusOptions,
+    categoriaOptions,
+    statusOptions,
+    analistaOptions,
     erroPeriodo = null,
 }: ResultadosExpressoIndexProps) {
+    const [maisFiltros, setMaisFiltros] = useState(() =>
+        CHAVES_DA_CONSULTA.some((chave) => ((filtros as unknown as Record<string, string | undefined>)[chave] ?? '') !== '') ||
+        (filtros.protocolado_de ?? '') !== '' ||
+        (filtros.protocolado_ate ?? '') !== '',
+    );
     const table = useServerTable({
         url: '/gestao/resultados-expresso',
         initialSearch: filtros.search,
         initialSort: { column: 'decided_at', direction: 'desc' },
         initialPerPage: filtros.per_page,
-        initialFilters: { outcome: filtros.outcome, data_de: filtros.data_de, data_ate: filtros.data_ate },
+        initialFilters: {
+            outcome: filtros.outcome,
+            data_de: filtros.data_de,
+            data_ate: filtros.data_ate,
+            protocolado_de: filtros.protocolado_de ?? '',
+            protocolado_ate: filtros.protocolado_ate ?? '',
+            ...Object.fromEntries(
+                CHAVES_DA_CONSULTA.map((chave) => [chave, (filtros as unknown as Record<string, string | undefined>)[chave] ?? '']),
+            ),
+        },
     });
+
+    // O formulário da Consulta chama de data_de/data_ate o período de PROTOCOLO; aqui essas chaves são da decisão.
+    const valoresDaConsulta: Partial<ProcessoFiltrosValores> = {
+        ...Object.fromEntries(CHAVES_DA_CONSULTA.map((chave) => [chave, table.filters[chave] ?? ''])),
+        data_de: table.filters.protocolado_de ?? '',
+        data_ate: table.filters.protocolado_ate ?? '',
+    };
+
+    function pesquisarPelaConsulta(valores: ProcessoFiltrosValores) {
+        const { data_de, data_ate, ...demais } = valores as unknown as Record<string, string>;
+
+        table.setFilters({ ...demais, protocolado_de: data_de ?? '', protocolado_ate: data_ate ?? '' });
+    }
+
+    function limparConsulta() {
+        const { data_de: _de, data_ate: _ate, ...demais } = FILTROS_VAZIOS as unknown as Record<string, string>;
+
+        table.setFilters({ ...demais, protocolado_de: '', protocolado_ate: '' });
+    }
 
     const filtering =
         table.search.trim() !== '' ||
         table.filters.outcome !== '' ||
         table.filters.data_de !== '' ||
-        table.filters.data_ate !== '';
+        table.filters.data_ate !== '' ||
+        (table.filters.protocolado_de ?? '') !== '' ||
+        (table.filters.protocolado_ate ?? '') !== '' ||
+        CHAVES_DA_CONSULTA.some((chave) => (table.filters[chave] ?? '') !== '');
 
     const outcomeLabel = outcomeOptions.find((option) => option.value === table.filters.outcome)?.label;
 
@@ -241,6 +293,32 @@ export default function ResultadosExpressoIndex({
                                 />
                             }
                         />
+
+                        <div>
+                            <button
+                                type="button"
+                                aria-expanded={maisFiltros}
+                                onClick={() => setMaisFiltros((aberto) => !aberto)}
+                                className="text-theme-sm font-medium text-brand-600 hover:underline dark:text-brand-400"
+                            >
+                                {maisFiltros ? 'Ocultar filtros da consulta' : 'Mais filtros (os mesmos da Consulta de processos)'}
+                            </button>
+                            {maisFiltros && (
+                                <div className="mt-3 rounded-xl border border-gray-200 p-4 dark:border-gray-800">
+                                    <ProcessoFiltros
+                                        completo
+                                        valores={valoresDaConsulta}
+                                        servicoOptions={servicoOptions}
+                                        analysisStatusOptions={analysisStatusOptions}
+                                        categoriaOptions={categoriaOptions}
+                                        analistaOptions={analistaOptions}
+                                        statusOptions={statusOptions}
+                                        onAplicar={pesquisarPelaConsulta}
+                                        onLimpar={limparConsulta}
+                                    />
+                                </div>
+                            )}
+                        </div>
 
                         {filtering && (
                             <div className="flex flex-wrap items-center gap-2">

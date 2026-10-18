@@ -282,21 +282,15 @@ class DistribuicaoService
     }
 
     /**
-     * Processo no eixo de vistoria (Vistoriar/Vistoriado) só pode ser atribuído
-     * a vistoriador (preencher-ficha-vistoria) — a distribuição/assunção é
-     * específica nesse fluxo: quem recebe é quem abre e preenche a ficha.
+     * Processo a vistoriar só pode ser atribuído a vistoriador
+     * (preencher-ficha-vistoria): quem recebe é quem abre e preenche a ficha.
+     * Depois de vistoriado, o processo volta à análise e vai a analista.
      * Redistribuição em vistoria já é bloqueada pelo enum
      * (permiteRedistribuicao), então a regra vive no caminho de atribuição.
      */
     private function garantirVistoriadorEmVistoria(ViabilityRequest $request, User $analista): void
     {
-        $emVistoria = in_array(
-            $request->analysis_status,
-            [AnalysisStatus::Vistoriar, AnalysisStatus::Vistoriado],
-            true,
-        );
-
-        if ($emVistoria && ! $analista->can('preencher-ficha-vistoria')) {
+        if ($request->analysis_status === AnalysisStatus::Vistoriar && ! $analista->can('preencher-ficha-vistoria')) {
             throw DistribuicaoException::alvoSemPermissaoDeVistoria($analista, $request);
         }
     }

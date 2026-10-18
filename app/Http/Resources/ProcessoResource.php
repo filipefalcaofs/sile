@@ -74,7 +74,7 @@ class ProcessoResource extends JsonResource
             'analysis_stage' => $this->analysis_stage?->value,
             'analysis_stage_label' => $this->analysis_stage?->label(),
             'analysis_status' => $this->analysis_status?->value,
-            'analysis_status_label' => $this->analysis_status?->label(),
+            'analysis_status_label' => $this->resource->rotuloStatusTramitacao(),
             'analysis_due_at' => $this->analysis_due_at?->toIso8601String(),
             'sla' => $this->slaResumo(),
             'protocoled_at' => $this->protocoled_at?->toIso8601String(),

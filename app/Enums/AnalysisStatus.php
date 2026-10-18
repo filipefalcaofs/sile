@@ -88,8 +88,8 @@ enum AnalysisStatus: string
         return match ($this) {
             self::ParaDistribuir => [self::Encaminhado],
             self::Encaminhado => [self::Analisar],
-            self::Analisar => [self::EmAnalise],
-            self::EmAnalise => [self::ParaConclusao, self::AnaliseConcluida, self::EmConvite, self::Vistoriar],
+            self::Analisar => [self::EmAnalise, self::Encaminhado],
+            self::EmAnalise => [self::ParaConclusao, self::AnaliseConcluida, self::EmConvite, self::Vistoriar, self::Encaminhado],
             self::ParaConclusao => [self::EmAnalise],
             self::EmConvite => [self::ConviteCancelado],
             self::Vistoriar => [self::Vistoriado],

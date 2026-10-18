@@ -166,7 +166,13 @@ export default function Fila({
             cellClassName: 'whitespace-nowrap',
             cell: (item) => (
                 <div className="flex flex-col">
-                    <span className="font-medium text-gray-800 dark:text-white/90">{item.bap ?? '—'}</span>
+                    <span
+                        className={`text-gray-800 dark:text-white/90 ${
+                            item.analysis_status === 'convite_respondido' ? 'font-bold' : 'font-medium'
+                        }`}
+                    >
+                        {item.bap ?? '—'}
+                    </span>
                     <span className="text-theme-xs text-gray-400 dark:text-gray-500">
                         {item.protocol_number ?? 'sem protocolo'}
                     </span>
@@ -242,8 +248,11 @@ export default function Fila({
             id: 'status_tramitacao',
             header: 'Status',
             cellClassName: 'whitespace-nowrap',
-            cell: (item) =>
-                item.analysis_status_label ?? item.status_label ?? <span className="text-gray-400 dark:text-gray-500">—</span>,
+            cell: (item) => (
+                <span className={item.analysis_status === 'convite_respondido' ? 'font-bold text-gray-900 dark:text-white' : undefined}>
+                    {item.analysis_status_label ?? item.status_label ?? <span className="text-gray-400 dark:text-gray-500">—</span>}
+                </span>
+            ),
         },
         ...(visao === 'analise'
             ? [

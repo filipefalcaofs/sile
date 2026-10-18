@@ -2,12 +2,17 @@
 
 namespace App\Http\Controllers\Gestao;
 
+use App\Enums\AnalysisStatus;
 use App\Enums\DecisionOutcome;
+use App\Enums\ViabilityRequestStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\DecisionExplanationResource;
 use App\Http\Resources\ViabilityDecisionResource;
 use App\Models\Activity;
 use App\Models\ViabilityRequest;
+use App\Models\ViabilityRequestEvento;
+use App\Models\ViabilityServiceType;
+use App\Services\Analise\ProcessoQueryService;
 use App\Services\Auditoria\DecisionExplanationService;
 use App\Support\Audit\AuditService;
 use App\Support\Settings;
@@ -35,9 +40,17 @@ class ResultadoExpressoController extends Controller
     /** Itens por página aceitos — reusa o padrão do console (ui.cnaes.per_page). */
     private const PER_PAGE_OPTIONS = [10, 15, 25, 50];
 
+    /** Filtros da Consulta de processos aceitos aqui, aplicados pelo ProcessoQueryService. */
+    private const CHAVES_FILTRO_CONSULTA = [
+        'grupo', 'status', 'analysis_status', 'protocolo', 'bap', 'produto_tvl', 'servico', 'setor',
+        'analista', 'categoria', 'inscricao', 'nome', 'cnpj', 'cep', 'logradouro', 'bairro', 'fluxo',
+        'cnae', 'complemento',
+    ];
+
     public function __construct(
         private AuditService $audit,
         private DecisionExplanationService $explanations,
+        private ProcessoQueryService $processos,
     ) {}
 
     /**
@@ -60,13 +73,18 @@ class ResultadoExpressoController extends Controller
         $dataAte = $this->dataFiltro($request->string('data_ate')->toString());
         $periodoInvertido = $dataDe !== null && $dataAte !== null && $dataDe > $dataAte;
 
+        $filtrosConsulta = $this->filtrosDaConsulta($request);
+
         $decisoes = $periodoInvertido
             ? new LengthAwarePaginator([], 0, $perPage, 1, [
                 'path' => $request->url(),
                 'query' => $request->query(),
             ])
-            : (ViabilityRequest::query()
-                ->join('viability_decisions', 'viability_decisions.viability_request_id', '=', 'viability_requests.id')
+            : ($this->processos->aplicarFiltros(
+                ViabilityRequest::query()
+                    ->join('viability_decisions', 'viability_decisions.viability_request_id', '=', 'viability_requests.id'),
+                $filtrosConsulta,
+            )
                 ->with('company')
                 ->select([
                     'viability_requests.*',
@@ -111,6 +129,7 @@ class ResultadoExpressoController extends Controller
             properties: [
                 'resultado' => $outcomeFiltro ?: null,
                 'busca' => $request->string('search')->toString() ?: null,
+                'filtros' => array_filter($filtrosConsulta, fn ($valor): bool => $valor !== ''),
             ],
             result: 'sucesso',
         );
@@ -123,7 +142,14 @@ class ResultadoExpressoController extends Controller
                 'data_de' => $dataDe ?? '',
                 'data_ate' => $dataAte ?? '',
                 'per_page' => $perPage,
-            ],
+                'protocolado_de' => $request->string('protocolado_de')->toString(),
+                'protocolado_ate' => $request->string('protocolado_ate')->toString(),
+            ] + array_diff_key($this->crusDaConsulta($request), ['data_de' => 1, 'data_ate' => 1]),
+            'servicoOptions' => $this->servicoOptions(),
+            'analysisStatusOptions' => AnalysisStatus::options(),
+            'categoriaOptions' => $this->categoriaOptions(),
+            'statusOptions' => $this->statusOptions(),
+            'analistaOptions' => $this->processos->analistasParaFiltro($request->user()),
             'perPageOptions' => self::PER_PAGE_OPTIONS,
             'erroPeriodo' => $periodoInvertido
                 ? 'A data inicial não pode ser posterior à data final.'
@@ -133,6 +159,79 @@ class ResultadoExpressoController extends Controller
                 DecisionOutcome::cases(),
             ),
         ]);
+    }
+
+    /**
+     * Filtros da Consulta de processos, crus da query string. As datas de
+     * protocolo chegam como protocolado_de/ate (data_de/ate aqui são da decisão).
+     *
+     * @return array<string, string>
+     */
+    private function crusDaConsulta(Request $request): array
+    {
+        $filtros = [];
+
+        foreach (self::CHAVES_FILTRO_CONSULTA as $chave) {
+            $filtros[$chave] = $request->string($chave)->toString();
+        }
+
+        return $filtros + ['data_de' => '', 'data_ate' => ''];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function filtrosDaConsulta(Request $request): array
+    {
+        return array_merge($this->crusDaConsulta($request), [
+            'data_de' => $request->string('protocolado_de')->toString(),
+            'data_ate' => $request->string('protocolado_ate')->toString(),
+        ]);
+    }
+
+    /**
+     * @return list<array{value: string, label: string}>
+     */
+    private function servicoOptions(): array
+    {
+        $eventos = ViabilityRequestEvento::query()
+            ->selectRaw('codigo, min(nome) as nome')
+            ->groupBy('codigo')
+            ->orderBy('nome')
+            ->get()
+            ->map(fn ($evento): array => ['value' => ProcessoQueryService::PREFIXO_EVENTO.$evento->codigo, 'label' => $evento->nome]);
+
+        $tipos = ViabilityServiceType::query()
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn ($servico): array => ['value' => (string) $servico->id, 'label' => $servico->name]);
+
+        return $eventos->concat($tipos)->values()->all();
+    }
+
+    /**
+     * @return list<array{value: string, label: string}>
+     */
+    private function categoriaOptions(): array
+    {
+        $opcoes = [];
+
+        foreach (ProcessoQueryService::CATEGORIAS as $value => $label) {
+            $opcoes[] = ['value' => $value, 'label' => $label];
+        }
+
+        return $opcoes;
+    }
+
+    /**
+     * @return list<array{value: string, label: string}>
+     */
+    private function statusOptions(): array
+    {
+        return array_map(
+            fn (ViabilityRequestStatus $status): array => ['value' => $status->value, 'label' => $status->label()],
+            ViabilityRequestStatus::cases(),
+        );
     }
 
     /**

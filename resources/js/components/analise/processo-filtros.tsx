@@ -25,9 +25,21 @@ export interface ProcessoFiltrosValores {
     analista: string;
     cnae: string;
     complemento: string;
+    /** Só no modo completo (os filtros inteiros da Consulta de processos). */
+    produto_tvl?: string;
+    inscricao?: string;
+    logradouro?: string;
+    cep?: string;
+    grupo?: string;
+    status?: string;
+    fluxo?: string;
+    setor?: string;
 }
 
 interface ProcessoFiltrosProps {
+    /** Mostra também viabilidade, inscrição, logradouro, CEP, grupo, status, fluxo e setor. */
+    completo?: boolean;
+    statusOptions?: SelectOption[];
     valores: Partial<ProcessoFiltrosValores>;
     servicoOptions: SelectOption[];
     analysisStatusOptions: SelectOption[];
@@ -51,7 +63,28 @@ export const FILTROS_VAZIOS: ProcessoFiltrosValores = {
     analista: '',
     cnae: '',
     complemento: '',
+    produto_tvl: '',
+    inscricao: '',
+    logradouro: '',
+    cep: '',
+    grupo: '',
+    status: '',
+    fluxo: '',
+    setor: '',
 };
+
+export const GRUPOS_DE_STATUS: SelectOption[] = [
+    { value: 'rascunho', label: 'Rascunho' },
+    { value: 'em_andamento', label: 'Em andamento' },
+    { value: 'concluido', label: 'Concluído' },
+    { value: 'cancelado', label: 'Cancelado' },
+];
+
+export const FLUXOS: SelectOption[] = [
+    { value: 'expresso', label: 'Expresso' },
+    { value: 'em_analise', label: 'Em análise' },
+    { value: 'analise_tecnica', label: 'Análise técnica' },
+];
 
 /** CPF (até 11 dígitos) ou CNPJ no mesmo campo: a máscara segue a quantidade de dígitos. */
 export function mascararDocumento(valor: string): string {
@@ -70,6 +103,8 @@ export default function ProcessoFiltros({
     analysisStatusOptions,
     categoriaOptions,
     analistaOptions = [],
+    completo = false,
+    statusOptions = [],
     onAplicar,
     onLimpar,
 }: ProcessoFiltrosProps) {
@@ -149,6 +184,42 @@ export default function ProcessoFiltros({
                     <Label htmlFor="filtro-complemento">Complemento</Label>
                     <Input id="filtro-complemento" value={form.complemento} onChange={(e) => definir('complemento', e.target.value)} />
                 </div>
+                {completo && (
+                    <>
+                        <div>
+                            <Label htmlFor="filtro-produto-tvl">Nº da viabilidade</Label>
+                            <Input id="filtro-produto-tvl" value={form.produto_tvl ?? ''} onChange={(e) => definir('produto_tvl', e.target.value)} />
+                        </div>
+                        <div>
+                            <Label htmlFor="filtro-inscricao">Inscrição imobiliária</Label>
+                            <Input id="filtro-inscricao" inputMode="numeric" value={form.inscricao ?? ''} onChange={(e) => definir('inscricao', e.target.value.replace(/\D/g, ''))} />
+                        </div>
+                        <div>
+                            <Label htmlFor="filtro-logradouro">Logradouro</Label>
+                            <Input id="filtro-logradouro" value={form.logradouro ?? ''} onChange={(e) => definir('logradouro', e.target.value)} />
+                        </div>
+                        <div>
+                            <Label htmlFor="filtro-cep">CEP</Label>
+                            <Input id="filtro-cep" inputMode="numeric" value={applyMask(form.cep ?? '', MASK_PATTERNS.cep)} onChange={(e) => definir('cep', applyMask(e.target.value, MASK_PATTERNS.cep))} />
+                        </div>
+                        <div>
+                            <Label htmlFor="filtro-grupo">Grupo de status</Label>
+                            <Select id="filtro-grupo" value={form.grupo ?? ''} onChange={(v) => definir('grupo', v)} placeholder="Todos" options={GRUPOS_DE_STATUS} />
+                        </div>
+                        <div>
+                            <Label htmlFor="filtro-status">Status</Label>
+                            <Select id="filtro-status" value={form.status ?? ''} onChange={(v) => definir('status', v)} placeholder="Todos" options={statusOptions} />
+                        </div>
+                        <div>
+                            <Label htmlFor="filtro-fluxo">Fluxo</Label>
+                            <Select id="filtro-fluxo" value={form.fluxo ?? ''} onChange={(v) => definir('fluxo', v)} placeholder="Todos" options={FLUXOS} />
+                        </div>
+                        <div>
+                            <Label htmlFor="filtro-setor">Setor (ID)</Label>
+                            <Input id="filtro-setor" type="number" value={form.setor ?? ''} onChange={(e) => definir('setor', e.target.value)} />
+                        </div>
+                    </>
+                )}
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
