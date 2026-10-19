@@ -108,4 +108,18 @@ class ViabilityRequestPontoDoImovelTest extends TestCase
         $this->assertNull($request->fresh()->pontoGravadoOuDesenhado());
         $this->assertNotNull($request->fresh()->pontoDoImovel());
     }
+
+    public function test_centro_do_lote_multipolygon(): void
+    {
+        $request = ViabilityRequest::factory()->create(['property_polygon_geojson' => null]);
+        $request->forceFill(['address_polygon_geojson' => ['type' => 'MultiPolygon', 'coordinates' => [
+            [[[-38.4605, -12.9805], [-38.4595, -12.9805], [-38.4595, -12.9795], [-38.4605, -12.9795], [-38.4605, -12.9805]]],
+            [[[-38.4500, -12.9700], [-38.4498, -12.9700], [-38.4498, -12.9698], [-38.4500, -12.9698], [-38.4500, -12.9700]]],
+        ]]])->save();
+
+        $ponto = $request->fresh()->pontoDoImovel();
+
+        $this->assertEqualsWithDelta(-12.98, $ponto['lat'], 0.001);
+        $this->assertEqualsWithDelta(-38.46, $ponto['lng'], 0.001);
+    }
 }

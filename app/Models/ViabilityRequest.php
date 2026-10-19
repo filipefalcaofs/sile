@@ -217,7 +217,7 @@ class ViabilityRequest extends Model
      */
     private function centroideDoPoligono(mixed $geojson): ?array
     {
-        $ring = is_array($geojson) ? ($geojson['coordinates'][0] ?? null) : null;
+        $ring = is_array($geojson) ? $this->anelExterior($geojson) : null;
 
         if (! is_array($ring) || $ring === []) {
             return null;
@@ -234,6 +234,68 @@ class ViabilityRequest extends Model
             'lat' => array_sum($lats) / count($lats),
             'lng' => array_sum($lngs) / count($lngs),
         ];
+    }
+
+    /**
+     * Anel exterior do Polygon ou, no MultiPolygon, o do polígono de maior
+     * área planar.
+     *
+     * @param  array<string, mixed>  $geojson
+     * @return array<int, mixed>|null
+     */
+    private function anelExterior(array $geojson): ?array
+    {
+        $coordenadas = $geojson['coordinates'] ?? null;
+
+        if (! is_array($coordenadas)) {
+            return null;
+        }
+
+        if (($geojson['type'] ?? null) !== 'MultiPolygon') {
+            return is_array($coordenadas[0] ?? null) ? $coordenadas[0] : null;
+        }
+
+        $maior = null;
+        $maiorArea = -1.0;
+
+        foreach ($coordenadas as $poligono) {
+            $anel = is_array($poligono) ? ($poligono[0] ?? null) : null;
+
+            if (! is_array($anel) || $anel === []) {
+                continue;
+            }
+
+            $area = $this->areaPlanar($anel);
+
+            if ($area > $maiorArea) {
+                $maior = $anel;
+                $maiorArea = $area;
+            }
+        }
+
+        return $maior;
+    }
+
+    /**
+     * @param  array<int, mixed>  $anel
+     */
+    private function areaPlanar(array $anel): float
+    {
+        $soma = 0.0;
+        $total = count($anel);
+
+        for ($i = 0; $i < $total; $i++) {
+            $a = $anel[$i];
+            $b = $anel[($i + 1) % $total];
+
+            if (! is_array($a) || ! is_array($b)) {
+                continue;
+            }
+
+            $soma += (float) $a[0] * (float) $b[1] - (float) $b[0] * (float) $a[1];
+        }
+
+        return abs($soma) / 2;
     }
 
     /**
