@@ -348,6 +348,26 @@ class TratamentoRamoResolverTest extends TestCase
         $this->assertSame('nao_resolvido', $ramo->status);
     }
 
+    public function test_linhas_no_local_de_alto_risco_com_mesmo_tll_pre_seleciona_a_primeira(): void
+    {
+        // 8610-1/02 (regra 47): P11=SIM leva a 07.05.08 (hospital) e 07.05.09
+        // (outros serviços de saúde), ambas ALTO e TLL 1.16. Nada decide entre
+        // elas, mas o motor pré-seleciona a primeira para o analista confirmar
+        // ou trocar — sem LOUOS os Quadros 10/11-A ficam indisponíveis.
+        $ramo = $this->resolver()->resolver(new TratamentoRamoInput(
+            cnae: '8610-1/02',
+            respostas: [11 => true],
+            areaUtilizada: 80.0,
+            tipoImovel: TipoImovel::fromRegin('Edificação Comercial', TipoImovelCatalog::sedur200826()),
+        ));
+
+        $this->assertSame('resolvido', $ramo->status);
+        $this->assertSame('07.05.08', $ramo->codigoLouos);
+        $this->assertSame('1.16', $ramo->tll);
+        $this->assertSame('alto', $ramo->risco);
+        $this->assertNotSame('expresso', $ramo->fluxo);
+    }
+
     public function test_regra_27_no_local_e_expresso_com_a_linha_da_regra(): void
     {
         // Regra 27: P19=SIM + P20 (opções 1/2/4) → 07.04.06 expresso (MÉDIO).
