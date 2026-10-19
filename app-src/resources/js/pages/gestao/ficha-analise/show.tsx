@@ -914,8 +914,9 @@ export default function FichaAnaliseShow({
     const [parecerConclusao, setParecerConclusao] = useState('');
     const [conclusaoProcessing, setConclusaoProcessing] = useState(false);
     const [erroConclusao, setErroConclusao] = useState<string | null>(null);
+    const [divergenciaConclusao, setDivergenciaConclusao] = useState<string | null>(null);
     const podeConcluir = auth.permissions.includes('concluir-analise');
-    const podeConcluirAnalise = podeConcluir && (processo.status === 'em_analise' || processo.status === 'deferida');
+    const podeConcluirAnalise = podeConcluir && ['em_analise', 'deferida', 'indeferida', 'desativado', 'cassado', 'revogado'].includes(processo.status);
     const [pickerParaParecer, setPickerParaParecer] = useState(false);
     const [pickerParaCondicao, setPickerParaCondicao] = useState(false);
 
@@ -1088,11 +1089,12 @@ export default function FichaAnaliseShow({
         });
     }
 
-    function concluirAnalise() {
+    function concluirAnalise(confirmarDivergencia = false) {
         setErroConclusao(null);
+        setDivergenciaConclusao(null);
         router.post(
             `/gestao/processos/${processo.id}/conclusao-analise`,
-            { resultado: resultadoConclusao, parecer: parecerConclusao },
+            { resultado: resultadoConclusao, parecer: parecerConclusao, confirmar_divergencia: confirmarDivergencia },
             {
                 preserveScroll: true,
                 onStart: () => setConclusaoProcessing(true),
@@ -1104,8 +1106,9 @@ export default function FichaAnaliseShow({
                 },
                 onError: (erros) => {
                     const mapa = erros as Record<string, string>;
+                    setDivergenciaConclusao(mapa.divergencia ?? null);
                     setErroConclusao(
-                        mapa.conclusao ?? mapa.resultado ?? 'Não foi possível concluir a análise.',
+                        mapa.divergencia ? null : (mapa.conclusao ?? mapa.resultado ?? 'Não foi possível concluir a análise.'),
                     );
                 },
             },
@@ -2712,20 +2715,25 @@ export default function FichaAnaliseShow({
                     <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Conclusão de Análise</h4>
                     <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                         Deferido e indeferido seguem a ficha finalizada. Desativado, cassado e revogado encerram o
-                        processo — inclusive um já deferido.
+                        processo — inclusive um já deferido. Processo finalizado aceita qualquer outro resultado.
                     </p>
                     <div className="mt-4">
                         <ConclusaoAnaliseForm
                             resultadoId="resultado-conclusao"
                             resultado={resultadoConclusao}
-                            onResultado={setResultadoConclusao}
+                            onResultado={(valor) => {
+                                setResultadoConclusao(valor);
+                                setDivergenciaConclusao(null);
+                            }}
                             opcoes={conclusaoOpcoes}
                             parecer={parecerConclusao}
                             onParecer={setParecerConclusao}
                             parecerDaFicha={parecer}
                             erro={erroConclusao}
+                            divergencia={divergenciaConclusao}
+                            onConfirmarDivergencia={() => concluirAnalise(true)}
                             processing={conclusaoProcessing}
-                            onConfirm={concluirAnalise}
+                            onConfirm={() => concluirAnalise()}
                             onCancel={() => setShowConclusao(false)}
                         />
                     </div>

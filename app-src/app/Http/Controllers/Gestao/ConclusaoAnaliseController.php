@@ -8,6 +8,7 @@ use App\Http\Requests\Gestao\ConcluirAnaliseRequest;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Analise\ConclusaoAnaliseService;
+use App\Services\Analise\DivergenciaConclusaoException;
 use DomainException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Validation\ValidationException;
@@ -35,7 +36,10 @@ class ConclusaoAnaliseController extends Controller
                 $resultado,
                 $request->validated('parecer'),
                 exigirFichaSalva: true,
+                confirmarDivergencia: $request->boolean('confirmar_divergencia'),
             );
+        } catch (DivergenciaConclusaoException $e) {
+            throw ValidationException::withMessages(['divergencia' => $e->getMessage()]);
         } catch (DomainException $e) {
             throw ValidationException::withMessages(['conclusao' => $e->getMessage()]);
         }

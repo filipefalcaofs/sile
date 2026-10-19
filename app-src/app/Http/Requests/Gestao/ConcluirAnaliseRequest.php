@@ -27,6 +27,7 @@ class ConcluirAnaliseRequest extends FormRequest
         return [
             'resultado' => ['required', Rule::enum(ConclusionOutcome::class)],
             'parecer' => ['nullable', 'string', 'max:5000'],
+            'confirmar_divergencia' => ['nullable', 'boolean'],
         ];
     }
 

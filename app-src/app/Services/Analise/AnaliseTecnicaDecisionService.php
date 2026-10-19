@@ -73,6 +73,7 @@ class AnaliseTecnicaDecisionService
         ?TvlKind $tvlKind = null,
         ?string $tvlValidUntil = null,
         ?bool $condicionantesAtendidos = null,
+        bool $confirmarDivergencia = false,
     ): AnaliseDecisionResult {
         if (! $record->isFinalizada()) {
             throw new DomainException(
@@ -100,7 +101,9 @@ class AnaliseTecnicaDecisionService
 
         $derivado = $this->outcome($perCnae);
 
-        $this->recusarDecisaoContraditoria($perCnae, $escolhido);
+        if (! $confirmarDivergencia) {
+            $this->recusarDecisaoContraditoria($perCnae, $escolhido);
+        }
 
         if ($request->isRenewal() && $condicionantesAtendidos === false) {
             $escolhido = DecisionOutcome::Indeferida;
