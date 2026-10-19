@@ -1,8 +1,6 @@
 /**
  * Catálogo único do portal do cidadão. Fonte de verdade da sidebar, do
  * "O que você quer fazer?" do painel e dos serviços da landing.
- *
- * Antes de incluir ou mover item: ler `.cursor/rules/menu-navegacao.mdc`.
  */
 
 export type PortalNavIcon = 'grid' | 'bell' | 'search' | 'file' | 'check-circle' | 'list' | 'group' | 'user' | 'shield';
@@ -45,7 +43,6 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
             { name: 'Minhas solicitações', href: '/portal/solicitacoes', icon: 'file' },
             { name: 'Renovar viabilidade', href: '/portal/renovacao', icon: 'check-circle' },
             { name: 'Minhas empresas', href: '/portal/empresas', icon: 'list' },
-            { name: 'Procurações', href: '/portal/procuracoes', icon: 'group' },
         ],
     },
     {
@@ -103,8 +100,16 @@ export const FILTROS_SOLICITACOES = {
     todas: '/portal/solicitacoes',
 } as const;
 
-export function acoesPublicas(): PortalAcao[] {
-    return PORTAL_ACOES.filter((acao) => acao.publica);
+/** Rota da consulta prévia: some do menu e das ações quando o gestor a desliga. */
+export const ROTA_CONSULTA_VIABILIDADE = '/portal/viabilidade';
+
+/** Ações do painel; sem a consulta quando features.consulta_viabilidade está desligada. */
+export function acoesDoPortal(consultaHabilitada = true): PortalAcao[] {
+    return PORTAL_ACOES.filter((acao) => consultaHabilitada || acao.href !== ROTA_CONSULTA_VIABILIDADE);
+}
+
+export function acoesPublicas(consultaHabilitada = true): PortalAcao[] {
+    return acoesDoPortal(consultaHabilitada).filter((acao) => acao.publica);
 }
 
 /** Invariantes do catálogo. Usado pelos testes para impedir regressão. */

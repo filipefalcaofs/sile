@@ -47,7 +47,8 @@ class LgpdTermController extends Controller
 
         LegalTermAcceptance::firstOrCreate(
             [
-                'user_id' => $request->user('web')->id,
+                'accepted_by_type' => $request->user('web')->getMorphClass(),
+                'accepted_by_id' => $request->user('web')->id,
                 'legal_term_id' => $term->id,
             ],
             [

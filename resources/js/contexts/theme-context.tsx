@@ -37,7 +37,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
             usuarioTrocou.current = false;
             localStorage.setItem('acc-contrast', '0');
             document.documentElement.classList.remove('acc-contrast');
-            window.dispatchEvent(new CustomEvent('sile:theme-usuario'));
+            window.dispatchEvent(new CustomEvent('viabiliza:theme-usuario'));
         }
 
         const contraste = localStorage.getItem('acc-contrast') === '1';

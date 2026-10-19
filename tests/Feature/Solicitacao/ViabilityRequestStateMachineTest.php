@@ -111,7 +111,8 @@ class ViabilityRequestStateMachineTest extends TestCase
             publicLabel: 'Recebida — em processamento',
         );
 
-        $this->assertSame($actor->id, $transition->actor_user_id);
+        $this->assertSame($actor->id, $transition->actor_id);
+        $this->assertSame($actor->getMorphClass(), $transition->actor_type);
         $this->assertSame('Recebida — em processamento', $transition->public_label);
         $this->assertSame('Protocolo efetuado pelo requerente.', $transition->reason);
     }

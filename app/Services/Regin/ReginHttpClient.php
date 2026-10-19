@@ -152,6 +152,6 @@ class ReginHttpClient
 
     private function timeout(): int
     {
-        return (int) config('sile.integrations.regin.timeout', 8);
+        return (int) config('viabiliza.integrations.regin.timeout', 8);
     }
 }

@@ -37,7 +37,7 @@ class OpenAiCompatibleClient implements AiProviderClient
             $response = Http::withToken((string) $config->api_key)
                 ->withoutRedirecting()
                 ->acceptJson()
-                ->connectTimeout((int) config('sile.ai.test.connect_timeout', 3))
+                ->connectTimeout((int) config('viabiliza.ai.test.connect_timeout', 3))
                 ->timeout($this->timeoutSeconds($config))
                 ->get($endpoint);
         } catch (ConnectionException) {
@@ -60,7 +60,7 @@ class OpenAiCompatibleClient implements AiProviderClient
      */
     private function timeoutSeconds(AiConfiguration $config): int
     {
-        $maxMs = (int) config('sile.ai.test.timeout_max_ms', 15000);
+        $maxMs = (int) config('viabiliza.ai.test.timeout_max_ms', 15000);
         $effectiveMs = max(1, min((int) $config->timeout_ms, $maxMs));
 
         return max(1, (int) ceil($effectiveMs / 1000));

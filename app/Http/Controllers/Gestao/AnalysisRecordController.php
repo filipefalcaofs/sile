@@ -77,7 +77,7 @@ class AnalysisRecordController extends Controller
         $decisaoExpresso = $viabilityRequest->decision;
 
         if ($decisaoExpresso !== null && $decisaoExpresso->flow === 'expresso') {
-            return $this->showExpresso($request, $viabilityRequest, $decisaoExpresso);
+            return $this->showExpresso($viabilityRequest, $decisaoExpresso);
         }
 
         abort_unless($request->user()?->can('analisar-processos'), 403);
@@ -127,8 +127,6 @@ class AnalysisRecordController extends Controller
             'localizacao' => $this->localizacaoDoImovel($viabilityRequest, $cadastro),
             'dadosTvl' => $this->dadosTvl($viabilityRequest, $record),
             'recepcao' => $this->recepcao($viabilityRequest),
-            'etapasMotor' => $this->etapasDoMotor($viabilityRequest),
-            'podeReprocessar' => (bool) request()->user()?->can('reprocessar-processos'),
             'cadastroImobiliario' => $cadastro,
             'tramitacao' => $this->tramitacao($viabilityRequest),
             'conclusaoOpcoes' => ConclusionOutcome::options(),
@@ -139,7 +137,7 @@ class AnalysisRecordController extends Controller
             // painel de abrigados quando a solicitação é a SEDE ativa da inscrição.
             'escritorioVirtual' => $this->escritorioVirtual($viabilityRequest, $record),
             'textosPadrao' => $this->textosPadraoAtivos(),
-            'autosaveDebounceMs' => (int) config('sile.analise.autosave.debounce_ms', 1500),
+            'autosaveDebounceMs' => (int) config('viabiliza.analise.autosave.debounce_ms', 1500),
             'iaFicha' => $this->iaFicha($viabilityRequest),
             // A consulta na ficha de análise não cria vistoria: só informa se já existe.
             'temFichaVistoria' => $viabilityRequest->inspection()->exists(),
@@ -163,7 +161,7 @@ class AnalysisRecordController extends Controller
      * (deferida ou indeferida): a tela mostra o que o motor fez e o resultado
      * de cada CNAE, sem criar revisão de análise humana.
      */
-    private function showExpresso(Request $request, ViabilityRequest $viabilityRequest, ViabilityDecision $decisao): Response
+    private function showExpresso(ViabilityRequest $viabilityRequest, ViabilityDecision $decisao): Response
     {
         $viabilityRequest->loadMissing(['company', 'decision.decidedBy']);
         $decisao->setRelation('viabilityRequest', $viabilityRequest);
@@ -200,9 +198,7 @@ class AnalysisRecordController extends Controller
             ],
             'decisao' => $decisaoPayload,
             'explicacao' => (new DecisionExplanationResource($this->explanations->explain($decisao)))->resolve(),
-            'etapasMotor' => $this->etapasDoMotor($viabilityRequest),
             'localizacao' => $this->localizacaoDoImovel($viabilityRequest, $cadastro),
-            'podeReprocessar' => (bool) $request->user()?->can('reprocessar-processos'),
         ]);
     }
 
@@ -706,31 +702,6 @@ class AnalysisRecordController extends Controller
     }
 
     /**
-     * Etapas do motor que dependem de serviço de terceiro, na ordem em que rodam.
-     *
-     * @return list<array<string, mixed>>
-     */
-    private function etapasDoMotor(ViabilityRequest $processo): array
-    {
-        return $processo->etapas()
-            ->get()
-            ->sortBy(fn ($etapa) => $etapa->etapa->ordem())
-            ->map(fn ($etapa): array => [
-                'etapa' => $etapa->etapa->value,
-                'rotulo' => $etapa->etapa->rotulo(),
-                'servico' => $etapa->servico,
-                'situacao' => $etapa->situacao->value,
-                'situacao_rotulo' => $etapa->situacao->rotulo(),
-                'motivo' => $etapa->motivo,
-                'tentativas' => $etapa->tentativas,
-                'proxima_tentativa_em' => $etapa->proxima_tentativa_em?->toIso8601String(),
-                'esgotada' => $etapa->esgotada_em !== null,
-            ])
-            ->values()
-            ->all();
-    }
-
-    /**
      * Declaração recebida no POST. Null quando o processo não entrou por ela.
      *
      * @return array<string, mixed>|null
@@ -831,9 +802,9 @@ class AnalysisRecordController extends Controller
             'abrigados' => $abrigados,
             'cnae_gatilho' => (string) Settings::get(
                 'analise.escritorio_virtual.cnae_gatilho_sede',
-                config('sile.analise.escritorio_virtual.cnae_gatilho_sede', '8211-3/00'),
+                config('viabiliza.analise.escritorio_virtual.cnae_gatilho_sede', '8211-3/00'),
             ),
-            'flag_analise_sede' => (string) config('sile.analise.escritorio_virtual.flag_analise_sede'),
+            'flag_analise_sede' => (string) config('viabiliza.analise.escritorio_virtual.flag_analise_sede'),
         ];
     }
 

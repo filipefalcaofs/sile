@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Cidadao;
 use App\Models\User;
 
 return [
@@ -40,12 +41,10 @@ return [
     'guards' => [
         'web' => [
             'driver' => 'session',
-            'provider' => 'users',
+            'provider' => 'cidadaos',
         ],
 
-        // Sessão independente da retaguarda: estar logado no portal do
-        // cidadão não significa nada na gestão, e vice-versa. Mesma tabela
-        // de usuários; o que separa os ambientes é a sessão por guard.
+        // Retaguarda: contas de servidor em `users`, sessão independente do portal.
         'gestao' => [
             'driver' => 'session',
             'provider' => 'users',
@@ -75,10 +74,11 @@ return [
             'model' => env('AUTH_MODEL', User::class),
         ],
 
-        // 'users' => [
-        //     'driver' => 'database',
-        //     'table' => 'users',
-        // ],
+        // Driver próprio: só resolve cidadão com senha (registro de balcão não vira sessão).
+        'cidadaos' => [
+            'driver' => 'cidadaos',
+            'model' => Cidadao::class,
+        ],
     ],
 
     /*
@@ -104,6 +104,13 @@ return [
         'users' => [
             'provider' => 'users',
             'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
+            'expire' => 60,
+            'throttle' => 60,
+        ],
+
+        'cidadaos' => [
+            'provider' => 'cidadaos',
+            'table' => 'cidadao_password_reset_tokens',
             'expire' => 60,
             'throttle' => 60,
         ],

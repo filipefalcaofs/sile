@@ -3,8 +3,8 @@
 namespace Tests\Feature\Procuration;
 
 use App\Http\Middleware\ResolveRepresentation;
+use App\Models\Cidadao;
 use App\Models\Procuration;
-use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Route;
@@ -25,13 +25,13 @@ class RevokeAttorneyTest extends TestCase
     /**
      * Cidadão habilitado a navegar no portal (papel + termo LGPD aceito).
      */
-    private function portalUser(): User
+    private function portalUser(): Cidadao
     {
-        return User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        return Cidadao::factory()->withAcceptedLgpdTerm()->create();
     }
 
     /**
-     * @return array{0: User, 1: User, 2: Procuration}
+     * @return array{0: Cidadao, 1: Cidadao, 2: Procuration}
      */
     private function activeProcuration(): array
     {
@@ -39,8 +39,8 @@ class RevokeAttorneyTest extends TestCase
         $attorney = $this->portalUser();
 
         $procuration = Procuration::factory()->create([
-            'grantor_user_id' => $grantor->id,
-            'attorney_user_id' => $attorney->id,
+            'grantor_cidadao_id' => $grantor->id,
+            'attorney_cidadao_id' => $attorney->id,
         ]);
 
         return [$grantor, $attorney, $procuration];
@@ -58,7 +58,7 @@ class RevokeAttorneyTest extends TestCase
         $procuration->refresh();
 
         $this->assertNotNull($procuration->revoked_at);
-        $this->assertSame($grantor->id, $procuration->revoked_by_user_id);
+        $this->assertSame($grantor->id, $procuration->revoked_by_cidadao_id);
     }
 
     public function test_revogacao_gera_auditoria(): void
@@ -86,7 +86,7 @@ class RevokeAttorneyTest extends TestCase
 
         $this->assertDatabaseHas('activity_log', [
             'event' => 'representacao-iniciada',
-            'acting_for_user_id' => $grantor->id,
+            'acting_for_cidadao_id' => $grantor->id,
         ]);
     }
 
@@ -110,7 +110,7 @@ class RevokeAttorneyTest extends TestCase
         $this->assertDatabaseHas('activity_log', [
             'log_name' => 'teste',
             'description' => 'Ação em representação',
-            'acting_for_user_id' => $grantor->id,
+            'acting_for_cidadao_id' => $grantor->id,
         ]);
     }
 
@@ -160,8 +160,8 @@ class RevokeAttorneyTest extends TestCase
         $attorney = $this->portalUser();
 
         $procuration = Procuration::factory()->expired()->create([
-            'grantor_user_id' => $grantor->id,
-            'attorney_user_id' => $attorney->id,
+            'grantor_cidadao_id' => $grantor->id,
+            'attorney_cidadao_id' => $attorney->id,
         ]);
 
         $this->actingAs($attorney)

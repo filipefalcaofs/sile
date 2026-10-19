@@ -3,9 +3,9 @@
 namespace Tests\Feature\Solicitacao;
 
 use App\Enums\CompanyLinkRole;
+use App\Models\Cidadao;
 use App\Models\Company;
 use App\Models\Procuration;
-use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -35,20 +35,20 @@ class CriarSolicitacaoTest extends TestCase
     /**
      * Cidadão habilitado a navegar no portal (papel + termo LGPD aceito).
      */
-    private function portalUser(): User
+    private function portalUser(): Cidadao
     {
-        return User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        return Cidadao::factory()->withAcceptedLgpdTerm()->create();
     }
 
     /**
      * Empresa com vínculo ATIVO do usuário (Fase 3).
      */
-    private function companyLinkedTo(User $user): Company
+    private function companyLinkedTo(Cidadao $user): Company
     {
         $company = Company::factory()->create();
 
         $company->links()->create([
-            'user_id' => $user->id,
+            'cidadao_id' => $user->id,
             'role' => CompanyLinkRole::Responsavel,
             'started_at' => now(),
         ]);
@@ -73,8 +73,8 @@ class CriarSolicitacaoTest extends TestCase
         $this->assertDatabaseHas('viability_requests', [
             'company_id' => $company->id,
             'service_type_id' => $serviceType->id,
-            'requester_user_id' => $user->id,
-            'created_by_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
+            'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
             'origin' => 'portal',
             'status' => 'rascunho',
         ]);
@@ -129,8 +129,8 @@ class CriarSolicitacaoTest extends TestCase
         $attorney = $this->portalUser();
 
         $proc = Procuration::factory()->create([
-            'grantor_user_id' => $grantor->id,
-            'attorney_user_id' => $attorney->id,
+            'grantor_cidadao_id' => $grantor->id,
+            'attorney_cidadao_id' => $attorney->id,
         ]);
 
         // A empresa é do REPRESENTADO; o procurador opera em nome dele.
@@ -147,13 +147,14 @@ class CriarSolicitacaoTest extends TestCase
 
         $request = ViabilityRequest::query()->where('company_id', $company->id)->first();
         $this->assertNotNull($request);
-        $this->assertSame($grantor->id, $request->requester_user_id);
-        $this->assertSame($attorney->id, $request->created_by_user_id);
+        $this->assertSame($grantor->id, $request->requester_cidadao_id);
+        $this->assertSame($attorney->id, $request->created_by_id);
+        $this->assertSame(Cidadao::class, $request->created_by_type);
 
         $this->assertDatabaseHas('activity_log', [
             'subject_type' => $request->getMorphClass(),
             'event' => 'created',
-            'acting_for_user_id' => $grantor->id,
+            'acting_for_cidadao_id' => $grantor->id,
         ]);
     }
 
@@ -166,7 +167,7 @@ class CriarSolicitacaoTest extends TestCase
         // Processo anterior recente (protocolada) da MESMA empresa.
         $previous = ViabilityRequest::factory()->protocoled()->create([
             'company_id' => $company->id,
-            'requester_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
         ]);
 
         $this->actingAs($user)
@@ -214,12 +215,12 @@ class CriarSolicitacaoTest extends TestCase
 
         $mine = ViabilityRequest::factory()->protocoled()->create([
             'company_id' => $companyA->id,
-            'requester_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
             'protocol_number' => 'VIA-2026-000010',
         ]);
         ViabilityRequest::factory()->protocoled()->create([
             'company_id' => $companyB->id,
-            'requester_user_id' => $other->id,
+            'requester_cidadao_id' => $other->id,
             'protocol_number' => 'VIA-2026-000011',
         ]);
 

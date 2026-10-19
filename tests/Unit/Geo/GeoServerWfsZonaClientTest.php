@@ -26,9 +26,9 @@ class GeoServerWfsZonaClientTest extends TestCase
         Http::preventStrayRequests();
 
         config([
-            'sile.features.geoserver_zona' => true,
-            'sile.integrations.geoserver.backoff_ms' => 0,
-            'sile.integrations.geoserver.retries' => 0,
+            'viabiliza.features.geoserver_zona' => true,
+            'viabiliza.integrations.geoserver.backoff_ms' => 0,
+            'viabiliza.integrations.geoserver.retries' => 0,
         ]);
 
         GeoServerLayer::factory()->create([

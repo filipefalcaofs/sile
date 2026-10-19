@@ -3,6 +3,7 @@
 namespace App\Services\Viabilidade;
 
 use App\Enums\ResultadoViabilidade;
+use App\Services\Decisao\DecisionTextCatalog;
 use App\Services\Geo\GeocodeResult;
 use App\Services\Geo\TerritoryResult;
 use App\Services\Louos\EnquadramentoResult;
@@ -36,7 +37,25 @@ final readonly class ConsultaViabilidadeResult
         public EnquadramentoResult $enquadramento,
         public RiscoResult $risco,
         public array $avisos = [],
+        private ?ConfiabilidadeConsultaResultado $confiabilidadeResolvida = null,
     ) {}
+
+    /**
+     * Cópia do resultado com a confiabilidade já resolvida (calculada uma única vez
+     * pelo serviço e reutilizada no payload, na auditoria e no histórico).
+     */
+    public function comConfiabilidade(ConfiabilidadeConsultaResultado $confiabilidade): self
+    {
+        return new self(
+            $this->entrada,
+            $this->geocode,
+            $this->territory,
+            $this->enquadramento,
+            $this->risco,
+            $this->avisos,
+            $confiabilidade,
+        );
+    }
 
     /**
      * Veredito locacional PROPAGADO do consolidado do motor LOUOS — não decidido
@@ -54,6 +73,16 @@ final readonly class ConsultaViabilidadeResult
             'label' => ResultadoViabilidade::from($resultado)->label(),
             'motivo' => $this->enquadramento->consolidado['motivo'] ?? null,
         ];
+    }
+
+    /**
+     * Confiabilidade do resultado (conclusiva, incompleta, inconclusiva), derivada
+     * do que os motores devolveram — não decide veredito.
+     */
+    public function confiabilidade(): ConfiabilidadeConsultaResultado
+    {
+        return $this->confiabilidadeResolvida
+            ?? (new ConfiabilidadeConsultaResolver(new DecisionTextCatalog))->resolver($this);
     }
 
     /**
@@ -103,6 +132,7 @@ final readonly class ConsultaViabilidadeResult
             'risco' => $this->risco->toArray(),
             'restricoes' => $this->territory?->restricoes,
             'veredito_locacional' => $this->vereditoLocacional(),
+            'confiabilidade' => $this->confiabilidade()->toArray(),
             'fundamentacao' => $this->fundamentacao(),
             'avisos' => $this->avisos,
             'versoes' => $this->versoes(),

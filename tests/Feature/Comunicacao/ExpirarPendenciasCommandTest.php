@@ -75,7 +75,7 @@ class ExpirarPendenciasCommandTest extends TestCase
 
         $this->assertDatabaseHas('communications', [
             'viability_request_id' => $processo->id,
-            'recipient_user_id' => $analista->id,
+            'recipient_type' => $analista->getMorphClass(), 'recipient_id' => $analista->id,
             'type' => CommunicationType::PendenciaExpirada->value,
         ]);
         NotificationFacade::assertSentTo($analista, PendenciaExpiradaNotification::class);

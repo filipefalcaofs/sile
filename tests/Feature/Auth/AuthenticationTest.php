@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Models\Cidadao;
 use App\Models\User;
 use App\Support\Settings;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -31,7 +32,7 @@ class AuthenticationTest extends TestCase
 
     public function test_cidadao_autentica_com_cpf_e_vai_para_o_portal(): void
     {
-        $user = User::factory()->cidadao()->create();
+        $user = Cidadao::factory()->create();
 
         $response = $this->post('/portal/login', [
             'cpf' => $user->cpf,
@@ -44,7 +45,7 @@ class AuthenticationTest extends TestCase
 
     public function test_cpf_com_mascara_tambem_autentica(): void
     {
-        $user = User::factory()->cidadao()->create();
+        $user = Cidadao::factory()->create();
 
         $masked = preg_replace('/(\d{3})(\d{3})(\d{3})(\d{2})/', '$1.$2.$3-$4', $user->cpf);
 
@@ -61,21 +62,23 @@ class AuthenticationTest extends TestCase
     {
         // Ambientes independentes: o login do portal nunca leva à gestão —
         // o console tem login próprio em /gestao/login (guard gestao).
-        $user = User::factory()->administrador()->create();
+        // A mesma pessoa tem as duas contas: o portal só autentica a de cidadão.
+        $administrador = User::factory()->administrador()->create();
+        $cidadao = Cidadao::factory()->create(['cpf' => $administrador->cpf, 'email' => $administrador->email]);
 
         $response = $this->post('/portal/login', [
-            'cpf' => $user->cpf,
+            'cpf' => $administrador->cpf,
             'password' => 'password',
         ]);
 
-        $this->assertAuthenticatedAs($user, 'web');
+        $this->assertAuthenticatedAs($cidadao, 'web');
         $this->assertGuest('gestao');
         $response->assertRedirect('/portal/painel');
     }
 
     public function test_login_gera_registro_no_historico_de_acessos(): void
     {
-        $user = User::factory()->cidadao()->create();
+        $user = Cidadao::factory()->create();
 
         $this->post('/portal/login', [
             'cpf' => $user->cpf,
@@ -83,7 +86,7 @@ class AuthenticationTest extends TestCase
         ]);
 
         $this->assertDatabaseHas('access_logs', [
-            'user_id' => $user->id,
+            'actor_type' => $user->getMorphClass(), 'actor_id' => $user->id,
             'event' => 'login',
             'ip_address' => '127.0.0.1',
         ]);
@@ -91,7 +94,7 @@ class AuthenticationTest extends TestCase
 
     public function test_credencial_invalida_nao_autentica_e_registra_falha(): void
     {
-        $user = User::factory()->cidadao()->create();
+        $user = Cidadao::factory()->create();
 
         $response = $this->post('/portal/login', [
             'cpf' => $user->cpf,
@@ -103,7 +106,7 @@ class AuthenticationTest extends TestCase
 
         // A trilha resolve o titular pelo CPF e registra o e-mail da conta.
         $this->assertDatabaseHas('access_logs', [
-            'user_id' => $user->id,
+            'actor_type' => $user->getMorphClass(), 'actor_id' => $user->id,
             'email' => $user->email,
             'event' => 'falha',
         ]);
@@ -128,9 +131,9 @@ class AuthenticationTest extends TestCase
 
     public function test_bloqueio_temporario_apos_tentativas_excedidas(): void
     {
-        config(['sile.security.login.max_attempts' => 3]);
+        config(['viabiliza.security.login.max_attempts' => 3]);
 
-        $user = User::factory()->cidadao()->create();
+        $user = Cidadao::factory()->create();
 
         $max = (int) Settings::get('security.login.max_attempts');
 
@@ -160,9 +163,9 @@ class AuthenticationTest extends TestCase
 
     public function test_mascara_no_cpf_nao_burla_o_limite_de_tentativas(): void
     {
-        config(['sile.security.login.max_attempts' => 3]);
+        config(['viabiliza.security.login.max_attempts' => 3]);
 
-        $user = User::factory()->cidadao()->create();
+        $user = Cidadao::factory()->create();
 
         $masked = preg_replace('/(\d{3})(\d{3})(\d{3})(\d{2})/', '$1.$2.$3-$4', $user->cpf);
 
@@ -188,21 +191,21 @@ class AuthenticationTest extends TestCase
 
     public function test_logout_encerra_sessao_e_registra(): void
     {
-        $user = User::factory()->cidadao()->create();
+        $user = Cidadao::factory()->create();
 
         $this->actingAs($user)->post('/portal/logout');
 
         $this->assertGuest();
 
         $this->assertDatabaseHas('access_logs', [
-            'user_id' => $user->id,
+            'actor_type' => $user->getMorphClass(), 'actor_id' => $user->id,
             'event' => 'logout',
         ]);
     }
 
     public function test_intended_da_gestao_e_descartado_no_login_do_portal(): void
     {
-        $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $user = Cidadao::factory()->withAcceptedLgpdTerm()->create();
 
         // Visita guest a uma rota da gestão salva a URL pretendida na sessão.
         $this->get('/gestao/cnaes')->assertRedirect('/gestao/login');
@@ -220,6 +223,7 @@ class AuthenticationTest extends TestCase
     public function test_servidor_logando_no_portal_tambem_fica_no_portal(): void
     {
         $administrador = User::factory()->administrador()->withAcceptedLgpdTerm()->create();
+        $cidadao = Cidadao::factory()->withAcceptedLgpdTerm()->create(['cpf' => $administrador->cpf]);
 
         $this->get('/gestao/cnaes')->assertRedirect('/gestao/login');
 
@@ -229,11 +233,13 @@ class AuthenticationTest extends TestCase
         ]);
 
         $response->assertRedirect(route('portal.dashboard'));
+        $this->assertAuthenticatedAs($cidadao, 'web');
+        $this->assertGuest('gestao');
     }
 
     public function test_cidadao_logado_no_portal_nao_entra_na_gestao(): void
     {
-        $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $user = Cidadao::factory()->withAcceptedLgpdTerm()->create();
 
         $this->post('/portal/login', [
             'cpf' => $user->cpf,

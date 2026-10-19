@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Enums\ViabilityRequestStatus;
 use App\Models\Cnae;
 use App\Models\ViabilityRequest;
 use App\Services\Expresso\DecisionResult;
@@ -81,6 +82,13 @@ class ExpressoDecidirCommand extends Command
         $this->line('Resultado: '.mb_strtoupper($result->status->label()));
 
         $decision = $result->decision;
+
+        if ($decision === null && $result->status === ViabilityRequestStatus::Protocolada) {
+            $this->line("Motivo: {$result->reason}");
+            $this->line('Nenhuma decisão emitida — o processo aguarda a próxima tentativa do motor.');
+
+            return;
+        }
 
         if ($decision !== null) {
             $this->line('Desfecho: '.mb_strtoupper($decision->outcome->label()));

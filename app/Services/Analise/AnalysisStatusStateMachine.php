@@ -4,6 +4,7 @@ namespace App\Services\Analise;
 
 use App\Enums\AnalysisStatus;
 use App\Models\AnalysisStatusTransition;
+use App\Models\Cidadao;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Support\Audit\AuditService;
@@ -22,7 +23,8 @@ class AnalysisStatusStateMachine
         'para_distribuir' => ['encaminhado'],
         'encaminhado' => ['analisar'],
         'analisar' => ['em_analise'],
-        'em_analise' => ['analise_concluida', 'em_convite', 'vistoriar'],
+        'em_analise' => ['para_conclusao', 'analise_concluida', 'em_convite', 'vistoriar'],
+        'para_conclusao' => ['analise_concluida', 'em_analise'],
         'em_convite' => ['convite_respondido', 'convite_cancelado', 'convite_expirado'],
         'convite_respondido' => ['em_analise'],
         'convite_cancelado' => ['em_analise'],
@@ -44,7 +46,7 @@ class AnalysisStatusStateMachine
     public function transition(
         ViabilityRequest $request,
         AnalysisStatus $to,
-        ?User $actor = null,
+        User|Cidadao|null $actor = null,
         ?string $reason = null,
         bool $force = false,
     ): AnalysisStatusTransition {
@@ -54,13 +56,20 @@ class AnalysisStatusStateMachine
             throw InvalidAnalysisStatusTransitionException::para($from, $to);
         }
 
-        $request->forceFill(['analysis_status' => $to])->save();
+        $request->forceFill(['analysis_status' => $to]);
+
+        if ($to !== AnalysisStatus::ParaConclusao) {
+            $request->forceFill(['conclusao_encaminhada_para_user_id' => null]);
+        }
+
+        $request->save();
 
         $transition = $request->analysisStatusTransitions()->create([
             'from_status' => $from,
             'to_status' => $to,
             'reason' => $reason,
-            'actor_user_id' => $actor?->id,
+            // actor_user_id referencia users: ator cidadão (ex.: renovação) não é gravado aqui.
+            'actor_user_id' => $actor instanceof User ? $actor->id : null,
         ]);
 
         $this->audit->log(

@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Settings;
 
-use App\Models\User;
+use App\Models\Cidadao;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -22,7 +22,7 @@ class PasswordUpdateTest extends TestCase
 
     public function test_pagina_de_alteracao_de_senha_renderiza(): void
     {
-        $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $user = Cidadao::factory()->withAcceptedLgpdTerm()->create();
 
         $this->actingAs($user)
             ->get('/portal/conta/senha')
@@ -32,7 +32,7 @@ class PasswordUpdateTest extends TestCase
 
     public function test_senha_e_alterada_com_dados_validos(): void
     {
-        $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $user = Cidadao::factory()->withAcceptedLgpdTerm()->create();
 
         $response = $this->actingAs($user)->put('/portal/conta/senha', [
             'current_password' => 'password',
@@ -47,7 +47,7 @@ class PasswordUpdateTest extends TestCase
 
     public function test_alteracao_gera_auditoria(): void
     {
-        $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $user = Cidadao::factory()->withAcceptedLgpdTerm()->create();
 
         $this->actingAs($user)->put('/portal/conta/senha', [
             'current_password' => 'password',
@@ -65,7 +65,7 @@ class PasswordUpdateTest extends TestCase
 
     public function test_senha_atual_incorreta_bloqueia(): void
     {
-        $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $user = Cidadao::factory()->withAcceptedLgpdTerm()->create();
 
         $response = $this->actingAs($user)->put('/portal/conta/senha', [
             'current_password' => 'senha-errada',
@@ -80,7 +80,7 @@ class PasswordUpdateTest extends TestCase
 
     public function test_nova_senha_fora_da_politica_bloqueia(): void
     {
-        $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $user = Cidadao::factory()->withAcceptedLgpdTerm()->create();
 
         $response = $this->actingAs($user)->put('/portal/conta/senha', [
             'current_password' => 'password',

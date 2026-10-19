@@ -38,10 +38,21 @@ describe('enunciadoSemOpcoes', () => {
         ).toBe('No local funcionará:');
     });
 
-    it('não mexe no enunciado de pergunta Sim/Não com as opções no texto', () => {
+    it('não mexe no enunciado de pergunta Sim/Não quando as opções não vêm listadas', () => {
         const texto = 'A atividade será desenvolvida no local?\n1. Sim, no local.\n2. Não, escritório.';
 
         expect(enunciadoSemOpcoes(texto, [])).toBe(texto);
+    });
+
+    it('tira Sim e Não do enunciado quando as opções vêm listadas', () => {
+        const texto = 'A atividade será desenvolvida no local?\n1. Sim\n2. Não';
+
+        expect(
+            enunciadoSemOpcoes(texto, [
+                { rotulo: '1', texto: 'Sim' },
+                { rotulo: '2', texto: 'Não' },
+            ]),
+        ).toBe('A atividade será desenvolvida no local?');
     });
 });
 

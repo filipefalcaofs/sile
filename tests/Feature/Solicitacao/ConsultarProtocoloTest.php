@@ -3,8 +3,8 @@
 namespace Tests\Feature\Solicitacao;
 
 use App\Enums\ViabilityRequestStatus;
+use App\Models\Cidadao;
 use App\Models\Parameter;
-use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Solicitacao\ProtocolarSolicitacaoService;
@@ -36,9 +36,9 @@ class ConsultarProtocoloTest extends TestCase
     /**
      * Cidadão habilitado a navegar no portal (papel + termo LGPD aceito).
      */
-    private function portalUser(): User
+    private function portalUser(): Cidadao
     {
-        return User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        return Cidadao::factory()->withAcceptedLgpdTerm()->create();
     }
 
     private function timeline(): TimelineSolicitacao
@@ -50,11 +50,11 @@ class ConsultarProtocoloTest extends TestCase
      * Solicitação PROTOCOLADA de verdade (número único + transição real) cujo
      * requerente é o usuário — caminho anti-fachada (sem inventar timeline).
      */
-    private function protocoladaDoUsuario(User $user): ViabilityRequest
+    private function protocoladaDoUsuario(Cidadao $user): ViabilityRequest
     {
         $solicitacao = ViabilityRequest::factory()->draft()->withPrimaryCnae()->create([
-            'requester_user_id' => $user->id,
-            'created_by_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
+            'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
             'used_area_m2' => 120.0,
         ]);
 
@@ -70,8 +70,8 @@ class ConsultarProtocoloTest extends TestCase
         // motivo interno e o rótulo técnico NÃO são expostos (LGPD).
         $user = $this->portalUser();
         $solicitacao = ViabilityRequest::factory()->draft()->withPrimaryCnae()->create([
-            'requester_user_id' => $user->id,
-            'created_by_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
+            'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
         ]);
 
         // Transição REAL rascunho→protocolada — fonte da timeline.
@@ -122,8 +122,8 @@ class ConsultarProtocoloTest extends TestCase
         // derivada do status REAL, nunca inventada. Sem transições ainda.
         $user = $this->portalUser();
         $solicitacao = ViabilityRequest::factory()->draft()->create([
-            'requester_user_id' => $user->id,
-            'created_by_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
+            'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
         ]);
 
         $timeline = $this->timeline()->build($solicitacao, publico: false);

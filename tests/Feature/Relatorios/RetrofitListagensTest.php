@@ -3,6 +3,7 @@
 namespace Tests\Feature\Relatorios;
 
 use App\Models\AccessLog;
+use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\Parameter;
 use App\Models\User;
@@ -167,6 +168,23 @@ class RetrofitListagensTest extends TestCase
         $this->assertFalse($nomes('portal')->contains('Servidora AD Sem Papel'));
     }
 
+    public function test_export_da_aba_gestao_inclui_servidores_sem_acesso_a_gestao(): void
+    {
+        $fiscal = User::factory()->create(['name' => 'Fiscal Herdado Export']);
+        $fiscal->assignRole('Fiscal');
+        User::factory()->create(['name' => 'Sem Perfil Export']);
+        Cidadao::factory()->create(['name' => 'Cidada Export']);
+
+        $conteudo = $this->actingAs($this->admin(), 'gestao')
+            ->get('/gestao/usuarios?formato=csv')
+            ->assertOk()
+            ->streamedContent();
+
+        $this->assertStringContainsString('Fiscal Herdado Export', $conteudo);
+        $this->assertStringContainsString('Sem Perfil Export', $conteudo);
+        $this->assertStringNotContainsString('Cidada Export', $conteudo);
+    }
+
     public function test_export_csv_de_usuarios_reflete_busca_rn005(): void
     {
         User::factory()->analista()->create(['name' => 'Mariana Busca Presente']);
@@ -211,14 +229,14 @@ class RetrofitListagensTest extends TestCase
         $outro = User::factory()->create();
 
         AccessLog::factory()->create([
-            'user_id' => $alvo->id,
+            'actor_type' => $alvo->getMorphClass(), 'actor_id' => $alvo->id,
             'email' => $alvo->email,
             'event' => 'login',
             'ip_address' => '10.0.0.7',
         ]);
 
         AccessLog::factory()->create([
-            'user_id' => $outro->id,
+            'actor_type' => $outro->getMorphClass(), 'actor_id' => $outro->id,
             'email' => $outro->email,
             'event' => 'login',
             'ip_address' => '10.9.9.9',
@@ -242,7 +260,7 @@ class RetrofitListagensTest extends TestCase
         $alvo = User::factory()->create();
 
         AccessLog::factory()->create([
-            'user_id' => $alvo->id,
+            'actor_type' => $alvo->getMorphClass(), 'actor_id' => $alvo->id,
             'email' => $alvo->email,
         ]);
 

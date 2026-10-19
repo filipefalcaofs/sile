@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Settings;
 
-use App\Actions\Fortify\UpdateUserPassword;
+use App\Actions\Fortify\UpdateCidadaoPassword;
 use App\Http\Controllers\Controller;
 use App\Support\PasswordPolicy;
 use Illuminate\Http\RedirectResponse;
@@ -23,7 +23,7 @@ class PasswordController extends Controller
      * Endpoint do portal (guard web). A rota do Fortify também atende, mas
      * a tela usa este endpoint sob /portal/conta para manter o ambiente.
      */
-    public function update(Request $request, UpdateUserPassword $updater): RedirectResponse
+    public function update(Request $request, UpdateCidadaoPassword $updater): RedirectResponse
     {
         $updater->update(
             $request->user('web'),

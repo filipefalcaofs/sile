@@ -3,6 +3,7 @@
 namespace App\Services\Solicitacao;
 
 use App\Enums\ViabilityRequestStatus;
+use App\Models\Cidadao;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Support\Audit\AuditService;
@@ -19,7 +20,7 @@ use Illuminate\Support\Facades\DB;
  * SEDUR. Fora dos estados canceláveis o cancelamento é BLOQUEADO com aviso e
  * auditado (RN-002, CA-03) — sem nada cancelar (anti-fachada).
  *
- * Dentro dos estados, grava cancelled_at/cancelled_reason/cancelled_by_user_id
+ * Dentro dos estados, grava cancelled_at/cancelled_reason/cancelled_by
  * e transiciona o status para Cancelada pela ViabilityRequestStateMachine (que
  * grava a timeline e audita a transição), tudo em UMA transação.
  */
@@ -30,7 +31,7 @@ class CancelarSolicitacaoService
         private AuditService $audit,
     ) {}
 
-    public function cancel(ViabilityRequest $request, User $actor, string $reason): void
+    public function cancel(ViabilityRequest $request, User|Cidadao $actor, string $reason): void
     {
         $cancelableStates = $this->cancelableStates();
 
@@ -56,7 +57,8 @@ class CancelarSolicitacaoService
             $request->forceFill([
                 'cancelled_at' => now(),
                 'cancelled_reason' => $reason,
-                'cancelled_by_user_id' => $actor->id,
+                'cancelled_by_type' => $actor->getMorphClass(),
+                'cancelled_by_id' => $actor->id,
             ])->save();
 
             $this->stateMachine->transition(
@@ -80,7 +82,7 @@ class CancelarSolicitacaoService
     {
         return Settings::get(
             'solicitacao.cancelamento.estados_cancelaveis',
-            config('sile.solicitacao.cancelamento.estados_cancelaveis', ['rascunho', 'protocolada']),
+            config('viabiliza.solicitacao.cancelamento.estados_cancelaveis', ['rascunho', 'protocolada']),
         );
     }
 }

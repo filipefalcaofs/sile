@@ -4,10 +4,12 @@ namespace Tests\Feature\Comunicacao;
 
 use App\Enums\AnalysisPendencyStatus;
 use App\Enums\AnalysisStage;
+use App\Enums\CommunicationChannel;
 use App\Enums\CommunicationStatus;
 use App\Enums\CommunicationType;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\AnalysisPendency;
+use App\Models\Cidadao;
 use App\Models\Communication;
 use App\Models\User;
 use App\Models\ViabilityRequest;
@@ -78,11 +80,15 @@ class AlertarVencimentosCommandTest extends TestCase
 
         $this->assertDatabaseHas('communications', [
             'viability_request_id' => $processo->id,
-            'recipient_user_id' => $analista->id,
+            'recipient_type' => $analista->getMorphClass(), 'recipient_id' => $analista->id,
             'type' => CommunicationType::PrazoVencendo->value,
             'status' => CommunicationStatus::NaFila->value,
         ]);
-        NotificationFacade::assertSentTo($analista, PrazoVencendoNotification::class);
+        NotificationFacade::assertSentTo(
+            $analista,
+            PrazoVencendoNotification::class,
+            fn (PrazoVencendoNotification $notification): bool => $notification->channels() === [CommunicationChannel::InApp],
+        );
 
         // SÓ notifica: o status do processo não muda (anti-dupla-contagem HU-129).
         $this->assertSame(ViabilityRequestStatus::EmAnalise, $processo->refresh()->status);
@@ -109,10 +115,10 @@ class AlertarVencimentosCommandTest extends TestCase
     public function test_pendencia_aberta_vencendo_alerta_o_requerente(): void
     {
         NotificationFacade::fake();
-        $requerente = User::factory()->create();
+        $requerente = Cidadao::factory()->create();
         $processo = ViabilityRequest::factory()->create([
             'status' => ViabilityRequestStatus::EmPendencia,
-            'requester_user_id' => $requerente->id,
+            'requester_cidadao_id' => $requerente->id,
             'protocol_number' => 'VIA-'.now()->year.'-900001',
             'protocoled_at' => now(),
         ]);
@@ -126,10 +132,14 @@ class AlertarVencimentosCommandTest extends TestCase
 
         $this->assertDatabaseHas('communications', [
             'viability_request_id' => $processo->id,
-            'recipient_user_id' => $requerente->id,
+            'recipient_type' => $requerente->getMorphClass(), 'recipient_id' => $requerente->id,
             'type' => CommunicationType::PrazoVencendo->value,
         ]);
-        NotificationFacade::assertSentTo($requerente, PrazoVencendoNotification::class);
+        NotificationFacade::assertSentTo(
+            $requerente,
+            PrazoVencendoNotification::class,
+            fn (PrazoVencendoNotification $notification): bool => $notification->channels() === [CommunicationChannel::Email, CommunicationChannel::InApp],
+        );
     }
 
     public function test_rodar_duas_vezes_nao_duplica_communications(): void

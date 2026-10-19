@@ -5,7 +5,6 @@ namespace Tests\Feature\Geo;
 use App\Enums\GeoLayerStatus;
 use App\Enums\GeoLayerType;
 use App\Models\GeoLayer;
-use Database\Seeders\ZonaFicticiaDevSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Spatie\Activitylog\Models\Activity;
 use Tests\TestCase;
@@ -33,16 +32,5 @@ class EncerrarCamadaGeoCommandTest extends TestCase
     public function test_versao_inexistente_falha(): void
     {
         $this->artisan('geo:encerrar-camada', ['type' => 'zona', 'versao' => 'nao-existe'])->assertFailed();
-    }
-
-    public function test_zona_ficticia_nunca_e_permitida_em_producao_mesmo_com_dados_de_demonstracao(): void
-    {
-        config(['sile.demo_data' => true]);
-
-        $this->assertTrue(ZonaFicticiaDevSeeder::permitido());
-
-        $this->app['env'] = 'production';
-
-        $this->assertFalse(ZonaFicticiaDevSeeder::permitido());
     }
 }

@@ -45,7 +45,7 @@ class ParameterSeeder extends Seeder
     /**
      * Chaves que saíram do painel: texto, throttle, janela de tela e
      * interruptor de módulo que o produto não desliga. O re-seed apaga a
-     * linha antiga para o valor ficar só no código (config/sile.php).
+     * linha antiga para o valor ficar só no código (config/viabiliza.php).
      *
      * @return list<string>
      */
@@ -64,7 +64,6 @@ class ParameterSeeder extends Seeder
             'seguranca.throttle.geocoding.por_minuto',
             'geo.zona.atributos_nome',
             'louos.sandbox.amostra_padrao',
-            'features.consulta_viabilidade',
             'seguranca.throttle.consulta_viabilidade.por_minuto',
             'features.solicitacao_viabilidade',
             'features.simulacao_solicitacao',
@@ -140,13 +139,6 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'integer', 'min:1', 'max:20'],
                 'description' => 'Tentativas de login antes do bloqueio temporário',
             ],
-            'portal.perfil_cidadao' => [
-                'group' => 'seguranca',
-                'type' => 'string',
-                'default_value' => 'cidadao',
-                'validation_rules' => ['required', 'string', 'exists:roles,name'],
-                'description' => 'Perfil atribuído no autocadastro e no login gov.br do cidadão',
-            ],
             'security.password_reset_expire' => [
                 'group' => 'seguranca',
                 'type' => 'integer',
@@ -182,6 +174,20 @@ class ParameterSeeder extends Seeder
                 'default_value' => '1',
                 'validation_rules' => ['required', 'boolean'],
                 'description' => 'Habilita a autenticação de servidores via AD (API institucional SEDUR) no console; desligar bloqueia o login das contas AD com aviso explícito',
+            ],
+            'features.consulta_viabilidade' => [
+                'group' => 'features',
+                'type' => 'boolean',
+                'default_value' => '1',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'Habilita a consulta prévia de viabilidade do portal. Desligada, só a página e as consultas ficam indisponíveis com aviso; os demais serviços do portal e o histórico das consultas já feitas continuam',
+            ],
+            'features.portal_servicos' => [
+                'group' => 'features',
+                'type' => 'boolean',
+                'default_value' => '0',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'Habilita os serviços do portal do cidadão (consulta, solicitação, renovação, empresas e procurações). Desligado, esses serviços ficam indisponíveis com aviso; painel, notificações e conta continuam',
             ],
             'integrations.govbr.em_producao' => [
                 'group' => 'integracoes',
@@ -353,6 +359,14 @@ class ParameterSeeder extends Seeder
                 'default_value' => 'https://geo.salvador.ba.gov.br/arcgis/rest/services/MAPA_BASE/MAPA_BASE_SEFAZ/MapServer/18/query',
                 'validation_rules' => ['required', 'url'],
                 'description' => 'URL de consulta da camada SEMAP (Inscrições Geo) do ArcGIS municipal',
+            ],
+            'integrations.arcgis_semap.token' => [
+                'group' => 'integracoes',
+                'type' => 'string',
+                'sensitive' => true,
+                'default_value' => null,
+                'validation_rules' => ['nullable', 'string', 'max:2048'],
+                'description' => 'Token do Portal ArcGIS da Prefeitura para a camada SEMAP (armazenado criptografado, nunca reexibido)',
             ],
             'features.geoserver_territorio' => [
                 'group' => 'features',
@@ -649,7 +663,7 @@ class ParameterSeeder extends Seeder
             // (provedor real bloqueado até a Fase 13 — degradação honesta).
             // Constantes técnicas de storage (disk dos documentos e do TVL PDF),
             // padding de números de protocolo/TVL, timeout/retries/backoff da
-            // consulta de CNPJ e paginações de listagem ficam em config/sile.php
+            // consulta de CNPJ e paginações de listagem ficam em config/viabiliza.php
             // — não são valores de negócio e não precisam ser administráveis.
             'features.notificacao_email' => [
                 'group' => 'features',
@@ -668,7 +682,7 @@ class ParameterSeeder extends Seeder
             'notificacoes.mapa_canais' => [
                 'group' => 'notificacoes',
                 'type' => 'json',
-                'default_value' => '{"pendencia_aberta":["email","in_app"],"pendencia_respondida":["in_app"],"pendencia_expirada":["email","in_app"],"prazo_vencendo":["email","in_app"],"escalonamento_sla":["email","in_app"],"resultado":["email","in_app"]}',
+                'default_value' => '{"pendencia_aberta":["email","in_app"],"pendencia_respondida":["in_app"],"pendencia_expirada":["in_app"],"prazo_vencendo":["email","in_app"],"escalonamento_sla":["in_app"],"resultado":["email","in_app"]}',
                 'validation_rules' => ['required', 'json'],
                 'description' => 'Canais por tipo de notificação. O canal oficial ao requerente é o e-mail',
             ],
@@ -746,7 +760,7 @@ class ParameterSeeder extends Seeder
             ],
             // Auditoria e compliance (EP12). O toggle de detecção de abuso
             // (HU-149) nasce DESLIGADO (nunca pune — só registra alerta e
-            // encaminha à malha fina). Paginação da trilha fica em config/sile.php.
+            // encaminha à malha fina). Paginação da trilha fica em config/viabiliza.php.
             'features.deteccao_abuso' => [
                 'group' => 'features',
                 'type' => 'boolean',
@@ -799,7 +813,7 @@ class ParameterSeeder extends Seeder
                 'description' => 'Dias de retenção dos arquivos de exportação gerados em segundo plano',
             ],
             // Meta da taxa de resposta expressa: nasce SEM valor (pendência SEDUR).
-            // default null + NÃO espelhada no config/sile.php → Settings::get cai
+            // default null + NÃO espelhada no config/viabiliza.php → Settings::get cai
             // no fallback do call site ("meta não definida"), nunca inventa meta.
             'relatorios.expresso.meta_taxa' => [
                 'group' => 'relatorios',

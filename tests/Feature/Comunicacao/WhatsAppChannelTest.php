@@ -35,7 +35,7 @@ class WhatsAppChannelTest extends TestCase
         // captura, marca bloqueado e audita a pendência — nunca um envio fictício.
         $user = User::factory()->create(['phone' => '+5571999990000']);
         $request = ViabilityRequest::factory()->create();
-        $communication = $this->linhaWhatsAppNaFila($request->id, $user->id, CommunicationType::PendenciaAberta);
+        $communication = $this->linhaWhatsAppNaFila($request->id, $user, CommunicationType::PendenciaAberta);
 
         $user->notify($this->notificacaoWhatsApp($request->id, CommunicationType::PendenciaAberta, 'Você tem uma pendência.'));
 
@@ -62,7 +62,7 @@ class WhatsAppChannelTest extends TestCase
         // 13 trocar SÓ o binding. O canal injeta o destino E.164 do destinatário.
         $user = User::factory()->create(['phone' => '+5571988887777']);
         $request = ViabilityRequest::factory()->create();
-        $communication = $this->linhaWhatsAppNaFila($request->id, $user->id, CommunicationType::PendenciaAberta);
+        $communication = $this->linhaWhatsAppNaFila($request->id, $user, CommunicationType::PendenciaAberta);
 
         $spy = $this->gatewaySpy();
         $this->app->instance(WhatsAppGateway::class, $spy);
@@ -86,7 +86,7 @@ class WhatsAppChannelTest extends TestCase
         // envia, não marca enviado nem bloqueado).
         $user = User::factory()->create(['phone' => null]);
         $request = ViabilityRequest::factory()->create();
-        $communication = $this->linhaWhatsAppNaFila($request->id, $user->id, CommunicationType::PendenciaAberta);
+        $communication = $this->linhaWhatsAppNaFila($request->id, $user, CommunicationType::PendenciaAberta);
 
         $spy = $this->gatewaySpy();
         $this->app->instance(WhatsAppGateway::class, $spy);
@@ -101,11 +101,12 @@ class WhatsAppChannelTest extends TestCase
         );
     }
 
-    private function linhaWhatsAppNaFila(int $viabilityRequestId, int $recipientUserId, CommunicationType $type): Communication
+    private function linhaWhatsAppNaFila(int $viabilityRequestId, User $destinatario, CommunicationType $type): Communication
     {
         return Communication::factory()->whatsapp()->create([
             'viability_request_id' => $viabilityRequestId,
-            'recipient_user_id' => $recipientUserId,
+            'recipient_type' => $destinatario->getMorphClass(),
+            'recipient_id' => $destinatario->id,
             'type' => $type,
             'status' => CommunicationStatus::NaFila,
         ]);

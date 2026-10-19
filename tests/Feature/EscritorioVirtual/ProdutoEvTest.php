@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\EscritorioVirtual;
 
+use App\Models\Cidadao;
 use App\Models\Company;
 use App\Models\User;
 use App\Models\ViabilityDecision;
@@ -116,8 +117,7 @@ class ProdutoEvTest extends TestCase
     public function test_requerente_externo_nao_alcanca_o_pdf_do_produto(): void
     {
         // Requerente externo: cidadão autenticado no PORTAL (guard `web`).
-        $externo = User::factory()->withAcceptedLgpdTerm()->create();
-        $externo->assignRole('cidadao');
+        $externo = Cidadao::factory()->withAcceptedLgpdTerm()->create();
 
         $request = ViabilityRequest::factory()->protocoled()->create();
         ViabilityDecision::factory()->create([

@@ -4,7 +4,7 @@ namespace Tests\Feature\Analise;
 
 use App\Enums\AnalysisStatus;
 use App\Models\AnalysisRecord;
-use App\Models\User;
+use App\Models\Cidadao;
 use App\Models\ViabilityRequest;
 use App\Services\Analise\PrecedentRepository;
 use App\Services\Analise\PrecedentService;
@@ -71,10 +71,10 @@ class PrecedentServiceTest extends TestCase
      */
     private function fichaComSnapshot(?array $engineSnapshot, string $cpf = '52998224725'): AnalysisRecord
     {
-        $requester = User::factory()->create(['cpf' => $cpf]);
+        $requester = Cidadao::factory()->create(['cpf' => $cpf]);
 
         $request = ViabilityRequest::factory()->protocoled()->create([
-            'requester_user_id' => $requester->id,
+            'requester_cidadao_id' => $requester->id,
             'address_street' => 'Rua das Laranjeiras',
             'address_number' => '100',
         ]);
@@ -162,7 +162,7 @@ class PrecedentServiceTest extends TestCase
     {
         // RN-003: a quantidade exibida é parametrizável (HU-014). Settings::get
         // cai no fallback de config quando não há linha em parameters.
-        config(['sile.analise.precedentes.max_itens' => 1]);
+        config(['viabiliza.analise.precedentes.max_itens' => 1]);
 
         $ficha = $this->fichaComSnapshot(
             $this->snapshotComZona(['status' => 'indisponivel', 'nome' => null]),
@@ -181,7 +181,7 @@ class PrecedentServiceTest extends TestCase
 
     public function test_estatistica_do_cnae_na_zona_quando_ha_zona(): void
     {
-        config(['sile.analise.precedentes.janela_meses' => 12]);
+        config(['viabiliza.analise.precedentes.janela_meses' => 12]);
 
         $ficha = $this->fichaComSnapshot(
             $this->snapshotComZona(['status' => 'identificado', 'nome' => 'ZR-1'], '4712100'),

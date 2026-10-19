@@ -5,7 +5,7 @@ namespace Tests\Feature\Analise;
 use App\Enums\AnalysisPendencyStatus;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\AnalysisPendency;
-use App\Models\User;
+use App\Models\Cidadao;
 use App\Models\ViabilityRequest;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -34,9 +34,9 @@ class PendenciaRespostaPortalTest extends TestCase
     /**
      * Cidadão habilitado a navegar no portal (papel + termo LGPD aceito).
      */
-    private function portalUser(): User
+    private function portalUser(): Cidadao
     {
-        return User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        return Cidadao::factory()->withAcceptedLgpdTerm()->create();
     }
 
     /**
@@ -44,11 +44,11 @@ class PendenciaRespostaPortalTest extends TestCase
      * protocolo ÚNICO por solicitação (evita a colisão do protocoled() hardcoded
      * — armadilha herdada do 10-02 quando há mais de uma solicitação no teste).
      */
-    private function emPendenciaDoDono(User $owner): ViabilityRequest
+    private function emPendenciaDoDono(Cidadao $owner): ViabilityRequest
     {
         $request = ViabilityRequest::factory()->withPrimaryCnae()->create([
-            'requester_user_id' => $owner->id,
-            'created_by_user_id' => $owner->id,
+            'requester_cidadao_id' => $owner->id,
+            'created_by_type' => $owner->getMorphClass(), 'created_by_id' => $owner->id,
         ]);
 
         $request->forceFill([
@@ -142,8 +142,8 @@ class PendenciaRespostaPortalTest extends TestCase
         // em_pendencia) é bloqueado com aviso comunicado — nada muda.
         $owner = $this->portalUser();
         $request = ViabilityRequest::factory()->protocoled()->withPrimaryCnae()->create([
-            'requester_user_id' => $owner->id,
-            'created_by_user_id' => $owner->id,
+            'requester_cidadao_id' => $owner->id,
+            'created_by_type' => $owner->getMorphClass(), 'created_by_id' => $owner->id,
         ]);
         $request->forceFill(['status' => ViabilityRequestStatus::EmAnalise])->save();
 

@@ -9,14 +9,14 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\MassPrunable;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
  * Histórico de acessos (HU-010): login, logout, falha e bloqueio.
  *
  * Não usa HasAuditoria — access_logs já É dado de auditoria.
  */
-#[Fillable(['user_id', 'email', 'event', 'ip_address', 'user_agent', 'channel', 'origin'])]
+#[Fillable(['actor_type', 'actor_id', 'email', 'event', 'ip_address', 'user_agent', 'channel', 'origin'])]
 class AccessLog extends Model
 {
     /** @use HasFactory<AccessLogFactory> */
@@ -35,11 +35,13 @@ class AccessLog extends Model
     }
 
     /**
-     * @return BelongsTo<User, $this>
+     * Cidadão (portal) ou servidor (gestão) que gerou o evento.
+     *
+     * @return MorphTo<Model, $this>
      */
-    public function user(): BelongsTo
+    public function actor(): MorphTo
     {
-        return $this->belongsTo(User::class);
+        return $this->morphTo('actor');
     }
 
     /**

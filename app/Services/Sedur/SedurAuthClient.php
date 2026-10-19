@@ -324,6 +324,6 @@ class SedurAuthClient
 
     private function timeout(): int
     {
-        return (int) config('sile.integrations.sedur_auth.timeout', 8);
+        return (int) config('viabiliza.integrations.sedur_auth.timeout', 8);
     }
 }

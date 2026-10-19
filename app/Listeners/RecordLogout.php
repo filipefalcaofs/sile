@@ -11,7 +11,8 @@ class RecordLogout
     {
         // Logout de sessão expirada pode chegar sem usuário.
         AccessLog::create([
-            'user_id' => $event->user?->getAuthIdentifier(),
+            'actor_type' => $event->user?->getMorphClass(),
+            'actor_id' => $event->user?->getAuthIdentifier(),
             'email' => $event->user?->email ?? '',
             'event' => 'logout',
             'ip_address' => request()->ip(),

@@ -49,7 +49,7 @@ class ReprocessarEtapasService
         $paradaEm = null;
 
         $precisaLocalizar = $anteriorAoRegistro
-            ? $request->pontoDoImovel() === null && filled($request->property_registration)
+            ? $request->pontoGravadoOuDesenhado() === null && filled($request->property_registration)
             : $pendentes->contains(fn ($etapa) => $etapa->etapa === EtapaMotor::LocalizacaoInscricao);
 
         if ($precisaLocalizar

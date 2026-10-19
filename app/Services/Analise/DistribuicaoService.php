@@ -101,7 +101,10 @@ class DistribuicaoService
      */
     public function assumir(ViabilityRequest $request, User $analista): void
     {
-        if ($request->assigned_user_id !== null && (int) $request->assigned_user_id !== $analista->id) {
+        // Para conclusão o processo está na fila de quem conclui: qualquer analista do setor o pega.
+        $paraConclusao = $request->analysis_status === AnalysisStatus::ParaConclusao;
+
+        if (! $paraConclusao && $request->assigned_user_id !== null && (int) $request->assigned_user_id !== $analista->id) {
             throw DistribuicaoException::jaAtribuido($request);
         }
 
@@ -212,10 +215,18 @@ class DistribuicaoService
                 'sector_id' => $setorDestino,
                 'assigned_user_id' => $analista->id,
                 'assigned_at' => $startedAt,
-                'analysis_stage' => AnalysisStage::Analise,
-                'analysis_stage_started_at' => $startedAt,
-                'analysis_due_at' => $this->sla->dueAtFor(AnalysisStage::Analise, $startedAt),
-            ])->save();
+            ]);
+
+            // Para conclusão o processo já passou pela análise: trocar quem conclui não reinicia o prazo.
+            if ($request->analysis_status !== AnalysisStatus::ParaConclusao) {
+                $request->forceFill([
+                    'analysis_stage' => AnalysisStage::Analise,
+                    'analysis_stage_started_at' => $startedAt,
+                    'analysis_due_at' => $this->sla->dueAtFor(AnalysisStage::Analise, $startedAt),
+                ]);
+            }
+
+            $request->save();
 
             $this->audit->log('analise', $evento, "{$descricao} (solicitação #{$request->id}).", [
                 'viability_request_id' => $request->id,

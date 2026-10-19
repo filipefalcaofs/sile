@@ -106,7 +106,7 @@ class PainelOperacaoService
             'tempo_decisao' => [
                 'media_minutos' => $tempoDecisao['media_minutos'],
                 'amostras' => $tempoDecisao['amostras'],
-                'meta_dias' => $this->metaDias('analise.sla.analise_dias', (int) config('sile.analise.sla.analise_dias', 10)),
+                'meta_dias' => $this->metaDias('analise.sla.analise_dias', (int) config('viabiliza.analise.sla.analise_dias', 10)),
                 'dentro_prazo_percentual' => $cumprimento['taxa'],
             ],
             'acoes' => $this->acoes($sla, $detalheSla, $pendencias['vencidas'], $falhas),
@@ -264,10 +264,10 @@ class PainelOperacaoService
     {
         $porEtapa = collect($this->tempos->tempoPorEtapa($f)['etapas'])->keyBy('etapa');
         $tvl = $this->tempos->tempoEmissaoTvl($f);
-        $metaAnalise = $this->metaDias('analise.sla.analise_dias', (int) config('sile.analise.sla.analise_dias', 10));
+        $metaAnalise = $this->metaDias('analise.sla.analise_dias', (int) config('viabiliza.analise.sla.analise_dias', 10));
         $metaPendencia = $this->metaDias(
             'analise.pendencia.prazo_resposta_dias',
-            (int) config('sile.analise.pendencia.prazo_resposta_dias', 15),
+            (int) config('viabiliza.analise.pendencia.prazo_resposta_dias', 15),
         );
 
         $linhas = [

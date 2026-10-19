@@ -21,7 +21,7 @@ class RedesimClientTest extends TestCase
 
     private function ligarIntegracao(): void
     {
-        config(['sile.features.benchmark_redesim' => true]);
+        config(['viabiliza.features.benchmark_redesim' => true]);
     }
 
     public function test_baixa_a_competencia_e_devolve_bytes_e_hash(): void

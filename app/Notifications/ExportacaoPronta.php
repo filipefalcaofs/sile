@@ -30,7 +30,7 @@ class ExportacaoPronta extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['database', 'mail'];
+        return ['database'];
     }
 
     public function toMail(object $notifiable): MailMessage
@@ -75,7 +75,7 @@ class ExportacaoPronta extends Notification implements ShouldQueue
     {
         $ttl = (int) Settings::get(
             'relatorios.export.download.ttl_minutos',
-            config('sile.relatorios.export.download.ttl_minutos', 15),
+            config('viabiliza.relatorios.export.download.ttl_minutos', 15),
         );
 
         return URL::temporarySignedRoute(

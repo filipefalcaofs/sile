@@ -26,7 +26,7 @@ class LouosClasseViaCommandTest extends TestCase
                 'description' => 'Consulta da classificação viária no GeoServer.',
             ],
         );
-        cache()->forget('sile.parameters.features.geoserver_via_classe');
+        cache()->forget('viabiliza.parameters.features.geoserver_via_classe');
     }
 
     public function test_comando_mostra_a_classe_oficial_do_codlog(): void

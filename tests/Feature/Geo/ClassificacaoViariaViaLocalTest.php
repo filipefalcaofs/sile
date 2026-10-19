@@ -26,7 +26,7 @@ class ClassificacaoViariaViaLocalTest extends TestCase
     {
         parent::setUp();
 
-        config(['sile.features.geoserver_via_classe' => true]);
+        config(['viabiliza.features.geoserver_via_classe' => true]);
     }
 
     /**

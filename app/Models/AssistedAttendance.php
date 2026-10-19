@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * NÃO é procuração jurídica — é atendimento de balcão; reusa apenas o
  * mecanismo de usuário efetivo/policy/auditoria "em nome de" da Fase 1.
  */
-#[Fillable(['attendant_user_id', 'citizen_user_id', 'started_at', 'expires_at', 'ended_at'])]
+#[Fillable(['attendant_user_id', 'citizen_cidadao_id', 'started_at', 'expires_at', 'ended_at'])]
 class AssistedAttendance extends Model
 {
     /** @use HasFactory<AssistedAttendanceFactory> */
@@ -46,11 +46,11 @@ class AssistedAttendance extends Model
     /**
      * Cidadão atendido (beneficiário "em nome de").
      *
-     * @return BelongsTo<User, $this>
+     * @return BelongsTo<Cidadao, $this>
      */
     public function citizen(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'citizen_user_id');
+        return $this->belongsTo(Cidadao::class, 'citizen_cidadao_id');
     }
 
     /**

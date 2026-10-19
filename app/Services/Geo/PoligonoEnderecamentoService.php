@@ -95,7 +95,7 @@ class PoligonoEnderecamentoService
 
         try {
             return Cache::lock("poligono-ponto:{$request->id}", 90)->block(
-                (int) config('sile.integrations.geoserver.enderecamento.espera_trava_ponto', 60),
+                (int) config('viabiliza.integrations.geoserver.enderecamento.espera_trava_ponto', 60),
                 fn (): bool => $this->buscarPorPonto($request->refresh()),
             );
         } catch (LockTimeoutException) {

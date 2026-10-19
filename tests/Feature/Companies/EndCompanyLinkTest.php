@@ -3,9 +3,9 @@
 namespace Tests\Feature\Companies;
 
 use App\Models\Activity;
+use App\Models\Cidadao;
 use App\Models\Company;
 use App\Models\CompanyUser;
-use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
@@ -24,21 +24,21 @@ class EndCompanyLinkTest extends TestCase
     /**
      * Cidadão habilitado a navegar no portal (papel + termo LGPD aceito).
      */
-    private function portalUser(): User
+    private function portalUser(): Cidadao
     {
-        return User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        return Cidadao::factory()->withAcceptedLgpdTerm()->create();
     }
 
     /**
      * Cria uma empresa com vínculo (ativo por padrão) do usuário informado.
      */
-    private function companyLinkedTo(User $user, array $linkAttributes = []): Company
+    private function companyLinkedTo(Cidadao $user, array $linkAttributes = []): Company
     {
         $company = Company::factory()->create();
 
         CompanyUser::factory()->responsavel()->create(array_merge([
             'company_id' => $company->id,
-            'user_id' => $user->id,
+            'cidadao_id' => $user->id,
         ], $linkAttributes));
 
         return $company;
@@ -47,13 +47,13 @@ class EndCompanyLinkTest extends TestCase
     /**
      * Acrescenta um segundo responsável ativo a uma empresa existente.
      */
-    private function addResponsavel(Company $company, ?User $user = null): User
+    private function addResponsavel(Company $company, ?Cidadao $user = null): Cidadao
     {
         $user ??= $this->portalUser();
 
         CompanyUser::factory()->responsavel()->create([
             'company_id' => $company->id,
-            'user_id' => $user->id,
+            'cidadao_id' => $user->id,
         ]);
 
         return $user;
@@ -74,7 +74,7 @@ class EndCompanyLinkTest extends TestCase
 
         $link = CompanyUser::query()
             ->where('company_id', $company->id)
-            ->where('user_id', $user->id)
+            ->where('cidadao_id', $user->id)
             ->first();
 
         $this->assertNotNull($link->ended_at);
@@ -96,7 +96,7 @@ class EndCompanyLinkTest extends TestCase
 
         $link = CompanyUser::query()
             ->where('company_id', $company->id)
-            ->where('user_id', $user->id)
+            ->where('cidadao_id', $user->id)
             ->first();
 
         $this->assertNotNull($link->ended_at);
@@ -142,7 +142,7 @@ class EndCompanyLinkTest extends TestCase
 
         $link = CompanyUser::query()
             ->where('company_id', $company->id)
-            ->where('user_id', $user->id)
+            ->where('cidadao_id', $user->id)
             ->first();
 
         $this->assertNull($link->ended_at);
@@ -157,7 +157,7 @@ class EndCompanyLinkTest extends TestCase
 
         CompanyUser::factory()->procurador()->create([
             'company_id' => $company->id,
-            'user_id' => $procurador->id,
+            'cidadao_id' => $procurador->id,
         ]);
 
         // A proteção conta APENAS responsáveis: o procurador encerra normalmente.
@@ -167,7 +167,7 @@ class EndCompanyLinkTest extends TestCase
 
         $link = CompanyUser::query()
             ->where('company_id', $company->id)
-            ->where('user_id', $procurador->id)
+            ->where('cidadao_id', $procurador->id)
             ->first();
 
         $this->assertNotNull($link->ended_at);

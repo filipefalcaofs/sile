@@ -26,8 +26,8 @@ export function resumoConsultaCpfSedur(
             ? 'Já cadastrado no Viabiliza — pode iniciar o atendimento.'
             : 'Já cadastrado no Viabiliza.'
         : contexto === 'atendimento'
-          ? 'Encontrado na SEDUR, mas este CPF ainda não está cadastrado no Viabiliza. Oriente o cidadão a criar a conta.'
-          : 'Encontrado na SEDUR, mas este CPF ainda não está cadastrado no Viabiliza.';
+          ? 'Encontrado na SEDUR e ainda sem cadastro no Viabiliza — ao iniciar o atendimento, o cidadão é registrado no balcão.'
+          : 'Encontrado na SEDUR e ainda sem cadastro no Viabiliza — será registrado no balcão ao protocolar.';
 
     return nome ? `${nome}. ${situacao}` : situacao;
 }

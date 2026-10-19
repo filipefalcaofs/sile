@@ -3,6 +3,7 @@
 namespace Tests\Feature\Relatorios;
 
 use App\Enums\ViabilityRequestStatus;
+use App\Models\Cidadao;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityRequestTransition;
@@ -67,7 +68,8 @@ class TrilhaProcessoTest extends TestCase
             'viability_request_id' => $processo->id,
             'from_status' => ViabilityRequestStatus::Rascunho,
             'to_status' => ViabilityRequestStatus::Protocolada,
-            'actor_user_id' => $this->ator->id,
+            'actor_type' => $this->ator->getMorphClass(),
+            'actor_id' => $this->ator->id,
             'created_at' => Carbon::parse('2026-06-10 10:00'),
         ]);
 
@@ -75,7 +77,8 @@ class TrilhaProcessoTest extends TestCase
             'viability_request_id' => $processo->id,
             'from_status' => ViabilityRequestStatus::Protocolada,
             'to_status' => ViabilityRequestStatus::EmAnalise,
-            'actor_user_id' => $this->ator->id,
+            'actor_type' => $this->ator->getMorphClass(),
+            'actor_id' => $this->ator->id,
             'created_at' => Carbon::parse('2026-06-12 09:00'),
         ]);
 
@@ -208,5 +211,28 @@ class TrilhaProcessoTest extends TestCase
 
         $this->assertStringContainsString('Lisa Sousa', $auditoria['descricao']);
         $this->assertSame('Ana Analista', $auditoria['usuario']);
+    }
+
+    public function test_causer_da_auditoria_respeita_o_tipo_quando_os_ids_colidem(): void
+    {
+        $cidadao = Cidadao::factory()->create(['id' => $this->ator->id, 'name' => 'Carla Cidadã']);
+        $processo = ViabilityRequest::factory()->create(['protocol_number' => 'VIA-2026-000777']);
+
+        foreach ([[User::class, 'servidor'], [Cidadao::class, 'cidadao']] as [$tipo, $evento]) {
+            Activity::create([
+                'log_name' => 'solicitacoes',
+                'event' => $evento,
+                'description' => "Evento {$evento}",
+                'subject_type' => ViabilityRequest::class,
+                'subject_id' => $processo->id,
+                'causer_type' => $tipo,
+                'causer_id' => $cidadao->id,
+            ]);
+        }
+
+        $eventos = collect(app(TrilhaProcessoService::class)->trilha('VIA-2026-000777')['eventos']);
+
+        $this->assertSame('Ana Analista', $eventos->firstWhere('descricao', 'Evento servidor')['usuario']);
+        $this->assertSame('Carla Cidadã', $eventos->firstWhere('descricao', 'Evento cidadao')['usuario']);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Comunicacao;
 
+use App\Models\Cidadao;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -30,9 +31,9 @@ class NotificationCenterTest extends TestCase
         $this->seed(RolesAndPermissionsSeeder::class);
     }
 
-    private function portalUser(): User
+    private function portalUser(): Cidadao
     {
-        return User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        return Cidadao::factory()->withAcceptedLgpdTerm()->create();
     }
 
     private function gestaoUser(): User
@@ -47,7 +48,7 @@ class NotificationCenterTest extends TestCase
      *
      * @param  array<string, mixed>  $data
      */
-    private function notificar(User $user, bool $lida = false, array $data = []): DatabaseNotification
+    private function notificar(User|Cidadao $user, bool $lida = false, array $data = []): DatabaseNotification
     {
         return $user->notifications()->create([
             'id' => (string) Str::uuid(),
@@ -80,6 +81,38 @@ class NotificationCenterTest extends TestCase
         $this->assertSame(3, $page['props']['lista']['total']);
         // Badge do sininho (shared prop): contagem real de não-lidas.
         $this->assertSame(2, $page['props']['notificacoes']['nao_lidas']);
+    }
+
+    public function test_lista_normaliza_titulo_e_resumo_dos_payloads_em_portugues_e_message(): void
+    {
+        $user = $this->gestaoUser();
+        $this->notificar($user, data: [
+            'tipo' => 'prazo_vencendo',
+            'titulo' => 'Prazo de análise próximo do vencimento — 2026/1',
+            'mensagem' => 'O prazo vence em 20/10/2026.',
+            'url' => 'https://sile.test/gestao/processos/1',
+        ]);
+        $this->notificar($user, data: [
+            'title' => 'Exportação pronta',
+            'message' => 'A sua exportação está disponível.',
+            'url' => 'https://sile.test/download',
+        ]);
+
+        $lista = $this->actingAs($user, 'gestao')
+            ->get(route('gestao.notificacoes.index'))
+            ->assertOk()
+            ->viewData('page')['props']['lista']['data'];
+
+        $porTitulo = collect($lista)->keyBy(fn (array $item): string => $item['data']['title']);
+
+        $this->assertSame(
+            'O prazo vence em 20/10/2026.',
+            $porTitulo['Prazo de análise próximo do vencimento — 2026/1']['data']['summary'],
+        );
+        $this->assertSame(
+            'A sua exportação está disponível.',
+            $porTitulo['Exportação pronta']['data']['summary'],
+        );
     }
 
     public function test_portal_marca_uma_notificacao_como_lida(): void

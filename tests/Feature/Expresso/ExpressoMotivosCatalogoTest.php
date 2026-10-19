@@ -45,7 +45,7 @@ class ExpressoMotivosCatalogoTest extends TestCase
 
     public function test_motivo_editado_no_catalogo_fica_registrado_no_processo(): void
     {
-        config(['sile.features.fluxo_expresso' => false]);
+        config(['viabiliza.features.fluxo_expresso' => false]);
         Event::fake([ResultadoEmitido::class]);
 
         DecisionText::query()->create([

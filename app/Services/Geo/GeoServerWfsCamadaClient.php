@@ -48,11 +48,11 @@ class GeoServerWfsCamadaClient
             /** @var Response $response */
             $response = Http::withHeaders([
                 'User-Agent' => (string) config(
-                    'sile.integrations.geoserver.user_agent',
+                    'viabiliza.integrations.geoserver.user_agent',
                     'Viabiliza-SEDUR-Salvador/1.0',
                 ),
             ])
-                ->timeout((int) config('sile.integrations.geoserver.timeout', 8))
+                ->timeout((int) config('viabiliza.integrations.geoserver.timeout', 8))
                 ->connectTimeout(3)
                 ->acceptJson()
                 ->get($this->url($typeName, $lat, $lng, $filtroExtra));
@@ -110,7 +110,7 @@ class GeoServerWfsCamadaClient
     {
         $base = rtrim((string) Settings::get(
             'integrations.geoserver.base_url',
-            config('sile.integrations.geoserver.base_url'),
+            config('viabiliza.integrations.geoserver.base_url'),
         ), '/');
 
         $filtro = sprintf('INTERSECTS(GEOMETRY,SRID=4326;POINT(%.7f %.7f))', $lng, $lat);

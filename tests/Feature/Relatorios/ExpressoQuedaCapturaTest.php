@@ -120,7 +120,7 @@ class ExpressoQuedaCapturaTest extends TestCase
         // ANTI-FACHADA (RN-001): toggle do expresso desligado → $resolved null. O
         // motor não classificou nada; grava 1 linha de nível-processo com
         // cnae/tipo_gatilho/dimensao NULL e o motivo — gatilho NUNCA inventado.
-        config(['sile.features.fluxo_expresso' => false]);
+        config(['viabiliza.features.fluxo_expresso' => false]);
         Event::fake([ResultadoEmitido::class]);
 
         $request = ViabilityRequest::factory()->protocoled()->create();

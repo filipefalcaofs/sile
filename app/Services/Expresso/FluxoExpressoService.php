@@ -5,10 +5,12 @@ namespace App\Services\Expresso;
 use App\Enums\AnalysisStage;
 use App\Enums\AnalysisStatus;
 use App\Enums\DecisionOutcome;
+use App\Enums\EtapaMotor;
 use App\Enums\Fluxo;
 use App\Enums\IntencaoAtividade;
 use App\Enums\ResultadoViabilidade;
 use App\Enums\SefazNotificationEvent;
+use App\Enums\SituacaoEtapa;
 use App\Enums\TipoGatilho;
 use App\Enums\ViabilityRequestOrigin;
 use App\Enums\ViabilityRequestStatus;
@@ -102,7 +104,7 @@ class FluxoExpressoService
     {
         $this->garantirPoligonoRegin($request);
 
-        $ttl = (int) config('sile.expresso.lock.ttl_segundos', 10);
+        $ttl = (int) config('viabiliza.expresso.lock.ttl_segundos', 10);
 
         return Cache::lock("expresso:decisao:{$request->id}", $ttl)->block(
             $ttl,
@@ -147,7 +149,7 @@ class FluxoExpressoService
             return $this->resultadoIdempotente($request);
         }
 
-        $toggleAtivo = (bool) Settings::get('features.fluxo_expresso', config('sile.features.fluxo_expresso', true));
+        $toggleAtivo = (bool) Settings::get('features.fluxo_expresso', config('viabiliza.features.fluxo_expresso', true));
 
         if (! $toggleAtivo) {
             return $this->encaminharAnalise($request, $this->textos->get('expresso.motivo.desativado'), $actor);
@@ -213,7 +215,7 @@ class FluxoExpressoService
                     $mensagem = str_replace(
                         ':cnae',
                         $this->gatilhoSede->cnaeGatilhoFormatado(),
-                        (string) config('sile.analise.escritorio_virtual.mensagem_confirma_perda_sede'),
+                        (string) config('viabiliza.analise.escritorio_virtual.mensagem_confirma_perda_sede'),
                     );
 
                     return $this->encaminharAnalise($request, $mensagem, $actor);
@@ -268,6 +270,27 @@ class FluxoExpressoService
 
         if ($territorial->status === TerritorialRuleVerdict::INDEFERIR) {
             return $this->indeferirTerritorial($request, $resolved, $territorial, $actor);
+        }
+
+        // Camada territorial fora do ar: a decisão espera o motor rodar na
+        // próxima tentativa do reprocessamento. Só esgotada a janela (ou em
+        // processo que já está na análise) cai no encaminhamento abaixo.
+        if ($territorial->aguardarCamada
+            && $request->status === ViabilityRequestStatus::Protocolada
+            && $this->etapaTerritorialAguarda($request)) {
+            return DecisionResult::aguardando((string) $territorial->motivo);
+        }
+
+        // Pergunta da planilha necessária ao enquadramento sem resposta: sem
+        // ela não há enquadramento possível, e o processo é indeferido no
+        // expresso (decisão SEDUR 15/10/2026). O veto locacional (Quadro 10/11A)
+        // tem fundamento próprio e segue para a emissão.
+        $perguntaSemResposta = $resolved->perguntaSemResposta();
+
+        if ($perguntaSemResposta !== null
+            && $resolved->consolidado !== ResultadoViabilidade::NaoPermitido->value
+            && (bool) config('viabiliza.expresso.indeferir_pergunta_sem_resposta', true)) {
+            return $this->indeferirPerguntaSemResposta($request, $resolved, $perguntaSemResposta, $actor);
         }
 
         // Empate de porções: a lei não diz qual zona prevalece.
@@ -365,7 +388,7 @@ class FluxoExpressoService
         // informação de que foi o gatilho de sede já está na trilha de
         // auditoria por outros campos (resultado, consolidado, por_cnae).
         if ($this->gatilhoSede->aplica($request)) {
-            $flag = (string) config('sile.analise.escritorio_virtual.flag_analise_sede');
+            $flag = (string) config('viabiliza.analise.escritorio_virtual.flag_analise_sede');
 
             return $this->encaminharAnalise($request, $flag, $actor, $resolved);
         }
@@ -378,6 +401,15 @@ class FluxoExpressoService
      * passada ou encaminhada). Devolve a decisão existente (sem redisparar o
      * evento) ou o estado atual, sem nova transição — no-op idempotente.
      */
+    private function etapaTerritorialAguarda(ViabilityRequest $request): bool
+    {
+        return $request->etapas()
+            ->where('etapa', EtapaMotor::RegraTerritorial->value)
+            ->where('situacao', SituacaoEtapa::Indisponivel->value)
+            ->whereNull('esgotada_em')
+            ->exists();
+    }
+
     private function resultadoIdempotente(ViabilityRequest $request): DecisionResult
     {
         $decision = $request->decision()->first();
@@ -874,6 +906,88 @@ class FluxoExpressoService
             SefazNotificationEvent::SedePerdeuCondicao,
         );
 
+        ResultadoEmitido::dispatch($request, $decision);
+
+        return DecisionResult::decidida($decision, emitted: true);
+    }
+
+    /**
+     * Indefere no expresso o processo cuja pergunta da planilha, necessária ao
+     * enquadramento, chegou sem resposta. Mesma robustez idempotente de
+     * `indeferirTerritorial()`; sem número TVL (só deferimento tem produto).
+     *
+     * @param  array{numero: int, enunciado: string, cnae: string}  $pergunta
+     */
+    private function indeferirPerguntaSemResposta(
+        ViabilityRequest $request,
+        ResolvedViability $resolved,
+        array $pergunta,
+        ?User $actor,
+    ): DecisionResult {
+        $motivo = $this->textos->render('justificativa.indeferimento.pergunta_sem_resposta', [
+            ':numero' => (string) $pergunta['numero'],
+            ':enunciado' => $pergunta['enunciado'],
+            ':cnae' => $pergunta['cnae'],
+        ]);
+
+        try {
+            $decision = DB::transaction(function () use ($request, $resolved, $pergunta, $motivo, $actor): ViabilityDecision {
+                $decision = ViabilityDecision::create([
+                    'viability_request_id' => $request->id,
+                    'flow' => 'expresso',
+                    'outcome' => DecisionOutcome::Indeferida,
+                    'consolidated_result' => $resolved->consolidado,
+                    'is_virtual_office_tenant' => false,
+                    'virtual_office_hq_tvl_number' => null,
+                    'tvl_product_number' => null,
+                    'per_cnae' => $this->perCnae($resolved),
+                    'rules_versions' => $resolved->rules_versions,
+                    'fundamentacao' => array_values(array_unique([$motivo, ...$this->fundamentacaoConsolidada($resolved)])),
+                    'decision_trace' => $this->decisionTrace($resolved),
+                    'reason' => $motivo,
+                    'decided_by_user_id' => $actor?->id,
+                    'decided_at' => now(),
+                ]);
+
+                $this->stateMachine->transition(
+                    $request,
+                    ViabilityRequestStatus::Indeferida,
+                    $actor,
+                    publicLabel: ViabilityRequestStatus::Indeferida->publicLabel(),
+                );
+                $this->limparEncaminhamentoDaAnalise($request);
+
+                $this->audit->log(
+                    logName: 'expresso',
+                    event: 'decisao',
+                    description: "Indeferimento por pergunta {$pergunta['numero']} sem resposta da solicitação #{$request->id}",
+                    properties: [
+                        'viability_request_id' => $request->id,
+                        'protocol_number' => $request->protocol_number,
+                        'outcome' => DecisionOutcome::Indeferida->value,
+                        'pergunta' => $pergunta['numero'],
+                        'cnae' => $pergunta['cnae'],
+                        'motivo' => $motivo,
+                        'per_cnae' => $this->perCnaeResumo($resolved),
+                    ],
+                    subject: $request,
+                    result: DecisionOutcome::Indeferida->value,
+                    rulesVersion: $this->rulesVersionRepresentativa($resolved->rules_versions),
+                );
+
+                return $decision;
+            });
+        } catch (QueryException $e) {
+            $existente = $request->decision()->first();
+
+            if ($existente !== null) {
+                return DecisionResult::decidida($existente, emitted: false);
+            }
+
+            throw $e;
+        }
+
+        // APÓS o commit: só decisões efetivadas geram efeitos.
         ResultadoEmitido::dispatch($request, $decision);
 
         return DecisionResult::decidida($decision, emitted: true);

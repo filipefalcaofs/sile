@@ -84,7 +84,7 @@ class ZonaNomeAtributosTest extends TestCase
     {
         // A base oficial chega com o nome da zona em NM_ZONA — o admin aponta
         // o parâmetro e o motor passa a ler, sem deploy.
-        config(['sile.geo.zona.atributos_nome' => ['NM_ZONA']]);
+        config(['viabiliza.geo.zona.atributos_nome' => ['NM_ZONA']]);
 
         $this->enquadramentoFaixa('4712100', 'nR1', 'nR1-01');
         $this->quadro10Permissao('ZR-9', 'nR1', Quadro10Permissao::Permitido);
@@ -102,7 +102,7 @@ class ZonaNomeAtributosTest extends TestCase
 
     public function test_lista_padrao_resolve_zona_pelos_atributos_usuais(): void
     {
-        // Sem configuração customizada, o fallback (config/sile.php) mantém os
+        // Sem configuração customizada, o fallback (config/viabiliza.php) mantém os
         // 4 atributos atuais: ZONA, zona, SIGLA_ZONA, SUBZONA.
         $this->enquadramentoFaixa('4712100', 'nR1', 'nR1-01');
         $this->quadro10Permissao('ZPAM', 'nR1', Quadro10Permissao::Proibido);

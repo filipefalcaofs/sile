@@ -283,7 +283,7 @@ class SlaVencimentosService
     {
         return (int) Settings::get(
             'relatorios.sla.janela_vencimento_dias',
-            config('sile.relatorios.sla.janela_vencimento_dias', 2),
+            config('viabiliza.relatorios.sla.janela_vencimento_dias', 2),
         );
     }
 

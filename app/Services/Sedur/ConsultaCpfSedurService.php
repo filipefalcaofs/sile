@@ -2,7 +2,7 @@
 
 namespace App\Services\Sedur;
 
-use App\Models\User;
+use App\Models\Cidadao;
 use App\Support\Audit\AuditService;
 
 /**
@@ -55,7 +55,7 @@ class ConsultaCpfSedurService
 
         return new ConsultaCpfSedurResult(
             nome: $pessoa->nome !== '' ? $pessoa->nome : null,
-            cadastrado: User::query()->where('cpf', $cpf)->exists(),
+            cadastrado: Cidadao::query()->where('cpf', $cpf)->exists(),
         );
     }
 }

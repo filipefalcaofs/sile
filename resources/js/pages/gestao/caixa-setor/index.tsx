@@ -18,7 +18,7 @@ import GestaoLayout from '@/layouts/gestao-layout';
 import type { SharedProps } from '@/types';
 import { escolhaDeSetor, type SetorDoAnalista } from './setor-destino';
 
-type Visao = 'para_distribuir' | 'distribuidos';
+type Visao = 'para_distribuir' | 'distribuidos' | 'para_conclusao';
 
 interface ProcessoItem {
     id: number;
@@ -39,6 +39,7 @@ interface ProcessoItem {
     sector: string | null;
     assigned_user_id: number | null;
     assigned_to: string | null;
+    encaminhado_para: string | null;
     analysis_due_at: string | null;
     pode_redistribuir: boolean;
 }
@@ -154,6 +155,7 @@ function formatarPrazo(iso: string | null): string {
 const ABAS: { id: Visao; rotulo: string }[] = [
     { id: 'para_distribuir', rotulo: 'Para distribuir' },
     { id: 'distribuidos', rotulo: 'Distribuídos' },
+    { id: 'para_conclusao', rotulo: 'Para conclusão' },
 ];
 
 export default function CaixaSetorIndex({
@@ -194,7 +196,7 @@ export default function CaixaSetorIndex({
         sector_id: '',
     });
 
-    const selecaoAtiva = visao === 'para_distribuir' && podeDistribuir;
+    const selecaoAtiva = (visao === 'para_distribuir' || visao === 'para_conclusao') && podeDistribuir;
     const todosSelecionados = linhas.length > 0 && linhas.every((item) => selecionados.includes(item.id));
 
     // Modal em contexto de vistoria quando QUALQUER linha envolvida está no
@@ -234,6 +236,15 @@ export default function CaixaSetorIndex({
 
     function alternarTodos() {
         setSelecionados(todosSelecionados ? [] : linhas.map((item) => item.id));
+    }
+
+    // Em "Para conclusão" o analista pega o processo mesmo com o responsável anterior.
+    function podeAssumirItem(item: ProcessoItem): boolean {
+        if (item.assigned_user_id === null) {
+            return true;
+        }
+
+        return visao === 'para_conclusao' && item.assigned_user_id !== auth.user?.id;
     }
 
     function assumir(item: ProcessoItem) {
@@ -374,6 +385,16 @@ export default function CaixaSetorIndex({
             cell: (item) =>
                 item.assigned_to ?? <span className="text-gray-400 dark:text-gray-500">Não atribuído</span>,
         },
+        ...(visao === 'para_conclusao'
+            ? [
+                  {
+                      id: 'encaminhado_para',
+                      header: 'Encaminhado para',
+                      cellClassName: 'whitespace-nowrap',
+                      cell: (item: ProcessoItem) => item.encaminhado_para ?? '',
+                  },
+              ]
+            : []),
         {
             id: 'prazo',
             header: 'Prazo',
@@ -387,7 +408,7 @@ export default function CaixaSetorIndex({
             cellClassName: 'whitespace-nowrap',
             cell: (item) => (
                 <div className="flex justify-end gap-2">
-                    {podeAssumir && item.assigned_user_id === null && (!emVistoria(item) || podeVistoria) && (
+                    {podeAssumir && podeAssumirItem(item) && (!emVistoria(item) || podeVistoria) && (
                         <TableAction
                             tone="brand"
                             onClick={() => assumir(item)}
@@ -480,12 +501,12 @@ export default function CaixaSetorIndex({
 
                         <div className="flex flex-wrap items-center justify-between gap-3">
                             <div className="flex flex-wrap items-center gap-3">
-                                {selecaoAtiva && (
+                                {selecaoAtiva && visao === 'para_distribuir' && (
                                     <Button variant="outline" onClick={() => distribuicaoInteligente(null)}>
                                         Distribuição inteligente de todos os elegíveis
                                     </Button>
                                 )}
-                                {selecaoAtiva && selecionados.length > 0 && (
+                                {selecaoAtiva && visao === 'para_distribuir' && selecionados.length > 0 && (
                                     <Button variant="outline" onClick={() => distribuicaoInteligente(selecionados)}>
                                         Distribuição inteligente ({selecionados.length})
                                     </Button>
@@ -498,7 +519,7 @@ export default function CaixaSetorIndex({
                                                 (linha) => selecionados.includes(linha.id) && emVistoria(linha),
                                             );
 
-                                            if (algumEmVistoria) {
+                                            if (algumEmVistoria || visao === 'para_conclusao') {
                                                 abrirModal({
                                                     tipo: 'distribuir',
                                                     ids: selecionados,
@@ -532,12 +553,16 @@ export default function CaixaSetorIndex({
                                     title={
                                         visao === 'para_distribuir'
                                             ? 'Nenhum processo para distribuir'
-                                            : 'Nenhum processo distribuído'
+                                            : visao === 'para_conclusao'
+                                              ? 'Nenhum processo para conclusão'
+                                              : 'Nenhum processo distribuído'
                                     }
                                     description={
                                         visao === 'para_distribuir'
                                             ? 'Não há processos aguardando distribuição nos seus setores.'
-                                            : 'Ainda não há processos atribuídos a analistas nos seus setores.'
+                                            : visao === 'para_conclusao'
+                                              ? 'Não há processos com a análise finalizada aguardando conclusão nos seus setores.'
+                                              : 'Ainda não há processos atribuídos a analistas nos seus setores.'
                                     }
                                 />
                             }

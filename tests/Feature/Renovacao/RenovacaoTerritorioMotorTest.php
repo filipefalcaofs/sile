@@ -9,6 +9,7 @@ use App\Enums\RiscoMunicipal;
 use App\Enums\RuleDomain;
 use App\Enums\TvlKind;
 use App\Enums\ViabilityRequestStatus;
+use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\GeoLayer;
 use App\Models\Parameter;
@@ -16,7 +17,6 @@ use App\Models\RiskClassification;
 use App\Models\RuleVersion;
 use App\Models\Sector;
 use App\Models\ServiceDeclaration;
-use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
@@ -37,8 +37,8 @@ class RenovacaoTerritorioMotorTest extends TestCase
     public function test_protocolo_completa_territorio_e_deixa_o_motor_na_ficha(): void
     {
         config([
-            'sile.features.geoserver_enderecamento' => true,
-            'sile.features.arcgis_semap' => true,
+            'viabiliza.features.geoserver_enderecamento' => true,
+            'viabiliza.features.arcgis_semap' => true,
         ]);
 
         $this->territorio();
@@ -175,7 +175,7 @@ class RenovacaoTerritorioMotorTest extends TestCase
     }
 
     /**
-     * @return array{0: ViabilityRequest, 1: ServiceDeclaration, 2: User}
+     * @return array{0: ViabilityRequest, 1: ServiceDeclaration, 2: Cidadao}
      */
     private function cenario(): array
     {
@@ -199,6 +199,6 @@ class RenovacaoTerritorioMotorTest extends TestCase
             'required' => true,
         ]);
 
-        return [$origem->fresh(), $declaracao, User::factory()->create()];
+        return [$origem->fresh(), $declaracao, Cidadao::factory()->create()];
     }
 }

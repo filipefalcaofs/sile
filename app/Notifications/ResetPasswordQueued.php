@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Models\EmailLog;
+use App\Models\User;
 use App\Notifications\Messages\EmailViabiliza;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Bus\Queueable;
@@ -33,9 +34,19 @@ class ResetPasswordQueued extends ResetPassword implements ShouldQueue
         return $this->resetUrl ?? parent::resetUrl($notifiable);
     }
 
+    /** Broker de quem recebe: o prazo citado no e-mail é o do link que ele gera. */
+    private string $broker = 'cidadaos';
+
+    public function toMail($notifiable)
+    {
+        $this->broker = $notifiable instanceof User ? 'users' : 'cidadaos';
+
+        return parent::toMail($notifiable);
+    }
+
     protected function buildMailMessage($url): MailMessage
     {
-        $minutos = (int) config('auth.passwords.'.config('auth.defaults.passwords').'.expire');
+        $minutos = (int) config("auth.passwords.{$this->broker}.expire");
 
         return (new EmailViabiliza)
             ->subject(Lang::get('Reset Password Notification'))

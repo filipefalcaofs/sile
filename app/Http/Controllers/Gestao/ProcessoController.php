@@ -17,8 +17,10 @@ use App\Models\ViabilityServiceType;
 use App\Services\Analise\AnalysisStatusStateMachine;
 use App\Services\Analise\InvalidAnalysisStatusTransitionException;
 use App\Services\Analise\ProcessoQueryService;
+use App\Services\Analise\TramitacaoProcessoService;
 use App\Services\Auditoria\DecisionExplanationService;
 use App\Services\Geo\DivergenciaLogradouroInscricao;
+use App\Services\Regin\HttpReginParecerNotifier;
 use App\Services\Relatorios\Export\ReportExporter;
 use App\Services\Relatorios\Export\Sources\ProcessosReportSource;
 use App\Services\Relatorios\ReportFilters;
@@ -203,7 +205,20 @@ class ProcessoController extends Controller
                 ? null
                 : (new DecisionExplanationResource($this->explanations->explain($viabilityRequest->decision)))->resolve(),
             'timeline' => $this->timeline($viabilityRequest),
+            // Texto que o parecer leva à JUCEB (gravado no processo ou o padrão da
+            // decisão); null quando o processo não tem decisão ou não veio da JUCEB.
+            'justificativaRegin' => $viabilityRequest->decision === null || blank($viabilityRequest->external_reference)
+                ? null
+                : [
+                    'texto' => app(HttpReginParecerNotifier::class)->justificativaPara($viabilityRequest, $viabilityRequest->decision),
+                    'personalizada' => filled($viabilityRequest->regin_justificativa),
+                ],
             'setoresEncaminhamento' => Sector::query()->where('active', true)->orderBy('name')->get(['id', 'name']),
+            'destinatariosConclusao' => User::permission('concluir-analise')
+                ->orderBy('name')
+                ->get(['users.id', 'users.name'])
+                ->map(fn (User $usuario): array => ['value' => (string) $usuario->id, 'label' => $usuario->name])
+                ->all(),
             'analistasEncaminhamento' => User::query()
                 ->with('sectors:id')
                 ->orderBy('name')
@@ -256,14 +271,17 @@ class ProcessoController extends Controller
     {
         $distribuidor = $this->distribuidorDoProcesso($viabilityRequest);
 
-        return $viabilityRequest->transitions->load('actor')->map(fn ($transicao): array => [
+        $status = $viabilityRequest->transitions->load('actor')->map(fn ($transicao): array => [
+            'tipo' => 'status',
+            'resultado' => null,
             'from' => $transicao->from_status?->value,
             'from_label' => $transicao->from_status?->label(),
             'to' => $transicao->to_status->value,
             'to_label' => $transicao->to_status->label(),
             'reason' => $transicao->reason,
             'em' => $transicao->created_at?->toIso8601String(),
-            'ator' => $transicao->actor?->name,
+            // Ator é User ou Cidadao (morph); só conta de servidor pode ser ator oculto.
+            'ator' => $transicao->actor instanceof User && $transicao->actor->isAtorOcultoNaTramitacao() ? null : $transicao->actor?->name,
             'atribuido' => $transicao->to_status === ViabilityRequestStatus::EmAnalise
                 ? $viabilityRequest->assignedTo?->name
                 : null,
@@ -271,6 +289,12 @@ class ProcessoController extends Controller
                 ? $distribuidor
                 : null,
         ])->all();
+
+        $linha = [...$status, ...app(TramitacaoProcessoService::class)->eventos($viabilityRequest)];
+
+        usort($linha, fn (array $a, array $b): int => strcmp((string) $b['em'], (string) $a['em']));
+
+        return $linha;
     }
 
     /**
@@ -290,15 +314,16 @@ class ProcessoController extends Controller
             return null;
         }
 
-        $atorId = $atividade->properties['ator_id'] ?? $atividade->causer_id;
+        $atorId = $atividade->properties['ator_id']
+            ?? ($atividade->causer_type === (new User)->getMorphClass() ? $atividade->causer_id : null);
 
         if ($atorId === null) {
             return null;
         }
 
-        $nome = User::query()->whereKey($atorId)->value('name');
+        $ator = User::query()->find($atorId);
 
-        return is_string($nome) ? $nome : null;
+        return $ator === null || $ator->isAtorOcultoNaTramitacao() ? null : $ator->name;
     }
 
     /**
@@ -340,6 +365,14 @@ class ProcessoController extends Controller
                 'assigned_user_id' => $analista->id,
                 'assigned_at' => now(),
             ])->save();
+        }
+
+        if ($to === AnalysisStatus::ParaConclusao) {
+            $viabilityRequest->forceFill([
+                'conclusao_encaminhada_para_user_id' => $request->filled('encaminhado_para_user_id')
+                    ? $request->integer('encaminhado_para_user_id')
+                    : null,
+            ]);
         }
 
         try {

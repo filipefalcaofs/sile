@@ -3,8 +3,8 @@
 namespace Tests\Feature\Companies;
 
 use App\Models\Activity;
+use App\Models\Cidadao;
 use App\Models\Parameter;
-use App\Models\User;
 use App\Services\Cnpj\BrasilApiCnpjLookup;
 use App\Services\Cnpj\CnpjData;
 use App\Services\Cnpj\CnpjLookup;
@@ -60,11 +60,11 @@ class CnpjLookupTest extends TestCase
     /**
      * Cidadão habilitado a navegar no portal (papel + termo LGPD aceito).
      */
-    private function portalUser(): User
+    private function portalUser(): Cidadao
     {
         $this->seed(RolesAndPermissionsSeeder::class);
 
-        return User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        return Cidadao::factory()->withAcceptedLgpdTerm()->create();
     }
 
     // ----------------------------------------------------------------
@@ -110,7 +110,7 @@ class CnpjLookupTest extends TestCase
         $service = app(BrasilApiCnpjLookup::class);
         $service->lookup('00000000000191');
 
-        $this->assertIsArray(Cache::get('sile.cnpj_lookup.00000000000191'));
+        $this->assertIsArray(Cache::get('viabiliza.cnpj_lookup.00000000000191'));
 
         $deNovo = $service->lookup('00000000000191');
 
@@ -264,6 +264,8 @@ class CnpjLookupTest extends TestCase
         $user = $this->portalUser();
 
         $this->seed(ParameterSeeder::class);
+
+        Parameter::query()->where('key', 'features.portal_servicos')->first()->update(['value' => '1']);
 
         Parameter::query()
             ->where('key', 'features.cnpj_lookup')

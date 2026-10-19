@@ -112,7 +112,7 @@ class FluxoExpressoElegibilidadeTest extends TestCase
     {
         // HU-014 / RN-008: a funcionalidade acoplável degrada de forma
         // comunicada — desligada, nada é deferido/indeferido automaticamente.
-        config(['sile.features.fluxo_expresso' => false]);
+        config(['viabiliza.features.fluxo_expresso' => false]);
         Event::fake([ResultadoEmitido::class]);
 
         $request = $this->protocoladaComCnaes(['2222222']);

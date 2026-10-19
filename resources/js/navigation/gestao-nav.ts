@@ -1,7 +1,5 @@
 /**
  * Catálogo único da sidebar de Gestão. Fonte de verdade do menu e do Cmd+K.
- *
- * Antes de incluir, mover ou criar grupo: ler `.cursor/rules/menu-navegacao.mdc`.
  */
 
 export type GestaoNavIcon =

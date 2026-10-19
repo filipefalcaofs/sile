@@ -20,4 +20,14 @@ export interface SharedProps extends PageProps {
     appRevision: string;
     vocabulario: VocabularioCatalog;
     export_formatos: Array<'csv' | 'xlsx' | 'pdf'>;
+    /** Interruptor dos serviços do portal (features.portal_servicos). */
+    portalServicos: {
+        enabled: boolean;
+        mensagem: string;
+    };
+    /** Interruptor da consulta prévia (features.consulta_viabilidade). */
+    consultaViabilidade: {
+        enabled: boolean;
+        mensagem: string;
+    };
 }

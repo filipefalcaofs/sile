@@ -6,9 +6,9 @@ use App\Enums\CommunicationChannel;
 use App\Enums\CommunicationStatus;
 use App\Enums\CommunicationType;
 use App\Models\Activity;
+use App\Models\Cidadao;
 use App\Models\Communication;
 use App\Models\Parameter;
-use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Notifications\PendenciaSolicitadaNotification;
 use App\Services\Comunicacao\NotificationDispatcher;
@@ -69,7 +69,7 @@ class WhatsAppPipelineIntegrationTest extends TestCase
      */
     private function comWhatsAppNoMapa(): void
     {
-        config()->set('sile.notificacoes.mapa_canais', [
+        config()->set('viabiliza.notificacoes.mapa_canais', [
             'pendencia_aberta' => ['email', 'in_app', 'whatsapp'],
         ]);
     }
@@ -81,8 +81,8 @@ class WhatsAppPipelineIntegrationTest extends TestCase
 
         // Destinatário com telefone E.164 (o canal tem "para onde" transmitir) e um
         // processo real — a notificação de pendência é a Notification de PROCESSO real.
-        $requerente = User::factory()->create(['phone' => '+5571999990000']);
-        $request = ViabilityRequest::factory()->protocoled()->create(['requester_user_id' => $requerente->id]);
+        $requerente = Cidadao::factory()->create(['phone' => '+5571999990000']);
+        $request = ViabilityRequest::factory()->protocoled()->create(['requester_cidadao_id' => $requerente->id]);
 
         // Pipeline REAL: o dispatcher cria as 3 linhas na_fila (email/in_app/whatsapp),
         // congela os canais e chama notify() — SEM Notification::fake (envio real,
@@ -147,8 +147,8 @@ class WhatsAppPipelineIntegrationTest extends TestCase
         $this->ligarWhatsApp();
         $this->comWhatsAppNoMapa();
 
-        $requerente = User::factory()->create(['phone' => '+5571988887777']);
-        $request = ViabilityRequest::factory()->protocoled()->create(['requester_user_id' => $requerente->id]);
+        $requerente = Cidadao::factory()->create(['phone' => '+5571988887777']);
+        $request = ViabilityRequest::factory()->protocoled()->create(['requester_cidadao_id' => $requerente->id]);
 
         $notification = new PendenciaSolicitadaNotification(
             (string) $request->protocol_number,

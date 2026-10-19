@@ -187,7 +187,7 @@ class AuditoriaExportTest extends TestCase
     {
         $gestor = $this->administrador();
         $user = User::factory()->create(['name' => 'Eduarda Acesso']);
-        AccessLog::factory()->create(['user_id' => $user->id, 'email' => 'eduarda@example.test', 'event' => 'login']);
+        AccessLog::factory()->create(['actor_type' => $user->getMorphClass(), 'actor_id' => $user->id, 'email' => 'eduarda@example.test', 'event' => 'login']);
 
         $response = $this->actingAs($gestor, 'gestao')
             ->get('/gestao/auditoria/export?fonte=acessos')
@@ -199,9 +199,9 @@ class AuditoriaExportTest extends TestCase
 
     public function test_export_csv_aplica_guarda_de_volume_max_linhas(): void
     {
-        // Constante técnica de volume (config/sile.php) — limita honesto, não
+        // Constante técnica de volume (config/viabiliza.php) — limita honesto, não
         // simula. Com max_linhas=2, o CSV traz cabeçalho + no máximo 2 linhas.
-        config(['sile.auditoria.export.max_linhas' => 2]);
+        config(['viabiliza.auditoria.export.max_linhas' => 2]);
 
         $gestor = $this->administrador();
 

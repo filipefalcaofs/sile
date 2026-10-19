@@ -2,11 +2,10 @@
 
 namespace Tests\Feature\Auth;
 
-use App\Models\User;
+use App\Models\Cidadao;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
-use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class RegistrationTest extends TestCase
@@ -34,26 +33,23 @@ class RegistrationTest extends TestCase
         $response->assertRedirect('/portal/painel');
         $this->assertAuthenticated();
 
-        $this->assertDatabaseHas('users', [
+        $this->assertDatabaseHas('cidadaos', [
             'email' => 'maria@example.com',
             'cpf' => '52998224725',
         ]);
 
-        $user = User::firstWhere('email', 'maria@example.com');
+        $cidadao = Cidadao::firstWhere('email', 'maria@example.com');
 
-        $this->assertTrue($user->hasRole('cidadao'));
+        $this->assertAuthenticatedAs($cidadao, 'web');
     }
 
-    public function test_cadastro_usa_o_perfil_definido_no_parametro(): void
+    public function test_cadastro_nao_cria_conta_de_servidor_nem_atribui_perfil(): void
     {
-        Role::create(['name' => 'municipe', 'guard_name' => 'web']);
-        config(['sile.portal.perfil_cidadao' => 'municipe']);
-
         $this->post('/portal/register', $this->validPayload());
 
-        $user = User::firstWhere('email', 'maria@example.com');
-        $this->assertTrue($user->hasRole('municipe'));
-        $this->assertFalse($user->hasRole('cidadao'));
+        $this->assertNotNull(Cidadao::firstWhere('email', 'maria@example.com'));
+        $this->assertDatabaseCount('users', 0);
+        $this->assertDatabaseCount('model_has_roles', 0);
     }
 
     public function test_cadastro_gera_auditoria(): void
@@ -77,7 +73,7 @@ class RegistrationTest extends TestCase
 
         $response->assertSessionHasErrors(['name', 'cpf']);
         $this->assertGuest();
-        $this->assertDatabaseCount('users', 0);
+        $this->assertDatabaseCount('cidadaos', 0);
 
         $errors = session('errors')->get('name');
 
@@ -94,23 +90,23 @@ class RegistrationTest extends TestCase
 
         $response->assertSessionHasErrors(['cpf']);
         $this->assertGuest();
-        $this->assertDatabaseCount('users', 0);
+        $this->assertDatabaseCount('cidadaos', 0);
     }
 
     public function test_cadastro_bloqueado_com_email_duplicado(): void
     {
-        User::factory()->create(['email' => 'maria@example.com']);
+        Cidadao::factory()->create(['email' => 'maria@example.com']);
 
         $response = $this->post('/portal/register', $this->validPayload());
 
         $response->assertSessionHasErrors(['email']);
         $this->assertGuest();
-        $this->assertDatabaseCount('users', 1);
+        $this->assertDatabaseCount('cidadaos', 1);
     }
 
     public function test_cadastro_bloqueado_com_cpf_duplicado(): void
     {
-        User::factory()->create(['cpf' => '52998224725']);
+        Cidadao::factory()->create(['cpf' => '52998224725']);
 
         $response = $this->post('/portal/register', [
             ...$this->validPayload(),
@@ -119,7 +115,7 @@ class RegistrationTest extends TestCase
 
         $response->assertSessionHasErrors(['cpf']);
         $this->assertGuest();
-        $this->assertDatabaseCount('users', 1);
+        $this->assertDatabaseCount('cidadaos', 1);
     }
 
     public function test_usuario_se_cadastra_com_senha_com_simbolo(): void
@@ -134,7 +130,7 @@ class RegistrationTest extends TestCase
 
         $response->assertRedirect('/portal/painel');
         $this->assertAuthenticated();
-        $this->assertDatabaseHas('users', [
+        $this->assertDatabaseHas('cidadaos', [
             'email' => 'filipe@example.com',
             'cpf' => '06681065570',
         ]);
@@ -154,7 +150,7 @@ class RegistrationTest extends TestCase
 
     public function test_usuario_autenticado_nao_acessa_cadastro(): void
     {
-        $user = User::factory()->cidadao()->create();
+        $user = Cidadao::factory()->create();
 
         $this->actingAs($user)->get('/portal/register')->assertRedirect();
     }

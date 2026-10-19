@@ -55,8 +55,8 @@ class TvlPdfService
 
         $pdf = Pdf::loadView('tvl.documento', $this->montarDados($decision, $verificationCode, $generatedAt))
             ->setPaper(
-                (string) config('sile.analise.tvl.paper', 'a4'),
-                (string) config('sile.analise.tvl.orientation', 'portrait'),
+                (string) config('viabiliza.analise.tvl.paper', 'a4'),
+                (string) config('viabiliza.analise.tvl.orientation', 'portrait'),
             )
             ->output();
 

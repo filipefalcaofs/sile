@@ -2,9 +2,9 @@
 
 namespace Tests\Feature\Renovacao;
 
+use App\Models\Cidadao;
 use App\Models\ServiceDeclaration;
 use App\Models\ServiceDeclarationAcceptance;
-use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
 use Database\Seeders\ServiceDeclarationSeeder;
@@ -48,12 +48,12 @@ class ServiceDeclarationTest extends TestCase
             'version' => 4,
         ]);
         $solicitacao = ViabilityRequest::factory()->create();
-        $usuario = User::factory()->create();
+        $usuario = Cidadao::factory()->create();
 
         $aceite = ServiceDeclarationAcceptance::create([
             'service_declaration_id' => $declaracao->id,
             'viability_request_id' => $solicitacao->id,
-            'user_id' => $usuario->id,
+            'cidadao_id' => $usuario->id,
             'version' => $declaracao->version,
             'accepted_at' => now(),
         ]);

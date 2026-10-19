@@ -50,7 +50,7 @@ class TerritoryController extends Controller
                 ]),
             'sobreposicaoMinima' => (int) Settings::get(
                 'geo.validacao.sobreposicao_minima',
-                config('sile.geo.validacao.sobreposicao_minima', 50),
+                config('viabiliza.geo.validacao.sobreposicao_minima', 50),
             ),
             'geocodingEnabled' => Settings::enabled('geocoding'),
             'mapa' => ['centro' => ['lat' => -12.97, 'lng' => -38.5], 'zoom' => 13],

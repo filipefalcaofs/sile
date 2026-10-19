@@ -41,7 +41,7 @@ class UpdateSolicitacaoAtividadesRequest extends FormRequest
     {
         $max = (int) Settings::get(
             'solicitacao.cnaes_complementares.max',
-            config('sile.solicitacao.cnaes_complementares.max', 99),
+            config('viabiliza.solicitacao.cnaes_complementares.max', 99),
         );
 
         return [
@@ -167,7 +167,7 @@ class UpdateSolicitacaoAtividadesRequest extends FormRequest
                 ) {
                     $validator->errors()->add(
                         'principal_cnae_id',
-                        config('sile.analise.escritorio_virtual.mensagem_recusa_abrigo'),
+                        config('viabiliza.analise.escritorio_virtual.mensagem_recusa_abrigo'),
                     );
 
                     return;
@@ -201,12 +201,12 @@ class UpdateSolicitacaoAtividadesRequest extends FormRequest
                         if ($gatilho !== null && preg_replace('/\D/', '', $code) === $gatilho) {
                             $validator->errors()->add(
                                 'principal_cnae_id',
-                                str_replace(':cnae', $code, config('sile.analise.escritorio_virtual.mensagem_cnae_sede_em_abrigado')),
+                                str_replace(':cnae', $code, config('viabiliza.analise.escritorio_virtual.mensagem_cnae_sede_em_abrigado')),
                             );
                         } else {
                             $validator->errors()->add(
                                 'principal_cnae_id',
-                                config('sile.analise.escritorio_virtual.mensagem_bloqueio_abrigado'),
+                                config('viabiliza.analise.escritorio_virtual.mensagem_bloqueio_abrigado'),
                             );
                         }
 
@@ -258,7 +258,7 @@ class UpdateSolicitacaoAtividadesRequest extends FormRequest
                         if (preg_replace('/\D/', '', $code) === $gatilho) {
                             $validator->errors()->add(
                                 'principal_cnae_id',
-                                str_replace(':cnae', $code, config('sile.analise.escritorio_virtual.mensagem_cnae_sede_em_abrigado')),
+                                str_replace(':cnae', $code, config('viabiliza.analise.escritorio_virtual.mensagem_cnae_sede_em_abrigado')),
                             );
 
                             return;
@@ -288,7 +288,7 @@ class UpdateSolicitacaoAtividadesRequest extends FormRequest
                     if ($lock !== null && ! app(SedeEscritorioVirtualGatilho::class)->titularDoVinculo($solicitacao, $lock)) {
                         $validator->errors()->add(
                             'principal_cnae_id',
-                            config('sile.analise.escritorio_virtual.mensagem_sede_duplicada'),
+                            config('viabiliza.analise.escritorio_virtual.mensagem_sede_duplicada'),
                         );
 
                         return;
@@ -313,7 +313,7 @@ class UpdateSolicitacaoAtividadesRequest extends FormRequest
                 foreach ($naoPermitidos as $code) {
                     $validator->errors()->add(
                         'principal_cnae_id',
-                        str_replace(':cnae', $code, config('sile.analise.escritorio_virtual.mensagem_cnae_fora_anexo_a')),
+                        str_replace(':cnae', $code, config('viabiliza.analise.escritorio_virtual.mensagem_cnae_fora_anexo_a')),
                     );
                 }
             },

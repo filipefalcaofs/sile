@@ -65,8 +65,8 @@ class InscricaoAtividadesIncompativeisDetector implements AbuseDetector
                 $grupos[$chave]['cnaes'][] = (string) $cnae;
             }
 
-            if ($solicitacao->requester_user_id !== null) {
-                $grupos[$chave]['requerentes'][] = (int) $solicitacao->requester_user_id;
+            if ($solicitacao->requester_cidadao_id !== null) {
+                $grupos[$chave]['requerentes'][] = (int) $solicitacao->requester_cidadao_id;
             }
         }
 

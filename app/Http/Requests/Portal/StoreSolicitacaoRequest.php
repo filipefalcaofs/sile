@@ -57,7 +57,7 @@ class StoreSolicitacaoRequest extends FormRequest
                 $hasActiveLink = Company::query()
                     ->whereKey($companyId)
                     ->whereHas('links', fn ($query) => $query
-                        ->where('user_id', $effectiveUser->id)
+                        ->where('cidadao_id', $effectiveUser->id)
                         ->whereNull('ended_at'))
                     ->exists();
 

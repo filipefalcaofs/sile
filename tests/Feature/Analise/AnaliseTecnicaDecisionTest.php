@@ -192,6 +192,32 @@ class AnaliseTecnicaDecisionTest extends TestCase
         $this->assertSame(ViabilityRequestStatus::Deferida, $ficha->viabilityRequest->fresh()->status);
     }
 
+    public function test_deferimento_grava_o_parecer_do_analista_como_motivo(): void
+    {
+        Event::fake([ResultadoEmitido::class]);
+
+        $ficha = $this->fichaFinalizada([
+            ['cnae' => '4712100', 'status_sugerido' => 'deferida', 'status_escolhido' => 'deferida'],
+        ]);
+
+        $result = $this->service()->decide($ficha, $this->analista(), DecisionOutcome::Deferida, "  Atividade compatível com a zona e com o porte do imóvel.  \n");
+
+        $this->assertSame('Atividade compatível com a zona e com o porte do imóvel.', $result->decision->reason);
+    }
+
+    public function test_deferimento_sem_parecer_segue_sem_motivo(): void
+    {
+        Event::fake([ResultadoEmitido::class]);
+
+        $ficha = $this->fichaFinalizada([
+            ['cnae' => '4712100', 'status_sugerido' => 'deferida', 'status_escolhido' => 'deferida'],
+        ]);
+
+        $result = $this->service()->decide($ficha, $this->analista(), DecisionOutcome::Deferida, '   ');
+
+        $this->assertNull($result->decision->reason);
+    }
+
     public function test_indefere_com_uma_cnae_indeferida_sem_exigir_escolha_nas_demais(): void
     {
         Event::fake([ResultadoEmitido::class]);

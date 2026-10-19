@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { useState } from 'react';
 import ConclusaoAnaliseForm from '@/components/analise/conclusao-analise-form';
 import BaixarTvl from '@/components/analise/baixar-tvl';
+import JustificativaReginCard, { type JustificativaRegin } from '@/components/analise/justificativa-regin-card';
 import {
     CategoriaBadges,
     formatarDataHora,
@@ -30,6 +31,9 @@ import GestaoLayout from '@/layouts/gestao-layout';
 import type { SharedProps } from '@/types';
 
 interface TimelineItem {
+    /** status | analise | atribuicao | pendencia | vistoria | malha_fina | documento | integracao */
+    tipo?: string;
+    resultado?: string | null;
     from: string | null;
     from_label: string | null;
     to: string;
@@ -66,6 +70,8 @@ interface ShowProps {
     };
     /** Logradouro declarado × logradouro da inscrição (SEFAZ); null quando coincidem ou falta dado. */
     divergencia_endereco?: { declarado: string; sefaz: string } | null;
+    /** Texto que o parecer leva à JUCEB; null sem decisão ou fora do REGIN. */
+    justificativaRegin?: JustificativaRegin | null;
     /** Explicabilidade passo a passo (HU-099); null quando não há decisão. */
     explicacao?: DecisionExplanationData | null;
     /** Próximas transições manuais oferecidas ao analista (Tarefa 10). */
@@ -74,6 +80,16 @@ interface ShowProps {
 }
 
 type Aba = 'informacoes' | 'tramitacao' | 'explicabilidade';
+
+const ROTULOS_TIPO: Record<string, string> = {
+    analise: 'Análise',
+    atribuicao: 'Atribuição',
+    pendencia: 'Pendência',
+    vistoria: 'Vistoria',
+    malha_fina: 'Malha fina',
+    documento: 'Documento',
+    integracao: 'Integração',
+};
 
 /** Centroide do anel exterior do polígono (média dos vértices em [lng, lat]). */
 function centroide(poligono: Polygon | null): { lat: number; lng: number } | null {
@@ -145,11 +161,14 @@ export default function Show({
     geo,
     divergencia_endereco = null,
     explicacao,
+    justificativaRegin = null,
     analysisStatusProximas,
     conclusaoOpcoes,
     setoresEncaminhamento = [],
     analistasEncaminhamento = [],
+    destinatariosConclusao = [],
 }: ShowProps & {
+    destinatariosConclusao?: { value: string; label: string }[];
     setoresEncaminhamento?: SetorEncaminhamento[];
     analistasEncaminhamento?: AnalistaEncaminhamento[];
 }) {
@@ -157,7 +176,10 @@ export default function Show({
     const podeAnalisar = auth.permissions.includes('analisar-processos');
     const fichaExpresso = processo.fluxo === 'expresso';
     const podeAbrirFicha = podeAnalisar || fichaExpresso;
-    const podeConcluirAnalise = processo.status === 'em_analise' || processo.status === 'deferida';
+    const podeConcluirAnalise =
+        !fichaExpresso &&
+        auth.permissions.includes('concluir-analise') &&
+        (processo.status === 'em_analise' || processo.status === 'deferida');
 
     const [aba, setAba] = useState<Aba>('informacoes');
     const [resultadoConclusao, setResultadoConclusao] = useState('');
@@ -166,6 +188,7 @@ export default function Show({
     const [situacaoAnalise, setSituacaoAnalise] = useState('');
     const [setorEncaminhamento, setSetorEncaminhamento] = useState('');
     const [analistaEncaminhamento, setAnalistaEncaminhamento] = useState('');
+    const [destinatarioConclusao, setDestinatarioConclusao] = useState('');
 
     function concluirAnalise() {
         setErroConclusao(null);
@@ -276,6 +299,9 @@ export default function Show({
                                         '—'
                                     )}
                                 </DescItem>
+                                <DescItem label="Data de entrada">
+                                    {formatarDataHora(processo.protocoled_at)}
+                                </DescItem>
                             </dl>
                         </div>
 
@@ -340,6 +366,14 @@ export default function Show({
 
                         {aba === 'informacoes' && parecer && <ParecerCard parecer={parecer} />}
 
+                        {aba === 'informacoes' && justificativaRegin && auth.permissions.includes('concluir-analise') && (
+                            <JustificativaReginCard
+                                key={justificativaRegin.texto}
+                                processoId={processo.id}
+                                justificativa={justificativaRegin}
+                            />
+                        )}
+
                         {aba === 'informacoes' && divergencia_endereco && (
                             <Alert
                                 variant="warning"
@@ -397,7 +431,7 @@ export default function Show({
                                                         options={analysisStatusProximas}
                                                         onChange={(valor) => {
                                                             setSituacaoAnalise(valor);
-                                                            if (valor !== '' && valor !== 'encaminhado') {
+                                                            if (valor !== '' && valor !== 'encaminhado' && valor !== 'para_conclusao') {
                                                                 router.post(
                                                                     `/gestao/processos/${processo.id}/status-analise`,
                                                                     { status: valor },
@@ -406,6 +440,35 @@ export default function Show({
                                                             }
                                                         }}
                                                     />
+                                                    {situacaoAnalise === 'para_conclusao' && (
+                                                        <>
+                                                            <SearchableSelect
+                                                                id="destinatario-conclusao"
+                                                                value={destinatarioConclusao}
+                                                                placeholder="Encaminhar para (opcional)"
+                                                                options={destinatariosConclusao}
+                                                                onChange={setDestinatarioConclusao}
+                                                            />
+                                                            <Button
+                                                                size="sm"
+                                                                onClick={() =>
+                                                                    router.post(
+                                                                        `/gestao/processos/${processo.id}/status-analise`,
+                                                                        {
+                                                                            status: 'para_conclusao',
+                                                                            encaminhado_para_user_id:
+                                                                                destinatarioConclusao === ''
+                                                                                    ? null
+                                                                                    : Number(destinatarioConclusao),
+                                                                        },
+                                                                        { preserveScroll: true },
+                                                                    )
+                                                                }
+                                                            >
+                                                                Enviar para conclusão
+                                                            </Button>
+                                                        </>
+                                                    )}
                                                     {situacaoAnalise === 'encaminhado' && (
                                                         <>
                                                             <OptionSelect
@@ -487,7 +550,7 @@ export default function Show({
                             <Card>
                                 <CardHeader
                                     title="Tramitação"
-                                    description="Linha do tempo das transições de estado, com o tempo em cada etapa."
+                                    description="Linha do tempo completa do processo: mudanças de situação, análise, atribuições, pendências e envios à JUCEB e à SEFAZ."
                                 />
                                 <CardContent>
                                     {eventos.length === 0 ? (
@@ -498,14 +561,26 @@ export default function Show({
                                     ) : (
                                         <ol className="relative space-y-6 border-l border-gray-200 pl-6 dark:border-gray-800">
                                             {eventos.map((evento, index) => {
-                                                const duracao = formatarDuracao(
-                                                    evento.em,
-                                                    eventos[index + 1]?.em ?? null,
-                                                );
+                                                const status = (evento.tipo ?? 'status') === 'status';
+                                                const proximoStatus = eventos
+                                                    .slice(index + 1)
+                                                    .find((outro) => (outro.tipo ?? 'status') === 'status');
+                                                const duracao = status ? formatarDuracao(evento.em, proximoStatus?.em ?? null) : null;
+                                                const rotuloTipo = ROTULOS_TIPO[evento.tipo ?? 'status'];
 
                                                 return (
-                                                    <li key={`${evento.to}-${evento.em}-${index}`} className="relative">
-                                                        <span className="absolute top-1 -left-[1.4rem] size-3 rounded-full border-2 border-white bg-brand-500 dark:border-gray-900" />
+                                                    <li key={`${evento.tipo ?? 'status'}-${evento.to}-${evento.em}-${index}`} className="relative">
+                                                        <span
+                                                            className={`absolute top-1 -left-[1.4rem] size-3 rounded-full border-2 border-white dark:border-gray-900 ${
+                                                                status
+                                                                    ? 'bg-brand-500'
+                                                                    : evento.resultado === 'bloqueado'
+                                                                      ? 'bg-warning-500'
+                                                                      : evento.tipo === 'integracao'
+                                                                        ? 'bg-success-500'
+                                                                        : 'bg-gray-400'
+                                                            }`}
+                                                        />
                                                         <div className="flex flex-wrap items-center gap-2">
                                                             <span className="text-theme-sm font-medium text-gray-800 dark:text-white/90">
                                                                 {evento.to_label}
@@ -528,6 +603,20 @@ export default function Show({
                                                             {duracao && (
                                                                 <Badge color="light" size="sm">
                                                                     {duracao}
+                                                                </Badge>
+                                                            )}
+                                                            {!status && rotuloTipo && (
+                                                                <Badge
+                                                                    color={
+                                                                        evento.resultado === 'bloqueado'
+                                                                            ? 'warning'
+                                                                            : evento.tipo === 'integracao'
+                                                                              ? 'success'
+                                                                              : 'light'
+                                                                    }
+                                                                    size="sm"
+                                                                >
+                                                                    {rotuloTipo}
                                                                 </Badge>
                                                             )}
                                                         </div>

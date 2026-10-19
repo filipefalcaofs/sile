@@ -78,6 +78,7 @@ class TratamentoMotivosCatalogoTest extends TestCase
             'Subdivisão do CNAE 3314-7/10 ausente na planilha de tratamento carregada — rode o complemento da planilha (tratamento:verificar --corrigir)',
             $ramo->motivo,
         );
+        $this->assertNull($ramo->perguntaSemResposta, 'Falha de carga da planilha não pode virar pergunta sem resposta (que indefere).');
     }
 
     public function test_motivo_editado_no_catalogo_vale_no_resolver(): void

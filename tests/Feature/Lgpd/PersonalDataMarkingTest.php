@@ -3,6 +3,7 @@
 namespace Tests\Feature\Lgpd;
 
 use App\Enums\ViabilityRequestStatus;
+use App\Models\Cidadao;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -80,7 +81,7 @@ class PersonalDataMarkingTest extends TestCase
     public function test_alteracao_de_papel_de_usuario_marca_acesso_a_dado_pessoal(): void
     {
         $admin = User::factory()->administrador()->withAcceptedLgpdTerm()->create();
-        $target = User::factory()->cidadao()->create();
+        $target = User::factory()->create();
 
         $this->actingAs($admin, 'gestao')
             ->put("/gestao/usuarios/{$target->id}/papel", ['role' => 'Analista Terceirizado'])
@@ -95,18 +96,18 @@ class PersonalDataMarkingTest extends TestCase
         ]);
     }
 
-    public function test_inativacao_de_usuario_marca_acesso_a_dado_pessoal(): void
+    public function test_inativacao_de_cidadao_marca_acesso_a_dado_pessoal(): void
     {
         $admin = User::factory()->administrador()->withAcceptedLgpdTerm()->create();
-        $target = User::factory()->cidadao()->create();
+        $target = Cidadao::factory()->create();
 
         $this->actingAs($admin, 'gestao')
-            ->put("/gestao/usuarios/{$target->id}/inativacao")
+            ->put(route('gestao.cidadaos.inativacao.update', $target))
             ->assertRedirect();
 
         $this->assertDatabaseHas('activity_log', [
             'log_name' => 'usuarios',
-            'event' => 'usuario-inativado',
+            'event' => 'cidadao-inativado',
             'result' => 'sucesso',
             'causer_id' => $admin->id,
             'personal_data' => true,

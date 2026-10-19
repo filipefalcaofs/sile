@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Lgpd;
 
+use App\Models\Cidadao;
 use App\Models\LegalTerm;
 use App\Models\LegalTermAcceptance;
 use App\Models\User;
@@ -49,7 +50,7 @@ class TermAcceptanceTest extends TestCase
         $this->assertFalse($user->hasAcceptedTerm($term));
 
         LegalTermAcceptance::create([
-            'user_id' => $user->id,
+            'accepted_by_type' => $user->getMorphClass(), 'accepted_by_id' => $user->id,
             'legal_term_id' => $term->id,
             'accepted_at' => now(),
         ]);
@@ -71,7 +72,7 @@ class TermAcceptanceTest extends TestCase
     public function test_usuario_sem_aceite_e_redirecionado_ao_termo(): void
     {
         $this->seedRolesAndTerm();
-        $cidadao = User::factory()->cidadao()->create();
+        $cidadao = Cidadao::factory()->create();
 
         $this->actingAs($cidadao)
             ->get('/portal/painel')
@@ -81,7 +82,7 @@ class TermAcceptanceTest extends TestCase
     public function test_pagina_do_termo_renderiza_conteudo_vigente(): void
     {
         $this->seedRolesAndTerm();
-        $cidadao = User::factory()->cidadao()->create();
+        $cidadao = Cidadao::factory()->create();
 
         $this->actingAs($cidadao)
             ->get('/portal/termo-lgpd')
@@ -96,7 +97,7 @@ class TermAcceptanceTest extends TestCase
     public function test_aceite_grava_versao_ip_e_audita(): void
     {
         $this->seedRolesAndTerm();
-        $cidadao = User::factory()->cidadao()->create();
+        $cidadao = Cidadao::factory()->create();
         $term = LegalTerm::current('lgpd');
 
         $this->actingAs($cidadao)
@@ -104,7 +105,7 @@ class TermAcceptanceTest extends TestCase
             ->assertRedirect('/portal/painel');
 
         $this->assertDatabaseHas('legal_term_acceptances', [
-            'user_id' => $cidadao->id,
+            'accepted_by_type' => $cidadao->getMorphClass(), 'accepted_by_id' => $cidadao->id,
             'legal_term_id' => $term->id,
             'ip_address' => '127.0.0.1',
         ]);
@@ -120,7 +121,7 @@ class TermAcceptanceTest extends TestCase
     public function test_aceite_sem_concordancia_e_bloqueado(): void
     {
         $this->seedRolesAndTerm();
-        $cidadao = User::factory()->cidadao()->create();
+        $cidadao = Cidadao::factory()->create();
 
         $this->actingAs($cidadao)
             ->post('/portal/termo-lgpd', ['accepted' => false])
@@ -132,7 +133,7 @@ class TermAcceptanceTest extends TestCase
     public function test_nova_versao_publicada_reexige_aceite(): void
     {
         $this->seedRolesAndTerm();
-        $cidadao = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $cidadao = Cidadao::factory()->withAcceptedLgpdTerm()->create();
 
         $this->actingAs($cidadao)->get('/portal/painel')->assertOk();
 
@@ -163,7 +164,7 @@ class TermAcceptanceTest extends TestCase
 
         // Defesa em profundidade: sessão da gestão sem a permissão (ex.:
         // papel rebaixado após o login) é barrada antes do gate do termo.
-        $cidadao = User::factory()->cidadao()->create();
-        $this->actingAs($cidadao, 'gestao')->get('/gestao')->assertForbidden();
+        $servidor = User::factory()->create();
+        $this->actingAs($servidor, 'gestao')->get('/gestao')->assertForbidden();
     }
 }

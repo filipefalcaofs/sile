@@ -21,7 +21,7 @@ final class CondicionanteEscritorioVirtual
      */
     public function texto(string $cnae, array $respostas): ?string
     {
-        $gatilho = (string) config('sile.analise.escritorio_virtual.cnae_gatilho_sede');
+        $gatilho = (string) config('viabiliza.analise.escritorio_virtual.cnae_gatilho_sede');
 
         if ($this->digitos($cnae) !== $this->digitos($gatilho) || ($respostas[self::PERGUNTA_SEDE] ?? null) !== false) {
             return null;
@@ -34,8 +34,8 @@ final class CondicionanteEscritorioVirtual
         }
 
         return array_diff($opcoes, [self::OPCAO_COWORKING]) !== []
-            ? (string) config('sile.analise.escritorio_virtual.condicionante_apoio_administrativo')
-            : (string) config('sile.analise.escritorio_virtual.condicionante_coworking');
+            ? (string) config('viabiliza.analise.escritorio_virtual.condicionante_apoio_administrativo')
+            : (string) config('viabiliza.analise.escritorio_virtual.condicionante_coworking');
     }
 
     private function digitos(string $cnae): string

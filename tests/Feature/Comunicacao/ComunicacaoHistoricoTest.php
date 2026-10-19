@@ -6,6 +6,7 @@ use App\Enums\CommunicationChannel;
 use App\Enums\CommunicationStatus;
 use App\Enums\CommunicationType;
 use App\Enums\ViabilityRequestStatus;
+use App\Models\Cidadao;
 use App\Models\Communication;
 use App\Models\User;
 use App\Models\ViabilityRequest;
@@ -44,21 +45,21 @@ class ComunicacaoHistoricoTest extends TestCase
         return User::factory()->analista()->withAcceptedLgpdTerm()->create();
     }
 
-    private function portalUser(): User
+    private function portalUser(): Cidadao
     {
-        return User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        return Cidadao::factory()->withAcceptedLgpdTerm()->create();
     }
 
     /**
      * Processo protocolado com protocolo único (evita colisão do protocoled()
      * hardcoded quando há mais de um processo no teste).
      */
-    private function processo(?User $owner = null): ViabilityRequest
+    private function processo(?Cidadao $owner = null): ViabilityRequest
     {
         // Sem owner explícito, a factory cria o próprio requerente (FK NOT NULL).
         $attrs = $owner === null ? [] : [
-            'requester_user_id' => $owner->id,
-            'created_by_user_id' => $owner->id,
+            'requester_cidadao_id' => $owner->id,
+            'created_by_type' => $owner->getMorphClass(), 'created_by_id' => $owner->id,
         ];
 
         $request = ViabilityRequest::factory()->create($attrs);

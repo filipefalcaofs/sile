@@ -5,8 +5,11 @@ namespace Tests\Feature\Regin;
 use App\Enums\ViabilityRequestOrigin;
 use App\Enums\ViabilityRequestStatus;
 use App\Jobs\DecidirFluxoExpressoJob;
+use App\Models\Activity;
+use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\Company;
+use App\Models\IntegrationCall;
 use App\Models\ReginRecebimento;
 use App\Models\User;
 use App\Models\ViabilityRequest;
@@ -134,6 +137,26 @@ class ReginProcessoProtocoladorTest extends TestCase
         );
     }
 
+    /**
+     * @param  array<string, string|null>  $campos
+     */
+    private function resultadoComCadastro(string $inscricao, array $campos): PropertyRegistryResult
+    {
+        $cadastro = new PropertyCadastroCampos(...array_replace(
+            PropertyCadastroCampos::vazios()->toArray(),
+            ['inscricao' => $inscricao],
+            $campos,
+        ));
+
+        return new PropertyRegistryResult(
+            latitude: null,
+            longitude: null,
+            inscricao: $inscricao,
+            source: 'teste',
+            cadastro: $cadastro,
+        );
+    }
+
     public function test_ruc_completo_protocola_com_cnaes_endereco_area_e_inscricao(): void
     {
         $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($this->ruc()));
@@ -152,6 +175,131 @@ class ReginProcessoProtocoladorTest extends TestCase
         $this->assertSame(2, $processo->cnaes()->count());
         $this->assertSame('4712100', $processo->primaryCnae()->first()?->code);
         $this->assertNotNull($processo->protocol_number);
+    }
+
+    public function test_ruc_nao_vincula_o_processo_ao_usuario_logado_nem_ao_primeiro_usuario(): void
+    {
+        $gestor = User::factory()->create();
+        $this->actingAs($gestor, 'gestao');
+
+        $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($this->ruc()));
+
+        $this->assertNotNull($processo);
+        $this->assertNull($processo->requester_cidadao_id);
+        $this->assertNull($processo->requester);
+        $this->assertSame(User::class, $processo->created_by_type);
+        $this->assertNotSame($gestor->id, $processo->created_by_id);
+    }
+
+    public function test_ruc_sem_solicitante_nao_confunde_a_integracao_com_cidadao_de_mesmo_id(): void
+    {
+        $integracao = app(ReginProcessoProtocolador::class)->integracao();
+        Cidadao::factory()->create(['id' => $integracao->id]);
+
+        $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($this->ruc()));
+
+        $this->assertNull($processo->requester_cidadao_id);
+        $this->assertSame(User::class, $processo->created_by_type);
+        $this->assertSame($integracao->id, $processo->created_by_id);
+        $this->assertTrue($processo->createdBy->is($integracao));
+        $this->assertSame(0, Cidadao::query()->where('cpf', '00000000000')->count());
+        $this->assertDatabaseHas('users', ['email' => User::EMAIL_INTEGRACAO_REGIN]);
+    }
+
+    public function test_cpf_ja_usado_nao_impede_o_solicitante_nao_identificado(): void
+    {
+        User::factory()->create(['cpf' => '00000000000']);
+
+        $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($this->ruc()));
+
+        $this->assertNotNull($processo);
+        $this->assertSame(User::EMAIL_INTEGRACAO_REGIN, $processo->createdBy->email);
+    }
+
+    public function test_comando_refaz_requerente_pelo_envelope_e_criador_pela_integracao(): void
+    {
+        $dev = User::factory()->create(['email' => 'dev@exemplo.test']);
+        config(['viabiliza.tramitacao.atores_ocultos.emails' => ['dev@exemplo.test']]);
+        $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($this->ruc()));
+        $processo->forceFill([
+            'requester_cidadao_id' => null,
+            'created_by_type' => $dev->getMorphClass(),
+            'created_by_id' => $dev->id,
+            'origem_declarada' => ['cpf_solicitante' => '52998224725', 'nome_solicitante' => 'Maria Souza', 'email_solicitante' => 'maria@exemplo.com'],
+        ])->save();
+
+        $this->artisan('regin:corrigir-requerentes', ['--dry-run' => true])->assertSuccessful();
+        $this->assertNull($processo->fresh()->requester_cidadao_id);
+        $this->assertSame($dev->id, $processo->fresh()->created_by_id);
+        $this->assertSame(0, Cidadao::query()->where('cpf', '52998224725')->count());
+
+        $this->artisan('regin:corrigir-requerentes')->assertSuccessful();
+
+        $processo = $processo->fresh();
+        $this->assertSame('maria@exemplo.com', $processo->requester->email);
+        $this->assertInstanceOf(Cidadao::class, $processo->requester);
+        $this->assertFalse($processo->requester->temSenha());
+        $this->assertSame(User::EMAIL_INTEGRACAO_REGIN, $processo->createdBy->email);
+        $this->assertSame(User::class, $processo->created_by_type);
+    }
+
+    public function test_comando_le_o_solicitante_do_json_do_log_de_integracao_quando_o_processo_nao_guarda_o_envelope(): void
+    {
+        $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($this->ruc()));
+        $processo->forceFill(['origem_declarada' => null])->save();
+
+        IntegrationCall::query()->create([
+            'direction' => 'entrada',
+            'integration' => 'regin',
+            'method' => 'POST',
+            'url' => 'https://viabiliza.test/api_integracao/recebe',
+            'outcome' => 'sucesso',
+            'request_body' => json_encode(['protocolo' => '43747', 'cpfSolicitante' => '529.982.247-25', 'nomeSolicitante' => 'Maria Souza', 'emailSolicitante' => 'maria@exemplo.com']),
+        ]);
+
+        $this->artisan('regin:corrigir-requerentes')->assertSuccessful();
+
+        $processo = $processo->fresh();
+        $this->assertSame('maria@exemplo.com', $processo->requester->email);
+        $this->assertSame('52998224725', $processo->requester->cpf);
+        $this->assertSame(User::EMAIL_INTEGRACAO_REGIN, $processo->createdBy->email);
+    }
+
+    public function test_comando_preserva_o_requerente_existente_quando_nao_ha_solicitante_recuperavel(): void
+    {
+        $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($this->ruc()));
+        $requerente = Cidadao::factory()->create();
+        $processo->forceFill(['requester_cidadao_id' => $requerente->id, 'origem_declarada' => null])->save();
+
+        $this->artisan('regin:corrigir-requerentes')->assertSuccessful();
+
+        $this->assertSame($requerente->id, $processo->fresh()->requester_cidadao_id);
+        $this->assertSame(User::EMAIL_INTEGRACAO_REGIN, $processo->fresh()->createdBy->email);
+    }
+
+    public function test_comando_reatribui_processo_criado_por_conta_de_sistema_invalid_e_e_idempotente(): void
+    {
+        $sistema = User::factory()->create(['email' => 'robo@sistema.invalid']);
+        $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($this->ruc()));
+        $processo->forceFill([
+            'requester_cidadao_id' => Cidadao::factory()->create()->id,
+            'created_by_type' => $sistema->getMorphClass(),
+            'created_by_id' => $sistema->id,
+            'origem_declarada' => ['cpf_solicitante' => '52998224725', 'nome_solicitante' => 'Maria Souza', 'email_solicitante' => 'maria@exemplo.com'],
+        ])->save();
+
+        $this->artisan('regin:corrigir-requerentes', ['--dry-run' => true])->assertSuccessful();
+        $this->assertSame($sistema->id, $processo->fresh()->created_by_id);
+        $this->assertNotSame($processo->fresh()->requester_cidadao_id, Cidadao::query()->where('cpf', '52998224725')->value('id'));
+
+        $this->artisan('regin:corrigir-requerentes')->assertSuccessful();
+        $primeiro = $processo->fresh();
+        $this->assertSame(User::EMAIL_INTEGRACAO_REGIN, $primeiro->createdBy->email);
+        $this->assertSame('maria@exemplo.com', $primeiro->requester->email);
+
+        $this->artisan('regin:corrigir-requerentes')->assertSuccessful();
+        $this->assertSame($primeiro->requester_cidadao_id, $processo->fresh()->requester_cidadao_id);
+        $this->assertSame(1, Cidadao::query()->where('cpf', '52998224725')->count());
     }
 
     public function test_natureza_juridica_do_ruc_vai_para_a_empresa(): void
@@ -634,6 +782,193 @@ XML,
         );
 
         $this->assertNull($processo);
+    }
+
+    public function test_endereco_vazio_no_regin_carrega_da_inscricao_imobiliaria(): void
+    {
+        $this->fakeInscricao(fn (string $inscricao): PropertyRegistryResult => $this->resultadoComCadastro($inscricao, [
+            'endereco' => 'Estrada Campinas Pirajá, 4655',
+            'bairro' => 'CAMPINAS DE PIRAJA',
+            'cep' => '41270-000',
+        ]));
+
+        $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($this->ruc([
+            'RUC_ESTAB' => ['RES_DIRECCION' => '', 'RES_NUME' => '', 'RES_URBANIZACION' => '', 'RES_ZONA_POSTAL' => '41270000'],
+        ])));
+
+        $this->assertNotNull($processo);
+        $this->assertSame('Estrada Campinas Pirajá', $processo->address_street);
+        $this->assertSame('4655', $processo->address_number);
+        $this->assertSame('CAMPINAS DE PIRAJA', $processo->address_neighborhood);
+        $this->assertSame('41270000', $processo->address_zip);
+    }
+
+    public function test_endereco_do_cadastro_descarta_o_sufixo_depois_do_travessao(): void
+    {
+        $this->fakeInscricao(fn (string $inscricao): PropertyRegistryResult => $this->resultadoComCadastro($inscricao, [
+            'endereco' => 'Avenida Luís Viana Filho, 6282 — SUPERMERCADO',
+            'bairro' => 'PATAMARES',
+            'cep' => '41680-400',
+        ]));
+
+        $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($this->ruc([
+            'RUC_ESTAB' => ['RES_DIRECCION' => '', 'RES_NUME' => '', 'RES_URBANIZACION' => ''],
+        ])));
+
+        $this->assertNotNull($processo);
+        $this->assertSame('Avenida Luís Viana Filho', $processo->address_street);
+        $this->assertSame('6282', $processo->address_number);
+    }
+
+    public function test_endereco_do_cadastro_sem_numero_vira_sem_numero(): void
+    {
+        $this->fakeInscricao(fn (string $inscricao): PropertyRegistryResult => $this->resultadoComCadastro($inscricao, [
+            'endereco' => 'Rua Arquiteto Marcos Moreira Solter',
+            'bairro' => 'SAO CRISTOVAO',
+            'cep' => '41510-808',
+        ]));
+
+        $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($this->ruc([
+            'RUC_ESTAB' => ['RES_DIRECCION' => '', 'RES_NUME' => '', 'RES_URBANIZACION' => ''],
+        ])));
+
+        $this->assertNotNull($processo);
+        $this->assertSame('Rua Arquiteto Marcos Moreira Solter', $processo->address_street);
+        $this->assertSame('s/n', $processo->address_number);
+    }
+
+    public function test_cep_do_envelope_prevalece_sobre_o_do_cadastro(): void
+    {
+        $this->fakeInscricao(fn (string $inscricao): PropertyRegistryResult => $this->resultadoComCadastro($inscricao, [
+            'endereco' => 'Rua do Cadastro, 10',
+            'bairro' => 'BAIRRO DO CADASTRO',
+            'cep' => '41270-000',
+        ]));
+
+        $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($this->ruc([
+            'RUC_ESTAB' => ['RES_DIRECCION' => '', 'RES_URBANIZACION' => '', 'RES_ZONA_POSTAL' => '40000000'],
+        ])));
+
+        $this->assertNotNull($processo);
+        $this->assertSame('40000000', $processo->address_zip);
+    }
+
+    public function test_endereco_e_area_do_envelope_prevalecem_sobre_o_cadastro(): void
+    {
+        $this->fakeInscricao(fn (string $inscricao): PropertyRegistryResult => $this->resultadoComCadastro($inscricao, [
+            'endereco' => 'Rua do Cadastro, 10',
+            'bairro' => 'BAIRRO DO CADASTRO',
+            'cep' => '41270-000',
+            'area_construida_m2' => '50',
+            'area_terreno_m2' => '900',
+        ]));
+
+        $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($this->ruc()));
+
+        $this->assertNotNull($processo);
+        $this->assertSame('Rua das Flores', $processo->address_street);
+        $this->assertSame('Centro', $processo->address_neighborhood);
+        $this->assertSame(834.0, (float) $processo->used_area_m2);
+        $this->assertNull(Activity::query()->where('event', 'complementar')->first());
+    }
+
+    public function test_area_zerada_usa_a_do_terreno_quando_a_construida_do_cadastro_e_zero(): void
+    {
+        $this->fakeInscricao(fn (string $inscricao): PropertyRegistryResult => $this->resultadoComCadastro($inscricao, [
+            'area_construida_m2' => '0',
+            'area_terreno_m2' => '300',
+        ]));
+
+        $processo = app(ReginProcessoProtocolador::class)->protocolar(
+            $this->recebimento($this->ruc(['RUC_ESTAB' => ['RES_AREA' => '0']])),
+        );
+
+        $this->assertNotNull($processo);
+        $this->assertSame(300.0, (float) $processo->used_area_m2);
+    }
+
+    public function test_area_construida_do_cadastro_prevalece_sobre_a_do_terreno(): void
+    {
+        $this->fakeInscricao(fn (string $inscricao): PropertyRegistryResult => $this->resultadoComCadastro($inscricao, [
+            'area_construida_m2' => '150,00',
+            'area_terreno_m2' => '800',
+        ]));
+
+        $processo = app(ReginProcessoProtocolador::class)->protocolar(
+            $this->recebimento($this->ruc(['RUC_ESTAB' => ['RES_AREA' => '0']])),
+        );
+
+        $this->assertNotNull($processo);
+        $this->assertSame(150.0, (float) $processo->used_area_m2);
+    }
+
+    public function test_dados_complementados_pelo_cadastro_ficam_auditados(): void
+    {
+        $this->fakeInscricao(fn (string $inscricao): PropertyRegistryResult => $this->resultadoComCadastro($inscricao, [
+            'endereco' => 'Rua do Cadastro, 10',
+            'bairro' => 'BAIRRO DO CADASTRO',
+            'cep' => '41270-000',
+            'area_construida_m2' => '0',
+            'area_terreno_m2' => '300',
+        ]));
+
+        $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($this->ruc([
+            'RUC_ESTAB' => ['RES_AREA' => '0', 'RES_DIRECCION' => '', 'RES_URBANIZACION' => ''],
+        ])));
+
+        $registro = Activity::query()->where('event', 'complementar')->first();
+
+        $this->assertNotNull($registro);
+        $this->assertSame('regin', $registro->log_name);
+        $this->assertSame('43747', $registro->properties['protocolo']);
+        $this->assertEqualsCanonicalizing(['endereco', 'area_terreno'], $registro->properties['campos']);
+        $this->assertSame($processo->id, $registro->subject_id);
+    }
+
+    public function test_recusa_por_cadastro_indisponivel_fica_auditada_com_o_motivo(): void
+    {
+        $this->fakeInscricao(function (string $inscricao): PropertyRegistryResult {
+            throw new PropertyRegistryUnavailableException($inscricao);
+        });
+
+        $processo = app(ReginProcessoProtocolador::class)->protocolar(
+            $this->recebimento($this->ruc(['RUC_ESTAB' => ['RES_AREA' => '0']])),
+        );
+
+        $registro = Activity::query()->where('event', 'protocolar')->first();
+
+        $this->assertNull($processo);
+        $this->assertNotNull($registro);
+        $this->assertSame('falha', $registro->result);
+        $this->assertSame('43747', $registro->properties['protocolo']);
+        $this->assertEqualsCanonicalizing(['sem_area', 'cadastro_indisponivel'], $registro->properties['motivos']);
+    }
+
+    public function test_recusa_sem_inscricao_e_sem_endereco_fica_auditada_com_os_motivos(): void
+    {
+        $corpo = $this->ruc(['RUC_ESTAB' => ['RES_DIRECCION' => '']]);
+        unset($corpo['rowset']['GROUPRUC_GEN_PROTOCOLO']);
+
+        $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($corpo));
+
+        $registro = Activity::query()->where('event', 'protocolar')->first();
+
+        $this->assertNull($processo);
+        $this->assertNotNull($registro);
+        $this->assertEqualsCanonicalizing(['sem_endereco', 'sem_inscricao'], $registro->properties['motivos']);
+    }
+
+    public function test_recusa_sem_cnae_fica_auditada_com_o_motivo(): void
+    {
+        $corpo = $this->ruc();
+        unset($corpo['rowset']['GROUPRUC_ACTV_ECON']);
+
+        app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($corpo));
+
+        $registro = Activity::query()->where('event', 'protocolar')->first();
+
+        $this->assertNotNull($registro);
+        $this->assertSame(['sem_cnae'], $registro->properties['motivos']);
     }
 
     public function test_ruc_sem_area_nao_protocola(): void

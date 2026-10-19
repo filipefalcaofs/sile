@@ -37,7 +37,7 @@ class TvlPdfServiceTest extends TestCase
     {
         parent::setUp();
 
-        // O disco padrão do TVL (config sile.analise.tvl.disk) é 'local'; o teste
+        // O disco padrão do TVL (config viabiliza.analise.tvl.disk) é 'local'; o teste
         // grava no disco fake para provar a escrita real sem tocar o filesystem.
         Storage::fake('local');
     }
@@ -172,14 +172,14 @@ class TvlPdfServiceTest extends TestCase
         $document = $this->service()->generate($this->decisaoDeferida(), User::factory()->create());
 
         $this->assertNotSame('public', $document->disk);
-        $this->assertSame(config('sile.analise.tvl.disk'), $document->disk);
+        $this->assertSame(config('viabiliza.analise.tvl.disk'), $document->disk);
     }
 
     public function test_recusa_disco_publico_configurado(): void
     {
         // Guarda anti-vazamento: ainda que alguém configure o disco como 'public',
         // o serviço RECUSA emitir (o TVL nunca pode ir a um disco público).
-        config()->set('sile.analise.tvl.disk', 'public');
+        config()->set('viabiliza.analise.tvl.disk', 'public');
 
         $this->expectException(RuntimeException::class);
 
@@ -234,8 +234,8 @@ class TvlPdfServiceTest extends TestCase
         $caminho = tempnam(sys_get_temp_dir(), 'tvl_assinatura').'.png';
         file_put_contents($caminho, $png);
 
-        config()->set('sile.analise.tvl.assinatura.modo', 'imagem');
-        config()->set('sile.analise.tvl.assinatura.imagem_path', $caminho);
+        config()->set('viabiliza.analise.tvl.assinatura.modo', 'imagem');
+        config()->set('viabiliza.analise.tvl.assinatura.imagem_path', $caminho);
 
         $dados = $this->service()->montarDados($this->decisaoDeferida(), 'TVL-COD');
         $html = view('tvl.documento', $dados)->render();
@@ -308,7 +308,7 @@ class TvlPdfServiceTest extends TestCase
     public function test_assinatura_parametrizavel_modo_nenhuma_nao_assina(): void
     {
         // RN-005: modo 'nenhuma' → nenhuma assinatura embutida (sem forjar firma).
-        config()->set('sile.analise.tvl.assinatura.modo', 'nenhuma');
+        config()->set('viabiliza.analise.tvl.assinatura.modo', 'nenhuma');
 
         $dados = $this->service()->montarDados($this->decisaoDeferida(), 'TVL-COD');
         $html = view('tvl.documento', $dados)->render();

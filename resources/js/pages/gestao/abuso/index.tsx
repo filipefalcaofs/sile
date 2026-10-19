@@ -36,11 +36,16 @@ const EVIDENCIA_LABEL: Record<string, string> = {
     total: 'Total',
     limite: 'Limite',
     ids: 'Processos',
+    // Chave legada: evidência gravada antes da separação cidadão x servidor.
     created_by_user_id: 'Representante',
+    created_by_type: 'Tipo do representante',
+    created_by_id: 'Representante',
     poligono_hash: 'Polígono',
     enderecos: 'Endereços',
     enderecos_distintos: 'Endereços distintos',
     minimo: 'Mínimo',
+    requester_cidadao_id: 'Requerente',
+    // Chave legada: evidência gravada antes da separação cidadão x servidor.
     requester_user_id: 'Requerente',
     processos: 'Processos',
     inscricao: 'Inscrição',
@@ -52,6 +57,11 @@ const EVIDENCIA_LABEL: Record<string, string> = {
 function rotuloRegra(chave: string): string {
     return REGRA_LABEL[chave] ?? chave.replaceAll('_', ' ');
 }
+
+const TIPO_CONTA_LABEL: Record<string, string> = {
+    'App\\Models\\Cidadao': 'Cidadão',
+    'App\\Models\\User': 'Servidor',
+};
 
 function rotuloEvidencia(chave: string): string {
     return EVIDENCIA_LABEL[chave] ?? chave.replaceAll('_', ' ');
@@ -222,7 +232,7 @@ function resumoEvidencia(evidence: Record<string, unknown> | null): { chave: str
         }
 
         if (typeof valor === 'string' || typeof valor === 'number') {
-            itens.push({ chave, valor: String(valor) });
+            itens.push({ chave, valor: TIPO_CONTA_LABEL[String(valor)] ?? String(valor) });
         } else if (typeof valor === 'boolean') {
             itens.push({ chave, valor: valor ? 'sim' : 'não' });
         } else if (Array.isArray(valor)) {

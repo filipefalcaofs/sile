@@ -69,7 +69,11 @@ class CaixaSetorController extends Controller
 
         // Visões da caixa (abas): "para_distribuir" (padrão — sem responsável)
         // e "distribuidos" (acompanhamento, com a analista atribuída).
-        $visao = $request->input('visao') === 'distribuidos' ? 'distribuidos' : 'para_distribuir';
+        $visao = match ($request->input('visao')) {
+            'distribuidos' => 'distribuidos',
+            'para_conclusao' => 'para_conclusao',
+            default => 'para_distribuir',
+        };
 
         $filtros = $this->filtrosDaCaixa($request);
 
@@ -78,18 +82,22 @@ class CaixaSetorController extends Controller
 
         $base = $this->processos->aplicarFiltros($base, $filtros);
 
+        $paraConclusao = AnalysisStatus::ParaConclusao->value;
+        $foraDaConclusao = fn ($query) => $query->where(
+            fn ($q) => $q->whereNull('analysis_status')->orWhere('analysis_status', '!=', $paraConclusao),
+        );
+
         $contadores = [
-            'para_distribuir' => (clone $base)->whereNull('assigned_user_id')->count(),
-            'distribuidos' => (clone $base)->whereNotNull('assigned_user_id')->count(),
+            'para_distribuir' => $foraDaConclusao((clone $base)->whereNull('assigned_user_id'))->count(),
+            'distribuidos' => $foraDaConclusao((clone $base)->whereNotNull('assigned_user_id'))->count(),
+            'para_conclusao' => (clone $base)->where('analysis_status', $paraConclusao)->count(),
         ];
 
         $processos = $base
-            ->when(
-                $visao === 'para_distribuir',
-                fn ($query) => $query->whereNull('assigned_user_id'),
-                fn ($query) => $query->whereNotNull('assigned_user_id'),
-            )
-            ->with(['company', 'serviceType:id,name', 'eventos', 'cnaes', 'sector:id,name', 'assignedTo:id,name'])
+            ->when($visao === 'para_distribuir', fn ($query) => $foraDaConclusao($query->whereNull('assigned_user_id')))
+            ->when($visao === 'distribuidos', fn ($query) => $foraDaConclusao($query->whereNotNull('assigned_user_id')))
+            ->when($visao === 'para_conclusao', fn ($query) => $query->where('analysis_status', $paraConclusao))
+            ->with(['company', 'serviceType:id,name', 'eventos', 'cnaes', 'sector:id,name', 'assignedTo:id,name', 'conclusaoEncaminhadaPara:id,name'])
             ->orderBy('analysis_due_at')
             ->orderBy('id')
             ->paginate($perPage)
@@ -130,6 +138,7 @@ class CaixaSetorController extends Controller
                 'sector' => $processo->sector?->name,
                 'assigned_user_id' => $processo->assigned_user_id,
                 'assigned_to' => $processo->assignedTo?->name,
+                'encaminhado_para' => $processo->conclusaoEncaminhadaPara?->name,
                 'analysis_due_at' => $processo->analysis_due_at?->toIso8601String(),
                 // Redistribuir só antes da conclusão (regra única do enum).
                 'pode_redistribuir' => $processo->assigned_user_id !== null
@@ -364,7 +373,7 @@ class CaixaSetorController extends Controller
         $processos = $this->naCaixaDoUsuario(ViabilityRequest::query(), $request->user())
             ->whereIn('id', $pedidos)
             ->where('status', ViabilityRequestStatus::EmAnalise->value)
-            ->whereNull('assigned_user_id')
+            ->where($this->semResponsavelOuParaConclusao(...))
             ->get();
 
         if ($processos->count() !== $pedidos->count()) {
@@ -413,7 +422,7 @@ class CaixaSetorController extends Controller
                 $processos = $this->naCaixaDoUsuario(ViabilityRequest::query(), $request->user())
                     ->whereIn('id', $todosIds->unique())
                     ->where('status', ViabilityRequestStatus::EmAnalise->value)
-                    ->whereNull('assigned_user_id')
+                    ->where($this->semResponsavelOuParaConclusao(...))
                     ->lockForUpdate()
                     ->get()
                     ->keyBy('id');
@@ -550,6 +559,18 @@ class CaixaSetorController extends Controller
         }
 
         return back()->with('status', 'Processo assumido.');
+    }
+
+    /**
+     * Distribuível: sem responsável, ou na aba "Para conclusão", onde o apoio
+     * também reatribui quem vai concluir.
+     *
+     * @param  Builder<ViabilityRequest>  $query
+     */
+    private function semResponsavelOuParaConclusao(Builder $query): void
+    {
+        $query->whereNull('assigned_user_id')
+            ->orWhere('analysis_status', AnalysisStatus::ParaConclusao->value);
     }
 
     /**

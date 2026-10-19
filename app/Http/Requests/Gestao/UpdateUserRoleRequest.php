@@ -9,11 +9,12 @@ use Illuminate\Validation\Rule;
 class UpdateUserRoleRequest extends FormRequest
 {
     /**
-     * A autorização é o middleware permission:manter-usuarios da rota.
+     * A permissão é o middleware permission:manter-usuarios da rota. Conta de sistema
+     * (integração REGIN, `.invalid`, suporte) não é gerenciável pela tela.
      */
     public function authorize(): bool
     {
-        return true;
+        return $this->route('user')?->isContaDeSistema() !== true;
     }
 
     /**

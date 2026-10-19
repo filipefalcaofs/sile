@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Spatie\Permission\Models\Role;
 
 /**
  * @extends Factory<User>
@@ -95,11 +96,12 @@ class UserFactory extends Factory
     }
 
     /**
-     * Assign the cidadao role (role must be seeded first).
+     * Papel `cidadao` de antes da separação cidadão x servidor (o papel não existe mais).
+     * Só para os testes das migrations que leem contas antigas de `users`.
      */
-    public function cidadao(): static
+    public function papelCidadaoLegado(): static
     {
-        return $this->afterCreating(fn (User $user) => $user->assignRole('cidadao'));
+        return $this->afterCreating(fn (User $user) => $user->assignRole(Role::findOrCreate('cidadao', 'web')));
     }
 
     /**
@@ -108,6 +110,14 @@ class UserFactory extends Factory
     public function analista(): static
     {
         return $this->afterCreating(fn (User $user) => $user->assignRole('Analista Terceirizado'));
+    }
+
+    /**
+     * Assign the Analista Servidor role, que também conclui processos (role must be seeded first).
+     */
+    public function analistaServidor(): static
+    {
+        return $this->afterCreating(fn (User $user) => $user->assignRole('Analista Servidor'));
     }
 
     /**
@@ -144,7 +154,8 @@ class UserFactory extends Factory
                 ?? LegalTerm::factory()->published()->create(['type' => 'lgpd', 'version' => 1]);
 
             LegalTermAcceptance::create([
-                'user_id' => $user->id,
+                'accepted_by_type' => User::class,
+                'accepted_by_id' => $user->id,
                 'legal_term_id' => $term->id,
                 'ip_address' => '127.0.0.1',
                 'accepted_at' => now(),

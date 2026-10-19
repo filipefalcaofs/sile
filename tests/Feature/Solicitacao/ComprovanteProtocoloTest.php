@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Solicitacao;
 
-use App\Models\User;
+use App\Models\Cidadao;
 use App\Models\ViabilityRequest;
 use App\Services\Solicitacao\ComprovanteProtocoloService;
 use App\Services\Solicitacao\ProtocolarSolicitacaoService;
@@ -28,16 +28,16 @@ class ComprovanteProtocoloTest extends TestCase
         $this->seed(RolesAndPermissionsSeeder::class);
     }
 
-    private function portalUser(): User
+    private function portalUser(): Cidadao
     {
-        return User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        return Cidadao::factory()->withAcceptedLgpdTerm()->create();
     }
 
-    private function protocoladaDoUsuario(User $user): ViabilityRequest
+    private function protocoladaDoUsuario(Cidadao $user): ViabilityRequest
     {
         $solicitacao = ViabilityRequest::factory()->draft()->withPrimaryCnae()->create([
-            'requester_user_id' => $user->id,
-            'created_by_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
+            'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
         ]);
 
         app(ProtocolarSolicitacaoService::class)->protocol($solicitacao, $user);
@@ -71,8 +71,8 @@ class ComprovanteProtocoloTest extends TestCase
     {
         $user = $this->portalUser();
         $rascunho = ViabilityRequest::factory()->draft()->withPrimaryCnae()->create([
-            'requester_user_id' => $user->id,
-            'created_by_user_id' => $user->id,
+            'requester_cidadao_id' => $user->id,
+            'created_by_type' => $user->getMorphClass(), 'created_by_id' => $user->id,
         ]);
 
         $this->actingAs($user)

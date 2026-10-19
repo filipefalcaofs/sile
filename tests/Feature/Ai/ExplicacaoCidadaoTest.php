@@ -8,7 +8,7 @@ use App\Enums\AiSuggestionType;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Models\AiConfiguration;
 use App\Models\AiSuggestion;
-use App\Models\User;
+use App\Models\Cidadao;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Ai\ExplicacaoCidadaoService;
@@ -46,13 +46,14 @@ class ExplicacaoCidadaoTest extends TestCase
      * Processo DECIDIDO (ViabilityDecision deferida) — a fonte REAL da explicação.
      * requester = $dono para a policy view do portal.
      */
-    private function processoDecidido(?User $dono = null): ViabilityRequest
+    private function processoDecidido(?Cidadao $dono = null): ViabilityRequest
     {
         $atributos = [];
 
         if ($dono !== null) {
-            $atributos['requester_user_id'] = $dono->id;
-            $atributos['created_by_user_id'] = $dono->id;
+            $atributos['requester_cidadao_id'] = $dono->id;
+            $atributos['created_by_type'] = $dono->getMorphClass();
+            $atributos['created_by_id'] = $dono->id;
         }
 
         $processo = ViabilityRequest::factory()->protocoled()->withPrimaryCnae()->create($atributos);
@@ -69,7 +70,7 @@ class ExplicacaoCidadaoTest extends TestCase
 
     public function test_explica_decisao_com_fonte_quando_ha_decisao(): void
     {
-        config(['sile.features.ia_explicacao' => true]);
+        config(['viabiliza.features.ia_explicacao' => true]);
         $this->provedorTextoAtivo();
         $processo = $this->processoDecidido();
 
@@ -104,7 +105,7 @@ class ExplicacaoCidadaoTest extends TestCase
 
     public function test_sem_decisao_registrada_nao_despacha(): void
     {
-        config(['sile.features.ia_explicacao' => true]);
+        config(['viabiliza.features.ia_explicacao' => true]);
         $this->provedorTextoAtivo();
 
         // Processo protocolado AINDA EM ANÁLISE (sem ViabilityDecision): não há
@@ -125,7 +126,7 @@ class ExplicacaoCidadaoTest extends TestCase
 
     public function test_toggle_desligado_nao_chama_provedor_nem_cria_sugestao(): void
     {
-        config(['sile.features.ia_explicacao' => false]);
+        config(['viabiliza.features.ia_explicacao' => false]);
         $this->provedorTextoAtivo();
         $processo = $this->processoDecidido();
 
@@ -144,10 +145,10 @@ class ExplicacaoCidadaoTest extends TestCase
     public function test_protocolo_dispara_explicacao_ao_carregar_sugestao(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
-        config(['sile.features.ia_explicacao' => true]);
+        config(['viabiliza.features.ia_explicacao' => true]);
         $this->provedorTextoAtivo();
 
-        $dono = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $dono = Cidadao::factory()->withAcceptedLgpdTerm()->create();
         $processo = $this->processoDecidido($dono);
 
         ExplicacaoCidadaoAgent::fake([[
@@ -181,14 +182,15 @@ class ExplicacaoCidadaoTest extends TestCase
     public function test_protocolo_nao_dispara_explicacao_sem_decisao(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
-        config(['sile.features.ia_explicacao' => true]);
+        config(['viabiliza.features.ia_explicacao' => true]);
         $this->provedorTextoAtivo();
 
-        $dono = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $dono = Cidadao::factory()->withAcceptedLgpdTerm()->create();
         // Protocolado, sem decisão registrada (em análise): nada a explicar.
         $processo = ViabilityRequest::factory()->protocoled()->withPrimaryCnae()->create([
-            'requester_user_id' => $dono->id,
-            'created_by_user_id' => $dono->id,
+            'requester_cidadao_id' => $dono->id,
+            'created_by_type' => $dono->getMorphClass(),
+            'created_by_id' => $dono->id,
         ]);
 
         ExplicacaoCidadaoAgent::fake([[

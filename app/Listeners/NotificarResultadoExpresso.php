@@ -43,7 +43,7 @@ class NotificarResultadoExpresso
 
         $habilitado = Settings::get(
             'features.notificacao_resultado_expresso',
-            config('sile.features.notificacao_resultado_expresso', true),
+            config('viabiliza.features.notificacao_resultado_expresso', true),
         );
 
         if (! $habilitado) {

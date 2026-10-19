@@ -63,7 +63,7 @@ class PendenciaService
             // (ExpirarPendenciasCommand + IndeferirPorPrazoConviteService).
             $horasUteis = (int) Settings::get(
                 'analise.convite.prazo_resposta_horas_uteis',
-                config('sile.analise.pendencia.prazo_resposta_horas_uteis', 48),
+                config('viabiliza.analise.pendencia.prazo_resposta_horas_uteis', 48),
             );
 
             $pendency = AnalysisPendency::create([

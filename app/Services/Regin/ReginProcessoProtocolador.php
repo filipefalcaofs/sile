@@ -6,6 +6,7 @@ use App\Enums\AuthType;
 use App\Enums\CompanySource;
 use App\Enums\RuleDomain;
 use App\Enums\ViabilityRequestOrigin;
+use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\ReginRecebimento;
@@ -17,15 +18,16 @@ use App\Models\ViabilityServiceType;
 use App\Rules\ValidCpf;
 use App\Services\Expresso\FluxoExpressoService;
 use App\Services\Geo\PoligonoEnderecamentoService;
+use App\Services\Realty\PropertyCadastroCampos;
 use App\Services\Realty\PropertyRegistryLookup;
 use App\Services\Solicitacao\ProtocolarSolicitacaoService;
 use App\Services\Tratamento\CategoriaEmpresa;
 use App\Services\Tratamento\RespostaPlanilha;
 use App\Services\Tratamento\TratamentoRamoResolver;
+use App\Support\Audit\AuditService;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
-use RuntimeException;
 use Throwable;
 
 /**
@@ -53,6 +55,7 @@ class ReginProcessoProtocolador
         private PoligonoEnderecamentoService $poligonoLote,
         private TratamentoRamoResolver $tratamento,
         private PropertyRegistryLookup $cadastro,
+        private AuditService $audit,
     ) {}
 
     public function protocolar(ReginRecebimento $recebimento): ?ViabilityRequest
@@ -71,21 +74,51 @@ class ReginProcessoProtocolador
 
         $cnaes = $this->cnaes($rowset);
         $inscricao = $this->inscricao($rowset);
-        $area = $this->area($rowset) ?? $this->areaPelaInscricao($inscricao);
+        $area = $this->area($rowset);
         $endereco = $this->endereco($rowset);
 
+        $precisaDoCadastro = $area === null || $endereco === null;
+        $cadastro = $precisaDoCadastro ? $this->cadastroDaInscricao($inscricao) : null;
+        $complementados = [];
+
+        if ($area === null && $cadastro !== null) {
+            [$area, $origemArea] = $this->areaDoCadastro($cadastro) ?? [null, null];
+
+            if ($origemArea !== null) {
+                $complementados[] = $origemArea;
+            }
+        }
+
+        if ($endereco === null && $cadastro !== null) {
+            $endereco = $this->endereco($rowset, $cadastro);
+
+            if ($endereco !== null) {
+                $complementados[] = 'endereco';
+            }
+        }
+
         if ($cnaes === [] || $area === null || $endereco === null) {
+            $this->registrarRecusa($recebimento, $this->motivosDaRecusa(
+                semCnae: $cnaes === [],
+                semArea: $area === null,
+                semEndereco: $endereco === null,
+                consultouCadastro: $precisaDoCadastro,
+                temInscricao: $inscricao !== null,
+                cadastroRespondeu: $cadastro !== null,
+            ));
+
             return null;
         }
 
-        $ator = $this->ator();
+        $ator = $this->integracao();
 
         $solicitacao = ViabilityRequest::query()->create([
             'origin' => ViabilityRequestOrigin::Regin,
             'service_type_id' => $this->tipoServico()->id,
             'company_id' => $this->empresa($rowset)->id,
-            'requester_user_id' => $ator->id,
-            'created_by_user_id' => $ator->id,
+            'requester_cidadao_id' => null,
+            'created_by_type' => $ator->getMorphClass(),
+            'created_by_id' => $ator->id,
             'used_area_m2' => $area,
             'address_street' => $endereco['street'],
             'address_number' => $endereco['number'],
@@ -104,18 +137,84 @@ class ReginProcessoProtocolador
 
         ReginEventos::gravar($solicitacao, $recebimento);
 
+        if ($complementados !== []) {
+            $this->audit->log(
+                'regin',
+                'complementar',
+                'Dados do estabelecimento complementados pelo Cadastro Imobiliário',
+                ['protocolo' => $recebimento->protocolo, 'campos' => $complementados],
+                $solicitacao,
+            );
+        }
+
         $this->protocolar->protocol($solicitacao->fresh() ?? $solicitacao, $ator);
 
         return $solicitacao->fresh() ?? $solicitacao;
     }
 
+    /**
+     * @return list<string>
+     */
+    private function motivosDaRecusa(
+        bool $semCnae,
+        bool $semArea,
+        bool $semEndereco,
+        bool $consultouCadastro,
+        bool $temInscricao,
+        bool $cadastroRespondeu,
+    ): array {
+        $motivos = [];
+
+        if ($semCnae) {
+            $motivos[] = 'sem_cnae';
+        }
+
+        if ($semArea) {
+            $motivos[] = 'sem_area';
+        }
+
+        if ($semEndereco) {
+            $motivos[] = 'sem_endereco';
+        }
+
+        if ($consultouCadastro && ! $temInscricao) {
+            $motivos[] = 'sem_inscricao';
+        }
+
+        if ($consultouCadastro && $temInscricao && ! $cadastroRespondeu) {
+            $motivos[] = 'cadastro_indisponivel';
+        }
+
+        return $motivos;
+    }
+
+    /**
+     * Recebimento que não vira processo é pendência registrada, nunca silêncio.
+     *
+     * @param  list<string>  $motivos
+     */
+    private function registrarRecusa(ReginRecebimento $recebimento, array $motivos): void
+    {
+        $this->audit->log(
+            'regin',
+            'protocolar',
+            'Processo recebido via REGIN não pôde ser aberto',
+            ['protocolo' => $recebimento->protocolo, 'motivos' => $motivos],
+            $recebimento,
+            'falha',
+        );
+    }
+
     private function protocolarDeclaracao(ReginRecebimento $recebimento, RecebimentoProcesso $dados): ?ViabilityRequest
     {
         if (! $dados->podeProtocolar()) {
+            $this->registrarRecusa($recebimento, $dados->faltamParaProtocolar());
+
             return null;
         }
 
-        $ator = $this->atorDaDeclaracao($dados);
+        $ator = $this->integracao();
+        $requerente = $this->requerenteDaDeclaracao($dados);
         $cnaePrincipal = $this->cnae((string) $dados->cnaePrincipal);
         $secundarios = [];
 
@@ -131,8 +230,9 @@ class ReginProcessoProtocolador
             'origin' => ViabilityRequestOrigin::Regin,
             'service_type_id' => $this->tipoServicoDeclarado($dados->servico)->id,
             'company_id' => $this->empresaDaDeclaracao($dados, $recebimento->protocolo)->id,
-            'requester_user_id' => $ator->id,
-            'created_by_user_id' => $ator->id,
+            'requester_cidadao_id' => $requerente?->id,
+            'created_by_type' => $ator->getMorphClass(),
+            'created_by_id' => $ator->id,
             'used_area_m2' => $dados->area,
             'address_street' => $dados->logradouro,
             'address_number' => $dados->numero ?? 's/n',
@@ -218,24 +318,43 @@ class ReginProcessoProtocolador
         ]);
     }
 
-    private function atorDaDeclaracao(RecebimentoProcesso $dados): User
+    /**
+     * Quem a JUCEB indicou como solicitante; sem os dados, ninguém (null).
+     * Sem $criar (simulação), não grava: devolve o registro do CPF ou um modelo vazio.
+     */
+    public function requerenteDaDeclaracao(RecebimentoProcesso $dados, bool $criar = true): ?Cidadao
     {
-        $solicitante = $this->solicitante($dados);
+        return $this->solicitante($dados, $criar);
+    }
 
-        if ($solicitante !== null) {
-            return $solicitante;
-        }
-
-        $existente = User::query()->orderBy('id')->first();
+    /**
+     * Autora dos processos recebidos da JUCEB (created_by): nunca uma pessoa real
+     * (nem o primeiro usuário, nem quem está logado). Sem e-mail entregável.
+     */
+    public function integracao(): User
+    {
+        $existente = User::query()->where('email', User::EMAIL_INTEGRACAO_REGIN)->first();
 
         if ($existente !== null) {
             return $existente;
         }
 
-        throw new RuntimeException('Solicitante ausente e não há usuário para protocolar.');
+        $cpf = '00000000000';
+
+        for ($sufixo = 1; User::query()->where('cpf', $cpf)->exists(); $sufixo++) {
+            $cpf = str_pad((string) $sufixo, 11, '0', STR_PAD_LEFT);
+        }
+
+        return User::query()->create([
+            'name' => 'JUCEB (integração REGIN)',
+            'email' => User::EMAIL_INTEGRACAO_REGIN,
+            'cpf' => $cpf,
+            'password' => Hash::make(Str::random(40)),
+            'auth_type' => AuthType::Local,
+        ]);
     }
 
-    private function solicitante(RecebimentoProcesso $dados): ?User
+    private function solicitante(RecebimentoProcesso $dados, bool $criar = true): ?Cidadao
     {
         $cpf = $dados->cpfSolicitante;
         $email = $dados->emailSolicitante;
@@ -254,21 +373,11 @@ class ReginProcessoProtocolador
             return null;
         }
 
-        $porCpf = User::query()->where('cpf', $cpf)->first();
-
-        if ($porCpf !== null) {
-            return $porCpf;
+        if (! $criar) {
+            return Cidadao::query()->where('cpf', $cpf)->first() ?? new Cidadao;
         }
 
-        $emailEmUso = User::query()->where('email', $email)->exists();
-
-        return User::query()->create([
-            'name' => $nome,
-            'email' => $emailEmUso ? $cpf.'@solicitante.viabiliza.local' : $email,
-            'cpf' => $cpf,
-            'password' => Hash::make(Str::random(40)),
-            'auth_type' => AuthType::Local,
-        ]);
+        return Cidadao::criarRegistroDeBalcao($cpf, $nome, $email, null);
     }
 
     private function tipoServicoDeclarado(?string $servico): ViabilityServiceType
@@ -906,27 +1015,43 @@ class ReginProcessoProtocolador
         return $area > 0 ? $area : null;
     }
 
-    /**
-     * A JUCEB carrega o RES_AREA da inscrição imobiliária; quando vem zerado,
-     * buscamos a mesma área na nossa consulta ao Cadastro Imobiliário (SEFAZ
-     * via SEDUR). Base indisponível ou sem área: segue sem processo, nunca com
-     * área simulada.
-     */
-    private function areaPelaInscricao(?string $inscricao): ?float
+    private function cadastroDaInscricao(?string $inscricao): ?PropertyCadastroCampos
     {
         if ($inscricao === null) {
             return null;
         }
 
         try {
-            $resultado = $this->cadastro->resolve($inscricao);
+            return $this->cadastro->resolve($inscricao)->cadastro;
         } catch (Throwable) {
             return null;
         }
+    }
 
-        $area = $this->paraArea($resultado->cadastro?->area_construida_m2);
+    /**
+     * A JUCEB carrega o RES_AREA da inscrição imobiliária; quando vem zerado,
+     * a área é a do Cadastro: a construída e, sem ela (imóvel sem construção
+     * cadastrada), a do terreno. Base indisponível ou sem área: segue sem
+     * processo, nunca com área simulada.
+     *
+     * @return array{0: float, 1: string}|null área e o campo do Cadastro de onde veio
+     */
+    private function areaDoCadastro(PropertyCadastroCampos $cadastro): ?array
+    {
+        $candidatas = [
+            'area_construida' => $cadastro->area_construida_m2,
+            'area_terreno' => $cadastro->area_terreno_m2,
+        ];
 
-        return $area !== null && $area > 0 ? $area : null;
+        foreach ($candidatas as $origem => $valor) {
+            $area = $this->paraArea($valor);
+
+            if ($area !== null && $area > 0) {
+                return [$area, $origem];
+            }
+        }
+
+        return null;
     }
 
     private function paraArea(?string $valor): ?float
@@ -945,16 +1070,36 @@ class ReginProcessoProtocolador
     }
 
     /**
+     * Endereço do estabelecimento: o que a JUCEB enviou e, campo a campo, o que
+     * faltou vem do Cadastro Imobiliário quando ele foi consultado.
+     *
      * @param  array<string, mixed>  $rowset
      * @return array{street: string, number: string, complement: ?string, neighborhood: string, zip: string}|null
      */
-    private function endereco(array $rowset): ?array
+    private function endereco(array $rowset, ?PropertyCadastroCampos $cadastro = null): ?array
     {
         $estab = is_array($rowset['RUC_ESTAB'] ?? null) ? $rowset['RUC_ESTAB'] : [];
-        $street = trim((string) ($estab['RES_DIRECCION'] ?? ''));
+        $doCadastro = $cadastro !== null ? $this->enderecoDoCadastro($cadastro) : ['street' => '', 'number' => ''];
+
+        $streetEnvio = trim((string) ($estab['RES_DIRECCION'] ?? ''));
+        $street = $streetEnvio !== '' ? $streetEnvio : $doCadastro['street'];
         $number = trim((string) ($estab['RES_NUME'] ?? ''));
+
+        if ($number === '' && $streetEnvio === '') {
+            $number = $doCadastro['number'];
+        }
+
         $neighborhood = trim((string) ($estab['RES_URBANIZACION'] ?? ''));
+
+        if ($neighborhood === '') {
+            $neighborhood = trim((string) $cadastro?->bairro);
+        }
+
         $zip = preg_replace('/\D/', '', (string) ($estab['RES_ZONA_POSTAL'] ?? ''));
+
+        if ($zip === '') {
+            $zip = preg_replace('/\D/', '', (string) $cadastro?->cep);
+        }
 
         if ($street === '' || $neighborhood === '' || $zip === '') {
             return null;
@@ -969,6 +1114,25 @@ class ReginProcessoProtocolador
             'neighborhood' => $neighborhood,
             'zip' => $zip,
         ];
+    }
+
+    /**
+     * O Cadastro entrega logradouro e número numa linha só ("Rua X, 21"), às
+     * vezes com uma observação depois do travessão ("Av. Y, 6282 — SUPERMERCADO").
+     *
+     * @return array{street: string, number: string}
+     */
+    private function enderecoDoCadastro(PropertyCadastroCampos $cadastro): array
+    {
+        $texto = trim((string) preg_split('/\s+[—–]\s+/u', trim((string) $cadastro->endereco))[0]);
+
+        if (preg_match('/^(.*?),\s*(\d+\S*)$/u', $texto, $partes) === 1) {
+            return ['street' => trim($partes[1]), 'number' => $partes[2]];
+        }
+
+        $numero = trim((string) ($cadastro->numero_porta ?? $cadastro->numero_metrico));
+
+        return ['street' => $texto, 'number' => $numero === '0' ? '' : $numero];
     }
 
     /**
@@ -1041,22 +1205,5 @@ class ReginProcessoProtocolador
                 'active' => true,
             ],
         );
-    }
-
-    private function ator(): User
-    {
-        $autenticado = auth('gestao')->user();
-
-        if ($autenticado instanceof User) {
-            return $autenticado;
-        }
-
-        $existente = User::query()->orderBy('id')->first();
-
-        if ($existente !== null) {
-            return $existente;
-        }
-
-        return User::factory()->create();
     }
 }

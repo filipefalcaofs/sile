@@ -41,7 +41,7 @@ class EtapaMotorRegistrador
             $linha->primeira_falha_em ??= $agora;
 
             $proxima = $agora->copy()->addMinutes($this->intervaloEmMinutos($linha->tentativas));
-            $fimDaJanela = $linha->primeira_falha_em->copy()->addHours((int) config('sile.reprocessamento.janela_horas'));
+            $fimDaJanela = $linha->primeira_falha_em->copy()->addHours((int) config('viabiliza.reprocessamento.janela_horas'));
 
             if ($proxima->greaterThan($fimDaJanela)) {
                 $linha->esgotada_em = $agora;
@@ -84,8 +84,8 @@ class EtapaMotorRegistrador
 
     private function intervaloEmMinutos(int $tentativas): int
     {
-        return $tentativas <= (int) config('sile.reprocessamento.tentativas_iniciais')
-            ? (int) config('sile.reprocessamento.intervalo_inicial_min')
-            : (int) config('sile.reprocessamento.intervalo_posterior_min');
+        return $tentativas <= (int) config('viabiliza.reprocessamento.tentativas_iniciais')
+            ? (int) config('viabiliza.reprocessamento.intervalo_inicial_min')
+            : (int) config('viabiliza.reprocessamento.intervalo_posterior_min');
     }
 }

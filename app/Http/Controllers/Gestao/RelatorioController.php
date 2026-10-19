@@ -95,6 +95,23 @@ class RelatorioController extends Controller
     {
         $filtros = $request->toReportFilters();
 
+        if ($this->periodoInvertido($filtros)) {
+            return Inertia::render('gestao/relatorios/indicadores', [
+                'porPeriodo' => [],
+                'porZona' => [
+                    'degradacao' => 'bairro',
+                    'rotulo' => 'Zona urbanística indisponível — agrupado por bairro',
+                    'itens' => [],
+                ],
+                'porCnae' => [],
+                'porRisco' => [],
+                'taxaDeferimento' => ['deferidas' => 0, 'total' => 0, 'taxa' => null],
+                'taxaIndeferimento' => ['indeferidas' => 0, 'total' => 0, 'taxa' => null],
+                'filtros' => $filtros->aplicados(),
+                'erroPeriodo' => 'A data inicial não pode ser posterior à data final.',
+            ]);
+        }
+
         if ($formato = $this->formato($request)) {
             return $this->exportar(app(SolicitacoesReportSource::class), $filtros, $formato, $request);
         }
@@ -109,6 +126,7 @@ class RelatorioController extends Controller
             'taxaDeferimento' => $this->indicadores->taxaDeferimento($filtros),
             'taxaIndeferimento' => $this->indicadores->taxaIndeferimento($filtros),
             'filtros' => $filtros->aplicados(),
+            'erroPeriodo' => null,
         ]);
     }
 
@@ -219,8 +237,9 @@ class RelatorioController extends Controller
      * estabelecimentos deferidos por bairro×CNAE vs capacidade recomendada
      * (parâmetro HU-014), classificando ok/saturando/saturado. Insumo de política
      * urbana da SEDUR (adensamento/externalidades). Degradação honesta: CNAE sem
-     * capacidade vira "sem_capacidade"; recorte por bairro até a zona oficial
-     * (GIS). Com ?formato=, exporta as solicitações filtradas (contrato único).
+     * capacidade vira "sem_capacidade"; recorte pelo bairro oficial, com o
+     * digitado de reserva. Com ?formato=, exporta as solicitações filtradas
+     * (contrato único).
      */
     public function saturacao(RelatorioFiltersRequest $request): InertiaResponse|Response
     {
@@ -533,13 +552,27 @@ class RelatorioController extends Controller
         if ($recebidos->from() === null && $recebidos->to() === null) {
             $janela = (int) Settings::get(
                 'relatorios.dashboard.janela_dias',
-                config('sile.relatorios.dashboard.janela_dias', 30),
+                config('viabiliza.relatorios.dashboard.janela_dias', 30),
             );
             $bag['data_de'] = now()->subDays($janela)->toDateString();
             $bag['data_ate'] = now()->toDateString();
         }
 
         return ReportFilters::fromArray($bag);
+    }
+
+    /**
+     * Período invertido não consulta: as datas permanecem na tela e o aviso
+     * explica o recorte, em vez de um estado vazio comum.
+     */
+    private function periodoInvertido(ReportFilters $filtros): bool
+    {
+        $de = (string) ($filtros->bag['data_de'] ?? '');
+        $ate = (string) ($filtros->bag['data_ate'] ?? '');
+
+        return preg_match('/^\d{4}-\d{2}-\d{2}$/', $de) === 1
+            && preg_match('/^\d{4}-\d{2}-\d{2}$/', $ate) === 1
+            && $de > $ate;
     }
 
     /**

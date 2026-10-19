@@ -5,10 +5,10 @@ namespace App\Services\Renovacao;
 use App\Enums\AnalysisCategory;
 use App\Enums\ViabilityRequestOrigin;
 use App\Enums\ViabilityRequestStatus;
+use App\Models\Cidadao;
 use App\Models\Sector;
 use App\Models\ServiceDeclaration;
 use App\Models\ServiceDeclarationAcceptance;
-use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
 use App\Services\Analise\EnviarParaAnaliseService;
@@ -42,7 +42,7 @@ class RenovacaoProtocoloService
      * @param  array{email?: string|null, phone?: string|null, mobile?: string|null}  $contato
      * @param  list<int>  $declaracaoIds
      */
-    public function protocolar(ViabilityRequest $origem, User $ator, array $contato, array $declaracaoIds): ViabilityRequest
+    public function protocolar(ViabilityRequest $origem, Cidadao $ator, array $contato, array $declaracaoIds): ViabilityRequest
     {
         $avaliacao = $this->elegibilidade->avaliar($origem);
 
@@ -73,8 +73,9 @@ class RenovacaoProtocoloService
                 'service_type_id' => $tipo->id,
                 'renews_viability_request_id' => $origem->id,
                 'company_id' => $origem->company_id,
-                'requester_user_id' => $ator->id,
-                'created_by_user_id' => $ator->id,
+                'requester_cidadao_id' => $ator->id,
+                'created_by_type' => $ator->getMorphClass(),
+                'created_by_id' => $ator->id,
                 'used_area_m2' => $origem->used_area_m2,
                 'property_registration' => $origem->property_registration,
                 'address_street' => $origem->address_street,
@@ -98,7 +99,7 @@ class RenovacaoProtocoloService
                 ServiceDeclarationAcceptance::query()->create([
                     'service_declaration_id' => $declaracao->id,
                     'viability_request_id' => $renovacao->id,
-                    'user_id' => $ator->id,
+                    'cidadao_id' => $ator->id,
                     'version' => $declaracao->version,
                     'accepted_at' => now(),
                 ]);

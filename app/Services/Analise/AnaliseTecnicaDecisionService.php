@@ -114,7 +114,7 @@ class AnaliseTecnicaDecisionService
 
         $justificativa = $outcome === DecisionOutcome::Indeferida
             ? $this->justificativaDoIndeferimento($record, $perCnae, $parecer)
-            : null;
+            : $this->parecerDoDeferimento($parecer);
 
         try {
             $decision = DB::transaction(
@@ -180,7 +180,7 @@ class AnaliseTecnicaDecisionService
 
         if ($isSede) {
             $consolidated = ResultadoViabilidade::PermitidoComCondicoes->value;
-            $fundamentacao[] = (string) config('sile.analise.escritorio_virtual.condicionante_sede', '');
+            $fundamentacao[] = (string) config('viabiliza.analise.escritorio_virtual.condicionante_sede', '');
         }
 
         // Abrigado de escritório virtual (RN-EV-05): a inscrição tem sede ativa e
@@ -341,6 +341,13 @@ class AnaliseTecnicaDecisionService
         }
 
         return false;
+    }
+
+    private function parecerDoDeferimento(?string $parecer): ?string
+    {
+        $parecer = trim((string) $parecer);
+
+        return $parecer === '' ? null : $parecer;
     }
 
     /**

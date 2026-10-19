@@ -75,7 +75,7 @@ class ResumoProcessoTest extends TestCase
 
     public function test_resumo_com_fonte_vira_sugestao_revisavel(): void
     {
-        config(['sile.features.ia_resumo' => true]);
+        config(['viabiliza.features.ia_resumo' => true]);
         $this->provedorTextoAtivo();
         $processo = $this->processoComFicha();
 
@@ -113,7 +113,7 @@ class ResumoProcessoTest extends TestCase
     public function test_resumo_fica_pronto_no_mesmo_request_mesmo_com_fila_assincrona(): void
     {
         config([
-            'sile.features.ia_resumo' => true,
+            'viabiliza.features.ia_resumo' => true,
             'queue.default' => 'database',
         ]);
         $this->provedorTextoAtivo();
@@ -135,7 +135,7 @@ class ResumoProcessoTest extends TestCase
 
     public function test_processar_nao_chama_provedor_de_novo_quando_resumo_ja_existe(): void
     {
-        config(['sile.features.ia_resumo' => true]);
+        config(['viabiliza.features.ia_resumo' => true]);
         $this->provedorTextoAtivo();
         $processo = $this->processoComFicha();
 
@@ -162,7 +162,7 @@ class ResumoProcessoTest extends TestCase
 
     public function test_falha_do_provedor_nao_quebra_a_ficha_nem_cria_sugestao(): void
     {
-        config(['sile.features.ia_resumo' => true]);
+        config(['viabiliza.features.ia_resumo' => true]);
         $this->provedorTextoAtivo();
         $processo = $this->processoComFicha();
 
@@ -176,7 +176,7 @@ class ResumoProcessoTest extends TestCase
 
     public function test_resumo_sem_fonte_escala_para_humano(): void
     {
-        config(['sile.features.ia_resumo' => true]);
+        config(['viabiliza.features.ia_resumo' => true]);
         $this->provedorTextoAtivo();
         $processo = $this->processoComFicha();
 
@@ -193,7 +193,7 @@ class ResumoProcessoTest extends TestCase
 
     public function test_toggle_desligado_nao_chama_provedor_nem_cria_sugestao(): void
     {
-        config(['sile.features.ia_resumo' => false]);
+        config(['viabiliza.features.ia_resumo' => false]);
         $this->provedorTextoAtivo();
         $processo = $this->processoComFicha();
 
@@ -212,7 +212,7 @@ class ResumoProcessoTest extends TestCase
     public function test_ficha_dispara_resumo_ao_carregar_sugestoes_de_ia(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
-        config(['sile.features.ia_resumo' => true]);
+        config(['viabiliza.features.ia_resumo' => true]);
         $this->provedorTextoAtivo();
         $processo = $this->processoComFicha();
 
@@ -251,7 +251,7 @@ class ResumoProcessoTest extends TestCase
     public function test_ficha_nao_dispara_resumo_com_toggle_desligado(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
-        config(['sile.features.ia_resumo' => false]);
+        config(['viabiliza.features.ia_resumo' => false]);
         $this->provedorTextoAtivo();
         $processo = $this->processoComFicha();
 
@@ -280,7 +280,7 @@ class ResumoProcessoTest extends TestCase
     public function test_endpoint_gera_resumo_quando_disponivel(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
-        config(['sile.features.ia_resumo' => true]);
+        config(['viabiliza.features.ia_resumo' => true]);
         $this->provedorTextoAtivo();
         $processo = $this->processoComFicha();
 
@@ -307,7 +307,7 @@ class ResumoProcessoTest extends TestCase
     public function test_endpoint_recusa_resumo_quando_indisponivel(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
-        config(['sile.features.ia_resumo' => false]);
+        config(['viabiliza.features.ia_resumo' => false]);
         $this->provedorTextoAtivo();
         $processo = $this->processoComFicha();
 

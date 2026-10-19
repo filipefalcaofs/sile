@@ -31,7 +31,7 @@ use Tests\TestCase;
 /**
  * DecidirFluxoExpressoJob (HU-076 FA-03) — envelopa o FluxoExpressoService::decide
  * (motor real, 09-05) num job de fila com retry/timeout/backoff parametrizados
- * (config/sile.php). A decisão roda FORA do request do protocolo (resiliência):
+ * (config/viabiliza.php). A decisão roda FORA do request do protocolo (resiliência):
  *
  *  - executa de verdade (anti-fachada): com a zona disponível, decide e grava a
  *    ViabilityDecision via o service real — não simula;
@@ -132,12 +132,12 @@ class DecidirFluxoExpressoJobTest extends TestCase
 
     public function test_define_retry_timeout_e_backoff_a_partir_da_config(): void
     {
-        // FA-03: a resiliência é parametrizada (config/sile.php expresso.job.*),
+        // FA-03: a resiliência é parametrizada (config/viabiliza.php expresso.job.*),
         // não hardcoded — espelha o ImportRedesimJob.
         config([
-            'sile.expresso.job.tries' => 5,
-            'sile.expresso.job.timeout' => 90,
-            'sile.expresso.job.backoff' => [10, 20, 40],
+            'viabiliza.expresso.job.tries' => 5,
+            'viabiliza.expresso.job.timeout' => 90,
+            'viabiliza.expresso.job.backoff' => [10, 20, 40],
         ]);
 
         $job = new DecidirFluxoExpressoJob(1);

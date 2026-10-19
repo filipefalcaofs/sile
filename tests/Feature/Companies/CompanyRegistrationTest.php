@@ -2,10 +2,10 @@
 
 namespace Tests\Feature\Companies;
 
+use App\Models\Cidadao;
 use App\Models\Company;
 use App\Models\CompanyUser;
 use App\Models\Procuration;
-use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -25,9 +25,9 @@ class CompanyRegistrationTest extends TestCase
     /**
      * Cidadão habilitado a navegar no portal (papel + termo LGPD aceito).
      */
-    private function portalUser(): User
+    private function portalUser(): Cidadao
     {
-        return User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        return Cidadao::factory()->withAcceptedLgpdTerm()->create();
     }
 
     /**
@@ -83,12 +83,12 @@ class CompanyRegistrationTest extends TestCase
         ]);
 
         $this->assertDatabaseHas('company_user', [
-            'user_id' => $user->id,
+            'cidadao_id' => $user->id,
             'role' => 'responsavel',
             'ended_at' => null,
         ]);
 
-        $link = CompanyUser::query()->where('user_id', $user->id)->first();
+        $link = CompanyUser::query()->where('cidadao_id', $user->id)->first();
         $this->assertNotNull($link);
         $this->assertNotNull($link->started_at);
     }
@@ -190,8 +190,8 @@ class CompanyRegistrationTest extends TestCase
         $attorney = $this->portalUser();
 
         $proc = Procuration::factory()->create([
-            'grantor_user_id' => $grantor->id,
-            'attorney_user_id' => $attorney->id,
+            'grantor_cidadao_id' => $grantor->id,
+            'attorney_cidadao_id' => $attorney->id,
         ]);
 
         $this->actingAs($attorney)
@@ -204,19 +204,19 @@ class CompanyRegistrationTest extends TestCase
 
         $this->assertDatabaseHas('company_user', [
             'company_id' => $company->id,
-            'user_id' => $grantor->id,
+            'cidadao_id' => $grantor->id,
             'role' => 'responsavel',
         ]);
 
         $this->assertDatabaseMissing('company_user', [
             'company_id' => $company->id,
-            'user_id' => $attorney->id,
+            'cidadao_id' => $attorney->id,
         ]);
 
         $this->assertDatabaseHas('activity_log', [
             'subject_type' => $company->getMorphClass(),
             'event' => 'created',
-            'acting_for_user_id' => $grantor->id,
+            'acting_for_cidadao_id' => $grantor->id,
         ]);
     }
 }

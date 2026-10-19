@@ -64,7 +64,7 @@ class RelatoriosExportarCommand extends Command
             return self::FAILURE;
         }
 
-        $disk = (string) config('sile.relatorios.export.disk', 'local');
+        $disk = (string) config('viabiliza.relatorios.export.disk', 'local');
 
         if ($disk === 'public') {
             $this->error('O disco de exportação não pode ser público (relatorios.export.disk) — o arquivo pode conter dados pessoais (LGPD).');
@@ -100,7 +100,7 @@ class RelatoriosExportarCommand extends Command
         $disponiveis = ['csv', 'xlsx', 'pdf'];
 
         $habilitados = array_values(array_intersect(
-            (array) config('sile.relatorios.export.formatos_habilitados', $disponiveis),
+            (array) config('viabiliza.relatorios.export.formatos_habilitados', $disponiveis),
             $disponiveis,
         ));
 

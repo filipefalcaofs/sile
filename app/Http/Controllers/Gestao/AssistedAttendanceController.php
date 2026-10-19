@@ -5,11 +5,14 @@ namespace App\Http\Controllers\Gestao;
 use App\Enums\ViabilityRequestOrigin;
 use App\Http\Controllers\Controller;
 use App\Models\AssistedAttendance;
+use App\Models\Cidadao;
 use App\Models\Company;
-use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
 use App\Rules\ValidCpf;
+use App\Services\Sedur\SedurContatoIndisponivelException;
+use App\Services\Sedur\SedurContatoNaoEncontradoException;
+use App\Services\Solicitacao\RequerenteDeBalcao;
 use App\Support\Audit\AuditService;
 use App\Support\Representation\CurrentRepresentation;
 use App\Support\Settings;
@@ -32,7 +35,10 @@ use Inertia\Response;
  */
 class AssistedAttendanceController extends Controller
 {
-    public function __construct(private AuditService $audit) {}
+    public function __construct(
+        private AuditService $audit,
+        private RequerenteDeBalcao $requerentes,
+    ) {}
 
     /**
      * Estação de atendimento: iniciar (CPF), banner do atendimento ativo e
@@ -64,9 +70,9 @@ class AssistedAttendanceController extends Controller
     }
 
     /**
-     * Inicia o atendimento informando o CPF do cidadão presente (RN-001). O
-     * cidadão precisa de conta no portal — não fabricamos cidadão (anti-fachada);
-     * sem conta, bloqueia com orientação. O vínculo nasce com expiração curta
+     * Inicia o atendimento informando o CPF do cidadão presente (RN-001). Sem
+     * cadastro, o servidor registra o cidadão no balcão (sem senha) com o nome da
+     * base da SEDUR; sem nome confirmado lá, bloqueia. O vínculo nasce com expiração curta
      * parametrizável (solicitacao.atendimento.expiracao_minutos).
      */
     public function store(Request $request): RedirectResponse
@@ -78,25 +84,24 @@ class AssistedAttendanceController extends Controller
         );
 
         $cpf = (string) preg_replace('/\D/', '', $validated['cpf']);
-        $citizen = User::query()->where('cpf', $cpf)->first();
 
-        if ($citizen === null) {
-            throw ValidationException::withMessages([
-                'cpf' => 'Não há cidadão cadastrado com este CPF. Oriente o cidadão a criar a conta para ser atendido.',
-            ]);
-        }
-
-        if ($citizen->id === $request->user()->id) {
+        if ($cpf === $request->user()->cpf) {
             throw ValidationException::withMessages([
                 'cpf' => 'Não é possível iniciar um atendimento para a sua própria conta.',
             ]);
+        }
+
+        try {
+            $citizen = $this->requerentes->resolver($cpf, 'atendimento');
+        } catch (SedurContatoNaoEncontradoException|SedurContatoIndisponivelException $e) {
+            throw ValidationException::withMessages(['cpf' => RequerenteDeBalcao::mensagemDeFalha($e)]);
         }
 
         $minutes = (int) Settings::get('solicitacao.atendimento.expiracao_minutos', 30);
 
         $attendance = AssistedAttendance::create([
             'attendant_user_id' => $request->user()->id,
-            'citizen_user_id' => $citizen->id,
+            'citizen_cidadao_id' => $citizen->id,
             'started_at' => now(),
             'expires_at' => now()->addMinutes($minutes),
         ]);
@@ -105,7 +110,7 @@ class AssistedAttendanceController extends Controller
 
         $this->audit->log('atendimento', 'atendimento-iniciado', 'Início de atendimento presencial assistido', [
             'attendance_id' => $attendance->id,
-            'citizen_user_id' => $citizen->id,
+            'citizen_cidadao_id' => $citizen->id,
         ]);
 
         return redirect()
@@ -148,7 +153,7 @@ class AssistedAttendanceController extends Controller
         $hasActiveLink = Company::query()
             ->whereKey($validated['company_id'])
             ->whereHas('links', fn ($query) => $query
-                ->where('user_id', $citizen->id)
+                ->where('cidadao_id', $citizen->id)
                 ->whereNull('ended_at'))
             ->exists();
 
@@ -162,8 +167,9 @@ class AssistedAttendanceController extends Controller
             'origin' => ViabilityRequestOrigin::Portal,
             'service_type_id' => $validated['service_type_id'],
             'company_id' => $validated['company_id'],
-            'requester_user_id' => $citizen->id,
-            'created_by_user_id' => $request->user()->id,
+            'requester_cidadao_id' => $citizen->id,
+            'created_by_type' => $request->user()->getMorphClass(),
+            'created_by_id' => $request->user()->id,
             'assisted_attendance_id' => $attendance->id,
         ]));
 
@@ -207,11 +213,11 @@ class AssistedAttendanceController extends Controller
      *
      * @return array<int, array{id: int, legal_name: string, formatted_cnpj: string}>
      */
-    private function citizenCompanies(User $citizen): array
+    private function citizenCompanies(Cidadao $citizen): array
     {
         return Company::query()
             ->whereHas('links', fn ($query) => $query
-                ->where('user_id', $citizen->id)
+                ->where('cidadao_id', $citizen->id)
                 ->whereNull('ended_at'))
             ->orderBy('legal_name')
             ->get()

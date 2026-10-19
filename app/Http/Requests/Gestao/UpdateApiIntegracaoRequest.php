@@ -58,7 +58,7 @@ class UpdateApiIntegracaoRequest extends FormRequest
             $fieldRules = $parameter?->validation_rules ?? ['nullable', 'string'];
 
             if ($campo['tipo'] === 'senha') {
-                $fieldRules = ['nullable', 'string', 'max:255'];
+                $fieldRules = ['nullable', 'string', $campo['id'] === 'token' ? 'max:2048' : 'max:255'];
 
                 if ($campo['id'] === 'senha') {
                     $fieldRules[] = 'min:8';

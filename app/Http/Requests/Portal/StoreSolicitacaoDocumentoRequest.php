@@ -27,11 +27,11 @@ class StoreSolicitacaoDocumentoRequest extends FormRequest
     public function rules(): array
     {
         /** @var array<int, string> $mimes */
-        $mimes = (array) config('sile.solicitacao.anexos.mime_permitidos', ['application/pdf', 'image/jpeg', 'image/png']);
+        $mimes = (array) config('viabiliza.solicitacao.anexos.mime_permitidos', ['application/pdf', 'image/jpeg', 'image/png']);
 
         $maxMb = (int) Settings::get(
             'solicitacao.anexos.max_mb',
-            config('sile.solicitacao.anexos.max_mb', 10),
+            config('viabiliza.solicitacao.anexos.max_mb', 10),
         );
 
         $maxKb = $maxMb * 1024;

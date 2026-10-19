@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Collection;
 
 /**
@@ -48,13 +49,13 @@ use Illuminate\Support\Collection;
  */
 #[Fillable([
     'origin',
-    'service_type_id', 'renews_viability_request_id', 'company_id', 'requester_user_id', 'created_by_user_id', 'assisted_attendance_id',
+    'service_type_id', 'renews_viability_request_id', 'company_id', 'requester_cidadao_id', 'created_by_type', 'created_by_id', 'assisted_attendance_id',
     'used_area_m2', 'property_registration',
     'address_street', 'address_number', 'address_complement', 'address_neighborhood', 'address_zip', 'address_reference',
     'property_polygon_geojson',
     'is_virtual_office', 'wants_virtual_office_hq', 'wants_virtual_office_tenant', 'confirma_perda_condicao_sede', 'is_public_area', 'has_independent_access',
     'simulation_snapshot', 'simulation_rules_versions', 'simulation_resultado', 'simulated_at',
-    'applicant_proceeded_despite', 'contingency_reason', 'external_reference',
+    'applicant_proceeded_despite', 'contingency_reason', 'external_reference', 'regin_justificativa',
     'origem_declarada',
 ])]
 class ViabilityRequest extends Model
@@ -85,7 +86,7 @@ class ViabilityRequest extends Model
         // Pergunta 4 do CNAE gatilho (sede de escritório virtual) é respondida no passo do imóvel.
         if ($cnae !== null
             && ! array_key_exists(4, $respostas)
-            && preg_replace('/\D/', '', $cnae) === preg_replace('/\D/', '', (string) config('sile.analise.escritorio_virtual.cnae_gatilho_sede'))
+            && preg_replace('/\D/', '', $cnae) === preg_replace('/\D/', '', (string) config('viabiliza.analise.escritorio_virtual.cnae_gatilho_sede'))
             && $this->wants_virtual_office_hq !== null) {
             $respostas[4] = (bool) $this->wants_virtual_office_hq;
         }
@@ -172,13 +173,27 @@ class ViabilityRequest extends Model
     /**
      * Ponto (lat, lng) usado pelos motores. O polígono desenhado manda: o
      * centroide do anel exterior. Sem polígono, vale o ponto gravado (Cadastro
-     * Imobiliário ou catálogo da simulação). Sem os dois, não há ponto.
+     * Imobiliário ou catálogo da simulação). Sem os dois, o centroide do lote
+     * encontrado no endereçamento (address_polygon_geojson). Sem nenhum, não há
+     * ponto.
      *
      * @return array{lat: float, lng: float}|null
      */
     public function pontoDoImovel(): ?array
     {
-        $centroide = $this->centroideDoPoligono();
+        return $this->pontoGravadoOuDesenhado() ?? $this->centroideDoPoligono($this->address_polygon_geojson);
+    }
+
+    /**
+     * Ponto que o requerente desenhou ou que a inscrição/simulação gravou, sem
+     * o lote do endereçamento. É o critério de "já localizado pela inscrição":
+     * o lote achado depois não substitui a busca do ponto no Cadastro.
+     *
+     * @return array{lat: float, lng: float}|null
+     */
+    public function pontoGravadoOuDesenhado(): ?array
+    {
+        $centroide = $this->centroideDoPoligono($this->property_polygon_geojson);
 
         if ($centroide !== null) {
             return $centroide;
@@ -196,13 +211,13 @@ class ViabilityRequest extends Model
 
     /**
      * Centroide pela média dos vértices do anel exterior, sem o vértice de
-     * fechamento. Mesmo cálculo que o resolver de viabilidade usava.
+     * fechamento. Mesmo cálculo que o resolver de viabilidade usava. Em lote
+     * côncavo a média pode cair fora do polígono.
      *
      * @return array{lat: float, lng: float}|null
      */
-    private function centroideDoPoligono(): ?array
+    private function centroideDoPoligono(mixed $geojson): ?array
     {
-        $geojson = $this->property_polygon_geojson;
         $ring = is_array($geojson) ? ($geojson['coordinates'][0] ?? null) : null;
 
         if (! is_array($ring) || $ring === []) {
@@ -297,29 +312,29 @@ class ViabilityRequest extends Model
     /**
      * Beneficiário da solicitação.
      *
-     * @return BelongsTo<User, $this>
+     * @return BelongsTo<Cidadao, $this>
      */
     public function requester(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'requester_user_id');
+        return $this->belongsTo(Cidadao::class, 'requester_cidadao_id');
     }
 
     /**
      * Ator real que criou a solicitação ("em nome de" — HU-150).
      *
-     * @return BelongsTo<User, $this>
+     * @return MorphTo<Model, $this>
      */
-    public function createdBy(): BelongsTo
+    public function createdBy(): MorphTo
     {
-        return $this->belongsTo(User::class, 'created_by_user_id');
+        return $this->morphTo('createdBy', 'created_by_type', 'created_by_id');
     }
 
     /**
-     * @return BelongsTo<User, $this>
+     * @return MorphTo<Model, $this>
      */
-    public function cancelledBy(): BelongsTo
+    public function cancelledBy(): MorphTo
     {
-        return $this->belongsTo(User::class, 'cancelled_by_user_id');
+        return $this->morphTo('cancelledBy', 'cancelled_by_type', 'cancelled_by_id');
     }
 
     /**
@@ -463,6 +478,17 @@ class ViabilityRequest extends Model
     public function assignedTo(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assigned_user_id');
+    }
+
+    /**
+     * Destinatário opcional da conclusão, informado pelo analista ao enviar o
+     * processo para conclusão. Quem analisou continua em assignedTo.
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function conclusaoEncaminhadaPara(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'conclusao_encaminhada_para_user_id');
     }
 
     /**

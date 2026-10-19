@@ -83,7 +83,7 @@ class SugestaoParecerTest extends TestCase
 
     public function test_sugere_minuta_fundamentada_no_motor_como_sugestao_nao_decisao(): void
     {
-        config(['sile.features.ia_parecer' => true]);
+        config(['viabiliza.features.ia_parecer' => true]);
         $this->provedorTextoAtivo();
         $processo = $this->processoPreAnalisado();
 
@@ -128,7 +128,7 @@ class SugestaoParecerTest extends TestCase
 
     public function test_sem_pre_analise_do_motor_nao_despacha_e_escala_ao_humano(): void
     {
-        config(['sile.features.ia_parecer' => true]);
+        config(['viabiliza.features.ia_parecer' => true]);
         $this->provedorTextoAtivo();
 
         // Ficha em MODO MANUAL (motor indisponível, sem engine_snapshot): não há
@@ -161,7 +161,7 @@ class SugestaoParecerTest extends TestCase
 
     public function test_toggle_desligado_nao_chama_provedor_nem_cria_sugestao(): void
     {
-        config(['sile.features.ia_parecer' => false]);
+        config(['viabiliza.features.ia_parecer' => false]);
         $this->provedorTextoAtivo();
         $processo = $this->processoPreAnalisado();
 
@@ -182,7 +182,7 @@ class SugestaoParecerTest extends TestCase
 
     public function test_endpoint_da_ficha_sugere_minuta_sem_gravar_decisao(): void
     {
-        config(['sile.features.ia_parecer' => true]);
+        config(['viabiliza.features.ia_parecer' => true]);
         $this->provedorTextoAtivo();
         $processo = $this->processoPreAnalisado();
 
@@ -221,7 +221,7 @@ class SugestaoParecerTest extends TestCase
 
     public function test_minuta_costura_texto_padrao_e_nao_sobrescreve_parecer_ja_escrito(): void
     {
-        config(['sile.features.ia_parecer' => true]);
+        config(['viabiliza.features.ia_parecer' => true]);
         $this->provedorTextoAtivo();
         $processo = $this->processoPreAnalisado();
 

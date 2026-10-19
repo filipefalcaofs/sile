@@ -3,6 +3,7 @@
 namespace App\Listeners;
 
 use App\Models\AccessLog;
+use App\Models\Cidadao;
 use App\Models\User;
 use Illuminate\Auth\Events\Failed;
 
@@ -17,17 +18,19 @@ class RecordFailedLogin
         $cpf = preg_replace('/\D/', '', (string) ($event->credentials['cpf'] ?? ''));
 
         $user = $event->user;
+        $modelo = request()->routeIs('gestao.*') ? User::class : Cidadao::class;
 
         if ($user === null && $email !== '') {
-            $user = User::query()->where('email', $email)->first();
+            $user = $modelo::query()->where('email', $email)->first();
         }
 
         if ($user === null && $cpf !== '') {
-            $user = User::query()->where('cpf', $cpf)->first();
+            $user = $modelo::query()->where('cpf', $cpf)->first();
         }
 
         AccessLog::create([
-            'user_id' => $user?->getAuthIdentifier(),
+            'actor_type' => $user?->getMorphClass(),
+            'actor_id' => $user?->getAuthIdentifier(),
             // Tentativa sem conta correspondente permanece rastreável pelo
             // identificador digitado (e-mail ou CPF em dígitos).
             'email' => $user->email ?? ($email !== '' ? $email : $cpf),

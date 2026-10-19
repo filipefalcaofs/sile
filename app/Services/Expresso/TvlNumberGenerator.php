@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Gera o número de produto TVL {prefixo}-{N} (HU-076 RN-007), com N sequencial
- * único e SEM reinício anual, a partir de sile.expresso.tvl.inicio (3000000). O
+ * único e SEM reinício anual, a partir de viabiliza.expresso.tvl.inicio (3000000). O
  * N é o mesmo número que segue à SEFAZ (ViabilityDecision::numeroSefaz), então
  * não pode repetir entre anos. O contador (tvl_sequences, linha CONTADOR_UNICO)
  * é travado com lockForUpdate dentro de uma transação, então incrementado — duas
@@ -51,14 +51,14 @@ class TvlNumberGenerator
 
     public function format(int $number): string
     {
-        $prefix = (string) Settings::get('expresso.tvl.prefixo', config('sile.expresso.tvl.prefixo', 'TVL'));
-        $padding = (int) Settings::get('expresso.tvl.padding', config('sile.expresso.tvl.padding', 6));
+        $prefix = (string) Settings::get('expresso.tvl.prefixo', config('viabiliza.expresso.tvl.prefixo', 'TVL'));
+        $padding = (int) Settings::get('expresso.tvl.padding', config('viabiliza.expresso.tvl.padding', 6));
 
         return sprintf('%s-%s', $prefix, str_pad((string) $number, $padding, '0', STR_PAD_LEFT));
     }
 
     public static function numeroInicial(): int
     {
-        return (int) config('sile.expresso.tvl.inicio', 3_000_000);
+        return (int) config('viabiliza.expresso.tvl.inicio', 3_000_000);
     }
 }

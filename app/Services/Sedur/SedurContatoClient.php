@@ -200,12 +200,12 @@ class SedurContatoClient
     {
         return (string) Settings::get(
             'integrations.sedur_contato.base_url',
-            config('sile.integrations.sedur_contato.base_url'),
+            config('viabiliza.integrations.sedur_contato.base_url'),
         );
     }
 
     private function timeout(): int
     {
-        return (int) config('sile.integrations.sedur_contato.timeout', 8);
+        return (int) config('viabiliza.integrations.sedur_contato.timeout', 8);
     }
 }

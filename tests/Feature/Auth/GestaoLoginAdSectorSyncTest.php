@@ -24,7 +24,7 @@ class GestaoLoginAdSectorSyncTest extends TestCase
         parent::setUp();
 
         $this->seed(RolesAndPermissionsSeeder::class);
-        config(['sile.integrations.sedur_auth.base_url' => 'https://sedur.test/k8s/prd']);
+        config(['viabiliza.integrations.sedur_auth.base_url' => 'https://sedur.test/k8s/prd']);
         Cache::flush();
     }
 
@@ -88,7 +88,7 @@ class GestaoLoginAdSectorSyncTest extends TestCase
         $this->assertAuthenticatedAs($servidor, 'gestao');
         $this->assertSame(0, UserSectorAssignment::query()->count());
         $this->assertDatabaseHas('access_logs', [
-            'user_id' => $servidor->id,
+            'actor_type' => $servidor->getMorphClass(), 'actor_id' => $servidor->id,
             'event' => 'ad-sincronizacao-falhou',
             'channel' => 'gestao',
         ]);

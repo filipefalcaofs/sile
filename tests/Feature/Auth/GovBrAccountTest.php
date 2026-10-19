@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Models\Cidadao;
 use App\Models\GovBrAccount;
-use App\Models\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
@@ -19,9 +19,9 @@ class GovBrAccountTest extends TestCase
             'reliability_levels' => [1, 2],
         ]);
 
-        $user = $account->user;
+        $user = $account->cidadao;
 
-        $this->assertInstanceOf(User::class, $user);
+        $this->assertInstanceOf(Cidadao::class, $user);
         $this->assertTrue($user->govBrAccount->is($account));
         $this->assertSame('prata', $user->govBrAccount->reliability_level);
         $this->assertSame([1, 2], $user->govBrAccount->reliability_levels);
@@ -34,6 +34,6 @@ class GovBrAccountTest extends TestCase
 
         $this->expectException(QueryException::class);
 
-        GovBrAccount::factory()->create(['user_id' => $account->user_id]);
+        GovBrAccount::factory()->create(['cidadao_id' => $account->cidadao_id]);
     }
 }

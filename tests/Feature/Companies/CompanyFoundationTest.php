@@ -4,10 +4,10 @@ namespace Tests\Feature\Companies;
 
 use App\Enums\CompanyLinkRole;
 use App\Enums\CompanySource;
+use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\CompanyUser;
-use App\Models\User;
 use App\Rules\ValidCnpj;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -44,7 +44,7 @@ class CompanyFoundationTest extends TestCase
         $company = Company::factory()->create(['cnpj' => '00000000000191']);
         CompanyUser::factory()->responsavel()->create([
             'company_id' => $company->id,
-            'user_id' => User::factory()->create()->id,
+            'cidadao_id' => Cidadao::factory()->create()->id,
         ]);
 
         $primary = Cnae::factory()->create();
@@ -83,7 +83,7 @@ class CompanyFoundationTest extends TestCase
     {
         $link = CompanyUser::factory()->ended()->create([
             'company_id' => Company::factory()->create()->id,
-            'user_id' => User::factory()->create()->id,
+            'cidadao_id' => Cidadao::factory()->create()->id,
         ]);
 
         $this->assertNotNull($link->ended_at);

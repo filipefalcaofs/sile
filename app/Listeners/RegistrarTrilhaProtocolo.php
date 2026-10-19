@@ -34,7 +34,8 @@ class RegistrarTrilhaProtocolo
                 'from_status' => ViabilityRequestStatus::Rascunho,
                 'to_status' => ViabilityRequestStatus::Protocolada,
                 'public_label' => ViabilityRequestStatus::Protocolada->publicLabel(),
-                'actor_user_id' => null,
+                'actor_type' => null,
+                'actor_id' => null,
             ]);
         }
 

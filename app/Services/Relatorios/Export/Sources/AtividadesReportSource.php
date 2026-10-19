@@ -24,7 +24,7 @@ use Illuminate\Database\Eloquent\Builder;
  * construtor injeta apenas o serviço de query, sem estado de filtro. As colunas,
  * o mapeamento (via {@see ActivityResource}) e a marca personalData=true (HU-101)
  * são preservados fielmente do controller. A guarda de volume técnica
- * (sile.auditoria.export.max_linhas) é aplicada no builder.
+ * (viabiliza.auditoria.export.max_linhas) é aplicada no builder.
  */
 final class AtividadesReportSource implements ReportSource
 {
@@ -42,7 +42,7 @@ final class AtividadesReportSource implements ReportSource
     {
         $trilhaFiltros = $filtros->only(self::CHAVES);
         $alteracoes = $filtros->get('fonte') === 'alteracoes';
-        $maxLinhas = (int) config('sile.auditoria.export.max_linhas', 50000);
+        $maxLinhas = (int) config('viabiliza.auditoria.export.max_linhas', 50000);
 
         return new ReportDefinition(
             titulo: $alteracoes ? 'Histórico de alterações' : 'Trilha de atividades',
@@ -69,7 +69,7 @@ final class AtividadesReportSource implements ReportSource
             event: 'exporta-trilha',
             personalData: true,
             arquivoBase: 'auditoria',
-            // Guarda de volume técnica (sile.auditoria.export.max_linhas) honrada
+            // Guarda de volume técnica (viabiliza.auditoria.export.max_linhas) honrada
             // por TODO driver (HU-101): o teto do streaming histórico é preservado
             // sem materializar a trilha inteira; o count() real decide o limiar.
             maxRows: $maxLinhas,

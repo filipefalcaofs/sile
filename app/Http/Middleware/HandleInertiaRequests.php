@@ -2,7 +2,9 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\User;
 use App\Support\Representation\CurrentRepresentation;
+use App\Support\Settings;
 use App\Support\Vocabulario;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -46,8 +48,8 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'auth' => [
                 'user' => $user?->only('id', 'name', 'email'),
-                'roles' => $user?->getRoleNames() ?? [],
-                'permissions' => $user?->getAllPermissions()->pluck('name') ?? [],
+                'roles' => $user instanceof User ? $user->getRoleNames() : [],
+                'permissions' => $user instanceof User ? $user->getAllPermissions()->pluck('name') : [],
             ],
             // Closure: avaliada na serialização da resposta, depois de o
             // ResolveRepresentation (middleware de rota) resolver o estado.
@@ -69,6 +71,14 @@ class HandleInertiaRequests extends Middleware
             ],
             'appVersion' => config('app.version'),
             'appRevision' => config('app.revision'),
+            'portalServicos' => fn (): array => [
+                'enabled' => Settings::enabled('portal_servicos'),
+                'mensagem' => EnsurePortalServicosEnabled::MENSAGEM,
+            ],
+            'consultaViabilidade' => fn (): array => [
+                'enabled' => Settings::enabled('consulta_viabilidade'),
+                'mensagem' => EnsureConsultaViabilidadeEnabled::MENSAGEM,
+            ],
             'vocabulario' => fn (): array => Vocabulario::catalog(),
             'export_formatos' => fn (): array => Vocabulario::exportFormatos(),
         ];

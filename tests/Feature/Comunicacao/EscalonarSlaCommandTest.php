@@ -3,6 +3,7 @@
 namespace Tests\Feature\Comunicacao;
 
 use App\Enums\AnalysisStage;
+use App\Enums\CommunicationChannel;
 use App\Enums\CommunicationStatus;
 use App\Enums\CommunicationType;
 use App\Enums\ViabilityRequestStatus;
@@ -100,6 +101,30 @@ class EscalonarSlaCommandTest extends TestCase
         return $request;
     }
 
+    public function test_escalonamento_notifica_so_no_sistema_sem_email(): void
+    {
+        NotificationFacade::fake();
+        $analista = User::factory()->analista()->create();
+        $processo = $this->processoEmAnalise([
+            'assigned_user_id' => $analista->id,
+            'analysis_stage_started_at' => now()->subDays(9),
+            'analysis_due_at' => now()->addDay(),
+        ]);
+
+        $this->artisan('notificacoes:escalonar-sla')->assertSuccessful();
+
+        $this->assertDatabaseMissing('communications', [
+            'viability_request_id' => $processo->id,
+            'type' => CommunicationType::EscalonamentoSla->value,
+            'channel' => 'email',
+        ]);
+        NotificationFacade::assertSentTo(
+            $analista,
+            ProcessoEscalonadoNotification::class,
+            fn ($notification): bool => $notification->channels() === [CommunicationChannel::InApp],
+        );
+    }
+
     public function test_amarelo_alerta_o_analista_responsavel(): void
     {
         NotificationFacade::fake();
@@ -114,7 +139,7 @@ class EscalonarSlaCommandTest extends TestCase
 
         $this->assertDatabaseHas('communications', [
             'viability_request_id' => $processo->id,
-            'recipient_user_id' => $analista->id,
+            'recipient_type' => $analista->getMorphClass(), 'recipient_id' => $analista->id,
             'type' => CommunicationType::EscalonamentoSla->value,
             'status' => CommunicationStatus::NaFila->value,
         ]);
@@ -141,7 +166,7 @@ class EscalonarSlaCommandTest extends TestCase
         foreach ([$gestor1, $gestor2] as $gestor) {
             $this->assertDatabaseHas('communications', [
                 'viability_request_id' => $processo->id,
-                'recipient_user_id' => $gestor->id,
+                'recipient_type' => $gestor->getMorphClass(), 'recipient_id' => $gestor->id,
                 'type' => CommunicationType::EscalonamentoSla->value,
             ]);
             NotificationFacade::assertSentTo($gestor, ProcessoEscalonadoNotification::class);
@@ -150,7 +175,7 @@ class EscalonarSlaCommandTest extends TestCase
         // No vencido, o destinatário é o gestor — o analista NÃO é escalado.
         $this->assertDatabaseMissing('communications', [
             'viability_request_id' => $processo->id,
-            'recipient_user_id' => $analista->id,
+            'recipient_type' => $analista->getMorphClass(), 'recipient_id' => $analista->id,
             'type' => CommunicationType::EscalonamentoSla->value,
         ]);
     }
@@ -175,7 +200,7 @@ class EscalonarSlaCommandTest extends TestCase
 
         $this->assertDatabaseHas('communications', [
             'viability_request_id' => $processo->id,
-            'recipient_user_id' => $gestor->id,
+            'recipient_type' => $gestor->getMorphClass(), 'recipient_id' => $gestor->id,
             'type' => CommunicationType::EscalonamentoSla->value,
         ]);
     }

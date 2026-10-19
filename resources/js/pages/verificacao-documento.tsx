@@ -5,6 +5,7 @@ import { CheckCircleIcon, MoonIcon, SunIcon } from '@/components/icons';
 import Badge from '@/components/ui/badge';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { ThemeProvider, useTheme } from '@/contexts/theme-context';
+import { formatDateTime } from '@/lib/datas';
 
 /**
  * Verificação PÚBLICA de autenticidade de documentos (TVL, indeferimento,
@@ -24,23 +25,6 @@ interface ResultadoVerificacao {
 interface VerificacaoDocumentoProps {
     codigo: string;
     resultado: ResultadoVerificacao;
-}
-
-/** Formata ISO 8601 como 'DD/MM/YYYY HH:MM' sem depender de fuso do navegador. */
-function formatDateTime(value: string | null): string {
-    if (!value) {
-        return '—';
-    }
-
-    const match = value.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/);
-
-    if (!match) {
-        return value;
-    }
-
-    const [, year, month, day, hour, minute] = match;
-
-    return `${day}/${month}/${year} ${hour}:${minute}`;
 }
 
 function ThemeToggleButton() {

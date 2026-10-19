@@ -66,7 +66,8 @@ class SolicitacaoDocumentoController extends Controller
                 'mime_type' => $mimeType,
                 'size' => $size,
                 'sha256' => $sha256,
-                'uploaded_by_user_id' => $request->user()->id,
+                'uploaded_by_type' => $request->user()->getMorphClass(),
+                'uploaded_by_id' => $request->user()->id,
             ]);
 
             $this->audit->log('solicitacoes', 'documento-anexado', 'Documento anexado à solicitação', [
@@ -135,7 +136,7 @@ class SolicitacaoDocumentoController extends Controller
     {
         return (string) Settings::get(
             'storage.documentos.disk',
-            config('sile.storage.documentos.disk', 'local'),
+            config('viabiliza.storage.documentos.disk', 'local'),
         );
     }
 }

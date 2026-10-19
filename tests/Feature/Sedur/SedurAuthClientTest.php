@@ -18,7 +18,7 @@ class SedurAuthClientTest extends TestCase
     {
         parent::setUp();
 
-        config(['sile.integrations.sedur_auth.base_url' => 'https://sedur.test/k8s/prd']);
+        config(['viabiliza.integrations.sedur_auth.base_url' => 'https://sedur.test/k8s/prd']);
     }
 
     private function client(): SedurAuthClient

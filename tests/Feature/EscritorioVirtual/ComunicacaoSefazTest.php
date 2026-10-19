@@ -4,6 +4,7 @@ namespace Tests\Feature\EscritorioVirtual;
 
 use App\Enums\SefazNotificationEvent;
 use App\Enums\SefazNotificationStatus;
+use App\Models\Cidadao;
 use App\Models\Company;
 use App\Models\SefazNotification;
 use App\Models\User;
@@ -52,10 +53,10 @@ class ComunicacaoSefazTest extends TestCase
      */
     private function abrigado(string $inscricao): ViabilityRequest
     {
-        $requester = User::factory()->create();
+        $requester = Cidadao::factory()->create();
         $abrigado = ViabilityRequest::factory()->protocoled()->create([
             'property_registration' => $inscricao,
-            'requester_user_id' => $requester->id,
+            'requester_cidadao_id' => $requester->id,
         ]);
         ViabilityDecision::factory()->create([
             'viability_request_id' => $abrigado->id,

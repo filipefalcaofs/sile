@@ -5,6 +5,7 @@ namespace Tests\Feature\Auditoria;
 use App\Http\Resources\ActivityResource;
 use App\Models\AccessLog;
 use App\Models\Activity;
+use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\User;
 use App\Services\Auditoria\AuditTrailQueryService;
@@ -82,6 +83,21 @@ class AuditoriaConsultaTest extends TestCase
         // Busca textual case-insensitive no nome do causer (whereHasMorph).
         $porNome = $this->service()->filtered(['log_name' => 'teste', 'usuario' => 'ana audit'])->pluck('id')->all();
         $this->assertSame([$daAna->id], $porNome);
+    }
+
+    public function test_busca_por_nome_inclui_cidadao_e_servidor_de_mesmo_nome(): void
+    {
+        $servidor = User::factory()->create(['name' => 'Joana Homonima']);
+        $cidada = Cidadao::factory()->create(['name' => 'Joana Homonima']);
+        $outro = Cidadao::factory()->create(['name' => 'Pedro Outro']);
+
+        $doServidor = $this->atividade(['causer_type' => $servidor->getMorphClass(), 'causer_id' => $servidor->id]);
+        $daCidada = $this->atividade(['causer_type' => $cidada->getMorphClass(), 'causer_id' => $cidada->id]);
+        $this->atividade(['causer_type' => $outro->getMorphClass(), 'causer_id' => $outro->id]);
+
+        $porNome = $this->service()->filtered(['log_name' => 'teste', 'usuario' => 'joana homo'])->pluck('id')->sort()->values()->all();
+
+        $this->assertSame([$doServidor->id, $daCidada->id], $porNome);
     }
 
     public function test_filtra_por_entidade_subject_tipo_e_id(): void
@@ -166,20 +182,20 @@ class AuditoriaConsultaTest extends TestCase
     public function test_acessos_filtra_por_usuario(): void
     {
         $user = User::factory()->create(['name' => 'Carla Cidadã']);
-        AccessLog::factory()->create(['user_id' => $user->id, 'email' => $user->email]);
+        AccessLog::factory()->create(['actor_type' => $user->getMorphClass(), 'actor_id' => $user->id, 'email' => $user->email]);
         AccessLog::factory()->create();
 
-        $porId = $this->service()->acessos(['usuario_id' => $user->id])->pluck('user_id')->all();
+        $porId = $this->service()->acessos(['usuario_id' => $user->id])->pluck('actor_id')->all();
         $this->assertSame([$user->id], $porId);
 
-        $porNome = $this->service()->acessos(['usuario' => 'carla'])->pluck('user_id')->all();
+        $porNome = $this->service()->acessos(['usuario' => 'carla'])->pluck('actor_id')->all();
         $this->assertSame([$user->id], $porNome);
     }
 
     public function test_activity_resource_expoe_campos_da_trilha_e_o_diff(): void
     {
         $causer = User::factory()->create(['name' => 'Carla Causer']);
-        $representado = User::factory()->create(['name' => 'Diego Representado']);
+        $representado = Cidadao::factory()->create(['name' => 'Diego Representado']);
 
         $activity = $this->atividade([
             'log_name' => 'empresas',
@@ -187,7 +203,7 @@ class AuditoriaConsultaTest extends TestCase
             'description' => 'Atualização de empresa',
             'causer_type' => $causer->getMorphClass(),
             'causer_id' => $causer->id,
-            'acting_for_user_id' => $representado->id,
+            'acting_for_cidadao_id' => $representado->id,
             'subject_type' => 'App\\Models\\Company',
             'subject_id' => 99,
             'result' => 'sucesso',

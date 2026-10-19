@@ -4,6 +4,7 @@ namespace App\Services\Comunicacao;
 
 use App\Enums\CommunicationChannel;
 use App\Enums\CommunicationStatus;
+use App\Models\Cidadao;
 use App\Models\Communication;
 use App\Models\User;
 use App\Notifications\Contracts\ProcessNotification;
@@ -37,8 +38,15 @@ class NotificationDispatcher
 
     public function __construct(private AuditService $audit) {}
 
-    public function deliver(User $recipient, ProcessNotification $notification): void
+    /**
+     * @param  array<int, CommunicationChannel>|null  $apenasCanais  restringe os canais do mapa (ex.: aviso interno só in-app); null = mapa completo
+     */
+    public function deliver(User|Cidadao $recipient, ProcessNotification $notification, ?array $apenasCanais = null): void
     {
+        if (! $recipient->temEmailEntregavel()) {
+            return;
+        }
+
         $type = $notification->communicationType();
 
         /** @var array<int, CommunicationChannel> $resolved */
@@ -47,6 +55,16 @@ class NotificationDispatcher
         $communicationIds = [];
 
         foreach ($this->mappedChannels($type->value) as $channel) {
+            if ($apenasCanais !== null && ! in_array($channel, $apenasCanais, true)) {
+                continue;
+            }
+
+            if ($channel === CommunicationChannel::Email && $this->semCanalDeEmail($recipient)) {
+                $this->registrarSemCanal($recipient, $notification, $channel);
+
+                continue;
+            }
+
             if ($this->channelEnabled($channel) && $this->preferredByRecipient($recipient, $channel)) {
                 $communication = $this->queue($recipient, $notification, $channel);
                 $resolved[] = $channel;
@@ -75,6 +93,45 @@ class NotificationDispatcher
     }
 
     /**
+     * Registro de balcão sem e-mail próprio usa o endereço técnico do domínio
+     * reservado: não há caixa postal real para receber.
+     */
+    private function semCanalDeEmail(User|Cidadao $recipient): bool
+    {
+        return str_ends_with(strtolower((string) $recipient->email), Cidadao::SUFIXO_EMAIL_TECNICO);
+    }
+
+    private function registrarSemCanal(User|Cidadao $recipient, ProcessNotification $notification, CommunicationChannel $channel): void
+    {
+        $type = $notification->communicationType();
+
+        $communication = Communication::create([
+            'viability_request_id' => $notification->viabilityRequestId(),
+            'recipient_type' => $recipient->getMorphClass(),
+            'recipient_id' => $recipient->id,
+            'channel' => $channel,
+            'type' => $type,
+            'status' => CommunicationStatus::Desativado,
+            'title' => $type->label(),
+            'error_message' => 'Destinatário sem e-mail próprio (registro de balcão).',
+        ]);
+
+        $this->audit->log(
+            'notificacoes',
+            $type->value,
+            "Canal {$channel->label()} sem destinatário real para a comunicação {$type->label()}",
+            properties: [
+                'viability_request_id' => $notification->viabilityRequestId(),
+                'channel' => $channel->value,
+                'type' => $type->value,
+                'communication_id' => $communication->id,
+            ],
+            subject: $communication,
+            result: 'sem-canal',
+        );
+    }
+
+    /**
      * Canais (CommunicationChannel) do tipo, conforme notificacoes.mapa_canais
      * (HU-014). Canais desconhecidos no mapa são ignorados defensivamente.
      *
@@ -82,7 +139,7 @@ class NotificationDispatcher
      */
     private function mappedChannels(string $type): array
     {
-        $mapa = Settings::get('notificacoes.mapa_canais', config('sile.notificacoes.mapa_canais', []));
+        $mapa = Settings::get('notificacoes.mapa_canais', config('viabiliza.notificacoes.mapa_canais', []));
         $canais = is_array($mapa) ? ($mapa[$type] ?? []) : [];
 
         return array_values(array_filter(array_map(
@@ -94,7 +151,7 @@ class NotificationDispatcher
     private function channelEnabled(CommunicationChannel $channel): bool
     {
         // features.notificacao_email / _in_app / _whatsapp (HU-014). Settings::enabled
-        // já cai no fallback de config/sile.php sem banco migrado.
+        // já cai no fallback de config/viabiliza.php sem banco migrado.
         return Settings::enabled("notificacao_{$channel->value}");
     }
 
@@ -103,16 +160,17 @@ class NotificationDispatcher
      * o default é por toggle + mapa. A preferência por usuário entra numa fase
      * futura SEM tocar o roteamento (basta este método passar a consultá-la).
      */
-    private function preferredByRecipient(User $recipient, CommunicationChannel $channel): bool
+    private function preferredByRecipient(User|Cidadao $recipient, CommunicationChannel $channel): bool
     {
         return true;
     }
 
-    private function queue(User $recipient, ProcessNotification $notification, CommunicationChannel $channel): Communication
+    private function queue(User|Cidadao $recipient, ProcessNotification $notification, CommunicationChannel $channel): Communication
     {
         return Communication::create([
             'viability_request_id' => $notification->viabilityRequestId(),
-            'recipient_user_id' => $recipient->id,
+            'recipient_type' => $recipient->getMorphClass(),
+            'recipient_id' => $recipient->id,
             'channel' => $channel,
             'type' => $notification->communicationType(),
             'status' => CommunicationStatus::NaFila,
@@ -121,13 +179,14 @@ class NotificationDispatcher
         ]);
     }
 
-    private function disable(User $recipient, ProcessNotification $notification, CommunicationChannel $channel): void
+    private function disable(User|Cidadao $recipient, ProcessNotification $notification, CommunicationChannel $channel): void
     {
         $type = $notification->communicationType();
 
         $communication = Communication::create([
             'viability_request_id' => $notification->viabilityRequestId(),
-            'recipient_user_id' => $recipient->id,
+            'recipient_type' => $recipient->getMorphClass(),
+            'recipient_id' => $recipient->id,
             'channel' => $channel,
             'type' => $type,
             'status' => CommunicationStatus::Desativado,
