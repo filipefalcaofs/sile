@@ -100,9 +100,8 @@ enum AnalysisStatus: string
 
     /**
      * Transições manuais que o perfil enxerga. Quem não conclui análise
-     * (terceirizada) só pode mandar o processo em análise para conclusão: a
-     * conclusão, o convite, a vistoria e o encaminhamento a outro setor ficam
-     * com quem decide.
+     * (terceirizada) só pode mandar o processo em análise para conclusão ou
+     * encaminhá-lo: a conclusão, o convite e a vistoria ficam com quem decide.
      *
      * @return list<self>
      */
@@ -112,6 +111,6 @@ enum AnalysisStatus: string
             return $this->proximas();
         }
 
-        return [self::ParaConclusao];
+        return [self::ParaConclusao, self::Encaminhado];
     }
 }
