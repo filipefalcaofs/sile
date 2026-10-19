@@ -147,7 +147,9 @@ class ProvisoriasLegadasServiceTest extends TestCase
         $resultado = $this->service()->buscarPorNumero($this->empresa(), '1234567');
 
         $this->assertSame(['itens' => [], 'indisponivel' => true], $resultado);
-        Log::shouldHaveReceived('warning')->once();
+        Log::shouldHaveReceived('warning')->once()->withArgs(
+            fn (string $mensagem, array $contexto): bool => ! str_contains($mensagem.json_encode($contexto), self::CNPJ),
+        );
     }
 
     public function test_payload_malformado_marca_indisponivel(): void
