@@ -21,6 +21,7 @@ use App\Services\Analise\TramitacaoProcessoService;
 use App\Services\Auditoria\DecisionExplanationService;
 use App\Services\Geo\DivergenciaLogradouroInscricao;
 use App\Services\Regin\HttpReginParecerNotifier;
+use App\Services\Regin\JustificativaReginService;
 use App\Services\Relatorios\Export\ReportExporter;
 use App\Services\Relatorios\Export\Sources\ProcessosReportSource;
 use App\Services\Relatorios\PainelOperacaoService;
@@ -225,6 +226,7 @@ class ProcessoController extends Controller
                 : [
                     'texto' => app(HttpReginParecerNotifier::class)->justificativaPara($viabilityRequest, $viabilityRequest->decision),
                     'personalizada' => filled($viabilityRequest->regin_justificativa),
+                    'enviada' => app(JustificativaReginService::class)->parecerJaEnviado($viabilityRequest),
                 ],
             'setoresEncaminhamento' => Sector::query()->where('active', true)->orderBy('name')->get(['id', 'name']),
             'destinatariosConclusao' => User::permission('concluir-analise')

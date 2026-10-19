@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 export interface JustificativaRegin {
     texto: string;
     personalizada: boolean;
+    enviada: boolean;
 }
 
 interface JustificativaReginCardProps {
@@ -53,16 +54,21 @@ export default function JustificativaReginCard({ processoId, justificativa }: Ju
             <CardHeader
                 title="Justificativa enviada à JUCEB"
                 actions={
-                    <Badge size="sm" color={justificativa.personalizada ? 'success' : 'warning'}>
-                        {justificativa.personalizada ? 'Texto do analista' : 'Texto padrão da decisão'}
+                    <Badge size="sm" color={justificativa.enviada ? 'info' : justificativa.personalizada ? 'success' : 'warning'}>
+                        {justificativa.enviada
+                            ? 'Enviada à JUCEB'
+                            : justificativa.personalizada
+                              ? 'Texto do analista'
+                              : 'Texto padrão da decisão'}
                     </Badge>
                 }
             />
             <CardContent>
                 <div className="flex flex-col gap-4">
                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Este é o texto que segue no campo de justificativa do parecer. Diga o fundamento da decisão na
-                        lei; ao salvar, o parecer passa a levar exatamente este texto.
+                        {justificativa.enviada
+                            ? 'O parecer já foi enviado à JUCEB com este texto e ela confirmou o recebimento. A justificativa não pode mais ser alterada.'
+                            : 'Este é o texto que segue no campo de justificativa do parecer. Diga o fundamento da decisão na lei; ao salvar, o parecer passa a levar exatamente este texto.'}
                     </p>
                     <div>
                         <Label htmlFor="justificativa-regin">Justificativa</Label>
@@ -73,21 +79,24 @@ export default function JustificativaReginCard({ processoId, justificativa }: Ju
                             value={texto}
                             onChange={(evento) => setTexto(evento.target.value)}
                             error={erro !== null}
+                            readOnly={justificativa.enviada}
                             hint={`${texto.length} de ${LIMITE} caracteres`}
                         />
                     </div>
                     {erro && <FieldError>{erro}</FieldError>}
-                    <div className="flex justify-end">
-                        <Button
-                            type="button"
-                            size="sm"
-                            onClick={salvar}
-                            disabled={vazia || !alterada || processando}
-                            loading={processando}
-                        >
-                            Salvar
-                        </Button>
-                    </div>
+                    {!justificativa.enviada && (
+                        <div className="flex justify-end">
+                            <Button
+                                type="button"
+                                size="sm"
+                                onClick={salvar}
+                                disabled={vazia || !alterada || processando}
+                                loading={processando}
+                            >
+                                Salvar
+                            </Button>
+                        </div>
+                    )}
                 </div>
             </CardContent>
         </Card>

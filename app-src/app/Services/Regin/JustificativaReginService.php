@@ -2,6 +2,7 @@
 
 namespace App\Services\Regin;
 
+use App\Models\Activity;
 use App\Models\ViabilityRequest;
 use App\Support\Audit\AuditService;
 use DomainException;
@@ -15,7 +16,7 @@ class JustificativaReginService
     public function __construct(private AuditService $audit) {}
 
     /**
-     * @throws DomainException quando o processo não tem decisão ou não veio da JUCEB
+     * @throws DomainException quando o processo não tem decisão, não veio da JUCEB ou o parecer já foi recebido por ela
      */
     public function salvar(ViabilityRequest $processo, string $justificativa): void
     {
@@ -27,6 +28,10 @@ class JustificativaReginService
 
         if (blank($processo->external_reference)) {
             throw new DomainException('Este processo não veio da JUCEB, então não há parecer a enviar.');
+        }
+
+        if ($this->parecerJaEnviado($processo)) {
+            throw new DomainException('O parecer já foi enviado à JUCEB e ela confirmou o recebimento: a justificativa não pode mais ser alterada.');
         }
 
         $texto = trim($justificativa);
@@ -44,5 +49,20 @@ class JustificativaReginService
             ],
             subject: $processo,
         );
+    }
+
+    /**
+     * Parecer com recebimento confirmado pela JUCEB (RECEBIDO_SUCESSO), o mesmo
+     * registro que o regin:reenviar-pareceres usa para não reenviar.
+     */
+    public function parecerJaEnviado(ViabilityRequest $processo): bool
+    {
+        return Activity::query()
+            ->where('log_name', 'integracoes')
+            ->where('event', 'regin-parecer')
+            ->where('result', 'sucesso')
+            ->where('subject_type', $processo->getMorphClass())
+            ->where('subject_id', $processo->getKey())
+            ->exists();
     }
 }

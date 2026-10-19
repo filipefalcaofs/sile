@@ -12,6 +12,7 @@ use App\Models\Parameter;
 use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
+use App\Support\Audit\AuditService;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -212,5 +213,42 @@ class JustificativaReginTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->where('justificativaRegin.personalizada', true)
                 ->where('justificativaRegin.texto', 'Texto do analista.'));
+    }
+
+    public function test_depois_que_a_juceb_confirma_o_parecer_a_justificativa_nao_muda(): void
+    {
+        [$processo, $decisao] = $this->processoDeferido('BAP9000009');
+        $processo->forceFill(['regin_justificativa' => 'Texto enviado.'])->save();
+
+        event(new ResultadoEmitido($processo->fresh(), $decisao));
+
+        $this->actingAs($this->analistaServidor(), 'gestao')
+            ->put($this->url($processo), ['justificativa' => 'Troca depois do envio.'])
+            ->assertSessionHasErrors('justificativa');
+
+        $this->assertSame('Texto enviado.', $processo->fresh()->regin_justificativa);
+
+        $this->actingAs($this->analistaServidor(), 'gestao')
+            ->get("/gestao/processos/{$processo->id}")
+            ->assertInertia(fn (Assert $page) => $page->where('justificativaRegin.enviada', true));
+    }
+
+    public function test_parecer_sem_recebimento_confirmado_continua_editavel(): void
+    {
+        [$processo] = $this->processoDeferido('BAP9000010');
+
+        app(AuditService::class)->log(
+            logName: 'integracoes',
+            event: 'regin-parecer',
+            description: 'Comunicação do parecer ao Regin/Junta pendente',
+            subject: $processo,
+            result: 'bloqueado',
+        );
+
+        $this->actingAs($this->analistaServidor(), 'gestao')
+            ->put($this->url($processo), ['justificativa' => 'Ainda pode corrigir.'])
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('Ainda pode corrigir.', $processo->fresh()->regin_justificativa);
     }
 }
