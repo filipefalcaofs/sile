@@ -39,21 +39,22 @@ class FakeBuildingFootprintRepository implements BuildingFootprintRepository
      *
      * @param  array<string, mixed>  $geojson
      */
-    public function candidata(FonteEdificacao $fonte, array $geojson, float $areaM2 = 120.0, ?float $confidence = null, string $metodo = EdificacaoCandidata::CONTEM_PONTO): EdificacaoCandidata
+    public function candidata(FonteEdificacao $fonte, array $geojson, float $areaM2 = 120.0, ?float $confidence = null, string $metodo = EdificacaoCandidata::CONTEM_PONTO, ?string $sourceId = null, string $release = 'release-teste', array $properties = []): EdificacaoCandidata
     {
-        $sourceId = $fonte->value.'-'.uniqid();
+        $sourceId ??= $fonte->value.'-'.uniqid();
         $id = DB::table('building_footprints')->insertGetId([
             'source' => $fonte->value,
             'source_id' => $sourceId,
-            'release' => 'release-teste',
+            'release' => $release,
             'geometry' => json_encode($geojson),
+            'properties' => json_encode($properties),
             'area_m2' => $areaM2,
             'confidence' => $confidence,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
 
-        return new EdificacaoCandidata($id, $fonte, $sourceId, 'release-teste', $geojson, $areaM2, $confidence, $metodo);
+        return new EdificacaoCandidata($id, $fonte, $sourceId, $release, $geojson, $areaM2, $confidence, $metodo);
     }
 
     public function falhando(FonteEdificacao $fonte): static
@@ -96,7 +97,7 @@ class FakeBuildingFootprintRepository implements BuildingFootprintRepository
 
     public function upsert(FonteEdificacao $fonte, string $sourceId, string $release, array $geojson, float $areaM2, ?float $confidence, ?array $sourceDatasets, array $properties, ?int $importId, ?int $duplicateOfId, array $notas): array
     {
-        $candidata = $this->candidata($fonte, $geojson, $areaM2, $confidence);
+        $candidata = $this->candidata($fonte, $geojson, $areaM2, $confidence, sourceId: $sourceId, release: $release, properties: $properties);
         $this->candidatas[$fonte->value] = $candidata;
 
         return ['id' => $candidata->id, 'inserido' => true];
