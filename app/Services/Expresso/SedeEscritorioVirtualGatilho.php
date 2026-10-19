@@ -13,6 +13,9 @@ use App\Support\Settings;
  */
 class SedeEscritorioVirtualGatilho
 {
+    /** Código do evento da JUCEB "Alteração de atividades econômicas". */
+    public const EVENTO_ALTERACAO_ATIVIDADES = '244';
+
     /**
      * O gatilho (encaminhar à análise) exige a resposta do requerente "quero ser
      * sede = Sim" E a presença do CNAE gatilho no processo (RN-EV-01).
@@ -72,6 +75,30 @@ class SedeEscritorioVirtualGatilho
         $cnaeGatilho = $this->cnaeGatilho();
 
         return $request->cnaesParaExcluir()->contains(fn ($cnae): bool => $this->normalizar($cnae->code) === $cnaeGatilho);
+    }
+
+    /**
+     * Alteração de atividades recebida da JUCEB (evento 244): a lista traz as
+     * atividades que a empresa vai exercer depois da mudança, então o CNAE da
+     * sede que não vem nela foi retirado. Devolve o vínculo de sede ativo da
+     * inscrição quando a solicitação é dessa empresa, é uma alteração de
+     * atividades e não traz mais o CNAE gatilho; null nos demais casos.
+     */
+    public function vinculoPerdidoPorAlteracaoDeAtividades(ViabilityRequest $request): ?VirtualOfficeInscriptionLock
+    {
+        $inscricao = (string) $request->property_registration;
+
+        if (trim($inscricao) === '' || ! $request->eventos()->where('codigo', self::EVENTO_ALTERACAO_ATIVIDADES)->exists()) {
+            return null;
+        }
+
+        $lock = VirtualOfficeInscriptionLock::sedeAtiva($inscricao);
+
+        if ($lock === null || $lock->sede_viability_request_id === $request->id || ! $this->titularDoVinculo($request, $lock)) {
+            return null;
+        }
+
+        return $this->temCnaeGatilho($request) ? null : $lock;
     }
 
     /**

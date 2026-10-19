@@ -215,6 +215,7 @@ final class DecisionTextCatalog
 
             // Fluxo expresso — motivos do encaminhamento à análise técnica,
             // registrados na transição e na queda do processo.
+            'expresso.motivo.abrigada_fora_do_anexo_b' => 'empresa abrigada em escritório virtual com atividade fora do Anexo B (:cnaes) — encaminhado para análise',
             'expresso.motivo.desativado' => 'fluxo expresso desativado',
             'expresso.motivo.alto_risco' => 'atividade de alto risco — análise técnica',
             'expresso.motivo.fora_do_expresso' => 'atividade fora do fluxo expresso (análise técnica)',
