@@ -18,7 +18,7 @@ use InvalidArgumentException;
 class ImportarCamadaWfsCommand extends Command
 {
     protected $signature = 'geo:importar-wfs
-        {type : Tipo da camada local (bairro, zona, via, lote, restricao)}
+        {type : Tipo da camada local (bairro, zona, via, lote, restricao, limite_municipio)}
         {typeName : FeatureType do GeoServer SEDUR (ex.: logradouro:VM_LOGRADOURO)}
         {--versao= : Versão da camada (ex.: sedur-logradouros-2026-09)}
         {--ordenar=CODLOG : Atributo estável para ordenar a paginação}

@@ -117,6 +117,14 @@ return [
         // negócio; ajustável sem deploy se uma base oficial maior precisar subir.
         'upload_max_mb' => 20,
     ],
+    // Edificações complementares (Overture, Microsoft, IA) usadas como
+    // polígono do lote quando as fontes da Prefeitura não acham o lote.
+    // Constantes técnicas; URLs e interruptores ficam no painel de integrações.
+    'edificacoes' => [
+        // Faixa de área (m²) aceita na importação.
+        'area_min_m2' => 10,
+        'area_max_m2' => 20000,
+    ],
     'retencao' => [
         'access_logs' => ['dias' => 365],
     ],

@@ -115,4 +115,28 @@ class ImportarCamadaWfsCommandTest extends TestCase
             '--versao' => 'sedur-logradouros-2026-09',
         ])->assertFailed();
     }
+
+    public function test_importa_limite_do_municipio(): void
+    {
+        Http::fake(fn () => Http::response(['type' => 'FeatureCollection', 'features' => [[
+            'type' => 'Feature',
+            'properties' => ['MUNICIPIOS' => 'SALVADOR'],
+            'geometry' => ['type' => 'Polygon', 'coordinates' => [[[-38.7, -13.0], [-38.3, -13.0], [-38.3, -12.7], [-38.7, -13.0]]]],
+        ]]]));
+
+        $importador = Mockery::mock(GeoJsonLayerImporter::class);
+        $importador->shouldReceive('import')
+            ->once()
+            ->withArgs(fn (GeoLayerType $tipo, string $versao, string $fonte): bool => $tipo === GeoLayerType::LimiteMunicipio
+                && str_contains($fonte, 'limite_salvador:VM_LIMITE_SALVADOR'))
+            ->andReturn(['lidas' => 1, 'inseridas' => 1, 'invalidas' => [], 'version' => 'sedur-limite-2026-10', 'feature_count' => 1]);
+        $this->app->instance(GeoJsonLayerImporter::class, $importador);
+
+        $this->artisan('geo:importar-wfs', [
+            'type' => 'limite_municipio',
+            'typeName' => 'limite_salvador:VM_LIMITE_SALVADOR',
+            '--versao' => 'sedur-limite-2026-10',
+            '--ordenar' => 'MUNICIPIOS',
+        ])->assertSuccessful();
+    }
 }
