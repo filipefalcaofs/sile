@@ -3,12 +3,15 @@
 namespace Tests\Feature\Analise;
 
 use App\Enums\AnalysisRecordStatus;
+use App\Enums\PoligonoFonte;
 use App\Enums\RuleDomain;
 use App\Enums\RuleVersionStatus;
+use App\Enums\StatusResolucaoPoligono;
 use App\Enums\ViabilityRequestStatus;
 use App\Enums\ZonaFonte;
 use App\Models\AnalysisRecord;
 use App\Models\ExpressoQueda;
+use App\Models\LotPolygonResolution;
 use App\Models\RuleVersion;
 use App\Models\StandardText;
 use App\Models\TllValor;
@@ -239,6 +242,43 @@ class FichaUiSmokeTest extends TestCase
                 ->where('localizacao.poligono.type', 'Polygon')
                 ->where('localizacao.camadas.zona.nome', 'ZPR 3')
                 ->where('localizacao.camadas.zona.fonte', 'enderecamento_maior_porcao'));
+    }
+
+    public function test_ficha_envia_procedencia_sem_a_palavra_estimado(): void
+    {
+        $processo = ViabilityRequest::factory()->create([
+            'status' => ViabilityRequestStatus::EmAnalise,
+            'protocol_number' => 'VIA-'.now()->year.'-000127',
+            'protocoled_at' => now(),
+        ]);
+        $processo->forceFill([
+            'address_polygon_geojson' => ['type' => 'MultiPolygon', 'coordinates' => [[[[-38.5, -12.98], [-38.499, -12.98], [-38.499, -12.979], [-38.5, -12.98]]]]],
+            'address_polygon_source' => PoligonoFonte::Ia,
+        ])->save();
+        LotPolygonResolution::factory()->create([
+            'viability_request_id' => $processo->id,
+            'source' => PoligonoFonte::Ia,
+            'status' => StatusResolucaoPoligono::Encontrado,
+            'source_id' => 'ia-uuid',
+            'release' => 'sam2.1-hiera-small@cpu+imageserver-2024',
+            'area_m2' => 88.4,
+        ]);
+        AnalysisRecord::factory()->create([
+            'viability_request_id' => $processo->id,
+            'revision' => 1,
+            'status' => AnalysisRecordStatus::Rascunho,
+        ]);
+
+        $resposta = $this->actingAs($this->analista(), 'gestao')
+            ->get("/gestao/processos/{$processo->id}/ficha")
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('localizacao.poligono_fonte.legenda', 'Contorno tracejado: polígono gerado por IA.')
+                ->where('localizacao.poligono_fonte.atribuicao', 'Ortofoto: Prefeitura Municipal de Salvador')
+                ->where('localizacao.poligono_fonte.procedencia.area_m2', 88.4)
+                ->where('localizacao.poligono_fonte.procedencia.source_id', 'ia-uuid'));
+
+        $this->assertStringNotContainsStringIgnoringCase('estimad', json_encode($resposta->viewData('page')['props']['localizacao']));
     }
 
     public function test_ficha_sem_poligono_do_enderecamento_entrega_nulo(): void

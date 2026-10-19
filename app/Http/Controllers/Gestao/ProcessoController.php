@@ -20,6 +20,7 @@ use App\Services\Analise\ProcessoQueryService;
 use App\Services\Analise\TramitacaoProcessoService;
 use App\Services\Auditoria\DecisionExplanationService;
 use App\Services\Geo\DivergenciaLogradouroInscricao;
+use App\Services\Geo\ProcedenciaPoligono;
 use App\Services\Regin\HttpReginParecerNotifier;
 use App\Services\Relatorios\Export\ReportExporter;
 use App\Services\Relatorios\Export\Sources\ProcessosReportSource;
@@ -248,6 +249,7 @@ class ProcessoController extends Controller
             'geo' => [
                 'poligono' => $viabilityRequest->property_polygon_geojson,
                 'poligono_enderecamento' => $viabilityRequest->address_polygon_geojson,
+                'poligono_fonte' => app(ProcedenciaPoligono::class)->paraTela($viabilityRequest),
                 'ponto' => $viabilityRequest->property_polygon_geojson ? null : $viabilityRequest->pontoDoImovel(),
                 'origem' => $viabilityRequest->property_location_source === null ? null : [
                     'value' => $viabilityRequest->property_location_source->value,

@@ -28,3 +28,31 @@ export function centroDaGeometria(geometria: GeoJsonObject | null | undefined): 
 
     return { lat: soma.lat / vertices.length, lng: soma.lng / vertices.length };
 }
+
+/** Fonte do polígono do lote, com a legenda do contorno e a procedência das fontes complementares. */
+export interface FontePoligono {
+    value: string;
+    legenda: string;
+    atribuicao: string | null;
+    oficial: boolean;
+    procedencia: { source_id: string | null; release: string | null; obtido_em: string | null; area_m2: number | null } | null;
+}
+
+/** "Overture · id gers-9 · 19/10/2026 · 135,5 m²", a partir da legenda e da procedência. */
+export function resumoDaProcedencia(fonte: FontePoligono): string | null {
+    if (fonte.oficial || fonte.procedencia === null) {
+        return null;
+    }
+
+    const nome = fonte.legenda.replace(/^Contorno tracejado: polígono (do |da )?/, '').replace(/\.$/, '');
+    const { source_id, obtido_em, area_m2 } = fonte.procedencia;
+    const partes = [
+        `Fonte: ${nome.charAt(0).toUpperCase()}${nome.slice(1)}`,
+        source_id ? `id ${source_id}` : null,
+        obtido_em ? new Date(obtido_em).toLocaleDateString('pt-BR') : null,
+        area_m2 !== null ? `${area_m2.toLocaleString('pt-BR')} m²` : null,
+    ];
+
+    return partes.filter((parte): parte is string => parte !== null).join(' · ');
+}
+
