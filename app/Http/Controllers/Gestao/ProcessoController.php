@@ -185,6 +185,7 @@ class ProcessoController extends Controller
             'company',
             'sector:id,name',
             'assignedTo:id,name',
+            'conclusaoEncaminhadaPara:id,name',
             'decision',
             'currentAnalysisRecord',
             'transitions',
@@ -397,7 +398,24 @@ class ProcessoController extends Controller
             return back()->with('error', $e->getMessage());
         }
 
-        return back()->with('status', 'Situação da análise atualizada.');
+        return back()->with('status', $this->confirmacaoDaTramitacao($viabilityRequest, $to));
+    }
+
+    /**
+     * Mensagem de sucesso que diz para onde o processo foi, para quem tramita
+     * ter certeza de que o destino recebeu.
+     */
+    private function confirmacaoDaTramitacao(ViabilityRequest $viabilityRequest, AnalysisStatus $to): string
+    {
+        $viabilityRequest->load(['sector:id,name', 'assignedTo:id,name', 'conclusaoEncaminhadaPara:id,name']);
+
+        return match ($to) {
+            AnalysisStatus::Encaminhado => "Processo encaminhado para {$viabilityRequest->assignedTo?->name} ({$viabilityRequest->sector?->name}). Ele já está na Caixa de entrada dessa pessoa.",
+            AnalysisStatus::ParaConclusao => $viabilityRequest->conclusaoEncaminhadaPara === null
+                ? "Processo enviado para conclusão. Ele está na aba Para conclusão da Caixa do setor {$viabilityRequest->sector?->name}, aguardando distribuição."
+                : "Processo enviado para conclusão de {$viabilityRequest->conclusaoEncaminhadaPara->name}. Ele já está na Caixa de entrada dessa pessoa.",
+            default => "Situação da análise atualizada para {$to->label()}.",
+        };
     }
 
     /**

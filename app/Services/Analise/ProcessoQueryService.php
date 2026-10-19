@@ -71,7 +71,7 @@ class ProcessoQueryService
     public function filtered(array $filtros): Builder
     {
         $query = ViabilityRequest::query()
-            ->with(['company', 'sector:id,name', 'assignedTo:id,name', 'decision', 'encaminhamentoAnalise', 'serviceType:id,name', 'eventos']);
+            ->with(['company', 'sector:id,name', 'assignedTo:id,name', 'conclusaoEncaminhadaPara:id,name', 'decision', 'encaminhamentoAnalise', 'serviceType:id,name', 'eventos']);
 
         return $this->aplicarOrdem($this->aplicarFiltros($query, $filtros), $this->valor($filtros, 'ordem'));
     }
@@ -152,7 +152,7 @@ class ProcessoQueryService
     public function fila(User $user): Builder
     {
         return $this->escopo($user)
-            ->with(['company', 'sector:id,name', 'assignedTo:id,name', 'decision', 'encaminhamentoAnalise', 'serviceType:id,name', 'eventos'])
+            ->with(['company', 'sector:id,name', 'assignedTo:id,name', 'conclusaoEncaminhadaPara:id,name', 'decision', 'encaminhamentoAnalise', 'serviceType:id,name', 'eventos'])
             ->whereIn('status', self::STATUS_FILA)
             ->orderByRaw('case when analysis_status = ? then 0 else 1 end', [AnalysisStatus::ConviteRespondido->value])
             ->orderBy('analysis_due_at')
@@ -168,7 +168,7 @@ class ProcessoQueryService
     public function analisados(User $user): Builder
     {
         return $this->analisadosPor($user)
-            ->with(['company', 'sector:id,name', 'assignedTo:id,name', 'decision', 'encaminhamentoAnalise', 'serviceType:id,name', 'eventos'])
+            ->with(['company', 'sector:id,name', 'assignedTo:id,name', 'conclusaoEncaminhadaPara:id,name', 'decision', 'encaminhamentoAnalise', 'serviceType:id,name', 'eventos'])
             ->orderByDesc('id');
     }
 
@@ -285,19 +285,27 @@ class ProcessoQueryService
 
     /**
      * Escopo da caixa de entrada: processos atribuídos ao usuário, menos os já
-     * enviados para conclusão (saem da caixa individual e vão para a aba "Para
-     * Conclusão" do setor). Sem filtro de status nem ordenação (reaproveitado
-     * pela fila e pelos contadores).
+     * enviados para conclusão (saem da caixa de quem analisou e vão para a aba
+     * "Para Conclusão" do setor), mais os que estão para conclusão com ele —
+     * o destinatário escolhido no envio, ou quem foi distribuído ou assumiu na
+     * aba. Sem filtro de status nem ordenação (reaproveitado pela fila e pelos
+     * contadores).
      *
      * @return Builder<ViabilityRequest>
      */
     private function escopo(User $user): Builder
     {
-        return ViabilityRequest::query()
-            ->where('assigned_user_id', $user->id)
-            ->where(fn (Builder $query) => $query
-                ->whereNull('analysis_status')
-                ->orWhere('analysis_status', '!=', AnalysisStatus::ParaConclusao->value));
+        $paraConclusao = AnalysisStatus::ParaConclusao->value;
+
+        return ViabilityRequest::query()->where(fn (Builder $caixa) => $caixa
+            ->where(fn (Builder $atribuidos) => $atribuidos
+                ->where('assigned_user_id', $user->id)
+                ->where(fn (Builder $query) => $query
+                    ->whereNull('analysis_status')
+                    ->orWhere('analysis_status', '!=', $paraConclusao)))
+            ->orWhere(fn (Builder $conclusao) => $conclusao
+                ->where('analysis_status', $paraConclusao)
+                ->where('conclusao_encaminhada_para_user_id', $user->id)));
     }
 
     /**

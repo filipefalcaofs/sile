@@ -294,6 +294,12 @@ class ViabilityRequest extends Model
             return $setor === null ? $status->label() : "{$status->label()} {$setor}";
         }
 
+        if ($status === AnalysisStatus::ParaConclusao) {
+            $destinatario = $this->conclusaoEncaminhadaPara?->name;
+
+            return $destinatario === null ? $status->label() : "{$status->label()} – {$destinatario}";
+        }
+
         if ($status === AnalysisStatus::AnaliseConcluida) {
             $resultado = match ($this->status) {
                 ViabilityRequestStatus::Deferida => 'Deferido',

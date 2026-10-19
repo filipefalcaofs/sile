@@ -231,8 +231,11 @@ class DistribuicaoService
                 'assigned_at' => $startedAt,
             ]);
 
-            // Para conclusão o processo já passou pela análise: trocar quem conclui não reinicia o prazo.
-            if ($request->analysis_status !== AnalysisStatus::ParaConclusao) {
+            // Para conclusão o processo já passou pela análise: quem recebe é quem
+            // conclui (e o vê na Caixa de entrada), e a troca não reinicia o prazo.
+            if ($request->analysis_status === AnalysisStatus::ParaConclusao) {
+                $request->forceFill(['conclusao_encaminhada_para_user_id' => $analista->id]);
+            } else {
                 $request->forceFill([
                     'analysis_stage' => AnalysisStage::Analise,
                     'analysis_stage_started_at' => $startedAt,
