@@ -88,4 +88,33 @@ class PoligonoFonteTest extends TestCase
 
         $this->assertSame(PoligonoFonte::Semap, $request->fresh()->address_polygon_source);
     }
+
+    public function test_legenda_de_cada_fonte(): void
+    {
+        $this->assertSame('Contorno tracejado: polígono do endereçamento SEDUR.', PoligonoFonte::Chave->legenda());
+        $this->assertSame('Contorno tracejado: polígono do endereçamento SEDUR.', PoligonoFonte::Ponto->legenda());
+        $this->assertSame('Contorno tracejado: polígono do cadastro municipal (SEMAP).', PoligonoFonte::Semap->legenda());
+        $this->assertSame('Contorno tracejado: polígono do Overture.', PoligonoFonte::Overture->legenda());
+        $this->assertSame('Contorno tracejado: polígono da Microsoft.', PoligonoFonte::Microsoft->legenda());
+        $this->assertSame('Contorno tracejado: polígono gerado por IA.', PoligonoFonte::Ia->legenda());
+    }
+
+    public function test_so_fontes_da_prefeitura_sao_oficiais(): void
+    {
+        $this->assertTrue(PoligonoFonte::Chave->oficial());
+        $this->assertTrue(PoligonoFonte::Semap->oficial());
+        $this->assertTrue(PoligonoFonte::Ponto->oficial());
+        $this->assertFalse(PoligonoFonte::Overture->oficial());
+        $this->assertFalse(PoligonoFonte::Microsoft->oficial());
+        $this->assertFalse(PoligonoFonte::Ia->oficial());
+    }
+
+    public function test_atribuicao_das_complementares(): void
+    {
+        $this->assertNull(PoligonoFonte::Chave->atribuicao());
+        $this->assertNull(PoligonoFonte::Semap->atribuicao());
+        $this->assertSame('© OpenStreetMap contributors, Overture Maps Foundation', PoligonoFonte::Overture->atribuicao());
+        $this->assertSame('Microsoft', PoligonoFonte::Microsoft->atribuicao());
+        $this->assertSame('Ortofoto: Prefeitura Municipal de Salvador', PoligonoFonte::Ia->atribuicao());
+    }
 }

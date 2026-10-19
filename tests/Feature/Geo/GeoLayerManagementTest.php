@@ -125,7 +125,7 @@ class GeoLayerManagementTest extends TestCase
     }
 
     /**
-     * O index agrupa as camadas pelos 5 tipos do enum (label), com a versão
+     * O index agrupa as camadas pelos 6 tipos do enum (label), com a versão
      * vigente destacada e o histórico (feature_count/source/vigência) — a
      * leitura não usa funções espaciais, então roda em SQLite.
      */
@@ -151,7 +151,7 @@ class GeoLayerManagementTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('gestao/territorio/camadas')
-                ->has('grupos', 5)
+                ->has('grupos', 6)
                 ->where('grupos.0.tipo', 'bairro')
                 ->where('grupos.0.label', 'Bairro')
                 ->where('grupos.0.vigente.id', $vigente->id)

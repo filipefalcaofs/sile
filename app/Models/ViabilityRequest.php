@@ -8,6 +8,7 @@ use App\Enums\AnalysisStage;
 use App\Enums\AnalysisStatus;
 use App\Enums\IntencaoAtividade;
 use App\Enums\PoligonoFonte;
+use App\Enums\PropertyLocationPrecision;
 use App\Enums\PropertyLocationSource;
 use App\Enums\ViabilityRequestOrigin;
 use App\Enums\ViabilityRequestStatus;
@@ -140,6 +141,7 @@ class ViabilityRequest extends Model
             'property_point_lat' => 'float',
             'property_point_lng' => 'float',
             'property_location_source' => PropertyLocationSource::class,
+            'property_location_precision' => PropertyLocationPrecision::class,
             'camadas_incidentes' => 'array',
             'simulation_snapshot' => 'array',
             'simulation_rules_versions' => 'array',
