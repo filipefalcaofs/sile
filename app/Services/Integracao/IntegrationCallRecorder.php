@@ -129,6 +129,10 @@ class IntegrationCallRecorder
         $alvo = $host.$path;
 
         $regras = [
+            'overture' => ['overturemaps'],
+            'edificacoes_microsoft' => ['minedbuildings', 'bfppub'],
+            'ortofoto' => ['/imageserver/', 'mapeamento.salvador'],
+            'edificacoes_ia' => ['/segmentar', '/saude'],
             'regin' => ['api_integracao', 'juceb', 'regin'],
             'geoserver' => ['geoserver', '/wfs'],
             'geocoding' => ['nominatim'],

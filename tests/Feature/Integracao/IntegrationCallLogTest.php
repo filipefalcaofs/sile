@@ -6,6 +6,7 @@ use App\Jobs\DecidirFluxoExpressoJob;
 use App\Jobs\ProtocolarRecebimentoReginJob;
 use App\Models\IntegrationCall;
 use App\Models\User;
+use App\Services\Integracao\IntegrationCallRecorder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Http\Client\ConnectionException;
@@ -121,6 +122,17 @@ class IntegrationCallLogTest extends TestCase
         Http::get('https://x.exemplo.test/part.csv.gz');
 
         $this->assertSame('[conteúdo binário: 11 bytes]', IntegrationCall::query()->sole()->response_body);
+    }
+
+    public function test_integracao_por_url_das_edificacoes(): void
+    {
+        $recorder = app(IntegrationCallRecorder::class);
+
+        $this->assertSame('overture', $recorder->integracao('https://overturemaps-us-west-2.s3.amazonaws.com/release/x'));
+        $this->assertSame('edificacoes_microsoft', $recorder->integracao('https://minedbuildings.z5.web.core.windows.net/global-buildings/dataset-links.csv'));
+        $this->assertSame('ortofoto', $recorder->integracao('https://geo.salvador.ba.gov.br/imageserver/rest/services/Ortofotos/2024/ImageServer/exportImage'));
+        $this->assertSame('ortofoto', $recorder->integracao('https://mapeamento.salvador.ba.gov.br/wms'));
+        $this->assertSame('edificacoes_ia', $recorder->integracao('http://footprint-ia:8080/segmentar'));
     }
 
     public function test_resposta_de_erro_grava_como_erro(): void

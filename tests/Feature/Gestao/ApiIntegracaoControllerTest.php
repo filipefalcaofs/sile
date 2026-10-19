@@ -34,7 +34,7 @@ class ApiIntegracaoControllerTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('gestao/config-apis/index')
                 ->where('aba', 'regin')
-                ->has('abas', 8)
+                ->has('abas', 9)
                 ->where('abas.0.nome', 'REGIN')
                 ->where('abas.1.nome', 'Inscrição imobiliária')
                 ->where('abas.2.nome', 'CPF e CNPJ')
@@ -116,6 +116,44 @@ class ApiIntegracaoControllerTest extends TestCase
                 ->where('abas.7.id', 'arcgis_semap')
                 ->where('abas.7.campos.2.valor', null)
                 ->where('abas.7.campos.2.tem_valor', true))
+            ->assertDontSee($token);
+    }
+
+    public function test_aba_edificacoes_tem_interruptores_urls_e_token_sensivel(): void
+    {
+        $token = str_repeat('x9Y8', 30);
+
+        $this->actingAs($this->admin(), 'gestao')
+            ->put('/gestao/config-apis/edificacoes', [
+                'campos' => [
+                    'overture' => '1',
+                    'microsoft' => '0',
+                    'ia' => '1',
+                    'importacao_agendada' => '0',
+                    'ia_url' => 'http://footprint-ia:8080',
+                    'ortofoto_2024_url' => 'https://geo.salvador.ba.gov.br/imageserver/rest/services/Ortofotos/2024/ImageServer',
+                    'ortofoto_2016_url' => 'https://mapeamento.salvador.ba.gov.br/wms',
+                    'ortofoto_token' => $token,
+                ],
+            ])
+            ->assertRedirect(route('gestao.config-apis.edit', ['aba' => 'edificacoes']));
+
+        $this->assertTrue(Settings::enabled('edificacoes_overture'));
+        $this->assertFalse(Settings::enabled('edificacoes_microsoft'));
+        $this->assertSame('http://footprint-ia:8080', Settings::get('integrations.edificacoes.ia_url'));
+        $parameter = Parameter::query()->where('key', 'integrations.edificacoes.ortofoto_token')->first();
+        $this->assertTrue($parameter->sensitive);
+        $this->assertNotSame($token, $parameter->getRawOriginal('value'));
+
+        $this->actingAs($this->admin(), 'gestao')
+            ->get('/gestao/config-apis?aba=edificacoes')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('abas.8.id', 'edificacoes')
+                ->where('abas.8.nome', 'Edificações complementares')
+                ->has('abas.8.campos', 8)
+                ->where('abas.8.campos.7.valor', null)
+                ->where('abas.8.campos.7.tem_valor', true))
             ->assertDontSee($token);
     }
 

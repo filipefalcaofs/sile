@@ -25,6 +25,7 @@ fi
 
 release=$1
 saida=$2
+mkdir -p "$(dirname "$saida")"
 
 overturemaps download --bbox=-38.70,-13.02,-38.29,-12.73 -f geojsonseq --type=building -o "$saida"
 
