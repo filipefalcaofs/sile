@@ -27,7 +27,7 @@ class RenovacaoLegadaElegibilidadeService
 
     public function avaliar(TvlLegadaDetalhe $tvl, Company $empresa): RenovacaoElegibilidade
     {
-        $motivo = $this->motivoTitularidade($tvl, $empresa)
+        $motivo = $this->titularidade($tvl, $empresa)
             ?? $this->motivoTipo($tvl)
             ?? $this->motivoAtividades($tvl)
             ?? $this->motivoRenovadaNoLegado($tvl)
@@ -37,7 +37,10 @@ class RenovacaoLegadaElegibilidadeService
         return new RenovacaoElegibilidade($motivo === null, $motivo);
     }
 
-    private function motivoTitularidade(TvlLegadaDetalhe $tvl, Company $empresa): ?string
+    /**
+     * Motivo pelo qual a empresa não é a titular da TVL; null quando é.
+     */
+    public function titularidade(TvlLegadaDetalhe $tvl, Company $empresa): ?string
     {
         $cnpjEmpresa = $this->digitos($empresa->cnpj);
         $cnpjGravado = $this->digitos($tvl->titularDocumento);
