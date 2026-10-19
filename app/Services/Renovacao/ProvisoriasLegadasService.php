@@ -3,6 +3,7 @@
 namespace App\Services\Renovacao;
 
 use App\Models\Company;
+use App\Services\Legado\LegadoIndisponivelException;
 use App\Services\Legado\LegadoViabilidadeClient;
 use App\Services\Legado\TvlLegadaDetalhe;
 use Illuminate\Support\Collection;
@@ -30,15 +31,21 @@ class ProvisoriasLegadasService
         $indisponivel = false;
 
         foreach ($empresas as $empresa) {
+            $cnpj = preg_replace('/\D/', '', (string) $empresa->cnpj) ?? '';
+
+            if (strlen($cnpj) !== 14) {
+                continue;
+            }
+
             try {
-                $detalhes = [];
-                $cnpj = preg_replace('/\D/', '', (string) $empresa->cnpj) ?? '';
+                $daEmpresa = [];
 
                 foreach ($this->client->provisoriasPorCnpj($cnpj) as $resumo) {
                     $detalhe = $this->client->tvlPorNumero($resumo->numero);
+                    $item = $detalhe === null ? null : $this->item($detalhe, $empresa);
 
-                    if ($detalhe !== null) {
-                        $detalhes[] = $detalhe;
+                    if ($item !== null) {
+                        $daEmpresa[] = $item;
                     }
                 }
             } catch (\Throwable $e) {
@@ -48,12 +55,8 @@ class ProvisoriasLegadasService
                 continue;
             }
 
-            foreach ($detalhes as $detalhe) {
-                $item = $this->item($detalhe, $empresa);
-
-                if ($item !== null) {
-                    $itens[$item['numero']] ??= $item;
-                }
+            foreach ($daEmpresa as $item) {
+                $itens[$item['numero']] ??= $item;
             }
         }
 
@@ -66,35 +69,29 @@ class ProvisoriasLegadasService
     public function buscarPorNumero(Company $empresa, string $numeroViabilidade): array
     {
         $numero = preg_replace('/\s+/', '', trim($numeroViabilidade)) ?? '';
-        $detalhes = [];
+        $itens = [];
 
         try {
             if (preg_match('/^\d{7}$/', $numero) === 1) {
-                $detalhe = $this->client->tvlPorNumero((int) $numero);
-                $detalhes = $detalhe === null ? [] : [$detalhe];
+                $resumos = [(int) $numero];
             } elseif (preg_match('/^\d{10}-\d{8}\/\d{4}$/', $numero) === 1) {
-                foreach ($this->client->tvlsDoProcesso($numero) as $resumo) {
-                    $detalhe = $this->client->tvlPorNumero($resumo->numero);
+                $resumos = array_map(fn ($tvl): int => $tvl->numero, $this->client->tvlsDoProcesso($numero));
+            } else {
+                $resumos = [];
+            }
 
-                    if ($detalhe !== null) {
-                        $detalhes[] = $detalhe;
-                    }
+            foreach ($resumos as $numeroTvl) {
+                $detalhe = $this->client->tvlPorNumero($numeroTvl);
+                $item = $detalhe === null ? null : $this->item($detalhe, $empresa);
+
+                if ($item !== null) {
+                    $itens[$item['numero']] ??= $item;
                 }
             }
         } catch (\Throwable $e) {
             $this->registrarFalha($e);
 
             return ['itens' => [], 'indisponivel' => true];
-        }
-
-        $itens = [];
-
-        foreach ($detalhes as $detalhe) {
-            $item = $this->item($detalhe, $empresa);
-
-            if ($item !== null) {
-                $itens[$item['numero']] ??= $item;
-            }
         }
 
         return ['itens' => array_values($itens), 'indisponivel' => false];
@@ -105,11 +102,17 @@ class ProvisoriasLegadasService
      */
     private function item(TvlLegadaDetalhe $tvl, Company $empresa): ?array
     {
-        if ($this->elegibilidade->titularidade($tvl, $empresa) !== null) {
+        $titularidade = $this->elegibilidade->titularidade($tvl, $empresa);
+
+        if ($titularidade->consultaIndisponivel) {
+            throw new LegadoIndisponivelException('Conferência de titularidade indisponível.');
+        }
+
+        if (! $titularidade->titular) {
             return null;
         }
 
-        $veredito = $this->elegibilidade->avaliar($tvl, $empresa);
+        $veredito = $this->elegibilidade->avaliarAposTitularidade($tvl);
 
         return [
             'numero' => $tvl->numero,

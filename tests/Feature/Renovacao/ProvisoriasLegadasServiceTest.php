@@ -6,6 +6,7 @@ use App\Models\Cnae;
 use App\Models\Company;
 use App\Services\Cnpj\CnpjData;
 use App\Services\Cnpj\CnpjLookup;
+use App\Services\Cnpj\CnpjLookupException;
 use App\Services\Legado\LegadoIndisponivelException;
 use App\Services\Legado\LegadoViabilidadeClient;
 use App\Services\Legado\TvlLegada;
@@ -212,6 +213,52 @@ class ProvisoriasLegadasServiceTest extends TestCase
         $this->assertSame([1111111], array_column($resultado['itens'], 'numero'));
     }
 
+    public function test_consulta_cadastral_fora_do_ar_marca_indisponivel_e_nao_descarta_em_silencio(): void
+    {
+        Log::spy();
+        $this->cadastroFalhando();
+        $this->mockClient(function (MockInterface $client): void {
+            $client->shouldReceive('provisoriasPorCnpj')->with(self::CNPJ)->andReturn([$this->resumo(1111111)]);
+            $client->shouldReceive('tvlPorNumero')->with(1111111)->andReturn($this->detalhe(1111111, titular: null));
+        });
+
+        $lista = $this->service()->paraEmpresas(collect([$this->empresa()]));
+        $busca = $this->service()->buscarPorNumero($this->empresa(), '1111111');
+
+        $this->assertSame(['itens' => [], 'indisponivel' => true], $lista);
+        $this->assertSame(['itens' => [], 'indisponivel' => true], $busca);
+        Log::shouldHaveReceived('warning')->twice()->withArgs(
+            fn (string $mensagem, array $contexto): bool => ! str_contains($mensagem.json_encode($contexto), self::CNPJ),
+        );
+    }
+
+    public function test_consulta_cadastral_e_feita_uma_vez_por_item_sem_cnpj_gravado(): void
+    {
+        $chamadas = new \ArrayObject;
+        $this->cadastroRespondendo(self::RAZAO, $chamadas);
+        $this->mockClient(function (MockInterface $client): void {
+            $client->shouldReceive('tvlPorNumero')->with(1234567)->andReturn($this->detalhe(1234567, titular: null));
+        });
+
+        $resultado = $this->service()->buscarPorNumero($this->empresa(), '1234567');
+
+        $this->assertCount(1, $resultado['itens']);
+        $this->assertCount(1, $chamadas);
+    }
+
+    public function test_empresa_com_cnpj_invalido_nao_chama_o_cliente(): void
+    {
+        $this->mockClient(function (MockInterface $client): void {
+            $client->shouldNotReceive('provisoriasPorCnpj');
+        });
+        $empresa = Company::factory()->create(['cnpj' => '123']);
+
+        $this->assertSame(
+            ['itens' => [], 'indisponivel' => false],
+            $this->service()->paraEmpresas(collect([$empresa])),
+        );
+    }
+
     private function service(): ProvisoriasLegadasService
     {
         return app(ProvisoriasLegadasService::class);
@@ -228,7 +275,18 @@ class ProvisoriasLegadasServiceTest extends TestCase
         $this->mock(LegadoViabilidadeClient::class, $expectativas);
     }
 
-    private function cadastroRespondendo(string $razao): void
+    private function cadastroFalhando(): void
+    {
+        $this->app->instance(CnpjLookup::class, new class implements CnpjLookup
+        {
+            public function lookup(string $cnpj): CnpjData
+            {
+                throw new CnpjLookupException('fora do ar');
+            }
+        });
+    }
+
+    private function cadastroRespondendo(string $razao, ?\ArrayObject $chamadas = null): void
     {
         $dados = new CnpjData(
             cnpj: self::CNPJ,
@@ -252,12 +310,14 @@ class ProvisoriasLegadasServiceTest extends TestCase
             registrationStatus: null,
         );
 
-        $this->app->instance(CnpjLookup::class, new class($dados) implements CnpjLookup
+        $this->app->instance(CnpjLookup::class, new class($dados, $chamadas) implements CnpjLookup
         {
-            public function __construct(private CnpjData $dados) {}
+            public function __construct(private CnpjData $dados, private ?\ArrayObject $chamadas) {}
 
             public function lookup(string $cnpj): CnpjData
             {
+                $this->chamadas?->append($cnpj);
+
                 return $this->dados;
             }
         });

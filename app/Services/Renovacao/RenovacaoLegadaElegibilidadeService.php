@@ -27,8 +27,21 @@ class RenovacaoLegadaElegibilidadeService
 
     public function avaliar(TvlLegadaDetalhe $tvl, Company $empresa): RenovacaoElegibilidade
     {
-        $motivo = $this->titularidade($tvl, $empresa)
-            ?? $this->motivoTipo($tvl)
+        $titularidade = $this->titularidade($tvl, $empresa);
+
+        if (! $titularidade->titular) {
+            return new RenovacaoElegibilidade(false, $titularidade->motivo);
+        }
+
+        return $this->avaliarAposTitularidade($tvl);
+    }
+
+    /**
+     * Regras posteriores à titularidade, para quem já a conferiu.
+     */
+    public function avaliarAposTitularidade(TvlLegadaDetalhe $tvl): RenovacaoElegibilidade
+    {
+        $motivo = $this->motivoTipo($tvl)
             ?? $this->motivoAtividades($tvl)
             ?? $this->motivoRenovadaNoLegado($tvl)
             ?? $this->motivoVencida($tvl)
@@ -37,27 +50,28 @@ class RenovacaoLegadaElegibilidadeService
         return new RenovacaoElegibilidade($motivo === null, $motivo);
     }
 
-    /**
-     * Motivo pelo qual a empresa não é a titular da TVL; null quando é.
-     */
-    public function titularidade(TvlLegadaDetalhe $tvl, Company $empresa): ?string
+    public function titularidade(TvlLegadaDetalhe $tvl, Company $empresa): ResultadoTitularidade
     {
         $cnpjEmpresa = $this->digitos($empresa->cnpj);
         $cnpjGravado = $this->digitos($tvl->titularDocumento);
 
         if (strlen($cnpjGravado) === 14) {
-            return $cnpjGravado === $cnpjEmpresa ? null : 'Esta viabilidade pertence a outra empresa.';
+            return $cnpjGravado === $cnpjEmpresa
+                ? ResultadoTitularidade::titular()
+                : ResultadoTitularidade::outroTitular('Esta viabilidade pertence a outra empresa.');
         }
 
         try {
             $dados = $this->cnpjLookup->lookup($cnpjEmpresa);
         } catch (CnpjNotFoundException|CnpjLookupException) {
-            return 'Não foi possível conferir o CNPJ agora. Tente novamente em instantes.';
+            return ResultadoTitularidade::consultaIndisponivel('Não foi possível conferir o CNPJ agora. Tente novamente em instantes.');
         }
 
         $conferencia = $this->conferenciaTitularidade->conferir($tvl, $dados);
 
-        return $conferencia->confere ? null : $conferencia->motivo;
+        return $conferencia->confere
+            ? ResultadoTitularidade::titular()
+            : ResultadoTitularidade::outroTitular((string) $conferencia->motivo);
     }
 
     private function motivoTipo(TvlLegadaDetalhe $tvl): ?string
