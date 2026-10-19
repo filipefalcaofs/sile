@@ -113,7 +113,7 @@ class ConclusaoAnaliseTest extends TestCase
             ->post("/gestao/processos/{$processo->id}/conclusao-analise", [
                 'resultado' => 'deferido',
             ])
-            ->assertSessionHasErrors('conclusao');
+            ->assertSessionHasErrors('divergencia');
 
         $this->assertSame(ViabilityRequestStatus::EmAnalise, $processo->fresh()->status);
         $this->assertDatabaseCount('viability_decisions', 0);
@@ -133,11 +133,71 @@ class ConclusaoAnaliseTest extends TestCase
                 'resultado' => 'indeferido',
                 'parecer' => 'Parecer qualquer.',
             ])
-            ->assertSessionHasErrors('conclusao');
+            ->assertSessionHasErrors('divergencia');
 
         $this->assertSame(ViabilityRequestStatus::EmAnalise, $processo->fresh()->status);
         $this->assertDatabaseCount('viability_decisions', 0);
         Event::assertNotDispatched(ResultadoEmitido::class);
+    }
+
+    public function test_divergencia_confirmada_deferido_com_atividade_indeferida_conclui(): void
+    {
+        Event::fake([ResultadoEmitido::class]);
+
+        $processo = $this->processoComFicha([
+            ['cnae' => '4712100', 'status_escolhido' => 'deferida'],
+            ['cnae' => '5611201', 'status_escolhido' => 'indeferida'],
+        ]);
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->post("/gestao/processos/{$processo->id}/conclusao-analise", [
+                'resultado' => 'deferido',
+                'confirmar_divergencia' => true,
+            ])
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame(ViabilityRequestStatus::Deferida, $processo->fresh()->status);
+    }
+
+    public function test_divergencia_confirmada_indeferido_sem_atividade_indeferida_conclui(): void
+    {
+        Event::fake([ResultadoEmitido::class]);
+
+        $processo = $this->processoComFicha([
+            ['cnae' => '4712100', 'status_escolhido' => 'deferida'],
+        ]);
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->post("/gestao/processos/{$processo->id}/conclusao-analise", [
+                'resultado' => 'indeferido',
+                'parecer' => 'Indeferido por decisão do analista.',
+                'confirmar_divergencia' => true,
+            ])
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame(ViabilityRequestStatus::Indeferida, $processo->fresh()->status);
+    }
+
+    public function test_processo_finalizado_tambem_pede_confirmacao_da_divergencia(): void
+    {
+        $processo = $this->processoComFicha([
+            ['cnae' => '4712100', 'status_escolhido' => 'deferida'],
+            ['cnae' => '5611201', 'status_escolhido' => 'indeferida'],
+        ]);
+        $processo->forceFill(['status' => ViabilityRequestStatus::Indeferida])->save();
+        ViabilityDecision::factory()->create(['viability_request_id' => $processo->id]);
+
+        $rota = "/gestao/processos/{$processo->id}/conclusao-analise";
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->post($rota, ['resultado' => 'deferido'])
+            ->assertSessionHasErrors('divergencia');
+        $this->assertSame(ViabilityRequestStatus::Indeferida, $processo->fresh()->status);
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->post($rota, ['resultado' => 'deferido', 'confirmar_divergencia' => true])
+            ->assertSessionHasNoErrors();
+        $this->assertSame(ViabilityRequestStatus::Deferida, $processo->fresh()->status);
     }
 
     public function test_cassado_revogado_e_desativado_encerram_sem_tvl(): void
@@ -200,18 +260,39 @@ class ConclusaoAnaliseTest extends TestCase
         $this->assertSame('TVL-2026-880001', $processo->decision->tvl_product_number);
     }
 
-    public function test_processo_deferido_nao_pode_ser_indeferido_na_conclusao(): void
+    public function test_processo_finalizado_aceita_qualquer_outro_resultado(): void
     {
-        $processo = ViabilityRequest::factory()->protocoled()->create();
-        $processo->forceFill(['status' => ViabilityRequestStatus::Deferida])->save();
+        $casos = [
+            [ViabilityRequestStatus::Deferida, 'indeferido', ViabilityRequestStatus::Indeferida],
+            [ViabilityRequestStatus::Indeferida, 'deferido', ViabilityRequestStatus::Deferida],
+            [ViabilityRequestStatus::Indeferida, 'cassado', ViabilityRequestStatus::Cassado],
+            [ViabilityRequestStatus::Revogado, 'indeferido', ViabilityRequestStatus::Indeferida],
+            [ViabilityRequestStatus::Cassado, 'deferido', ViabilityRequestStatus::Deferida],
+        ];
 
-        $this->actingAs($this->analista(), 'gestao')
-            ->post("/gestao/processos/{$processo->id}/conclusao-analise", [
-                'resultado' => 'indeferido',
-            ])
-            ->assertSessionHasErrors('conclusao');
+        foreach ($casos as $indice => [$origem, $resultado, $esperado]) {
+            $processo = ViabilityRequest::factory()->protocoled()->create([
+                'protocol_number' => sprintf('VIA-2026-9%05d', $indice),
+            ]);
+            $processo->forceFill(['status' => $origem])->save();
+            ViabilityDecision::factory()->create([
+                'viability_request_id' => $processo->id,
+                'tvl_product_number' => sprintf('TVL-2026-9%05d', $indice),
+            ]);
 
-        $this->assertSame(ViabilityRequestStatus::Deferida, $processo->fresh()->status);
+            $this->actingAs($this->analista(), 'gestao')
+                ->post("/gestao/processos/{$processo->id}/conclusao-analise", [
+                    'resultado' => $resultado,
+                    'parecer' => 'Revisão da conclusão.',
+                ])
+                ->assertRedirect()
+                ->assertSessionHasNoErrors();
+
+            $processo->refresh();
+            $this->assertSame($esperado, $processo->status);
+            $this->assertSame($esperado->value, $processo->decision->outcome->value);
+            $this->assertSame(1, ViabilityDecision::query()->where('viability_request_id', $processo->id)->count());
+        }
     }
 
     public function test_resultado_obrigatorio(): void

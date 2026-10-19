@@ -23,6 +23,9 @@ interface ConclusaoAnaliseFormProps {
     /** Parecer registrado na ficha de análise: é o texto que o botão "Copiar parecer" leva para a área de transferência. */
     parecerDaFicha?: string | null;
     erro?: string | null;
+    /** Resultado contradiz a ficha: mostra o aviso e o botão para confirmar mesmo assim. */
+    divergencia?: string | null;
+    onConfirmarDivergencia?: () => void;
     processing?: boolean;
     onConfirm: () => void;
     onCancel?: () => void;
@@ -63,6 +66,8 @@ export default function ConclusaoAnaliseForm({
     parecerLabel = 'Parecer',
     parecerDaFicha = null,
     erro,
+    divergencia = null,
+    onConfirmarDivergencia,
     processing = false,
     onConfirm,
     onCancel,
@@ -124,15 +129,32 @@ export default function ConclusaoAnaliseForm({
                 </div>
             )}
             {erro && <FieldError>{erro}</FieldError>}
+            {divergencia && (
+                <div
+                    role="alert"
+                    className="rounded-lg border border-warning-300 bg-warning-50 p-3 text-sm text-warning-800 dark:border-warning-500/30 dark:bg-warning-500/10 dark:text-warning-300"
+                >
+                    <p>{divergencia}</p>
+                    <p className="mt-1 font-medium">
+                        Deseja, de fato, concluir como {opcoes.find((opcao) => opcao.value === resultado)?.label ?? 'o resultado escolhido'}?
+                    </p>
+                </div>
+            )}
             <div className="flex items-center justify-end gap-3">
                 {onCancel && (
                     <Button type="button" variant="outline" size="sm" onClick={onCancel} disabled={processing}>
                         Cancelar
                     </Button>
                 )}
-                <Button type="button" size="sm" onClick={onConfirm} disabled={resultado === ''} loading={processing}>
-                    {confirmLabel}
-                </Button>
+                {divergencia && onConfirmarDivergencia ? (
+                    <Button type="button" size="sm" onClick={onConfirmarDivergencia} loading={processing}>
+                        Confirmar mesmo assim
+                    </Button>
+                ) : (
+                    <Button type="button" size="sm" onClick={onConfirm} disabled={resultado === ''} loading={processing}>
+                        {confirmLabel}
+                    </Button>
+                )}
             </div>
         </div>
     );

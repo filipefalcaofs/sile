@@ -5,6 +5,7 @@ namespace App\Services\Analise;
 use App\Enums\AnalysisRecordStatus;
 use App\Enums\AnalysisStatus;
 use App\Enums\ConclusionOutcome;
+use App\Enums\ResultadoViabilidade;
 use App\Enums\SefazNotificationEvent;
 use App\Enums\ViabilityRequestStatus;
 use App\Events\ResultadoEmitido;
@@ -14,6 +15,7 @@ use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Models\VirtualOfficeInscriptionLock;
 use App\Services\EscritorioVirtual\DesvincularInscricaoService;
+use App\Services\Expresso\TvlNumberGenerator;
 use App\Services\Solicitacao\ViabilityRequestStateMachine;
 use App\Support\Audit\AuditService;
 use DomainException;
@@ -29,6 +31,8 @@ use Illuminate\Support\Facades\DB;
  * substituem um deferimento já emitido — sem gerar TVL e sem fingir
  * envio à SEFAZ. Se a inscrição é sede de escritório virtual, esses
  * três resultados (e o indeferimento) desvinculam pelo serviço real.
+ *
+ * Processo já finalizado pode ter o resultado trocado por qualquer outro.
  */
 class ConclusaoAnaliseService
 {
@@ -40,17 +44,16 @@ class ConclusaoAnaliseService
         private DesvincularInscricaoService $desvincular,
         private AuditService $audit,
         private ComunicarResultadoRegin $regin,
+        private TvlNumberGenerator $tvl,
     ) {}
 
-    public function concluir(ViabilityRequest $request, User $ator, ConclusionOutcome $resultado, ?string $parecer = null, bool $exigirFichaSalva = false): void
+    public function concluir(ViabilityRequest $request, User $ator, ConclusionOutcome $resultado, ?string $parecer = null, bool $exigirFichaSalva = false, bool $confirmarDivergencia = false): void
     {
         $parecer = $this->parecer($parecer);
         $motivo = $this->motivo($resultado, $parecer);
 
-        if ($request->status === ViabilityRequestStatus::Deferida && $resultado === ConclusionOutcome::Indeferido) {
-            throw new DomainException(
-                'Processo já deferido não pode ser indeferido. A conclusão usa Desativado, Cassado ou Revogado.',
-            );
+        if (! $confirmarDivergencia) {
+            $this->avisarDivergencia($request, $resultado);
         }
 
         if ($exigirFichaSalva && $request->status === ViabilityRequestStatus::EmAnalise) {
@@ -58,10 +61,12 @@ class ConclusaoAnaliseService
         }
 
         if ($request->status !== $resultado->status()) {
-            if ($resultado->encerraDeferimento()) {
+            if ($this->jaFinalizado($request->status) && ! $this->encerramentoDeDeferido($request->status, $resultado)) {
+                $this->revisarConclusao($request, $ator, $resultado, $parecer);
+            } elseif ($resultado->encerraDeferimento()) {
                 $this->aplicarEncerramento($request, $ator, $resultado, $parecer);
             } else {
-                $this->concluirPelaFicha($request, $ator, $resultado, $parecer);
+                $this->concluirPelaFicha($request, $ator, $resultado, $parecer, $confirmarDivergencia);
             }
         }
 
@@ -72,7 +77,124 @@ class ConclusaoAnaliseService
         }
     }
 
-    private function concluirPelaFicha(ViabilityRequest $request, User $ator, ConclusionOutcome $resultado, ?string $parecer): void
+    /**
+     * Deferir com atividade indeferida na ficha, ou indeferir sem nenhuma,
+     * pede confirmação do analista em vez de barrar.
+     *
+     * @throws DivergenciaConclusaoException
+     */
+    private function avisarDivergencia(ViabilityRequest $request, ConclusionOutcome $resultado): void
+    {
+        if (! in_array($resultado, [ConclusionOutcome::Deferido, ConclusionOutcome::Indeferido], true)) {
+            return;
+        }
+
+        $ficha = $request->currentAnalysisRecord()->first();
+
+        if ($ficha === null) {
+            return;
+        }
+
+        $atividades = array_values(array_filter($ficha->per_cnae ?? [], fn ($item): bool => is_array($item) && isset($item['cnae'])));
+
+        if ($atividades === []) {
+            return;
+        }
+
+        try {
+            $this->decisao->recusarDecisaoContraditoria($atividades, $resultado->decisionOutcome());
+        } catch (DomainException $e) {
+            throw new DivergenciaConclusaoException($e->getMessage(), previous: $e);
+        }
+    }
+
+    private function jaFinalizado(ViabilityRequestStatus $status): bool
+    {
+        return in_array($status, [
+            ViabilityRequestStatus::Deferida,
+            ViabilityRequestStatus::Indeferida,
+            ViabilityRequestStatus::Desativado,
+            ViabilityRequestStatus::Cassado,
+            ViabilityRequestStatus::Revogado,
+        ], true);
+    }
+
+    private function encerramentoDeDeferido(ViabilityRequestStatus $origem, ConclusionOutcome $resultado): bool
+    {
+        return $origem === ViabilityRequestStatus::Deferida && $resultado->encerraDeferimento();
+    }
+
+    /**
+     * Processo já finalizado: quem tem a permissão de concluir pode trocar
+     * o resultado por qualquer outro. A decisão existente é reescrita (uma
+     * por processo) e a troca fica na linha do tempo e na auditoria.
+     */
+    private function revisarConclusao(ViabilityRequest $request, User $ator, ConclusionOutcome $resultado, ?string $parecer): void
+    {
+        DB::transaction(function () use ($request, $ator, $resultado, $parecer): void {
+            $anterior = $request->status;
+            $destino = $resultado->status();
+            $decisao = $request->decision()->first();
+
+            $consolidado = match ($resultado) {
+                ConclusionOutcome::Deferido => ResultadoViabilidade::Permitido->value,
+                ConclusionOutcome::Indeferido => ResultadoViabilidade::NaoPermitido->value,
+                default => $resultado->value,
+            };
+
+            $dados = [
+                'outcome' => $resultado->decisionOutcome(),
+                'consolidated_result' => $consolidado,
+                'reason' => $parecer ?? $decisao?->reason,
+                'decided_by_user_id' => $ator->id,
+                'decided_at' => now(),
+            ];
+
+            if ($decisao === null) {
+                $decisao = ViabilityDecision::create($dados + [
+                    'viability_request_id' => $request->id,
+                    'flow' => 'analise_tecnica',
+                    'tvl_product_number' => null,
+                    'per_cnae' => [],
+                    'rules_versions' => [],
+                    'fundamentacao' => [],
+                ]);
+            } else {
+                $decisao->update($dados);
+            }
+
+            if ($resultado === ConclusionOutcome::Deferido && $decisao->tvl_product_number === null && ! $request->isRenewal()) {
+                $decisao->update(['tvl_product_number' => $this->tvl->generate()]);
+            }
+
+            $this->stateMachine->transition(
+                $request,
+                $destino,
+                $ator,
+                reason: $this->motivo($resultado, $parecer),
+                publicLabel: $destino->publicLabel(),
+                force: true,
+            );
+
+            $this->audit->log(
+                logName: 'analise',
+                event: 'conclusao-analise',
+                description: "Conclusão de análise revisada ({$anterior->value} → {$resultado->value}) do processo #{$request->id}",
+                properties: [
+                    'viability_request_id' => $request->id,
+                    'protocol_number' => $request->protocol_number,
+                    'resultado_anterior' => $anterior->value,
+                    'resultado' => $resultado->value,
+                    'parecer' => $parecer,
+                    'decided_by' => $ator->id,
+                ],
+                subject: $request,
+                result: $resultado->value,
+            );
+        });
+    }
+
+    private function concluirPelaFicha(ViabilityRequest $request, User $ator, ConclusionOutcome $resultado, ?string $parecer, bool $confirmarDivergencia = false): void
     {
         $record = $request->currentAnalysisRecord()->first();
 
@@ -85,7 +207,7 @@ class ConclusaoAnaliseService
             $record = $this->fichas->finalizar($record, $ator);
         }
 
-        $this->decisao->decide($record, $ator, $resultado->decisionOutcome(), $parecer);
+        $this->decisao->decide($record, $ator, $resultado->decisionOutcome(), $parecer, confirmarDivergencia: $confirmarDivergencia);
     }
 
     /**

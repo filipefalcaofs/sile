@@ -59,10 +59,11 @@ class ViabilityRequestStateMachine
         ?User $actor = null,
         ?string $reason = null,
         ?string $publicLabel = null,
+        bool $force = false,
     ): ViabilityRequestTransition {
         $from = $request->status;
 
-        if (! $this->canTransition($from, $to)) {
+        if (! $force && ! $this->canTransition($from, $to)) {
             throw InvalidStatusTransitionException::para($from, $to);
         }
 

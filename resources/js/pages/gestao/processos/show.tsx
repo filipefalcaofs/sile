@@ -184,16 +184,18 @@ export default function Show({
     const [resultadoConclusao, setResultadoConclusao] = useState('');
     const [conclusaoProcessing, setConclusaoProcessing] = useState(false);
     const [erroConclusao, setErroConclusao] = useState<string | null>(null);
+    const [divergenciaConclusao, setDivergenciaConclusao] = useState<string | null>(null);
     const [situacaoAnalise, setSituacaoAnalise] = useState('');
     const [setorEncaminhamento, setSetorEncaminhamento] = useState('');
     const [analistaEncaminhamento, setAnalistaEncaminhamento] = useState('');
     const [destinatarioConclusao, setDestinatarioConclusao] = useState('');
 
-    function concluirAnalise() {
+    function concluirAnalise(confirmarDivergencia = false) {
         setErroConclusao(null);
+        setDivergenciaConclusao(null);
         router.post(
             `/gestao/processos/${processo.id}/conclusao-analise`,
-            { resultado: resultadoConclusao },
+            { resultado: resultadoConclusao, confirmar_divergencia: confirmarDivergencia },
             {
                 preserveScroll: true,
                 onStart: () => setConclusaoProcessing(true),
@@ -201,7 +203,8 @@ export default function Show({
                 onSuccess: () => setResultadoConclusao(''),
                 onError: (erros) => {
                     const mapa = erros as Record<string, string>;
-                    setErroConclusao(mapa.conclusao ?? mapa.resultado ?? 'Não foi possível concluir a análise.');
+                    setDivergenciaConclusao(mapa.divergencia ?? null);
+                    setErroConclusao(mapa.divergencia ? null : (mapa.conclusao ?? mapa.resultado ?? 'Não foi possível concluir a análise.'));
                 },
             },
         );
@@ -409,11 +412,16 @@ export default function Show({
                                                 <ConclusaoAnaliseForm
                                                     resultadoId="resultado-conclusao"
                                                     resultado={resultadoConclusao}
-                                                    onResultado={setResultadoConclusao}
+                                                    onResultado={(valor) => {
+                                                        setResultadoConclusao(valor);
+                                                        setDivergenciaConclusao(null);
+                                                    }}
                                                     opcoes={conclusaoOpcoes}
                                                     erro={erroConclusao}
+                                                    divergencia={divergenciaConclusao}
+                                                    onConfirmarDivergencia={() => concluirAnalise(true)}
                                                     processing={conclusaoProcessing}
-                                                    onConfirm={concluirAnalise}
+                                                    onConfirm={() => concluirAnalise()}
                                                 />
                                             </DescItem>
                                         )}
