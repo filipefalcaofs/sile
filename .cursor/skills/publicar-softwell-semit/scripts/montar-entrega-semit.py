@@ -53,6 +53,7 @@ REMOVE_FILES = [
     "scripts/gerar_fpa_codigo.py",
     "scripts/reorganizar_fpa_codigo.py",
     "scripts/portainer-build-push.sh",
+    "scripts/publicar-semit.py",
     "scripts/convert-cnae-xlsx.py",
     "app/Support/DemoMode.php",
     "database/seeders/DevDatabaseSeeder.php",

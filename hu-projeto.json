@@ -1,0 +1,10 @@
+{
+  "nome_projeto": "Viabiliza — Sistema de Licenciamento Eletrônico",
+  "empresa": "Sudoeste Informática",
+  "pasta_hus": "docs/requisitos/hus",
+  "padrao_arquivo": "HU.{num:03d} - {titulo}",
+  "cor_primaria": "#005ca9",
+  "gerar_docx": true,
+  "gerar_pdf": true,
+  "gerar_consolidado": true
+}
