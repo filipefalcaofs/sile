@@ -583,11 +583,23 @@ class TratamentoRamoResolver
             ) ?? $outros->first();
         }
 
-        // Sem resposta que decida entre várias linhas "no local", o sistema NÃO
-        // enquadra (relatório SEDUR 21/09, item 21 + decisão 22/09): null →
-        // nao_resolvido → análise. Nunca a primeira linha do arquivo (o default
-        // anterior assumia a linha ID/ALTO e chegou a indeferir o 990011).
-        return null;
+        // Sem resposta que decida entre várias linhas "no local" de risco ou TLL
+        // diferentes, o sistema NÃO enquadra (relatório SEDUR 21/09, item 21 +
+        // decisão 22/09): null → nao_resolvido → análise. Nunca a primeira
+        // linha do arquivo (o default anterior assumia a linha ID/ALTO e chegou
+        // a indeferir o 990011). Quando todas são de ALTO risco, com o mesmo TLL
+        // e fora da família ID, a diferença é só o código LOUOS (ex.: 8610-1/02,
+        // hospital × outros serviços de saúde): a primeira é pré-selecionada e o
+        // analista, que decide o alto risco, confirma ou troca.
+        $primeira = $outros->first();
+        $altoRiscoComMesmoTll = $outros->every(
+            fn (TratamentoEnquadramento $linha): bool => $this->normalizarRisco((string) $linha->risco) === 'alto'
+                && (string) $linha->codigo_tll === (string) $primeira->codigo_tll
+                && ! $this->eFamiliaId((string) $linha->subcategoria)
+                && ! $this->eCnlu((string) $linha->risco),
+        );
+
+        return $altoRiscoComMesmoTll ? $primeira : null;
     }
 
     /**

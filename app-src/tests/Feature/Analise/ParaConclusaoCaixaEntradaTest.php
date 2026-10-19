@@ -37,6 +37,14 @@ class ParaConclusaoCaixaEntradaTest extends TestCase
         return $analista;
     }
 
+    private function analistaServidor(Sector $setor): User
+    {
+        $analista = User::factory()->analistaServidor()->withAcceptedLgpdTerm()->create();
+        $analista->sectors()->attach($setor);
+
+        return $analista;
+    }
+
     private function processo(Sector $setor, ?User $responsavel, AnalysisStatus $status): ViabilityRequest
     {
         $processo = ViabilityRequest::factory()->create();
@@ -83,7 +91,7 @@ class ParaConclusaoCaixaEntradaTest extends TestCase
     {
         $setor = Sector::factory()->create();
         $outroSetor = Sector::factory()->create();
-        $analista = $this->analista($setor);
+        $analista = $this->analistaServidor($setor);
         $destino = $this->analista($outroSetor);
         $processo = $this->processo($setor, $analista, AnalysisStatus::EmAnalise);
 
