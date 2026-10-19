@@ -3,134 +3,62 @@
 ## Épica
 **EP08 — Solicitação de Viabilidade**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Verificar presença dos documentos exigidos.
+Resolver os documentos obrigatórios do rascunho e impedir o protocolo enquanto algum deles não tiver anexo associado ao requisito.
 
 ## História de Usuário
-**Como** sistema,  
-**quero** validar documentação,  
-**para** impedir protocolo incompleto quando exigido.
+**Como** requerente,  
+**quero** ver quais documentos obrigatórios faltam,  
+**para** anexá-los antes de protocolar, e que o sistema recuse o protocolo se ainda faltar algum.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- A lista de obrigatórios e de faltantes aparece no wizard do dono em rascunho (`SolicitacaoController::edit`).
+- O bloqueio ocorre em `ProtocolarSolicitacaoService`, chamado pelo dono ao protocolar e também pela contingência.
+- Solicitação de origem Regin não passa por essa trava no protocolo.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. `DocumentRequirementResolver::required` une duas fontes, sem duplicar por id:
+   - requisitos ativos e marcados como obrigatórios, ligados por `cnae_document_requirement` a algum CNAE do pedido;
+   - condicionais de código estável que existam e estejam ativos: `foto-fachada` sempre; `termo-concessao` quando `is_public_area` é verdadeiro.
+2. Código base ausente ou inativo é ignorado. O resolver não cria requisito que não esteja cadastrado.
+3. `missing` devolve os obrigatórios cujo id ainda não aparece em anexo com `requirement_id` preenchido.
+4. O wizard recebe `requisitosObrigatorios` e `requisitosFaltantes`.
+5. No protocolo, se `missing` não estiver vazio, `DocumentacaoIncompletaException` volta como flash de erro, com os nomes dos requisitos, e nenhum número é gerado.
+6. Na contingência, a mesma exceção desfaz a transação e apaga os arquivos já gravados na tentativa.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- Anexo sem `requirement_id` não cobre requisito.
+- A tabela por CNAE pode não ter vínculos. Nesse caso, só entram os condicionais base que existirem e estiverem ativos.
+- Foto da fachada é obrigatória somente se o requisito `foto-fachada` estiver cadastrado e ativo.
+- Termo de concessão entra somente com área pública e requisito `termo-concessao` ativo.
+- Origem Regin não é barrada por documento faltante neste serviço.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Validar documentos obrigatórios**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- Não há FormRequest próprio desta HU. A checagem é de domínio, depois das validações de arquivo da HU-066.
+- O protocolo só segue quando `missing` está vazio, salvo origem Regin.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+- Dado um rascunho com `foto-fachada` ativo e sem anexo desse requisito, quando o dono abre o wizard, então o requisito aparece em faltantes e, ao protocolar, o sistema recusa com a lista de nomes, sem número de protocolo.
+- Dado anexo com o `requirement_id` da fachada, quando protocola e os demais obrigatórios também estão cobertos, então essa trava não dispara.
+- Dado área pública e `termo-concessao` ativo sem anexo, quando protocola, então o termo entra na lista que bloqueia.
+- Dado requisito por CNAE inativo, não obrigatório ou sem vínculo com os CNAEs do pedido, quando resolve, então ele não entra nos obrigatórios.
+- Dado origem Regin, quando protocola, então `guardRequiredDocuments` não bloqueia por documento faltante.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+## Divergências da redação anterior
+A validação não confere o conteúdo do arquivo. Ela confere a presença de anexo por requisito. A lista por CNAE depende do cadastro; sem vínculo, o código não inventa exigência além dos códigos base existentes. O canal Regin fica de fora dessa trava.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+## Evidências
+- `App\Services\Solicitacao\DocumentRequirementResolver`
+- `App\Services\Solicitacao\ProtocolarSolicitacaoService::guardRequiredDocuments`
+- `App\Http\Controllers\Portal\SolicitacaoController::edit`
+- `App\Http\Controllers\Portal\ProtocoloController`
+- `App\Http\Controllers\Gestao\ContingenciaController::store`
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
-
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-
-## Critérios de Aceite — BDD
-
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Validar documentos obrigatórios**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
-
-Modelo de referência no projeto SIGVISA (`sls-sms`): entidade `Requisito` (descrição, tipo, obrigatório, ativo, instruções para validação por IA, contexto de exibição) vinculada N:N aos CNAEs — a lista de documentos obrigatórios é derivada dos CNAEs da solicitação. Esse desenho atende a coluna "Documentação específica por CNAE" da Planilha Unificada (hoje vazia) e conecta com a validação documental por IA do EP14.
+## Não evidenciado
+- Conferência humana ou automática do conteúdo do documento nesta HU.
+- Bloqueio documental da origem Regin no `ProtocolarSolicitacaoService`.
+- Criação automática de requisito quando o código `foto-fachada` ou `termo-concessao` não está cadastrado.

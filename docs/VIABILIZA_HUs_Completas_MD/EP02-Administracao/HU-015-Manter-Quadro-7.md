@@ -3,136 +3,73 @@
 ## Épica
 **EP02 — Administração**
 
+## Situação na implementação
+- **Status:** Parcial
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Administrar regras do Quadro 7.
+Manter o enquadramento da atividade (código LOUOS, faixas de área, classificação e código TLL) pela planilha de tratamento, no hub Motor de regras.
 
 ## História de Usuário
-**Como** administrador,  
-**quero** manter Quadro 7,  
-**para** permitir enquadramento correto.
+**Como** mantenedor com `manter-louos`,
+**quero** importar a planilha de regras de tratamento e publicar o rascunho,
+**para** o enquadramento vigente passar a ser o da planilha importada.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- Consultar a aba Enquadramento do hub (`/gestao/louos?aba=enquadramento`) exige `consultar-cnaes`. Quem tem só `consultar-louos` não abre essa aba.
+- Importar (`louos.enquadramento.importar`) e publicar o rascunho (`louos.enquadramento.publicar`) exigem `manter-louos`.
+- Menu Regras, item Motor de regras (`/gestao/louos`). A rota antiga `/gestao/regras-tratamento` redireciona para a aba.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. A aba mostra a versão vigente do domínio `risco_tratamento`: contagens, perguntas, regras, ramos, condicionantes, itens CNLU, notas, pendências da versão vigente e a lista paginada de enquadramentos.
+2. A busca da lista atinge CNAE, denominação, código LOUOS, denominação LOUOS, subcategoria, segundo enquadramento, terceiro enquadramento e risco.
+3. Cada linha de enquadramento expõe CNAE, denominação, código e denominação LOUOS, subcategoria, grupo, risco, `ate_m2`, segundo enquadramento, `ate_m2_2`, terceiro enquadramento, `acima_m2`, classificação, código TLL e regra.
+4. O import recebe um `.xlsx` de até 20 MB, abre rascunho e informa quantas regras ficaram sem ramo explícito. Arquivo já importado ou já vigente não gera versão nova.
+5. Publicar só aceita rascunho desse domínio. A chamada usa `fourEyes: false`: o autor do rascunho pode publicar.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- Não existe domínio `louos_quadro7` em `RuleDomain`. O enquadramento por faixa de área está na planilha de tratamento (`TratamentoEnquadramento`), não num quadro versionado próprio.
+- Não há inclusão, edição ou exclusão de linha avulsa desta aba. A manutenção é o arquivo.
+- A publicação desta planilha não exige publicador diferente do autor, embora `RuleDomain::RiscoTratamento` esteja marcado como sensível.
+- Pendências do rascunho (regra e motivo) são listadas à parte das pendências da versão vigente.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Manter Quadro 7**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- `arquivo` obrigatório, arquivo, MIME `xlsx`, tamanho máximo 20.480 KB.
+- Mensagens: «Envie a planilha de regras.» e «A planilha precisa ser um arquivo .xlsx.»
+- Publicar versão de outro domínio ou que não seja rascunho devolve «Só um rascunho da planilha de tratamento pode ser publicado.»
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+### CA-01 — Consulta da vigente
+**Dado** um usuário com `consultar-cnaes` e uma versão vigente de `risco_tratamento`,
+**Quando** abre a aba Enquadramento,
+**Então** vê a versão, as contagens e as linhas com código LOUOS, faixas de área e código TLL.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+### CA-02 — Importar planilha nova
+**Dado** um usuário com `manter-louos` e um `.xlsx` ainda não importado,
+**Quando** envia o arquivo,
+**Então** abre rascunho e a versão vigente permanece até a publicação.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+### CA-03 — Arquivo repetido
+**Dado** um arquivo cujo conteúdo já gerou versão,
+**Quando** o mantenedor importa de novo,
+**Então** nenhuma versão nova é criada e a mensagem informa que o arquivo já está vigente ou já foi importado.
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
+### CA-04 — Publicar sem segundo usuário
+**Dado** um rascunho da planilha,
+**Quando** o autor publica,
+**Então** a versão entra em uso. O controller não exige outro publicador.
 
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-- RN-004: O enquadramento deve considerar CNAE informado e área ocupada declarada.
-- RN-005: A regra aplicada deve referenciar a versão vigente do Quadro 7 da LOUOS.
-- RN-006: Quando não houver regra aplicável, o processo deve ser encaminhado para análise técnica.
-- RN-007: Modelo operacional do SAPS: por código LOUOS → classificação, código TLL, flag de classificação de risco e **até 3 enquadramentos por faixa de área** ("Até m²") + opção "Qualquer Área" — espelhar na parametrização (ex.: LOUOS 07.12.13 escritório → TLL 1.01, nR1-12 até 1.250 m²).
+## Divergências da redação anterior
+A redação anterior pedia o Quadro 7 da LOUOS como cadastro por código LOUOS, com até três enquadramentos por faixa de área e opção «Qualquer Área», e exigia encaminhar à análise técnica quando não houvesse regra. O domínio `louos_quadro7` não está no código atual. O que existe é a aba Enquadramento da planilha de tratamento, com as colunas `ate_m2`, `ate_m2_2` e `acima_m2`. A regra de encaminhamento quando falta enquadramento é comportamento do motor e dos gatilhos (HU-164), não desta tela. A publicação desta planilha não usa quatro olhos.
 
-## Critérios de Aceite — BDD
+## Evidências
+- `app/Enums/RuleDomain.php`: `RiscoTratamento`, sem caso de Quadro 7.
+- `app/Http/Controllers/Gestao/LouosController.php`: aba `enquadramento` e `dadosEnquadramento`.
+- `app/Http/Controllers/Gestao/TratamentoPlanilhaController.php`.
+- `app/Http/Requests/Gestao/ImportarPlanilhaTratamentoRequest.php`.
+- `routes/gestao.php`: `louos.enquadramento.importar` e `louos.enquadramento.publicar`.
 
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Manter Quadro 7**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- CRUD de linha do antigo Quadro 7.
+- Quatro olhos na publicação da planilha.
+- Domínio versionado `louos_quadro7`.

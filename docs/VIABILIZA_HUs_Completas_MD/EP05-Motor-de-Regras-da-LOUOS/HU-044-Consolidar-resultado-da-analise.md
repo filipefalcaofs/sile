@@ -3,132 +3,71 @@
 ## Épica
 **EP05 — Motor de Regras da LOUOS**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Consolidar regras em resultado único.
+Combinar enquadramento, Quadro 10 e Quadro 11A num único resultado: permitido, permitido com condições, não permitido ou pendente.
 
 ## História de Usuário
 **Como** sistema,  
-**quero** consolidar resultado,  
-**para** informar decisão da viabilidade.
+**quero** um veredito único do motor da LOUOS,  
+**para** a consulta e o fluxo expresso propagarem a mesma decisão, sem recalcular.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- O consolidado é produzido por `LouosEnquadramentoService::consolidar`. Quem consulta a viabilidade ou decide o expresso só lê o resultado.
+- Não há permissão para “forçar” o consolidado na tela do motor.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+A ordem no código é esta:
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+1. Ramo da planilha com `bloqueia`: `nao_permitido`, sem condicionantes, motivo do ramo.
+2. Enquadramento não identificado, mas sinalizado CNLU com grupo: se o Quadro 10 está `proibido`, `nao_permitido`; senão `pendente` com o motivo de CNLU.
+3. Enquadramento não identificado: `pendente`.
+4. Quadro 10 `indisponivel` ou `nao_encontrado`: `pendente`, com o motivo da dimensão.
+5. Quadro 10 `proibido`: `nao_permitido`.
+6. Quadro 11A com token `nao`: `nao_permitido`, motivo de via vedada.
+7. Quadro 11A com token `r` ou texto de análise da CNLU: `pendente`.
+8. Com condicionante incidente: `permitido_com_condicoes`. Sem ela: `permitido`.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Consolidar resultado da análise**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+O retorno traz `resultado`, `fundamentacao`, `condicionantes` e `motivo`. Pendente sai com condicionantes vazias.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+A consulta de viabilidade copia esse resultado. Não escolhe outro veredito. Sem zona identificada, acrescenta aviso; o pendente já veio do motor.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+No expresso, `nao_permitido` é emitido como indeferimento locacional antes do gate de alto risco. `pendente` vai à análise, sem deferir nem indeferir por omissão.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+## Regras de negócio evidenciadas
+- O que não pode ser decidido vira `pendente`.
+- Condicionante incidente não proíbe.
+- Quadro 11A indisponível não aplica o veredito de via. Se o Quadro 10 identificou permissão, o fluxo segue para as condicionantes.
+- Os valores do enum são `permitido`, `permitido_com_condicoes`, `nao_permitido` e `pendente`.
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
+## Validações
+- Não há validação de formulário nesta consolidação. Ela consome as dimensões já resolvidas.
 
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
+## Critérios de aceite
+**Dado** que o enquadramento e o Quadro 10 identificam uso permitido, a via não veda e não há condicionante incidente,  
+**Quando** o motor consolida,  
+**Então** o resultado é `permitido`.
 
-## Critérios de Aceite — BDD
+**Dado** que o Quadro 10 está indisponível ou o ramo não foi resolvido,  
+**Quando** o motor consolida,  
+**Então** o resultado é `pendente` e nenhuma permissão é inventada.
 
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Consolidar resultado da análise**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
+**Dado** que o Quadro 10 está proibido ou o Quadro 11A contém `nao`,  
+**Quando** o motor consolida,  
+**Então** o resultado é `nao_permitido`.
 
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
+## Divergências da redação anterior
+A redação anterior não fixava a precedência bloqueio, CNLU, ausência de ramo, zona, proibição, via e condicionante.
 
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
+## Evidências
+- `LouosEnquadramentoService::consolidar`
+- `ResultadoViabilidade`
+- `ConsultaViabilidadeService` (propaga o consolidado)
+- `FluxoExpressoService` (não permitido e pendente)
 
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- Quarto quadro (Quadro 7 ou Quadro 11) participando desta precedência.
+- Consolidado permitido quando a zona não foi identificada.

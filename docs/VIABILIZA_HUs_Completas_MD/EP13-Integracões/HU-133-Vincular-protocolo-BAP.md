@@ -1,32 +1,46 @@
 # HU-133 — Vincular protocolo BAP
 
-> **Status: Confirmada (2026-06-11)** — após preenchimento do formulário SEDUR no Regin, o requerente gera o **protocolo BAP** na Junta. O SAPS vincula BAP ↔ processo em 10–20 min antes de processar.
-
 ## Épica
 **EP13 — Integrações**
 
+## Situação na implementação
+- **Status:** Bloqueada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Receber o protocolo BAP do Regin/Junta e vinculá-lo ao número de processo SEDUR, liberando o motor de decisão.
+O vínculo do protocolo BAP com o processo não é obtido: a fonte ligada na aplicação não devolve vínculo.
 
 ## História de Usuário
-**Como** sistema,  
-**quero** vincular o protocolo BAP ao processo,  
-**para** iniciar análise automática ou encaminhamento humano após confirmação na Junta.
+**Como** sistema, **quero** associar o protocolo BAP da Junta ao processo da SEDUR quando a base existir. Sem essa fonte, nenhum número de BAP é inventado.
 
-## Fluxo Principal
-1. Processo criado aguarda status "espera BAP" após formulário SEDUR concluído.
-2. Regin/Junta envia BAP via integração (HU-103).
-3. Sistema valida correspondência (CNPJ, inscrição, token) e vincula BAP ↔ processo.
-4. Sistema atualiza timeline (histórico) e dispara classificação/decisão.
-5. Registro em auditoria com payload e timestamp.
+## Atores e permissões
+- `BapRegistry` está ligado a `UnavailableBapRegistry`.
+- Não há tela para digitar um BAP fictício no lugar da consulta.
 
-## Regras de Negócio
-- RN-001: Processo carrega três identificadores: número processo SEDUR, protocolo BAP e número produto TVL (quando deferido).
-- RN-002: Vinculação duplicada ou BAP já usado deve ser rejeitada.
-- RN-003: Falha na vinculação gera pendência operacional visível — nunca decisão silenciosa.
+## Fluxo evidenciado
+1. `findLinkage` devolve `null`.
+2. O comentário do serviço registra que nada entra em espera de BAP por esse retorno: ausência de vínculo não é exceção e não fabrica protocolo.
+3. O indeferimento por prazo sem BAP é outra regra de decisão. Não cria o vínculo que esta HU pede.
+4. O recebimento REGIN grava o protocolo do envelope. Isso não consulta a base de BAP.
 
-## Dependências
-- HU-103, HU-134 (indeferimento se BAP não chegar no prazo).
+## Regras de negócio evidenciadas
+- Sem fonte oficial não há `BapLinkage`.
+- A troca futura seria só do binding; o indisponível não simula sucesso.
 
-## Prioridade
-Alta
+## Validações
+- Não há parsing de protocolo BAP neste registro.
+
+## Critérios de aceite
+- Consultar o registro BAP de um processo retorna nulo.
+- Nenhum processo ganha número BAP gerado localmente por este serviço.
+
+## Divergências da redação anterior
+O texto dizia que receber o BAP liberava o motor. O binding atual não recebe nem grava esse vínculo.
+
+## Evidências
+- `app/Services/Regin/UnavailableBapRegistry.php`
+- `app/Providers/AppServiceProvider.php` (binding de `BapRegistry`)
+
+## Não evidenciado
+- Cliente HTTP ou fila que leia protocolo BAP na Junta.
+- Estado `aguardando_bap` alimentado por este registro.

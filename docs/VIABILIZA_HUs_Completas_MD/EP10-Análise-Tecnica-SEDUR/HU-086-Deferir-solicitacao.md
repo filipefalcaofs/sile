@@ -3,133 +3,60 @@
 ## Épica
 **EP10 — Análise Técnica SEDUR**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Permitir deferimento manual.
+Concluir como deferido o processo em análise, a partir da ficha finalizada, gerando número de TVL quando não for renovação.
 
 ## História de Usuário
-**Como** analista,  
-**quero** deferir solicitação,  
-**para** aprovar viabilidade.
+**Como** usuário com `analisar-processos` e `concluir-analise`, **quero** deferir o processo, **para** encerrar a análise como deferida e registrar a decisão humana.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- `POST processos/{processo}/decidir`, `POST processos/{processo}/conclusao-analise` e `POST processos/{processo}/ficha/concluir-processo` exigem as duas permissões.
+- No seeder, quem tem `concluir-analise`: Coordenador, Subcoordenador, Chefe de setor e Analista Servidor. Analista Terceirizado tem `analisar-processos` e não defere. Apoio não analisa. Administrador, no seeder, não tem `concluir-analise` nem `analisar-processos`.
+- A decisão grava `decided_by_user_id` com o usuário autenticado e `flow` `analise_tecnica`.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. A ficha precisa estar finalizada. O endpoint da ficha finaliza o rascunho antes de decidir. Rascunho enviado ao decidir direto é recusado.
+2. O processo precisa estar `em_analise`. A ficha precisa ter ao menos um CNAE.
+3. Deferir com alguma atividade marcada como indeferida na ficha é recusado, e a mensagem lista essas atividades. Atividade sem marcação não impede o deferimento: o desfecho derivado é deferido quando nenhuma atividade está marcada como indeferida.
+4. Renovação deferida exige tipo de TVL (provisória ou definitiva) e nova data de validade. Se `condicionantes_atendidos` vier falso, o resultado vira indeferido.
+5. Fora de renovação, o deferimento gera `tvl_product_number`. O status canônico vai para `deferida`. A auditoria `decisao` ocorre na mesma transação.
+6. Depois do commit dispara `ResultadoEmitido`. Uma segunda decisão no mesmo processo esbarra na unicidade e devolve a decisão já gravada, sem disparar o evento de novo.
+7. Sede de escritório virtual confirmada na ficha, com o CNAE gatilho, grava condicionante, trava a inscrição e marca o processo como escritório virtual.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- Deferido e indeferido são os únicos resultados lidos da ficha neste serviço. Desativado, cassado e revogado passam por `ConclusaoAnaliseService` (HU-089).
+- O humano pode deferir caso que o motor deixou pendente: a decisão nasce da ficha, não de um veredito consolidado.
+- Com condicionantes na ficha, o consolidado do deferimento é `permitido_com_condicoes`; sem elas, `permitido`.
+- Processo já deferido não é indeferido por esta conclusão: a mensagem manda usar desativado, cassado ou revogado.
 
-## Fluxo Principal
-1. Analista finaliza ficha de análise (HU-135) com todas as atividades deferidas.
-2. O sistema valida permissões e consistência da decisão.
-3. O sistema registra deferimento, fundamentação e número de produto (TVL).
-4. O sistema comunica parecer ao Regin (HU-104) e envia dados à SEFAZ (HU-110).
-5. O sistema **não** entrega PDF/TVL ao requerente; analista pode emitir relatório PDF no backoffice (HU-132).
-6. O sistema registra operação em trilha de auditoria.
+## Validações
+- `decisao`, quando informada, só aceita deferida ou indeferida.
+- Renovação sem tipo ou sem validade no deferimento lança erro de domínio, traduzido para a tela.
+- Sem ficha vigente, a decisão responde que a ficha ainda não foi criada.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+1. Usuário sem `concluir-analise` recebe 403 em decidir e em concluir pela ficha.
+2. Ficha finalizada, processo em análise, nenhuma atividade indeferida: status `deferida`, decisão com fluxo `analise_tecnica`, autor preenchido e número de TVL quando não é renovação.
+3. Atividade indeferida na ficha impede o deferimento e não grava decisão.
+4. Segunda conclusão não cria outra decisão.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+## Divergências da redação anterior
+- A redação anterior dizia que o analista defere e que REGIN e SEFAZ são disparados e concluídos com o deferimento. Quem defere é quem tem `concluir-analise`. O evento `ResultadoEmitido` dispara, mas o binding do REGIN e o da SEFAZ indisponíveis auditam bloqueio e não registram transmissão. O indeferimento não é enviado à SEFAZ.
+- A redação dizia que o deferimento exige todas as atividades deferidas. O código defere quando nenhuma atividade está marcada como indeferida; atividade sem marcação não bloqueia.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+## Evidências
+- `app/Http/Controllers/Gestao/ProcessoDecisaoController.php`
+- `app/Http/Controllers/Gestao/ConclusaoAnaliseController.php`
+- `app/Http/Controllers/Gestao/AnalysisRecordController.php` (`concluirProcesso`)
+- `app/Services/Analise/AnaliseTecnicaDecisionService.php`
+- `app/Services/Analise/ConclusaoAnaliseService.php`
+- `routes/gestao.php`
+- `database/seeders/RolesAndPermissionsSeeder.php`
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
-
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-004: Deferimento exige **todas** as atividades (CNAEs) deferidas na ficha de análise.
-- RN-005: Após deferimento, integrações Regin (HU-104) e SEFAZ (HU-110) são disparadas automaticamente, independentemente da emissão de PDF no backoffice.
-
-## Critérios de Aceite — BDD
-
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Deferir solicitação**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- Transmissão concluída ao REGIN ou à SEFAZ a partir deste deferimento.
+- Entrega do PDF ao requerente. A emissão no backoffice é a HU-132.

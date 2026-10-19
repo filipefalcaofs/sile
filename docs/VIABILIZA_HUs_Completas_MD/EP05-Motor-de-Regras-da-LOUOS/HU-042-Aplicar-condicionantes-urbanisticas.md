@@ -3,134 +3,64 @@
 ## Épica
 **EP05 — Motor de Regras da LOUOS**
 
+## Situação na implementação
+- **Status:** Parcial
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Aplicar condicionantes específicas.
+Juntar as condicionantes que acompanham o parecer e, quando incidem, mudar o consolidado de permitido para permitido com condições. Nenhuma delas, sozinha, torna o uso não permitido. A exigência de vagas por grupo nasce vazia.
 
 ## História de Usuário
 **Como** sistema,  
-**quero** aplicar condicionantes,  
-**para** definir resultado correto.
+**quero** listar as condições urbanísticas aplicáveis ao caso,  
+**para** o parecer registrar o que precisa ser observado sem transformar condição em proibição.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- O motor monta a lista durante o enquadramento. Não há tela exclusiva de “aplicar condicionante”.
+- A exigência de vagas é o parâmetro `louos.vagas.exigencia_por_grupo` (JSON). O padrão gravado é `{}`.
+- Os textos numerados vêm das condicionantes da versão `risco_tratamento` citada no enquadramento.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. A coleta só ocorre quando o consolidado não caiu em não permitido, pendente ou bloqueio antes dessa etapa.
+2. Quadro 10 `permitido_condicionado` gera condicionante `zona`, com `condicionante_ref` da linha.
+3. Condição textual do Quadro 11A, que não seja só `sim` nem `nao`/`r`, gera condicionante `via`.
+4. Vagas: sem grupo, não gera item. Sem exigência parametrizada para o grupo, gera item `vagas` com `conforme` nulo e motivo de exigência não parametrizada. Esse item não rebaixa o veredito. Com exigência, `conforme` é verdadeiro só se cada item declarado for maior ou igual ao exigido. Item omitido conta como zero. Não conforme rebaixa para `permitido_com_condicoes`. Não vira `nao_permitido`.
+5. Escritório virtual: `CondicionanteEscritorioVirtual` pode acrescentar texto do tipo `planilha` a partir do CNAE e das respostas. Texto de planilha é informativo e não rebaixa sozinho.
+6. Números em `condicionantes_planilha` do ramo são lidos em `TratamentoCondicionante` da mesma versão. Também são do tipo `planilha` e não rebaixam sozinhos.
+7. Restrições territoriais identificadas entram aqui (HU-043) e rebaixam.
+8. Resultado permitido ou permitido com condições leva o motivo que encadeia CNAE, área, grupo, zona e a frase de condição.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- Incidem (rebaixam): zona condicionada, via textual, vagas não conformes e restrição.
+- Não incidem: vagas conformes, vagas sem parâmetro e textos da planilha.
+- O parâmetro de vagas vazio deixa a conformidade nula. O motor não bloqueia por isso.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Aplicar condicionantes urbanísticas**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- Quantidade declarada é comparada como número. Ausência vale zero diante de exigência maior que zero.
+- Sem grupo de uso, a verificação de vagas não roda.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+**Dado** que o Quadro 10 devolve permitido condicionado e o restante não veda o uso,  
+**Quando** o parecer é consolidado,  
+**Então** existe condicionante do tipo `zona` e o resultado é `permitido_com_condicoes`.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+**Dado** que o parâmetro de vagas do grupo está vazio,  
+**Quando** as condicionantes são coletadas,  
+**Então** o item de vagas fica com `conforme` nulo e não muda um resultado que seria permitido.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+**Dado** que a exigência do grupo está parametrizada e o declarado fica abaixo,  
+**Quando** o parecer é consolidado,  
+**Então** o resultado é `permitido_com_condicoes` e o motivo fala em imóvel não conforme quanto a vagas.
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
+## Divergências da redação anterior
+A redação anterior tratava condicionante urbanística como bloqueio genérico. O código separa o que rebaixa o veredito do que só entra na ficha, e a tabela de vagas começa vazia.
 
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-- RN-004: Entre as condicionantes urbanísticas, o motor deve verificar **vagas de estacionamento exigidas** (LOUOS/análise CNLU): comparar vagas, carga e descarga, pátio e embarque/desembarque declarados pelo requerente com o exigido, produzindo veredito de conformidade ("Imóvel Conforme/Não Conforme") — regra observada na ficha de análise do SAPS; exigência parametrizada como dado versionado.
-- RN-005: Resultado não conforme não decide sozinho: alimenta a ficha de análise (HU-135) com possibilidade de recálculo e registro de vagas em vistoria.
+## Evidências
+- `LouosEnquadramentoService::coletarCondicionantes`, `avaliarVagas`, `temCondicionanteIncidente`
+- Parâmetro `louos.vagas.exigencia_por_grupo`
+- `CondicionanteEscritorioVirtual`
+- `TratamentoCondicionante`
 
-## Critérios de Aceite — BDD
-
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Aplicar condicionantes urbanísticas**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- Tabela de vagas preenchida com índices da lei. O padrão do parâmetro é objeto vazio.
+- Condicionante da planilha que, sozinha, mude permitido para permitido com condições ou para não permitido.

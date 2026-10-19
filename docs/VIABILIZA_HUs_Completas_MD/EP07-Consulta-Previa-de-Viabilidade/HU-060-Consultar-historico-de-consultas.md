@@ -3,132 +3,68 @@
 ## Épica
 **EP07 — Consulta Prévia de Viabilidade**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Exibir consultas prévias realizadas.
+Listar as consultas prévias bem-sucedidas do próprio usuário e reabrir o snapshot gravado.
 
 ## História de Usuário
-**Como** cidadão,  
-**quero** consultar histórico,  
-**para** reaproveitar informações.
+**Como** cidadão autenticado,  
+**quero** ver minhas consultas anteriores,  
+**para** reabrir o resultado que foi gravado na época, com a entrada e o veredito.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- `GET /portal/viabilidade/historico` exige sessão do portal, e-mail verificado e termo LGPD aceito.
+- A lista é só do usuário da sessão (`ViabilityQuery::forUser`). Não usa o representado da representação.
+- Não está no menu lateral. O link "Ver minhas consultas anteriores" aparece na página de consulta quando há usuário logado.
+- Anônimo não grava nem consulta este histórico. A consulta anônima continua só na auditoria feita pelo serviço.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. Consulta pública com sucesso e usuário autenticado grava `entry_type`, `input`, `result` (snapshot completo), `rules_versions`, `resultado` do veredito locacional, IP e data.
+2. Erros (endereço não localizado, fora de Salvador, geocodificador indisponível) não gravam histórico.
+3. A listagem ordena da mais recente (`created_at`, depois `id`) e pagina com `ui.companies.per_page` (padrão 15).
+4. Cada item traz tipo de entrada (endereço, CNAE ou inscrição), rótulo do veredito, entrada, data e o resultado completo.
+5. A tela abre o mesmo componente de resultado da consulta, em modal, a partir do snapshot.
+6. Abrir a lista audita `viabilidade` / `consulta-historico` com a quantidade de itens.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- O snapshot é o JSON da consulta na data em que foi feita, inclusive versões de regra. A tela não recalcula o motor ao reabrir.
+- Veredito nulo não ganha rótulo.
+- O histórico pessoal não inclui consultas feitas antes do login nem as de outro usuário.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Consultar histórico de consultas**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- Não há filtro de busca nesta tela. A paginação usa o parâmetro de empresas, não um parâmetro próprio de histórico.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+### CA-01 — Gravar só sucesso autenticado
+**Dado** usuário logado e uma consulta que retornou resultado,  
+**Quando** a consulta termina,  
+**Então** surge um item do próprio usuário com entrada, resultado e versões. Consulta anônima ou com erro HTTP de localização não cria item.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+### CA-02 — Listar e reabrir
+**Dado** itens do usuário,  
+**Quando** ele abre o histórico,  
+**Então** vê os seus, do mais recente ao mais antigo, e pode reabrir o snapshot sem nova execução do motor.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+### CA-03 — Escopo
+**Dado** consultas de outra pessoa,  
+**Quando** o usuário abre o histórico,  
+**Então** elas não aparecem.
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
+## Divergências da redação anterior
+A redação anterior dizia exibir consultas prévias para reaproveitar informações, sem exigir login nem distinguir erro de sucesso. O código só persiste consulta bem-sucedida de usuário autenticado e não coloca a lista no menu.
 
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
+## Evidências
+- `app/Http/Controllers/Portal/HistoricoConsultaController.php`
+- `app/Http/Controllers/Portal/ConsultaViabilidadeController.php` (`registrarHistorico`)
+- `routes/portal.php` (`portal.viabilidade.historico`)
+- `resources/js/pages/portal/viabilidade/historico.tsx`
+- `resources/js/pages/portal/viabilidade/consulta.tsx`
 
-## Critérios de Aceite — BDD
-
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Consultar histórico de consultas**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- Histórico do anônimo.
+- Histórico do representado no lugar do usuário da sessão.
+- Item de menu próprio para o histórico.
+- Recálculo da viabilidade ao reabrir um item.

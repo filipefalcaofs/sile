@@ -3,133 +3,60 @@
 ## Épica
 **EP08 — Solicitação de Viabilidade**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Permitir consulta do andamento.
+Permitir que o requerente acompanhe a própria solicitação e que um terceiro veja, por link assinado e temporário, só o número, o status público, a data de protocolo, a linha do tempo pública e o prazo estimado.
 
 ## História de Usuário
-**Como** cidadão,  
-**quero** consultar protocolo,  
-**para** acompanhar situação da solicitação.
+**Como** requerente,  
+**quero** consultar o andamento do protocolo e compartilhar um link público de acompanhamento,  
+**para** ver a situação do pedido sem expor os dados completos a quem recebe o link.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- Consulta autenticada: dono efetivo, qualquer status (`ViabilityRequestPolicy::view`). Terceiro autenticado recebe 403.
+- Rota `GET portal/solicitacoes/{solicitacao}`, com autenticação do portal, LGPD e representação. Não depende de `portal.solicitacao`.
+- Consulta pública: sem login, `GET portal/protocolo/{solicitacao}` com middleware `signed` e `throttle:consulta-protocolo`. Assinatura inválida ou expirada responde 403.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. Na consulta autenticada, o sistema audita `consulta-protocolo` e mostra protocolo, status (rótulo interno e público), datas, tipo de serviço, empresa e CNPJ formatado, área, endereço resumido e CNAEs.
+2. A linha do tempo sai das transições reais. No modo autenticado, cada etapa traz rótulo, data, status técnico e motivo. Pendências: em rascunho, concluir e protocolar; em pendência, há convite aguardando ação; nos demais status, lista vazia.
+3. Se já existe número, a página recebe link assinado com validade `viabiliza.solicitacao.consulta_publica.assinatura_ttl_dias` (padrão 30 dias), lido de config. Em rascunho sem número, o link é nulo.
+4. A página autenticada oferece o download do comprovante (HU-068) e, quando há decisão, o parecer e a carga opcional de explicação por IA.
+5. A consulta pública audita `consulta-protocolo-publica` e devolve só número, status público, data de protocolo, etapas com rótulo e data, e o prazo estimado. Não envia empresa, CNPJ, endereço, CNAE, motivo interno, ator nem pendências.
+6. O prazo estimado usa `solicitacao.prazo_estimado_dias` (padrão 30), com texto de que é estimativa parametrizada e não vinculante. Status cancelada, deferida ou indeferida não traz prazo.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- A linha do tempo não é inventada: só existem etapas que foram transições gravadas.
+- O link público não mostra dado de empresa, endereço ou anexo.
+- Toda consulta, autenticada ou pública, gera auditoria. Na pública, o causer fica nulo.
+- A explicação por IA, quando carregada, é sugestão lida do ledger e não altera a decisão.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Consultar protocolo**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- Autorização por policy na consulta autenticada.
+- Assinatura e throttle na consulta pública.
+- Filtro de status da lista (HU-061) é outra tela; esta HU é o detalhe do protocolo.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+- Dado o requerente efetivo, quando abre a solicitação, então vê os dados do processo, a linha do tempo com motivo e a auditoria da consulta.
+- Dado solicitação com número, quando a página autenticada é montada, então existe link temporário assinado. Dado rascunho sem número, então o link é nulo.
+- Dado o link válido, quando um visitante sem login abre a rota pública, então vê número, rótulo público, data de protocolo, etapas sem motivo e o prazo com ressalva, e a consulta é auditada.
+- Dado link expirado ou adulterado, quando abre a rota pública, então a resposta é 403.
+- Dado outro usuário autenticado, quando abre a consulta, então a policy nega.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+## Divergências da redação anterior
+A consulta pública não pede protocolo digitado numa busca anônima aberta. O acesso público é o link assinado gerado para quem já é o dono. O prazo exibido é parâmetro com ressalva, não medição por etapa.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+## Evidências
+- `App\Http\Controllers\Portal\ConsultaProtocoloController`
+- `App\Http\Controllers\Portal\ConsultaProtocoloPublicaController`
+- `App\Services\Solicitacao\TimelineSolicitacao`
+- `routes/portal.php` (`portal.solicitacoes.show`, `portal.protocolo.publico`)
+- `resources/js/pages/portal/solicitacoes/protocolo.tsx`
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
-
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-- RN-004: O status deve ser exibido ao cidadão em **linguagem simples**, com explicação do momento atual e dos próximos passos (ex.: "Aguardando confirmação da Junta Comercial — protocolo BAP. Nada a fazer por enquanto."), mantendo o status técnico disponível em detalhe.
-- RN-005: Exibir **prazo estimado com base em dados reais** (tempo médio recente de processos equivalentes, alimentado pela medição por etapa da HU-129), com a ressalva de estimativa.
-- RN-006: A consulta deve apresentar a timeline do processo em versão simplificada para o cidadão (etapas concluídas, etapa atual, pendências dele).
-
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Consultar protocolo**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- Consulta pública por digitação do número, sem assinatura.
+- Prazo calculado pelo histórico real de processos equivalentes.
+- Exibição de CPF, CNPJ, endereço ou anexo no payload público.

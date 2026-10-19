@@ -3,135 +3,58 @@
 ## Épica
 **EP09 — Fluxo Expresso**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Registrar todas as regras aplicadas.
+Gravar, na mesma transação da decisão expressa, o resultado, o motivo, o por CNAE, a versão de regra representativa e, na decisão, o traço e a fundamentação usados depois na consulta.
 
 ## História de Usuário
 **Como** sistema,  
-**quero** auditar decisão automática,  
-**para** permitir conferência posterior.
+**quero** auditar a decisão automática no momento em que ela é gravada,  
+**para** que a conferência posterior não dependa do evento nem de um reprocessamento do motor.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- A escrita é do `FluxoExpressoService` e, no prazo BAP, do `IndeferirSemBapService`.
+- A leitura na retaguarda exige `consultar-solicitacoes` (HU-076). Cada abertura de lista ou detalhe também audita a consulta (`consulta-resultado-lista` e `consulta-resultado`).
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. No deferimento, no indeferimento e no encaminhamento à análise, `AuditService::log` grava log `expresso`, evento `decisao`, com id da solicitação, protocolo, resultado e o conteúdo da passagem.
+2. Na emissão, o resultado da auditoria é `deferida` ou `indeferida`. As propriedades incluem consolidado, TVL (nulo no indeferimento) e resumo por CNAE (código, tendência e fluxo). `rulesVersion` é a primeira versão não vazia na ordem Quadro 10, risco de tratamento, Quadro 11A, risco municipal, risco sanitário, zona e bairro.
+3. A linha `viability_decisions` guarda `per_cnae` com código TLL, fundamentação de cada CNAE, `rules_versions`, `fundamentacao` consolidada sem duplicar e `decision_trace` montado do array já resolvido, sem rodar o motor de novo.
+4. No encaminhamento, o resultado da auditoria é `analise`, com motivo, setor, consolidado e por CNAE quando houve resolução. Não há `ViabilityDecision`. A queda estruturada fica em `expresso_quedas`, com gatilho e dimensão quando o motor os trouxe; sem isso, a linha não inventa gatilho.
+5. Exclusão de atividade audita os CNAEs excluídos e o TVL, com `rulesVersion` nulo, porque não houve enquadramento.
+6. Se o job esgota as tentativas, `decisao-falha` registra o id e a mensagem do erro, com resultado `falha`.
+7. O detalhe da retaguarda projeta a explicação a partir do traço já gravado.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- A auditoria da decisão é síncrona, dentro da transação. O evento posterior não é a fonte da trilha.
+- A fundamentação exibida é a que os motores devolveram, reunida sem duplicar. Na exclusão sem enquadramento, o texto gravado é o da própria regra de exclusão.
+- Consultar a lista ou o detalhe gera outra auditoria, de consulta, e não altera a decisão.
+- Versão representativa ausente fica nula. O mapa completo permanece na decisão quando houve resolução.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Registrar auditoria da decisão automática**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- Não há formulário. A trilha acompanha a transição válida da máquina de estados (`solicitacoes` / `transicao`), além do log `expresso`.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+- Dado deferimento ou indeferimento emitido, quando a transação conclui, então existem a `ViabilityDecision` e o log `expresso`/`decisao` com protocolo, resultado e por CNAE, mesmo que um listener do evento falhe depois.
+- Dado encaminhamento à análise, quando a transação conclui, então o log registra resultado `analise` e o motivo, e não existe decisão.
+- Dado queda sem gatilho conhecido, quando grava `expresso_quedas`, então `tipo_gatilho` fica nulo em vez de um código inventado.
+- Dado falha definitiva do job, quando `failed` roda, então o log é `decisao-falha` e não surge decisão.
+- Dado usuário autorizado no detalhe, quando a explicação é montada, então ela lê o traço gravado e não recalcula o veredito.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+## Divergências da redação anterior
+A redação pedia um registro genérico de "todas as regras". O código grava a decisão, a versão representativa, o mapa de versões, a fundamentação devolvida pelo motor e o traço por CNAE. Não há trilha separada que reexecute a LOUOS na hora da consulta.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+## Evidências
+- `App\Services\Expresso\FluxoExpressoService` (chamadas `audit->log` em `emitir`, `encaminharAnalise`, `deferirExclusao`, `indeferirTerritorial`, `indeferirPerguntaSemResposta`)
+- `App\Services\Auditoria\DecisionTraceBuilder`
+- `App\Jobs\DecidirFluxoExpressoJob::failed`
+- `App\Http\Controllers\Gestao\ResultadoExpressoController`
+- `App\Services\Solicitacao\ViabilityRequestStateMachine::transition`
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
-
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-- RN-004: Decisão automática somente deve ocorrer quando todas as regras necessárias forem encontradas e não houver conflito.
-- RN-005: O sistema deve registrar a fundamentação legal, dados de entrada, regras aplicadas e resultado final.
-- RN-006: Casos ambíguos, sem dado confiável ou com conflito normativo devem ir para análise técnica.
-
-## Critérios de Aceite — BDD
-
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Registrar auditoria da decisão automática**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- Auditoria da decisão automática feita só pelo listener, depois do commit, sem o log síncrono.
+- Reexecução do motor ao abrir a tela de explicação.
+- Registro de regras que o motor não devolveu.

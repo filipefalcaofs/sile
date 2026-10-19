@@ -1,57 +1,60 @@
 # HU-147 — Escalonar processos parados por SLA
 
-> **Status: Aceita (2026-06-12)** — melhoria além do legado. Generaliza o padrão do indeferimento por BAP (HU-134): toda etapa tem prazo, e prazo estourado tem tratamento definido.
-
 ## Épica
 **EP11 — Pendências e Comunicação**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Monitorar, por rotina agendada, processos parados além do prazo parametrizado em cada etapa (em análise, aguardando convite, aguardando integração) e aplicar o tratamento configurado: notificar gestor, redistribuir ou tratar conforme regra.
+Avisar, pelo semáforo do prazo de análise, o analista na faixa amarela e quem tem permissão de receber escalonamento na faixa vencida, sem decidir o processo.
 
 ## História de Usuário
-**Como** gestor SEDUR,  
-**quero** ser alertado de processos parados além do prazo da etapa,  
-**para** agir antes que o prazo total estoure — em vez de descobrir no relatório mensal.
+**Como** sistema, **quero** escalar por notificação os processos em análise que entram em alerta ou vencem o SLA, **para** que o responsável e quem recebe escalonamento vejam o atraso, sem redistribuir nem encerrar sozinho.
 
-## Contexto de Negócio
-A distorção de prazos do legado (19 dias reportados) nasce de processos esquecidos em etapas intermediárias. Com a timeline por etapa (HU-129) e regras de prazo corretas (HU-137), o escalonamento fecha o ciclo: medir → alertar → agir.
+## Atores e permissões
+- Comando `notificacoes:escalonar-sla`, de hora em hora, com `withoutOverlapping` e `onOneServer`.
+- Faixa amarela, no tratamento padrão `notificar_analista`: o `assignedTo`. Sem responsável, ninguém é avisado nessa faixa.
+- Faixa vencida, no tratamento padrão `notificar_gestor`: todos os usuários cujo perfil tem `receber-escalonamento-sla`. No seeder, essa permissão está nas chefias. Não há filtro pelo setor do processo.
+- Se não existe nenhum usuário com a permissão, o serviço registra aviso de log e a lista vem vazia.
 
-## Fluxo Principal
-1. Rotina agendada percorre processos ativos e calcula tempo na etapa atual (regras de prazo parametrizadas).
-2. Para cada etapa com SLA configurado (HU-014): ao atingir limiar de alerta, notifica o analista responsável; ao estourar, notifica o gestor do setor.
-3. Tratamentos configuráveis por etapa: somente notificar, sugerir redistribuição (HU-080), aplicar regra automática quando prevista (ex.: HU-134 para BAP).
-4. Painel do gestor lista escalonamentos ativos (integra com a visão de fila, HU-144).
-5. Toda notificação e ação registrada em auditoria.
+## Fluxo evidenciado
+1. Entram processos `em_analise` com `analysis_due_at` e `analysis_stage_started_at` preenchidos.
+2. O semáforo é `AnalysisSlaService` sobre essas duas datas, a mesma origem da fila. Verde não gera aviso.
+3. O que fazer em cada faixa vem de `notificacoes.escalonamento.tratamento`. Padrão: amarelo notifica o analista; vencido notifica os destinatários da permissão. Outro texto de tratamento não notifica e não executa ação.
+4. A notificação é `ProcessoEscalonadoNotification`, tipo `escalonamento_sla`. No mapa padrão: e-mail e in-app.
+5. Idempotência: não repete para o mesmo processo, destinatário e comunicação desse tipo desde `analysis_stage_started_at`.
+6. O comando não transiciona status, não redistribui e não indefere.
 
-## Regras de Negócio
-- RN-001: SLAs por etapa e por tipo de serviço são parametrizáveis (HU-014); etapas sem SLA configurado não escalonam.
-- RN-002: A contagem usa as mesmas regras de prazo da medição (HU-129/HU-137) — fonte única.
-- RN-003: Ação automática só onde houver regra explícita (como HU-134); o padrão é notificação, nunca decisão silenciosa.
-- RN-004: A rotina deve ser idempotente e não duplicar notificações (controle de último alerta por processo/etapa).
-- RN-005: Convite sem resposta no prazo segue o tratamento parametrizado próprio (vínculo com HU-083/HU-091).
+## Regras de negócio evidenciadas
+- Escalonar, no código, é notificar. Tratamento que não seja `notificar_analista` ou `notificar_gestor` é ignorado.
+- O destinatário do vencido não é "o gestor do setor". É quem tem `receber-escalonamento-sla`, em qualquer setor.
+- Processo fora de `em_analise`, ou sem as duas datas de prazo, não entra.
 
-## Critérios de Aceite — BDD
+## Validações
+- Não há formulário. A faixa verde é descartada no próprio comando.
+- E-mail não entregável impede o dispatcher de criar a comunicação daquele destinatário.
 
-### CA-01 — Alerta por etapa
-**Dado** um processo parado além do limiar da etapa,  
-**Quando** a rotina executar,  
-**Então** o responsável (e o gestor, no estouro) deve ser notificado pelos canais habilitados, uma única vez por limiar.
+## Critérios de aceite
+1. Processo em análise no amarelo, com responsável, gera um aviso ao analista na etapa atual e não muda o status.
+2. Processo no vermelho gera aviso a cada usuário com `receber-escalonamento-sla`, uma vez por etapa.
+3. Segunda execução na mesma etapa não duplica.
+4. Tratamento diferente dos dois nomes de notificação não redistribui, não encerra e não notifica.
+5. Verde não gera comunicação.
 
-### CA-02 — Fonte única de prazo
-**Dado** um processo atravessando feriado cadastrado,  
-**Quando** o tempo na etapa for calculado,  
-**Então** o resultado deve coincidir com a medição da HU-129 para o mesmo processo.
+## Divergências da redação anterior
+- A redação anterior podia ser lida como movimentação do processo parado. O código só notifica. Não move de setor, não troca analista e não conclui.
+- O vencido não vai ao gestor do setor do processo. Vai a quem tem a permissão `receber-escalonamento-sla`.
 
-### CA-03 — Auditoria
-**Dado** qualquer escalonamento,  
-**Quando** ocorrer notificação ou ação,  
-**Então** processo, etapa, regra aplicada e destinatários devem constar da auditoria.
+## Evidências
+- `app/Console/Commands/EscalonarSlaCommand.php`
+- `app/Services/Comunicacao/DestinatariosEscalonamento.php`
+- `app/Services/Analise/AnalysisSlaService.php` (leitura do semáforo)
+- `routes/console.php`
+- `config/viabiliza.php` (`escalonamento.tratamento`, `escalonamento_sla`)
+- `database/seeders/RolesAndPermissionsSeeder.php`
 
-## Dependências
-- HU-014 (parâmetros), HU-137 (feriados), HU-129 (medição por etapa), HU-144 (fila/painel), HU-134 (caso BAP), EP11 (canais).
-
-## Prioridade
-Média-alta
-
-## Observações
-Implementação natural via scheduler Laravel (padrão já validado no SIGVISA: rotinas horárias com `withoutOverlapping`).
+## Não evidenciado
+- Redistribuição automática ou decisão por SLA.
+- Destinatário calculado pelo setor do processo.

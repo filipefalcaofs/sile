@@ -3,132 +3,64 @@
 ## Épica
 **EP01 — Identidade, Acesso e Segurança**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Permitir rastreabilidade dos acessos à conta.
+O cidadão consulta os acessos da própria conta. Quem tem permissão no console consulta o histórico de outra conta e pode exportar o conjunto. A consulta administrativa fica auditada.
 
 ## História de Usuário
-**Como** usuário ou administrador,  
-**quero** consultar histórico de acessos,  
-**para** identificar acessos realizados no sistema.
+**Como** cidadão, **quero** ver meus acessos, falhas e bloqueios, **para** reconhecer tentativas na minha conta. **Como** administrador autorizado, **quero** consultar o histórico de outra conta, **para** apurar o uso sem depender do próprio usuário.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- Portal: usuário com `auth:web`, `verified` e `lgpd.accepted` (e `ResolveRepresentation`). Menu Minha conta > Histórico de acessos (`/portal/acessos`). Não há permissão Spatie adicional. O controller usa o usuário logado; não recebe id de outra conta.
+- Console: `auth:gestao`, `acessar-gestao`, `lgpd.accepted` e, na rota, `permission:consultar-acessos-de-qualquer-conta`. GET `/gestao/acessos/{user}`. Não há item em `gestao-nav.ts`. A listagem Administração > Usuários (`manter-usuarios`) tem a ação "Acessos" para essa URL. Quem não tem `consultar-acessos-de-qualquer-conta` é barrado na rota, mesmo que enxergue o link.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+No seeder, `consultar-acessos-de-qualquer-conta` é concedida ao papel `administrador`.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Fluxo evidenciado
+1. Os eventos gravados em `access_logs` incluem, conforme os listeners e o login do console: `login`, `falha`, `bloqueio`, `inativada`, `ad-indisponivel` e `ad-sincronizacao-falhou`. Canal `portal` ou `gestao`. Origem `ad` ou `local` quando o login do console define `auth_origin`.
+2. No portal, `AccessHistoryController` lista registros em que `user_id` é o usuário ou `email` é o e-mail dele (para falhas anteriores ao vínculo do id). Ordena por `created_at` decrescente e pagina com `ui.access_history.per_page` (padrão 15). Cada item mostra `id`, `event`, `ip_address`, `channel` e `created_at`. O user agent não vai para a tela.
+3. No console, a consulta interativa faz o mesmo filtro para o `{user}` da rota e ainda envia nome e e-mail do alvo. Antes de renderizar, `AuditService::log` registra `acessos` / `consulta-acessos` com `target_user_id` e `personalData: true`.
+4. Se a query `formato` for `csv`, `xlsx` ou `pdf`, o console não renderiza a tela: `ReportExporter` exporta `AcessosUsuarioReportSource` com o filtro do usuário e audita a exportação. O portal não tem esse parâmetro.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Consultar histórico de acessos**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Regras de negócio evidenciadas
+- RN-001: o portal só lê a própria conta, por id ou pelo e-mail gravado no log (`Portal\AccessHistoryController`).
+- RN-002: a consulta de terceiro exige `consultar-acessos-de-qualquer-conta` (`routes/gestao.php`).
+- RN-003: consultar o histórico de outra conta é dado pessoal e gera auditoria explícita (`Gestao\AccessHistoryController`).
+- RN-004: a página usa o parâmetro `ui.access_history.per_page`.
+- Não há, nestes controllers, filtro por período, canal ou tipo de evento.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Validações
+Não há Form Request. No console, `formato` só muda o fluxo quando o valor em minúsculas é `csv`, `xlsx` ou `pdf`. Qualquer outro valor cai na listagem.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+## Critérios de aceite
+### CA-01 — Cidadão vê os próprios registros
+**Dado** um cidadão autenticado com logs de `login` e de `falha` no e-mail dele, **quando** abre `/portal/acessos`, **então** a lista pagina esses eventos com IP, canal e data, sem escolher outro usuário.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+### CA-02 — Sem permissão no console
+**Dado** um servidor sem `consultar-acessos-de-qualquer-conta`, **quando** abre `/gestao/acessos/{id}`, **então** o middleware de permissão impede a consulta.
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
+### CA-03 — Consulta administrativa auditada
+**Dado** um administrador com a permissão, **quando** abre o histórico de outra conta sem `formato` de exportação, **então** vê os logs daquele usuário ou e-mail e a atividade `consulta-acessos` é registrada com `personalData`.
 
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
+### CA-04 — Exportação
+**Dado** a mesma permissão e `formato` igual a `csv`, `xlsx` ou `pdf`, **quando** acessa a rota do usuário, **então** a resposta vem de `ReportExporter` com `AcessosUsuarioReportSource`, e não da página Inertia.
 
-## Critérios de Aceite — BDD
+## Divergências da redação anterior
+- O texto antigo misturava a consulta com trilha de processo, GIS e REDESIM. Aqui a fonte é `access_logs`.
+- O cidadão não escolhe outra conta. A exportação existe só no console e só nos três formatos acima.
+- A tela administrativa não está no menu lateral; o atalho está na lista de usuários.
 
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Consultar histórico de acessos**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
+## Evidências
+- `app/Http/Controllers/Portal/AccessHistoryController.php`.
+- `app/Http/Controllers/Gestao/AccessHistoryController.php`.
+- `app/Listeners/RecordSuccessfulLogin.php`, `RecordFailedLogin.php`, `RecordLockout.php`.
+- `routes/portal.php` e `routes/gestao.php`.
+- `resources/js/navigation/portal-nav.ts`.
+- `resources/js/pages/gestao/usuarios/index.tsx` — ação "Acessos".
+- `database/seeders/RolesAndPermissionsSeeder.php` — `consultar-acessos-de-qualquer-conta`.
 
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+Não há histórico de logout nestes listeners. Não há edição nem exclusão manual de `access_logs` por estas rotas. A poda de retenção não faz parte desta consulta.

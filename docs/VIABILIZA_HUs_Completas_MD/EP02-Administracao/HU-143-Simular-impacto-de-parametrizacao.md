@@ -1,57 +1,76 @@
-# HU-143 — Simular impacto de alteração de parametrização
-
-> **Status: Aceita (2026-06-12)** — melhoria além do legado. Autonomia com segurança: o gestor vê o impacto antes de ativar a mudança de regra.
+# HU-143 — Simular impacto de parametrização
 
 ## Épica
 **EP02 — Administração**
 
+## Situação na implementação
+- **Status:** Parcial
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Permitir simular uma alteração de parametrização do motor (enquadramentos, condicionantes, classificação de risco, gatilhos) contra processos reais recentes, exibindo quais teriam resultado diferente, antes de publicar a mudança.
+Simular um rascunho do Quadro 10 ou do Quadro 11A no motor de enquadramento e, em seguida, publicá-lo com quatro olhos.
 
 ## História de Usuário
-**Como** gestor/administrador SEDUR,  
-**quero** simular o impacto de uma mudança de regra antes de ativá-la,  
-**para** ampliar o expresso e ajustar parametrizações sem quebrar decisões silenciosamente.
+**Como** mantenedor com `manter-louos`,
+**quero** simular o rascunho de um quadro e ver quantos cenários mudariam de resultado,
+**para** publicar a versão só depois de olhar o relatório.
 
-## Contexto de Negócio
-A SEDUR quer autonomia (HU-014), mas no legado mudanças dependem de desenvolvedor justamente porque errar parametrização tem consequência invisível. O sandbox dá segurança: "esta mudança teria alterado o resultado de 12 dos últimos 500 processos — ver quais" — e só então o gestor publica.
+## Atores e permissões
+- Simular e publicar exigem `manter-louos`. Menu Regras, item Simulação de regras (`/gestao/louos/simulacao`).
+- A publicação recusa o autor do rascunho como publicador.
 
-## Fluxo Principal
-1. O gestor edita uma regra parametrizada (ex.: novo enquadramento no Quadro 7, condicionante, gatilho) e salva como **rascunho/versão candidata**.
-2. Aciona "Simular impacto": o sistema reexecuta o motor sobre os últimos N processos (parametrizável) com a versão candidata.
-3. O resultado lista: total reprocessado, quantos mudariam de resultado, distribuição (deferido→indeferido, análise→expresso etc.) e o detalhe de cada caso divergente.
-4. O gestor decide: publicar a versão (passa a vigorar com nova versão de regras) ou ajustar o rascunho.
-5. Simulação e publicação registradas em auditoria (quem, quando, diff da regra, resumo do impacto).
+## Fluxo evidenciado
+1. A página lista rascunhos de `louos_quadro10` e `louos_quadro11a` (quadro, domínio, rótulo, versão, autor e data) e a amostra padrão lida de `config('viabiliza.louos.sandbox.amostra_padrao')`, 50 se a chave não existir.
+2. Simular reexecuta `LouosEnquadramentoService` dentro de uma transação que é sempre revertida. O relatório volta na mesma página: domínio, versão do rascunho, amostra usada, total, quantos mudariam, distribuição e divergências. Atualizar a página cai no GET e o relatório some.
+3. A amostra, quando o pedido não envia `amostra`, usa a config. Os cenários são CNAEs ativos, limitados à amostra, com área fixa de 50 m² e uma zona: a zona da versão vigente do Quadro 10 com mais permissões `permitido`. O território desses cenários é sintético. Sem zona vigente ou sem permissões, a amostra fica vazia.
+4. Publicar o rascunho passa por `LouosDraftService`, com a mesma trava de zonas do Quadro 10 e a auditoria de publicação do rascunho. Autor e publicador precisam ser pessoas diferentes.
+5. A simulação grava um evento de auditoria `simulacao` fora da transação revertida. Essa gravação não publica versão.
 
-## Regras de Negócio
-- RN-001: A simulação roda em sandbox — nunca altera processos reais nem dispara integrações/notificações.
-- RN-002: Publicação cria nova versão das regras (HU-046/HU-053); decisões passadas permanecem vinculadas à versão da época.
-- RN-003: O tamanho da amostra (N processos / janela temporal) é parametrizável; o resumo deve indicar a amostra usada.
-- RN-004: O diff da regra (antes × depois) integra o registro de auditoria da publicação.
-- RN-005: Segregação de funções obrigatória para regras sensíveis (enquadramentos, risco, gatilhos): quem edita/simula **não** pode ser quem publica — aprovação de segunda pessoa autorizada ("4 olhos"), com ambos registrados na auditoria da publicação; a lista de domínios sujeitos a 4 olhos é parametrizável.
+## Regras de negócio evidenciadas
+- A simulação não deixa escrita do motor persistida.
+- Só rascunho existente do Quadro 10 ou do Quadro 11A entra na simulação e na publicação desta tela.
+- O tamanho da amostra do pedido é inteiro mínimo 1. O padrão 50 está em configuração da aplicação, não no catálogo de parâmetros da HU-014.
+- A área de todos os cenários é 50 m², constante do serviço.
+- O relatório informa `amostra_usada`.
 
-## Critérios de Aceite — BDD
+## Validações
+- `quadro` obrigatório, `quadro10` ou `quadro11a`.
+- `versao_rascunho` obrigatória e existente em `rule_versions.version` naquele domínio, com status rascunho. Mensagem: «Não há um rascunho deste Quadro da LOUOS com esse identificador.»
+- `amostra` opcional, inteiro, mínimo 1.
 
-### CA-01 — Simulação sem efeito colateral
-**Dado** uma versão candidata de regra,  
-**Quando** o gestor simular o impacto,  
-**Então** o sistema deve reprocessar a amostra em sandbox e nenhum processo real, integração ou notificação pode ser afetado.
+## Critérios de aceite
+### CA-01 — Simular sem persistir o motor
+**Dado** um rascunho do Quadro 10 ou do 11A e um mantenedor com `manter-louos`,
+**Quando** simula,
+**Então** recebe total, quantos mudariam, distribuição, divergências e a amostra usada, e a transação do motor é revertida.
 
-### CA-02 — Relatório de divergência
-**Dado** uma simulação concluída,  
-**Quando** houver casos com resultado diferente,  
-**Então** o sistema deve listar cada caso com resultado atual × resultado simulado e motivo.
+### CA-02 — Amostra explícita
+**Dado** o mesmo rascunho,
+**Quando** a simulação envia `amostra` igual a 10,
+**Então** o relatório registra `amostra_usada` 10, limitada aos CNAEs ativos encontrados.
 
-### CA-03 — Publicação versionada
-**Dado** uma versão candidata aprovada,  
-**Quando** o gestor publicar,  
-**Então** nova versão de regras entra em vigor, com auditoria completa (diff, responsável, impacto estimado).
+### CA-03 — Rascunho inexistente
+**Dado** uma versão que não é rascunho daquele quadro,
+**Quando** o mantenedor tenta simular,
+**Então** a validação recusa `versao_rascunho`.
 
-## Dependências
-- HU-014 (parâmetros), HU-015 a HU-020 (mantenedores), HU-046 (versionar LOUOS), HU-053 (atualizar risco), motores EP05/EP06.
+### CA-04 — Publicar com outro usuário
+**Dado** um rascunho simulável,
+**Quando** o autor tenta publicar pela simulação,
+**Então** a publicação é recusada. Outro usuário com `manter-louos` publica pelo `LouosDraftService`.
 
-## Prioridade
-Média-alta (entregar junto com os mantenedores das Fases 5–6)
+## Divergências da redação anterior
+A redação anterior pedia simulação contra N processos reais numa janela temporal, amostra parametrizável no catálogo da HU-014, diff da regra na auditoria da publicação e quatro olhos para enquadramento, risco e gatilhos, com a lista de domínios parametrizável. O código simula CNAEs ativos, área fixa de 50 m² e uma zona, em território sintético. A amostra padrão é config, não parâmetro de tela. A tela só cobre rascunho do Quadro 10 e do Quadro 11A. Risco municipal, planilha de tratamento e gatilhos não entram neste sandbox.
 
-## Observações
-É o mecanismo que torna segura a meta de ampliar o expresso continuamente (HU-145): propor mudança → simular → publicar → medir.
+## Evidências
+- `routes/gestao.php`: `louos.sandbox.index`, `sandbox.simular`, `sandbox.publicar`.
+- `app/Http/Controllers/Gestao/LouosSandboxController.php`.
+- `app/Http/Requests/Gestao/SimulateLouosRequest.php`.
+- `app/Services/Louos/LouosSandboxSimulationService.php`: `montarCenarios`, `areaRepresentativa` (50.0), `territorioComZona`.
+- `resources/js/navigation/gestao-nav.ts`: Simulação de regras.
+
+## Não evidenciado
+- Amostra de processos protocolados ou janela de datas.
+- Simulação de risco municipal, planilha de tratamento, gatilhos ou regras territoriais nesta tela.
+- Parâmetro de catálogo para o tamanho da amostra. O padrão está em `config('viabiliza.louos.sandbox.amostra_padrao')`.
+- Relatório que sobreviva a um refresh: o POST devolve a página com o relatório; o GET não o guarda.

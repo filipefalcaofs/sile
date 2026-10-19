@@ -3,135 +3,66 @@
 ## Épica
 **EP06 — Classificação de Risco**
 
+## Situação na implementação
+- **Status:** Parcial
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Tratar exceções por CNAE/local/condição.
+Tirar o encaminhamento do mapa de risco quando um gatilho ativo incide ou quando o tipo de imóvel exige análise. A reclassificação por condicionante-pergunta não é executada.
 
 ## História de Usuário
 **Como** sistema,  
-**quero** aplicar exceções de risco,  
-**para** gerar decisão correta.
+**quero** aplicar as exceções cadastradas que mandam o caso à análise,  
+**para** não manter no expresso um contexto que o gatilho marca como semi-expresso.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- Manutenção dos gatilhos: `manter-gatilhos-risco`. A tela lista, edita motivo e liga ou desliga. Não cria nem apaga código: o código é o enum `TipoGatilho`.
+- O motor só aciona gatilho que esteja ativo na tabela `risk_triggers` e cujo código venha no contexto, ou que ele mesmo acrescente.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. `applyGatilhos` lê os gatilhos ativos e cruza com `gatilhosContexto`.
+2. Se o tipo de imóvel dirige regra, ou se o valor enviado não é reconhecido (`Desconhecido`), o código `dados_do_processo` entra no contexto. Tipo ausente (nada foi enviado) não aciona.
+3. Cada gatilho casado devolve código e motivo. Se a lista não é vazia, o fluxo vira `analise` e o motivo do encaminhamento passa a ser o do primeiro gatilho.
+4. O seed grava três gatilhos, ativos na criação, sem recolocar `ativo` num re-seed: `enquadramento_ausente`, `zeis_especial` e `dados_do_processo`.
+5. O enum tem ainda `regra_territorial`, `localizacao_divergente` e `zona_empate`. O expresso grava esses códigos ao encaminhar por regra de lugar, divergência de zona ou empate de porções. Isso não passa por `applyGatilhos`.
+6. `ConsultaViabilidadeService` monta `RiscoInput` sem lista de gatilhos. A consulta prévia não envia `zeis_especial`, mesmo que a camada de restrição tenha feição.
+7. O model `RiskCondicionante` descreve `regra_reclassificacao` com `resposta_gatilho` e `reclassifica_para`. `classifySanitario` não lê esse model. Devolve `reclassificado` falso, `nivel_final` igual ao original e perguntas vazias. O comentário do serviço registra que a validação de condicionantes da VISA foi retirada.
+8. As frases de condicionante da linha municipal entram na fundamentação. Não mudam o nível.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- Gatilho acionado vence o mapa, inclusive quando o mapa diria expresso.
+- Desligar o gatilho na tela muda o roteamento. O registro não é excluído.
+- ZEIS como gatilho de risco só ocorre se algum chamador colocar `zeis_especial` no contexto e o gatilho estiver ativo. A identificação territorial não faz isso.
+- Tipo de imóvel desconhecido vai à análise. Tipo omitido não.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Aplicar exceções de risco**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- Código de gatilho fora do enum não é cadastrável por esta tela.
+- Contexto vazio e tipo de imóvel que não exige análise produzem lista vazia de gatilhos.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+**Dado** que `dados_do_processo` está ativo e o tipo de imóvel dirige regra ou é desconhecido,  
+**Quando** o motor classifica,  
+**Então** o fluxo é `analise` e o gatilho aparece em `gatilhos_acionados`.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+**Dado** que o classificador recebe a dimensão sanitária de um CNAE,  
+**Quando** o resultado sanitário é lido,  
+**Então** `reclassificado` é falso e não há nível alterado por resposta.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+**Dado** que a consulta prévia identifica restrição no ponto,  
+**Quando** o risco é classificado por essa consulta,  
+**Então** `zeis_especial` não é enviado no contexto.
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
+## Divergências da redação anterior
+A redação anterior tratava exceção de risco como reclassificação genérica. O código aplica gatilho que força análise e não reclassifica o nível pela condicionante.
 
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-- RN-004: A classificação de risco deve ser parametrizável por CNAE e condicionantes.
-- RN-005: Baixo risco elegível deve seguir fluxo expresso quando todas as condicionantes forem atendidas.
-- RN-006: Alto risco deve ser encaminhado para análise técnica quando a legislação assim exigir.
+## Evidências
+- `RiscoClassificationService::applyGatilhos` e `classifySanitario`
+- `TipoGatilho`, `RiskTrigger`, `RiskTriggerSeeder`, `RiskTriggerController`
+- `RiskCondicionante` (contrato não usado pelo classificador)
+- `ConsultaViabilidadeService::riscoInput`
+- `TipoImovel` e `TipoImovelReconhecimento::Desconhecido`
 
-## Critérios de Aceite — BDD
-
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Aplicar exceções de risco**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- Resposta de condicionante que mude o nível para outro grau.
+- Inclusão automática de `zeis_especial` a partir da camada de restrição.
+- Criação de gatilho novo pela tela, fora do enum.

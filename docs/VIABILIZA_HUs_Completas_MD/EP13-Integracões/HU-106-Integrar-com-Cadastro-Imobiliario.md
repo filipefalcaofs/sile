@@ -3,135 +3,51 @@
 ## Épica
 **EP13 — Integrações**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Consultar dados oficiais do imóvel.
+Consultar o cadastro imobiliário da SEFAZ, pelo BFF da SEDUR, para obter endereço e coordenada do imóvel a partir da inscrição.
 
 ## História de Usuário
-**Como** sistema,  
-**quero** integrar com cadastro imobiliário,  
-**para** aumentar precisão da análise.
+**Como** sistema, **quero** resolver a inscrição imobiliária na base oficial quando a consulta está habilitada, **para** usar o ponto e o endereço devolvidos, e falhar de forma explícita quando o serviço não responde.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- O binding de `PropertyRegistryLookup` é `SedurSefazPropertyRegistryLookup`.
+- A consulta só sai se `features.cadastro_imobiliario` está ligado. URL de homologação ou produção é parâmetro, com teste de conexão em `/gestao/config-inscricao-imobiliaria/testar` (`manter-parametros`).
+- Quem abre processo (portal ou job do REGIN) dispara a consulta; não há tela pública desta HU.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. Inscrição sem dígitos gera não encontrado.
+2. Com o recurso desligado, a consulta lança `PropertyRegistryUnavailableException` e não inventa coordenada.
+3. Com o recurso ligado, há GET na URL configurada, com timeout, retentativa em erro de servidor ou falha de rede, e log com inscrição, HTTP e `CodigoRetorno`. Nome do proprietário e histórico de propriedade são descartados.
+4. HTTP 404 ou `CodigoRetorno` diferente de `0` é imóvel não encontrado. Falha de rede, HTTP não sucedido ou corpo inválido é indisponibilidade.
+5. Coordenada UTM 24S é convertida para WGS84. Endereço sai do logradouro, número e complemento do imóvel devolvido.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- Desligado não simula ponto.
+- Dado de proprietário não entra no resultado mapeado.
+- A classe `UnavailablePropertyRegistryLookup` existe e não é o binding atual.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Integrar com Cadastro Imobiliário**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- Inscrição é reduzida a dígitos antes da chamada.
+- Timeout, retentativas e intervalo vêm de `viabiliza.integrations.inscricao_imobiliaria`.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+- Com a consulta habilitada e retorno `CodigoRetorno` `0`, o resultado traz inscrição, endereço e coordenada convertida, sem nome de proprietário.
+- Com a consulta desligada, nenhuma chamada HTTP é feita e a exceção de indisponibilidade é lançada.
+- Imóvel inexistente não vira coordenada padrão.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+## Divergências da redação anterior
+O texto genérico não dizia o bloqueio do interruptor nem o descarte do proprietário. A integração em uso é o BFF da SEDUR sobre o cadastro da SEFAZ, não um adaptador vazio.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+## Evidências
+- `app/Services/Realty/SedurSefazPropertyRegistryLookup.php`
+- `app/Providers/AppServiceProvider.php`
+- `app/Http/Controllers/Gestao/InscricaoImobiliariaIntegrationController.php`
+- `routes/gestao.php` (`config-inscricao-imobiliaria`)
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
-
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-- RN-004: Integrações devem registrar payload, status, protocolo externo quando houver e erros de comunicação.
-- RN-005: Falha de integração não deve gerar decisão inconsistente; deve permitir retentativa ou análise técnica.
-- RN-006: O sistema deve tratar indisponibilidade do serviço externo.
-
-## Critérios de Aceite — BDD
-
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Integrar com Cadastro Imobiliário**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- Consulta com o recurso desligado produzindo endereço fictício.
+- Persistência do nome do proprietário.

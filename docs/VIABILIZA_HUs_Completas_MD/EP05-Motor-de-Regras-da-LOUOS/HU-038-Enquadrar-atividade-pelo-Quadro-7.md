@@ -3,135 +3,62 @@
 ## Épica
 **EP05 — Motor de Regras da LOUOS**
 
+## Situação na implementação
+- **Status:** Parcial
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Enquadrar atividade por CNAE e área.
+Classificar a atividade (grupo, subgrupo e código de uso) antes de consultar zona e via. O código não aplica o Quadro 7. A dimensão se chama enquadramento e sai do ramo da planilha de tratamento vigente.
 
 ## História de Usuário
 **Como** sistema,  
-**quero** aplicar Quadro 7,  
-**para** definir o enquadramento da atividade.
+**quero** resolver o ramo da planilha para o CNAE, a área, as respostas e o tipo de imóvel,  
+**para** saber o grupo de uso que o Quadro 10 e o Quadro 11A vão consultar.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- O motor roda dentro da consulta de viabilidade e do fluxo do processo. Não há tela “Quadro 7”.
+- A planilha é o domínio `risco_tratamento`, publicação sensível (quatro olhos) em Motor de regras, permissão `manter-louos`.
+- Consulta do hub: `consultar-louos` ou `consultar-cnaes`.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. `LouosEnquadramentoService::enquadrar` normaliza o CNAE para dígitos e chama `resolverEnquadramento`.
+2. `TratamentoRamoResolver` recebe CNAE no formato `0000-0/00`, respostas, área utilizada, tipo de imóvel, data, override de versão e categoria da empresa.
+3. Ramo resolvido e que não bloqueia recebe o motivo de enquadramento (CNAE, área, grupo, subgrupo e código LOUOS). Sem ramo, o status não é `identificado` e nenhum grupo é inventado.
+4. Linha marcada como CNLU traz o grupo, mas `cnlu` verdadeiro. O consolidado só indefere se o Quadro 10 proibir. Nos outros casos fica pendente, com o texto de enquadramento CNLU.
+5. Ramo com `bloqueia` verdadeiro torna o consolidado `nao_permitido`, sem condicionantes, com o motivo da planilha.
+6. Não existe domínio `louos_quadro7`, model de faixa do Quadro 7 nem chamada de quadro 7 em `enquadrar`. O resultado expõe a chave `enquadramento`, não `quadro7`.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- A versão usada é a vigente, a vigente na data, ou a versão do sandbox (`versoesOverride`).
+- Sem enquadramento identificado, o consolidado é `pendente`, salvo o bloqueio explícito da planilha e o caso CNLU com Quadro 10 proibido.
+- O motivo de enquadramento não afirma que o uso é permitido na zona. Quem permite ou proíbe é o Quadro 10.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Enquadrar atividade pelo Quadro 7**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- CNAE é reduzido a dígitos antes da formatação `0000-0/00`. Comprimento diferente de 7 permanece sem essa máscara na classificação de risco; no enquadramento a formatação só aplica a máscara com 7 dígitos.
+- Pergunta da planilha sem resposta, no expresso, pode indeferir o processo quando o consolidado ainda não é `nao_permitido` e a configuração `expresso.indeferir_pergunta_sem_resposta` está ligada (padrão verdadeiro).
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+**Dado** que a planilha vigente resolve um ramo para o CNAE, a área e as respostas,  
+**Quando** o motor enquadra,  
+**Então** a dimensão `enquadramento` fica identificada com grupo e subgrupo, e a auditoria grava a versão `risco_tratamento`.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+**Dado** que nenhum ramo é resolvido,  
+**Quando** o motor enquadra,  
+**Então** o consolidado fica `pendente` e nenhum grupo de uso é criado.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+**Dado** que se procura tabela, enum ou serviço do Quadro 7,  
+**Quando** o código do motor é lido,  
+**Então** o Quadro 7 não é consultado.
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
+## Divergências da redação anterior
+A redação anterior atribuía o enquadramento ao Quadro 7. O motor usa a planilha de tratamento (`risco_tratamento`). O Quadro 7 saiu do código.
 
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-- RN-004: O enquadramento deve considerar CNAE informado e área ocupada declarada.
-- RN-005: A regra aplicada deve referenciar a versão vigente do Quadro 7 da LOUOS.
-- RN-006: Quando não houver regra aplicável, o processo deve ser encaminhado para análise técnica.
+## Evidências
+- `LouosEnquadramentoService::resolverEnquadramento`
+- `TratamentoRamoResolver`
+- `RuleDomain::RiscoTratamento`
+- `EnquadramentoResult` (dimensão `enquadramento`)
 
-## Critérios de Aceite — BDD
-
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Enquadrar atividade pelo Quadro 7**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- Faixas de área do Quadro 7, domínio `louos_quadro7` ou importação desse quadro.
+- Decisão de permitido ou proibido só com o ramo da planilha, sem o Quadro 10, exceto quando o ramo bloqueia o prosseguimento.

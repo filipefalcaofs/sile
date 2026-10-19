@@ -1,55 +1,51 @@
 # HU-142 — Exibir histórico decisório do imóvel e do CNAE na zona
 
-> **Status: Aceita (2026-06-12)** — melhoria além do legado. Consistência decisória: o analista decide vendo os precedentes, não no vácuo.
-
 ## Épica
 **EP10 — Análise Técnica SEDUR**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Exibir na ficha de análise os precedentes relevantes: decisões anteriores no mesmo endereço/inscrição imobiliária e estatística de decisões para o mesmo CNAE na mesma zona.
+Mostrar, na ficha, decisões anteriores do mesmo imóvel e a estatística do CNAE na zona, sem reinventar o motor e sem expor dado pessoal além do que o serviço de precedentes devolve.
 
 ## História de Usuário
-**Como** analista SEDUR,  
-**quero** ver o histórico decisório do imóvel e do CNAE na zona,  
-**para** decidir com consistência e fundamentar melhor o parecer.
+**Como** analista com `analisar-processos`, **quero** ver precedentes do imóvel e do CNAE na zona, **para** apoiar a análise sem que esse painel decida o processo.
 
-## Contexto de Negócio
-Decisões divergentes para casos equivalentes geram insegurança jurídica e questionamentos. O dado já existe no banco de processos; falta apresentá-lo no momento da decisão. O SAPS versiona fichas do mesmo processo, mas não cruza processos distintos do mesmo imóvel ou CNAE.
+## Atores e permissões
+- `GET processos/{processo}/precedentes`: `analisar-processos`.
+- A consulta é auditada com o número da revisão vigente.
 
-## Fluxo Principal
-1. Ao abrir a ficha de análise (HU-135), o sistema busca processos anteriores: mesma inscrição imobiliária/endereço; mesmo CNAE na mesma zona urbanística.
-2. Painel "Precedentes" exibe: processos do imóvel (resultado, data, serviço, analista) e estatística do CNAE na zona (ex.: "últimos 12 meses: 14 deferimentos, 2 indeferimentos"), com link para cada processo.
-3. Divergência relevante (ex.: decidir diferente do padrão histórico) pede confirmação simples do analista — sem bloquear.
-4. Consulta registrada em auditoria.
+## Fluxo evidenciado
+1. O controller obtém a revisão vigente (o que pode acionar a pré-análise, HU-140) e chama `PrecedentService::forRecord`.
+2. A resposta JSON tem `imovel` e `cnae_zona`.
+3. O imóvel lista decisões anteriores da mesma inscrição: id da solicitação, protocolo, outcome, data, tipo de serviço e analista, no formato declarado pelo serviço.
+4. A zona é lida do snapshot do motor (`por_cnae[].consulta.territorio.zona`). Sem CNAE ou sem zona, a seção do CNAE na zona não calcula estatística.
+5. A janela da estatística vem da configuração usada pelo serviço. A consulta é de apoio: não grava decisão nem status.
 
-## Regras de Negócio
-- RN-001: Precedente é informação de apoio — não vincula a decisão; divergir é permitido com a fundamentação habitual.
-- RN-002: O painel deve deixar explícita a versão de regras das decisões antigas (regra pode ter mudado — comparar com contexto).
-- RN-003: Janela temporal e quantidade de precedentes exibidos parametrizáveis (HU-014).
-- RN-004: Acesso restrito a perfis de análise/gestão; dados pessoais minimizados (LGPD).
+## Regras de negócio evidenciadas
+- Sem zona no snapshot ou sem histórico, o painel degrada sem inventar precedente.
+- O painel não é fonte da decisão humana. A decisão continua sendo a ficha finalizada.
 
-## Critérios de Aceite — BDD
+## Validações
+- Processo inexistente: 404 do route model binding.
+- Sem permissão: 403.
 
-### CA-01 — Precedentes do imóvel
-**Dado** um imóvel com processos anteriores,  
-**Quando** o analista abrir a ficha,  
-**Então** os processos do mesmo endereço/inscrição devem aparecer com resultado, data e link.
+## Critérios de aceite
+1. Analista recebe o JSON com precedentes do imóvel e, quando há CNAE e zona no snapshot, a estatística da zona.
+2. Sem zona, a seção do CNAE na zona não fabrica números.
+3. A consulta gera auditoria `precedentes`.
+4. Usuário sem `analisar-processos` não acessa o endpoint.
 
-### CA-02 — Estatística do CNAE na zona
-**Dado** um CNAE com decisões na mesma zona no período parametrizado,  
-**Quando** a ficha abrir,  
-**Então** a estatística deferidos × indeferidos deve ser exibida com acesso aos casos.
+## Divergências da redação anterior
+- A redação anterior tratava o histórico como funcionalidade genérica de vários atores. A rota é da ficha de análise e exige `analisar-processos`.
 
-### CA-03 — Sem precedentes
-**Dado** que não há histórico,  
-**Quando** a ficha abrir,  
-**Então** o painel deve indicar explicitamente "sem precedentes" (não ocultar a seção).
+## Evidências
+- `app/Http/Controllers/Gestao/PrecedenteController.php`
+- `app/Services/Analise/PrecedentService.php`
+- `routes/gestao.php`
 
-## Dependências
-- HU-135 (ficha), HU-082 (consulta), dados acumulados de processos (Fases 8–10).
-
-## Prioridade
-Média-alta
-
-## Observações
-Na Fase 14, a IA pode resumir os precedentes (HU-117) — esta HU entrega a base determinística primeiro.
+## Não evidenciado
+- Uso do precedente como voto automático ou como bloqueio de deferimento.
+- Exibição deste painel no portal do cidadão.

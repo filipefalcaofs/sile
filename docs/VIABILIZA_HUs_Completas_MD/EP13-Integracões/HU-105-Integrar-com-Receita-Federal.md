@@ -3,136 +3,46 @@
 ## Épica
 **EP13 — Integrações**
 
+## Situação na implementação
+- **Status:** Não evidenciada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Consultar/validar dados federais.
+Não há, no código ligado à aplicação, consulta à Receita Federal nem validação de DBE.
 
 ## História de Usuário
-**Como** sistema,  
-**quero** integrar com Receita Federal,  
-**para** validar CNPJ/DBE quando disponível.
+**Como** sistema, **quero** validar CNPJ e DBE na Receita Federal quando esse canal existir, **para** conferir dado federal antes do cadastro. Esse canal não está ligado.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- Não há controller, rota nem binding de Receita Federal ou DBE.
+- A consulta de CNPJ do portal (`CnpjLookupController`) usa `SedurCnpjLookup`, que chama a base cadastral da SEDUR (ws-contato). Não é a Receita Federal.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. `AppServiceProvider` liga `CnpjLookup` a `SedurCnpjLookup`.
+2. Essa consulta devolve razão social, nome fantasia, telefone e endereço quando a SEDUR responde. Natureza jurídica, porte e CNAE ficam nulos de propósito: a SEDUR não os envia e o código não os inventa.
+3. A classe `BrasilApiCnpjLookup` existe e não é o binding em uso.
+4. Com `features.cnpj_lookup` desligado, a rota do portal não faz HTTP e pede preenchimento manual. Isso continua sendo a base da SEDUR, não a Receita.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- Não há chamada evidenciada a serviço da Receita Federal neste repositório ligado ao fluxo.
+- Ausência de CNAE na consulta da SEDUR não é preenchida por outra fonte.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Integrar com Receita Federal**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- Não há validação de DBE.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+- Nenhuma rota em uso consulta a Receita Federal para CNPJ ou DBE.
+- A consulta de CNPJ do cadastro de empresa, quando ligada, fala com a SEDUR e não completa porte, natureza ou CNAE.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+## Divergências da redação anterior
+O texto pedia integrar com a Receita para validar CNPJ/DBE. O que existe é consulta cadastral da SEDUR, com outro contrato e sem DBE.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+## Evidências
+- `app/Providers/AppServiceProvider.php` (binding `CnpjLookup`)
+- `app/Services/Cnpj/SedurCnpjLookup.php`
+- `app/Http/Controllers/Portal/CnpjLookupController.php`
+- `app/Services/Cnpj/BrasilApiCnpjLookup.php` (não ligada)
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
-
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-- RN-004: Integrações devem registrar payload, status, protocolo externo quando houver e erros de comunicação.
-- RN-005: Falha de integração não deve gerar decisão inconsistente; deve permitir retentativa ou análise técnica.
-- RN-006: O sistema deve tratar indisponibilidade do serviço externo.
-- RN-007: Os dados retornados (razão social, situação cadastral, CNAEs, endereço) devem ser **cruzados automaticamente** com os informados na solicitação; divergência relevante gera alerta estruturado no processo (insumo da ficha de análise e da HU-115), sem bloqueio cego.
-
-## Critérios de Aceite — BDD
-
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Integrar com Receita Federal**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- Cliente da Receita Federal, e-CAC, DBE ou comprovante de inscrição federal.
+- Uso de `BrasilApiCnpjLookup` no fluxo da aplicação.

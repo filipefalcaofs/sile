@@ -3,132 +3,50 @@
 ## Épica
 **EP11 — Pendências e Comunicação**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Retornar processo para analista após resposta.
+Devolver o processo de `em_pendencia` para `em_analise` quando o requerente responde ou quando o analista cancela o convite, e avisar o analista atribuído no caso da resposta.
 
 ## História de Usuário
-**Como** sistema,  
-**quero** reabrir análise,  
-**para** concluir processo.
+**Como** sistema, **quero** reabrir a análise ao receber a resposta do convite, **para** o responsável continuar o processo, e avisar esse analista. **Como** analista, **quero** cancelar o convite com parecer, **para** reabrir a análise sem esperar a resposta.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- Reabertura pela resposta: requerente autorizado na solicitação (HU-091). Não há rota chamada "reabrir".
+- Reabertura pelo cancelamento: `analisar-processos`, parecer obrigatório (HU-083).
+- O aviso usa o `assignedTo`. Sem responsável, audita `sem-destinatario` e não inventa destinatário.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. `responder` grava a pendência como `respondida` e transiciona `em_pendencia` → `em_analise` na mesma transação, com o motivo "Convite respondido pelo requerente".
+2. Depois do commit, `PendenciaRespondida` aciona `NotificarRespostaPendencia`.
+3. O dispatcher entrega `RespostaPendenciaNotification` ao analista atribuído. No mapa padrão, o tipo `pendencia_respondida` só tem o canal in-app.
+4. O cancelamento também transiciona para `em_analise`, com o parecer no motivo, mas não dispara `PendenciaRespondida` e não notifica por esse listener.
+5. Convite expirado não reabre: o comando indefere (HU-091).
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- Só reabre pendência aberta com processo em `em_pendencia`.
+- A reabertura pela resposta não redistribui o processo. O responsável continua o `assigned_user_id` já gravado.
+- E-mail não entregável do analista faz o dispatcher sair antes de criar a comunicação in-app.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Reabrir análise**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- As da resposta (HU-091) e as do cancelamento (parecer obrigatório, até 2000 caracteres).
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+1. Resposta válida coloca o processo em `em_analise` e, com analista atribuído e e-mail entregável, gera comunicação `pendencia_respondida` no canal do mapa.
+2. Sem analista atribuído, a análise reabre e a notificação audita `sem-destinatario`.
+3. Cancelamento com parecer reabre a análise e não usa o listener da resposta.
+4. Pendência expirada não volta para `em_analise` por este fluxo.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+## Divergências da redação anterior
+- A redação anterior tratava reabrir como funcionalidade genérica, possivelmente manual e independente. No código, reabrir é o efeito de responder ou de cancelar o convite. Não há reabertura de processo já indeferido ou deferido nesta história.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+## Evidências
+- `app/Services/Analise/PendenciaService.php` (`responder`, `cancelar`)
+- `app/Listeners/NotificarRespostaPendencia.php`
+- `config/viabiliza.php` (`pendencia_respondida`)
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
-
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-
-## Critérios de Aceite — BDD
-
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Reabrir análise**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- Botão de reabrir análise concluída, indeferida ou deferida.
+- Notificação ao analista quando o próprio analista cancela o convite.

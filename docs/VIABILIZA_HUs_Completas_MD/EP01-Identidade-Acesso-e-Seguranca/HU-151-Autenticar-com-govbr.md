@@ -1,74 +1,82 @@
 # HU-151 — Autenticar com GOV.BR
 
-> **Status: Aprovada (2026-06-12)** — pedido direto do produto; reverte o adiamento registrado na Fase 1 ("login gov.br — não consta nas HUs"). Convive com o login local. Design: `docs/superpowers/specs/2026-06-12-autenticacao-govbr-design.md`.
-
 ## Épica
 **EP01 — Identidade, Acesso e Segurança**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Permitir que o cidadão acesse o portal com a conta GOV.BR (Login Único do governo federal), criando ou vinculando a conta local automaticamente pelo CPF.
+O cidadão entra no portal pelo Login Único. A identidade é o CPF do `sub`. Conta existente é vinculada; conta nova é criada de verdade. Com o interruptor desligado ou sem credenciais, as rotas recusam e avisam, sem simular sessão.
 
 ## História de Usuário
-**Como** cidadão com conta GOV.BR,
-**quero** entrar no portal com o Login Único,
-**para** acessar os serviços sem criar mais uma senha.
+**Como** cidadão com conta GOV.BR, **quero** entrar no portal pelo Login Único, **para** usar o Viabiliza sem depender só de CPF e senha local.
 
-## Regras de Negócio
-- RN-001: Credenciais (`client_id`/`client_secret`), URLs e nível mínimo administráveis por interface (HU-014); sensíveis criptografados; efeito sem deploy.
-- RN-002: Auditoria transversal — login, criação de conta e bloqueios registrados (usuário, data/hora, origem, ação, resultado).
-- RN-003: Vínculo de identidade exclusivamente pelo CPF (`sub` do `id_token`); e-mail nunca vincula sozinho.
-- RN-004: Nível mínimo de confiabilidade parametrizável (`auth.govbr.minimum_level`, default bronze); conta abaixo do mínimo não autentica e recebe orientação.
-- RN-005: Fluxo conforme roteiro oficial — Authorization Code + PKCE S256, `state`, `nonce` e validação de assinatura do `id_token` contra o JWK do provedor.
-- RN-006: Funcionalidade nasce atrás do toggle `features.govbr_login` (default desligado); sem credenciamento da SEDUR a integração permanece explicitamente bloqueada — nunca simulada. Degradação sempre comunicada.
-- RN-007: Conta criada via GOV.BR recebe papel `cidadao`, senha aleatória e `email_verified_at` somente quando o GOV.BR declarar o e-mail verificado.
-- RN-008: Conta local inativada não autentica via GOV.BR (paridade com o login local).
-- RN-009: Logout permanece local (sem Single Logout do SSO nesta versão).
+## Atores e permissões
+Visitante. Rotas públicas com middleware `guest`: GET `/portal/login/govbr` (`portal.govbr.redirect`) e GET `/portal/login/govbr/callback` (`portal.govbr.callback`).
 
-## Critérios de Aceite — BDD
+Não há permissão Spatie. O botão na tela de login do Fortify só é montado quando `GovBr::loginAvailable()` é verdadeiro (`canLoginWithGovBr`). Não há item de menu.
 
-### CA-01 — Login de conta existente vinculada por CPF
-**Dado** um usuário local cujo CPF corresponde ao `sub` retornado pelo GOV.BR,
-**Quando** concluir a autenticação no Login Único,
-**Então** a sessão é criada, o vínculo GOV.BR é registrado/atualizado e ele é redirecionado ao painel do portal.
+Depois da sessão, valem as mesmas portas do portal (`verified` e `lgpd.accepted`). Conta nova marca o e-mail como verificado e ainda passa pelo termo, se houver termo vigente.
 
-### CA-02 — Primeiro acesso cria conta real
-**Dado** que não existe usuário local com o CPF retornado,
-**Quando** concluir a autenticação no Login Único,
-**Então** uma conta é criada com nome/e-mail/CPF do GOV.BR, papel `cidadao`, vínculo registrado, e o aceite do termo LGPD é exigido no primeiro acesso.
+## Fluxo evidenciado
+1. `GovBr::loginAvailable()` exige `features.govbr_login` ligado (`Settings::enabled('govbr_login')`) e `integrations.govbr.client_id` e `integrations.govbr.client_secret` preenchidos. O padrão do interruptor em `config/viabiliza.php` é desligado. Se indisponível, `redirect` e `callback` voltam a `login` com o erro: "O login com GOV.BR está indisponível no momento. Entre com e-mail e senha."
+2. Disponibilidade ok: `Socialite::driver('govbr')->redirect()`. O provider `GovBrProvider` usa PKCE (`$usesPKCE = true`), escopos `openid`, `email`, `profile`, `govbr_confiabilidades` e `govbr_confiabilidades_idtoken`, grava `nonce` na sessão e pede autorização em `{base_url}/authorize`. A URL base vem de `integrations.govbr.base_url`.
+3. No callback, `error` preenchido na query volta com: "A autorização no GOV.BR não foi concluída. Você pode tentar novamente ou entrar com e-mail e senha." `InvalidStateException` volta com sessão de autenticação expirada.
+4. `GovBrProvider::user` exige `id_token` e `GovBrIdTokenValidator::validate` com client id, URL base e o nonce da sessão. O token é pedido com Authorization Basic; client id e segredo não vão no corpo.
+5. `GovBrAuthService::authenticate` lê o CPF do `sub` (11 dígitos). Outro formato lança `GovBrAuthException`. O nível vem de `reliability_info.level` (`bronze`, `silver` → prata, `gold` → ouro); ausência vira bronze. O mínimo é `security.govbr.minimum_level` (padrão bronze). Abaixo do mínimo, `AuditService::logBlocked` registra o bloqueio (CPF mascarado) e a mensagem orienta a elevar o nível. Nenhuma sessão é criada.
+6. CPF já cadastrado: conta inativa grava `access_logs` `inativada` no canal `portal` e responde "Sua conta está inativa. Procure o administrador do sistema." Conta ativa atualiza ou cria `gov_br_accounts` (nível, ids de confiabilidade, `linked_at` na primeira vez, `last_authenticated_at`) e segue. O e-mail não é usado para achar a conta.
+7. CPF novo: exige e-mail presente e `email_verified` verdadeiro no provedor; senão, orienta a verificar o e-mail no gov.br ou criar conta com e-mail e senha. Se o e-mail já existe em outra conta, recusa sem vincular. Nome vazio recusa. No sucesso, cria usuário com nome, e-mail, CPF e senha aleatória, `markEmailAsVerified()`, papel `PerfilCidadao::nome()`, registro em `gov_br_accounts` e atividade `usuarios` / `cadastro-govbr`.
+8. `Auth::login`, regeneração de sessão e atividade `acessos` / `login-govbr` com o nível. O destino é o `LoginResponse` do Fortify: URL pretendida em `/gestao` é descartada; o restante vai ao painel do portal.
+9. Falhas de `GovBrAuthException` são logadas com o motivo técnico; a tela recebe só `userMessage`.
 
-### CA-03 — Toggle desligado degrada comunicando
-**Dado** `features.govbr_login` desligado ou credenciais não configuradas,
-**Quando** o cidadão acessar a tela de login ou as rotas GOV.BR,
-**Então** o botão não é exibido e as rotas redirecionam com aviso de indisponibilidade.
+## Regras de negócio evidenciadas
+- RN-001: sem interruptor e sem as duas credenciais, não há redirect ao provedor (`GovBr::loginAvailable`, `GovBrLoginController::unavailable`).
+- RN-002: o vínculo de conta existente é só pelo CPF do `sub` (`GovBrAuthService::authenticate`).
+- RN-003: o nível mínimo efetivo está em `security.govbr.minimum_level`, não em outra chave (`ensureMinimumLevel`).
+- RN-004: conta inativa não autentica e gera o evento `inativada` (`ensureActive`).
+- RN-005: primeiro acesso exige e-mail verificado no provedor, papel de cidadão e `email_verified_at` local (`register`).
+- RN-006: e-mail do GOV.BR já usado por outro CPF impede a criação (`register`).
+- RN-007: protocolo com `state` inválido ou sem conclusão no provedor não cria sessão (`GovBrProvider::user`, `GovBrLoginController::callback`).
+- RN-008: sucesso e bloqueio por nível ficam auditados (`login-govbr`, `cadastro-govbr`, `logBlocked`). O `access_logs` de sucesso continua o listener genérico de `Login` (evento `login`, canal `portal`). Este controller não preenche `auth_origin`.
 
-### CA-04 — Nível de confiabilidade insuficiente
-**Dado** `auth.govbr.minimum_level` = prata e conta GOV.BR nível bronze,
-**Quando** concluir a autenticação,
-**Então** o acesso é negado com mensagem orientando a elevar o nível, sem criar sessão.
+## Validações
+Não há Form Request. As recusas são as de `GovBrAuthService` e as mensagens de `GovBrLoginController::failed`. O `sub` precisa ter 11 dígitos depois de remover não dígitos.
 
-### CA-05 — Conta inativada bloqueada
-**Dado** um usuário local inativado cujo CPF corresponde ao retorno do GOV.BR,
-**Quando** concluir a autenticação,
-**Então** o acesso é negado com a mesma mensagem do login local e o evento `inativada` é registrado em `access_logs`.
+## Critérios de aceite
+### CA-01 — Indisponível não autentica
+**Dado** `features.govbr_login` desligado ou client id/segredo vazios, **quando** o visitante abre `/portal/login/govbr` ou o callback, **então** volta ao login com o aviso de indisponibilidade e nenhuma sessão é criada.
 
-### CA-06 — Auditoria obrigatória
-**Dado** qualquer autenticação via GOV.BR (sucesso ou bloqueio),
-**Quando** o fluxo for concluído,
-**Então** ficam registrados o acesso (canal portal, método govbr) e, quando houver criação de conta, a origem `govbr`.
+### CA-02 — CPF já cadastrado
+**Dado** o interruptor e as credenciais ok, e um usuário ativo com o CPF do `sub`, **quando** o callback conclui, **então** a sessão `web` é criada, `gov_br_accounts` é gravado ou atualizado e a atividade `login-govbr` é registrada.
 
-### CA-07 — Conflito de e-mail nunca vincula automaticamente
-**Dado** que o e-mail retornado pelo GOV.BR já pertence a usuário local com outro CPF,
-**Quando** concluir a autenticação,
-**Então** o acesso é negado com mensagem clara e nenhum vínculo é criado.
+### CA-03 — Primeiro acesso
+**Dado** que não existe usuário com aquele CPF, e o id token traz nome e e-mail verificado que não está em outra conta, **quando** o callback conclui, **então** a conta é criada com o papel de cidadão, e-mail marcado como verificado e atividade `cadastro-govbr`.
 
-### CA-08 — Falha segura de protocolo
-**Dado** `state` ou `nonce` divergente do esperado na sessão,
-**Quando** o callback for processado,
-**Então** nenhuma sessão é criada e o erro é comunicado sem detalhes técnicos sensíveis.
+### CA-04 — Nível insuficiente ou conta inativa
+**Dado** nível abaixo de `security.govbr.minimum_level`, ou conta local inativa com o mesmo CPF, **quando** o callback conclui a leitura do token, **então** a sessão não é criada e o cidadão recebe a mensagem de nível ou de conta inativa.
 
-## Dependências
-- HU-001/HU-002 (identidade local, CPF único), HU-014 (parâmetros), infraestrutura de auditoria (RN-002 transversal).
-- Externa: credenciamento da SEDUR no Login Único (Termo de Adesão — Secretaria de Governo Digital) para validação em staging/produção.
+### CA-05 — E-mail de outra conta
+**Dado** CPF ainda sem usuário e e-mail do GOV.BR já gravado em `users` com outro CPF, **quando** o callback tenta o primeiro acesso, **então** nenhuma conta é criada e a mensagem informa que o e-mail já está em uso.
 
-## Prioridade
-Alta
+## Divergências da redação anterior
+- A chave do nível mínimo no código é `security.govbr.minimum_level`. A redação anterior citava `auth.govbr.minimum_level`.
+- O interruptor é `features.govbr_login`. O padrão em `config/viabiliza.php` é desligado: nesse estado a rota recusa de forma explícita.
+- As mensagens de falha do controller falam em "e-mail e senha", embora o login local do portal seja CPF e senha.
+- O log de sucesso do GOV.BR na activity é `login-govbr`. O `access_logs` do listener de `Login` não recebe origem `govbr`, porque `GovBrLoginController` não define `auth_origin`.
+- Não há, neste controller, logout no provedor (single logout). O logout do portal continua o do Fortify.
+
+## Evidências
+- `routes/portal.php` — `GovBrLoginController`.
+- `app/Http/Controllers/Portal/GovBrLoginController.php`.
+- `app/Services/GovBr/GovBr.php` — `loginAvailable`.
+- `app/Services/GovBr/GovBrAuthService.php`.
+- `app/Services/GovBr/GovBrProvider.php` — PKCE, nonce, id token.
+- `app/Providers/AppServiceProvider.php` — `Socialite::extend('govbr', ...)`.
+- `app/Providers/FortifyServiceProvider.php` — `canLoginWithGovBr` e `LoginResponse`.
+- `config/viabiliza.php` — `features.govbr_login` e `integrations.govbr`.
+- `database/seeders/ParameterSeeder.php` — chaves `features.govbr_login`, `integrations.govbr.client_id`, `integrations.govbr.client_secret`, `security.govbr.minimum_level`.
+
+## Não evidenciado
+Não há vínculo de conta pelo e-mail quando o CPF não confere. Não há elevação automática de nível. Não há single logout no GOV.BR. O credenciamento no ambiente real do Login Único não está neste código: sem client id e segredo configurados, `loginAvailable()` permanece falso.

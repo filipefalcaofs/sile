@@ -3,132 +3,69 @@
 ## Épica
 **EP05 — Motor de Regras da LOUOS**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Manter histórico de versões das regras.
+Guardar Quadros 10 e 11A, planilha de tratamento e regras territoriais em versões de `rule_versions`, publicar por quatro olhos e simular um rascunho sem alterar a versão vigente.
 
 ## História de Usuário
 **Como** administrador,  
-**quero** versionar regras,  
-**para** preservar decisões conforme legislação vigente na data.
+**quero** editar um rascunho e publicar uma versão nova, com outra pessoa publicando,  
+**para** a decisão usar a versão vigente e ainda ser reproduzível numa data ou num sandbox.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- Consulta do hub Motor de regras: `consultar-louos` ou `consultar-cnaes` (administrador, Analista Terceirizado e Coordenador consultam; cidadão não).
+- Publicar, ativar, importar, editar rascunho e simular: `manter-louos`, somente administrador.
+- Quadro 10, Quadro 11A, planilha (`risco_tratamento`) e domínio `territorial` são sensíveis: a publicação exige autor do rascunho diferente de quem publica.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. Cada domínio tem cabeçalho em `rule_versions`. O motor resolve a versão em três modos: override do sandbox, vigente na data informada, ou vigente agora.
+2. O rascunho dos quadros permite abrir, incluir, alterar e excluir linha, importar CSV e descartar. Publicar gera versão nova. A anterior permanece para reprodução. Ativar uma versão antiga troca a vigente sem apagar o histórico.
+3. A publicação recusa autor igual ao publicador, com a mensagem de quatro olhos.
+4. Regras territoriais seguem o mesmo ciclo: rascunho, publicar, ativar e descartar.
+5. `LouosSandboxSimulationService` reexecuta o motor real com `versoesOverride` na versão rascunho, compara o consolidado com o da vigente e devolve quantos cenários mudariam. A simulação corre em transação revertida. Não publica, não notifica e não grava decisão. Depois, fora da transação, audita o evento `simulacao` sem versão de publicação.
+6. A amostra padrão é `viabiliza.louos.sandbox.amostra_padrao` (50), montada com CNAEs ativos e uma zona do Quadro 10 vigente. Não há arquivo próprio de cenários de processo.
+7. Zona citada no rascunho do Quadro 10 e classe citada no rascunho do 11A precisam existir e estar ativas nos cadastros de zonas e de vias.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- Decisão e consulta usam a versão resolvida, não a última linha editada fora de versão.
+- Simulação não altera a vigente.
+- Reimportar o seed territorial substitui as regras da versão vigente. Não duplica a versão.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Versionar regras da LOUOS**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- Publicador precisa ser outro usuário que não o autor do rascunho.
+- CSV e linhas do rascunho passam pelos importadores do quadro. Zona ou classe desconhecida bloqueia a publicação do rascunho em vez de virar `nao_encontrado` silencioso.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+**Dado** que existe rascunho de um domínio sensível e quem publica é outro usuário,  
+**Quando** a publicação é confirmada,  
+**Então** nasce uma versão nova e a anterior deixa de ser a vigente, sem ser apagada.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+**Dado** que o autor tenta publicar o próprio rascunho,  
+**Quando** a publicação é submetida,  
+**Então** ela é recusada.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+**Dado** que um rascunho é simulado,  
+**Quando** a simulação termina,  
+**Então** o relatório conta divergências de consolidado e a versão vigente permanece a mesma.
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
+**Dado** que o enquadramento recebe data ou override de versão,  
+**Quando** o motor resolve o quadro,  
+**Então** usa a versão daquela data ou a versão indicada, não a vigente atual.
 
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
+## Divergências da redação anterior
+A redação anterior falava em versionar regras sem quatro olhos, sem sandbox e sem os domínios que o código realmente versiona.
 
-## Critérios de Aceite — BDD
+## Evidências
+- `RuleDomain` (`louos_quadro10`, `louos_quadro11a`, `risco_tratamento`, `territorial`)
+- `LouosEnquadramentoService::resolveVersion`
+- `LouosController::publish`
+- `LouosDraftController`, `TerritorialRuleController`
+- `LouosSandboxSimulationService`
+- Rotas `gestao.louos.publicar`, `rascunho.*`, `territoriais.*`, `sandbox.simular`
 
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Versionar regras da LOUOS**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- Versionamento do Quadro 7 ou de um Quadro 11 separado.
+- Simulação sobre processos protocolados. A amostra sai do catálogo de CNAE e de uma zona do Quadro 10.

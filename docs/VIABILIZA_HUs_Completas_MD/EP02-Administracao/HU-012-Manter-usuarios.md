@@ -3,132 +3,83 @@
 ## Épica
 **EP02 — Administração**
 
+## Situação na implementação
+- **Status:** Parcial
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Gerenciar usuários internos.
+Administrar contas já existentes: papel, situação, mecanismo de autenticação e pedidos de primeiro acesso.
 
 ## História de Usuário
-**Como** administrador,  
-**quero** manter usuários,  
-**para** controlar acesso.
+**Como** administrador com a permissão `manter-usuarios`,
+**quero** localizar contas, trocar o papel, inativar ou reativar, definir se a autenticação é AD ou local e decidir solicitações de acesso,
+**para** controlar quem entra no console e no portal.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- Toda a tela exige `manter-usuarios`. Menu Administração, item Usuários (`/gestao/usuarios`).
+- O próprio administrador não inativa a própria conta.
+- A auditoria dessas ações marca dado pessoal (`personalData: true`).
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. A lista tem duas abas. `gestao` (padrão) mostra a equipe SEDUR: contas AD e papéis com `acessar-gestao`. `portal` mostra usuários externos, nunca contas AD. A busca é por nome ou e-mail. A paginação usa o parâmetro `ui.users.per_page` (15 se ausente).
+2. Cada linha expõe nome, e-mail, papéis, data de inativação, CPF mascarado (`***.***.***-` e os dois últimos dígitos), tipo de autenticação e conta AD. O CPF completo não sai na lista nem na exportação.
+3. Com `formato` `csv`, `xlsx` ou `pdf`, exporta o conjunto da aba e da busca.
+4. A troca de papel sincroniza um único papel do guard `web` e registra papel anterior e novo.
+5. A inativação grava `inactivated_at`; a reativação limpa o campo. O atributo fica fora do `fillable` e só é gravado por `forceFill`.
+6. A troca de autenticação aceita `ad` ou `local`. Em AD, a conta (`ad_username`) é obrigatória, única e normalizada para minúsculas. Em local, a conta AD é proibida. Se o mecanismo muda, a senha anterior é substituída por um valor aleatório. Na conversão de AD para local, o sistema envia o link de redefinição de senha do console.
+7. A mesma tela lista solicitações de acesso pendentes (nome, e-mail, conta AD, perfil pedido, justificativa e data). Aprovar vincula o papel informado e marca a solicitação como aprovada. Recusar exige motivo de até 300 caracteres. Solicitação já decidida não é decidida de novo.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- Uma conta tem um papel por vez (`syncRoles` com um único nome).
+- O administrador não inativa a si mesmo. A mensagem é «Você não pode inativar a própria conta.»
+- CPF não é exibido em claro nesta tela.
+- Não existe, neste controller, cadastro de nome, e-mail, CPF ou senha inicial.
+- Conta convertida para local recebe a nova senha pelo fluxo de recuperação do console, não por senha digitada nesta tela.
+- Se o tipo e a conta AD enviados já são os atuais, nada é regravado.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Manter usuários**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- Papel: obrigatório e existente em `roles.name` com `guard_name` `web`.
+- Inativação: bloqueada quando o alvo é o usuário autenticado.
+- `auth_type`: enum `AuthType` (`ad`, `local`).
+- `ad_username`: obrigatório se `auth_type` é `ad`; proibido se é `local`; até 100 caracteres; padrão `^[a-zA-Z0-9._-]+$`; único em `users.ad_username`, ignorando a própria conta.
+- Recusa de solicitação: `motivo` obrigatório, até 300 caracteres.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+### CA-01 — Abas e CPF mascarado
+**Dado** um usuário com `manter-usuarios`,
+**Quando** abre a lista na aba `gestao` ou `portal`,
+**Então** vê só o conjunto da aba e o CPF apenas com os dois últimos dígitos.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+### CA-02 — Um papel e trilha
+**Dado** uma conta com papel atual,
+**Quando** o administrador grava outro papel existente no guard `web`,
+**Então** a conta fica com esse único papel e a auditoria registra papel anterior e novo.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+### CA-03 — Anti-lockout
+**Dado** o administrador autenticado,
+**Quando** tenta inativar a própria conta,
+**Então** a inativação é recusada.
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
+### CA-04 — AD para local
+**Dado** uma conta autenticada por AD,
+**Quando** o administrador muda o tipo para local,
+**Então** a conta AD é removida, a senha anterior deixa de valer e o fluxo de redefinição do console é disparado para o e-mail da conta.
 
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
+### CA-05 — Solicitação já decidida
+**Dado** uma solicitação que não está pendente,
+**Quando** o administrador tenta aprovar ou recusar,
+**Então** a decisão não é reaplicada e a mensagem informa que a solicitação já foi decidida.
 
-## Critérios de Aceite — BDD
+## Divergências da redação anterior
+A redação anterior tratava «manter usuários» como cadastro genérico, com fluxos de processo, GIS e motor. O código não cria usuário nesta tela e não edita nome, e-mail ou CPF. O que existe é gestão de papel, situação, autenticação e fila de primeiro acesso AD.
 
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Manter usuários**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
+## Evidências
+- `routes/gestao.php`: `usuarios.index`, `usuarios.papel.update`, `usuarios.inativacao.update`, `usuarios.autenticacao.update`, `usuarios.solicitacoes.aprovar`, `usuarios.solicitacoes.recusar`, todas com `manter-usuarios`.
+- `app/Http/Controllers/Gestao/UserManagementController.php` e `SolicitacaoAcessoController.php`.
+- `UpdateUserRoleRequest`, `ToggleUserActivationRequest`, `UpdateUserAuthTypeRequest`, `RejectAccessRequestRequest`.
+- `resources/js/navigation/gestao-nav.ts`: Usuários em Administração.
 
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- Formulário de criação de conta, edição de identidade ou definição de senha nesta tela.
+- Exclusão física de usuário.
+- Mais de um papel simultâneo na mesma conta.

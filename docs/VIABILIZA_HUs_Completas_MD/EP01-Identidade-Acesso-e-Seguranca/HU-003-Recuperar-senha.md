@@ -3,132 +3,80 @@
 ## Épica
 **EP01 — Identidade, Acesso e Segurança**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Permitir recuperação segura de acesso.
+Quem esqueceu a senha pede um link por e-mail e define outra senha. O portal e o console têm fluxos separados. No console, conta inativa, conta AD e conta sem acesso ao console não recebem o link, e a resposta não revela isso.
 
 ## História de Usuário
-**Como** usuário cadastrado,  
-**quero** recuperar minha senha,  
-**para** voltar a acessar o sistema.
+**Como** usuário que não lembra a senha, **quero** receber um link de redefinição no meu e-mail, **para** voltar a entrar sem que o sistema informe se a conta existe.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+Visitante. Não há permissão Spatie.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+- Portal: views do Fortify `auth/forgot-password` e `auth/reset-password`, com `Features::resetPasswords()` e prefixo `/portal`.
+- Console: `/gestao/forgot-password` e `/gestao/reset-password/{token}`, middleware `gestao.guest`.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+Nenhum dos dois endereços está no menu lateral.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Recuperar senha**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Fluxo evidenciado
+### Portal
+1. O usuário informa o e-mail na tela de esqueci a senha do Fortify.
+2. O broker `users` envia o link por `User::sendPasswordResetNotification`, que grava `EmailLog` e notifica com `ResetPasswordQueued`.
+3. Se o broker responde usuário inválido, `RespostaRecuperacaoSenhaSemRevelarConta` devolve a mesma resposta de link enviado. Outros status de falha, inclusive limite de tentativas, continuam como erro.
+4. No link, `ResetUserPassword::reset` valida a nova senha com a política padrão e grava o hash. O evento `PasswordReset` é auditado por `RecordPasswordResetActivity` (`activity` `seguranca`, evento `senha-redefinida`).
+5. Esta action não verifica `isAdAccount` nem `isInactive`.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+### Console
+1. `ForgotPasswordController::store` exige e-mail. A mensagem de retorno é sempre: "Se a conta tiver acesso ao console, enviamos as instruções de recuperação."
+2. O link só é enviado se a conta existe, não está inativa, não é AD e `can('acessar-gestao')`. A notificação é `User::sendGestaoPasswordResetNotification` (`GestaoResetPasswordQueued`), com link do console.
+3. `ResetPasswordController::store` usa o mesmo broker. Se a conta for AD, a redefinição lança: "Contas corporativas (AD) têm a senha gerenciada pela rede corporativa."
+4. Senha aceita: grava o hash, dispara `PasswordReset` e redireciona a `gestao.login` com o status do broker. Não há `Auth::login` neste controller.
+5. Token ou e-mail recusado pelo broker volta com erro no campo e-mail.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+## Regras de negócio evidenciadas
+- RN-001: a resposta do pedido no portal não distingue e-mail inexistente (`RespostaRecuperacaoSenhaSemRevelarConta`). No console a frase também é única (`ForgotPasswordController::store`).
+- RN-002: no console, conta AD não recebe link e não redefine senha (`isAdAccount`).
+- RN-003: no console, conta inativa ou sem `acessar-gestao` não recebe link.
+- RN-004: a nova senha usa `PasswordValidationRules` / `PasswordPolicy`.
+- RN-005: a redefinição bem-sucedida gera atividade `senha-redefinida` (`RecordPasswordResetActivity`). O envio gera `EmailLog`.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+## Validações
+Portal, pedido: o Fortify espera o campo `email` (`config/fortify.php`). Nova senha: `ResetUserPassword` aplica `passwordRules()` (obrigatória, política padrão, confirmada).
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
+Console, pedido: `email` obrigatório, texto, e-mail (`ForgotPasswordController::store`).
 
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
+Console, redefinição (`ResetPasswordRequest`): `token` obrigatório; `email` obrigatório e e-mail; `password` com `passwordRules()`.
 
-## Critérios de Aceite — BDD
+## Critérios de aceite
+### CA-01 — E-mail desconhecido no portal
+**Dado** um e-mail que não está em `users`, **quando** o visitante pede recuperação no portal, **então** a resposta apresentada é a de link enviado.
 
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Recuperar senha**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
+### CA-02 — Conta local do console recebe o link
+**Dado** uma conta ativa, local e com `acessar-gestao`, **quando** pede recuperação em `/gestao/forgot-password`, **então** `sendGestaoPasswordResetNotification` é chamada e a mensagem exibida é a frase genérica de instruções enviadas.
 
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
+### CA-03 — Conta AD no console
+**Dado** uma conta com `auth_type` AD, **quando** pede o link ou abre a redefinição do console, **então** o link não é enviado no pedido e, na redefinição, a mensagem informa que a senha é da rede corporativa.
 
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
+### CA-04 — Nova senha no console
+**Dado** um token válido de conta local, **quando** a nova senha cumpre a política e a confirmação, **então** o hash é gravado, a atividade `senha-redefinida` é registrada e o usuário volta a `/gestao/login`.
 
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
+## Divergências da redação anterior
+- Há dois fluxos, com notificações diferentes. O texto antigo descrevia um único caminho e citava GIS, REDESIM e LOUOS, que não participam da recuperação.
+- O console recusa AD, inativo e quem não tem `acessar-gestao`. O `ResetUserPassword` do portal não aplica esses filtros.
+- A redefinição do console não abre sessão.
 
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
+## Evidências
+- `config/fortify.php` — `Features::resetPasswords()`.
+- `app/Http/Responses/RespostaRecuperacaoSenhaSemRevelarConta.php`.
+- `app/Actions/Fortify/ResetUserPassword.php`.
+- `app/Http/Controllers/Gestao/ForgotPasswordController.php` e `ResetPasswordController.php`.
+- `app/Http/Requests/Gestao/ResetPasswordRequest.php`.
+- `app/Models/User.php` — `sendPasswordResetNotification` e `sendGestaoPasswordResetNotification`.
+- `app/Listeners/RecordPasswordResetActivity.php`.
+- `routes/gestao.php`.
 
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+Não há recuperação por CPF, SMS ou GOV.BR. Não há, no código do portal desta história, o mesmo bloqueio de conta AD que o console aplica. Não há tela de redefinição no menu.

@@ -3,132 +3,71 @@
 ## Épica
 **EP03 — Cadastro Empresarial**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Permitir cadastro de empresa quando dados não vierem integrados.
+Permitir que o cidadão cadastre uma empresa no portal e se torne responsável ativo dela.
 
 ## História de Usuário
-**Como** usuário,  
-**quero** cadastrar empresa,  
-**para** abrir solicitação de viabilidade.
+**Como** cidadão autenticado no portal,  
+**quero** informar os dados da empresa,  
+**para** vinculá-la à minha conta como responsável.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- Cidadão com sessão do portal, e-mail verificado e termo LGPD aceito.
+- Em representação ativa, a empresa e o vínculo são criados para o representado (`CurrentRepresentation`).
+- Menu: "Minhas empresas" (`/portal/empresas`). O cadastro é tela filha: `/portal/empresas/cadastrar`.
+- Quem grava torna-se responsável. Não há escolha de papel nesta tela.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. O cidadão abre "Cadastrar empresa". A página informa se a busca de CNPJ está ligada (`cnpjLookupEnabled`).
+2. Preenche o formulário. A busca de CNPJ, quando usada, só pré-preenche; a gravação é o `POST /portal/empresas`.
+3. `CompanyController::store` cria a empresa com `source` `manual` e, na mesma transação, o vínculo `responsavel` com `started_at` agora, para o usuário efetivo.
+4. Redireciona para a lista com a mensagem "Empresa cadastrada com sucesso."
+5. A auditoria de criação da empresa e do vínculo fica a cargo do mecanismo `HasAuditoria` dos modelos.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- CNPJ duplicado é recusado com "Já existe empresa cadastrada com este CNPJ."
+- A origem do cadastro feito por esta tela é sempre manual. Protocolo REDESIM não é preenchido aqui.
+- O cadastro não exige CNAE. CNAE principal e secundários entram depois, no detalhe.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Cadastrar empresa**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+`StoreCompanyRequest`, após normalizar CNPJ (sem máscara, maiúsculas), telefone e CEP (só dígitos):
+- CNPJ: obrigatório, `ValidCnpj`, único em `companies.cnpj`.
+- Razão social: obrigatória, até 255 caracteres.
+- Nome fantasia, natureza (código até 4 e descrição), porte (código até 2 e descrição), logradouro, número (até 20), complemento, bairro, cidade: opcionais, até 255 quando houver limite.
+- UF: opcional, 2 caracteres. CEP: opcional, 8 dígitos.
+- E-mail: opcional, formato de e-mail. Telefone: opcional, até 11 dígitos, regra `TelefoneComDdd`.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+### CA-01 — Cadastro com vínculo de responsável
+**Dado** um CNPJ válido ainda não cadastrado e a razão social,  
+**Quando** o cidadão envia o formulário,  
+**Então** a empresa é gravada com origem manual e o usuário efetivo fica com vínculo ativo de responsável.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+### CA-02 — CNPJ repetido
+**Dado** que já existe empresa com o mesmo CNPJ,  
+**Quando** o cidadão tenta cadastrar,  
+**Então** o sistema recusa e informa que já existe empresa cadastrada com este CNPJ.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+### CA-03 — Representação
+**Dado** uma representação ativa,  
+**Quando** o procurador cadastra a empresa,  
+**Então** o vínculo de responsável é do representado.
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
+## Divergências da redação anterior
+A redação anterior era um fluxo genérico de "usuário" com integração e auditoria indistintas. O código restringe o ator ao portal autenticado, fixa a origem manual e cria o vínculo de responsável na mesma transação do cadastro.
 
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
+## Evidências
+- `app/Http/Controllers/Portal/CompanyController.php` (`create`, `store`)
+- `app/Http/Requests/Portal/StoreCompanyRequest.php`
+- `routes/portal.php` (`portal.empresas.create`, `portal.empresas.store`)
+- `resources/js/pages/portal/empresas/cadastrar.tsx`
+- `resources/js/navigation/portal-nav.ts`
 
-## Critérios de Aceite — BDD
-
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Cadastrar empresa**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- Cadastro por servidor da SEDUR nesta tela.
+- Importação REDESIM acoplada ao botão de salvar.
+- Definição de CNAE no momento do cadastro.

@@ -3,135 +3,50 @@
 ## Épica
 **EP14 — Inteligência Artificial**
 
+## Situação na implementação
+- **Status:** Parcial
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Extrair texto de documentos quando tecnicamente viável.
+Extrair texto de um anexo por provedor de visão e gravar o resultado como sugestão, sem transformar a leitura em fato do processo.
 
 ## História de Usuário
-**Como** sistema,  
-**quero** realizar OCR,  
-**para** apoiar análise documental.
+**Como** analista, **quero** uma transcrição do documento anexado, **para** apoiar a leitura. A transcrição não decide viabilidade nem substitui o arquivo.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- `LeituraDocumentoService` só despacha se `features.ia_ocr` não foi desligado e existe `AiConfiguration` ativa de capacidade `vision`.
+- Não há controller, listener nem tela que chame `processar`. O anexo, ao ser enviado, não dispara esta função.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. `processar` devolve falso e não chama o provedor quando o portão está fechado. Não grava texto simulado.
+2. Com o portão aberto, despacha `LeituraDocumentoJob`, que relê o portão no processamento.
+3. O agente `LeituraDocumentoAgent` transcreve imagem ou PDF. A saída vai para `ai_suggestions` do tipo `ocr`.
+4. O job declara que a leitura nunca vira verdade. Ilegibilidade no mesmo job força revisão humana (HU de documentos ilegíveis).
+5. A ficha de análise, se houver sugestão já gravada, apenas lista o ledger. Não cria a leitura.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- Sugestão revisável. Não altera `AnalysisRecord` nem `ViabilityDecision`.
+- Sem provedor de visão ou com a função desligada, o retorno é indisponibilidade, não um OCR vazio apresentado como lido.
+- O job marca dado pessoal.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Realizar OCR documental**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- O documento precisa existir para o job montar o anexo a partir do disco e do caminho gravados.
+- Capacidade exigida é visão, não texto.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+- Com o portão fechado, `processar` não despacha job e não cria sugestão.
+- Com o portão aberto, a sugestão gravada é do tipo leitura e não muda o status do processo.
+- Enviar um anexo pelo portal não chama este serviço.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+## Divergências da redação anterior
+O texto tratava o OCR como etapa do fluxo documental. O agente e o job existem; o protocolo e a ficha não os acionam.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+## Evidências
+- `app/Services/Ai/LeituraDocumentoService.php`
+- `app/Jobs/Ai/LeituraDocumentoJob.php`
+- `app/Ai/Agents/LeituraDocumentoAgent.php`
+- `app/Services/Ai/AiFeatureGate.php`
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
-
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-- RN-004: A IA deve atuar apenas como apoio, sem decisão administrativa vinculante.
-- RN-005: Toda sugestão da IA deve ser identificada como sugestão e permitir revisão humana.
-- RN-006: Dados sensíveis devem ser tratados conforme LGPD e políticas de segurança.
-
-## Critérios de Aceite — BDD
-
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Realizar OCR documental**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- Disparo automático no upload ou botão da ficha que chame `LeituraDocumentoService`.
+- Uso do texto extraído como validação que aprove ou recuse o documento.

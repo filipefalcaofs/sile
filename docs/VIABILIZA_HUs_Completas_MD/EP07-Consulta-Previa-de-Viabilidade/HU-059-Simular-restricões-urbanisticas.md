@@ -3,132 +3,63 @@
 ## Épica
 **EP07 — Consulta Prévia de Viabilidade**
 
+## Situação na implementação
+- **Status:** Parcial
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Exibir restrições relevantes do local.
+Mostrar, quando a consulta tem ponto, as restrições e as dimensões territoriais identificadas nesse ponto.
 
 ## História de Usuário
-**Como** sistema,  
-**quero** apontar restrições urbanísticas,  
-**para** orientar o cidadão previamente.
+**Como** cidadão que consulta por endereço ou por inscrição com ponto resolvido,  
+**quero** ver bairro, via, zona, lote e restrições daquele ponto,  
+**para** saber o que a identificação territorial devolveu.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- Não há rota separada. `restricoes` e `territorio` vêm no JSON da consulta quando `TerritoryService::identify` rodou.
+- Acesso público, com o throttle da consulta.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. Consulta por endereço com ponto em Salvador, ou por inscrição com ponto, chama `TerritoryService::identify`.
+2. O território inclui bairro, via, zona, lote e restrições (`status`, itens com nome e propriedades, motivo, versão da camada).
+3. A tela só renderiza o card "Território" se `territorio` não for nulo. Lista bairro, via mais próxima, zona urbanística e lote. Em restrições:
+   - `identificado` com itens: lista os nomes;
+   - `indisponivel`: selo e o motivo, ou "Base pendente de disponibilização pela SEDUR.";
+   - demais casos: "Nenhuma restrição neste ponto".
+4. Se a zona não vier com status `identificado`, a consulta acrescenta o aviso "Veredito locacional pendente: zona urbanística pendente da base oficial (SEDUR)." O veredito em si já vem pendente do motor.
+5. Consulta só por CNAE, e inscrição degradada sem ponto, não identificam território. `restricoes` sai nulo e o card não aparece.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- Restrição urbanística nesta consulta depende de ponto. Sem ponto, não há lista de restrições.
+- Camada de restrição indisponível é exibida como indisponível, sem lista inventada.
+- A descrição do card na tela diz que zona e lote ficam indisponíveis enquanto a base estiver pendente. O serviço exibe o status que a identificação devolve (`identificado` ou outro). O aviso de zona pendente só entra quando o status da zona não é `identificado`.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Simular restrições urbanísticas**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- As da consulta por endereço ou por inscrição. Não há campo próprio de restrição.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+### CA-01 — Restrições com território
+**Dado** uma consulta com ponto e território identificado,  
+**Quando** o resultado é exibido,  
+**Então** o card de território mostra as dimensões e as restrições conforme o status devolvido (itens, indisponível ou nenhuma).
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+### CA-02 — Sem ponto
+**Dado** consulta só por CNAE, ou inscrição sem ponto,  
+**Quando** o resultado volta,  
+**Então** não há card de território nem lista de restrições urbanísticas.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+## Divergências da redação anterior
+A redação anterior tratava as restrições como simulação sempre disponível para orientar o cidadão. O código só as inclui quando há território; a consulta por CNAE não as traz.
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
+## Evidências
+- `app/Services/Viabilidade/ConsultaViabilidadeService.php` (`consultarPorPonto`)
+- `app/Services/Viabilidade/ConsultaViabilidadeResult.php`
+- `app/Services/Geo/TerritoryService.php`
+- `app/Services/Geo/TerritoryResult.php`
+- `resources/js/components/viabilidade/resultado-viabilidade.tsx`
+- `app/Services/Decisao/DecisionTextCatalog.php` (`consulta.aviso.zona_pendente`)
 
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-
-## Critérios de Aceite — BDD
-
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Simular restrições urbanísticas**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- Simulação de restrições sem ponto.
+- Rota exclusiva de restrições urbanísticas.
+- Lista de restrições quando a camada responde indisponível.

@@ -3,132 +3,73 @@
 ## Épica
 **EP04 — Georreferenciamento e Território**
 
+## Situação na implementação
+- **Status:** Parcial
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Apontar restrições especiais.
+Listar as feições de restrição que intersectam o ponto e, no processo, avaliar as regras territoriais versionadas RT-01 a RT-04 e as allow-lists RT-05-A e RT-05-B. A observação (c) não está no código.
 
 ## História de Usuário
 **Como** sistema,  
-**quero** identificar restrições,  
-**para** evitar decisão automática indevida.
+**quero** saber quais restrições e regras de lugar incidem sobre o imóvel,  
+**para** condicionar o parecer ou tirar o processo do fluxo automático quando a regra de lugar mandar.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- Consulta do ponto: `consultar-territorio`.
+- A avaliação no processo é do fluxo expresso, sobre a versão vigente do domínio `territorial`.
+- Publicar ou editar as regras exige `manter-louos` (rascunho, quatro olhos, ativação e descarte).
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. `TerritoryService::identifyIntersecting` lê a camada vigente do tipo `restricao`. O seed em PostGIS importa `restricoes-ambientais.geojson`, versão `geosalvador-pddu2016-zeis`.
+2. Camada bloqueada: status `indisponivel`, lista vazia, sem consulta espacial. Camada vigente sem interseção: `nao_encontrado`. Com interseção: `identificado` e itens com nome e propriedades.
+3. Cada item identificado vira condicionante do tipo `restricao` no enquadramento da LOUOS. O texto do código cita ZEIS como exemplo. Isso rebaixa o consolidado para `permitido_com_condicoes` quando o Quadro 10 não proibiu o uso. Não decide o risco sozinho.
+4. `TerritorialRuleService::avaliar` lê só as regras ativas da versão vigente e devolve `indeferir`, `encaminhar_analise` ou `sem_incidencia`.
+5. RT-01 (`logradouro_cnae`): CNAE da solicitação que não está marcado para exclusão e que consta da regra, mais o mesmo logradouro (CODLOG materializado ou, sem CODLOG, nome normalizado). Casa também o logradouro tributário da inscrição. Cadastro imobiliário indisponível, com CNAE da regra, encaminha à análise em vez de descartar a regra. O indeferimento tem precedência e encerra a avaliação. O texto usa o template `territorial.indeferimento.logradouro_cnae` com alvo e fundamento da própria regra.
+6. RT-02, RT-03 e RT-04 (`poligonal_analise` e `poligonal_allowlist_expresso`): ponto dentro da camada WFS da regra encaminha à análise com `motivo_analise`. A allow-list de endereços (Itaigara no seed) não defere: endereço da lista apenas não encaminha por essa regra. Ponto ausente, camada vazia ou WFS indisponível encaminha à análise e registra a indisponibilidade. Se o único encaminhamento vier de camada que não respondeu, o veredito marca `aguardarCamada`.
+7. O seed vigente cria RT-01 (logradouro 212), RT-02-VELA-BRANCA, RT-02-ITAIGARA, RT-03-ZEM, RT-03-ZPAM, RT-03-ABM (trechos 5 e 6), RT-04-ZUE, RT-05-A e RT-05-B. RT-05-A e RT-05-B não passam pelo loop de `avaliar`: o enquadramento consulta `observacaoQuadro10Permite`.
+8. O seed declara que RT-05 (c) não é carregada. Não há código `RT-05-C` nem tipo de regra para “depósitos de produtos perigosos”.
+9. Incidência de indeferir ou encaminhar é auditada em `regras` / `regra-territorial`, com a versão do dado. Com ponto, a etapa `regra_territorial` fica ok ou indisponível.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- Sem versão vigente do domínio `territorial`, o veredito é `sem_incidencia`.
+- CNAE com intenção de excluir não conta para a RT-01.
+- Número de porta da allow-list compara os dígitos iniciais (“135 A” casa com “135”), sem zeros à esquerda.
+- Estar na allow-list de Itaigara não produz deferimento. Só devolve a solicitação ao fluxo seguinte.
+- O gatilho de risco `zeis_especial` não é preenchido por esta identificação. A consulta prévia não envia gatilhos de contexto ao classificador.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Identificar restrições territoriais**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- Regra de poligonal sem nome de camada, ou WFS indisponível, não é tratada como “fora da área”.
+- Allow-list de endereço sem número de porta no processo não considera o endereço como da lista.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+**Dado** que a camada de restrição vigente intersecta o ponto,  
+**Quando** o território é identificado e o enquadramento consolida um uso não proibido,  
+**Então** cada feição vira condicionante de restrição e o resultado pode ser `permitido_com_condicoes`.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+**Dado** que a RT-01 vigente casa CNAE e logradouro,  
+**Quando** o processo é avaliado,  
+**Então** o veredito é `indeferir`, com o texto legal da regra, e as poligonais seguintes não são aplicadas.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+**Dado** que o ponto está na poligonal de uma regra ativa e fora da allow-list, quando houver lista,  
+**Quando** a camada WFS responde,  
+**Então** o veredito é `encaminhar_analise` com o motivo gravado na regra.
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
+**Dado** que a regra RT-05 (c) é procurada no seed e no avaliador,  
+**Quando** se lê o código,  
+**Então** ela não existe: só RT-05-A e RT-05-B.
 
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
+## Divergências da redação anterior
+A redação anterior falava em restrições territoriais sem separar a camada de interseção, as regras RT e a ausência da observação (c).
 
-## Critérios de Aceite — BDD
+## Evidências
+- `TerritoryService::identifyIntersecting`
+- `GeoLayerSeeder` (`restricoes-ambientais.geojson`)
+- `TerritorialRuleService`, `TerritorialRuleType`, `TerritorialRuleSeeder`
+- `LouosEnquadramentoService::avaliarRestricoes`
+- `FluxoExpressoService` (avaliação territorial antes do risco)
 
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Identificar restrições territoriais**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- RT-05 (c), depósitos de produtos perigosos, ou qualquer regra com esse código.
+- Ligação automática da feição ZEIS ao gatilho `zeis_especial` do classificador de risco.
+- Deferimento porque o endereço está na allow-list de uma poligonal.

@@ -1,56 +1,48 @@
-# HU-145 — Relatório de quedas por gatilho (expansão do expresso)
-
-> **Status: Aceita (2026-06-12)** — melhoria além do legado. Transforma a meta de ampliar o expresso (~405 CNAEs hoje) em processo contínuo guiado por dados.
+# HU-145 — Relatório de quedas por gatilho
 
 ## Épica
 **EP15 — Relatórios e Indicadores**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Medir e ranquear os motivos pelos quais processos elegíveis (baixo/médio risco) caem para análise humana — gatilhos CNAE, enquadramento ausente, dado pendente, divergência do motor — orientando qual parametrização criar ou corrigir.
+Medir a taxa de resposta do fluxo expresso e ranquear os motivos pelos quais o processo elegível não foi decidido por ele.
 
 ## História de Usuário
-**Como** gestor SEDUR,  
-**quero** ver o ranking de motivos de queda para análise,  
-**para** decidir qual parametrização atacar e ampliar a taxa de resposta expressa.
+**Como** gestor, **quero** ver a taxa de resposta expressa e o ranking de motivos de queda, **para** saber o que tirou o processo da decisão automática.
 
-## Contexto de Negócio
-O expresso subutilizado é a aposta central do projeto (reunião 2026-06-11). Cada queda registrada com motivo (HU-073 RN-008) vira dado; este relatório fecha o ciclo: medir → priorizar → parametrizar (com simulação de impacto, HU-143) → medir de novo.
+## Atores e permissões
+- `consultar-relatorios` em `/gestao/relatorios/quedas`.
+- Consulta auditada (`consulta-quedas`).
 
-## Fluxo Principal
-1. O gestor acessa o relatório no módulo de indicadores.
-2. Filtros: período, setor, zona, CNAE, categoria (semi-expresso/malha fina), tipo de motivo.
-3. Visões: ranking de motivos de queda (volume e % do total), CNAEs que mais caem, série temporal da taxa de resposta expressa (% decidido automaticamente).
-4. Drill-down: do motivo para a lista de processos; de cada processo para a ficha e as divergências analista × motor (HU-140 RN-003).
-5. Exportação (padrão EP15) e leitura em dashboard executivo (HU-122).
+## Fluxo evidenciado
+1. A tela recebe `taxa` (`taxaRespostaExpressa`), `serie` temporal e `ranking` de motivos.
+2. A taxa usa o recorte de elegíveis e respondidas. Sem base, o serviço não transforma ausência em zero de desempenho quando devolve taxa nula (o mesmo padrão do painel).
+3. `?formato=` exporta as quedas filtradas (`ExpressoQuedaReportSource`).
+4. O painel executivo reutiliza a taxa e o ranking; esta rota é o relatório dedicado.
 
-## Regras de Negócio
-- RN-001: A fonte é o motivo estruturado registrado na queda (HU-073/HU-079) e as divergências da pré-análise (HU-140) — nunca texto livre não classificado.
-- RN-002: O indicador-mestre é a **taxa de resposta expressa** (decididos automaticamente ÷ elegíveis), com meta acompanhável no tempo.
-- RN-003: O relatório deve sugerir o vínculo de ação: motivo → mantenedor correspondente (ex.: "enquadramento ausente" → HU-015; "condicionante sem pergunta" → HU-019).
-- RN-004: Janelas e metas parametrizáveis (HU-014).
+## Regras de negócio evidenciadas
+- O ranking é motivo de queda para análise, não uma lista genérica de indeferimentos.
+- Exportação segue o mesmo filtro da tela.
 
-## Critérios de Aceite — BDD
+## Validações
+- Filtros comuns do request de relatório.
+- Formato somente csv, xlsx ou pdf habilitados.
 
-### CA-01 — Ranking com drill-down
-**Dado** processos caídos para análise no período,  
-**Quando** o gestor abrir o relatório,  
-**Então** os motivos devem aparecer ranqueados com volume, % e acesso à lista de processos de cada motivo.
+## Critérios de aceite
+- A rota devolve taxa, série e ranking do mesmo recorte.
+- Exportar usa a fonte de quedas, não a de solicitações genéricas.
+- A consulta é auditada.
 
-### CA-02 — Taxa de resposta expressa
-**Dado** o período filtrado,  
-**Quando** o relatório carregar,  
-**Então** a série temporal da taxa de resposta expressa deve refletir os dados reais dos processos.
+## Divergências da redação anterior
+O texto citava gatilhos de CNAE, enquadramento ausente, dado pendente e divergência do motor como lista fechada da redação. O ranking evidenciado é o que `ExpressoQuedaService::rankingMotivos` agrega dos registros, não uma lista fixa reescrita nesta HU.
 
-### CA-03 — Exportação
-**Dado** qualquer visão filtrada,  
-**Quando** o gestor exportar,  
-**Então** o arquivo deve refletir exatamente os filtros aplicados.
+## Evidências
+- `app/Http/Controllers/Gestao/RelatorioController.php` (`quedas`)
+- `app/Services/Relatorios/ExpressoQuedaService.php`
+- `app/Services/Relatorios/Export/Sources/ExpressoQuedaReportSource.php`
 
-## Dependências
-- HU-073 (motivos de queda), HU-140 (divergências), HU-143 (simulação de parametrização), HU-122 (dashboard).
-
-## Prioridade
-Média-alta
-
-## Observações
-Fecha o ciclo de melhoria contínua do expresso: este relatório aponta o alvo; a HU-143 valida a mudança; a série temporal comprova o ganho.
+## Não evidenciado
+- Ação nesta tela que altere parâmetro ou reenquadre processo.

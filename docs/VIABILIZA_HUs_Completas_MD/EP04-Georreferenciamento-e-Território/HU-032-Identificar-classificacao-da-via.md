@@ -3,132 +3,65 @@
 ## Épica
 **EP04 — Georreferenciamento e Território**
 
+## Situação na implementação
+- **Status:** Parcial
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Determinar classificação da via.
+Obter o CODLOG da via do imóvel e a classe viária da LOUOS usada pelo Quadro 11A, sem inferir a classe a partir da geometria.
 
 ## História de Usuário
 **Como** sistema,  
-**quero** identificar via,  
-**para** aplicar Quadros 10, 11 e 11A.
+**quero** saber o código do logradouro e a classe oficial da via,  
+**para** aplicar as condições de instalação do Quadro 11A somente quando a classe existir.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- Identificação do ponto: `consultar-territorio`.
+- A classe é lida pelo sistema no GeoServer. O interruptor é `geoserver_via_classe`.
+- A camada local de vias só entra depois de carga WFS (`geo:importar-wfs`, fonte `logradouro:VM_LOGRADOURO`). Até lá o seed deixa a camada `pendente_fonte`.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. Com camada local de via vigente, `identifyNearest` busca a feição mais próxima dentro do raio em metros. O resultado inclui `distancia_m`.
+2. Sem camada vigente, a via local fica `indisponivel`, motivo da base de logradouros pendente no GeoServer, e a distância fica nula.
+3. Quando a via local foi identificada, `comClasseViaria` lê `CODLOG` nas propriedades e consulta `GeoServerClassificacaoViariaClient`.
+4. A consulta principal é WFS por CODLOG na camada `louos_classificacao_viaria:VM_L_CLASSIF_VIARIA`, atributo `CLASSIFICACAO_VIARIA`. Não é interseção de ponto com linha.
+5. Se essa camada não tem feição, o cliente tenta a hierarquia do logradouro (`HIERARQUIA` em `logradouros:VM_LOGRADOURO`). Falha dessa segunda chamada vira `nao_encontrado`, sem derrubar a consulta inteira.
+6. `Quadro11aClasseVia::oficializar` aceita só VA I, VA II, VC I, VC II, VE, VL e VP. Hífen e espaço são ignorados na comparação (`VC-II` e `VC II` são a mesma classe). Valor fora da lista não vira classe.
+7. Sem CODLOG na via do ponto, `TerritoryService::comCodLogOficial` pode repor o código vindo da inscrição e então buscar a classe. `TerritorioProcessoService::aplicarLogradouroTributario` grava o CODLOG tributário da inscrição e audita quando substitui o da via mais próxima.
+8. Com CODLOG no processo, a etapa do motor “via” usa a classe do GeoServer, não o status da busca espacial. A classe identificada também entra em `camadas_incidentes.via`.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- Toggle desligado, CODLOG vazio, GeoServer fora, CODLOG sem linha ou classe fora das sete oficiais não produzem classe inventada. O motivo fica em `classe_via_motivo`.
+- O Quadro 11A só roda quando `CLASSE_VIA_LOUOS` está preenchido na via identificada.
+- Via mais próxima e logradouro tributário podem divergir. O tributário prevalece quando a inscrição o traz.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Identificar classificação da via**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- CODLOG vazio não consulta o GeoServer.
+- Classe bruta que não oficializa permanece sem `CLASSE_VIA_LOUOS`.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+**Dado** que `geoserver_via_classe` está ligado e o CODLOG tem classe entre as sete oficiais,  
+**Quando** a via é identificada,  
+**Então** `CLASSE_VIA_LOUOS` recebe a grafia oficial e a etapa da via fica ok.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+**Dado** que a camada local de vias está pendente e não há CODLOG de inscrição,  
+**Quando** o ponto é identificado,  
+**Então** a via fica `indisponivel` e o Quadro 11A não recebe classe.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+**Dado** que o GeoServer devolve uma classificação fora das sete classes,  
+**Quando** o CODLOG é consultado,  
+**Então** a classe não é gravada e o motivo registra que o valor está fora do Quadro 11A.
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
+## Divergências da redação anterior
+A redação anterior não separava geometria da via, CODLOG e classe da LOUOS, nem citava as sete classes oficiais nem o fallback de hierarquia.
 
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
+## Evidências
+- `TerritoryService::identifyNearest`, `comClasseViaria`, `comCodLogOficial`
+- `GeoServerClassificacaoViariaClient`
+- `Quadro11aClasseVia`
+- `TerritorioProcessoService::registrarClasseViaria` e `aplicarLogradouroTributario`
+- `GeoLayerSeeder` (via pendente até a carga WFS)
 
-## Critérios de Aceite — BDD
-
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Identificar classificação da via**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- Classificação viária calculada pela distância do ponto à linha.
+- Quadro 11 separado do Quadro 11A. A classe alimenta só o domínio `louos_quadro11a`.

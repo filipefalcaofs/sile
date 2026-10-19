@@ -3,134 +3,57 @@
 ## Épica
 **EP10 — Análise Técnica SEDUR**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Registrar parecer técnico.
+Registrar o parecer do analista na ficha e usá-lo como texto da decisão quando o processo é indeferido.
 
 ## História de Usuário
-**Como** analista,  
-**quero** emitir parecer,  
-**para** concluir análise técnica.
+**Como** analista com `analisar-processos`, **quero** escrever o parecer na ficha, com texto padrão quando houver, **para** que a conclusão grave esse motivo na decisão.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- Abrir, autosave e finalizar a ficha humana: `analisar-processos`. A ficha do expresso abre com `consultar-solicitacoes` ou `analisar-processos` e não cria revisão humana.
+- Concluir o processo a partir da ficha, decidir e gravar a justificativa REGIN: as duas permissões, `analisar-processos` e `concluir-analise`.
+- No seeder, `concluir-analise` está em Coordenador, Subcoordenador, Chefe de setor e Analista Servidor. Analista Terceirizado analisa e não conclui. O perfil `apoio` não analisa. O administrador, no seeder, não tem nenhuma das duas.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. A ficha vigente carrega os textos padrão ativos para o parecer e o debounce de autosave (configuração `viabiliza.analise.autosave.debounce_ms`, padrão 1500 ms).
+2. O autosave grava `parecer` no rascunho. Ficha finalizada recusa alteração.
+3. Na conclusão, o indeferimento usa, nesta ordem, o parecer informado na conclusão, o parecer da ficha ou as justificativas das atividades marcadas como indeferidas. Sem nenhum texto, a decisão é recusada.
+4. O deferimento grava o parecer informado só se não estiver em branco; pode ficar nulo.
+5. `ViabilityDecision` recusa salvar indeferimento com `reason` vazio.
+6. Há sugestão de parecer e de justificativa por IA na ficha. A sugestão não grava a decisão.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- Rascunho não decide. A decisão exige ficha finalizada, ou a conclusão da ficha finaliza o rascunho antes de decidir.
+- O parecer do indeferimento humano é o campo `reason` da decisão, visível a quem consulta o parecer.
+- O motivo de análise (`analysis_reasons`) não é editável pelo analista: o autosave ignora valor vindo do cliente.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Emitir parecer**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- Autosave: `parecer` opcional, texto.
+- Conclusão de análise: `parecer` opcional, no máximo 5000 caracteres. A obrigatoriedade do motivo no indeferimento é regra de domínio, não do formulário.
+- Justificativa REGIN: a rota exige `concluir-analise`. O limite de 10000 caracteres está declarado no form request.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+1. Analista grava parecer no rascunho e a ficha finalizada deixa de aceitar autosave.
+2. Indeferir sem parecer na conclusão, sem parecer na ficha e sem justificativa por atividade recusa a decisão e não cria `ViabilityDecision`.
+3. Indeferir com parecer grava `reason` preenchido.
+4. Usuário sem `concluir-analise` não chama decidir, conclusão da ficha nem justificativa REGIN, ainda que tenha `analisar-processos`.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+## Divergências da redação anterior
+- A redação anterior atribuía a emissão a um analista genérico. Deferir e indeferir, que publicam o parecer na decisão, exigem `concluir-analise`.
+- Não há documento de parecer separado nesta ação. O PDF de indeferimento é outra rota, sob `emitir-tvl`.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+## Evidências
+- `app/Http/Controllers/Gestao/AnalysisRecordController.php`
+- `app/Services/Analise/AnalysisRecordService.php`
+- `app/Services/Analise/AnaliseTecnicaDecisionService.php` (`justificativaDoIndeferimento`, `parecerDoDeferimento`)
+- `app/Models/ViabilityDecision.php`
+- `app/Http/Requests/Gestao/ConcluirAnaliseRequest.php`
+- `routes/gestao.php`
+- `database/seeders/RolesAndPermissionsSeeder.php`
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
-
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-- RN-004: O parecer conta com **biblioteca de textos-padrão** administrada pela coordenação (fundamentações e trechos aprovados, organizados por situação/CNAE/zona), inseríveis e editáveis no texto — consistência de redação entre analistas; o legado só oferece texto livre.
-- RN-005: Textos-padrão são versionados; o parecer registra quais blocos-padrão foram usados (rastreabilidade de fundamentação).
-
-## Critérios de Aceite — BDD
-
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Emitir parecer**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- Publicação do parecer ao REGIN como entrega concluída. O listener existe e o binding indisponível audita bloqueio, sem marcar envio.

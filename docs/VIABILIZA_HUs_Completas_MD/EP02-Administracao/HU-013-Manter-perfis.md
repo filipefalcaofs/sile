@@ -3,132 +3,74 @@
 ## Épica
 **EP02 — Administração**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Gerenciar perfis e permissões.
+Criar e ajustar perfis do guard `web` e o conjunto exato de permissões de cada um.
 
 ## História de Usuário
-**Como** administrador,  
-**quero** manter perfis,  
-**para** garantir segregação de funções.
+**Como** administrador com a permissão `manter-perfis`,
+**quero** criar, renomear, marcar permissões e excluir perfis que não sejam protegidos nem tenham usuários,
+**para** segregar o que cada papel pode fazer no Viabiliza.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- Toda a tela exige `manter-perfis`. Menu Administração, item Perfis (`/gestao/perfis`).
+- Perfil com flag `protegido`, ou o perfil do cidadão, não é renomeado nem excluído.
+- O papel de nome `administrador` não pode perder a permissão `acessar-gestao`.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. A lista busca pelo nome, ordena por nome, pagina em 10, 15, 25 ou 50 (padrão 15) e mostra permissões, quantidade de usuários e se o perfil é estrutural (`RoleProtection`).
+2. Com `formato` `csv`, `xlsx` ou `pdf`, exporta o conjunto filtrado pela busca.
+3. O catálogo de permissões enviado à tela vem de `permissions` do guard `web`, com rótulos de `PermissionCatalog`.
+4. Criar grava nome e guard `web` e sincroniza o conjunto de permissões marcado.
+5. Atualizar aplica o conjunto exato marcado (`syncPermissions`). Em perfil protegido, o nome enviado é ignorado na gravação do nome.
+6. Excluir recusa perfil protegido e perfil com usuários vinculados. A exclusão bem-sucedida é auditada com o nome do perfil.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- O conjunto marcado na tela substitui as permissões do perfil. O seeder de permissões é aditivo; esta tela não é.
+- Perfil protegido não muda de nome e não é excluído. A mensagem de exclusão é «Perfis protegidos do sistema não podem ser excluídos.»
+- Perfil com usuário vinculado não é excluído. A mensagem é «Este perfil possui usuários vinculados e não pode ser excluído.»
+- O papel `administrador` mantém `acessar-gestao`.
+- A auditoria de criação e de atualização registra as permissões (antes e depois, na atualização).
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Manter perfis**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- Nome obrigatório, até 255 caracteres, único em `roles.name` no guard `web`. Na edição, ignora o próprio perfil.
+- `permissions` é um array. Cada item precisa existir em `permissions.name` no guard `web`.
+- Se o perfil é protegido e o nome enviado difere do atual, a validação acrescenta «Perfis protegidos do sistema não podem ser renomeados.»
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+### CA-01 — Criar com permissões existentes
+**Dado** um usuário com `manter-perfis` e permissões cadastradas no guard `web`,
+**Quando** cria um perfil com nome ainda não usado e um subconjunto dessas permissões,
+**Então** o perfil passa a ter exatamente esse conjunto.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+### CA-02 — Perfil protegido
+**Dado** um perfil protegido ou o perfil do cidadão,
+**Quando** o administrador tenta renomeá-lo ou excluí-lo,
+**Então** o nome permanece e a exclusão é recusada.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+### CA-03 — Administrador sem acesso à gestão
+**Dado** o papel `administrador`,
+**Quando** a atualização omite `acessar-gestao`,
+**Então** a gravação é recusada.
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
+### CA-04 — Exclusão com usuários
+**Dado** um perfil não protegido com ao menos um usuário,
+**Quando** o administrador tenta excluí-lo,
+**Então** o perfil permanece.
 
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
+## Divergências da redação anterior
+A redação anterior não distinguia perfil protegido, guard `web` nem a trava do papel administrador. Também misturava a HU com fluxos de processo e integração que esta tela não executa.
 
-## Critérios de Aceite — BDD
+## Evidências
+- `routes/gestao.php`: `perfis.index`, `store`, `update`, `destroy` com `manter-perfis`.
+- `app/Http/Controllers/Gestao/RoleController.php`.
+- `StoreRoleRequest`, `UpdateRoleRequest`.
+- `app/Support/RoleProtection.php`.
+- `resources/js/navigation/gestao-nav.ts`: Perfis em Administração.
 
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Manter perfis**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- Clonagem de perfil.
+- Exclusão de permissão do catálogo do sistema por esta tela. A tela só associa permissões já existentes.

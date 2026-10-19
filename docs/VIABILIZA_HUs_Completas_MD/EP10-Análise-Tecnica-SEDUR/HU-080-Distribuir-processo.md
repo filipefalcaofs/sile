@@ -3,136 +3,58 @@
 ## Épica
 **EP10 — Análise Técnica SEDUR**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Distribuir processos entre analistas via caixas de setor, mantendo visibilidade da equipe.
+Atribuir processos em análise da caixa do setor a um analista, em um ou em lote, recalculando o SLA na distribuição e sem recalcular na redistribuição.
 
 ## História de Usuário
-**Como** gestor,  
-**quero** distribuir processo,  
-**para** organizar a fila de trabalho do setor.
+**Como** gestor, chefia ou apoio com permissão de tramitar, **quero** distribuir e redistribuir processos da caixa do setor, **para** definir o responsável sem tirar o processo da fila de trabalho do setor, salvo quando o apoio entrega para outro setor.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- Ver a caixa: `analisar-processos` ou `distribuir-processos`.
+- Distribuir, redistribuir, central e distribuição inteligente: somente `distribuir-processos`.
+- No seeder, `distribuir-processos` está nas chefias (Coordenador, Subcoordenador, Chefe de setor), no perfil `apoio` e no `administrador`. Analista Servidor e Analista Terceirizado não distribuem.
+- `distribuir-qualquer-setor` (apoio e administrador) enxerga todos os setores e pode entregar a analista de outro setor; o processo passa para o setor de destino. Sem essa permissão, o analista precisa pertencer ao setor do processo e o processo permanece nesse setor.
+- Destinatário da análise: usuário com `analisar-processos`. Linha em vistoria: destinatário com `preencher-ficha-vistoria`.
+- Quem só tem `distribuir-processos` não assume (a assunção exige `analisar-processos`).
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. A caixa lista processos com status `em_analise` dos setores do usuário, ou de todos os setores se ele distribui em qualquer setor.
+2. Abas: para distribuir (sem responsável e fora de `para_conclusao`), distribuídos e para conclusão.
+3. Distribuição simples ou em lote chama `DistribuicaoService`, grava responsável, data, setor de destino, recalcula o SLA da etapa e audita `distribuir` por processo. Falha de um item do lote não cancela os demais.
+4. Redistribuição só ocorre se `analysis_status` permite (`para_distribuir`, `encaminhado`, `analisar`, `em_analise`). Troca o responsável e o setor quando couber, audita `redistribuir` com o analista anterior e não recalcula o prazo.
+5. A consulta da caixa é auditada.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- Processo fora da caixa ou analista sem vínculo com o setor de destino não é gravado (`DistribuicaoException`).
+- Redistribuição depois da conclusão, em convite ou em vistoria é recusada.
+- O prazo é do processo: redistribuir não zera atraso.
+- A caixa não remove o processo do trabalho do setor, exceto a mudança de setor feita por quem distribui em qualquer setor.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Distribuir processo**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- `DistribuirProcessoRequest` e `DistribuirEmLoteRequest` validam a estrutura; a rota já exige `distribuir-processos`.
+- O vínculo do analista com o setor é regra do serviço, não só do formulário.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+1. Sem `distribuir-processos`, a caixa pode ser vista por quem analisa, mas distribuir e redistribuir respondem 403.
+2. Distribuição grava responsável, recalcula SLA e audita cada processo.
+3. Lote isola falha por item.
+4. Redistribuição recusada quando o status operacional não permite, e não altera `analysis_due_at` quando permitida.
+5. Apoio com `distribuir-qualquer-setor` entrega fora do próprio setor e move o processo para o setor do analista.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+## Divergências da redação anterior
+- A redação anterior dizia que qualquer analista do setor mantém visibilidade e pode assumir, misturando distribuição e assunção. No código, assumir é outra permissão e outra ação (HU-081).
+- Não é verdade que o processo nunca sai do setor: quem tem `distribuir-qualquer-setor` muda o `sector_id`.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+## Evidências
+- `app/Http/Controllers/Gestao/CaixaSetorController.php`
+- `app/Services/Analise/DistribuicaoService.php`
+- `routes/gestao.php` (grupo `caixa-setor`)
+- `database/seeders/RolesAndPermissionsSeeder.php`
+- `app/Enums/AnalysisStatus.php` (`permiteRedistribuicao`)
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
-
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-- RN-004: O processo cai na **caixa do setor** (HU-138) e é atribuído a um analista **sem sair da caixa do setor** — modelo do SAPS que cobre férias e ausências: qualquer analista do setor mantém visibilidade e pode assumir.
-- RN-005: A caixa de entrada (chegada automática) é distinta da malha fina (provocação humana — HU-136).
-- RN-006: Histórico de atribuições (quem, quando, de qual setor) registrado em auditoria.
-- RN-007: O gestor pode distribuir **em lote**: selecionar N processos da caixa e atribuir a um analista em uma única ação, com auditoria por processo.
-
-## Critérios de Aceite — BDD
-
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Distribuir processo**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- Distribuição automática por carga como decisão do sistema. A tela de distribuição inteligente existe na rota, mas a escolha de quem recebe continua sendo executada pelo serviço a partir da alocação recebida.

@@ -3,132 +3,52 @@
 ## Épica
 **EP11 — Pendências e Comunicação**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Avisar prazos de resposta.
+Alertar, antes do vencimento, o analista sobre o prazo de análise e o requerente sobre o prazo do convite, sem mudar status.
 
 ## História de Usuário
-**Como** sistema,  
-**quero** notificar vencimentos,  
-**para** evitar perda de prazo.
+**Como** sistema, **quero** avisar quem é responsável por um prazo que ainda não venceu e já entrou na antecedência, **para** que a fila e o convite sejam tratados a tempo.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- Comando `notificacoes:alertar-vencimentos`, agendado todo dia às 07:00, com `withoutOverlapping` e `onOneServer`.
+- Não há permissão de usuário. O analista alertado é o `assignedTo`. O requerente alertado é o `requester` da pendência aberta.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. A antecedência é `notificacoes.vencimento.antecedencia_dias`, padrão 3 na config.
+2. Processos `em_analise`, com responsável e com `analysis_due_at` maior que agora e menor ou igual ao limite, geram `PrazoVencendoNotification` para o analista. Prazo já vencido não entra aqui.
+3. Pendências abertas com `due_at` na mesma janela geram o aviso para o requerente, com texto de convite e link do portal.
+4. Os dois usam o dispatcher. O tipo no mapa padrão é `prazo_vencendo`: e-mail e in-app.
+5. Idempotência pelo ledger: se já existe comunicação desse tipo para o processo e o destinatário desde o início da etapa (processo) ou desde `due_at` menos a antecedência (pendência), não envia de novo.
+6. O comando não transiciona status e não grava timeline de tramitação.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- Vencido é assunto do escalonamento (HU-147), não deste comando.
+- Sem responsável, o processo é pulado. Sem requerente, a pendência é pulada.
+- E-mail não entregável faz o dispatcher não criar comunicação.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Notificar vencimentos**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- `analysis_due_at` ou `due_at` nulos ficam de fora da consulta.
+- Status diferente de `em_analise` no processo, ou pendência que não está aberta, não é alertado.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+1. Processo em análise com prazo dentro da antecedência e ainda no futuro alerta o analista uma vez na janela.
+2. Convite aberto na mesma janela alerta o requerente uma vez.
+3. Segunda execução na mesma janela não duplica a comunicação.
+4. Prazo já vencido não é alertado por este comando, e nenhum status muda.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+## Divergências da redação anterior
+- A redação anterior não separava alerta antecipado de escalonamento nem fixava a fonte do prazo. O código só notifica e usa `analysis_due_at` e `due_at` já gravados.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+## Evidências
+- `app/Console/Commands/AlertarVencimentosCommand.php`
+- `routes/console.php`
+- `config/viabiliza.php` (`notificacoes.vencimento`, `prazo_vencendo`)
+- `app/Services/Comunicacao/NotificationDispatcher.php`
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
-
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-
-## Critérios de Aceite — BDD
-
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Notificar vencimentos**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- Mudança de responsável, redistribuição ou indeferimento por este alerta.
+- Alerta de processo sem `assigned_user_id`.

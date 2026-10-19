@@ -3,135 +3,65 @@
 ## Épica
 **EP06 — Classificação de Risco**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Permitir consulta da classificação.
+Consultar o nível de risco municipal vigente do CNAE na ficha de cadastro e obter a classificação completa pelo motor.
 
 ## História de Usuário
-**Como** analista,  
-**quero** consultar tabela de risco,  
-**para** entender regras aplicadas.
+**Como** servidor que consulta CNAEs,  
+**quero** ver o risco municipal vigente do código,  
+**para** conferir a classificação sem abrir a planilha do decreto.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- Listagem de CNAEs: `consultar-cnaes`.
+- Abrir a ficha, mesmo para leitura na prática da tela, exige `manter-cnaes`. O controller registra que a ficha não tem modo somente leitura.
+- Gatilhos: consulta e edição sob `manter-gatilhos-risco` (`/gestao/gatilhos-risco`). Não há rota separada de consulta.
+- Não há rota `/gestao/risco`. A ficha do CNAE substitui essa tela.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. A listagem mostra código, descrição, situação e classe do CNAE. Não traz a coluna de risco.
+2. A ficha de edição carrega a versão vigente de `risco_municipal` e a linha do CNAE. O campo `risco_municipal` é a chave (`baixo_a`, `baixo_b` ou `alto`) ou nulo.
+3. As opções de nível são os três casos do enum, com o rótulo de tela: Baixo, Médio Risco e Alto.
+4. Sem versão municipal vigente, a ficha marca `semVersaoMunicipal` e a gravação é recusada.
+5. A ficha não lista classificação sanitária nem perguntas de condicionante.
+6. `RiscoClassificationService::classify` devolve as duas dimensões, o encaminhamento, a fundamentação e as versões. A consulta de viabilidade usa esse resultado. O comando `risco:classificar` aceita gatilhos opcionais no contexto.
+7. A exportação de CNAEs segue o exportador de relatórios da listagem. Não é uma tabela de risco separada.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- A consulta da ficha lê somente a versão vigente, não o histórico de versões do mesmo CNAE.
+- A opção Médio risco da ficha municipal é `baixo_b`, nome usado pela SEDUR. A ficha não oferece uma segunda chave municipal `medio`.
+- Condicionantes textuais da linha municipal não aparecem nesta ficha. Elas vão para a fundamentação quando o motor classifica.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Consultar tabela de risco**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- A ficha só abre para quem tem `manter-cnaes`.
+- Nível exibido é um valor do enum ou ausência de linha.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+**Dado** que existe versão municipal vigente e linha para o CNAE,  
+**Quando** o mantenedor abre a ficha,  
+**Então** o campo mostra `baixo_a`, `baixo_b` ou `alto`.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+**Dado** que não há versão municipal vigente,  
+**Quando** a ficha abre,  
+**Então** o sistema informa a ausência da versão e não apresenta uma classificação inventada.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+**Dado** que a consulta de viabilidade classifica o CNAE,  
+**Quando** o resultado de risco é lido,  
+**Então** municipal, sanitário, encaminhamento, fundamentação e versões vêm do motor.
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
+## Divergências da redação anterior
+A redação anterior descrevia uma consulta genérica da tabela de risco. O código consulta o nível na ficha do CNAE e a classificação completa só pelo serviço.
 
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-- RN-004: A classificação de risco deve ser parametrizável por CNAE e condicionantes.
-- RN-005: Baixo risco elegível deve seguir fluxo expresso quando todas as condicionantes forem atendidas.
-- RN-006: Alto risco deve ser encaminhado para análise técnica quando a legislação assim exigir.
+## Evidências
+- `CnaeController::index` e `edit`
+- `RiscoClassificationService::classify`
+- `RiscoClassificarCommand`
+- Ausência de rota `gestao/risco`
 
-## Critérios de Aceite — BDD
-
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Consultar tabela de risco**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- Tela que liste, filtrável, todos os CNAEs com nível municipal e sanitário lado a lado.
+- Consulta do histórico de versões de risco na ficha.
+- Exibição das condicionantes textuais do decreto na ficha do CNAE.

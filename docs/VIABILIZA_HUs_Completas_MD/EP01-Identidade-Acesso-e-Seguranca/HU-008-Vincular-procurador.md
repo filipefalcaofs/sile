@@ -3,132 +3,74 @@
 ## Épica
 **EP01 — Identidade, Acesso e Segurança**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Permitir que uma empresa/cidadão autorize procurador a atuar no portal.
+O cidadão autoriza outra conta já cadastrada, localizada pelo e-mail, a atuar em seu nome. O procurador inicia essa atuação a partir de uma procuração ativa. A lista mostra o que ele outorgou e o que recebeu.
 
 ## História de Usuário
-**Como** representante legal,  
-**quero** vincular um procurador,  
-**para** permitir que ele acompanhe e protocole solicitações.
+**Como** cidadão autenticado no portal, **quero** vincular um procurador pelo e-mail da conta dele e, quando eu for o procurador, **quero** passar a atuar em nome de quem me outorgou, **para** acompanhar os serviços do portal nessa condição.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+Cidadão autenticado no portal: `auth:web`, `verified`, `lgpd.accepted` e `ResolveRepresentation`.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+Rotas: GET/POST `/portal/procuracoes` e POST `/portal/representacao`. Menu Serviços > Procurações (`/portal/procuracoes`). O card "Procurações" também está em `PORTAL_ACOES`.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+A permissão `gerenciar-procuracoes-proprias` é dada ao papel `cidadao` no `RolesAndPermissionsSeeder`, mas estas rotas não consultam essa permissão. A revogação, na história HU-009, usa `ProcurationPolicy::delete`.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Vincular procurador**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Fluxo evidenciado
+1. `ProcurationController::index` lista procurações em que o usuário é outorgante (`granted`) e em que é procurador (`received`), com nome e e-mail da outra parte, início, validade, revogação e `isActive()`. A prop `procuracoesEnabled` é enviada como `true`.
+2. `store` localiza o procurador pelo e-mail validado e cria a procuração com `grantor_user_id` do usuário logado, `starts_at` agora e `expires_at` opcional. A mensagem é "Procurador vinculado com sucesso."
+3. O `store` não lê o parâmetro `features.procuracoes`. A migration `2026_09_22_224506_remove_retired_parameters_from_catalog` remove essa chave do catálogo. O comentário do método que fala em bloqueio pelo toggle não corresponde ao corpo do método.
+4. Para atuar em nome de alguém, `RepresentationController::store` exige `procuration_id`. A procuração precisa estar em `scopeActive`, pertencer ao procurador logado. A sessão guarda `acting_procuration_id`. O contexto recebe `acting_for_user_id`. A auditoria registra `procuracao` / `representacao-iniciada`. O destino é o painel, com a mensagem "Você está atuando em nome de {nome}."
+5. `ResolveRepresentation`, em toda request desse grupo, confere se a procuração da sessão ainda existe, se o usuário ainda é o procurador e se `isActive()` continua verdadeiro. Se não, remove a sessão, avisa que a representação foi encerrada e limpa o contexto.
+6. Procuração ativa: não revogada, `starts_at` já alcançado e `expires_at` nulo ou futuro (`Procuration::isActive` / `scopeActive`).
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Regras de negócio evidenciadas
+- RN-001: o procurador precisa ser uma conta existente, encontrada por e-mail (`StoreProcurationRequest`).
+- RN-002: não é permitido outorgar para si mesmo (`StoreProcurationRequest::after`).
+- RN-003: não pode haver outra procuração ativa do mesmo outorgante para o mesmo procurador.
+- RN-004: a validade, quando informada, tem de ser uma data futura. Sem validade, a procuração não expira por data.
+- RN-005: só procuração ativa recebida pelo usuário logado inicia a representação (`RepresentationController::store`).
+- RN-006: o model `Procuration` usa `HasAuditoria` nos atributos fillable. O início da atuação gera log explícito em `AuditService`.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+## Validações
+`StoreProcurationRequest`:
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+- `attorney_email`: obrigatório, e-mail, `exists:users,email`. Mensagem de inexistência: "Não encontramos uma conta com este e-mail. Oriente o procurador a se cadastrar no Viabiliza primeiro."
+- `expires_at`: opcional, data, `after:now`. Mensagem: "A validade deve ser uma data futura."
+- Depois das regras: auto-outorga ("Você não pode outorgar procuração para si mesmo.") e duplicidade ("Já existe uma procuração ativa para este procurador.").
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
+Representação: `procuration_id` obrigatório, inteiro. Se a procuração não está ativa para aquele procurador: "Esta procuração não está ativa."
 
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
+## Critérios de aceite
+### CA-01 — Vínculo por e-mail
+**Dado** um cidadão autenticado e outra conta com e-mail cadastrado, **quando** envia POST `/portal/procuracoes` sem validade ou com data futura, **então** a procuração é criada com início agora e a mensagem é "Procurador vinculado com sucesso."
 
-## Critérios de Aceite — BDD
+### CA-02 — E-mail sem conta
+**Dado** um e-mail que não existe em `users`, **quando** tenta vincular, **então** a validação recusa com a orientação para o procurador se cadastrar antes.
 
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Vincular procurador**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
+### CA-03 — Auto-outorga e duplicidade
+**Dado** o próprio e-mail, ou um procurador que já tem procuração ativa daquele outorgante, **quando** envia o formulário, **então** o vínculo não é criado e a mensagem correspondente de `after()` é exibida.
 
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
+### CA-04 — Atuar em nome do outorgante
+**Dado** uma procuração ativa recebida pelo usuário, **quando** envia POST `/portal/representacao` com o id, **então** a sessão guarda `acting_procuration_id`, a atividade `representacao-iniciada` é registrada e o painel informa em nome de quem ele está.
 
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
+## Divergências da redação anterior
+- O ator da redação antiga era "representante legal" num fluxo de LOUOS, GIS e REDESIM. O código liga duas contas do portal por e-mail, sem documento, sem empresa e sem cartório.
+- O interruptor `features.procuracoes` não é consultado no `store` atual; a tela recebe `procuracoesEnabled: true` fixo.
+- A permissão `gerenciar-procuracoes-proprias` não protege a rota.
 
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
+## Evidências
+- `routes/portal.php` — `procuracoes` e `representacao`.
+- `app/Http/Controllers/Portal/ProcurationController.php` — `index` e `store`.
+- `app/Http/Controllers/Portal/RepresentationController.php` — `store`.
+- `app/Http/Requests/StoreProcurationRequest.php`.
+- `app/Models/Procuration.php` — `scopeActive` e `isActive`.
+- `app/Http/Middleware/ResolveRepresentation.php`.
+- `resources/js/navigation/portal-nav.ts`.
 
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+Não há upload de procuração, consulta à Receita ou vínculo por CPF/CNPJ. Não há aprovação do procurador antes de a outorga valer. Não há tela de procurações no console.

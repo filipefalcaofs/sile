@@ -1,145 +1,62 @@
 # HU-062 — Informar imóvel
 
-> **Refinada (2026-06-11)** — no fluxo Regin, esta etapa ocorre no formulário hospedado pelo Simplifica (`ps001_Regin.aspx`), após dados da Junta.
-
 ## Épica
 **EP08 — Solicitação de Viabilidade**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Registrar imóvel, polígono territorial e dados complementares necessários à análise locacional e ao enquadramento LOUOS.
+Gravar, no rascunho, o polígono do imóvel, o endereço informado, o ponto de referência, a inscrição imobiliária opcional e os indicadores do local.
 
 ## História de Usuário
-**Como** cidadão,  
-**quero** informar imóvel,  
-**para** permitir análise territorial.
+**Como** requerente dono do rascunho,  
+**quero** demarcar o imóvel e informar o ponto de referência,  
+**para** que o processo tenha a localização usada na análise territorial.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- Dono efetivo da solicitação, somente com status rascunho (`ViabilityRequestPolicy::update`).
+- Rota `PUT portal/solicitacoes/{solicitacao}/imovel`, com `auth:web`, e-mail verificado, LGPD aceita, representação resolvida e middleware `portal.solicitacao`.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. O requerente envia o polígono GeoJSON, a área utilizada, o ponto de referência e, se quiser, logradouro, número, complemento, bairro, CEP e inscrição.
+2. O sistema calcula o centroide do anel exterior e consulta `TerritoryService::identify`. O resultado vai em flash `territorio`. Sem zona identificada, a resposta degrada sem inventar zona.
+3. Na mesma transação grava endereço, indicadores e polígono; `PropertyGeometryWriter` deriva a geometria quando o driver é PostgreSQL; `TerritorioProcessoService::materializar` grava zona, bairro e demais dados já obtidos, sem segunda consulta WFS.
+4. A simulação anterior, se existir, é invalidada (`markSimulationStale`).
+5. A resposta volta ao wizard com a mensagem de imóvel e área atualizados.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- O polígono GeoJSON é a fonte. Precisa ser `Polygon` com anel exterior de pelo menos quatro pontos, cada um com longitude e latitude numéricas.
+- O ponto de referência é obrigatório. Logradouro, número, complemento, bairro, CEP e inscrição são opcionais. O complemento é texto livre.
+- Indicadores aceitos: escritório virtual, sede, abrigado, área pública e acesso independente. Chave ausente de sede ou abrigado preserva o valor já gravado; não apaga a resposta anterior.
+- A identificação territorial neste passo não recalcula o veredito de viabilidade.
+- Mudança de imóvel ou área invalida o snapshot de simulação.
 
-## Fluxo Principal
-1. Requerente informa inscrição imobiliária (pré-preenche logradouro quando disponível no cadastro).
-2. Requerente informa complemento (pré-preenchido quando edifício comercial; descrição obrigatória), ponto de referência (obrigatório) e número métrico.
-3. Requerente demarca **polígono de 4 pontos** no mapa; sistema valida contra logradouro e consulta SIGIS (HU-107) para zona/via.
-4. Requerente responde indicadores: escritório virtual (valida sede na inscrição + CNPJ com viabilidade de sede), área pública (exige concessão de uso ou bloqueia), acessos independentes residencial/comercial.
-5. Requerente anexa **foto da fachada** (obrigatória), contrato de locação (opcional se proprietário) e termo de concessão (obrigatório se área pública).
-6. Sistema registra dados e avança para CNAEs e condicionantes (HU-064, HU-065).
+## Validações
+- Polígono obrigatório, tipo `Polygon`, coordenadas presentes e numéricas, anel com no mínimo quatro posições.
+- `address_reference` obrigatório, até 255 caracteres.
+- Campos de endereço e inscrição opcionais, com tamanho máximo.
+- Indicadores booleanos somente quando enviados.
+- A área (`used_area_m2`) viaja neste mesmo pedido; a regra da área está na HU-063.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+- Dado o dono de um rascunho com polígono válido e ponto de referência, quando salva o imóvel, então o GeoJSON, o endereço e os indicadores ficam gravados e a simulação anterior deixa de valer.
+- Dado polígono ausente, tipo diferente de Polygon, anel com menos de quatro pontos ou ponto de referência vazio, quando envia o formulário, então a validação recusa e nada é gravado.
+- Dado usuário que não é o requerente efetivo, ou solicitação que não está em rascunho, quando chama a rota, então a policy nega a edição.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+## Divergências da redação anterior
+A redação anterior situava esta etapa no formulário hospedado pelo Regin/Simplifica. No portal, o imóvel é um `PUT` do rascunho, com polígono obrigatório e endereço textual em grande parte opcional. Não há, neste controller, recepção de dados da Junta.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+## Evidências
+- `App\Http\Controllers\Portal\SolicitacaoImovelController::update`
+- `App\Http\Requests\Portal\UpdateSolicitacaoImovelRequest`
+- `App\Services\Solicitacao\PropertyGeometryWriter`
+- `App\Services\Geo\TerritoryService`
+- `App\Services\Geo\TerritorioProcessoService`
+- `routes/portal.php` (`portal.solicitacoes.imovel`)
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
-
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-004: Polígono de 4 pontos é obrigatório no fluxo Regin; deve ser validado geograficamente antes de protocolar.
-- RN-005: Foto da fachada é documento obrigatório; área pública sem concessão de uso impede continuidade.
-- RN-006: Escritório virtual exige comprovação de sede na mesma inscrição imobiliária e CNPJ da sede com viabilidade deferida.
-
-## Critérios de Aceite — BDD
-
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Informar imóvel**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Indicador de escritório virtual.
-- Indicador de imóvel em área pública e dados da concessão de uso, quando aplicável.
-- Indicador de acessos independentes (a área comercial não pode ter acesso por dentro da área residencial e vice-versa).
-- Anuência ou convenção do condomínio autorizando a atividade no local, quando aplicável.
-- Comprovação de vinculação de vagas de estacionamento, quando exigida.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
-
-Os campos de escritório virtual, área pública/concessão de uso, acessos independentes, anuência de condomínio e vinculação de vagas foram extraídos do formulário atual de Viabilidade de Localização do Portal Simplifica — validar obrigatoriedade e regras de cada um com a SEDUR.
+## Não evidenciado
+- Preenchimento do imóvel a partir de mensagem Regin neste controller.
+- Obrigatoriedade de logradouro, número, bairro ou CEP no portal.
+- Bloqueio do salvamento quando a zona urbanística não é identificada.

@@ -3,140 +3,52 @@
 ## Épica
 **EP10 — Análise Técnica SEDUR**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Visualizar dados completos do processo.
+Consultar a fila de processos da retaguarda, com filtros, paginação, exportação do conjunto filtrado e detalhe auditado.
 
 ## História de Usuário
-**Como** analista,  
-**quero** consultar processo,  
-**para** realizar análise fundamentada.
+**Como** usuário da gestão com `consultar-solicitacoes`, **quero** buscar e abrir um processo, **para** ver dados, decisão, ficha vigente e tramitação.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- Rotas `GET processos`, `GET processos/fila`, `GET processos/busca` e `GET processos/{processo}`: `consultar-solicitacoes`.
+- Não há permissão nova só para esta consulta.
+- A leitura do detalhe é marcada como dado pessoal na auditoria.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. O índice aplica filtros (protocolo, BAP, TVL, serviço, setor, analista, categoria, inscrição, nome, CNPJ, CEP, logradouro, bairro, período, busca, fluxo, status e situação da análise), ordena e pagina no servidor.
+2. Com `formato` csv, xlsx ou pdf e período válido, exporta o conjunto filtrado pelo exportador de relatórios, que audita a exportação.
+3. Período com data inicial posterior à final não consulta: a lista volta vazia e a tela recebe a mensagem de período invertido. A consulta mesmo assim é auditada.
+4. O detalhe carrega empresa, setor, responsável, decisão, ficha vigente, transições e encaminhamento, e devolve parecer e explicação da decisão quando existirem.
+5. Processo inexistente responde 404 pelo route model binding.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- A consulta é somente leitura nesta rota. Mudar situação da análise é outro endpoint, sob `analisar-processos`.
+- Paginação aceita 10, 15, 25 ou 50; fora disso usa o parâmetro `ui.cnaes.per_page` (padrão 15).
+- Ordens aceitas: `recentes`, `prazo`, `status`. Outro valor cai em `recentes`.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Consultar processo**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- Datas no formato `YYYY-MM-DD` com início posterior ao fim interrompem a consulta e a exportação.
+- Filtros vazios são ignorados pelo serviço de consulta.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+1. Sem `consultar-solicitacoes`, o acesso responde 403.
+2. A lista respeita os filtros informados e registra a consulta na auditoria, inclusive os filtros preenchidos.
+3. Período invertido não devolve processos e informa o erro na tela.
+4. Exportação csv, xlsx ou pdf usa o conjunto filtrado.
+5. O detalhe de processo inexistente é 404. O detalhe existente audita `consulta-processo` com dado pessoal.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+## Divergências da redação anterior
+- A redação anterior listava atores genéricos (cidadão, gestor, administrador) como se todos consultassem esta tela. A rota da retaguarda exige `consultar-solicitacoes`.
+- Não há, nesta história, decisão automática nem encaminhamento por regra ausente.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+## Evidências
+- `app/Http/Controllers/Gestao/ProcessoController.php` (`index`, `show`)
+- `app/Services/Analise/ProcessoQueryService.php`
+- `routes/gestao.php`
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
-
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-- RN-004: A consulta deve oferecer, no mínimo, os filtros do SAPS legado: grupo de status, status do processo, status de tramitação, número do produto (TVL), número do processo, **BAP**, grupo de serviço, serviço, setor, zona, intervalo de datas, inscrição imobiliária, nome, CPF, CNPJ, CEP, código do logradouro, logradouro, bairro e nº de porta — **mais filtro por analista responsável** (melhoria pedida na reunião: "filtros insuficientes").
-- RN-005: Filtro por **categoria de processo**: Expresso, Semi-Expresso, Malha Fina, Sede de Escritório.
-- RN-006: O detalhe do processo deve organizar o conteúdo nas visões do legado: tramitação, informações do processo, polígono (mapa), anexos, **histórico/timeline com tempo por etapa** (abertura → preenchimento → espera BAP → resposta), DAM (HU-071) e vistoria quando aplicável.
-- RN-007: O processo exibe seus três identificadores: número do processo SEDUR, protocolo BAP e número do produto (TVL).
-- RN-008: A consulta deve responder com desempenho adequado (reclamação central do legado: "sistema muito lento") — paginação server-side e índices nos campos filtrados.
-- RN-009: A retaguarda deve oferecer **busca global** (atalho de teclado, ex.: Cmd/Ctrl+K): digitar número de processo, BAP, produto, CNPJ ou nome leva diretamente ao processo — sem passar pela tela de filtros.
-- RN-010: O histórico do processo deve ser apresentado como **timeline visual** (etapas com duração, responsável e tipo de evento), além da tabela de tramitação; o detalhe deve exibir **mini-mapa permanente** com o polígono e a zona/via sobrepostas (sem precisar abrir a aba de polígono).
-- RN-011: A listagem de processos oferece **exportação em CSV, XLSX e PDF** do conjunto filtrado, conforme o padrão transversal de exportação da gestão (HU-131 RN-004 a RN-009).
-
-## Critérios de Aceite — BDD
-
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Consultar processo**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- Consulta do cidadão nesta rota. O portal tem rotas próprias de solicitação.

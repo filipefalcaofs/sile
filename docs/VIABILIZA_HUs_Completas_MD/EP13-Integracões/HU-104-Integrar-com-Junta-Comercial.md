@@ -1,139 +1,55 @@
-# HU-104 — Integrar com Junta Comercial (Regin)
-
-> **Status: Refinada (2026-06-11)** — o integrador estadual é o Regin. Resolução CGSIM nº 61/2020: município define dados coletados e responde viabilidade no prazo, com motivos em caso negativa.
+# HU-104 — Integrar com Junta Comercial
 
 ## Épica
 **EP13 — Integrações**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Devolver parecer de viabilidade (deferido/indeferido) ao Regin/Junta e garantir conformidade com regras de deferimento por atividade.
+Enviar à JUCEB o parecer da viabilidade já decidida, deferida ou indeferida, e só registrar sucesso quando a Junta confirmar o recebimento.
 
 ## História de Usuário
-**Como** sistema,  
-**quero** integrar com Junta Comercial/Regin,  
-**para** dar continuidade ao registro empresarial nacional.
+**Como** sistema, **quero** devolver o parecer ao REGIN/JUCEB depois da decisão, **para** a Junta receber o resultado municipal sem que uma falha de rede seja tratada como envio feito.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- Disparo pelo listener `ComunicarResultadoRegin` no evento `ResultadoEmitido`, para deferimento e indeferimento.
+- No pedido do analista, o envio corre depois da resposta HTTP, para não segurar a tela. Em console, corre na hora.
+- Credenciais e URL ficam nos parâmetros da API REGIN (`ReginIntegrationSettings`). Sem usuário ou senha, a chamada não autentica.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. O binding em uso é `HttpReginParecerNotifier`, que monta o envelope de resposta (serviço `WsProSol098`, função 110) a partir da decisão imutável e do protocolo externo.
+2. `ReginHttpClient` autentica em `/acesso/auth` e envia o parecer com Bearer. Token e senha não entram em log nem em exceção.
+3. Status da área: 2 se deferida, 4 caso contrário. A justificativa usa o texto gravado no processo; sem ele, motivo, fundamentação e condicionantes, com teto de 10.000 caracteres. Notas internas do motor (GeoServer, indisponibilidade, encaminhamento à análise) não vão para a Junta.
+4. Sucesso é somente o corpo `RECEBIDO_SUCESSO` (texto ou JSON). Qualquer outro resultado lança `ReginUnavailableException`.
+5. O listener audita `integracoes` / `regin-parecer` com resultado `sucesso` ou `bloqueado`. A falha não desfaz a decisão.
+6. O comando `regin:reenviar-pareceres` reenvia quem tem decisão e ainda não tem `sucesso`. Quem já teve sucesso não é reenviado. Falhas seguidas interrompem a passada (padrão 3). `--dry-run` só lista.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- Não há sucesso fictício: pendência fica com resultado `bloqueado`.
+- A decisão já foi gravada antes deste envio. Indisponibilidade da Junta não muda o desfecho.
+- Processo sem referência externa de protocolo não compõe o envio esperado deste canal.
 
-## Fluxo Principal
-1. O sistema identifica processo concluído (expresso HU-076 ou análise HU-086/HU-087).
-2. O sistema monta payload com parecer, status por CNAE, condicionantes e fundamentação conforme contrato Regin.
-3. O sistema envia resposta ao integrador e aguarda confirmação de recebimento.
-4. O sistema atualiza status de integração e registra comprovante em auditoria.
-5. Quando deferido, dispara em paralelo envio à SEFAZ (HU-110) — independente da entrega de PDF ao cidadão.
+## Validações
+- Credencial vazia impede a autenticação e a exceção é auditada como bloqueio.
+- HTTP sem sucesso ou corpo diferente de `RECEBIDO_SUCESSO` não conta como entregue.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+- Com a Junta confirmando `RECEBIDO_SUCESSO`, a trilha registra `sucesso`.
+- Com credencial ausente, timeout ou corpo diferente, a trilha registra `bloqueado` e o processo permanece decidido.
+- Reenvio não repete protocolo que já tem `sucesso`.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+## Divergências da redação anterior
+O texto juntava “conformidade de deferimento por atividade” a esta integração. A regra de deferimento é do motor. Aqui só sai o parecer já gravado. O comentário antigo do listener ainda cita um notificador que sempre falha; o binding atual é o cliente HTTP.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+## Evidências
+- `app/Services/Regin/HttpReginParecerNotifier.php`
+- `app/Services/Regin/ReginHttpClient.php` (`enviarParecer`)
+- `app/Listeners/ComunicarResultadoRegin.php`
+- `app/Providers/AppServiceProvider.php` (binding de `ReginParecerNotifier`)
+- `app/Console/Commands/ReginReenviarPareceresCommand.php`
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
-
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-- RN-004: Integrações devem registrar payload, status, protocolo externo quando houver e erros de comunicação.
-- RN-005: Falha de integração não deve gerar decisão inconsistente; deve permitir retentativa ou análise técnica.
-- RN-006: Deferimento só pode ser comunicado ao Regin quando **todas** as atividades (CNAEs) estiverem deferidas; uma indeferida implica indeferimento do processo.
-- RN-007: O parecer deve incluir orientações, requisitos condicionantes e motivos de indeferimento quando negativa, conforme art. 7º da Resolução CGSIM nº 61/2020.
-
-## Critérios de Aceite — BDD
-
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Integrar com Junta Comercial**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Depende do contrato técnico Regin↔SAPS (bloqueio EP13). Cidadão acompanha resultado pelo site da Junta; convites/pendências direcionam ao portal Simplifica (HU-083/HU-091).
+## Não evidenciado
+- Confirmação de homologação desta sessão contra o ambiente da JUCEB. O código exige a confirmação `RECEBIDO_SUCESSO`; esta HU não registra uma chamada feita agora.
+- Envio de indeferimento por prazo BAP como vínculo de protocolo (o registro BAP continua sem fonte).

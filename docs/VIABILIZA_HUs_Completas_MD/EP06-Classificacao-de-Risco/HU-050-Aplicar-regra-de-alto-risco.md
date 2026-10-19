@@ -3,135 +3,62 @@
 ## Épica
 **EP06 — Classificação de Risco**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Encaminhar alto risco quando exigido.
+Encaminhar o nível `alto` à análise, no mapa padrão, e impedir decisão automática do expresso quando o processo tem alto risco fora de um ramo de planilha marcado como expresso.
 
 ## História de Usuário
 **Como** sistema,  
-**quero** aplicar alto risco,  
-**para** garantir análise técnica quando necessária.
+**quero** reconhecer o CNAE de alto risco e não deferi-lo no automático,  
+**para** a análise técnica receber o caso, salvo o ramo da planilha que declara fluxo expresso.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- Nível gravado na versão municipal (`manter-cnaes` ou importação) e destino no parâmetro `risco.mapa_encaminhamento`.
+- O bloqueio do expresso é do `FluxoExpressoService`, sobre o resultado já classificado.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. `RiscoMunicipal::Alto` vale `alto`, rótulo “Alto”, severidade 3. `fromDecreto` aceita `ALTO`.
+2. O mapa padrão associa `alto` a `analise`. O motivo cita o nível e a dimensão decisiva.
+3. Sanitário `alto` segue o mesmo mapa somente se a dimensão decisiva for `sanitario`.
+4. Ramo da planilha com fluxo `expresso` grava encaminhamento expresso mesmo quando o texto do ramo fala em alto risco. O comentário do expresso cita a regra 51 da planilha como exemplo de ramo curado assim. A planilha prevalece sobre o gate.
+5. No expresso, depois do veto locacional (`nao_permitido` é emitido mesmo em alto risco), `temAltoRiscoForaDoExpresso` encaminha à análise com o texto `expresso.motivo.alto_risco`. O processo não é deferido nem indeferido por ser alto.
+6. Gatilho ativo também força análise, com o motivo do gatilho, antes de chegar a esse gate.
+7. A fundamentação municipal inclui as frases de condicionante importadas da linha. Elas não alteram o nível para alto. O código do expresso menciona pergunta condicional que eleve o risco; no classificador, quem eleva o nível municipal é o ramo resolvido da planilha (`municipalDoRamo`), não a resposta de `RiskCondicionante`.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- Alto risco não é, por si, indeferimento. Indeferimento locacional do Quadro 10 ou do 11A ocorre antes e independe do risco.
+- Sem veto locacional, alto risco fora do expresso explícito da planilha vai à análise.
+- Alterar o mapa para `alto` → `expresso` mudaria o encaminhamento do classificador. O gate do expresso ainda olha alto risco fora do ramo expresso.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Aplicar regra de alto risco**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- Célula diferente de `ALTO` não vira `alto` na importação municipal.
+- A chave `alto` é obrigatória no mapa, com valor `expresso` ou `analise`.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+**Dado** que o nível decisivo é `alto`, o mapa padrão está vigente e não há ramo expresso da planilha,  
+**Quando** o motor classifica,  
+**Então** o fluxo é `analise`.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+**Dado** que o consolidado da LOUOS é `nao_permitido`,  
+**Quando** o expresso decide,  
+**Então** o indeferimento locacional é emitido antes do gate de alto risco.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+**Dado** que não há veto locacional e o processo tem alto risco fora do ramo expresso da planilha,  
+**Quando** o expresso decide,  
+**Então** o processo vai à análise e não é deferido nem indeferido por esse motivo.
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
+## Divergências da redação anterior
+A redação anterior não separava o mapa `alto` → `analise`, o veto locacional que indefere antes, e a exceção do ramo da planilha marcado como expresso.
 
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-- RN-004: A classificação de risco deve ser parametrizável por CNAE e condicionantes.
-- RN-005: Baixo risco elegível deve seguir fluxo expresso quando todas as condicionantes forem atendidas.
-- RN-006: Alto risco deve ser encaminhado para análise técnica quando a legislação assim exigir.
+## Evidências
+- `RiscoMunicipal::Alto`
+- `RiscoClassificationService::resolveEncaminhamento` e `municipalDoRamo`
+- `FluxoExpressoService` (gate de alto risco depois do `nao_permitido`)
+- Parâmetro `risco.mapa_encaminhamento`
 
-## Critérios de Aceite — BDD
-
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Aplicar regra de alto risco**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- Indeferimento automático só porque o risco é alto.
+- Reclassificação para alto por pergunta da VISA. O nível sanitário final permanece o da tabela.

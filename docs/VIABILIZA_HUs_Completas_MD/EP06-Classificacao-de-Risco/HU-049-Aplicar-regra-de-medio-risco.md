@@ -3,137 +3,66 @@
 ## Épica
 **EP06 — Classificação de Risco**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência. O termo operacional da SEDUR para `baixo_b` é Médio risco.
+
 ## Objetivo
-Avaliar condicionantes de médio risco e encaminhar processos elegíveis ao fluxo expresso automático, conforme diretriz operacional da SEDUR (baixo e médio risco → expresso; alto risco → análise humana).
+Aplicar o Médio risco municipal. A SEDUR chama assim o nível cuja chave interna é `baixo_b`. A tela, a ficha e o resultado da classificação usam o rótulo «Médio Risco». A chave gravada e o mapa de encaminhamento continuam `baixo_b`.
 
 ## História de Usuário
 **Como** sistema,  
-**quero** aplicar médio risco,  
-**para** finalizar automaticamente quando elegível ou encaminhar à análise técnica quando houver gatilho ou alto risco.
+**quero** classificar e encaminhar o Médio risco municipal,  
+**para** a operação ver o nome que a SEDUR usa, com a chave `baixo_b` no decreto e no mapa.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- A chave municipal é gravada na classificação do CNAE (`manter-cnaes`) ou na importação da versão `risco_municipal`.
+- O destino de `baixo_b` está no parâmetro `risco.mapa_encaminhamento` (`manter-parametros`).
+- A dimensão sanitária `medio` só decide o fluxo quando `risco.dimensao_tvl` é `sanitario`. O padrão é `municipal`.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. O risco municipal tem três níveis. A SEDUR os exibe como Baixo, Médio risco e Alto. As chaves são `baixo_a`, `baixo_b` e `alto`. Médio risco é `baixo_b`.
+2. `fromDecreto` lê a planilha do decreto como `BAIXO A`, `BAIXO B` e `ALTO`. `BAIXO B` vira `baixo_b` e, na tela, Médio risco.
+3. O rótulo de `RiscoMunicipal::BaixoB` é «Médio Risco». A chave e o mapa de encaminhamento permanecem `baixo_b`.
+4. O padrão do mapa manda o Médio risco (`baixo_b`) para `expresso`, o mesmo destino padrão do Baixo (`baixo_a`).
+5. A severidade do Médio risco fica entre Baixo e Alto.
+6. A dimensão sanitária é outra. Nela, a chave `medio` também se chama «Médio Risco». Essa chave não substitui o Médio risco municipal.
+7. Com dimensão decisiva sanitária, o mapa é lido por `baixo`, `medio` e `alto`. O validador do parâmetro municipal exige `baixo_a`, `baixo_b` e `alto`.
+8. Ramo da planilha e gatilho ativo continuam prevalecendo, como nos outros níveis.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- Médio risco municipal é o nome da SEDUR para `baixo_b` (`RiscoMunicipal::label`).
+- A importação do decreto entra por `BAIXO B`. O sistema não grava uma segunda chave municipal chamada `medio`.
+- O Médio risco sanitário (`RiscoSanitario::Medio`, chave `medio`) permanece na dimensão sanitária e não reclassifica o municipal.
 
-## Fluxo Principal
-1. O sistema identifica solicitação classificada como médio risco (conforme Decreto Municipal nº 32.636/2020 e parametrização por CNAE).
-2. O sistema avalia condicionantes gerais e específicas do CNAE (HU-019, HU-048).
-3. O sistema verifica enquadramento LOUOS automático (Quadro 7) e ausência de gatilhos CNAE parametrizados (ex.: enquadramento ausente, zona ZEIS especial).
-4. Quando todas as condicionantes forem atendidas, não houver gatilho e o enquadramento estiver resolvido, o sistema encaminha ao fluxo expresso (HU-073 a HU-076).
-5. Quando houver gatilho, enquadramento pendente ou classificação de alto risco, o sistema encaminha à análise técnica (HU-079), registrando o motivo (semi-expresso quando aplicável).
-6. O sistema registra classificação, condicionantes avaliadas, gatilhos e decisão de roteamento em trilha de auditoria.
+## Validações
+- Célula municipal diferente de `BAIXO A`, `BAIXO B` e `ALTO` não vira classificação.
+- Mapa sem `baixo_b` é inválido.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+**Dado** que a planilha do decreto traz `BAIXO B`,  
+**Quando** a linha é importada e classificada na dimensão municipal,  
+**Então** o nível gravado é `baixo_b`, a tela mostra Médio risco e o fluxo segue a chave `baixo_b` do mapa.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+**Dado** que a célula municipal do decreto é `BAIXO B`,  
+**Quando** a importação municipal lê a linha,  
+**Então** o CNAE fica em Médio risco. A planilha não precisa trazer a palavra «médio».
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+**Dado** que a dimensão decisiva continua municipal,  
+**Quando** o motor encaminha um CNAE de Médio risco,  
+**Então** usa `baixo_b` e não a chave sanitária `medio`.
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
+## Divergências da redação anterior
+A revisão de 16/10/2026 tratou Médio risco como se o nível não existisse. A SEDUR mantém o termo: Médio risco é `baixo_b`. A chave interna não muda. O `medio` da dimensão sanitária é outro nível, de outra tabela.
 
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-- RN-004: A classificação de risco deve ser parametrizável por CNAE e condicionantes.
-- RN-005: Médio risco elegível deve seguir fluxo expresso quando todas as condicionantes forem atendidas, o enquadramento LOUOS estiver resolvido automaticamente e não houver gatilho CNAE parametrizado — mesma lógica de finalização expressa aplicável ao baixo risco (HU-048).
-- RN-006: Alto risco deve ser encaminhado para análise técnica quando a legislação assim exigir.
-- RN-007: Gatilhos CNAE (enquadramento pelo analista, zona ZEIS especial, informações do processo etc.) devem ser parametrizáveis e, quando acionados, impedem decisão automática — o processo segue para análise técnica com motivo registrado (categoria semi-expresso, quando aplicável).
-- RN-008: A taxonomia operacional "médio risco" deve ser mapeável à classificação legal do Decreto 32.636/2020 (confirmar com a SEDUR se corresponde a Baixo Risco B ou outra faixa).
+## Evidências
+- `RiscoMunicipal` (`baixo_a`, `baixo_b`, `alto`; rótulo de `baixo_b`)
+- `RiscoSanitario::Medio`
+- `RiscoMunicipalImportService` (contagem só das três chaves)
+- Parâmetro `risco.mapa_encaminhamento` (“Decreto 32.636/2020 não tem nível médio”)
+- `AppServiceProvider` (mapa exige `baixo_a`, `baixo_b` e `alto`)
 
-## Critérios de Aceite — BDD
-
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Aplicar regra de médio risco**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Refinada com base na reunião SEDUR (2026-06-11) e mapeamento do SAPS legado. Diretriz-alvo: expresso para baixo e médio risco; análise humana para alto risco. Pendente confirmar mapeamento exato "médio risco" ↔ Decreto 32.636/2020 e lista completa de gatilhos CNAE.
+## Não evidenciado
+- Uma chave municipal chamada `medio`, separada de `baixo_b`. O nome Médio risco já cobre esse nível.
+- Mapa padrão que mande o Médio risco à análise. O padrão de `baixo_b` é `expresso`.
+- Condicionante municipal que troque o CNAE de Médio risco para outro nível.

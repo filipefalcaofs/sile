@@ -3,132 +3,65 @@
 ## Épica
 **EP01 — Identidade, Acesso e Segurança**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Permitir alteração de senha pelo usuário autenticado.
+O usuário autenticado troca a própria senha informando a senha atual. No console, conta AD é recusada e orientada a alterar a senha na rede corporativa.
 
 ## História de Usuário
-**Como** usuário autenticado,  
-**quero** alterar minha senha,  
-**para** manter minha conta segura.
+**Como** usuário autenticado com senha local, **quero** definir uma nova senha depois de confirmar a atual, **para** manter o acesso sem usar o link de recuperação.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+Usuário já autenticado. Não há permissão Spatie além do acesso ao ambiente.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+- Portal: `auth:web`, `verified`, `lgpd.accepted` e `ResolveRepresentation`. Rotas `portal.conta.senha.show` (GET `/portal/conta/senha`) e `portal.conta.senha.update` (PUT). Controller `App\Http\Controllers\Settings\PasswordController`.
+- Console: `auth:gestao`, `acessar-gestao`, `lgpd.accepted`. Rotas `gestao.conta.senha.show` e `gestao.conta.senha.update`. Controller `App\Http\Controllers\Gestao\Conta\PasswordController`.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+No portal, a aba "Senha" fica no layout das telas de conta (`resources/js/layouts/settings-layout.tsx`), depois de abrir "Meus dados" em Minha conta (`/portal/conta/perfil`). No console, a rota existe, mas nenhum item de `gestao-nav.ts` nem a tela de perfil aponta para `/gestao/conta/senha`. O cabeçalho leva a `/gestao/conta/perfil`.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Alterar senha**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Fluxo evidenciado
+1. A tela mostra o texto de `PasswordPolicy::description()`.
+2. No portal, `PasswordController::update` chama `UpdateUserPassword::update` com o usuário do guard `web` e os campos `current_password`, `password` e `password_confirmation`.
+3. No console, se `isAdAccount()`, a atualização é recusada em `current_password` com: "Contas corporativas (AD) têm a senha gerenciada pela rede corporativa. Altere-a pelo portal de senhas da prefeitura."
+4. `UpdateUserPassword` exige a senha atual (`current_password`) e a nova senha na política, com confirmação. A mensagem de senha atual divergente é a da regra: "The provided password does not match your current password." O erro fica no bag `updatePassword`.
+5. Senha aceita: grava o hash e `AuditService::log` registra o log `seguranca` / `senha-alterada` ("Senha alterada pelo próprio usuário"). A resposta é `back()`, sem texto de status no controller. A tela do console exibe "Senha alterada com sucesso." quando o Inertia marca sucesso recente.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Regras de negócio evidenciadas
+- RN-001: a troca exige a senha atual (`UpdateUserPassword::update`).
+- RN-002: a nova senha segue `PasswordPolicy` (tamanho, maiúsculas/minúsculas, números e símbolos conforme os parâmetros `security.password.*`).
+- RN-003: no console, conta AD não altera senha local (`Gestao\Conta\PasswordController::update`). O controller do portal não faz essa checagem.
+- RN-004: a alteração é auditada por `AuditService`, não pelo log fillable do model (a senha está em `logExcept` de `HasAuditoria`).
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+## Validações
+Não há Form Request. `UpdateUserPassword` valida:
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+- `current_password`: obrigatório, texto, regra `current_password` (usuário do guard padrão da request).
+- `password`: `passwordRules()` — obrigatório, `Password::default()`, `confirmed`.
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
+## Critérios de aceite
+### CA-01 — Troca no portal
+**Dado** um cidadão autenticado no guard `web`, com e-mail verificado e termo aceito, **quando** informa a senha atual correta e uma nova senha válida em `/portal/conta/senha`, **então** o hash é atualizado e a atividade `senha-alterada` é registrada.
 
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
+### CA-02 — Senha atual incorreta
+**Dado** a senha atual digitada não confere, **quando** o formulário é enviado, **então** a validação recusa no bag `updatePassword` e a senha gravada não muda.
 
-## Critérios de Aceite — BDD
+### CA-03 — Conta AD no console
+**Dado** um servidor com `auth_type` AD autenticado no console, **quando** envia PUT `/gestao/conta/senha`, **então** a resposta aponta `current_password` para a mensagem da rede corporativa e `UpdateUserPassword` não roda.
 
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Alterar senha**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
+## Divergências da redação anterior
+- A redação antiga era o fluxo genérico de viabilidade (GIS, REDESIM, LOUOS, CNAE). A troca de senha não consulta esses serviços.
+- São duas rotas e dois controllers. Só o console bloqueia conta AD.
+- A tela do console não está no menu.
 
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
+## Evidências
+- `routes/portal.php` — prefixo `conta`, `PasswordController` de Settings.
+- `routes/gestao.php` — prefixo `conta`, `Gestao\Conta\PasswordController`.
+- `app/Actions/Fortify/UpdateUserPassword.php`.
+- `app/Support/PasswordPolicy.php`.
+- `resources/js/layouts/settings-layout.tsx` e `resources/js/pages/settings/password.tsx`.
+- `resources/js/pages/gestao/conta/senha.tsx`.
 
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+Não há link de navegação para a senha do console. Não há exigência de senha diferente da anterior além do que `Password::default()` já aplica. Não há invalidação das outras sessões no `update` lido.

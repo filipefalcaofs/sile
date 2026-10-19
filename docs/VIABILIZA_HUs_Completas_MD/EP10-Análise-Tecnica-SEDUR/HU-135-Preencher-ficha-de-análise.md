@@ -1,40 +1,57 @@
 # HU-135 — Preencher ficha de análise
 
-> **Status: Confirmada (2026-06-11)** — mapeada a partir do SAPS legado (prints `docs/legado-saps/02`–`08`). Coração da análise humana e do fluxo semi-expresso.
-
 ## Épica
 **EP10 — Análise Técnica SEDUR**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Permitir ao analista registrar análise por CNAE, condicionantes, vagas de estacionamento, parecer e revisões versionadas na ficha de análise.
+Abrir a revisão vigente da ficha, salvar o rascunho, finalizá-la de forma imutável e abrir nova revisão quando for preciso reeditar.
 
 ## História de Usuário
-**Como** analista SEDUR,  
-**quero** preencher a ficha de análise do processo,  
-**para** deferir, indeferir ou manter atividades em análise com fundamentação completa.
+**Como** analista com `analisar-processos`, **quero** preencher a ficha do processo, **para** registrar a escolha por atividade, condicionantes, vagas e parecer antes da conclusão.
 
-## Fluxo Principal
-1. Analista abre processo na caixa do setor (HU-080/HU-081).
-2. Por **CNAE**: seleciona Deferida / Indeferida / Análise; visualiza resposta à condicionante, descrição LOUOS, grupo uso, TLL/valor e **gatilhos CNAE** (motivo de análise).
-3. Analista marca condicionantes que compõem o documento (checkboxes + adicionais em texto livre).
-4. Seção **Vagas estacionamento**: compara dados requerente × exigido LOUOS/CNLU → veredito conforme/não conforme; recálculo e vagas vistoria quando aplicável.
-5. Analista registra **parecer** (texto livre), salva rascunho ou **finaliza ficha**.
-6. **Fichas de revisão** versionadas (nova revisão, histórico por data/analista, imprimir).
-7. Ao finalizar: deferimento (HU-086) exige todas deferidas; uma indeferida → indeferimento do processo (HU-087).
+## Atores e permissões
+- Ficha humana (abrir, autosave, finalizar, nova revisão, diff, sugestões de IA): `analisar-processos`.
+- Ficha de processo já decidido pelo expresso: `consultar-solicitacoes` ou `analisar-processos`, somente leitura, sem criar revisão humana.
+- Concluir o processo pela ficha: também `concluir-analise` (HU-086 e HU-087). Preencher não exige concluir.
 
-## Regras de Negócio
-- RN-001: Gatilhos CNAE parametrizados (enquadramento analista, ZEIS especial etc.) exibidos e registrados como motivo de análise.
-- RN-002: Analista pode incluir atividade (CNAE) adicional quando permitido.
-- RN-003: Revisões versionadas imutáveis após finalização — nova revisão cria nova ficha.
-- RN-004: Dados SIGIS (zona/via) exibidos na ficha (HU-107).
-- RN-005: A ficha abre **pré-preenchida pelo motor** (HU-140) quando disponível; o painel de **precedentes** do imóvel e do CNAE na zona (HU-142) é exibido junto.
-- RN-006: A ficha exibe **mini-mapa permanente** (polígono + zona/via/ZEIS sobrepostos) ao lado dos dados de enquadramento — o analista vê o contexto territorial sem trocar de tela.
-- RN-007: Entre revisões, o sistema oferece **comparação (diff)**: o que mudou da revisão anterior para a atual (campos, condicionantes, status por CNAE, parecer).
-- RN-008: Rascunho com salvamento automático (autosave) — perda de sessão não perde trabalho da ficha.
-- RN-009: Campos de texto da ficha (parecer, condicionantes adicionais) oferecem a **biblioteca de textos-padrão** (HU-085 RN-004) para inserção rápida e consistente.
+## Fluxo evidenciado
+1. Abrir a ficha chama a revisão vigente. Se não houver revisão utilizável, a pré-análise tenta criar a revisão 1. A abertura audita `ficha-consulta` e a consulta ao cadastro imobiliário.
+2. A tela recebe localização, dados de TVL, recepção, tramitação, opções de enquadramento e de conclusão, setores ativos, escritório virtual, textos padrão e o indicador de ficha de vistoria já existente. Abrir a ficha de análise não cria vistoria.
+3. Autosave atualiza só o que veio: escolha por CNAE (preservando `status_sugerido` do motor), condicionantes, vagas, parecer, sede de escritório virtual e confirmação de endereço. O motivo de análise enviado pelo cliente é ignorado.
+4. Finalizar marca a revisão como finalizada, grava data e analista, materializa divergências entre o sugerido pelo motor e o escolhido, e audita. Finalizar de novo é recusado. Finalizar não decide o processo.
+5. Nova revisão copia a última como rascunho. A finalizada permanece.
+6. O diff compara duas revisões. Sugestão de parecer, de justificativa e resumo de IA são apoio de leitura; não gravam a decisão.
 
-## Dependências
-- HU-015, HU-019, HU-038, HU-107, HU-086, HU-087, HU-132.
+## Regras de negócio evidenciadas
+- Revisão finalizada não recebe autosave.
+- A sugestão do motor fica gravada para a divergência e não pré-marca `status_escolhido`: na pré-análise esse campo nasce nulo.
+- Decisão humana só lê ficha finalizada.
 
-## Prioridade
-Alta
+## Validações
+- Autosave em ficha finalizada: erro de imutabilidade, respondido como validação.
+- Campos do rascunho seguem `AnalysisRecordRequest` (parecer opcional; listas quando enviadas).
+
+## Critérios de aceite
+1. Sem `analisar-processos`, a ficha humana responde 403. A ficha do expresso abre para quem consulta a solicitação.
+2. Rascunho aceita gravação parcial e guarda a sugestão do motor.
+3. Finalizar torna a revisão imutável e registra divergência quando a escolha difere do sugerido.
+4. Nova revisão não altera a finalizada.
+5. Preencher a ficha não muda o status canônico do processo.
+
+## Divergências da redação anterior
+- A redação anterior dizia que a ficha serve para deferir, indeferir ou manter atividades em análise como se preencher já decidisse. Decidir é outro endpoint e exige `concluir-analise`.
+- Não há manutenção de atividade "em análise" como terceiro resultado da decisão da ficha: os resultados lidos na conclusão são deferido e indeferido.
+
+## Evidências
+- `app/Http/Controllers/Gestao/AnalysisRecordController.php`
+- `app/Services/Analise/AnalysisRecordService.php`
+- `app/Http/Requests/Gestao/AnalysisRecordRequest.php`
+- `routes/gestao.php`
+
+## Não evidenciado
+- Edição da ficha finalizada no lugar. A reedição é revisão nova.
+- Preenchimento da ficha pelo perfil apoio.

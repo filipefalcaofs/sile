@@ -3,135 +3,76 @@
 ## Épica
 **EP02 — Administração**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Administrar regras do Quadro 10.
+Consultar a versão vigente do Quadro 10 da LOUOS e alterar suas permissões por zona somente por rascunho publicado com quatro olhos.
 
 ## História de Usuário
-**Como** administrador,  
-**quero** manter Quadro 10,  
-**para** permitir análise por via.
+**Como** mantenedor com `manter-louos`,
+**quero** abrir um rascunho do Quadro 10, editar linhas, importar CSV e publicar com outro usuário,
+**para** a permissão por zona mudar sem reescrever a versão que já decidiu processos.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- Consultar o hub na aba Quadros exige `consultar-louos` (a rota também aceita `consultar-cnaes`, e a aba reconfere `consultar-louos`).
+- Abrir rascunho, gravar linha, importar CSV, publicar, descartar, ativar versão e a publicação direta por `alteracoes` exigem `manter-louos`.
+- Menu Regras, item Motor de regras. O rascunho fica em `/gestao/louos/rascunho?quadro=quadro10`.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. A aba Quadros resume Quadro 10 e Quadro 11A (versão, vigência e total de linhas) e lista a vigente do quadro selecionado, com histórico de versões que não são rascunho.
+2. A busca do Quadro 10 atinge zona e grupo de uso. Cada linha traz zona, grupo de uso, subgrupo, permissão (`permitido`, `permitido_condicionado`, `proibido`), referência de condicionante e base legal.
+3. Abrir rascunho copia a vigente quando ainda não há rascunho. Se já há, a abertura retoma o existente. A versão é obrigatória só na abertura nova e é única no domínio.
+4. No rascunho o mantenedor inclui, altera e exclui linha, importa CSV (opção de substituir) e baixa o modelo. O diff compara o rascunho com a vigente. `canPublish` é verdadeiro quando o usuário autenticado não é o autor.
+5. Publicar exige publicador diferente do autor. No Quadro 10, o serviço recusa a publicação se alguma zona referenciada não existir e estiver ativa no cadastro de zonas (HU-165). A vigente anterior permanece.
+6. Ativar uma versão já publicada fecha a vigente sem apagá-la. Rascunho não é ativado.
+7. Descartar o rascunho não altera a vigente.
+8. Existe também publicação que recebe `quadro`, `version`, `author_id` e `alteracoes` e cria versão nova, igualmente com autor diferente do publicador.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- A vigente não é editada no lugar. Toda edição de linha ocorre no rascunho.
+- A permissão aceita o enum interno e, na importação, os sinais da matriz oficial (S, N, S(c) e equivalentes).
+- Zona citada no rascunho e ausente do cadastro ativo bloqueia a publicação, com a lista das zonas ausentes.
+- A consulta do hub é auditada no log `louos`, evento `consulta-quadros`.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Manter Quadro 10**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- Quadro restrito a `quadro10` ou `quadro11a`.
+- Linha do Quadro 10: zona e grupo de uso obrigatórios (até 50), subgrupo opcional (até 50), permissão obrigatória no enum `Quadro10Permissao`, referência de condicionante opcional (até 50), base legal e observação opcionais.
+- CSV: arquivo `csv` ou `txt`, até 5 MB; `substituir` booleano opcional. Cabeçalho do modelo: `zona,grupo_uso,subgrupo,permissao,condicionante_ref,base_legal`.
+- Versão do rascunho ou da publicação: obrigatória na publicação direta, até 255, única no domínio `louos_quadro10`. `author_id` precisa existir em `users`.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+### CA-01 — Consulta da vigente
+**Dado** um usuário com `consultar-louos` e versão vigente do Quadro 10,
+**Quando** abre o hub no quadro `quadro10`,
+**Então** vê as permissões por zona dessa versão e o histórico publicado.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+### CA-02 — Edição só no rascunho
+**Dado** um mantenedor com `manter-louos`,
+**Quando** inclui ou altera uma linha,
+**Então** a mudança fica no rascunho e a versão vigente conserva as linhas anteriores.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+### CA-03 — Quatro olhos
+**Dado** um rascunho cujo autor é o usuário autenticado,
+**Quando** esse usuário tenta publicar,
+**Então** a publicação é recusada e a mensagem pede publicador diferente do autor.
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
+### CA-04 — Zona inexistente
+**Dado** um rascunho do Quadro 10 que cita zona ausente do cadastro ativo,
+**Quando** outro usuário publica,
+**Então** a publicação falha e a vigente não muda.
 
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-- RN-004: A aplicação do quadro deve considerar zona, via, enquadramento da atividade e versão vigente da LOUOS.
-- RN-005: Resultado proibitivo deve impedir deferimento automático.
-- RN-006: Resultado condicionado deve gerar condicionante vinculada à decisão.
+## Divergências da redação anterior
+A redação anterior dizia que resultado proibitivo impede deferimento automático e que resultado condicionado gera condicionante na decisão. Isso é efeito do motor ao aplicar a versão vigente, não regra desta tela de manutenção. A tela grava `permissao` e `condicionante_ref`; não emite a decisão. A redação também não descrevia rascunho, CSV, quatro olhos nem a trava de zona cadastrada.
 
-## Critérios de Aceite — BDD
+## Evidências
+- `LouosController`, `LouosDraftController`, `LouosDraftService`.
+- `LouosLinhaRules`, `PublishLouosVersionRequest`, `StoreLouosLinhaRequest`, `ImportLouosCsvRequest`, `OpenLouosDraftRequest`.
+- `app/Enums/Quadro10Permissao.php` e `RuleDomain::LouosQuadro10`.
+- `routes/gestao.php`: prefixo `louos` com `consultar-louos|consultar-cnaes` e `manter-louos`.
 
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Manter Quadro 10**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- Edição destrutiva da versão vigente.
+- Quadro 7 e Quadro 11 neste mesmo mapa. O mapa de quadros do rascunho contém só `quadro10` e `quadro11a`.
+- A aba Regras territoriais (`TerritorialRuleController`) é outro fluxo do mesmo hub, com rascunho e quatro olhos próprios, e não faz parte desta HU.

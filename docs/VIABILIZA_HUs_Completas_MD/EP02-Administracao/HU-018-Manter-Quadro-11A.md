@@ -3,137 +3,75 @@
 ## Épica
 **EP02 — Administração**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Administrar regras do Quadro 11A.
+Consultar e versionar o Quadro 11A da LOUOS (condições complementares por classe de via), sem alterar a versão vigente no lugar.
 
 ## História de Usuário
-**Como** administrador,  
-**quero** manter Quadro 11A,  
-**para** permitir regras complementares.
+**Como** mantenedor com `manter-louos`,
+**quero** manter o rascunho do Quadro 11A e publicá-lo com outro usuário,
+**para** as condições por classe de via entrarem em vigor como nova versão.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- As mesmas do hub de quadros da HU-016. O quadro na URL é `quadro11a`.
+- Consulta da aba: `consultar-louos`. Escrita: `manter-louos`.
+- Menu Regras, Motor de regras. O cadastro das classes de via usadas na publicação é a HU-166.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. A consulta vigente lista classe de via, grupo de uso, condições e base legal. A busca atinge classe de via e grupo de uso.
+2. O rascunho segue o mesmo ciclo do Quadro 10: abrir ou retomar, incluir, alterar, excluir linha, importar CSV, ver diff, publicar com quatro olhos, descartar e reativar versão publicada.
+3. Na publicação, o serviço recusa classe de via referenciada que não exista e esteja ativa no cadastro de vias.
+4. O modelo CSV é `classe_via,grupo_uso,condicoes,base_legal`. O exemplo do controller usa classe `VL` e grupo `nR1-01`.
+5. O manual de montagem do CSV fica em `/gestao/louos/manual?quadro=quadro11a`.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- Domínio `louos_quadro11a`, rótulo «Quadro 11A da LOUOS (condições complementares pela via)».
+- A publicação é sensível: publicador diferente do autor.
+- Classe de via fora do cadastro ativo bloqueia a publicação do rascunho.
+- A versão vigente consultada não recebe edição direta de linha.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Manter Quadro 11A**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- `classe_via` obrigatória, até 50 caracteres.
+- `grupo_uso` opcional, até 50.
+- `condicoes` opcional, array.
+- `base_legal` e `observacao` opcionais.
+- CSV `csv` ou `txt`, até 5 MB.
+- `quadro` aceito: `quadro11a` (ou `quadro10` no mesmo validador).
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+### CA-01 — Lista vigente
+**Dado** versão vigente do Quadro 11A e usuário com `consultar-louos`,
+**Quando** seleciona `quadro11a` no hub,
+**Então** vê classe de via, grupo de uso, condições e base legal dessa versão.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+### CA-02 — Rascunho isolado
+**Dado** um mantenedor com `manter-louos`,
+**Quando** altera uma linha no rascunho,
+**Então** a versão vigente permanece até a publicação.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+### CA-03 — Via não cadastrada
+**Dado** um rascunho que cita classe de via inativa ou inexistente,
+**Quando** outro usuário publica,
+**Então** a publicação é recusada e a vigente não muda.
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
+### CA-04 — Autor não publica
+**Dado** o autor do rascunho,
+**Quando** ele mesmo tenta publicar,
+**Então** a publicação por quatro olhos é recusada.
 
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-- RN-004: A aplicação do quadro deve considerar zona, via, enquadramento da atividade e versão vigente da LOUOS.
-- RN-005: Resultado proibitivo deve impedir deferimento automático.
-- RN-006: Resultado condicionado deve gerar condicionante vinculada à decisão.
+## Divergências da redação anterior
+A redação anterior repetia as regras genéricas de resultado proibitivo e condicionante na decisão. A tela grava condições por classe de via na versão do quadro. O efeito na decisão automática é do motor que lê a versão vigente. A redação não citava o cadastro de vias como trava da publicação.
 
-## Critérios de Aceite — BDD
+## Evidências
+- `LouosController::listarQuadro` no ramo `quadro11a`.
+- `LouosDraftController` rótulo «Quadro 11A — Condições por classe de via».
+- `LouosLinhaRules` ramo `quadro11a`.
+- `LouosDraftService::publicar` e a verificação de classes de via ativas.
+- `RuleDomain::LouosQuadro11a`.
 
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Manter Quadro 11A**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
-
-Referência oficial: Quadro 11A da LOUOS (Lei nº 9.148/2016, Anexo 01) — condições de instalação em função da classificação viária.
+## Não evidenciado
+- Quadro 11 e Quadro 11B neste fluxo.
+- Edição da linha na versão vigente, sem rascunho.

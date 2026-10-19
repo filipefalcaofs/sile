@@ -3,134 +3,67 @@
 ## Épica
 **EP04 — Georreferenciamento e Território**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Permitir consulta de camadas GIS.
+Listar as versões das camadas geográficas locais e importar um GeoJSON oficial, abrindo nova versão vigente sem apagar a anterior.
 
 ## História de Usuário
-**Como** analista,  
-**quero** consultar camadas,  
-**para** apoiar análise técnica.
+**Como** administrador,  
+**quero** ver a versão vigente de cada tipo de camada e importar um GeoJSON,  
+**para** trocar a base territorial sem deploy e sem perder o histórico.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- Leitura e importação: `manter-territorio`, somente o papel administrador.
+- A consulta territorial (`consultar-territorio`) mostra o status das camadas abertas, sem importar arquivo.
+- Menu: Território → Camadas geográficas (`/gestao/territorio/camadas`).
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. `GET /gestao/territorio/camadas` agrupa `geo_layers` pelos cinco tipos: bairro, zona urbanística, via, lote e restrição territorial.
+2. Cada grupo traz a vigente (status `vigente`), o histórico ordenado por início de vigência e o indicador `fonte_bloqueada` (verdadeiro para zona e lote).
+3. Cada versão expõe identificador, código de versão, status (`vigente`, `substituida`, `pendente_fonte`), origem, vigência, e quantidade de feições.
+4. `POST /gestao/territorio/camadas` exige tipo, versão e arquivo. Origem vazia vira `importacao-pela-gestao`.
+5. Fora de PostgreSQL, a importação é recusada com erro e nada é criado.
+6. JSON inválido é recusado. JSON válido segue `GeoJsonLayerImporter`, o mesmo da carga por comando: a nova versão fica vigente e a anterior é fechada, não apagada.
+7. A mensagem de retorno informa versão, feições lidas, inseridas e, se houver, as inválidas não inseridas (até cinco motivos).
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- O importador depende de PostGIS (`ST_GeomFromGeoJSON` / `ST_MakeValid`). Conexão que não é `pgsql` não simula a carga.
+- Zona e lote continuam marcados como fonte bloqueada na tela. Importar GeoJSON desses tipos é aceito pelo formulário se o arquivo for válido e o banco for PostGIS. O seed, por si, não traz feições oficiais desses dois tipos.
+- O tamanho máximo do arquivo é `viabiliza.geo.upload_max_mb` (padrão 20 MB).
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Consultar camadas geográficas**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- Tipo obrigatório, um dos valores do enum.
+- Versão obrigatória, até 100 caracteres.
+- Origem opcional, até 255 caracteres.
+- Arquivo obrigatório, até o limite em megabytes.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+**Dado** que o administrador abre as camadas,  
+**Quando** a listagem carrega,  
+**Então** os cinco tipos aparecem com a vigente, quando houver, e o histórico de versões.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+**Dado** que o banco não é PostgreSQL,  
+**Quando** um GeoJSON é enviado,  
+**Então** a importação é recusada e nenhum registro novo é criado.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+**Dado** que o banco é PostGIS e o arquivo é um GeoJSON válido,  
+**Quando** a importação conclui,  
+**Então** a nova versão fica vigente, a anterior deixa de ser a vigente, e a tela informa lidas, inseridas e inválidas.
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
+## Divergências da redação anterior
+A redação anterior descrevia consulta genérica de camadas. O código é a manutenção versionada do GeoJSON local, com recusa explícita fora do PostGIS.
 
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-- RN-004: Camadas geográficas devem ser mantidas como **dados versionados com vigência** (carga de nova versão não apaga a anterior); consultas operacionais usam a versão vigente e consultas de auditoria/reprodução usam a versão da época da decisão (ver HU-107 RN-009).
-- RN-005: A carga/atualização de camada registra origem, responsável, data e resumo do diff (features adicionadas/alteradas/removidas) em auditoria.
+## Evidências
+- `GeoLayerController`
+- `ImportGeoLayerRequest`
+- `GeoJsonLayerImporter`
+- `GeoLayerType`, `GeoLayerStatus`
+- Rotas `gestao.territorio.camadas.index` e `store`
 
-## Critérios de Aceite — BDD
-
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Consultar camadas geográficas**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- Exclusão de versão já importada.
+- Edição de feição individual na tela.
+- Publicação da camada no GeoServer a partir deste formulário. O catálogo WFS é a HU-169.

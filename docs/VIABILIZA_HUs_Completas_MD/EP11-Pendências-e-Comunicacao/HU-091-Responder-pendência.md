@@ -3,134 +3,55 @@
 ## Épica
 **EP11 — Pendências e Comunicação**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Permitir resposta e anexos complementares.
+Permitir que o requerente responda o convite aberto e que o sistema encerre, por indeferimento, o convite que venceu sem resposta.
 
 ## História de Usuário
-**Como** cidadão,  
-**quero** responder pendência,  
-**para** dar continuidade ao processo.
+**Como** requerente, **quero** enviar a resposta do convite no portal, **para** recolocar a solicitação em análise. **Como** sistema, **quero** expirar o convite vencido, **para** indeferir o processo que ficou sem resposta no prazo.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- Resposta: portal, policy `view` da solicitação (dono ou representado). Terceiro recebe 403. A pendência tem de ser da mesma solicitação.
+- Expiração: comando `pendencias:expirar`, agendado todo dia às 06:00, sem usuário. Não há permissão de perfil.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. A resposta exige pendência aberta e processo em `em_pendencia`. Grava o texto, a data e o status `respondida`, transiciona para `em_analise` e audita. O aviso ao analista é a HU-092.
+2. Fora desse estado, nada é gravado e o portal mostra o erro.
+3. O comando seleciona pendências abertas com `due_at` anterior a agora. Marca `expirada` e audita `pendencia-expirada`.
+4. Se o processo ainda está `em_pendencia`, `IndeferirPorPrazoConviteService` cria decisão indeferida, `flow` `analise_tecnica`, consolidado `convite_expirado`, `decided_by_user_id` nulo e `reason` do catálogo `justificativa.indeferimento.convite_expirado`. O status canônico vai para `indeferida`. `ResultadoEmitido` dispara depois do commit.
+5. Em seguida notifica o analista atribuído ou, se não houver, quem abriu o convite, tipo `pendencia_expirada` (e-mail e in-app no mapa padrão).
+6. Segunda execução não acha de novo a pendência aberta vencida.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- Responder reabre a análise. Não responder até o `due_at` indefere. O comentário antigo do agendamento dizia que o comando não indeferia; o comando que roda indefere.
+- O indeferimento por prazo não preenche CNAE nem versão de regra. O motivo legível é o texto do catálogo, então o model aceita a gravação.
+- Só indefere se o status ainda é `em_pendencia`.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Responder pendência**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- Resposta: `response` obrigatório, texto, no máximo 5000 caracteres.
+- Comando: `due_at` nulo não entra. Pendência já respondida ou cancelada não entra.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+1. Requerente autorizado responde convite aberto e a pendência fica `respondida`, com o processo em `em_analise`.
+2. Resposta vazia é recusada. Resposta fora do estado aberto não grava.
+3. Convite vencido passa a `expirada` e o processo em `em_pendencia` fica `indeferida`, com justificativa do catálogo e sem autor humano.
+4. Rodar o comando de novo não gera segunda decisão para o mesmo convite.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+## Divergências da redação anterior
+- A redação anterior não descrevia o indeferimento automático. O código não mantém o processo em pendência depois do prazo: indefere.
+- A resposta não é lançada pela gestão. O analista cancela o convite por outro caminho (HU-083), com parecer, sem texto do requerente.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+## Evidências
+- `app/Http/Controllers/Portal/PendenciaRespostaController.php`
+- `app/Services/Analise/PendenciaService.php` (`responder`)
+- `app/Console/Commands/ExpirarPendenciasCommand.php`
+- `app/Services/Analise/IndeferirPorPrazoConviteService.php`
+- `routes/console.php`
+- `config/viabiliza.php` (`pendencia_expirada`)
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
-
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-- RN-004: A resposta ao convite/pendência ocorre pelo **portal Simplifica** (a interação analista ↔ requerente é pelo portal — reunião 2026-06-11); no fluxo Regin, o acompanhamento do convite também é visível no site da Junta.
-- RN-005: Resposta dentro do prazo reabre a análise (HU-092); prazo expirado segue tratamento parametrizado (HU-014), com contagem conforme regras de prazo e feriados (HU-137).
-
-## Critérios de Aceite — BDD
-
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Responder pendência**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- Prorrogação do prazo pelo analista.
+- Resposta com anexo.

@@ -1,57 +1,74 @@
 # HU-148 — Registrar solicitação em contingência
 
-> **Status: Aceita (2026-06-12)** — melhoria além do legado. Evita paralisia total da operação quando o Regin/integração falha por período prolongado; também permite operar o fluxo completo antes de o contrato Regin ser entregue.
-
 ## Épica
 **EP08 — Solicitação de Viabilidade**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Permitir que operador autorizado da SEDUR registre manualmente uma solicitação de viabilidade no backoffice, com origem "contingência" auditada, mantendo o processo no mesmo fluxo decisório padrão.
+Permitir que um operador autorizado registre, na retaguarda, uma solicitação completa com origem contingência, protocole pelo mesmo serviço do portal e submeta o processo ao motor do fluxo expresso.
 
 ## História de Usuário
-**Como** operador/gestor SEDUR,  
-**quero** registrar solicitação manualmente em contingência,  
-**para** manter o atendimento quando o canal Regin estiver indisponível ou a mensagem não chegar.
+**Como** operador com permissão de registrar contingência,  
+**quero** lançar o pedido com os dados do formulário, o motivo e a referência externa,  
+**para** protocolar o processo quando o canal Regin não é a origem do registro.
 
-## Contexto de Negócio
-O legado sofre com "mensagens que não chegam" e processos travados na origem. Com recepção durável (HU-103) o risco cai, mas falha prolongada do integrador não pode parar a cidade. A entrada de contingência registra o processo com os mesmos dados do formulário oficial e o BAP/identificadores externos são vinculados a posteriori, quando disponíveis.
+## Atores e permissões
+- Permissão `registrar-contingencia` nas rotas `gestao/contingencia`.
+- O beneficiário é um usuário já cadastrado, localizado pelo CPF. O operador fica em `created_by_user_id`.
+- A empresa precisa já existir, localizada pelo CNPJ.
+- Não há criação de cidadão nem de empresa nesta tela.
 
-## Fluxo Principal
-1. Operador autorizado aciona "Nova solicitação (contingência)" na retaguarda.
-2. Preenche o mesmo conjunto de dados do formulário oficial (imóvel, polígono, CNAEs, condicionantes, anexos), informando motivo da contingência e referência externa quando houver (nº de protocolo Regin informado pelo requerente, e-mail, atendimento presencial).
-3. O sistema protocola com origem "contingência" e segue o fluxo padrão (classificação, expresso ou análise).
-4. Quando o canal normaliza, identificadores externos (BAP) são vinculados ao processo (HU-133) e a resposta ao integrador segue o fluxo normal (HU-104).
-5. Tudo auditado: operador, motivo, dados, vínculos posteriores.
+## Fluxo evidenciado
+1. `GET gestao/contingencia/create` lista tipos de serviço ativos, requisitos documentais ativos, tipos de imóvel do catálogo e o centro do mapa.
+2. `POST` valida CPF, CNPJ, motivo, polígono, área, CNAE principal, complementares e anexos.
+3. Se a referência externa já existe em solicitação não cancelada, a operação volta com erro e não cria outro processo.
+4. Reincidência por CNPJ gera alerta e não bloqueia.
+5. Em uma transação, cria a solicitação com origem `contingencia`, motivo, referência, endereço, área, indicadores e inscrição; aplica o tipo de imóvel; sincroniza CNAEs; grava anexos com SHA-256 no disco de documentos; escreve a geometria; chama `ProtocolarSolicitacaoService::protocol`.
+6. Falha de dado mínimo ou de documento obrigatório desfaz a transação, apaga os arquivos gravados e devolve o erro. O número não permanece consumido por um processo pela metade.
+7. Depois do commit, `FluxoExpressoService::decide` roda na hora, com o operador como ator.
+8. O redirecionamento vai para a ficha do processo, com o número de protocolo. O alerta de CNPJ, se houver, segue na sessão.
 
-## Regras de Negócio
-- RN-001: Acesso restrito a perfil específico; motivo da contingência é obrigatório.
-- RN-002: O processo de contingência executa exatamente o mesmo motor e regras do fluxo normal — nunca um atalho decisório.
-- RN-003: Origem "contingência" permanece visível no processo e nos relatórios (dimensão de origem).
-- RN-004: Vinculação posterior de BAP/identificadores externos não pode duplicar processo (verificação de duplicidade — HU-061 RN-007).
-- RN-005: Volume de contingência é monitorado (HU-146/EP15) — uso recorrente indica problema de integração a tratar, não rotina aceitável.
+## Regras de negócio evidenciadas
+- A origem gravada é contingência. O protocolo usa a mesma máquina de estados do portal: rascunho para protocolada.
+- A referência externa duplicada bloqueia. A reincidência por empresa não bloqueia.
+- `is_virtual_office` também preenche `wants_virtual_office_hq` com o mesmo booleano.
+- Inscrição é só dígitos; vazia vira nulo.
+- Anexo cuja chave não é um requisito existente é ignorado.
+- O ponto de referência é opcional na contingência. No portal, o ponto de referência do imóvel é obrigatório.
 
-## Critérios de Aceite — BDD
+## Validações
+- CPF obrigatório e válido; cidadão precisa existir.
+- CNPJ obrigatório; empresa precisa existir.
+- Motivo obrigatório, até 2000 caracteres.
+- Referência externa opcional, até 255 caracteres.
+- Polígono obrigatório, tipo Polygon, um anel com pelo menos quatro pontos.
+- Área obrigatória, numérica, maior que zero.
+- Tipo de serviço, se informado, ativo. CNAE principal ativo. Complementares ativos, distintos, até o limite parametrizado, e diferentes da principal.
+- Anexos opcionais, MIME e tamanho iguais aos do portal.
+- Tipo de imóvel, inscrição e endereço opcionais, com os tamanhos do request.
 
-### CA-01 — Registro com fluxo padrão
-**Dado** um operador autorizado com o canal Regin indisponível,  
-**Quando** registrar solicitação em contingência,  
-**Então** o processo deve ser protocolado com origem "contingência" e seguir o fluxo decisório padrão.
+## Critérios de aceite
+- Dado operador autorizado, cidadão e empresa já cadastrados, polígono, área e CNAE principal, quando registra, então a solicitação nasce com origem contingência, é protocolada e o motor do expresso é chamado em seguida.
+- Dado a mesma referência externa já usada em processo não cancelado, quando registra de novo, então não cria outro processo e informa o protocolo existente.
+- Dado documento obrigatório faltante ou dado mínimo ausente, quando registra, então nada permanece protocolado e os arquivos da tentativa são removidos.
+- Dado CPF ou CNPJ sem cadastro, quando envia, então a validação recusa.
+- Dado usuário sem `registrar-contingencia`, quando acessa a rota, então o middleware nega.
 
-### CA-02 — Vinculação posterior
-**Dado** um processo de contingência com BAP chegando depois,  
-**Quando** o vínculo for realizado,  
-**Então** o processo não pode ser duplicado e a resposta ao integrador segue o contrato normal.
+## Divergências da redação anterior
+A vinculação posterior do BAP e a resposta ao integrador não ocorrem neste controller. A referência externa é gravada e, se repetida, bloqueia na hora. Cidadão e empresa não são criados no ato. O expresso é decidido de imediato, não apenas deixado na fila do evento de protocolo.
 
-### CA-03 — Auditoria
-**Dado** qualquer registro em contingência,  
-**Quando** consultar a trilha,  
-**Então** operador, motivo, dados e vínculos posteriores devem estar registrados.
+## Evidências
+- `App\Http\Controllers\Gestao\ContingenciaController`
+- `App\Http\Requests\Gestao\RegistrarContingenciaRequest`
+- `App\Services\Solicitacao\ProtocolarSolicitacaoService`
+- `App\Services\Expresso\FluxoExpressoService::decide`
+- `App\Services\Solicitacao\DuplicateRequestDetector::detectByExternalReference`
+- `routes/gestao.php` (middleware `permission:registrar-contingencia`)
 
-## Dependências
-- HU-061/HU-062 (formulário), HU-133 (BAP), HU-104 (resposta ao integrador), HU-146 (monitoramento).
-
-## Prioridade
-Média-alta
-
-## Observações
-Benefício adicional: enquanto o contrato técnico do Regin não for entregue (bloqueio EP13), a entrada de contingência permite à SEDUR operar e homologar o fluxo completo de ponta a ponta com processos reais — sem nenhum adaptador simulado.
+## Não evidenciado
+- Cadastro de cidadão ou de empresa inexistentes durante a contingência.
+- Transição para `aguardando_bap` ou consulta ao `BapRegistry` neste fluxo.
+- Recebimento automático de mensagem Regin. Este canal grava o que o operador digitou.

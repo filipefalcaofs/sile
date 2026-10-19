@@ -3,132 +3,50 @@
 ## Épica
 **EP12 — Auditoria e Compliance**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Exibir regras usadas em uma decisão.
+Mostrar, a partir do que foi gravado na decisão, os passos de regra que fundamentaram o desfecho.
 
 ## História de Usuário
-**Como** analista/auditor,  
-**quero** consultar regras aplicadas,  
-**para** entender fundamentação da decisão.
+**Como** analista ou auditor que abre o processo, **quero** ver as regras aplicadas na decisão, **para** entender a fundamentação sem o motor rodar de novo.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- Quem consulta o processo na gestão e recebe a prop `explicacao`.
+- Não há rota própria “regras aplicadas”. A projeção sai em `ProcessoController` quando existe `ViabilityDecision`.
+- A mesma leitura do `decision_trace` é usada na ficha de resultado do expresso e no registro de análise.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. Se o processo não tem decisão, a explicação não é montada.
+2. `DecisionExplanationService::explain` lê `decision_trace`, `rules_versions` e fundamentação já gravados.
+3. Com trace, a projeção segue a ordem registrada por CNAE: entrada, risco, enquadramento LOUOS, consolidação e desfecho.
+4. Sem trace (decisão anterior a esse snapshot), a explicação é compacta, a partir de `per_cnae` e fundamentação, e cada passo não snapshotado é marcado como não registrado.
+5. O serviço não instancia o motor nem recalcula zona, risco ou quadro.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- A fonte é o registro da decisão. Reexecutar a regra vigente mudaria o passado e não ocorre.
+- Decisão legada não recebe valores inventados para preencher passo ausente.
+- Títulos e motivos dos passos não registrados vêm do catálogo `decision_texts`, com texto de fábrica se o parâmetro não existir.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Consultar regras aplicadas**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- Sem `ViabilityDecision`, não há explicação.
+- Shape associativo legado de fundamentação não deve derrubar a leitura; o resource trata o payload gravado.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+- Com `decision_trace` preenchido, a tela do processo mostra os passos na ordem gravada, com versão de regra do snapshot.
+- Com trace vazio, a resposta marca `legado` e não fabrica quadro, artigo ou zona.
+- A consulta não dispara nova execução do motor.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+## Divergências da redação anterior
+A redação pedia uma consulta genérica do auditor. O código projeta a decisão já gravada na ficha do processo, sem tela de auditoria separada e sem nova chamada ao motor.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+## Evidências
+- `app/Services/Auditoria/DecisionExplanationService.php`
+- `app/Http/Resources/DecisionExplanationResource.php`
+- `app/Http/Controllers/Gestao/ProcessoController.php` (prop `explicacao`)
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
-
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-- RN-004: Para decisões automáticas, a consulta deve oferecer **visualização explicável**: passo a passo da decisão (regra a regra, com valores de entrada, resultado parcial e versão), em formato legível por analista e gestor — não apenas log técnico.
-- RN-005: A explicação deve ser reproduzível: dado o processo e a versão das regras, a visualização reflete exatamente o que foi executado (fonte: registro da decisão, nunca reexecução).
-
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Consultar regras aplicadas**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- Reprocessar a LOUOS na hora da consulta para “atualizar” a explicação.
+- Lista global de regras aplicadas fora de um processo decidido.

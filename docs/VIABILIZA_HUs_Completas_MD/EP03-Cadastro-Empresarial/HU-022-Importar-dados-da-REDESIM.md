@@ -3,132 +3,70 @@
 ## Épica
 **EP03 — Cadastro Empresarial**
 
+## Situação na implementação
+- **Status:** Parcial
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Receber dados empresariais encaminhados pela REDESIM/integrador.
+Incluir ou atualizar empresa e CNAEs a partir de um arquivo JSON no formato de referência tratado como REDESIM.
 
 ## História de Usuário
-**Como** sistema,  
-**quero** importar dados da REDESIM,  
-**para** iniciar o fluxo de viabilidade na SEDUR.
+**Como** operação com acesso ao comando de console,  
+**quero** importar um arquivo JSON de empresas,  
+**para** criar ou atualizar o cadastro e os CNAEs sem abrir solicitação de viabilidade.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- Não há rota de portal nem tela para esta importação.
+- O comando `redesim:importar {arquivo}` roda no console. A opção `--queue` enfileira `ImportRedesimJob`.
+- O serviço não cria vínculo `company_user`. A empresa importada não aparece em "Minhas empresas" até existir vínculo por outro fluxo.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. O comando confere se o arquivo existe. Ausente: mensagem "Arquivo não encontrado" e saída de falha.
+2. Sem `--queue`, `RedesimImportService::import` lê o JSON. Aceita um objeto com a chave `protocolo` ou uma lista de objetos.
+3. Cada item passa por validação. Item válido faz upsert por CNPJ, em transação, e sincroniza o conjunto de CNAEs (um principal e os secundários resolvidos).
+4. Empresa nova nasce com `source` `redesim`, `redesim_protocol` e `redesim_synced_at`. Empresa já existente é atualizada sem alterar `source`.
+5. O comando imprime lidos, importados, atualizados, rejeitados e avisos. Se todos os itens forem rejeitados, a saída é falha.
+6. A auditoria `empresas` / `importacao-redesim` grava o relatório, com versão de regra `redesim-import-v1`. Resultado `falha` somente quando todos os itens lidos foram rejeitados.
+7. Com `--queue`, o comando apenas despacha o job e informa que a importação foi enfileirada. O job chama o mesmo serviço.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- O próprio serviço declara que a estrutura do payload é referência, a validar com a SEDUR, e que o transporte (webservice ou fila do integrador) não está neste comando.
+- Campos de solicitação (área ocupada, inscrição imobiliária, forma de atuação) são ignorados.
+- Rejeição do item, sem gravar a empresa: protocolo vazio, razão social vazia, CNPJ inválido (`ValidCnpj`) ou CNAE principal inexistente na tabela oficial.
+- CNAE principal inativo gera aviso e o item segue. CNAE secundário inexistente ou igual ao principal é ignorado com aviso. Secundário inativo gera aviso e entra no conjunto.
+- Não há chamada HTTP à REDESIM, ao REGIN ou à JUCEB neste serviço.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Importar dados da REDESIM**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- Arquivo legível. JSON inválido encerra o comando com "JSON inválido".
+- Por item: protocolo obrigatório, razão social obrigatória, CNPJ válido, CNAE principal existente em `cnaes.code` (somente dígitos).
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+### CA-01 — Upsert por arquivo
+**Dado** um JSON com protocolo, razão social, CNPJ válido e CNAE principal existente,  
+**Quando** `redesim:importar` processa o arquivo,  
+**Então** a empresa é criada ou atualizada, os CNAEs do item substituem o conjunto anterior e o relatório é auditado.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+### CA-02 — Item inválido não grava empresa
+**Dado** um item sem protocolo, sem razão social, com CNPJ inválido ou com CNAE principal fora da tabela,  
+**Quando** a importação roda,  
+**Então** o item entra em rejeitados e não é persistido.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+### CA-03 — Sem canal REDESIM
+**Dado** este comando e este serviço,  
+**Quando** a importação executa,  
+**Então** a origem dos dados é o arquivo local. Nenhum webservice REDESIM é chamado e nenhuma solicitação de viabilidade é aberta.
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
+## Divergências da redação anterior
+A redação anterior dizia que o sistema recebe dados encaminhados pela REDESIM/integrador para iniciar o fluxo de viabilidade na SEDUR. O código implementa leitura de arquivo JSON, não o recebimento do integrador, e não abre viabilidade nem vínculo com usuário do portal.
 
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
+## Evidências
+- `app/Services/RedesimImportService.php`
+- `app/Console/Commands/ImportRedesimCommand.php`
+- `app/Jobs/ImportRedesimJob.php`
+- `app/Enums/CompanySource.php`
 
-## Critérios de Aceite — BDD
-
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Importar dados da REDESIM**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- Endpoint, fila ou webservice que receba o payload do integrador REDESIM/REGIN/JUCEB para este cadastro.
+- Abertura de solicitação de viabilidade a partir do arquivo.
+- Criação de vínculo do cidadão com a empresa importada.
+- Tela de importação no portal ou no console de gestão.

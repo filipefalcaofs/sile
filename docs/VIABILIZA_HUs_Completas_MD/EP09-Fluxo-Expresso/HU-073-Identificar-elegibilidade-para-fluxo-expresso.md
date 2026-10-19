@@ -3,137 +3,66 @@
 ## Épica
 **EP09 — Fluxo Expresso**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Identificar solicitações que dispensam análise humana.
+Decidir, sobre a solicitação já protocolada, se o motor conclui no fluxo expresso ou se encaminha o processo à análise técnica, reexecutando o enquadramento em vez de confiar na simulação pré-protocolo.
 
 ## História de Usuário
 **Como** sistema,  
-**quero** identificar elegibilidade,  
-**para** processar automaticamente.
+**quero** classificar o processo protocolado como elegível ou não ao expresso,  
+**para** deferir ou indeferir só quando a regra autoriza decisão automática e, nos demais casos, mandar à análise.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- Não há tela de elegibilidade. O ator é o processamento: `DecidirFluxoExpressoJob` depois de `SolicitacaoProtocolada`, o comando de reavaliação e, na contingência, a chamada direta a `FluxoExpressoService::decide`.
+- O ator humano, quando existe, é gravado em `decided_by_user_id` só na decisão. No encaminhamento à análise, o analista permanece nulo.
+- Consultar o resultado depois é a HU-076, com permissão `consultar-solicitacoes`.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. O serviço só decide solicitação `protocolada`, ou `em_analise` sem analista, sem decisão e com análise nula ou `para_distribuir`. Fora isso, devolve o estado atual sem nova transição.
+2. Com `features.fluxo_expresso` desligado, encaminha à análise com o motivo de expresso desativado. Não cria decisão.
+3. Exclusão exclusiva de atividades, sem o CNAE gatilho da sede, não passa pelo enquadramento: o caminho é deferimento (HU-074).
+4. Exclusão do CNAE gatilho em inscrição com sede ativa só defere se o requerente for o titular e tiver confirmado a perda da condição. Sem confirmação, ou se não for o titular, vai à análise.
+5. Nos demais casos, resolve de novo zona, camadas, regras territoriais e viabilidade por CNAE.
+6. `ResolvedViability::elegivelExpresso` é verdadeiro só quando há CNAE e todos têm fluxo `expresso`. Qualquer fluxo `analise`, ou lista vazia, torna o conjunto inelegível e o processo vai à análise, com o motivo e o CNAE que o tirou do expresso.
+7. Alto risco sem ramo expresso curado na planilha vai à análise antes do teste geral de elegibilidade, salvo se o consolidado já for `nao_permitido`: nesse caso a emissão indefere.
+8. Veredito consolidado `pendente` vai à análise, sem decisão.
+9. CNAE gatilho com intenção de sede também vai à análise.
+10. O encaminhamento transiciona para `em_analise`, deposita no setor `analise.setor_triagem_id` se o setor existir e estiver ativo, inicia a etapa de distribuição com SLA e grava a queda. Não dispara `ResultadoEmitido`.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- A simulação da HU-141 não define a elegibilidade. A decisão resolve de novo.
+- Um único CNAE fora do expresso torna o processo inelegível.
+- Sem zona que permita veredito, o consolidado pendente não vira deferimento nem indeferimento.
+- Toggle do expresso desligado encaminha tudo o que ainda pode ser decidido à análise, com auditoria.
+- Camada territorial indisponível, dentro da janela e com o processo ainda protocolado, devolve espera (`DecisionResult::aguardando`) sem encaminhar naquela passada.
+- Empate de zona e divergência entre desenho e endereçamento ou inscrição encaminham à análise.
+- Regra territorial que pede análise encaminha com o motivo da regra. A que pede indeferimento segue na HU-075.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Identificar elegibilidade para fluxo expresso**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- Releitura do status sob lock. Segunda passagem não redispara evento se o processo já saiu de protocolada e não pode ser reavaliado.
+- Idempotência também pela unicidade da decisão por solicitação, quando a emissão chega a criar `ViabilityDecision`.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+- Dado processo protocolado em que todos os CNAEs resolvem para o fluxo expresso, o consolidado não é pendente e não há veto, alto risco fora do expresso, gatilho de sede nem regra territorial de análise, quando o motor decide, então segue para emissão de decisão.
+- Dado qualquer CNAE com fluxo de análise, quando decide, então o status vai a `em_analise`, sem `ViabilityDecision` e sem `ResultadoEmitido`.
+- Dado `features.fluxo_expresso` falso, quando decide um processo protocolado, então encaminha à análise com o motivo de desativado.
+- Dado consolidado pendente, quando decide, então encaminha à análise e não inventa permitido nem não permitido.
+- Dado processo já decidido ou em análise com analista, quando o job roda de novo, então não há nova transição.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+## Divergências da redação anterior
+A elegibilidade não é uma etiqueta gravada antes do protocolo. É a passagem do motor depois de protocolar, com várias saídas para a análise além do risco: toggle, território, pergunta, zona, sede e veredito pendente. Alto risco não permitido no local é indeferido, não encaminhado.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+## Evidências
+- `App\Services\Expresso\FluxoExpressoService::decide` e `decidirSobLock`
+- `App\Services\Solicitacao\ResolvedViability::elegivelExpresso` e `temAltoRiscoForaDoExpresso`
+- `App\Jobs\DecidirFluxoExpressoJob`
+- `App\Listeners\AvaliarFluxoExpresso`
+- Parâmetro `features.fluxo_expresso`
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
-
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-- RN-004: Decisão automática somente deve ocorrer quando todas as regras necessárias forem encontradas e não houver conflito.
-- RN-005: O sistema deve registrar a fundamentação legal, dados de entrada, regras aplicadas e resultado final.
-- RN-006: Casos ambíguos, sem dado confiável ou com conflito normativo devem ir para análise técnica.
-- RN-007: São elegíveis ao expresso solicitações de **baixo e médio risco** (diretriz 2026-06-11) com condicionantes atendidas e enquadramento LOUOS automático resolvido — a meta é superar os ~405 CNAEs com resposta expressa do legado, levando a automação ao máximo permitido pela parametrização.
-- RN-008: **Gatilhos CNAE** parametrizados (enquadramento pelo analista, zona ZEIS especial, informações do processo etc.) tornam o caso inelegível e o encaminham à análise com motivo registrado (categoria semi-expresso); cada queda deve ser mensurável (EP15) para reduzir exceções ao longo do tempo.
-
-## Critérios de Aceite — BDD
-
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Identificar elegibilidade para fluxo expresso**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- Tela em que o cidadão ou o analista marque o processo como elegível.
+- Uso do `simulation_snapshot` como fonte da decisão.
+- Elegibilidade que ignore o veto locacional `nao_permitido` em favor do encaminhamento por alto risco.

@@ -3,132 +3,68 @@
 ## Épica
 **EP05 — Motor de Regras da LOUOS**
 
+## Situação na implementação
+- **Status:** Parcial
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Aplicar restrições legais/territoriais.
+Registrar restrição territorial incidente como condicionante do parecer e aplicar as regras de lugar versionadas. A observação (c) das regras territoriais não está implementada.
 
 ## História de Usuário
 **Como** sistema,  
-**quero** aplicar restrições especiais,  
-**para** evitar liberações indevidas.
+**quero** aplicar a restrição do lugar que o território e as regras RT indicarem,  
+**para** não tratar como uso livre um imóvel em área com regra especial.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- A leitura da camada de restrição ocorre na identificação territorial (HU-035).
+- A publicação das regras RT usa o domínio `territorial`, `manter-louos`, quatro olhos.
+- O expresso avalia `TerritorialRuleService` antes do enquadramento decidir o fluxo.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. `avaliarRestricoes` lê `territory.restricoes`. Status diferente de `identificado` produz lista vazia. Não transforma indisponível em restrição.
+2. Cada item identificado vira condicionante `restricao`, com o nome da feição e o motivo “Restrição territorial incidente (ex.: ZEIS)”. Essa condicionante rebaixa para `permitido_com_condicoes`. Não torna o uso não permitido e não classifica o risco.
+3. O seed da camada de restrição é o snapshot `geosalvador-pddu2016-zeis`. O nome ZEIS no motivo é exemplo do código, não um filtro que ignore outras feições da mesma camada: toda feição intersectada entra.
+4. As regras RT-01 a RT-04 e as allow-lists RT-05-A e RT-05-B estão em `TerritorialRuleService` e no seed, descritas na HU-035. No enquadramento, RT-05-A e RT-05-B alteram o Quadro 10 (HU-039): fora da lista, proibido; sem dado para verificar, indisponível.
+5. RT-01 indefere. Poligonal incidente encaminha à análise. Allow-list de endereço não defere.
+6. O seed registra que RT-05 (c) não é carregada. Não há avaliador para essa letra.
+7. O gatilho `zeis_especial` existe no catálogo de gatilhos de risco, mas `ConsultaViabilidadeService` não envia gatilhos de contexto ao classificar. A feição ZEIS desta HU não aciona esse gatilho.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- Restrição da camada e regra territorial são mecanismos diferentes. A primeira vira condicionante do parecer. A segunda pode indeferir ou encaminhar antes do consolidado de risco.
+- Camada de restrição indisponível não gera condicionante e não simula ZEIS.
+- `ViaAllowlistZona` não é avaliada no loop de `avaliar`. Só `observacaoQuadro10Permite`.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Aplicar restrições especiais**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- Lista de restrições só é lida quando o status da dimensão é `identificado`.
+- Allow-list da observação sem CODLOG e sem bairro não libera nem proíbe: a dimensão do Quadro 10 fica indisponível.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+**Dado** que a camada de restrição identifica uma ou mais feições no ponto,  
+**Quando** o parecer chega à coleta de condicionantes,  
+**Então** cada feição vira condicionante `restricao` e pode rebaixar o resultado para `permitido_com_condicoes`.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+**Dado** que a camada de restrição está indisponível ou não encontra feição,  
+**Quando** as restrições são avaliadas,  
+**Então** nenhuma condicionante de restrição é criada.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+**Dado** que a linha do Quadro 10 tem observação (a) ou (b),  
+**Quando** o CODLOG ou o bairro não está na regra RT-05 correspondente,  
+**Então** a permissão aplicada é proibida.
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
+**Dado** que se procura a regra RT-05 (c),  
+**Quando** o seed e o avaliador são lidos,  
+**Então** ela não é carregada nem executada.
 
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
+## Divergências da redação anterior
+A redação anterior juntava restrição especial num único passo. O código separa feição da camada, regras RT e a ausência da observação (c).
 
-## Critérios de Aceite — BDD
+## Evidências
+- `LouosEnquadramentoService::avaliarRestricoes` e `observacaoQuadro10`
+- `TerritoryService::identifyIntersecting`
+- `TerritorialRuleService`, `TerritorialRuleSeeder`
+- `TipoGatilho::ZeisEspecial` (catálogo; não ligado por esta identificação)
 
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Aplicar restrições especiais**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- RT-05 (c).
+- Encaminhamento automático ao gatilho `zeis_especial` a partir da feição de restrição.
+- Regra urbanística adicional de ZEIS além de registrar a feição como condicionante e do texto do gatilho, que o classificador só aplica se o código do gatilho vier no contexto.

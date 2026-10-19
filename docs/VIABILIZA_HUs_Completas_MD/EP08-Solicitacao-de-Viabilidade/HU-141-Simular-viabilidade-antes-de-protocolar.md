@@ -1,57 +1,60 @@
 # HU-141 — Simular viabilidade antes de protocolar
 
-> **Status: Aceita (2026-06-12)** — melhoria além do legado. Conecta a consulta prévia (EP07) ao formulário de solicitação (EP08) para prevenir indeferimentos.
-
 ## Épica
 **EP08 — Solicitação de Viabilidade**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Executar a simulação de viabilidade (motores reais do EP07) com os dados já digitados no formulário, antes do protocolo, alertando o requerente sobre tendência de indeferimento e seus motivos.
+Executar, a pedido do requerente e ainda em rascunho, os motores reais de viabilidade sobre os dados já informados, gravar o snapshot orientativo e permitir protocolar mesmo quando a tendência é desfavorável.
 
 ## História de Usuário
-**Como** requerente,  
-**quero** ver a simulação da viabilidade antes de protocolar,  
-**para** corrigir atividade, área ou local antes de gastar protocolo, BAP e fila de análise.
+**Como** requerente dono do rascunho,  
+**quero** simular a viabilidade antes de protocolar,  
+**para** ver a tendência por CNAE e decidir se ajusto o pedido ou se protocolo mesmo assim.
 
-## Contexto de Negócio
-Parte relevante dos indeferimentos do legado é evitável: atividade incompatível com a zona, área acima da faixa do enquadramento, condicionante não atendida. Antecipar o resultado reduz indeferimento, retrabalho do analista e convites/pendências — e melhora a experiência do empreendedor.
+## Atores e permissões
+- Dono efetivo, status rascunho (`ViabilityRequestPolicy::update`).
+- Rota `POST portal/solicitacoes/{solicitacao}/simular`, com autenticação do portal e `portal.solicitacao`.
 
-## Fluxo Principal
-1. Ao concluir as etapas de imóvel, área e atividades do formulário, o sistema executa a simulação (motor LOUOS + risco + condicionantes) com os dados informados.
-2. O resultado aparece como etapa do wizard: tendência (viável / viável com condições / tende a indeferimento), por CNAE, com motivos e fundamentação em linguagem simples.
-3. Em tendência de indeferimento, o sistema sugere o que revisar (ex.: "área informada excede a faixa permitida para esta atividade nesta zona").
-4. O requerente pode ajustar os dados e re-simular, ou prosseguir mesmo assim (a simulação não bloqueia o protocolo).
-5. A simulação e a escolha do requerente são registradas no processo (insumo para o analista e para métricas).
+## Fluxo evidenciado
+1. `SimulacaoSolicitacaoService` chama `SolicitacaoViabilityResolver` com a solicitação. Sem polígono, o resolver segue pela via de CNAE, sem território.
+2. O resultado consolidado, o snapshot por CNAE, as versões de regra e `simulated_at` são gravados na solicitação. A execução é auditada como `simulacao`.
+3. A resposta volta ao wizard com a mensagem de que o resultado é orientativo e não impede o protocolo, e com o flash da simulação.
+4. O wizard relê o snapshot persistido. Se `simulated_at` ou `simulation_resultado` estiver nulo, não há simulação para exibir.
+5. Imóvel, área ou CNAEs alterados chamam `markSimulationStale` e o snapshot deixa de ser exibido até nova simulação.
+6. No protocolo, tendência `nao_permitido` não bloqueia. Se o requerente envia `proceed_despite`, a ciência fica em `applicant_proceeded_despite`. A decisão posterior do expresso não reutiliza este snapshot: ela resolve de novo.
 
-## Regras de Negócio
-- RN-001: A simulação usa os motores reais (mesma versão de regras do fluxo oficial) — nunca lógica paralela.
-- RN-002: A simulação **não bloqueia** o protocolo: direito de petição preservado; o resultado é orientativo.
-- RN-003: O resultado simulado e a versão das regras ficam registrados no processo; o analista vê que o requerente prosseguiu ciente.
-- RN-004: Linguagem do resultado adequada ao cidadão (sem jargão), com fundamentação legal disponível em detalhe expansível.
-- RN-005: Funcionalidade com feature toggle administrável (HU-014); desativação degrada para fluxo sem simulação, sem falha.
+## Regras de negócio evidenciadas
+- A simulação não muda o status.
+- O veredito por CNAE é o do motor. Consolidação pendente permanece pendente; o serviço não transforma pendência em permitido ou não permitido.
+- O snapshot guardado é orientativo. A decisão autoritativa é outra passagem do resolver, depois do protocolo.
+- A prop `simulacaoEnabled` enviada ao wizard está fixa em verdadeiro. O `store` da simulação não consulta `features.simulacao_solicitacao`.
 
-## Critérios de Aceite — BDD
+## Validações
+- Autorização de atualização do rascunho. Não há campos de formulário neste POST.
+- A ciência no protocolo é booleana opcional e só produz efeito com simulação `nao_permitido`.
 
-### CA-01 — Simulação no wizard
-**Dado** que o requerente preencheu imóvel, área e atividades,  
-**Quando** avançar para a etapa de revisão,  
-**Então** o sistema deve exibir a tendência por CNAE com motivos, executando os motores reais.
+## Critérios de aceite
+- Dado o dono de um rascunho, quando aciona a simulação, então o processo guarda resultado, snapshot, versões e data, a auditoria registra a execução e a mensagem informa que o resultado não impede o protocolo.
+- Dado resultado `nao_permitido`, quando o dono protocola com `proceed_despite`, então o protocolo ocorre e a ciência fica registrada.
+- Dado resultado diferente de `nao_permitido`, quando envia `proceed_despite`, então o protocolo não grava a ciência.
+- Dado alteração posterior de imóvel ou de CNAEs, quando o wizard reabre, então a simulação anterior não é reexibida até nova execução.
+- Dado usuário sem permissão de editar o rascunho, quando chama a rota, então a policy nega.
 
-### CA-02 — Não bloqueio
-**Dado** um resultado com tendência de indeferimento,  
-**Quando** o requerente optar por prosseguir,  
-**Então** o protocolo deve ser permitido e a ciência registrada.
+## Divergências da redação anterior
+A simulação não dispara sozinha ao terminar imóvel e atividades. É um POST explícito. O código não devolve sugestão textual do que revisar. Não gasta número de protocolo nem exige BAP.
 
-### CA-03 — Auditoria
-**Dado** uma simulação executada,  
-**Quando** o processo for protocolado,  
-**Então** resultado simulado, versão das regras e escolha do requerente devem constar do processo.
+## Evidências
+- `App\Http\Controllers\Portal\SolicitacaoSimulacaoController`
+- `App\Services\Solicitacao\SimulacaoSolicitacaoService`
+- `App\Http\Controllers\Portal\SolicitacaoController::simulationPayload`
+- `App\Services\Solicitacao\ProtocolarSolicitacaoService` (`proceedDespite`, `unfavorableTendency`)
+- `routes/portal.php` (`portal.solicitacoes.simular`)
 
-## Dependências
-- EP07 (HU-054 a HU-059 — simulação), HU-061 a HU-065 (formulário), HU-014 (toggle).
-
-## Prioridade
-Alta
-
-## Observações
-No fluxo Regin, aplicar na etapa do formulário hospedado pelo Simplifica (`ps001_Regin` equivalente); no portal direto, como etapa do wizard. Métrica de sucesso: queda da taxa de indeferimento (HU-128) e dos convites por dado incorreto.
+## Não evidenciado
+- Bloqueio do protocolo pela tendência simulada.
+- Uso deste snapshot como decisão do fluxo expresso.
+- Interruptor efetivo `features.simulacao_solicitacao` no controller, apesar de existir na config e no comentário da classe.

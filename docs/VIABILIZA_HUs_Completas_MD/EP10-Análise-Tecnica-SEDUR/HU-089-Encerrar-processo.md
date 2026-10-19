@@ -3,132 +3,55 @@
 ## Épica
 **EP10 — Análise Técnica SEDUR**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Finalizar processo após decisão.
+Encerrar o processo pela conclusão da análise: deferido e indeferido saem de `em_analise`; desativado, cassado e revogado encerram a análise em curso ou substituem um deferimento já emitido.
 
 ## História de Usuário
-**Como** sistema,  
-**quero** encerrar processo,  
-**para** impedir alterações indevidas.
+**Como** usuário com `analisar-processos` e `concluir-analise`, **quero** concluir a análise com um resultado de encerramento, **para** tirar o processo da fila e fechar o eixo operacional.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- Conclusão na ficha, decidir e conclusão de análise: `analisar-processos` e `concluir-analise`.
+- Conclusão pela caixa de malha fina: `analisar-malha-fina` e `concluir-analise`, e só baixa encaminhamento que ainda está aberto.
+- No seeder, Analista Terceirizado não conclui. Administrador tem `analisar-malha-fina` e não tem `concluir-analise`, então não conclui a malha fina por essa rota.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. Deferido e indeferido, com processo em `em_analise`, passam por `AnaliseTecnicaDecisionService` e o status canônico vai para `deferida` ou `indeferida`. Isso é o encerramento desses dois resultados.
+2. Desativado, cassado e revogado partem de `em_analise` ou de `deferida`. Fora desses status, a conclusão é recusada. Não geram número de TVL.
+3. Se ainda não há decisão e o processo está em análise, esses três resultados criam `ViabilityDecision` com `flow` `analise_tecnica`, `per_cnae` vazio e `reason` com o parecer informado. O parecer pode ser nulo nesse caminho: o model só obriga `reason` quando o outcome é indeferida.
+4. Processo que já era deferido e recebe desativado, cassado ou revogado muda de status e não reenvia parecer ao REGIN. Encerrar a partir de `em_analise` criando decisão nova chama o listener do REGIN na hora.
+5. O eixo operacional vai para `analise_concluida`, com `force` se a transição normal não for permitida.
+6. Resultado que não é deferido desvincula sede ativa de escritório virtual, se houver trava.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- Não existe encerramento sem um resultado da conclusão. Deferido e indeferido também encerram.
+- Processo deferido não volta a indeferido por esta conclusão.
+- Indeferida e deferida saem da fila do analista: a fila só contém `em_analise` e `em_pendencia`.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Encerrar processo**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- `ConcluirAnaliseRequest`: resultado obrigatório entre os outcomes de conclusão; parecer opcional, até 5000 caracteres.
+- Transição de status não permitida pela máquina canônica é recusada com a situação atual na mensagem.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+1. Sem `concluir-analise`, encerrar pela ficha, pelo decidir ou pela malha fina responde 403.
+2. Deferir ou indeferir em `em_analise` tira o processo desses status e fecha o eixo em `analise_concluida` quando a conclusão passa por `ConclusaoAnaliseService`.
+3. Desativado, cassado ou revogado a partir de deferido altera o status, não gera TVL e não reenvia o parecer ao REGIN.
+4. Conclusão de malha fina sem encaminhamento aberto avisa e não muda o status.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+## Divergências da redação anterior
+- A redação anterior descrevia encerrar como ação genérica de qualquer perfil compatível. O código exige `concluir-analise` além de analisar, e o encerramento é um resultado nomeado, não um botão sem desfecho.
+- Não há encerramento automático por SLA nesta história. O escalonamento só notifica (HU-147).
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+## Evidências
+- `app/Services/Analise/ConclusaoAnaliseService.php`
+- `app/Services/Analise/AnaliseTecnicaDecisionService.php`
+- `app/Http/Controllers/Gestao/MalhaFinaController.php` (`concluir`)
+- `app/Services/Analise/ProcessoQueryService.php` (`STATUS_FILA`)
+- `routes/gestao.php`
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
-
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-
-## Critérios de Aceite — BDD
-
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Encerrar processo**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- Encerramento por arquivamento sem resultado de conclusão.
+- Cassação automática vinda do REDESIM.

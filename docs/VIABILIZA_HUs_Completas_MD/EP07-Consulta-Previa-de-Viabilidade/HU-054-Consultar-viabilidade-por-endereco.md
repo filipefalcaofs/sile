@@ -3,132 +3,74 @@
 ## Épica
 **EP07 — Consulta Prévia de Viabilidade**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Permitir simulação por endereço.
+Consultar a viabilidade locacional de uma atividade a partir de um endereço em Salvador, com geocodificação e território reais.
 
 ## História de Usuário
-**Como** cidadão,  
-**quero** informar endereço,  
-**para** verificar possibilidade preliminar da atividade.
+**Como** cidadão, com ou sem login,  
+**quero** informar endereço, CNAE e, se quiser, a área,  
+**para** ver o veredito locacional, o risco e o território daquele ponto.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- Rota pública: `GET /portal/viabilidade` e `POST /portal/viabilidade/endereco`. Login não é exigido.
+- Logado, a página usa o shell do portal e o middleware de representação. Anônimo usa o shell público.
+- Menu "Consultar viabilidade" e card público na landing.
+- Os POST têm throttle `consulta-viabilidade`: padrão de 20 por minuto por usuário ou por IP (`viabiliza.seguranca.throttle.consulta_viabilidade.por_minuto`). A página em si não tem esse throttle.
+- O controller envia `consultaEnabled: true`. Não há interruptor `features.consulta_viabilidade` no catálogo de parâmetros (a migração o retirou).
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. Na consulta, o cidadão escolhe "Endereço", informa endereço (mínimo 3 caracteres), CNAE e área opcional em m².
+2. Se a resposta trouxer perguntas da planilha do CNAE, a tela as exibe e reenvia as respostas.
+3. `ConsultaViabilidadeService::consultarPorEndereco` geocodifica o endereço.
+4. Fora de Salvador: 422, "O endereço está fora do município de Salvador. A consulta de viabilidade abrange apenas Salvador."
+5. Endereço não localizado: 404, "Endereço não localizado. Revise o endereço ou posicione a consulta por CNAE."
+6. Geocodificador indisponível: 503, "Serviço de geocodificação indisponível no momento. Tente novamente em instantes."
+7. Ponto em Salvador: identifica o território, enquadra pela LOUOS e classifica o risco. O veredito locacional é o resultado do motor LOUOS, não um cálculo à parte. Sem zona identificada, o veredito já vem pendente do motor e a consulta acrescenta o aviso de zona pendente.
+8. O JSON inclui entrada, geocode, território, enquadramento, risco, restrições, veredito, fundamentação, avisos, versões e as perguntas do ramo. A tela mostra o mapa quando há geocode e o componente de resultado.
+9. Sucesso é auditado em `viabilidade` / `consulta`. Erros de endereço ou de geocodificador não geram histórico pessoal.
+10. Usuário autenticado: a consulta bem-sucedida grava snapshot em `viability_queries`. Anônimo não gera histórico pessoal.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- CNAE é obrigatório em toda consulta por endereço. A viabilidade é de uma atividade num local.
+- Endereço não localizado e serviço indisponível não viram resultado de viabilidade.
+- A área, quando informada, entra no enquadramento. Sem área, o serviço usa 0.
+- O CNAE é normalizado para dígitos. Com 7 dígitos, a resposta também traz o formato `0000-0/00`.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Consultar viabilidade por endereço**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+`ConsultaViabilidadeEnderecoRequest`:
+- `endereco`: obrigatório, texto, 3 a 255 caracteres, com espaços das pontas removidos.
+- `cnae`: obrigatório, texto, até 14 caracteres.
+- `area`: opcional, numérica, de 0 a 9999999.
+- `respostas`: array opcional; cada valor passa por `RespostaPlanilhaValida`.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+### CA-01 — Consulta com ponto em Salvador
+**Dado** endereço geocodificado em Salvador e CNAE informado,  
+**Quando** o cidadão consulta,  
+**Então** recebe veredito do motor LOUOS, risco, território e, se autenticado, um item de histórico.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+### CA-02 — Endereço inválido para a consulta
+**Dado** endereço fora de Salvador, não localizado ou geocodificador indisponível,  
+**Quando** o cidadão consulta,  
+**Então** a resposta é 422, 404 ou 503, com a mensagem correspondente, sem resultado simulado e sem histórico.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+## Divergências da redação anterior
+A redação anterior pedia só "simulação por endereço" e um fluxo genérico com GIS e REDESIM. O código exige CNAE junto do endereço, recusa ponto fora de Salvador e propaga o veredito do motor, sem decidir à parte.
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
+## Evidências
+- `app/Http/Controllers/Portal/ConsultaViabilidadeController.php` (`endereco`)
+- `app/Services/Viabilidade/ConsultaViabilidadeService.php`
+- `app/Http/Requests/Portal/ConsultaViabilidadeEnderecoRequest.php`
+- `app/Services/Geo/ForaDeSalvadorException.php`
+- `routes/portal.php`
+- `resources/js/pages/portal/viabilidade/consulta.tsx`
+- `resources/js/navigation/portal-nav.ts`
 
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-
-## Critérios de Aceite — BDD
-
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Consultar viabilidade por endereço**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- Consulta por endereço sem CNAE.
+- Interruptor de parâmetro que desligue esta página.
+- Resultado locacional inventado quando o geocodificador falha.

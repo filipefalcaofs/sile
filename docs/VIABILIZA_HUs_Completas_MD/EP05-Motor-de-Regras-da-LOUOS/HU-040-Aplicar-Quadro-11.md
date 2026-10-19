@@ -3,137 +3,54 @@
 ## Épica
 **EP05 — Motor de Regras da LOUOS**
 
+## Situação na implementação
+- **Status:** Não evidenciada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Verificar permissões associadas ao Quadro 11.
+Aplicar um Quadro 11 distinto do Quadro 11A. Esse quadro não existe no motor.
 
 ## História de Usuário
 **Como** sistema,  
-**quero** aplicar Quadro 11,  
-**para** avaliar compatibilidade por zona.
+**quero** aplicar as condições do Quadro 11,  
+**para** condicionar a instalação pela via.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+O código não faz essa distinção. A condição pela via implementada é a do Quadro 11A (HU-041).
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Atores e permissões
+Não há permissão, rota ou domínio de regra para um Quadro 11 separado.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Fluxo evidenciado
+1. `LouosEnquadramentoService::enquadrar` chama `enquadrarCondicoesVia` uma vez, com `RuleDomain::LouosQuadro11a`.
+2. `RuleDomain` tem `louos_quadro10` e `louos_quadro11a`. Não tem `louos_quadro11`.
+3. A tabela lida é `LouosQuadro11CondicaoVia`, ligada à versão do 11A. O importador se chama `LouosQuadro11ImportService`, mas grava nessa tabela do 11A.
+4. O comentário do método fala em “Quadros 11 e 11A” e diz que o domínio distinguiria o quadro. Na chamada real só o 11A é passado.
+5. O cadastro de classes de via (`/gestao/louos/vias`) valida as classes citadas no rascunho do Quadro 11A.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Aplicar Quadro 11**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Regras de negócio evidenciadas
+- Nenhuma regra de permissão, vedação ou condição é lida de um Quadro 11 próprio.
+- O veredito pela via (Não, R, Sim e texto de análise da CNLU) está implementado sobre o resultado do Quadro 11A, documentado na HU-041.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Validações
+Não há validação de entrada exclusiva do Quadro 11.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+## Critérios de aceite
+**Dado** que o motor enquadra uma atividade,  
+**Quando** as dimensões devolvidas são lidas,  
+**Então** existem enquadramento, Quadro 10 e Quadro 11A. Não existe dimensão Quadro 11.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+**Dado** que se procura o domínio de versão `louos_quadro11`,  
+**Quando** o enum `RuleDomain` é lido,  
+**Então** o valor não existe.
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
+## Divergências da redação anterior
+A redação anterior tratava o Quadro 11 como quadro aplicado pelo motor. O código aplica somente o Quadro 11A.
 
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-- RN-004: A aplicação do quadro deve considerar zona, via, enquadramento da atividade e versão vigente da LOUOS.
-- RN-005: Resultado proibitivo deve impedir deferimento automático.
-- RN-006: Resultado condicionado deve gerar condicionante vinculada à decisão.
+## Evidências
+- `LouosEnquadramentoService::enquadrar` (única chamada, domínio `LouosQuadro11a`)
+- `RuleDomain` (sem `louos_quadro11`)
+- `LouosQuadro11ImportService` e `LouosQuadro11CondicaoVia`
 
-## Critérios de Aceite — BDD
-
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Aplicar Quadro 11**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
-
-Atenção à nomenclatura: a LOUOS oficial (Lei nº 9.148/2016, Anexo 01) não possui "Quadro 11" isolado — possui Quadro 11A (condições de instalação em função da classificação viária) e Quadro 11B (condições de instalação por subcategoria de uso). O "Quadro 11" referido nesta HU provavelmente corresponde ao Quadro 11B — confirmar com a SEDUR antes da parametrização.
+## Não evidenciado
+- Tabela, versão, tela ou veredito próprios do Quadro 11.
+- Diferença de efeito entre Quadro 11 e Quadro 11A. Só o 11A produz `classe_via` e `condicoes`.

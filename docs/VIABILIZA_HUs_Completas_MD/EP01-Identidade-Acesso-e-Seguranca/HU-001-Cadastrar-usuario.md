@@ -3,132 +3,68 @@
 ## Épica
 **EP01 — Identidade, Acesso e Segurança**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Permitir que cidadão, contador, procurador ou servidor crie acesso ao Viabiliza.
+O cidadão cria a própria conta no portal, com CPF, e-mail, telefone e senha. A conta nasce com o perfil de cidadão e precisa confirmar o e-mail antes de usar as telas autenticadas.
 
 ## História de Usuário
-**Como** cidadão/usuário,  
-**quero** criar minha conta,  
-**para** acessar os serviços digitais do Viabiliza.
+**Como** visitante do portal, **quero** me cadastrar com nome, e-mail, CPF, telefone e senha, **para** acessar o portal do Viabiliza com uma conta local.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+Visitante não autenticado. O Fortify publica o cadastro em `/portal/register` (prefixo `portal`, guard `web`, `Features::registration()`). Não há permissão Spatie nessa rota. O perfil atribuído é o nome devolvido por `PerfilCidadao::nome()` (parâmetro `portal.perfil_cidadao`, padrão `cidadao`).
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+O menu do portal não inclui o cadastro: a tela é a view de registro do Fortify (`auth/register`).
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Fluxo evidenciado
+1. O visitante abre `/portal/register`. A view recebe a descrição da política de senha (`PasswordPolicy::description()`) e se o botão GOV.BR pode aparecer (`GovBr::loginAvailable()`).
+2. O envio chama `CreateNewUser::create`. O CPF é reduzido a dígitos antes da validação.
+3. Com os dados válidos, o sistema grava `name`, `email`, `cpf`, `phone` e `password` em `users` e chama `assignRole` com o perfil de cidadão.
+4. `User` implementa `MustVerifyEmail`. As rotas autenticadas do portal exigem o middleware `verified`, então a conta só segue para o painel depois da confirmação do e-mail (HU-005).
+5. Conta de servidor no console não nasce neste formulário. O primeiro acesso com identificador ainda inexistente, quando a autenticação institucional está ligada, é criado em `LoginController::registrarPrimeiroAcessoAd` (HU-002).
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Cadastrar usuário**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Regras de negócio evidenciadas
+- RN-001: o cadastro local é autocadastro do portal e atribui um único papel, o de cidadão (`CreateNewUser::create`).
+- RN-002: CPF, e-mail e telefone são obrigatórios; o CPF é único e passa por `ValidCpf`; o telefone passa por `TelefoneComDdd`.
+- RN-003: a senha segue `PasswordValidationRules::passwordRules()` (`Password::default()` + confirmação). Os requisitos vêm de `PasswordPolicy::buildRule()`: tamanho mínimo `security.password.min_length` (padrão 8), maiúsculas e minúsculas se `security.password.require_mixed_case`, números se `security.password.require_numbers`, símbolos se `security.password.require_symbols`.
+- Não há regra, nesta ação, de consulta a GIS, REDESIM, CNAE ou motor da LOUOS.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Validações
+`CreateNewUser::create`, com `Validator::make`:
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+- `name`: obrigatório, texto, máximo 255 (rótulo "nome").
+- `email`: obrigatório, e-mail, máximo 255, único em `users`.
+- `cpf`: obrigatório, `ValidCpf` (11 dígitos, dígitos verificadores, rejeita sequência repetida), único em `users.cpf`.
+- `phone`: obrigatório, máximo 20, `TelefoneComDdd` (DDD + 8 ou 9 dígitos; a máscara não entra na contagem).
+- `password`: obrigatório, política padrão e `confirmed`.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+## Critérios de aceite
+### CA-01 — Cadastro válido cria conta de cidadão
+**Dado** um visitante em `/portal/register` com nome, e-mail inédito, CPF válido, telefone com DDD e senha que cumpre a política, **quando** envia o formulário, **então** `CreateNewUser` grava o usuário e atribui o papel de `PerfilCidadao::nome()`.
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
+### CA-02 — CPF ou e-mail repetido
+**Dado** um CPF ou e-mail já existente em `users`, **quando** o visitante tenta se cadastrar, **então** a validação recusa o envio e nenhuma conta nova é gravada.
 
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
+### CA-03 — CPF inválido
+**Dado** um CPF com quantidade de dígitos diferente de 11, sequência repetida ou dígitos verificadores incorretos, **quando** o visitante envia o cadastro, **então** `ValidCpf` recusa com a mensagem de CPF inválido.
 
-## Critérios de Aceite — BDD
+### CA-04 — Conta ainda não entra no portal autenticado
+**Dado** um cadastro concluído sem `email_verified_at`, **quando** o usuário tenta abrir uma rota do portal protegida por `auth:web` e `verified`, **então** o middleware de verificação impede o uso até a confirmação do e-mail.
 
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Cadastrar usuário**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
+## Divergências da redação anterior
+- O texto antigo tratava cidadão, contador, procurador e servidor como o mesmo cadastro, e incluía consulta a GIS, REDESIM, CNAE e LOUOS. O código só cadastra conta local do portal.
+- Não há pré-condição de usuário já autenticado nem de permissão Spatie.
+- A criação de conta AD no primeiro login do console e a criação de conta no GOV.BR não passam por este formulário.
 
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
+## Evidências
+- `config/fortify.php` — `Features::registration()`, prefixo `portal`, username `cpf`.
+- `app/Providers/FortifyServiceProvider.php` — `Fortify::registerView` e `Fortify::createUsersUsing(CreateNewUser::class)`.
+- `app/Actions/Fortify/CreateNewUser.php` — validação e `assignRole`.
+- `app/Rules/ValidCpf.php` e `app/Rules/TelefoneComDdd.php`.
+- `app/Support/PasswordPolicy.php` e `app/Support/PerfilCidadao.php`.
+- `routes/portal.php` — grupo `auth:web` + `verified`.
 
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+Não há tela em que um administrador crie usuário digitando os dados. `UserManagementController` lista, troca papel, inativa e altera o tipo de autenticação; não tem `store` de usuário. Não há integração com base externa neste cadastro.

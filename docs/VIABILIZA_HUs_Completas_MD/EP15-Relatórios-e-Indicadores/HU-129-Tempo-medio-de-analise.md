@@ -3,135 +3,47 @@
 ## Épica
 **EP15 — Relatórios e Indicadores**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Indicador de tempo de tramitação.
+Mostrar o tempo por etapa, o tempo de emissão da TVL agregado, os percentis de viabilidade e os gargalos do recorte.
 
 ## História de Usuário
-**Como** gestor,  
-**quero** consultar tempo médio,  
-**para** avaliar eficiência.
+**Como** gestor, **quero** ver onde o tempo de análise se concentra, **para** comparar etapas e não só uma média única.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- `consultar-relatorios` em `/gestao/relatorios/tempo`.
+- Consulta auditada (`consulta-tempo`).
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. A tela recebe `tempoPorEtapa`, `tempoEmissaoTvl` agregado, percentis do período, percentis por categoria e gargalos.
+2. A lista processo a processo da emissão da TVL é outra rota (`tempo-emissao-tvl`).
+3. `?formato=` exporta o detalhe por etapa (`TempoAnaliseReportSource`). Não exporta a lista de sedes de escritório virtual, que saiu desta rota.
+4. Filtros comuns do request de relatório.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- Tempo de etapa e tempo de emissão agregado convivem na mesma tela, com páginas próprias para o detalhe de TVL.
+- Exportação desta rota é a família de tempo por etapa.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Tempo médio de análise**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- Datas, setor, analista, bairro, CNAE e categoria conforme `RelatorioFiltersRequest`.
+- Formato de exportação limitado a csv, xlsx e pdf habilitados.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+- A tela mostra etapa, emissão agregada, percentis e gargalos do mesmo recorte.
+- Exportar não devolve a lista de escritório virtual.
+- A consulta é auditada.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+## Divergências da redação anterior
+O texto falava num indicador único de tramitação. O código entrega várias medidas e separa a tabela de emissão da TVL.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+## Evidências
+- `app/Http/Controllers/Gestao/RelatorioController.php` (`tempo`)
+- `app/Services/Relatorios/TempoAnaliseService.php`
+- `app/Services/Relatorios/TempoViabilidadeService.php`
+- `app/Services/Relatorios/GargalosService.php`
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
-
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-- RN-004: O tempo deve ser medido **por etapa** da timeline do processo (abertura → preenchimento → espera BAP → resposta/decisão), permitindo identificar onde o prazo é consumido — o legado mede só pelo histórico, e a diretora reporta 19 dias enquanto a medição interna deu 42h.
-- RN-005: A contagem deve aplicar as regras de prazo parametrizadas (dias úteis vs corridos, feriados via HU-137, fins de semana) — causa raiz da distorção de prazos no legado (+48h por fim de semana, +24h por feriado, contados indevidamente).
-- RN-006: Relatórios equivalentes aos administrativos do SAPS devem existir: **Tempo de Emissão de TVL** e **Sedes de Escritório Virtual**, com recortes por período, setor, analista e categoria (expresso/semi-expresso/malha fina).
-
-## Critérios de Aceite — BDD
-
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Tempo médio de análise**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- Uma única média, sem etapa, como único conteúdo da rota.

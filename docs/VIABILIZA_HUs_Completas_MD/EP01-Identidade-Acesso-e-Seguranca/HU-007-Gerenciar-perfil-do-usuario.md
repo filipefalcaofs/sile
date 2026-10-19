@@ -3,132 +3,72 @@
 ## Épica
 **EP01 — Identidade, Acesso e Segurança**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Permitir consulta e atualização de dados pessoais básicos.
+O usuário autenticado atualiza o próprio nome, e-mail e telefone. O CPF é exibido e não entra na atualização. Trocar o e-mail exige nova confirmação.
 
 ## História de Usuário
-**Como** usuário,  
-**quero** gerenciar meu perfil,  
-**para** manter meus dados atualizados.
+**Como** usuário autenticado, **quero** corrigir meu nome, e-mail e telefone, **para** manter meus dados de contato sem alterar o CPF da conta.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+A própria conta. `ProfileUpdateRequest::authorize` retorna verdadeiro; a proteção é a rota.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+- Portal: menu Minha conta > Meus dados (`/portal/conta/perfil`). Middleware `auth:web`, `verified`, `lgpd.accepted`, `ResolveRepresentation`. Controller `App\Http\Controllers\Settings\ProfileController`.
+- Console: o cabeçalho aponta `accountHref` para `/gestao/conta/perfil`. Não há item em `gestao-nav.ts`. Middleware `auth:gestao`, `acessar-gestao`, `lgpd.accepted`. Controller `App\Http\Controllers\Gestao\Conta\ProfileController`.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+Papel, inativação e tipo de autenticação de outra conta não são esta tela. Isso está em `UserManagementController`, permissão `manter-usuarios`, menu Administração > Usuários.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Gerenciar perfil do usuário**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Fluxo evidenciado
+1. `edit` envia à tela `id`, `name`, `email`, `cpf` e `phone`, além de `mustVerifyEmail` (verdadeiro porque `User` implementa `MustVerifyEmail`).
+2. O formulário envia PATCH com nome, e-mail e telefone. O CPF aparece com a orientação "O CPF não pode ser alterado." e não está nas regras do request.
+3. `update` preenche só o que foi validado. Se o e-mail mudou, `email_verified_at` é anulado e, após salvar, `sendEmailVerificationNotification` é chamada.
+4. A resposta volta à mesma tela com status "Perfil atualizado com sucesso."
+5. `User` usa `HasAuditoria`: alterações de atributos fillable (nome, e-mail, telefone) entram no activity log; senha e remember token ficam de fora (`logExcept`).
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Regras de negócio evidenciadas
+- RN-001: só nome, e-mail e telefone são atualizáveis neste fluxo (`ProfileUpdateRequest`). O CPF fica de fora de propósito, conforme o comentário e as regras do request.
+- RN-002: e-mail novo zera a verificação e dispara `VerifyEmailQueued` (`ProfileController::update` nos dois namespaces).
+- RN-003: a mudança de dados fillable é auditada por `HasAuditoria` no model `User`.
+- Não há, nestes controllers, troca de papel nem de `auth_type`.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+## Validações
+`ProfileUpdateRequest`:
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+- `name`: obrigatório, texto, máximo 255 (rótulo "nome").
+- `email`: obrigatório, e-mail, máximo 255, único em `users` ignorando o usuário atual (rótulo "e-mail").
+- `phone`: opcional, texto, máximo 20, `TelefoneComDdd` (rótulo "telefone"). Vazio passa na regra do telefone.
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
+`UpdateUserProfileInformation` (ação do Fortify) valida só nome e e-mail e também zera a verificação. As telas de conta desta história chamam o `ProfileController`, não essa action.
 
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
+## Critérios de aceite
+### CA-01 — Cidadão atualiza o próprio contato
+**Dado** um cidadão em `/portal/conta/perfil`, **quando** salva nome, e-mail único e telefone com DDD, **então** esses campos são gravados e a mensagem é "Perfil atualizado com sucesso."
 
-## Critérios de Aceite — BDD
+### CA-02 — CPF não é aceito no PATCH
+**Dado** um envio que inclua CPF diferente, **quando** `ProfileUpdateRequest` valida, **então** o CPF não faz parte de `validated()` e o valor gravado no preenchimento do model não vem desse campo.
 
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Gerenciar perfil do usuário**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
+### CA-03 — E-mail alterado pede confirmação
+**Dado** um e-mail diferente do atual, **quando** o perfil é salvo no portal ou no console, **então** `email_verified_at` fica nulo e a notificação de verificação é enviada.
 
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
+### CA-04 — Servidor edita a própria conta no console
+**Dado** um servidor com `acessar-gestao` e termo aceito, **quando** salva `/gestao/conta/perfil`, **então** a conta do guard `gestao` é atualizada com as mesmas regras do portal.
 
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
+## Divergências da redação anterior
+- "Perfil" aqui é o cadastro da própria pessoa, não o papel Spatie.
+- O fluxo antigo genérico (permissão de processo, GIS, REDESIM, LOUOS) não existe nesta tela.
+- O telefone é opcional na edição e obrigatório só no cadastro (HU-001).
 
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
+## Evidências
+- `routes/portal.php` e `routes/gestao.php` — prefixo `conta`.
+- `app/Http/Controllers/Settings/ProfileController.php`.
+- `app/Http/Controllers/Gestao/Conta/ProfileController.php`.
+- `app/Http/Requests/ProfileUpdateRequest.php`.
+- `app/Concerns/HasAuditoria.php`.
+- `resources/js/navigation/portal-nav.ts` — "Meus dados".
+- `resources/js/pages/settings/profile.tsx` e `resources/js/pages/gestao/conta/perfil.tsx`.
 
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+Não há exclusão da própria conta, alteração de CPF nem upload de foto nestes controllers. A gestão de papéis de terceiros, a inativação e a troca local/AD estão em `UserManagementController` e não nesta história.

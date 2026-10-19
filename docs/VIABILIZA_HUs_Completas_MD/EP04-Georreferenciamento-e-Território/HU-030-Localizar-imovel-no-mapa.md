@@ -3,132 +3,62 @@
 ## Épica
 **EP04 — Georreferenciamento e Território**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Exibir imóvel em mapa.
+Mostrar o mapa de Salvador na consulta territorial e identificar bairro, via, zona, lote e restrições a partir de um ponto informado.
 
 ## História de Usuário
-**Como** usuário,  
-**quero** visualizar imóvel no mapa,  
-**para** validar a localização usada na análise.
+**Como** servidor com permissão de consultar território,  
+**quero** posicionar um ponto no mapa e ver o que o território devolve para aquele ponto,  
+**para** conferir o imóvel sem depender só do texto do endereço.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- Página e identificação: `consultar-territorio`.
+- O requerente, ao salvar o imóvel do próprio rascunho, dispara a mesma identificação pelo centroide do polígono (`SolicitacaoImovelController`). Essa gravação usa a policy da solicitação, não a permissão de consulta territorial.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. `GET /gestao/territorio` renderiza a consulta com as camadas abertas (`valid_to` nulo), o limiar de sobreposição, se a geocodificação está ligada, e o centro do mapa em latitude −12,97 e longitude −38,5, zoom 13.
+2. `POST /gestao/territorio/identificar` recebe `lat` e `lng` e chama `TerritoryService::identify`.
+3. O serviço devolve bairro (feição que contém o ponto), via mais próxima dentro do raio, zona, lote e restrições que intersectam o ponto. Cada dimensão traz status `identificado`, `nao_encontrado` ou `indisponivel`, com a versão da camada.
+4. A identificação é auditada em `territorio` / `identificacao`, com as versões e o resumo de status. O resultado é sempre `sucesso` da auditoria, mesmo quando uma dimensão está indisponível: a degradação vai no conteúdo, não como falha da chamada.
+5. No rascunho do portal, o polígono GeoJSON é a fonte. O centroide alimenta `identify` e `TerritorioProcessoService::materializar` grava zona, bairro oficial e CODLOG somente quando a dimensão veio identificada. Valor indisponível ou não encontrado não apaga o que já estava gravado.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- O raio da via mais próxima é `viabiliza.geo.via_max_metros` (padrão 50 metros).
+- Camada ausente ou com status `pendente_fonte` não dispara consulta espacial. Zona ainda pode cair no GeoServer (HU-031). Lote permanece indisponível nesse estado (HU-033).
+- Sem ponto do imóvel, `materializar` não grava nada.
+- A data opcional de `identify` reproduz a camada vigente naquela data.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Localizar imóvel no mapa**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- `lat` obrigatória, numérica, entre −90 e 90.
+- `lng` obrigatória, numérica, entre −180 e 180.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+**Dado** que o servidor informa um ponto válido,  
+**Quando** solicita a identificação,  
+**Então** o sistema devolve as cinco dimensões com status e versão de camada, e registra a auditoria.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+**Dado** que uma camada está `pendente_fonte` ou não existe,  
+**Quando** o ponto é identificado,  
+**Então** essa dimensão volta `indisponivel` com motivo, sem feição inventada. A exceção evidenciada é a zona, que pode ser lida no GeoServer quando o parâmetro correspondente está ligado.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+**Dado** que o requerente grava o polígono do imóvel,  
+**Quando** o centroide é identificado,  
+**Então** zona, bairro e CODLOG só são gravados se o status for `identificado`.
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
+## Divergências da redação anterior
+A redação anterior não distinguia consulta do mapa, identificação por ponto e materialização no processo, nem o comportamento de não sobrescrever dado já identificado.
 
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
+## Evidências
+- `TerritoryController::index` e `identify`
+- `TerritoryService::identify`
+- `TerritorioProcessoService::materializar`
+- `SolicitacaoImovelController::update`
+- Página `gestao/territorio/index`
 
-## Critérios de Aceite — BDD
-
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Localizar imóvel no mapa**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- Desenho do lote oficial em cima do mapa a partir da dimensão `lote`, porque essa dimensão fica indisponível enquanto a camada local está pendente de fonte.
+- Escolha de uma feição entre várias na interface: o contrato devolve o resultado do serviço.

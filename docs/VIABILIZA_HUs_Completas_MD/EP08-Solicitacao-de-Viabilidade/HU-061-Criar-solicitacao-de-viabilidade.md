@@ -3,136 +3,64 @@
 ## Épica
 **EP08 — Solicitação de Viabilidade**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Abrir solicitação formal de viabilidade, identificando origem (Regin ou portal direto) e tipo de serviço.
+Abrir um rascunho de solicitação de viabilidade no portal, vinculado a um tipo de serviço ativo e a uma empresa com vínculo ativo do requerente efetivo.
 
 ## História de Usuário
-**Como** cidadão,  
-**quero** criar solicitação,  
-**para** obter análise oficial.
+**Como** cidadão autenticado no portal,  
+**quero** criar um rascunho de solicitação escolhendo o tipo de serviço e a empresa,  
+**para** continuar o preenchimento e, depois, protocolar o pedido.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- Requerente autenticado no portal (`auth:web`, e-mail verificado, termo LGPD aceito).
+- Em representação ativa, o requerente gravado é o representado; `created_by_user_id` é o usuário da sessão.
+- A listagem mostra somente solicitações em que `requester_user_id` é o usuário efetivo.
+- A empresa precisa ter vínculo ativo (`ended_at` nulo) desse usuário. Não há permissão Spatie específica: o escopo é a posse da solicitação (`ViabilityRequestPolicy`).
+- Criar e abrir o wizard passam pelo middleware `portal.solicitacao` (`SILE_PORTAL_SOLICITACAO` / `features.portal_solicitacao`). Desligado, a rota redireciona ao painel com aviso e, em JSON, responde 503. Listar solicitações já existentes não passa por esse middleware.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. O requerente abre `GET portal/solicitacoes/nova`. A tela recebe os tipos de serviço ativos e as empresas com vínculo ativo.
+2. O `POST portal/solicitacoes` cria `ViabilityRequest` com origem `portal`, tipo de serviço, empresa, requerente efetivo e autor da sessão. O status nasce como rascunho.
+3. Antes de gravar, o sistema procura reincidência da mesma empresa. Se houver, a criação segue e a resposta leva um alerta com o processo anterior.
+4. O redirecionamento volta para `GET portal/solicitacoes`, com a mensagem de rascunho criado.
+5. A lista filtra por protocolo ou razão social, por status do enum, ordena por `protocol_number` ou `created_at` e pagina em 10, 15, 25 ou 50 (padrão 15). Valor de status ou ordenação fora da lista é ignorado.
+6. Cada item indica se pode continuar a edição (somente rascunho) e se pode ser cancelado (estados do parâmetro `solicitacao.cancelamento.estados_cancelaveis`).
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- A solicitação criada por este fluxo nasce com origem portal, não Regin e não contingência.
+- Só tipo de serviço ativo entra no formulário e na validação.
+- Reincidência por CNPJ (mesma empresa, não cancelada, criada na janela `solicitacao.duplicidade.janela_dias` — padrão 180 dias — ou ainda protocolada) gera alerta. Não impede o novo rascunho.
+- A detecção por inscrição imobiliária não está neste serviço.
+- O wizard de rascunho existente (`GET portal/solicitacoes/{id}/editar`) exige a policy `update`: dono efetivo e status rascunho.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Criar solicitação de viabilidade**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- `service_type_id` obrigatório, inteiro, existente e ativo.
+- `company_id` obrigatório, inteiro, existente e com vínculo ativo do usuário efetivo.
+- Mensagens: tipo inválido ou inativo; empresa inválida; ausência de vínculo ativo.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+- Dado um cidadão autenticado com vínculo ativo na empresa e um tipo de serviço ativo, quando ele confirma a criação, então surge um rascunho de origem portal, com ele como requerente, e a lista exibe o sucesso.
+- Dado que já existe solicitação não cancelada da mesma empresa dentro da janela ou ainda protocolada, quando a nova é criada, então o rascunho é gravado e a sessão recebe o alerta do processo anterior.
+- Dado empresa sem vínculo ativo, tipo inativo ou usuário que não é o requerente, quando tenta criar ou editar, então a validação ou a policy recusa a ação.
+- Dado `features.portal_solicitacao` desligado, quando acessa a rota de criação, então recebe o aviso de indisponibilidade e o rascunho não é criado.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+## Divergências da redação anterior
+A redação genérica tratava a abertura como processo já oficial, com origem Regin ou portal e consulta a bases externas. O código desta HU só grava o rascunho no portal. A origem Regin não nasce aqui. A reincidência não bloqueia.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+## Evidências
+- `App\Http\Controllers\Portal\SolicitacaoController` (`create`, `store`, `index`, `edit`)
+- `App\Http\Requests\Portal\StoreSolicitacaoRequest`
+- `App\Policies\ViabilityRequestPolicy`
+- `App\Services\Solicitacao\DuplicateRequestDetector::detect`
+- `App\Http\Middleware\EnsurePortalSolicitacaoEnabled`
+- `routes/portal.php` (`portal.solicitacoes.create`, `store`, `index`, `edit`)
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
-
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-- RN-004: A solicitação deve registrar **origem** (Regin/integrador ou portal Simplifica direto) e **tipo de serviço** — o SAPS opera com grupo de serviço/serviço (ex.: viabilidade de 1º estabelecimento, alteração de endereço/atividade, "Revisão TVL — Inclusão de Atividade"); renovação de TVL entra direto pelo portal, **sem** Regin (reunião 2026-06-11).
-- RN-005: Tipos de serviço devem ser parametrizáveis (cadastro administrável), pois determinam fluxo, documentos exigidos e relatórios.
-- RN-006: Solicitações via Regin nascem no estado "aguardando BAP" (HU-133); solicitações diretas pelo portal são protocoladas imediatamente (HU-068).
-- RN-007: O sistema deve detectar **duplicidade/reincidência** na criação: mesmo CNPJ e/ou inscrição imobiliária com processo recente ou ativo gera alerta ao requerente e fica sinalizado ao analista, com link para o processo anterior e oferta de reaproveitamento da análise quando aplicável (HU-142).
-
-## Critérios de Aceite — BDD
-
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Criar solicitação de viabilidade**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- Abertura de solicitação com origem Regin neste controller.
+- Bloqueio da criação por duplicidade.
+- Detecção de reincidência por inscrição imobiliária.
+- Leitura, no `store`, do parâmetro `features.solicitacao_viabilidade`. O interruptor que a rota usa é `features.portal_solicitacao`. A prop `solicitacaoEnabled` enviada à tela está fixa em verdadeiro.

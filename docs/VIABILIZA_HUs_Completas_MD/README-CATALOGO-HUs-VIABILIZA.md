@@ -2,8 +2,9 @@
 
 Gerado em: 2026-06-09
 Revisado em: 2026-06-09 — alinhamento com as fontes oficiais (LOUOS Lei nº 9.148/2016, Decreto nº 32.636/2020, Portal Simplifica, CNAE 2.3 IBGE/CONCLA); épicas e HUs renumeradas em ordem cronológica de desenvolvimento.
+Revisado em: 2026-10-16 — cada HU foi reescrita com o código-fonte como referência. O status (Implementada, Parcial, Bloqueada ou Não evidenciada) está no corpo de cada arquivo. A redação genérica anterior deixou de valer.
 
-Total: 131 HUs (127 originais + 4 propostas)
+Total: 187 HUs. O comportamento vigente é o descrito em cada arquivo, não o texto de junho de 2026.
 
 
 ## EP01 — Identidade, Acesso e Segurança
@@ -18,6 +19,8 @@ Total: 131 HUs (127 originais + 4 propostas)
 - [HU-008 — Vincular procurador](EP01-Identidade-Acesso-e-Seguranca/HU-008-Vincular-procurador.md)
 - [HU-009 — Revogar procuração](EP01-Identidade-Acesso-e-Seguranca/HU-009-Revogar-procuracao.md)
 - [HU-010 — Consultar histórico de acessos](EP01-Identidade-Acesso-e-Seguranca/HU-010-Consultar-historico-de-acessos.md)
+- [HU-151 — Autenticar com GOV.BR](EP01-Identidade-Acesso-e-Seguranca/HU-151-Autenticar-com-govbr.md)
+- [HU-152 — Solicitar acesso ao console](EP01-Identidade-Acesso-e-Seguranca/HU-152-Solicitar-acesso-ao-console.md) *(nova em 2026-10-16)*
 
 ## EP02 — Administração
 
@@ -35,6 +38,22 @@ Total: 131 HUs (127 originais + 4 propostas)
 - [HU-138 — Manter setores](EP02-Administracao/HU-138-Manter-setores.md) *(nova — SAPS legado)*
 - [HU-139 — Manter edifícios comerciais e complementos](EP02-Administracao/HU-139-Manter-edificios-comerciais-e-complementos.md) *(proposta — SAPS legado; semântica a confirmar)*
 - [HU-143 — Simular impacto de alteração de parametrização](EP02-Administracao/HU-143-Simular-impacto-de-parametrizacao.md) *(nova — melhoria além do legado)*
+- [HU-153 — Manter tipos de serviço](EP02-Administracao/HU-153-Manter-tipos-de-servico.md) *(nova em 2026-10-16)*
+- [HU-154 — Manter tipos de imóvel](EP02-Administracao/HU-154-Manter-tipos-de-imovel.md) *(nova em 2026-10-16)*
+- [HU-155 — Manter requisitos documentais](EP02-Administracao/HU-155-Manter-requisitos-documentais.md) *(nova em 2026-10-16)*
+- [HU-156 — Manter valores TLL](EP02-Administracao/HU-156-Manter-valores-tll.md) *(nova em 2026-10-16)*
+- [HU-157 — Manter termos legais](EP02-Administracao/HU-157-Manter-termos-legais.md) *(nova em 2026-10-16)*
+- [HU-158 — Manter textos decisórios](EP02-Administracao/HU-158-Manter-textos-decisorios.md) *(nova em 2026-10-16)*
+- [HU-159 — Manter minutas e textos-padrão](EP02-Administracao/HU-159-Manter-minutas-e-textos-padrao.md) *(nova em 2026-10-16)*
+- [HU-160 — Configurar APIs de integração](EP02-Administracao/HU-160-Configurar-apis-de-integracao.md) *(nova em 2026-10-16)*
+- [HU-161 — Configurar servidores de e-mail](EP02-Administracao/HU-161-Configurar-servidores-de-email.md) *(nova em 2026-10-16)*
+- [HU-162 — Monitorar envio de e-mails](EP02-Administracao/HU-162-Monitorar-envio-de-emails.md) *(nova em 2026-10-16)*
+- [HU-163 — Configurar provedores de IA](EP02-Administracao/HU-163-Configurar-provedores-de-ia.md) *(nova em 2026-10-16)*
+- [HU-164 — Manter gatilhos de risco](EP02-Administracao/HU-164-Manter-gatilhos-de-risco.md) *(nova em 2026-10-16)*
+- [HU-165 — Manter zonas](EP02-Administracao/HU-165-Manter-zonas.md) *(nova em 2026-10-16)*
+- [HU-166 — Manter vias](EP02-Administracao/HU-166-Manter-vias.md) *(nova em 2026-10-16)*
+- [HU-167 — Manter anexos de escritório virtual](EP02-Administracao/HU-167-Manter-anexos-escritorio-virtual.md) *(nova em 2026-10-16)*
+- [HU-187 — Manter regras territoriais](EP02-Administracao/HU-187-Manter-regras-territoriais.md) *(nova em 2026-10-16)*
 
 ## EP03 — Cadastro Empresarial
 
@@ -58,6 +77,7 @@ Total: 131 HUs (127 originais + 4 propostas)
 - [HU-035 — Identificar restrições territoriais](EP04-Georreferenciamento-e-Território/HU-035-Identificar-restricões-territoriais.md)
 - [HU-036 — Consultar camadas geográficas](EP04-Georreferenciamento-e-Território/HU-036-Consultar-camadas-geograficas.md)
 - [HU-037 — Validar localização do imóvel](EP04-Georreferenciamento-e-Território/HU-037-Validar-localizacao-do-imovel.md)
+- [HU-169 — Manter camadas do GeoServer](EP04-Georreferenciamento-e-Território/HU-169-Manter-camadas-do-geoserver.md) *(nova em 2026-10-16)*
 
 ## EP05 — Motor de Regras da LOUOS
 
@@ -96,7 +116,7 @@ Total: 131 HUs (127 originais + 4 propostas)
 - [HU-061 — Criar solicitação de viabilidade](EP08-Solicitacao-de-Viabilidade/HU-061-Criar-solicitacao-de-viabilidade.md)
 - [HU-062 — Informar imóvel](EP08-Solicitacao-de-Viabilidade/HU-062-Informar-imovel.md)
 - [HU-063 — Informar área utilizada](EP08-Solicitacao-de-Viabilidade/HU-063-Informar-area-utilizada.md)
-- [HU-064 — Informar atividade econômica](EP08-Solicitacao-de-Viabilidade/HU-064-Informar-atividade-econômica.md)
+- [HU-064 — Informar atividade econômica](EP08-Solicitacao-de-Viabilidade/HU-064-Informar-atividade-economica.md)
 - [HU-065 — Informar CNAEs complementares](EP08-Solicitacao-de-Viabilidade/HU-065-Informar-CNAEs-complementares.md)
 - [HU-066 — Anexar documentos](EP08-Solicitacao-de-Viabilidade/HU-066-Anexar-documentos.md)
 - [HU-067 — Validar documentos obrigatórios](EP08-Solicitacao-de-Viabilidade/HU-067-Validar-documentos-obrigatorios.md)
@@ -108,6 +128,7 @@ Total: 131 HUs (127 originais + 4 propostas)
 - [HU-141 — Simular viabilidade antes de protocolar](EP08-Solicitacao-de-Viabilidade/HU-141-Simular-viabilidade-antes-de-protocolar.md) *(nova — melhoria além do legado)*
 - [HU-148 — Registrar solicitação em contingência](EP08-Solicitacao-de-Viabilidade/HU-148-Registrar-solicitacao-em-contingencia.md) *(nova — melhoria além do legado)*
 - [HU-150 — Atendimento presencial assistido](EP08-Solicitacao-de-Viabilidade/HU-150-Atendimento-presencial-assistido.md) *(nova — melhoria além do legado)*
+- [HU-168 — Renovar viabilidade](EP08-Solicitacao-de-Viabilidade/HU-168-Renovar-viabilidade.md) *(nova em 2026-10-16)*
 
 ## EP09 — Fluxo Expresso
 
@@ -138,6 +159,9 @@ Total: 131 HUs (127 originais + 4 propostas)
 - [HU-140 — Pré-analisar processo pelo motor](EP10-Análise-Tecnica-SEDUR/HU-140-Pre-analisar-processo-pelo-motor.md) *(nova — melhoria além do legado)*
 - [HU-142 — Exibir histórico decisório do imóvel e do CNAE na zona](EP10-Análise-Tecnica-SEDUR/HU-142-Exibir-historico-decisorio-do-imovel-e-CNAE.md) *(nova — melhoria além do legado)*
 - [HU-144 — Fila de trabalho do analista com SLA visual](EP10-Análise-Tecnica-SEDUR/HU-144-Fila-de-trabalho-do-analista-com-SLA.md) *(nova — melhoria além do legado)*
+- [HU-170 — Registrar vistoria](EP10-Análise-Tecnica-SEDUR/HU-170-Registrar-vistoria.md) *(nova em 2026-10-16)*
+- [HU-171 — Reprocessar processo](EP10-Análise-Tecnica-SEDUR/HU-171-Reprocessar-processo.md) *(nova em 2026-10-16)*
+- [HU-172 — Forçar encaminhamento para análise](EP10-Análise-Tecnica-SEDUR/HU-172-Forcar-encaminhamento-para-analise.md) *(nova em 2026-10-16)*
 
 ## EP11 — Pendências e Comunicação
 
@@ -160,6 +184,8 @@ Total: 131 HUs (127 originais + 4 propostas)
 - [HU-101 — Exportar auditoria](EP12-Auditoria-e-Compliance/HU-101-Exportar-auditoria.md)
 - [HU-102 — Monitorar conformidade LGPD](EP12-Auditoria-e-Compliance/HU-102-Monitorar-conformidade-LGPD.md)
 - [HU-149 — Detectar padrões de abuso e fraude](EP12-Auditoria-e-Compliance/HU-149-Detectar-padroes-de-abuso-e-fraude.md) *(nova — melhoria além do legado)*
+- [HU-184 — Consultar log de integrações](EP12-Auditoria-e-Compliance/HU-184-Consultar-log-de-integracoes.md) *(nova em 2026-10-16)*
+- [HU-185 — Auditoria preditiva](EP12-Auditoria-e-Compliance/HU-185-Auditoria-preditiva.md) *(nova em 2026-10-16)*
 
 ## EP13 — Integrações
 
@@ -174,6 +200,7 @@ Total: 131 HUs (127 originais + 4 propostas)
 - [HU-111 — Migrar dados do sistema legado](EP13-Integracões/HU-111-Migrar-dados-do-sistema-legado.md) *(proposta — SAPS/Simplifica legado)*
 - [HU-133 — Vincular protocolo BAP](EP13-Integracões/HU-133-Vincular-protocolo-BAP.md) *(nova — Regin 2026-06)*
 - [HU-146 — Painel de saúde das integrações](EP13-Integracões/HU-146-Painel-de-saude-das-integracoes.md) *(nova — melhoria além do legado)*
+- [HU-186 — Verificar autenticidade de documento](EP13-Integracões/HU-186-Verificar-autenticidade-de-documento.md) *(nova em 2026-10-16)*
 
 ## EP14 — Inteligência Artificial
 
@@ -201,6 +228,17 @@ Total: 131 HUs (127 originais + 4 propostas)
 - [HU-130 — Produtividade por analista](EP15-Relatórios-e-Indicadores/HU-130-Produtividade-por-analista.md)
 - [HU-131 — Exportar relatórios e listagens](EP15-Relatórios-e-Indicadores/HU-131-Exportar-relatorios.md) *(escopo ampliado — padrão transversal de exportação CSV/XLSX/PDF em toda datatable da gestão)*
 - [HU-145 — Relatório de quedas por gatilho (expansão do expresso)](EP15-Relatórios-e-Indicadores/HU-145-Relatorio-de-quedas-por-gatilho.md) *(nova — melhoria além do legado)*
+- [HU-173 — Consultar sala de controle](EP15-Relatórios-e-Indicadores/HU-173-Consultar-sala-de-controle.md) *(nova em 2026-10-16)*
+- [HU-174 — Consultar SLA e vencimentos](EP15-Relatórios-e-Indicadores/HU-174-Consultar-sla-e-vencimentos.md) *(nova em 2026-10-16)*
+- [HU-175 — Consultar tempo de emissão da viabilidade](EP15-Relatórios-e-Indicadores/HU-175-Consultar-tempo-de-emissao-da-viabilidade.md) *(nova em 2026-10-16)*
+- [HU-176 — Consultar benchmark nacional](EP15-Relatórios-e-Indicadores/HU-176-Consultar-benchmark-nacional.md) *(nova em 2026-10-16)*
+- [HU-177 — Relatório de pendências e exigências](EP15-Relatórios-e-Indicadores/HU-177-Relatorio-de-pendencias-e-exigencias.md) *(nova em 2026-10-16)*
+- [HU-178 — Relatório de trilha por processo](EP15-Relatórios-e-Indicadores/HU-178-Relatorio-de-trilha-por-processo.md) *(nova em 2026-10-16)*
+- [HU-179 — Painel por bairro](EP15-Relatórios-e-Indicadores/HU-179-Painel-por-bairro.md) *(nova em 2026-10-16)*
+- [HU-180 — Relatório de saturação locacional](EP15-Relatórios-e-Indicadores/HU-180-Relatorio-de-saturacao-locacional.md) *(nova em 2026-10-16)*
+- [HU-181 — Relatório de escritório virtual](EP15-Relatórios-e-Indicadores/HU-181-Relatorio-de-escritorio-virtual.md) *(nova em 2026-10-16)*
+- [HU-182 — Relatório de atendimento em contingência](EP15-Relatórios-e-Indicadores/HU-182-Relatorio-de-atendimento-em-contingencia.md) *(nova em 2026-10-16)*
+- [HU-183 — Relatório de falhas de comunicação](EP15-Relatórios-e-Indicadores/HU-183-Relatorio-de-falhas-de-comunicacao.md) *(nova em 2026-10-16)*
 
 ## Mapa de renumeração (2026-06-09)
 

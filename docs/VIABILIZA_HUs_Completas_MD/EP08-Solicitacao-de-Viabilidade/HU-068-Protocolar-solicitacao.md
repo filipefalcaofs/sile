@@ -3,132 +3,65 @@
 ## Épica
 **EP08 — Solicitação de Viabilidade**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Finalizar solicitação e gerar protocolo.
+Transformar o rascunho em solicitação protocolada, com número único, data de protocolo, trilha de transição e comprovante em PDF para o requerente.
 
 ## História de Usuário
-**Como** cidadão,  
-**quero** protocolar solicitação,  
-**para** acompanhar oficialmente o processo.
+**Como** requerente dono do rascunho,  
+**quero** protocolar a solicitação,  
+**para** receber um número oficial e acompanhar o processo.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- Protocolar: dono efetivo e status rascunho (`ViabilityRequestPolicy::protocol`).
+- Rota `POST portal/solicitacoes/{solicitacao}/protocolar`, com autenticação do portal e middleware `portal.solicitacao`.
+- Comprovante: dono efetivo (`view`), `GET portal/solicitacoes/{solicitacao}/comprovante`. Sem protocolo, a resposta é 422.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. O pedido pode trazer `proceed_despite`. O serviço só grava `applicant_proceeded_despite` quando esse sinal é verdadeiro e a simulação consolidada é `nao_permitido`.
+2. Antes de consumir número, recusa status diferente de rascunho, dados mínimos ausentes e documentos obrigatórios faltantes (origem diferente de Regin).
+3. Em uma transação, `ProtocolNumberGenerator` gera o número, grava `protocol_number` e `protocoled_at` e a máquina de estados vai de rascunho para `protocolada`, com rótulo público e auditoria da transição.
+4. Fora da transação, `completarTerritorio` tenta localização pela inscrição, zona, bairro, CODLOG, logradouro tributário e polígono de endereçamento. Falha de SEFAZ ou GIS não desfaz o protocolo.
+5. Depois do commit, dispara `SolicitacaoProtocolada`. O listener `AvaliarFluxoExpresso` enfileira `DecidirFluxoExpressoJob`.
+6. O portal redireciona à lista com o número gerado. Erro de documento ou de dados mínimos volta como flash, sem número.
+7. Na consulta autenticada, o dono baixa o comprovante. O PDF é gerado na hora, não fica armazenado, traz protocolo, empresa, endereço, área, CNAEs e código `CMP-{protocolo}-{hmac}`. Cada emissão é auditada.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- O número tem a forma `{prefixo}-{ano}-{sequência}`, prefixo `solicitacao.protocolo.prefixo` (padrão `VIA`) e padding `solicitacao.protocolo.padding` (padrão 6). O contador anual usa `lockForUpdate`. O único de `protocol_number` é a defesa final.
+- Dados mínimos do portal: empresa, polígono, área maior que zero e CNAE principal. Origem Regin dispensa o polígono nessa trava e dispensa a trava documental.
+- A simulação desfavorável não impede o protocolo. A ciência só é registrada no caso `nao_permitido`.
+- O snapshot da simulação não é reprocessado no protocolo.
+- Transição inválida lança `InvalidStatusTransitionException`.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Protocolar solicitação**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- `proceed_despite` opcional, booleano.
+- Bloqueios de domínio, com mensagem ao usuário: documentação incompleta e solicitação incompleta (lista de campos).
+- Comprovante inexistente: solicitação sem `protocol_number` ou sem `protocoled_at`.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+- Dado rascunho do dono com empresa, polígono, área positiva, CNAE principal e documentos obrigatórios cobertos, quando protocola, então o status passa a `protocolada`, nasce número no formato configurado e a lista confirma o número.
+- Dado campo mínimo ou documento obrigatório faltante (origem não Regin), quando protocola, então não há número novo e o erro é exibido.
+- Dado simulação `nao_permitido` e `proceed_despite` verdadeiro, quando protocola, então `applicant_proceeded_despite` fica verdadeiro. Sem essa tendência, o sinal não é gravado.
+- Dado solicitação já protocolada, quando o dono pede o comprovante, então recebe PDF com o código de verificação. Dado rascunho, quando pede o comprovante, então a resposta é 422.
+- Dado terceiro, quando protocola ou baixa o comprovante, então a policy nega.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+## Divergências da redação anterior
+O protocolo não espera pagamento nem DAM. Em seguida o sistema enfileira a decisão do fluxo expresso. O comprovante é PDF do protocolo, gerado sob demanda, distinto do TVL.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+## Evidências
+- `App\Http\Controllers\Portal\ProtocoloController`
+- `App\Services\Solicitacao\ProtocolarSolicitacaoService`
+- `App\Services\Solicitacao\ProtocolNumberGenerator`
+- `App\Services\Solicitacao\ViabilityRequestStateMachine`
+- `App\Http\Controllers\Portal\ComprovanteProtocoloController`
+- `App\Services\Solicitacao\ComprovanteProtocoloService`
+- `App\Listeners\AvaliarFluxoExpresso`
+- `resources/js/pages/portal/solicitacoes/protocolo.tsx` (ação "Baixar comprovante (PDF)")
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
-
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-
-## Critérios de Aceite — BDD
-
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Protocolar solicitação**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- Pagamento ou DAM como condição do protocolo.
+- Armazenamento permanente do PDF do comprovante.
+- Reprocessamento do motor de viabilidade dentro do `ProtocolarSolicitacaoService`.

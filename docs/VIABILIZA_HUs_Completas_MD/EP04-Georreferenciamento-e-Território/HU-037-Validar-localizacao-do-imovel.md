@@ -3,132 +3,70 @@
 ## Épica
 **EP04 — Georreferenciamento e Território**
 
+## Situação na implementação
+- **Status:** Parcial
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Confirmar coerência do endereço e coordenada.
+Comparar o polígono informado com o lote oficial e alertar quando a sobreposição fica abaixo do limiar. Enquanto a camada de lote está pendente, a comparação não roda. No processo, divergência de zona entre o desenho e a fonte oficial encaminha à análise.
 
 ## História de Usuário
-**Como** sistema,  
-**quero** validar localização,  
-**para** evitar análise em local incorreto.
+**Como** servidor que consulta o território,  
+**quero** saber se o polígono informado cobre o lote oficial,  
+**para** não aceitar um desenho deslocado sem registro.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- `POST /gestao/territorio/validar-localizacao`: `consultar-territorio`.
+- O limiar `geo.validacao.sobreposicao_minima` é parâmetro (padrão 50, inteiro de 1 a 100).
+- A divergência de zona no expresso é decisão do sistema, não uma ação do requerente.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. O endpoint recebe um GeoJSON `Polygon` e chama `LocationValidationService::validate`.
+2. Se não há camada de lote ou ela está `pendente_fonte`, o resultado é `indisponivel`, sobreposição nula, alerta falso, motivo de base de lotes (inscrição imobiliária) pendente. Nenhuma consulta espacial ocorre. Esse é o estado do seed.
+3. Com camada de lote vigente, o SQL calcula `ST_Area(ST_Intersection) / ST_Area(polígono)` da feição mais sobreposta. Sem interseção, o percentual é 0.
+4. Percentual abaixo do limiar: status `alerta_sobreposicao` e `alerta` verdadeiro. No limiar ou acima: `validado` e alerta falso.
+5. O controller audita `validacao-localizacao` com o resultado e o alerta.
+6. No rascunho, a área declarada é comparada à área do próprio polígono, com tolerância. Acima da tolerância há alerta auditado (`imovel-area-inconsistente`). Não bloqueia o salvamento. O comentário do controller registra que a comparação com o lote oficial degrada enquanto o lote está pendente.
+7. No expresso, `LocalizacaoDivergenciaService` encaminha à análise, com gatilho `localizacao_divergente`, quando o polígono desenhado cai em zona diferente da zona do endereçamento ou da zona da inscrição. Isso ocorre depois do indeferimento territorial por logradouro e antes do encaminhamento das poligonais.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- A decisão do limiar é percentual estritamente menor que o limiar.
+- Indisponibilidade do lote não gera alerta falso de sobreposição baixa.
+- A data opcional de `validate` usa a camada de lote vigente naquela data. O endpoint da gestão não envia data: usa a vigente agora.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Validar localização do imóvel**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- `polygon` obrigatório, tipo `Polygon`, com `coordinates`.
+- A topologia fica com o PostGIS. O request só exige a estrutura mínima do GeoJSON.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+**Dado** que a camada de lote está `pendente_fonte`,  
+**Quando** um polígono é enviado para validação,  
+**Então** o status é `indisponivel`, a sobreposição é nula, o alerta é falso e não há consulta espacial.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+**Dado** que existe camada de lote vigente e a maior sobreposição é menor que o limiar,  
+**Quando** o polígono é validado,  
+**Então** o status é `alerta_sobreposicao` e a auditoria guarda o alerta.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+**Dado** que a sobreposição é igual ou maior que o limiar,  
+**Quando** o polígono é validado,  
+**Então** o status é `validado`.
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
+**Dado** que a zona do desenho diverge da zona da inscrição ou do endereçamento,  
+**Quando** o fluxo expresso avalia a localização,  
+**Então** o processo vai à análise com o gatilho `localizacao_divergente`.
 
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-- RN-004: Além da validação contra o logradouro (comportamento do legado), o polígono informado deve ser comparado ao **lote oficial** da base GIS: percentual de sobreposição abaixo do limiar parametrizado gera alerta de localização suspeita, registrado no processo para o analista.
-- RN-005: Divergência entre zona/via derivadas do polígono e as derivadas da inscrição imobiliária deve ser apontada antes de prosseguir.
+## Divergências da redação anterior
+A redação anterior tratava a validação contra o lote como disponível. O código só calcula a sobreposição com camada de lote vigente. O seed deixa essa camada pendente.
 
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Validar localização do imóvel**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
+## Evidências
+- `LocationValidationService`
+- `TerritoryController::validateLocation`
+- `ValidateLocationRequest`
+- Parâmetro `geo.validacao.sobreposicao_minima`
+- `SolicitacaoImovelController` (alerta de área do polígono)
+- `FluxoExpressoService` e `TipoGatilho::LocalizacaoDivergente`
 
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- Bloqueio do salvamento do rascunho por sobreposição baixa com o lote oficial.
+- Cálculo da sobreposição em PHP. A área da interseção é SQL no PostGIS.
+- Identificação do lote oficial da cidade. Ver HU-033.

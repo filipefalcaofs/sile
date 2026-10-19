@@ -1,57 +1,53 @@
-# HU-144 — Fila de trabalho do analista com SLA visual
-
-> **Status: Aceita (2026-06-12)** — melhoria além do legado. O SAPS é orientado a "consultar processo" (tela de filtros); o Viabiliza entrega o trabalho ordenado por prioridade, com prazo visível.
+# HU-144 — Fila de trabalho do analista com SLA
 
 ## Épica
 **EP10 — Análise Técnica SEDUR**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Oferecer painel de fila de trabalho ("meus processos" e "processos do setor") ordenado por prazo restante, com semáforo de SLA por processo e por etapa, contadores por status e alertas de vencimento.
+Listar os processos atribuídos ao analista, ordenados pelo prazo `analysis_due_at`, com contadores, e oferecer visão agregada do setor a quem distribui.
 
 ## História de Usuário
-**Como** analista SEDUR,  
-**quero** ver minha fila priorizada por prazo,  
-**para** trabalhar no que urge sem precisar caçar processos em telas de filtro.
+**Como** usuário com `consultar-solicitacoes` e processos atribuídos a mim, **quero** ver minha fila pelo prazo, **para** trabalhar primeiro o que vence antes.
 
-## Contexto de Negócio
-No legado, o analista usa a consulta com filtros para achar trabalho; o prazo é invisível (origem da distorção "19 dias reportados vs 42h medidos"). A fila priorizada com semáforo torna o prazo um elemento operacional do dia a dia, não um relatório a posteriori.
+## Atores e permissões
+- `GET processos/fila`: `consultar-solicitacoes`. Não exige `analisar-processos`.
+- A lista é só `assigned_user_id` do usuário logado, status `em_analise` ou `em_pendencia`, e exclui situação operacional `para_conclusao`.
+- Quem tem `distribuir-processos` recebe, na mesma tela, `visaoSetor` (carga por analista e processos no vermelho). Os demais recebem `visaoSetor` nulo.
+- O parâmetro de modo antigo é ignorado: esta rota não reabre a fila do setor. A caixa do setor é a HU-080.
 
-## Fluxo Principal
-1. O analista acessa o painel de análise técnica.
-2. Abas "Meus processos" e "Caixa do setor" (HU-138), com contadores por status (aguardando análise, em análise, aguardando convite, vencendo hoje).
-3. Lista ordenada por prazo restante (calculado com as regras de prazo corretas — úteis/feriados, HU-137), com semáforo: verde (no prazo), amarelo (limiar parametrizável), vermelho (estourado).
-4. Cada item mostra etapa atual e tempo na etapa; clique abre o processo/ficha.
-5. Gestor vê visão agregada do setor (carga por analista, processos em vermelho) — ponte com HU-130.
+## Fluxo evidenciado
+1. A fila aplica os filtros da caixa, pagina e ordena por `analysis_due_at` e id.
+2. Contadores no escopo do usuário: em análise com responsável, em pendência e vencendo hoje (`analysis_due_at` até o fim do dia). O contador "aguardando análise" usa o mesmo escopo já filtrado pelo responsável, então processo sem responsável não entra nesta fila.
+3. O acesso audita `consulta-fila` com modo `meus`.
+4. O prazo exibido é a coluna materializada no encaminhamento e recalculada na distribuição ou na assunção. A redistribuição não recalcula.
 
-## Regras de Negócio
-- RN-001: O prazo usa exclusivamente as regras parametrizadas de contagem (HU-014/HU-137) — mesma fonte da medição da HU-129 (sem dupla contagem).
-- RN-002: Limiares do semáforo (ex.: amarelo a 80% do prazo) parametrizáveis por tipo de serviço.
-- RN-003: A ordenação padrão é por prazo restante; o analista pode reordenar sem perder o padrão ao recarregar.
-- RN-004: Processos em vermelho geram alerta ao gestor do setor conforme escalonamento (HU-147).
-- RN-005: Acesso restrito por perfil; visão "setor" respeita vínculo analista ↔ setor (HU-138).
+## Regras de negócio evidenciadas
+- Processo deferido, indeferido ou em outro status terminal não aparece: a fila só tem os dois status de trabalho.
+- `para_conclusao` sai desta fila e aparece na aba correspondente da caixa do setor.
+- O semáforo de SLA da fila e do escalonamento leem a mesma origem (`analysis_due_at` e início da etapa). Esta tela não dispara notificação.
 
-## Critérios de Aceite — BDD
+## Validações
+- Paginação 10, 15, 25 ou 50; senão, `ui.cnaes.per_page`.
+- Filtros vazios não restringem.
 
-### CA-01 — Fila priorizada
-**Dado** processos atribuídos ao analista e ao seu setor,  
-**Quando** abrir o painel,  
-**Então** as listas devem vir ordenadas por prazo restante com semáforo e contadores corretos.
+## Critérios de aceite
+1. A rota exige `consultar-solicitacoes`.
+2. O analista vê somente processos atribuídos a ele, em análise ou em pendência, fora de `para_conclusao`, ordenados pelo prazo.
+3. Usuário com `distribuir-processos` vê a visão do setor; os outros não.
+4. A consulta é auditada. Nenhum status é alterado por abrir a fila.
 
-### CA-02 — Prazo correto
-**Dado** um processo com prazo atravessando fim de semana e feriado cadastrado,  
-**Quando** o semáforo for calculado,  
-**Então** a contagem deve respeitar as regras parametrizadas (não contar dias não úteis quando a regra assim definir).
+## Divergências da redação anterior
+- A redação anterior misturava a fila do analista com a caixa do setor e com alertas de vencimento. A fila é somente leitura dos processos do usuário. Alertar vencimento é a HU-093 e não muda esta lista.
 
-### CA-03 — Visão do gestor
-**Dado** um gestor do setor,  
-**Quando** abrir o painel,  
-**Então** deve ver carga por analista e processos em vermelho do setor.
+## Evidências
+- `app/Http/Controllers/Gestao/ProcessoController.php` (`fila`)
+- `app/Services/Analise/ProcessoQueryService.php` (`fila`, `escopo`, `STATUS_FILA`, `visaoSetor`)
+- `routes/gestao.php`
 
-## Dependências
-- HU-080/HU-081/HU-138 (distribuição e setores), HU-137 (feriados), HU-014 (parâmetros), HU-147 (escalonamento).
-
-## Prioridade
-Alta
-
-## Observações
-Complementa (não substitui) a consulta avançada da HU-082. Padrões de UI: DataTable/KPI cards já estabelecidos nas Fases 2.x.
+## Não evidenciado
+- Fila do setor inteiro nesta rota.
+- Cálculo de SLA diferente do `analysis_due_at` já gravado.

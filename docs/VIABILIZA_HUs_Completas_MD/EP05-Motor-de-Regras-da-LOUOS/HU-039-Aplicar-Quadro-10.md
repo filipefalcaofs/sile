@@ -3,135 +3,66 @@
 ## Épica
 **EP05 — Motor de Regras da LOUOS**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Verificar permissões associadas ao Quadro 10.
+Consultar, na versão vigente do Quadro 10, se o grupo de uso é permitido, permitido condicionado ou proibido na zona identificada.
 
 ## História de Usuário
 **Como** sistema,  
-**quero** aplicar Quadro 10,  
-**para** avaliar compatibilidade da atividade.
+**quero** ler a permissão da zona para o grupo enquadrado,  
+**para** consolidar o parecer sem inventar permissão quando a zona ou a regra faltam.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- O motor não tem tela própria. A manutenção das linhas é o rascunho do domínio `louos_quadro10`, permissão `manter-louos`, publicação por quatro olhos.
+- O cadastro de zonas (`/gestao/louos/zonas`) é a lista que a publicação do rascunho confere: zona citada no quadro precisa existir e estar ativa.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. O motor não busca a zona. Usa `territory.zona` já identificado.
+2. Zona ausente ou com status diferente de `identificado`: dimensão `indisponivel`, sem ler `louos_quadro10_permissoes`. O motivo é o da zona ou o texto de zona pendente.
+3. Enquadramento não identificado e sem sinalização CNLU com grupo: dimensão `indisponivel`. Com CNLU e grupo, o Quadro 10 é consultado mesmo assim.
+4. Sem versão do domínio: `nao_encontrado`.
+5. A busca usa a grafia oficial da zona e, se não achar, o nome original. Não inventa zona.
+6. Com subgrupo, prefere a linha daquele subgrupo. Se existem linhas de subgrupo e a do subgrupo não existe, não cai na regra geral do grupo. Sem subgrupo, a regra geral do grupo só vale se os subgrupos não tiverem permissões diferentes. Caso contrário, `nao_encontrado` e o Quadro 10 não é aplicado.
+7. Permissões do enum: `permitido`, `permitido_condicionado`, `proibido`. A importação também aceita os sinais S, N, S(c), S(a) e S(b).
+8. Se a linha tem observação `(a)` ou `(b)` e a permissão não é proibida, a allow-list RT-05-A ou RT-05-B decide: fora da lista a permissão vira `proibido`; sem CODLOG e sem bairro a dimensão fica `indisponivel`; na lista a permissão da linha permanece.
+9. O motivo identificado diz o grupo, a permissão e a zona. Não descreve outras zonas.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- Proibido no consolidado vira `nao_permitido`.
+- Permitido condicionado entra como condicionante de zona e pode levar o consolidado a `permitido_com_condicoes`.
+- Zona ou regra ausente deixam o consolidado `pendente`. O motor não escolhe permitido nem não permitido nesse caso.
+- Observação lida do campo `observacao` da linha. O código reconhece `(a)` e `(b)`. Outro texto não dispara allow-list.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Aplicar Quadro 10**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- Zona, grupo e subgrupo vazios não geram permissão.
+- Subgrupos com permissões divergentes impedem usar uma única regra de grupo.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+**Dado** que a zona está identificada e existe linha do grupo na versão vigente,  
+**Quando** o Quadro 10 é aplicado,  
+**Então** a dimensão fica `identificado` com permissão, referência de condicionante e base legal da linha.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+**Dado** que a zona não está identificada,  
+**Quando** o motor enquadra,  
+**Então** o Quadro 10 fica `indisponivel` e a tabela não é consultada.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+**Dado** que a linha tem observação (a) ou (b) e o CODLOG ou o bairro está fora da allow-list,  
+**Quando** o Quadro 10 é aplicado,  
+**Então** a permissão devolvida é `proibido`.
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
+## Divergências da redação anterior
+A redação anterior não descrevia a degradação sem zona, a precedência do subgrupo nem as observações (a) e (b).
 
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-- RN-004: A aplicação do quadro deve considerar zona, via, enquadramento da atividade e versão vigente da LOUOS.
-- RN-005: Resultado proibitivo deve impedir deferimento automático.
-- RN-006: Resultado condicionado deve gerar condicionante vinculada à decisão.
+## Evidências
+- `LouosEnquadramentoService::enquadrarQuadro10`
+- `LouosQuadro10Permissao`, `Quadro10Permissao`
+- `Quadro10Zona`
+- `TerritorialRuleService::observacaoQuadro10Permite`
+- `RuleDomain::LouosQuadro10`
 
-## Critérios de Aceite — BDD
-
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Aplicar Quadro 10**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- Consulta do Quadro 10 a partir de zona digitada livremente, sem a dimensão territorial identificada.
+- Observação (c) do Quadro 10. O motor só reconhece `(a)` e `(b)`.

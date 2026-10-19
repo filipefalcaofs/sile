@@ -1,66 +1,52 @@
 # HU-140 — Pré-analisar processo pelo motor
 
-> **Status: Aceita (2026-06-12)** — melhoria além do legado. No SAPS, o analista preenche a ficha do zero; no Viabiliza, o motor roda **sempre** e a ficha chega pré-preenchida (human-in-the-loop).
-
 ## Épica
 **EP10 — Análise Técnica SEDUR**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Executar o motor de regras (LOUOS + risco + condicionantes + vagas) em todo processo encaminhado à análise humana, entregando a ficha de análise pré-preenchida com o resultado sugerido e o motivo exato da queda.
+Ao encaminhar o processo à análise, rodar o mesmo motor da solicitação e gravar a revisão 1 da ficha com o que o motor souber, sem pré-marcar a decisão do analista.
 
 ## História de Usuário
-**Como** analista SEDUR,  
-**quero** receber a ficha pré-analisada pelo motor,  
-**para** revisar e ajustar em minutos, em vez de preencher tudo manualmente.
+**Como** sistema, **quero** pré-analisar o processo encaminhado à análise, **para** que a ficha chegue preenchida com o veredito do motor e o analista confirme ou altere.
 
-## Contexto de Negócio
-A análise humana no legado consome ~30 minutos por processo porque o analista refaz manualmente o que o motor já sabe calcular (enquadramento, condicionantes, vagas). Com a pré-análise, o trabalho humano vira revisão: confirmar ou divergir do motor — e a divergência registrada alimenta a melhoria da parametrização.
+## Atores e permissões
+- Não há rota própria. O listener `PreAnalisarProcesso` reage a `EncaminhadoParaAnalise`, disparado pelo encaminhamento do expresso (HU-079) e pelo envio manual (HU-172).
+- Abrir a ficha também chama `preAnalisar` se ainda não houver revisão utilizável. Quem abre a ficha humana precisa de `analisar-processos`.
 
-## Pré-condições
-- Processo encaminhado à análise técnica (HU-079) com motivo registrado (gatilho, alto risco ou dado pendente).
-- Motores das Fases 5 e 6 operacionais.
+## Fluxo evidenciado
+1. Se a revisão 1 já existe e não é rascunho vazio do motor, o método devolve a existente e não reexecuta.
+2. Rascunho vazio é apagado e a revisão é recriada.
+3. O motor é `SolicitacaoViabilityResolver`. A revisão 1 nasce em rascunho com `engine_snapshot`, versões de regra e `per_cnae`. `status_sugerido` fica gravado para a divergência. `status_escolhido` nasce nulo e o parecer nasce em branco. Condicionantes, vagas e justificativa por atividade seguem pré-preenchidas quando o motor as traz.
+4. Exceção do motor grava revisão 1 em modo manual, com motor indisponível e ficha vazia. Veredito locacional pendente não esvazia a ficha: entra o que o motor souber, com status de análise, sem inventar deferimento.
+5. A execução é auditada.
+6. `atualizarRascunho` só regrava ficha intocada (rascunho, sem analista, sem parecer, única revisão). Ficha assumida ou preenchida não é tocada. Motor indisponível nessa atualização deixa a ficha como está.
 
-## Fluxo Principal
-1. Ao encaminhar processo à análise, o sistema executa o motor completo com os dados disponíveis.
-2. A ficha de análise (HU-135) abre pré-preenchida: enquadramento LOUOS sugerido por CNAE, status sugerido (deferida/indeferida/análise), condicionantes aplicáveis pré-marcadas, vagas calculadas com veredito, gatilhos exibidos com destaque.
-3. Campos sem dado confiável (motivo da queda) ficam destacados como pendência de análise humana.
-4. O analista confirma ou ajusta cada sugestão; ajustes registram divergência (valor sugerido × valor final + justificativa).
-5. O sistema registra a pré-análise (versão das regras, resultados sugeridos) e as divergências em auditoria.
+## Regras de negócio evidenciadas
+- A pré-análise não decide o processo e não marca a escolha do analista.
+- Idempotência pela revisão 1: reabrir não reexecuta o motor. Recalcular é nova revisão (HU-135).
+- Corrida na criação da revisão 1 devolve a linha já gravada.
 
-## Fluxos Alternativos
-### FA-01 — Motor indisponível ou regra ausente
-1. A ficha abre vazia no modo manual (comportamento do legado), com aviso explícito do motivo.
-2. O evento é registrado para acompanhamento.
+## Validações
+- Não há formulário. A falha do motor vira ficha manual, não erro silencioso de decisão.
 
-## Regras de Negócio
-- RN-001: A pré-análise nunca decide sozinha no fluxo humano — é sugestão; a decisão é do analista.
-- RN-002: Toda divergência analista × motor deve registrar campo, valor sugerido, valor final e justificativa.
-- RN-003: Divergências recorrentes devem ser consultáveis (relatório) para orientar correção de parametrização (HU-145).
-- RN-004: A pré-análise registra a versão das regras utilizada; reabrir a ficha não reexecuta o motor automaticamente (consistência), salvo ação explícita "Recalcular".
-- RN-005: Toda execução registrada em auditoria com dados de entrada, regras aplicadas e resultados sugeridos.
+## Critérios de aceite
+1. Primeiro encaminhamento cria revisão 1 com sugestão do motor e escolha do analista vazia.
+2. Segundo encaminhamento ou reabertura não duplica a revisão 1 nem reexecuta se a ficha já tem conteúdo.
+3. Falha do motor deixa revisão manual com motor indisponível, sem resultado inventado.
+4. Ficha já preenchida não é substituída na reavaliação.
 
-## Critérios de Aceite — BDD
+## Divergências da redação anterior
+- A redação anterior descrevia pré-análise como ação de usuário com permissão genérica. O código dispara no evento de encaminhamento e na abertura da ficha, e não decide.
 
-### CA-01 — Ficha pré-preenchida
-**Dado** um processo encaminhado à análise com dados completos,  
-**Quando** o analista abrir a ficha,  
-**Então** enquadramento, condicionantes, vagas e status sugerido por CNAE devem estar pré-preenchidos com a fundamentação do motor.
+## Evidências
+- `app/Services/Analise/PreAnaliseService.php`
+- `app/Listeners/PreAnalisarProcesso.php`
+- `app/Services/Analise/AnalysisRecordService.php` (`current`)
 
-### CA-02 — Registro de divergência
-**Dado** uma sugestão do motor,  
-**Quando** o analista alterar o valor,  
-**Então** a divergência (sugerido × final + justificativa) deve ser registrada e consultável.
-
-### CA-03 — Degradação controlada
-**Dado** que o motor está indisponível,  
-**Quando** o analista abrir a ficha,  
-**Então** o modo manual deve ser oferecido com aviso explícito — nunca falha silenciosa.
-
-## Dependências
-- HU-038 a HU-046 (motor LOUOS), HU-047 a HU-051 (risco), HU-042 (vagas), HU-135 (ficha), HU-079.
-
-## Prioridade
-Alta
-
-## Observações
-Maior alavanca de produtividade do projeto: transforma análise de ~30 min em revisão de ~5 min. As divergências viram insumo do feedback loop de parametrização (HU-145).
+## Não evidenciado
+- Botão isolado "pré-analisar" com permissão própria.
+- Exibição de `status_sugerido` como decisão já escolhida na ficha.

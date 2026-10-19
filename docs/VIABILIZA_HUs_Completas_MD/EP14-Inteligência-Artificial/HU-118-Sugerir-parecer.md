@@ -3,135 +3,50 @@
 ## Épica
 **EP14 — Inteligência Artificial**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Gerar minuta de parecer não vinculante.
+Redigir uma minuta de parecer a partir da pré-análise já gravada pelo motor, para o analista revisar. A minuta não é a decisão.
 
 ## História de Usuário
-**Como** IA,  
-**quero** sugerir parecer,  
-**para** apoiar decisão humana.
+**Como** analista, **quero** uma minuta de parecer fundamentada no que o motor já registrou, **para** editar antes de concluir. Sem essa pré-análise, a minuta não é inventada.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- Ficha de análise. A prop adiada chama `SugestaoParecerService`. O endpoint `sugerirParecer` repete a chamada sob demanda.
+- Portão `features.ia_parecer` e provedor de texto.
+- Exige ficha com `engine_available` e `engine_snapshot` não vazio.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. Sem interruptor, sem provedor ou sem snapshot do motor: não despacha, não chama o modelo e não redige quadro ou artigo.
+2. Com as três condições, o job grava `ai_suggestions` do tipo `parecer`.
+3. O job não escreve `AnalysisRecord` nem `ViabilityDecision`.
+4. A ficha informa se o parecer está disponível e o motivo quando não está.
+5. Há ainda sugestão de justificativa da atividade (`features.ia_justificativa`), só depois que o analista escolheu deferida ou indeferida, e só preenche campo vazio. Também não grava decisão. Não é esta HU; convive na mesma ficha.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- A minuta é revisável. Quem decide é o analista no fluxo de conclusão.
+- Sem motor não há fundamentação para citar: a função não desbloqueia a tela com texto genérico.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Sugerir parecer**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- Snapshot ausente impede a sugestão.
+- O portão é conferido de novo no job.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+- Com pré-análise gravada e função ligada, surge minuta em `ai_suggestions` e o processo continua sem decisão nova.
+- Sem snapshot, a resposta explica a indisponibilidade e não cria parecer.
+- Concluir a análise continua sendo ação humana distinta.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+## Divergências da redação anterior
+O texto já dizia minuta não vinculante. O código acrescenta a condição de só citar o snapshot do motor e o silêncio quando esse snapshot não existe.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+## Evidências
+- `app/Services/Ai/SugestaoParecerService.php`
+- `app/Jobs/Ai/SugestaoParecerJob.php`
+- `app/Ai/Agents/SugestaoParecerAgent.php`
+- `app/Http/Controllers/Gestao/AnalysisRecordController.php` (`sugerirParecer`, `parecerTemMotor`)
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
-
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-- RN-004: A IA deve atuar apenas como apoio, sem decisão administrativa vinculante.
-- RN-005: Toda sugestão da IA deve ser identificada como sugestão e permitir revisão humana.
-- RN-006: Dados sensíveis devem ser tratados conforme LGPD e políticas de segurança.
-
-## Critérios de Aceite — BDD
-
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Sugerir parecer**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- Parecer que conclua a ficha ou gere `ViabilityDecision`.
+- Minuta quando o motor não deixou snapshot.

@@ -1,140 +1,56 @@
-# HU-107 — Integrar com GIS Municipal (SIGIS)
-
-> **Status: Refinada (2026-06-11)** — base cartográfica em uso no SAPS é a antiga ("S69"); exigência da SEDUR é migrar para base **CA 2000** via **SIGIS**. Campo operacional: "Zona e Via SIGIS" na ficha de análise.
+# HU-107 — Integrar com GIS Municipal
 
 ## Épica
 **EP13 — Integrações**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Consultar o SIGIS/GIS municipal para identificar zona, via, polígono validado e restrições territoriais com base cartográfica oficial atualizada.
+Identificar zona, via, endereço e camadas incidentes consultando o GeoServer da SEDUR e, no lote, o ArcGIS da SEMAP quando esse for o fallback.
 
 ## História de Usuário
-**Como** sistema,  
-**quero** integrar com GIS,  
-**para** identificar zona, via e restrições.
+**Como** sistema, **quero** consultar as camadas geográficas oficiais no ponto ou no logradouro do imóvel, **para** gravar zona e restrições a partir da resposta do serviço, e não de um polígono inventado.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- Clientes usados por `TerritoryService`, `TerritorialRuleService`, `CamadasIncidentesService`, `PoligonoEnderecamentoService` e `TerritorioProcessoService`.
+- Camadas administráveis em `GeoServerLayerController`. URLs no catálogo de APIs (aba GeoServer e ArcGIS SEMAP), permissão `manter-parametros` para a configuração.
+- Consulta territorial da gestão exige `consultar-territorio`.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. Zona: `GeoServerWfsZonaClient` faz WFS no ponto (INTERSECTS, GeoJSON). A maior porção do polígono do imóvel usa o mesmo GeoServer em pool de requisições.
+2. Classificação viária: `GeoServerClassificacaoViariaClient` consulta pelo código de logradouro.
+3. Endereçamento: `GeoServerEnderecamentoClient` consulta logradouro e número, ou o ponto. `SemapLoteClient` é o fallback de lote no ArcGIS da SEMAP.
+4. Demais camadas: `GeoServerWfsCamadaClient` no type name configurado.
+5. Resposta em ISO-8859-1 é normalizada. Falha de rede ou feição ausente segue o tratamento do cliente (exceção ou hit vazio), sem geometria substituta.
+6. O código da zona e o bairro oficial materializados no processo alimentam o painel por bairro. O indicador “por zona” da tela de indicadores ainda agrupa por bairro e declara a zona indisponível naquela agregação.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- Identificação territorial do processo chama o GeoServer de fato.
+- Nota interna de falha de camada não é enviada como justificativa à JUCEB.
+- Camada não cadastrada não é consultada com type name inventado.
 
-## Fluxo Principal
-1. O requerente ou sistema informa polígono de 4 pontos no mapa (formulário Regin ou portal).
-2. O sistema valida coerência do polígono com o logradouro/inscrição imobiliária informados.
-3. O sistema consulta camadas SIGIS (base CA 2000) e retorna zona urbanística, classificação da via e metadados geográficos.
-4. O sistema persiste resultado geográfico no processo e disponibiliza na ficha de análise ("Zona e Via SIGIS").
-5. Falhas de integração registram pendência — decisão automática bloqueada quando dado geográfico for pré-requisito.
+## Validações
+- Consultas exigem coordenada ou código de logradouro conforme o cliente.
+- Timeout e URL saem da configuração da integração, não de constante de tela.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+- Identificar um ponto dispara WFS ao GeoServer da zona e não preenche zona se a resposta não trouxer feição.
+- Endereçamento sem retorno do GeoServer pode cair no lote SEMAP; sem os dois, não há endereço oficial fabricado.
+- A configuração da camada é a linha de `GeoServerLayer`, não um nome fixo só no código da tela.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+## Divergências da redação anterior
+O texto tratava a integração como pendência genérica de SIG. Os clientes HTTP do GeoServer e do ArcGIS SEMAP estão no fluxo de território. A agregação “solicitações por zona” dos indicadores não usa essa zona: ela degrada para bairro, com rótulo explícito.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+## Evidências
+- `app/Services/Geo/GeoServerWfsZonaClient.php`
+- `app/Services/Geo/GeoServerClassificacaoViariaClient.php`
+- `app/Services/Geo/GeoServerEnderecamentoClient.php`
+- `app/Services/Geo/GeoServerWfsCamadaClient.php`
+- `app/Services/Geo/SemapLoteClient.php`
+- `app/Services/Geo/TerritoryService.php`
+- `app/Providers/AppServiceProvider.php`
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
-
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-- RN-004: Integrações devem registrar payload, status, protocolo externo quando houver e erros de comunicação.
-- RN-005: Falha de integração não deve gerar decisão inconsistente; deve permitir retentativa ou análise técnica.
-- RN-007: A base cartográfica de referência deve ser a **CA 2000** (não S69); versão da base consultada deve ser registrada na auditoria do processo.
-- RN-008: Polígono inválido ou inconsistente com endereço deve impedir avanço do formulário Regin.
-- RN-009: **Camadas geográficas são dados versionados** (mesmo princípio do versionamento de regras): atualização de base/camada cria nova versão com vigência; cada decisão registra a versão da camada consultada, e a reprodução da decisão (HU-099) usa a versão da época — atualização da base **não** reescreve o contexto de processos já decididos.
-
-## Critérios de Aceite — BDD
-
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Integrar com GIS Municipal**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Pendente com a SEDUR: acesso às camadas SIGIS, formato de serviço (WMS/WFS/API) e cronograma de migração S69 → CA 2000. Integração bloqueada até credenciais/endpoints reais — nunca simular em produção.
+## Não evidenciado
+- Uso da zona oficial na série “solicitações por zona” de `IndicadoresViabilidadeService::porZona` (essa série declara degradação para bairro).

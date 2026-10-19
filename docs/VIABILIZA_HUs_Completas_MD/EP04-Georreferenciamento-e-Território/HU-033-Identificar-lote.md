@@ -3,132 +3,57 @@
 ## Épica
 **EP04 — Georreferenciamento e Território**
 
+## Situação na implementação
+- **Status:** Bloqueada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Relacionar imóvel ao lote territorial.
+Identificar o lote cadastral do ponto na camada de lotes do território. Essa identificação não ocorre: a camada local está pendente de fonte e o serviço não consulta geometria nesse estado.
 
 ## História de Usuário
 **Como** sistema,  
-**quero** identificar lote,  
-**para** aumentar precisão da análise.
+**quero** saber em qual lote o ponto do imóvel cai,  
+**para** validar a localização contra o lote da inscrição.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- A chamada de identificação exige `consultar-territorio`.
+- Não há papel que desbloqueie a dimensão `lote` pela interface. O desbloqueio depende de uma camada `lote` vigente, com feições, no lugar do registro `pendente_fonte`.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. `GeoLayerType::Lote` é fonte bloqueada, no mesmo grupo da zona. O seed cria a camada `pendente-sedur`, status `pendente_fonte`, zero feições, sem geometria.
+2. `TerritoryService::identifyContaining` para lote, com camada nula ou `pendente_fonte`, devolve `indisponivel`, motivo “Base de lotes pendente SEDUR”, e não chama o repositório espacial.
+3. `LocationValidationService` usa a mesma trava. Com a camada bloqueada, a sobreposição não é calculada (HU-037).
+4. `TerritorioProcessoService` não grava identificador de lote. As colunas materializadas são zona, bairro oficial e CODLOG.
+5. Existe consulta pontual por inscrição em `SemapLoteClient` (camada SEMAP / ArcGIS, parâmetro `arcgis_semap`), usada como fallback do endereçamento quando o endereço licenciado não tem a inscrição. Ela devolve geometria daquela inscrição, não preenche a dimensão `lote` de `TerritoryService` e não cobre a cidade como camada vigente de `geo_layers`. Com o parâmetro desligado, essa consulta também fica desligada.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- Camada `pendente_fonte` nunca dispara `ST_Contains` de lote.
+- Sem feição oficial, o sistema não fabrica polígono de lote.
+- A lógica de contenção já está no serviço: se uma camada de lote vigente com feições for carregada, a mesma identificação por contenção passa a valer. Hoje o dado carregado não é esse.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Identificar lote**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- Não há validação de inscrição contra lote na identificação por ponto. O ponto só produz o status `indisponivel` para a dimensão.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+**Dado** que a camada de lote vigente está `pendente_fonte` ou não existe,  
+**Quando** um ponto é identificado,  
+**Então** a dimensão `lote` volta `indisponivel`, com o motivo de base pendente, e nenhuma consulta espacial de lote é feita.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+**Dado** que a consulta SEMAP por inscrição está desligada,  
+**Quando** o endereçamento procura o lote da inscrição,  
+**Então** o cliente devolve status desligado e não inventa geometria.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+## Divergências da redação anterior
+A redação anterior apresentava a identificação do lote como capacidade operacional. O código da dimensão `lote` só comunica a pendência. A consulta SEMAP não substitui essa dimensão.
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
+## Evidências
+- `GeoLayerType::isBlockedSource` (zona e lote)
+- `GeoLayerSeeder::seedPendingBlockedLayers`
+- `TerritoryService::identifyContaining` e `motivoFor` (lote)
+- `LocationValidationService::isBlocked`
+- `SemapLoteClient` (consulta por inscrição, fora da dimensão `lote`)
 
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-
-## Critérios de Aceite — BDD
-
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Identificar lote**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- Base de lotes cobrindo o município carregada em `geo_layers`.
+- Número oficial do lote, quadra ou inscrição devolvidos por `TerritoryService::identify`.
+- Uso do lote SEMAP como lote da identificação territorial por ponto.

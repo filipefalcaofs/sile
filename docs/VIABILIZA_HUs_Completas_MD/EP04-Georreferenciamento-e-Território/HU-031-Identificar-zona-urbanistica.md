@@ -3,132 +3,64 @@
 ## Épica
 **EP04 — Georreferenciamento e Território**
 
+## Situação na implementação
+- **Status:** Parcial
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Determinar zona do imóvel.
+Informar a zona urbanística do ponto. A camada local de zona nasce pendente de fonte. A identificação usada pelo motor vem do GeoServer SEDUR quando o parâmetro está ligado, ou da maior porção do polígono de endereçamento no processo.
 
 ## História de Usuário
 **Como** sistema,  
-**quero** identificar zona,  
-**para** aplicar regras da LOUOS.
+**quero** obter o código da zona do imóvel a partir da fonte que estiver disponível,  
+**para** o Quadro 10 consultar a permissão sem inventar zona.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- Identificação avulsa: `consultar-territorio`.
+- No processo, a gravação é do sistema (`zona_codigo` fora do preenchimento do cidadão).
+- A consulta WFS depende do parâmetro `geoserver_zona` e das linhas ativas de `geoserver_layers`.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. `GeoLayerType::Zona` é fonte bloqueada. O seed registra a camada local como `pendente_fonte`, versão `pendente-sedur`, zero feições.
+2. Em `TerritoryService::identifyContaining`, camada ausente ou `pendente_fonte` não consulta o PostGIS. Para zona, tenta `identifyZonaFromGeoServer`.
+3. Sem cliente WFS ou com `geoserver_zona` desligado, a zona fica `indisponivel`, motivo “Base de zoneamento pendente SEDUR”.
+4. Com o parâmetro ligado, `GeoServerWfsZonaClient::identificar` consulta as camadas ativas. Status `identificado` devolve o código (atributo `ZONA`, fonte `geoserver-wfs`). Coleção vazia é `nao_encontrado`. Falha HTTP ou resposta fora do contrato é `indisponivel`, com o motivo do cliente.
+5. Se a camada local existir e estiver vigente, mas o ponto não cair em feição, o mesmo fallback WFS é tentado.
+6. `TerritorioProcessoService` grava `zona_codigo` só quando o nome veio identificado.
+7. No fluxo do processo com polígono de endereçamento, `ZonaProcessoService` materializa a zona pela maior porção do lote (`ZonaFonte::EnderecamentoMaiorPorcao`). Porções iguais viram empate e o expresso encaminha à análise com o gatilho `zona_empate`.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- O nome usado depois no Quadro 10 é o `nome` da dimensão ou, na falta dele, os atributos configurados em `geo.zona.atributos_nome` (padrão `ZONA`, `zona`, `SIGLA_ZONA`, `SUBZONA`).
+- `Quadro10Zona::oficializar` traduz alias de GIS para a grafia da matriz. Não cria zona que não esteja na lista.
+- Zona não identificada deixa o Quadro 10 indisponível e o consolidado `pendente`.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Identificar zona urbanística**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- Ponto com latitude e longitude numéricas, como na HU-030.
+- Código de zona só entra no processo quando o status da dimensão é `identificado` e o nome não é vazio.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+**Dado** que `geoserver_zona` está ligado e alguma camada ativa contém o ponto,  
+**Quando** o território é identificado,  
+**Então** a zona volta `identificado` com o código e a versão `geoserver-wfs`.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+**Dado** que a consulta ao GeoServer está desligada, sem camada ativa, ou o serviço não responde,  
+**Quando** a camada local está pendente de fonte,  
+**Então** a zona volta `indisponivel` e nenhuma permissão de zona é inventada.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+**Dado** que o polígono do endereçamento tem a mesma área em duas zonas,  
+**Quando** o fluxo expresso avalia a maior porção,  
+**Então** o processo vai à análise com o gatilho de empate.
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
+## Divergências da redação anterior
+A redação anterior tratava a identificação da zona como passo sempre concluído. O código distingue camada local pendente, WFS opcional e maior porção do endereçamento.
 
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
+## Evidências
+- `TerritoryService::identifyContaining` e `identifyZonaFromGeoServer`
+- `GeoServerWfsZonaClient`
+- `GeoLayerSeeder` (zona `pendente_fonte`)
+- `ZonaProcessoService`, `ZonaMaiorPorcao`
+- `TerritorioProcessoService::materializar`
 
-## Critérios de Aceite — BDD
-
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Identificar zona urbanística**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- Base vetorial local de zoneamento cobrindo o município. O enum marca zona como fonte bloqueada e o seed não carrega feições.
+- Regra urbanística de desempate quando duas zonas têm a mesma área. O código só registra o empate e encaminha à análise.

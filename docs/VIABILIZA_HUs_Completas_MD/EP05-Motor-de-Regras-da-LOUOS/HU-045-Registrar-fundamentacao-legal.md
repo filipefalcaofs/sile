@@ -3,132 +3,57 @@
 ## Épica
 **EP05 — Motor de Regras da LOUOS**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Registrar base legal da decisão.
+Montar a lista de fundamentos do parecer só com o que o motor aplicou, mais o motivo quando o resultado fica pendente.
 
 ## História de Usuário
 **Como** sistema,  
-**quero** registrar fundamentação,  
-**para** garantir rastreabilidade e segurança jurídica.
+**quero** citar a base legal das dimensões identificadas,  
+**para** o parecer não mencionar quadro que não chegou a ser aplicado.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- A lista é produzida no enquadramento e copiada para a auditoria do evento `louos` / `enquadramento`.
+- Os textos-base vêm do catálogo de textos decisórios (`base_legal.louos` e os motivos `louos.motivo.*`). A manutenção desses textos não é desta HU.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. `buildFundamentacao` começa vazio.
+2. Enquadramento `identificado`: inclui o texto `base_legal.louos` seguido do subgrupo, ou de “enquadramento de uso” se o subgrupo vier vazio.
+3. Quadro 10 `identificado`: inclui `base_legal` da linha, quando preenchida, e o texto da LOUOS com “Quadro 10”.
+4. Quadro 11A `identificado`: inclui `base_legal` da linha, quando preenchida, e o texto da LOUOS com “Quadro 11A”.
+5. Se o consolidado está pendente, o motivo da pendência entra na lista. O quadro que ficou indisponível não é citado como regra aplicada.
+6. Entradas repetidas são removidas.
+7. A auditoria grava essa lista junto com CNAE, área, status do enquadramento, resultado e versões. A versão de regra registrada no evento é a de `risco_tratamento`.
+8. Nas regras territoriais que indeferem, o fundamento do texto é o campo `base_legal` da regra RT, não esta lista do consolidado.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- Dimensão que não está `identificado` não contribui com quadro.
+- Base legal vazia da linha não gera item extra. O rótulo do quadro ainda entra se a dimensão foi identificada.
+- Pendência registra o motivo e não finge que a regra faltante foi aplicada.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Registrar fundamentação legal**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- Não há conferência externa de vigência da lei neste método. O texto é o cadastrado no catálogo e a base legal gravada na linha da versão usada.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+**Dado** que enquadramento, Quadro 10 e Quadro 11A estão identificados,  
+**Quando** a fundamentação é montada,  
+**Então** a lista cita o enquadramento, o Quadro 10, o Quadro 11A e as bases legais não vazias das linhas.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+**Dado** que o consolidado fica pendente porque a zona não foi identificada,  
+**Quando** a fundamentação é montada,  
+**Então** o motivo da pendência entra na lista e o Quadro 10 não é citado como aplicado.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+## Divergências da redação anterior
+A redação anterior pedia fundamentação genérica em toda ação. O código só inclui a dimensão que chegou a `identificado` e, na pendência, o motivo em vez do quadro não aplicado.
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
+## Evidências
+- `LouosEnquadramentoService::buildFundamentacao` e `baseLegal`
+- Auditoria do evento `enquadramento`
+- Textos `base_legal.louos` e `louos.motivo.*`
 
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-
-## Critérios de Aceite — BDD
-
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Registrar fundamentação legal**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- Citação do Quadro 7 ou do Quadro 11 na fundamentação.
+- Fundamentação da VISA neste parecer. O classificador de risco municipal tem lista própria e não inclui a dimensão sanitária.

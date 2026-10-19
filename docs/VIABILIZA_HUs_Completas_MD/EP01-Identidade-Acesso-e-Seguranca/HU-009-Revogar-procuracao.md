@@ -3,132 +3,67 @@
 ## Épica
 **EP01 — Identidade, Acesso e Segurança**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Permitir remoção do vínculo de procurador.
+O outorgante revoga a própria procuração na hora. A representação aberta na sessão do procurador cai na próxima request do portal. O procurador também pode encerrar a atuação sem revogar o vínculo.
 
 ## História de Usuário
-**Como** representante legal,  
-**quero** revogar uma procuração,  
-**para** interromper o acesso do procurador à empresa.
+**Como** outorgante, **quero** revogar uma procuração que concedi, **para** o procurador deixar de atuar em meu nome imediatamente. **Como** procurador em atuação, **quero** encerrar essa atuação na minha sessão, **para** voltar a agir só em meu nome.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+Cidadão autenticado no portal (`auth:web`, `verified`, `lgpd.accepted`, `ResolveRepresentation`).
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+- Revogação: DELETE `/portal/procuracoes/{procuration}`. `ProcurationPolicy::delete` permite só se `user.id` é `grantor_user_id`.
+- Encerrar atuação: DELETE `/portal/representacao`. Não há policy; remove a chave da sessão de quem está logado.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+Menu: Serviços > Procurações (`/portal/procuracoes`), o mesmo da HU-008. Não há item separado de revogação.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Revogar procuração**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Fluxo evidenciado
+1. `ProcurationController::destroy` autoriza `delete` na procuração. Quem não é o outorgante recebe a negação do Gate.
+2. A revogação preenche `revoked_at` com agora e `revoked_by_user_id` com o usuário logado. Não apaga a linha. A mensagem é "Procuração revogada."
+3. `isActive()` passa a ser falso porque `revoked_at` deixou de ser nulo. `scopeActive` também exige `revoked_at` nulo.
+4. Na request seguinte do portal, `ResolveRepresentation` vê a procuração inativa, esquece `acting_procuration_id`, limpa `acting_for_user_id` e avisa: "A representação foi encerrada porque a procuração não está mais ativa."
+5. `RepresentationController::destroy` apenas esquece `acting_procuration_id`, registra `procuracao` / `representacao-encerrada` e volta com "Representação encerrada." A procuração continua ativa para um novo início de atuação.
+6. A lista da HU-008 continua exibindo o registro, com `revoked_at` e `is_active` falso.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Regras de negócio evidenciadas
+- RN-001: somente o outorgante revoga (`ProcurationPolicy::delete`).
+- RN-002: revogar não exclui o registro; grava data e autor (`ProcurationController::destroy`).
+- RN-003: procuração revogada ou vencida não sustenta representação. O middleware revalida em toda request do grupo (`ResolveRepresentation`).
+- RN-004: encerrar a atuação na sessão não revoga a procuração (`RepresentationController::destroy`).
+- RN-005: `Procuration` audita atributos fillable via `HasAuditoria`. O fim da atuação tem log explícito no `AuditService`.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+## Validações
+Não há Form Request no DELETE da procuração nem no DELETE da representação. A autorização da revogação é a policy. O vínculo `{procuration}` é o model binding do Laravel.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+## Critérios de aceite
+### CA-01 — Outorgante revoga
+**Dado** uma procuração cujo `grantor_user_id` é o usuário logado, **quando** envia DELETE `/portal/procuracoes/{id}`, **então** `revoked_at` e `revoked_by_user_id` são preenchidos e a mensagem é "Procuração revogada."
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
+### CA-02 — Procurador não revoga
+**Dado** o procurador (ou outro usuário) autenticado, **quando** tenta o DELETE da procuração de que não é outorgante, **então** `ProcurationPolicy::delete` nega e `revoked_at` não é alterado por esse pedido.
 
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
+### CA-03 — Efeito na sessão
+**Dado** o procurador com `acting_procuration_id` apontando para a procuração revogada, **quando** faz uma nova request no grupo do portal, **então** `ResolveRepresentation` remove a atuação e informa que a representação foi encerrada.
 
-## Critérios de Aceite — BDD
+### CA-04 — Encerrar sem revogar
+**Dado** o procurador em atuação e a procuração ainda ativa, **quando** envia DELETE `/portal/representacao`, **então** a sessão perde `acting_procuration_id`, a atividade `representacao-encerrada` é registrada e `revoked_at` permanece nulo.
 
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Revogar procuração**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
+## Divergências da redação anterior
+- A redação antiga falava em representante legal, análise de viabilidade, GIS e REDESIM. A revogação é um update na procuração entre usuários do portal.
+- Não há aprovação de um servidor nem prazo de carência: `revoked_at` vale na hora para `isActive()`.
+- Encerrar a representação e revogar a procuração são operações diferentes.
 
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
+## Evidências
+- `app/Http/Controllers/Portal/ProcurationController.php` — `destroy`.
+- `app/Policies/ProcurationPolicy.php`.
+- `app/Http/Controllers/Portal/RepresentationController.php` — `destroy`.
+- `app/Http/Middleware/ResolveRepresentation.php`.
+- `app/Models/Procuration.php` — `isActive` e `scopeActive`.
+- `routes/portal.php`.
 
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+Não há revogação pelo console, revogação em lote nem restauração de uma procuração revogada. Não há notificação por e-mail ao procurador nestes métodos.

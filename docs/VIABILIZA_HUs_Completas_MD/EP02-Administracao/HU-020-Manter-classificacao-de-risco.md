@@ -3,137 +3,71 @@
 ## Épica
 **EP02 — Administração**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Atualizar classificação de risco.
+Registrar, na ficha do CNAE, o grau de risco municipal da versão vigente.
 
 ## História de Usuário
-**Como** administrador,  
-**quero** manter classificação de risco,  
-**para** adequar baixo/médio/alto risco.
+**Como** administrador com `manter-cnaes`,
+**quero** informar o grau de risco municipal ao cadastrar ou editar o CNAE,
+**para** a classificação vigente da subclasse ficar gravada sem uma segunda tela.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- A ficha de criação e de edição exige `manter-cnaes`. A listagem que leva à ficha exige `consultar-cnaes`, mas abrir a edição exige a permissão de manutenção.
+- Menu Regras, item CNAEs. Não há item de menu «Classificação de risco».
+- Os gatilhos que derrubam o processo para análise técnica são outra tela, a HU-164 (`/gestao/gatilhos-risco`).
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. Criar e editar enviam a lista `niveisMunicipais`: valores `baixo_a`, `baixo_b` e `alto`, com rótulos Baixo, Médio Risco e Alto.
+2. Se não houver versão vigente do domínio `risco_municipal`, a ficha de edição informa `semVersaoMunicipal` e a gravação é recusada.
+3. Na gravação, `RiskClassification` faz `updateOrCreate` pela versão vigente e pelo código do CNAE, com o `risco_municipal` informado.
+4. Essa gravação da ficha não abre rascunho nem exige segundo usuário. O comentário do controller reserva a publicação em lote com quatro olhos ao import oficial (`RiscoMunicipalImportService`).
+5. Trocar o código do CNAE realoca a classificação que apontava para o código anterior.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- Os níveis persistidos são os três do enum `RiscoMunicipal`. A SEDUR os chama Baixo, Médio risco e Alto. Médio risco é a chave `baixo_b`. A severidade usada pelo motor é Baixo < Médio risco < Alto.
+- O enum documenta o Decreto nº 41.758/2026 como fonte dos três níveis. O comentário do `CnaeController` e a exceção de nível desconhecido em `fromDecreto` ainda citam o Decreto nº 32.636/2020.
+- Nível fora de `BAIXO A`, `BAIXO B` e `ALTO` não é convertido por `fromDecreto`.
+- A ficha não grava condicionante sanitária nem reclassifica o grau pela resposta do requerente.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Manter classificação de risco**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- `risco_municipal` obrigatório no cadastro e na edição, restrito ao enum `RiscoMunicipal`.
+- Sem versão vigente, o controller devolve erro e não grava a classificação.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+### CA-01 — Grau na ficha
+**Dado** versão vigente de risco municipal e usuário com `manter-cnaes`,
+**Quando** salva o CNAE com um dos três graus,
+**Então** a classificação daquele código na versão vigente fica com o grau informado.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+### CA-02 — Grau obrigatório
+**Dado** um envio de cadastro ou edição sem `risco_municipal` válido,
+**Quando** a validação roda,
+**Então** a gravação é recusada.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+### CA-03 — Sem quatro olhos na ficha
+**Dado** o autor da alteração na ficha,
+**Quando** salva o grau,
+**Então** a linha vigente é atualizada na hora, sem proposta de segundo usuário.
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
+### CA-04 — Rótulos
+**Dado** a abertura da ficha,
+**Quando** o servidor monta `niveisMunicipais`,
+**Então** `baixo_a` aparece como Baixo, `baixo_b` como Médio Risco e `alto` como Alto.
 
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-- RN-004: A classificação de risco deve ser parametrizável por CNAE e condicionantes.
-- RN-005: Baixo risco elegível deve seguir fluxo expresso quando todas as condicionantes forem atendidas.
-- RN-006: Alto risco deve ser encaminhado para análise técnica quando a legislação assim exigir.
+## Divergências da redação anterior
+A redação anterior pedia classificação parametrizável por CNAE e por condicionante, baixo risco no fluxo expresso e alto risco sempre em análise técnica. A tela desta HU só grava o grau municipal na versão vigente. Condicionante sanitária saiu da ficha (HU-019). O roteamento do expresso pelos gatilhos é a HU-164, não esta ficha. A publicação em lote com quatro olhos não é o fluxo da tela.
 
-## Critérios de Aceite — BDD
+## Evidências
+- `CnaeController::store`, `update`, `niveisMunicipais`, `versaoMunicipalVigente`.
+- `StoreCnaeRequest` e `UpdateCnaeRequest`, campo `risco_municipal`.
+- `app/Enums/RiscoMunicipal.php`.
+- `routes/gestao.php`: escrita de CNAE sob `manter-cnaes`. A rota `/gestao/gatilhos-risco` é outra permissão (`manter-gatilhos-risco`).
 
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Manter classificação de risco**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
-
-Fonte oficial para o seed: anexos do Decreto Municipal nº 32.636/2020 (redação dos Decretos nº 37.407/2023 e nº 38.673/2024) — risco municipal unificado de todas as 1.331 subclasses CNAE (767 Baixo A, 328 Baixo B, 236 Alto), com condicionantes por CNAE. Extração estruturada em docs/dados-oficiais/decreto-32636-2020-risco-municipal-unificado-cnae.csv. O modelo deve suportar múltiplas dimensões de risco por CNAE (municipal unificado, sanitário/VISA etc.) e versionamento dos anexos do decreto, pois a redação muda por decreto alterador.
+## Não evidenciado
+- Tela separada de classificação de risco em `/gestao/risco`. O controller declara que a ficha única substituiu essa rota.
+- Quatro olhos na alteração feita pela ficha.
+- Parametrização, nesta ficha, da regra «baixo risco segue expresso» ou «alto risco vai para análise».

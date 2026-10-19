@@ -3,141 +3,69 @@
 ## Épica
 **EP06 — Classificação de Risco**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Classificar atividade em baixo, médio ou alto risco.
+Classificar o CNAE em duas dimensões separadas — municipal e sanitária — e indicar o encaminhamento (expresso ou análise) pela dimensão decisiva, pela planilha de tratamento ou por gatilho.
 
 ## História de Usuário
 **Como** sistema,  
-**quero** classificar risco,  
-**para** definir fluxo adequado.
+**quero** classificar o CNAE com a versão vigente de cada dimensão,  
+**para** saber se o caso é elegível ao fluxo expresso ou se vai à análise, com a versão registrada.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- A classificação é serviço interno (`RiscoClassificationService::classify`), usado pela consulta de viabilidade e pelo comando de classificação.
+- A ficha do CNAE, que grava o nível municipal, exige `manter-cnaes` para editar e `consultar-cnaes` para a listagem.
+- O mapa de encaminhamento e a dimensão decisiva são parâmetros (`risco.mapa_encaminhamento` e `risco.dimensao_tvl`).
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. O CNAE é reduzido a dígitos.
+2. Dimensão municipal: versão vigente de `risco_municipal`, ou a vigente na data. Busca `risk_classifications` por versão e CNAE. Acha: status `classificado`, nível `baixo_a`, `baixo_b` ou `alto`, rótulo, condicionantes da linha e versão. Não acha, ou não há versão: `nao_classificado`, nível nulo.
+3. Dimensão sanitária: versão de `risco_sanitario` e `sanitary_risk_classifications`. Níveis `baixo`, `medio` e `alto`. O nível final é o da tabela. `reclassificado` sai sempre falso e a lista de perguntas sai vazia.
+4. Se o ramo da planilha (`TratamentoRamoResolver`) resolve com CNAE de 7 dígitos, o nível municipal exibido passa a ser o risco do ramo. A versão da dimensão municipal não é trocada pela versão da planilha.
+5. Encaminhamento: com ramo resolvido, o fluxo do ramo (`expresso` ou análise). Sem ramo, usa a dimensão do parâmetro `risco.dimensao_tvl` (padrão `municipal`). Nível ausente ou fora do mapa cai em `analise`.
+6. Gatilho ativo presente no contexto força `analise`, com o motivo do gatilho.
+7. A fundamentação cita o texto `base_legal.risco_municipal` e as condicionantes textuais da linha municipal quando a dimensão está classificada. Nada da VISA entra nessa lista.
+8. Auditoria `risco` / `classificacao` grava CNAE, dimensão decisiva, níveis, fluxo, gatilhos e versões.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- Nível municipal desconhecido no CSV é rejeitado por `RiscoMunicipal::fromDecreto`. Os rótulos aceitos são `BAIXO A`, `BAIXO B` e `ALTO`.
+- Médio risco municipal é o nome da SEDUR para `baixo_b`. A chave gravada continua `baixo_b`.
+- A dimensão sanitária tem a própria chave `medio`, também rotulada Médio risco. Ela não substitui o Médio risco municipal.
+- CNAE sem classificação não recebe nível inventado e o encaminhamento vai à análise.
+- A importação municipal guarda condicionantes como texto. O classificador não usa essas frases para mudar o nível.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Classificar CNAE por risco**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- Máscara do CNAE é ignorada na busca: valem os dígitos.
+- Ramo da planilha só é resolvido com 7 dígitos.
+- Mapa de encaminhamento precisa das chaves `baixo_a`, `baixo_b` e `alto`, com valor `expresso` ou `analise`.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+**Dado** que o CNAE tem classificação na versão municipal vigente,  
+**Quando** o motor classifica,  
+**Então** devolve nível `baixo_a`, `baixo_b` ou `alto`, a versão, e um fluxo expresso ou análise.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+**Dado** que não há versão ou linha para o CNAE na dimensão decisiva, e a planilha não resolve ramo,  
+**Quando** o motor classifica,  
+**Então** o status é `nao_classificado`, o nível é nulo e o fluxo é `analise`.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+**Dado** que a dimensão sanitária está classificada,  
+**Quando** o resultado é lido,  
+**Então** `nivel_final` é igual a `nivel_original` e `reclassificado` é falso.
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
+## Divergências da redação anterior
+A redação anterior não separava risco municipal e sanitário. No municipal, Médio risco é o nome de `baixo_b`. No sanitário, Médio risco é a chave `medio`.
 
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-- RN-004: A classificação de risco deve ser parametrizável por CNAE e condicionantes.
-- RN-005: Baixo risco elegível deve seguir fluxo expresso quando todas as condicionantes forem atendidas.
-- RN-006: Alto risco deve ser encaminhado para análise técnica quando a legislação assim exigir.
-- RN-007: Um mesmo CNAE pode possuir múltiplas linhas de classificação (subatividades/descrições e macroáreas distintas) — a chave de classificação não é o CNAE isolado.
-- RN-008: A resposta do requerente à pergunta da condicionante pode reclassificar o risco (ex.: baixo risco que se torna alto risco quando o produto não é artesanal).
-- RN-009: Risco **municipal unificado** (Decreto 32.636/2020) e risco **sanitário** (planilha VISA) são dimensões separadas no modelo — 52 dos 260 CNAEs da planilha VISA divergem do decreto; para o TVL prevalece o municipal (confirmar com a SEDUR).
-- RN-010: O cadastro de regras por CNAE deve comportar as flags observadas na planilha unificada e no SAPS: autorizado para escritório virtual, autorizado para MEI, fator multiplicador, exige RT (condicional) e gatilhos de análise — todas parametrizáveis (tela "Cadastro CNAE" do legado).
+## Evidências
+- `RiscoClassificationService`
+- `RiscoMunicipal`, `RiscoSanitario`
+- `RiscoMunicipalImportService`, `RiscoSanitarioImportService`
+- Parâmetros `risco.mapa_encaminhamento` e `risco.dimensao_tvl`
+- `ConsultaViabilidadeService::riscoInput`
 
-## Critérios de Aceite — BDD
-
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Classificar CNAE por risco**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
-
-Estrutura de referência da Planilha Unificada CNAE 30.04.26 da Vigilância Sanitária (em docs/dados-oficiais/): CNAE, descrição, fator multiplicador, risco (Baixo/Médio/Alto), condicionante com pergunta ao requerente e pergunta complementar, autorização para escritório virtual, autorização para MEI, macroárea, exigência de RT, exigência de PBA, documentação específica e base legal. Atenção: essa planilha cobre 285 linhas de macroáreas sanitárias (dimensão de risco sanitário); a classificação de risco municipal unificada das 1.331 subclasses consta nos anexos do Decreto nº 32.636/2020 (ver HU-020).
+## Não evidenciado
+- Chave municipal `medio` além de `baixo_b`. O termo Médio risco permanece e aponta para `baixo_b`.
+- Reclassificação do nível sanitário por resposta de condicionante.
+- Perguntas da VISA na ficha do CNAE. O controller registra que essa validação foi retirada.

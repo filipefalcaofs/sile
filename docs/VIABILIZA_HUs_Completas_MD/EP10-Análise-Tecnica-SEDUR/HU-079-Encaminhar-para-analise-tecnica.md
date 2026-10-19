@@ -3,132 +3,51 @@
 ## Épica
 **EP10 — Análise Técnica SEDUR**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Enviar casos não expressos à fila da SEDUR.
+Levar à fila da análise humana o processo que o fluxo expresso não decide, com prazo da etapa de distribuição e pré-análise disparada depois do commit.
 
 ## História de Usuário
-**Como** sistema,  
-**quero** encaminhar para análise,  
-**para** permitir avaliação humana.
+**Como** sistema, **quero** encaminhar o processo não decidido pelo expresso para a análise técnica, **para** que a SEDUR o distribua e analise com o motivo da queda registrado.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- O encaminhamento automático não tem ator humano: `FluxoExpressoService::encaminharAnalise` transiciona o status e grava o setor de triagem.
+- O envio manual da tela T06 e o override `forcar-transicao-analise` estão na HU-172. Esta história cobre o caminho do expresso.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. Fora de `em_analise`, o serviço transiciona o processo para `em_analise`, grava `analysis_status` `para_distribuir`, etapa `distribuicao`, início da etapa e `analysis_due_at` calculado para essa etapa, e define `sector_id` com o setor de triagem.
+2. A auditoria do expresso registra o evento `decisao` com resultado `analise` e o motivo.
+3. Depois do commit, dispara `EncaminhadoParaAnalise`. O listener `PreAnalisarProcesso` chama a pré-análise (HU-140).
+4. Se o processo já está `em_analise` e ninguém o assumiu, a reavaliação atualiza a queda, o motivo do encaminhamento e o rascunho intocado da ficha, sem abrir outra tramitação.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- O expresso só encaminha a partir do próprio fluxo de decisão. O status canônico passa a `em_analise`.
+- O prazo da fila nasce nesse encaminhamento, na etapa de distribuição.
+- Processo já em análise e ainda sem analista não regride: a queda e a ficha intocada é que são atualizadas.
+- A pré-análise é efeito do evento após o commit, não um passo dentro da mesma transação do encaminhamento.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Encaminhar para análise técnica**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- O método só segue o ramo de reavaliação quando `status` já é `em_analise`.
+- Setor de triagem ausente na reavaliação: se `sector_id` está nulo, o processo é depositado no setor de triagem atual.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+1. Processo que o expresso não decide fica `em_analise`, com situação operacional `para_distribuir`, prazo de distribuição e setor de triagem.
+2. O motivo da queda fica no encaminhamento e na auditoria.
+3. O evento `EncaminhadoParaAnalise` só sai depois do commit e aciona a pré-análise.
+4. Reavaliar um processo já em análise e não assumido atualiza motivo e rascunho intocado, sem duplicar a tramitação.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+## Divergências da redação anterior
+- A redação anterior descrevia um fluxo genérico de usuário autenticado. O código encaminha pelo serviço do expresso, sem tela nesta história.
+- Não há, neste caminho, validação de permissão de perfil: o ator pode ser nulo.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+## Evidências
+- `app/Services/Expresso/FluxoExpressoService.php` (`encaminharAnalise`)
+- `app/Events/EncaminhadoParaAnalise.php`
+- `app/Listeners/PreAnalisarProcesso.php`
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
-
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-
-## Critérios de Aceite — BDD
-
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Encaminhar para análise técnica**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- Escolha manual de setor ou de analista neste encaminhamento. A distribuição é a HU-080.
+- Envio manual por protocolo e transição forçada do eixo operacional (HU-172).

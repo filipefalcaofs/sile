@@ -3,132 +3,62 @@
 ## Épica
 **EP07 — Consulta Prévia de Viabilidade**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Permitir consulta preliminar por atividade econômica.
+Consultar risco e enquadramento de uma atividade sem avaliar o local.
 
 ## História de Usuário
-**Como** cidadão,  
-**quero** informar CNAE,  
-**para** entender restrições antes de protocolar.
+**Como** cidadão, com ou sem login,  
+**quero** informar o CNAE e, se quiser, a área,  
+**para** ver risco e enquadramento da atividade sabendo que o local não foi avaliado.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- Rota pública `POST /portal/viabilidade/cnae`, mesmo throttle das outras consultas (padrão 20 por minuto).
+- Aba "CNAE" na página pública "Consultar viabilidade".
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. O cidadão informa CNAE e área opcional. Não há endereço nem inscrição.
+2. `consultarPorCnae` classifica o risco e enquadra com território nulo. Não chama o geocodificador.
+3. A resposta inclui o aviso: "Consulta por CNAE não avalia o local: o veredito locacional depende do endereço/zona. Para a viabilidade locacional, consulte por endereço."
+4. O veredito locacional é o do motor sem zona (pendente). Território e restrições vêm nulos. Não há mapa.
+5. Perguntas da planilha do CNAE podem ser reenviadas em `respostas`, como nas outras entradas.
+6. Auditoria `viabilidade` / `consulta`. Histórico pessoal só com usuário autenticado.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- Esta entrada não produz análise territorial.
+- A área alimenta o enquadramento da planilha. Sem área, o serviço usa 0.
+- O controller desta rota não recebe tipo de imóvel nem categoria de empresa; esses argumentos existem no serviço e ficam nulos na chamada pública.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Consultar viabilidade por CNAE**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+`ConsultaViabilidadeCnaeRequest`:
+- `cnae`: obrigatório, texto, até 14 caracteres.
+- `area`: opcional, numérica, de 0 a 9999999.
+- `respostas`: array opcional, com `RespostaPlanilhaValida`.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+### CA-01 — Resultado sem local
+**Dado** um CNAE informado,  
+**Quando** o cidadão consulta pela aba CNAE,  
+**Então** recebe risco, enquadramento e o aviso de que a consulta não avalia o local, sem território e sem mapa.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+### CA-02 — CNAE ausente
+**Dado** a requisição sem CNAE,  
+**Quando** é enviada,  
+**Então** a validação recusa com "Informe o CNAE da atividade pretendida."
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+## Divergências da redação anterior
+A redação anterior dizia que o cidadão informa o CNAE para entender restrições antes de protocolar. O código não lista restrições urbanísticas nesta entrada: território é nulo e o aviso declara que o local não foi avaliado.
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
+## Evidências
+- `app/Http/Controllers/Portal/ConsultaViabilidadeController.php` (`cnae`)
+- `app/Services/Viabilidade/ConsultaViabilidadeService.php` (`consultarPorCnae`)
+- `app/Http/Requests/Portal/ConsultaViabilidadeCnaeRequest.php`
+- `app/Services/Decisao/DecisionTextCatalog.php` (`consulta.aviso.cnae_sem_local`)
+- `resources/js/pages/portal/viabilidade/consulta.tsx`
 
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-
-## Critérios de Aceite — BDD
-
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Consultar viabilidade por CNAE**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- Restrições de zona, via ou lote na consulta só por CNAE.
+- Abertura de solicitação a partir desta consulta.

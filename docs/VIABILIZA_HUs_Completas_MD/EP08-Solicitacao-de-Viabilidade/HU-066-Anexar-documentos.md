@@ -3,132 +3,62 @@
 ## Épica
 **EP08 — Solicitação de Viabilidade**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Permitir envio de documentos.
+Anexar, baixar e remover arquivos do rascunho, com hash do conteúdo, disco não público e um arquivo por requisito quando o requisito é informado.
 
 ## História de Usuário
-**Como** cidadão,  
-**quero** anexar documentos,  
-**para** comprovar informações declaradas.
+**Como** requerente dono do rascunho,  
+**quero** anexar os documentos do pedido e baixar o que enviei,  
+**para** cumprir os requisitos documentais antes do protocolo.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- Incluir e remover: dono efetivo e status rascunho (`ViabilityRequestPolicy::update`).
+- Baixar: dono efetivo em qualquer status (`view`). Terceiro recebe 403.
+- Documento de outra solicitação na URL responde 404.
+- Rotas sob autenticação do portal. Incluir e remover também passam por `portal.solicitacao`. O download não passa por esse middleware.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. `POST portal/solicitacoes/{solicitacao}/documentos` recebe o arquivo e, opcionalmente, `requirement_id`.
+2. O SHA-256 é calculado antes de mover o arquivo. O arquivo vai para o disco `storage.documentos.disk` (padrão `local`), no diretório `solicitacoes/{id}`.
+3. Se o requisito foi informado, o anexo anterior do mesmo requisito é apagado do disco e da tabela. Fica um documento por requisito.
+4. A linha guarda disco, caminho, nome original, MIME, tamanho, hash e usuário que enviou. Auditoria `documento-anexado`.
+5. `GET .../documentos/{documento}/download` faz streaming autenticado, com o MIME gravado, e audita `documento-download`.
+6. `DELETE .../documentos/{documento}` apaga o arquivo e a linha, audita `documento-removido` e só funciona em rascunho.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- O disco não é público. O acesso é o streaming da rota autenticada.
+- Anexo sem requisito é aceito (avulso).
+- Novo arquivo do mesmo requisito substitui o anterior antes do protocolo.
+- Tipos permitidos vêm de `viabiliza.solicitacao.anexos.mime_permitidos` (padrão PDF, JPEG e PNG).
+- Tamanho máximo vem de `solicitacao.anexos.max_mb` (padrão 10 MB), aplicado em kilobytes na validação.
+- O wizard lista os anexos já gravados com a URL de download.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Anexar documentos**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- `file` obrigatório, arquivo, MIME na lista e tamanho até o máximo.
+- `requirement_id` opcional, inteiro e existente em `document_requirements`.
+- Mensagens de arquivo ausente, inválido, tipo não permitido, tamanho excedido e requisito inexistente.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+- Dado o dono de um rascunho e um PDF dentro do limite, quando anexa, então o arquivo fica no disco configurado, com SHA-256, e a auditoria registra o envio.
+- Dado um segundo arquivo para o mesmo `requirement_id`, quando anexa, então o anterior é removido e permanece o novo.
+- Dado o dono, quando baixa, então recebe o stream do arquivo gravado. Dado outro usuário, quando baixa, então a policy nega.
+- Dado solicitação que não está em rascunho, quando tenta incluir ou remover, então a policy nega. O download do dono continua permitido.
+- Dado tipo ou tamanho fora da regra, quando envia, então a validação recusa e nada é gravado.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+## Divergências da redação anterior
+Não há análise de conteúdo do arquivo neste fluxo, nem aprovação documental do analista. A substituição é por requisito, antes do protocolo. O download não usa URL pública.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+## Evidências
+- `App\Http\Controllers\Portal\SolicitacaoDocumentoController`
+- `App\Http\Requests\Portal\StoreSolicitacaoDocumentoRequest`
+- `App\Http\Controllers\Portal\SolicitacaoController::anexosConfig` e `wizardDraftPayload`
+- `routes/portal.php` (`portal.solicitacoes.documentos.store`, `download`, `destroy`)
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
-
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-
-## Critérios de Aceite — BDD
-
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Anexar documentos**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- Antivírus, OCR ou conferência de autenticidade do arquivo neste controller.
+- Anexo depois do protocolo pelo requerente.
+- Disco público ou link permanente sem autenticação.

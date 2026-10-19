@@ -3,134 +3,51 @@
 ## Épica
 **EP14 — Inteligência Artificial**
 
+## Situação na implementação
+- **Status:** Parcial
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Apontar divergências entre dados e documentos.
+Sinalizar divergência entre o que foi declarado e o que a visão lê no documento, como sugestão, sem punir o processo.
 
 ## História de Usuário
-**Como** IA,  
-**quero** identificar inconsistências,  
-**para** apoiar o analista e o cidadão.
+**Como** analista, **quero** ver alertas de inconsistência entre declaração e documento, **para** conferir o processo. O alerta não decide nem encaminha punição sozinho.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- `InconsistenciasService` exige `features.ia_inconsistencias` e provedor de visão.
+- A ficha de análise lê o ledger `ai_suggestions` no card de alertas. Essa leitura não dispara o serviço de inconsistências.
+- Nenhum controller chama `processar`.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. Portão fechado: não despacha e não inventa divergência.
+2. Portão aberto: `InconsistenciasJob` usa a primeira imagem, preferindo a exigência de foto de fachada. Sem imagem, não há material inventado.
+3. A saída prevista no card traz campo, valor declarado, valor no documento, severidade e fonte.
+4. O serviço não chama malha fina nem muda status. O comentário do código cita a malha fina como destino possível do sinal; o método `processar` só enfileira o job.
+5. Checagens determinísticas de área, polígono e Receita não são feitas aqui. Receita Federal não está integrada.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- Sugestão revisável. Não é decisão.
+- Ausência de foto não gera inconsistência fictícia.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Identificar inconsistências**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- Capacidade visão. Sem provedor, motivo de indisponibilidade no portão.
+- Processo sem imagem não recebe anexo fabricado.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+- Abrir a ficha não dispara detecção de inconsistência; só mostra sugestão já gravada.
+- Com o portão fechado, não há alerta simulado.
+- Uma sugestão deste tipo, se existir no ledger, não transiciona o processo.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+## Divergências da redação anterior
+O texto pedia apontar divergências no fluxo do cidadão e do analista. Há job e leitura do ledger; o disparo da detecção não está ligado à ficha nem ao protocolo.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+## Evidências
+- `app/Services/Ai/InconsistenciasService.php`
+- `app/Jobs/Ai/InconsistenciasJob.php`
+- `app/Ai/Agents/InconsistenciasAgent.php`
+- `app/Http/Controllers/Gestao/AnalysisRecordController.php` (`sugestoesIa`)
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
-
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-- RN-004: Caso de uso prioritário: verificar compatibilidade entre **foto da fachada** e os dados declarados (endereço/polígono/tipo de edificação) — inconsistência gera alerta estruturado que alimenta a ficha de análise e a detecção de abuso (HU-149); nunca decide sozinha.
-- RN-005: Complementa (não substitui) as validações determinísticas já especificadas: área × polígono (HU-063), polígono × lote (HU-037), Receita × informado (HU-105).
-
-## Critérios de Aceite — BDD
-
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Identificar inconsistências**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- Chamada de `InconsistenciasService::processar` fora dos testes.
+- Punição automática ou malha fina aberta por este serviço.
+- Confrontação com a Receita Federal.

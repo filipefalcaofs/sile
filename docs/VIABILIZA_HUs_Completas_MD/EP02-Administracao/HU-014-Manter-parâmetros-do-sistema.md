@@ -3,160 +3,75 @@
 ## Épica
 **EP02 — Administração**
 
+## Situação na implementação
+- **Status:** Parcial
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Gerenciar parâmetros gerais e funcionalidades ativáveis do sistema, de forma que o administrador ajuste o comportamento do Viabiliza sem depender de desenvolvedor ou de novo deploy.
+Alterar o catálogo de parâmetros já semeado, com validação própria de cada chave, histórico e quatro olhos quando a governança é de decisão.
 
 ## História de Usuário
-**Como** administrador,  
-**quero** manter parâmetros e ativar/desativar funcionalidades,  
-**para** ajustar o comportamento do sistema sem intervenção técnica.
+**Como** administrador com a permissão `manter-parametros`,
+**quero** consultar o catálogo por grupo, propor ou gravar um valor e ver o histórico,
+**para** mudar prazo, limiar ou credencial sem deploy.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- Listar, exportar, gravar, aprovar, rejeitar e ver histórico exigem `manter-parametros`. Menu Configuração, item Parâmetros (`/gestao/parametros`).
+- Em parâmetro de governança `decision`, quem propõe não aprova a própria proposta (`can_approve` é falso para o autor).
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. A tela agrupa os registros de `parameters` por `group` e, dentro do grupo, por chave. Cada item traz tipo, descrição, se é sensível, se exige teste de conexão, valor padrão, valor (nulo quando sensível), se já há valor administrativo, data de atualização, governança e proposta pendente (valor proposto, autor).
+2. Com `formato` `csv`, `xlsx` ou `pdf`, exporta o catálogo. Valor sensível não sai em claro.
+3. Parâmetro operacional: a gravação atualiza `value`, audita valor anterior e novo e o `saved` do model invalida o cache.
+4. Parâmetro sensível com campo vazio não altera o valor. A resposta é «Valor mantido.» No histórico, anterior e novo entram como `[criptografado]`.
+5. Parâmetro de governança `decision`: a gravação abre proposta. A mensagem informa que a alteração só vale após aprovação de um segundo usuário. Aprovar aplica o valor vigente. Rejeitar mantém o vigente. Sem proposta pendente, aprovar ou rejeitar devolve erro.
+6. O histórico (`/gestao/parametros/{chave}/historico`) lista, da atividade mais recente, valor anterior, valor novo, responsável e data.
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- Não há inclusão de parâmetro novo nesta tela. O catálogo é o que já está em `parameters`.
+- A validação do valor é a lista `validation_rules` do próprio registro. A chave `portal.perfil_cidadao` acrescenta a regra `PerfilSemAcessoAGestao`.
+- Governança `operational` grava na hora. Governança `decision` exige segundo usuário (`ParameterChangeService`).
+- Valor sensível não é enviado à tela. A interface recebe `null`.
+- A flag `requires_connection_test` é exibida no item. O teste de conexão em si não é executado por este controller.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Manter parâmetros do sistema**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- O corpo aceita `value` nulo ou string.
+- Se o parâmetro é sensível e o valor vem vazio, a validação dinâmica é pulada e o valor atual permanece.
+- Nos demais casos, o valor precisa satisfazer `validation_rules` da chave. As mensagens usam a descrição do parâmetro como nome do campo.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+### CA-01 — Operacional com efeito sem deploy
+**Dado** um parâmetro de governança operacional e um valor que passa nas regras da chave,
+**Quando** o administrador grava,
+**Então** o valor vigente muda, a auditoria registra anterior e novo, e o cache do parâmetro é invalidado na gravação.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+### CA-02 — Sensível em branco
+**Dado** um parâmetro sensível que já tem valor,
+**Quando** o administrador envia o campo vazio,
+**Então** o valor armazenado não muda.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+### CA-03 — Quatro olhos
+**Dado** um parâmetro de governança `decision`,
+**Quando** um usuário grava um valor novo,
+**Então** surge proposta pendente e o valor vigente só muda depois que outro usuário aprova.
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
+### CA-04 — Histórico
+**Dado** alterações já auditadas no log `parametros` daquele registro,
+**Quando** o administrador abre o histórico da chave,
+**Então** vê valor anterior, valor novo, responsável e data, com sensível mascarado como `[criptografado]`.
 
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-- RN-004: Nenhum valor de negócio passível de mudança (limiares, prazos, taxas, textos, mensagens, e-mails, termos) pode ser fixo em código — todos devem ser parâmetros administráveis por interface.
-- RN-005: Funcionalidades acopláveis (integrações externas, fluxo expresso, validação por IA, canais de notificação como e-mail e WhatsApp, aprovação automática) devem possuir chave de ativação/desativação (feature toggle) administrável por interface.
-- RN-006: Alterações de parâmetros e toggles devem ter efeito sem novo deploy, respeitando no máximo o tempo de expiração de cache definido.
-- RN-007: Cada parâmetro deve ter tipo, descrição, valor padrão e regras de validação (faixa, formato, obrigatoriedade); valores inválidos devem ser rejeitados na gravação.
-- RN-008: Alterações de parâmetros e toggles devem ser versionadas e auditadas (valor anterior, valor novo, responsável, data/hora), com possibilidade de consulta ao histórico.
-- RN-009: Parâmetros sensíveis (credenciais, senhas, tokens de integração) devem ser armazenados criptografados e nunca exibidos em texto claro após gravados.
-- RN-010: Telas de parametrização de integrações devem oferecer ação de teste de conexão para o administrador validar a configuração sem acionar o fluxo real.
-- RN-011: A desativação de uma funcionalidade deve degradar o comportamento de forma controlada e comunicada (ex.: integração desativada gera pendência operacional, não erro silencioso).
-- RN-012: Calendário de **feriados** municipais/nacionais deve ser administrável (HU-137) e impactar contagem de prazos operacionais.
-- RN-013: Regras de **contagem de prazo** (dias úteis vs corridos; inclusão/exclusão de fins de semana e feriados) devem ser parametrizáveis — problema identificado no SAPS legado (prazos inflados).
-- RN-014: Parâmetros de **indeferimento automático** (ex.: prazo sem BAP vinculado, padrão 48h) devem ser administráveis, conforme tela "Parâmetros para indeferimento automático" do SAPS.
+## Divergências da redação anterior
+A redação anterior exigia que texto, e-mail, termo, feriado, credencial, taxa, prazo de indeferimento automático e a regra de dias úteis versus corridos fossem todos esta mesma tela, e que todo toggle de integração, expresso, IA e WhatsApp vivesse aqui. O código separa isso: feriados (HU-137), valores TLL (HU-156), termos (HU-157), textos decisórios (HU-158), minutas (HU-159), APIs (HU-160), servidores de e-mail (HU-161) e provedores de IA (HU-163). Esta HU cobre o catálogo `parameters`. Não foi evidenciado, neste controller, um campo próprio de «prazo de 48 horas sem BAP» nem um interruptor genérico de WhatsApp.
 
-## Critérios de Aceite — BDD
+## Evidências
+- `routes/gestao.php`: `parametros.index`, `parametros.historico`, `parametros.update`, `parametros.aprovar`, `parametros.rejeitar`.
+- `app/Http/Controllers/Gestao/ParameterController.php`.
+- `app/Http/Requests/Gestao/UpdateParameterRequest.php`.
+- `app/Models/Parameter.php` (`isDecision`, tipos `integer`, `decimal`, `boolean`, `json`).
+- `app/Enums/ParameterGovernance.php`: `operational` e `decision`.
+- `resources/js/navigation/gestao-nav.ts`: Parâmetros em Configuração.
 
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Manter parâmetros do sistema**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-### CA-05 — Efeito sem deploy
-**Dado** que o administrador alterou um parâmetro ou toggle válido,  
-**Quando** a alteração for gravada,  
-**Então** o novo comportamento deve valer na aplicação sem novo deploy, dentro do tempo de expiração de cache definido.
-
-### CA-06 — Desativação controlada
-**Dado** que uma funcionalidade foi desativada por toggle,  
-**Quando** um fluxo que dela depende for executado,  
-**Então** o sistema deve seguir o comportamento degradado definido (pendência, aviso ou bloqueio explícito), sem falha silenciosa.
-
-### CA-07 — Histórico de alterações
-**Dado** que parâmetros foram alterados ao longo do tempo,  
-**Quando** o administrador consultar o histórico,  
-**Então** o sistema deve exibir valor anterior, valor novo, responsável e data/hora de cada alteração.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
-
-Exemplos de domínios parametrizáveis no Viabiliza: prazos (vencimento de DAM, resposta de pendência), valores e tabelas de taxa por exercício, textos de e-mails e notificações, termos LGPD, credenciais e URLs de integrações (SEFAZ, REDESIM, GIS), limiares do fluxo expresso, configuração de IA (modelo, prompts, ativação) e canais de comunicação. Modelo de referência no projeto SIGVISA (`sls-sms`): entidades de configuração segregadas por domínio (`ConfigDam`, `ConfigEmail`, `ConfigIa`, `ConfigPortal`, `ConfigGovBr`, `ConfigAprovacaoAutomatica`, `ConfigRt`), cada uma com tela própria de administração, credenciais criptografadas e botões de teste de conexão.
+## Não evidenciado
+- Criar ou apagar uma chave de parâmetro pela interface.
+- Teste de conexão disparado por esta tela. A flag `requires_connection_test` só indica que a chave pede teste; a ação está nas telas de integração.
+- Parametrização, nesta tela, da contagem de prazo em dias úteis ou corridos. O calendário que o cálculo de dias úteis desconta é a HU-137.

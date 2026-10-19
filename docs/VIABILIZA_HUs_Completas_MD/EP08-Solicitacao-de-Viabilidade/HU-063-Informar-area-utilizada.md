@@ -3,132 +3,57 @@
 ## Épica
 **EP08 — Solicitação de Viabilidade**
 
+## Situação na implementação
+- **Status:** Implementada
+- **Revisão:** 16/10/2026, com o código-fonte como referência.
+
 ## Objetivo
-Registrar área ocupada pela atividade.
+Registrar a área utilizada do imóvel no rascunho e alertar quando ela excede a área do polígono além da tolerância configurada, sem impedir o salvamento.
 
 ## História de Usuário
-**Como** cidadão,  
-**quero** informar área utilizada,  
-**para** permitir enquadramento pelo Quadro 7.
+**Como** requerente dono do rascunho,  
+**quero** informar a área utilizada em metros quadrados,  
+**para** que o processo carregue a área que a análise e o protocolo exigem.
 
-## Contexto de Negócio
-O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+## Atores e permissões
+- Mesmo ator e mesma rota da HU-062: dono efetivo, status rascunho, `PUT portal/solicitacoes/{solicitacao}/imovel`.
+- A área não tem endpoint próprio. É campo obrigatório do pedido do imóvel.
 
-## Atores Envolvidos
-- Cidadão / empresário / contador / procurador, quando aplicável.
-- Servidor ou analista da SEDUR, quando aplicável.
-- Administrador do sistema, quando aplicável.
-- Sistema Viabiliza e serviços integrados.
+## Fluxo evidenciado
+1. O pedido traz `used_area_m2` junto com o polígono.
+2. O sistema mede a área do polígono (`PropertyGeometryWriter::polygonAreaSquareMeters`).
+3. Se a área declarada supera a do polígono em percentual maior que `solicitacao.area_poligono.tolerancia_percentual` (padrão 10), grava auditoria `imovel-area-inconsistente` e devolve o flash `areaAlert` com área declarada, área do polígono, tolerância e divergência.
+4. Área declarada menor ou dentro da tolerância não gera alerta.
+5. O valor é persistido em `used_area_m2` e a simulação anterior é invalidada.
+6. No protocolo, área ausente ou menor ou igual a zero bloqueia a protocolização, com a pendência "área utilizada".
 
-## Pré-condições
-- Usuário autenticado quando a funcionalidade exigir identificação.
-- Perfil com permissão compatível.
-- Parâmetros e cadastros básicos disponíveis.
-- Regras, integrações ou bases oficiais configuradas quando aplicável.
+## Regras de negócio evidenciadas
+- A área é obrigatória neste passo, numérica e maior que zero.
+- A comparação é com o próprio polígono desenhado, não com um lote oficial.
+- Usar menos área que o polígono é aceito sem alerta.
+- O alerta orienta e fica auditado. Não impede gravar o imóvel nem, por si só, protocolar.
+- Sem polígono medível (área nula ou não positiva), não há alerta.
 
-## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Informar área utilizada**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+## Validações
+- `used_area_m2`: obrigatório, numérico, maior que zero.
+- Mensagens: área obrigatória, deve ser número, deve ser maior que zero.
 
-## Fluxos Alternativos
-### FA-01 — Dados incompletos
-1. O sistema identifica ausência de dados obrigatórios.
-2. O sistema informa os campos pendentes.
-3. O usuário complementa as informações.
-4. O sistema permite nova tentativa.
+## Critérios de aceite
+- Dado um rascunho e uma área maior que zero, quando o dono salva o imóvel, então `used_area_m2` fica gravado.
+- Dado área declarada acima da área do polígono além da tolerância, quando salva, então o registro permanece e a resposta traz o alerta, com trilha `imovel-area-inconsistente`.
+- Dado área zero, negativa ou ausente, quando envia o passo, então a validação recusa.
+- Dado rascunho sem área positiva, quando tenta protocolar, então `ProtocolarSolicitacaoService` bloqueia por dados mínimos, antes de gerar número.
 
-### FA-02 — Regra não encontrada
-1. O sistema não encontra regra parametrizada suficiente.
-2. O processo não deve ser decidido automaticamente.
-3. O sistema encaminha para análise técnica, quando aplicável.
+## Divergências da redação anterior
+A área não é uma etapa isolada com bloqueio por faixa da LOUOS. Ela entra no mesmo salvamento do imóvel. A divergência com o polígono alerta; não recusa o formulário.
 
-### FA-03 — Falha de integração
-1. Serviço externo fica indisponível ou retorna erro.
-2. O sistema registra a falha.
-3. O sistema permite retentativa, processamento posterior ou encaminhamento para análise.
+## Evidências
+- `App\Http\Controllers\Portal\SolicitacaoImovelController::buildAreaAlert`
+- `App\Http\Requests\Portal\UpdateSolicitacaoImovelRequest` (`used_area_m2`)
+- `App\Services\Solicitacao\ProtocolarSolicitacaoService::guardMinimumData`
+- Parâmetro `solicitacao.area_poligono.tolerancia_percentual`
 
-### FA-04 — Usuário sem permissão
-1. O sistema identifica ausência de permissão.
-2. O acesso é bloqueado.
-3. A tentativa é registrada para auditoria.
-
-## Regras de Negócio
-- RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
-- RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-- RN-004: A área utilizada declarada deve ser validada contra a área do polígono demarcado (HU-062/HU-107): declarada significativamente maior que a do polígono gera alerta de inconsistência (tolerância parametrizável) — alerta orienta correção, não bloqueia cegamente; inconsistência mantida fica registrada para o analista.
-- RN-005: A área declarada alimenta diretamente o enquadramento por faixa do Quadro 7 (HU-038); mudança de área após simulação invalida o resultado simulado anterior (HU-141).
-
-### CA-01 — Execução com sucesso
-**Dado** que o usuário possui permissão e informou os dados obrigatórios,  
-**Quando** executar a funcionalidade **Informar área utilizada**,  
-**Então** o sistema deve processar a solicitação e apresentar ou registrar o resultado esperado.
-
-### CA-02 — Auditoria obrigatória
-**Dado** que a funcionalidade foi executada,  
-**Quando** houver alteração, decisão, consulta relevante ou integração,  
-**Então** o sistema deve registrar usuário, data, hora, origem, ação executada e resultado.
-
-### CA-03 — Bloqueio por inconsistência
-**Dado** que existam dados inconsistentes, regra ausente, conflito ou falha crítica,  
-**Quando** o sistema não puder garantir precisão,  
-**Então** a decisão automática deve ser bloqueada e o caso deve seguir para tratamento adequado.
-
-### CA-04 — Segurança de acesso
-**Dado** que o usuário não possui permissão,  
-**Quando** tentar acessar ou executar a funcionalidade,  
-**Então** o sistema deve impedir a ação e registrar o evento.
-
-## Campos/Dados Envolvidos
-- Identificador da solicitação/processo.
-- Identificação do usuário responsável.
-- Dados da empresa, CNPJ, CNAE e atividade econômica, quando aplicável.
-- Dados do imóvel, endereço, inscrição imobiliária, zona, via e área ocupada, quando aplicável.
-- Resultado, status, parecer, condicionantes e fundamentação legal, quando aplicável.
-- Logs, integrações e metadados de auditoria.
-
-## Permissões
-- **Cidadão/Contador/Procurador:** acesso às próprias empresas e solicitações.
-- **Analista SEDUR:** consulta e análise dos processos atribuídos ou disponíveis.
-- **Gestor SEDUR:** acompanhamento, distribuição, parametrização e relatórios.
-- **Administrador:** configuração de regras, usuários, perfis e parâmetros.
-
-## Exceções e Tratamentos
-- Dados obrigatórios ausentes.
-- Endereço não localizado.
-- CNAE inexistente ou desatualizado.
-- Área ocupada inválida.
-- Regra da LOUOS não parametrizada.
-- Conflito entre regras.
-- Serviço externo indisponível.
-- Documento ilegível ou incompatível, quando aplicável.
-- Processo duplicado ou já encerrado.
-
-## Auditoria
-O sistema deve manter registro completo da execução desta HU, incluindo:
-- usuário ou serviço responsável;
-- data e hora;
-- dados de entrada;
-- regras aplicadas;
-- resultado;
-- erros ou exceções;
-- versão das regras, quando aplicável.
-
-## Dependências
-- Cadastro de usuários e perfis.
-- Cadastro empresarial e CNAEs.
-- Motor de regras da LOUOS.
-- Base geográfica/GIS.
-- Classificação de risco.
-- Integrações externas, quando aplicável.
-- Módulo de auditoria.
-
-## Prioridade
-Alta
-
-## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+## Não evidenciado
+- Teto ou faixa de área por CNAE ou zona neste passo.
+- Bloqueio do salvamento ou do protocolo somente pela divergência área × polígono.
+- Endpoint exclusivo de área, separado do imóvel.
