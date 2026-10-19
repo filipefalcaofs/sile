@@ -3,6 +3,7 @@
 namespace Tests\Feature\Geo;
 
 use App\Enums\GeoLayerType;
+use App\Enums\PropertyLocationPrecision;
 use App\Enums\PropertyLocationSource;
 use App\Enums\ViabilityRequestOrigin;
 use App\Models\Cnae;
@@ -115,6 +116,120 @@ class LocalizacaoPelaInscricaoTest extends TestCase
         $this->assertSame('ZCN-1', $solicitacao->zona_codigo);
         $this->assertSame('Comércio', $solicitacao->bairro_oficial);
         $this->assertSame('212', $solicitacao->cod_log);
+    }
+
+    /**
+     * Cadastro sem coordenada e geocodificação do endereço com o address informado.
+     *
+     * @param  array<string, mixed>  $address
+     */
+    private function fakeCadastroGeocodificado(array $address): void
+    {
+        $this->app->instance(PropertyRegistryLookup::class, new class implements PropertyRegistryLookup
+        {
+            public function resolve(string $inscricao): PropertyRegistryResult
+            {
+                return new PropertyRegistryResult(
+                    latitude: null,
+                    longitude: null,
+                    inscricao: $inscricao,
+                    raw: ['CodigoLogradouroTributario' => '1625', 'LogradouroTributario' => '3ª Travessa Alto dos Coqueiros'],
+                    cadastro: new PropertyCadastroCampos(
+                        inscricao: $inscricao,
+                        endereco: '3ª Travessa Alto dos Coqueiros, 212',
+                        numero_metrico: null,
+                        loteamento: null,
+                        quadra: null,
+                        lote: null,
+                        conjunto_edificio: null,
+                        bloco: null,
+                        sub_unidade: null,
+                        numero_sub_unidade: null,
+                        bairro: 'Matatu',
+                        cep: null,
+                        area_construida_m2: null,
+                        tipo_imovel: null,
+                        data_lancamento: null,
+                        situacao_cadastral: null,
+                        contribuinte: null,
+                        cpf_cnpj: null,
+                        numero_porta: '212',
+                        area_terreno_m2: null,
+                        valor_venal_iptu: null,
+                        logradouro_tributario: '1625 - 3ª Travessa Alto dos Coqueiros',
+                        situacao_fiscal: null,
+                        data_emissao_certidao: null,
+                    ),
+                );
+            }
+        });
+        $this->app->instance(Geocoder::class, new class($address) implements Geocoder
+        {
+            /**
+             * @param  array<string, mixed>  $address
+             */
+            public function __construct(private array $address) {}
+
+            public function geocode(string $address): GeocodeResult
+            {
+                return new GeocodeResult(-12.965785, -38.484540, 'Matatu, Salvador', 0.5, $this->address);
+            }
+        });
+    }
+
+    public function test_geocodificacao_com_numero_grava_precisao_numero(): void
+    {
+        $this->fakeCadastroGeocodificado(['city' => 'Salvador', 'state' => 'Bahia', 'house_number' => '212']);
+        $solicitacao = $this->rascunhoRegin(['property_registration' => '625553']);
+
+        app(ProtocolarSolicitacaoService::class)->protocol($solicitacao, User::factory()->create());
+
+        $solicitacao->refresh();
+        $this->assertSame(PropertyLocationPrecision::Numero, $solicitacao->property_location_precision);
+        $this->assertTrue($solicitacao->pontoElegivelParaEdificacao());
+    }
+
+    public function test_geocodificacao_so_da_via_grava_precisao_via(): void
+    {
+        $this->fakeCadastroGeocodificado(['city' => 'Salvador', 'state' => 'Bahia']);
+        $solicitacao = $this->rascunhoRegin(['property_registration' => '625553']);
+
+        app(ProtocolarSolicitacaoService::class)->protocol($solicitacao, User::factory()->create());
+
+        $solicitacao->refresh();
+        $this->assertSame(PropertyLocationPrecision::Via, $solicitacao->property_location_precision);
+        $this->assertFalse($solicitacao->pontoElegivelParaEdificacao());
+    }
+
+    public function test_ponto_do_cadastro_e_elegivel_sem_precisao(): void
+    {
+        $this->fakeCadastro('212');
+        $solicitacao = $this->rascunhoRegin();
+
+        app(ProtocolarSolicitacaoService::class)->protocol($solicitacao, User::factory()->create());
+
+        $solicitacao->refresh();
+        $this->assertNull($solicitacao->property_location_precision);
+        $this->assertTrue($solicitacao->pontoElegivelParaEdificacao());
+    }
+
+    public function test_processo_antigo_geocodificado_sem_precisao_nao_e_elegivel(): void
+    {
+        $solicitacao = ViabilityRequest::factory()->create(['property_polygon_geojson' => null]);
+        $solicitacao->forceFill([
+            'property_point_lat' => -12.965785,
+            'property_point_lng' => -38.484540,
+            'property_location_source' => PropertyLocationSource::Geocodificacao,
+        ])->save();
+
+        $this->assertFalse($solicitacao->fresh()->pontoElegivelParaEdificacao());
+    }
+
+    public function test_sem_ponto_nao_e_elegivel(): void
+    {
+        $solicitacao = ViabilityRequest::factory()->create(['property_polygon_geojson' => null]);
+
+        $this->assertFalse($solicitacao->pontoElegivelParaEdificacao());
     }
 
     public function test_cadastro_sem_coordenada_protocola_com_ponto_geocodificado(): void

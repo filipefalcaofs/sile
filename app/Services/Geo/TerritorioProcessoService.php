@@ -3,6 +3,7 @@
 namespace App\Services\Geo;
 
 use App\Enums\EtapaMotor;
+use App\Enums\PropertyLocationPrecision;
 use App\Enums\PropertyLocationSource;
 use App\Enums\SituacaoEtapa;
 use App\Models\ViabilityRequest;
@@ -179,6 +180,7 @@ class TerritorioProcessoService
             'property_point_lat' => $localizacao->lat,
             'property_point_lng' => $localizacao->lng,
             'property_location_source' => $localizacao->origemPonto ?? PropertyLocationSource::CadastroImobiliario,
+            'property_location_precision' => $this->precisao($localizacao->geocode),
         ])->save();
 
         return LocalizacaoInscricao::LOCALIZADA;
@@ -294,5 +296,20 @@ class TerritorioProcessoService
                 isset($dados['motivo']) ? (string) $dados['motivo'] : null,
             );
         }
+    }
+
+    /**
+     * Geocodificação que casou o número do imóvel vale para escolher a
+     * edificação; a que achou só a via, não. Sem geocodificação, sem precisão.
+     */
+    private function precisao(?GeocodeResult $geocode): ?PropertyLocationPrecision
+    {
+        if ($geocode === null) {
+            return null;
+        }
+
+        return filled($geocode->address['house_number'] ?? null)
+            ? PropertyLocationPrecision::Numero
+            : PropertyLocationPrecision::Via;
     }
 }

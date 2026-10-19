@@ -186,6 +186,28 @@ class ViabilityRequest extends Model
     }
 
     /**
+     * O ponto serve para escolher a edificação complementar (Overture,
+     * Microsoft, IA)? Geocodificação só vale quando casou o número do imóvel;
+     * processo antigo geocodificado, sem a precisão gravada, não vale.
+     */
+    public function pontoElegivelParaEdificacao(): bool
+    {
+        if ($this->pontoDoImovel() === null) {
+            return false;
+        }
+
+        if ($this->centroideDoPoligono($this->property_polygon_geojson) !== null) {
+            return true;
+        }
+
+        if ($this->property_location_source !== PropertyLocationSource::Geocodificacao) {
+            return true;
+        }
+
+        return $this->property_location_precision === PropertyLocationPrecision::Numero;
+    }
+
+    /**
      * Ponto que o requerente desenhou ou que a inscrição/simulação gravou, sem
      * o lote do endereçamento. É o critério de "já localizado pela inscrição":
      * o lote achado depois não substitui a busca do ponto no Cadastro.
