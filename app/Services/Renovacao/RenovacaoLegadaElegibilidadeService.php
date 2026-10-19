@@ -1,0 +1,133 @@
+<?php
+
+namespace App\Services\Renovacao;
+
+use App\Enums\ViabilityRequestStatus;
+use App\Models\Cnae;
+use App\Models\Company;
+use App\Models\ViabilityRequest;
+use App\Services\Cnpj\CnpjLookup;
+use App\Services\Cnpj\CnpjLookupException;
+use App\Services\Cnpj\CnpjNotFoundException;
+use App\Services\Legado\TvlLegadaDetalhe;
+use App\Support\Settings;
+
+/**
+ * Diz se uma TVL do sistema legado pode ser renovada pela empresa informada.
+ * A primeira regra que falha devolve o motivo; sem CNPJ gravado no legado, a
+ * titularidade é conferida pelo cadastro do CNPJ e, se a consulta falhar, o
+ * pedido é bloqueado.
+ */
+class RenovacaoLegadaElegibilidadeService
+{
+    public function __construct(
+        private readonly CnpjLookup $cnpjLookup,
+        private readonly ConferenciaTitularidade $conferenciaTitularidade,
+    ) {}
+
+    public function avaliar(TvlLegadaDetalhe $tvl, Company $empresa): RenovacaoElegibilidade
+    {
+        $motivo = $this->motivoTitularidade($tvl, $empresa)
+            ?? $this->motivoTipo($tvl)
+            ?? $this->motivoAtividades($tvl)
+            ?? $this->motivoRenovadaNoLegado($tvl)
+            ?? $this->motivoVencida($tvl)
+            ?? $this->motivoRenovacaoNoViabiliza($tvl);
+
+        return new RenovacaoElegibilidade($motivo === null, $motivo);
+    }
+
+    private function motivoTitularidade(TvlLegadaDetalhe $tvl, Company $empresa): ?string
+    {
+        $cnpjEmpresa = $this->digitos($empresa->cnpj);
+        $cnpjGravado = $this->digitos($tvl->titularDocumento);
+
+        if (strlen($cnpjGravado) === 14) {
+            return $cnpjGravado === $cnpjEmpresa ? null : 'Esta viabilidade pertence a outra empresa.';
+        }
+
+        try {
+            $dados = $this->cnpjLookup->lookup($cnpjEmpresa);
+        } catch (CnpjNotFoundException|CnpjLookupException) {
+            return 'Não foi possível conferir o CNPJ agora. Tente novamente em instantes.';
+        }
+
+        $conferencia = $this->conferenciaTitularidade->conferir($tvl, $dados);
+
+        return $conferencia->confere ? null : $conferencia->motivo;
+    }
+
+    private function motivoTipo(TvlLegadaDetalhe $tvl): ?string
+    {
+        return $tvl->tipo === 'provisoria' && $tvl->deferida
+            ? null
+            : 'Somente viabilidade provisória deferida pode ser renovada.';
+    }
+
+    private function motivoAtividades(TvlLegadaDetalhe $tvl): ?string
+    {
+        if ($tvl->atividades === []) {
+            return 'A viabilidade anterior não tem atividades registradas.';
+        }
+
+        foreach ($tvl->atividades as $atividade) {
+            $existe = Cnae::query()
+                ->where('code', $this->digitos($atividade['codigo']))
+                ->where('active', true)
+                ->exists();
+
+            if (! $existe) {
+                return "A atividade {$atividade['codigo']} não consta mais do catálogo. Procure a SEDUR.";
+            }
+        }
+
+        return null;
+    }
+
+    private function motivoRenovadaNoLegado(TvlLegadaDetalhe $tvl): ?string
+    {
+        return $tvl->renovadaDepois ? 'Esta viabilidade já foi renovada.' : null;
+    }
+
+    private function motivoVencida(TvlLegadaDetalhe $tvl): ?string
+    {
+        if ($tvl->situacao === 'vencida' && ! (bool) Settings::get('renovacao.legado.permite_vencida', true)) {
+            return 'Viabilidade vencida não pode ser renovada.';
+        }
+
+        return null;
+    }
+
+    private function motivoRenovacaoNoViabiliza(TvlLegadaDetalhe $tvl): ?string
+    {
+        $renovacoes = fn () => ViabilityRequest::query()->where('renews_legacy_tvl_number', $tvl->numero);
+
+        if ($renovacoes()->where('status', ViabilityRequestStatus::Deferida)->exists()) {
+            $meses = max(1, (int) Settings::get('renovacao.intervalo_meses', 3));
+
+            $recente = $renovacoes()
+                ->where('status', ViabilityRequestStatus::Deferida)
+                ->whereHas('decision', fn ($query) => $query->where('decided_at', '>=', now()->subMonths($meses)))
+                ->exists();
+
+            return $recente
+                ? "Esta viabilidade foi renovada há menos de {$meses} meses."
+                : 'Esta viabilidade já foi renovada.';
+        }
+
+        $emAberto = $renovacoes()
+            ->whereIn('status', [
+                ViabilityRequestStatus::Protocolada,
+                ViabilityRequestStatus::EmAnalise,
+                ViabilityRequestStatus::EmPendencia,
+            ])
+            ->exists();
+
+        return $emAberto ? RenovacaoElegibilidadeService::MOTIVO_EM_ANALISE : null;
+    }
+
+    private function digitos(?string $valor): string
+    {
+        return preg_replace('/\D/', '', $valor ?? '') ?? '';
+    }
+}

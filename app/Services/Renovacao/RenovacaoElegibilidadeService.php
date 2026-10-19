@@ -14,11 +14,11 @@ use App\Support\Settings;
  */
 class RenovacaoElegibilidadeService
 {
-    private const MOTIVO_SEM_VINCULO = 'Não há viabilidade vinculada a este CNPJ.';
+    public const MOTIVO_SEM_VINCULO = 'Não há viabilidade vinculada a este CNPJ.';
 
-    private const MOTIVO_DEFINITIVA = 'Viabilidade definitiva não pode ser renovada.';
+    public const MOTIVO_DEFINITIVA = 'Viabilidade definitiva não pode ser renovada.';
 
-    private const MOTIVO_EM_ANALISE = 'Para cadastrar novo processo de renovação, aguarde a conclusão da análise ou solicite desistência do processo em análise.';
+    public const MOTIVO_EM_ANALISE = 'Para cadastrar novo processo de renovação, aguarde a conclusão da análise ou solicite desistência do processo em análise.';
 
     public function avaliar(ViabilityRequest $origem): RenovacaoElegibilidade
     {
