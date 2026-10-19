@@ -15,6 +15,7 @@ use App\Services\Expresso\DecisionResult;
 use App\Services\Expresso\FluxoExpressoService;
 use App\Services\Geo\Edificacoes\BuildingFootprintRepository;
 use App\Services\Geo\ResolucaoPoligonoPorPonto;
+use Illuminate\Contracts\Queue\Job;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
@@ -157,6 +158,33 @@ class ResolucaoPoligonoPorPontoTest extends TestCase
 
         Queue::assertPushed(GerarPoligonoIaJob::class, fn (GerarPoligonoIaJob $job): bool => $job->viabilityRequestId === $request->id);
         $this->assertNotContains('enderecamento_ponto', $this->base->consultas);
+    }
+
+    public function test_espera_da_ia_tem_orcamento_proprio_alem_das_tentativas_do_job(): void
+    {
+        config([
+            'viabiliza.features.edificacoes_ia' => true,
+            'viabiliza.expresso.job.tries' => 3,
+            'viabiliza.edificacoes.ia.espera_tentativas' => 3,
+            'viabiliza.edificacoes.ia.espera_segundos' => 60,
+        ]);
+        Queue::fake([GerarPoligonoIaJob::class]);
+        $this->enderecamento(comLote: true);
+        $request = $this->processo();
+
+        $filaDoJob = Mockery::mock(Job::class);
+        $filaDoJob->shouldReceive('attempts')->andReturn(3);
+        $filaDoJob->shouldReceive('release')->once()->with(60);
+        $job = new DecidirFluxoExpressoJob($request->id);
+        $job->setJob($filaDoJob);
+
+        $service = Mockery::mock(FluxoExpressoService::class);
+        $service->shouldNotReceive('decide');
+
+        $job->handle($service);
+
+        $this->assertSame(6, $job->tries);
+        Queue::assertPushed(GerarPoligonoIaJob::class);
     }
 
     public function test_prazo_esgotado_segue_para_o_enderecamento_pelo_ponto(): void

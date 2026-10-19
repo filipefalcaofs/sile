@@ -6,6 +6,7 @@ use App\Enums\FonteEdificacao;
 use App\Enums\PoligonoFonte;
 use App\Enums\PropertyLocationSource;
 use App\Enums\StatusResolucaoPoligono;
+use App\Enums\ViabilityRequestStatus;
 use App\Jobs\DecidirFluxoExpressoJob;
 use App\Jobs\GerarPoligonoIaJob;
 use App\Models\BuildingFootprint;
@@ -45,7 +46,7 @@ class GerarPoligonoIaJobTest extends TestCase
 
     private function processo(float $lat = -12.98, float $lng = -38.46): ViabilityRequest
     {
-        $request = ViabilityRequest::factory()->create(['property_polygon_geojson' => null]);
+        $request = ViabilityRequest::factory()->create(['property_polygon_geojson' => null, 'status' => ViabilityRequestStatus::Protocolada]);
         $request->forceFill([
             'property_point_lat' => $lat,
             'property_point_lng' => $lng,
@@ -190,6 +191,36 @@ class GerarPoligonoIaJobTest extends TestCase
 
         $this->assertSame(PoligonoFonte::Ia, $request->fresh()->address_polygon_source);
         Http::assertNothingSent();
+    }
+
+    public function test_processo_ja_decidido_guarda_o_predio_mas_nao_recebe_o_poligono(): void
+    {
+        $this->fake();
+        $request = $this->processo();
+        $request->forceFill(['status' => ViabilityRequestStatus::Deferida])->save();
+
+        $this->rodar($request);
+
+        $this->assertNull($request->fresh()->address_polygon_geojson);
+        $this->assertSame(1, BuildingFootprint::query()->where('source', FonteEdificacao::Ia)->count());
+        Queue::assertNotPushed(DecidirFluxoExpressoJob::class);
+    }
+
+    public function test_prazo_esgotado_nao_recebe_o_poligono(): void
+    {
+        $this->fake();
+        $request = $this->processo();
+        LotPolygonResolution::factory()->create([
+            'viability_request_id' => $request->id,
+            'source' => PoligonoFonte::Ia,
+            'status' => StatusResolucaoPoligono::NaoResolvido,
+            'reason' => 'prazo_esgotado',
+        ]);
+
+        $this->rodar($request);
+
+        $this->assertNull($request->fresh()->address_polygon_geojson);
+        Queue::assertNotPushed(DecidirFluxoExpressoJob::class);
     }
 
     public function test_nao_despacha_segunda_inferencia_para_o_mesmo_ponto(): void

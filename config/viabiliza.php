@@ -131,6 +131,9 @@ return [
         // Faixa de área (m²) aceita na importação.
         'area_min_m2' => 10,
         'area_max_m2' => 20000,
+        // Carga com menos que esta fração das edificações ativas da fonte é
+        // tratada como parcial e não aposenta as ausentes.
+        'aposentadoria_fracao_minima' => 0.5,
         // Retângulo de Salvador com as ilhas [oeste, sul, leste, norte]: corte
         // grosso dos downloads; o recorte fino é pelo limite oficial.
         'bbox' => [-38.70, -13.02, -38.29, -12.73],
@@ -144,6 +147,8 @@ return [
             'timeout' => 120,
             // Passadas do job de decisão esperando a IA antes de seguir sem ela.
             'espera_tentativas' => 3,
+            // Segundos entre as passadas do job de decisão esperando a IA.
+            'espera_segundos' => 60,
             'fila' => 'default',
             // Critérios de aceite do contorno gerado.
             'aceite' => [

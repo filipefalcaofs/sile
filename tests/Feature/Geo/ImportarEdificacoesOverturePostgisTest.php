@@ -96,6 +96,18 @@ class ImportarEdificacoesOverturePostgisTest extends PostgisTestCase
         $this->assertNotNull(BuildingFootprint::query()->where('source_id', '00000003-gers-0000-0000-000000000003')->value('retired_at'));
     }
 
+    public function test_carga_parcial_nao_aposenta_o_resto_da_cidade(): void
+    {
+        $this->artisan('geo:edificacoes:importar-overture', ['arquivo' => base_path(self::AMOSTRA), '--release' => '2026-09-23.1'])->assertSuccessful();
+
+        $this->artisan('geo:edificacoes:importar-overture', ['arquivo' => $this->arquivoCom([0]), '--release' => '2026-10-21.0'])->assertSuccessful();
+
+        $importacao = BuildingFootprintImport::query()->latest('id')->first();
+        $this->assertSame(0, $importacao->counters['aposentados']);
+        $this->assertSame(1, $importacao->counters['aposentadoria_suspensa']);
+        $this->assertSame(3, $this->ativas());
+    }
+
     public function test_falha_no_meio_preserva_base_anterior(): void
     {
         $this->artisan('geo:edificacoes:importar-overture', ['arquivo' => base_path(self::AMOSTRA), '--release' => '2026-09-23.1'])->assertSuccessful();

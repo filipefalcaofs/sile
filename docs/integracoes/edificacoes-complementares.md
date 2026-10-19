@@ -60,7 +60,9 @@ As constantes técnicas ficam em `config/viabiliza.php`, bloco `edificacoes`:
 - faixa de área aceita na importação: 10 a 20.000 m²;
 - retângulo de Salvador usado nos downloads;
 - tamanho do recorte da IA: 60 m e 800 px;
-- prazo de espera da IA: 3 passadas do job;
+- prazo de espera da IA: 3 passadas extras do job de decisão, de 60 s cada,
+  além das tentativas da espera do Cadastro. Uma IA que responde depois disso
+  guarda o prédio na base, mas não muda o processo, que já seguiu sem ela;
 - critérios de aceite da IA: área de 20 a 5.000 m², compacidade ≥ 0,2 e
   margem de 2 px até a borda do recorte.
 
@@ -81,8 +83,8 @@ Rode nesta ordem, e só depois ligue as fontes no painel.
    ```bash
    php artisan geo:edificacoes:importar-microsoft --release=2026-08-13
    ```
-   Sem internet no servidor, baixe os `.csv.gz` em outra máquina e importe com
-   `--arquivo=caminho.csv.gz` (repetível).
+   Sem internet no servidor, baixe os `.csv.gz` em outra máquina e importe
+   **todos numa única execução**, repetindo `--arquivo=caminho.csv.gz`.
 
 Comportamento comum às importações:
 
@@ -91,6 +93,13 @@ Comportamento comum às importações:
   continua valendo.
 - Prédios que sumiram na release nova ficam aposentados (`retired_at`).
   Nenhuma linha é apagada.
+- Uma carga com menos da metade dos prédios ativos da fonte é tratada como
+  parcial (um tile, um arquivo cortado). Ela grava o que trouxe, mas não
+  aposenta nada (`aposentadoria_suspensa = 1` nos contadores).
+
+**Worker da fila:** o job da IA pode levar até 180 s. Rode o worker com
+`--timeout` acima disso e ajuste `retry_after` da conexão `database` para mais
+que 180 s, senão o job pode rodar duas vezes.
 
 ## Atualização
 

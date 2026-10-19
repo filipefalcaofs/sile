@@ -135,6 +135,27 @@ class IntegrationCallLogTest extends TestCase
         $this->assertSame('edificacoes_ia', $recorder->integracao('http://footprint-ia:8080/segmentar'));
     }
 
+    public function test_resposta_com_tipo_binario_grava_marcador_sem_ler_o_corpo(): void
+    {
+        Http::fake(['https://x.exemplo.test/*' => Http::response('texto-qualquer', 200, ['Content-Type' => 'application/gzip'])]);
+
+        Http::get('https://x.exemplo.test/part.csv.gz');
+
+        $this->assertSame('[conteúdo binário: 14 bytes]', IntegrationCall::query()->sole()->response_body);
+    }
+
+    public function test_resposta_grande_grava_so_o_inicio(): void
+    {
+        config(['viabiliza.integrations.log.limite_corpo' => 10]);
+        Http::fake(['https://x.exemplo.test/*' => Http::response(str_repeat('a', 50), 200, ['Content-Type' => 'text/plain'])]);
+
+        Http::get('https://x.exemplo.test/grande.txt');
+
+        $chamada = IntegrationCall::query()->sole();
+        $this->assertSame(str_repeat('a', 10), $chamada->response_body);
+        $this->assertTrue((bool) $chamada->truncated);
+    }
+
     public function test_resposta_de_erro_grava_como_erro(): void
     {
         Http::fake([

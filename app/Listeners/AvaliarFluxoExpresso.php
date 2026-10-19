@@ -2,6 +2,7 @@
 
 namespace App\Listeners;
 
+use App\Enums\ViabilityRequestOrigin;
 use App\Events\SolicitacaoProtocolada;
 use App\Jobs\DecidirFluxoExpressoJob;
 
@@ -20,6 +21,13 @@ class AvaliarFluxoExpresso
 {
     public function handle(SolicitacaoProtocolada $event): void
     {
+        // A declaração do REGIN ainda grava o CODLOG declarado e busca o lote
+        // oficial depois do protocolo; ela mesma decide ou despacha o job em
+        // seguida. Enfileirar aqui deixaria a decisão correr na frente do lote.
+        if ($event->request->origin === ViabilityRequestOrigin::Regin && $event->request->origem_declarada !== null) {
+            return;
+        }
+
         // Despacha pelo ID (serialização segura; o job recarrega o estado fresco).
         // A fila é responsabilidade do próprio job (config/viabiliza.php).
         DecidirFluxoExpressoJob::dispatch($event->request->id);

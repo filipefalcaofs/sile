@@ -297,7 +297,7 @@ class ReginProcessoProtocolador
         $solicitacao = $solicitacao->fresh() ?? $solicitacao;
 
         if ($this->poligonoPorPonto->precisaResolver($solicitacao)) {
-            DecidirFluxoExpressoJob::dispatch($solicitacao->id);
+            DecidirFluxoExpressoJob::dispatch($solicitacao->id, atorId: $ator->id);
 
             return $solicitacao;
         }

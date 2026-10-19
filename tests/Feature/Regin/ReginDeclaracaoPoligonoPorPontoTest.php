@@ -6,6 +6,8 @@ use App\Jobs\DecidirFluxoExpressoJob;
 use App\Models\ReginRecebimento;
 use App\Models\ViabilityRequest;
 use App\Services\Geo\PoligonoEnderecamentoService;
+use App\Services\Realty\PropertyRegistryLookup;
+use App\Services\Realty\PropertyRegistryResult;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Mockery;
@@ -22,9 +24,25 @@ class ReginDeclaracaoPoligonoPorPontoTest extends TestCase
 {
     use LazilyRefreshDatabase;
 
+    /**
+     * Cadastro Imobiliário com coordenada: o processo nasce com ponto.
+     */
+    private function comPontoDoCadastro(): void
+    {
+        config(['viabiliza.features.cadastro_imobiliario' => true]);
+        $this->app->instance(PropertyRegistryLookup::class, new class implements PropertyRegistryLookup
+        {
+            public function resolve(string $inscricao): PropertyRegistryResult
+            {
+                return new PropertyRegistryResult(latitude: -12.98, longitude: -38.46, inscricao: $inscricao, raw: []);
+            }
+        });
+    }
+
     public function test_busca_por_ponto_vai_para_o_job_de_decisao_com_o_recebimento_ja_vinculado(): void
     {
         config(['viabiliza.features.geoserver_enderecamento' => true]);
+        $this->comPontoDoCadastro();
         $consultasPorPonto = 0;
         $poligono = Mockery::mock(PoligonoEnderecamentoService::class);
         $poligono->shouldReceive('aplicar')->andReturnUsing(
@@ -43,6 +61,35 @@ class ReginDeclaracaoPoligonoPorPontoTest extends TestCase
         $this->assertSame(0, $consultasPorPonto);
         $this->assertSame($processo->id, ReginRecebimento::query()->where('protocolo', 'BAP-2026-0001')->value('viability_request_id'));
         Queue::assertPushed(DecidirFluxoExpressoJob::class, fn (DecidirFluxoExpressoJob $job): bool => $job->viabilityRequestId === $processo->id);
+    }
+
+    public function test_declaracao_sem_busca_pelo_ponto_decide_na_hora_sem_job_na_fila(): void
+    {
+        config(['viabiliza.features.geoserver_enderecamento' => false]);
+
+        $this->postJson('/api_integracao/recebe', $this->declaracao($this->cnpjValido()))->assertOk();
+
+        Queue::assertNotPushed(DecidirFluxoExpressoJob::class);
+    }
+
+    public function test_job_da_declaracao_sai_so_depois_do_lote_oficial_e_com_o_ator(): void
+    {
+        config(['viabiliza.features.geoserver_enderecamento' => true]);
+        $this->comPontoDoCadastro();
+        $chamadas = [];
+        $poligono = Mockery::mock(PoligonoEnderecamentoService::class);
+        $poligono->shouldReceive('aplicar')->andReturnUsing(function () use (&$chamadas): bool {
+            $chamadas[] = Queue::pushed(DecidirFluxoExpressoJob::class)->count();
+
+            return false;
+        });
+        $this->app->instance(PoligonoEnderecamentoService::class, $poligono);
+
+        $this->postJson('/api_integracao/recebe', $this->declaracao($this->cnpjValido()))->assertOk();
+
+        $this->assertSame(0, $chamadas[array_key_last($chamadas)]);
+        Queue::assertPushed(DecidirFluxoExpressoJob::class, 1);
+        Queue::assertPushed(DecidirFluxoExpressoJob::class, fn (DecidirFluxoExpressoJob $job): bool => $job->atorId !== null);
     }
 
     /**

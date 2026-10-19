@@ -6,7 +6,9 @@ use App\Enums\FonteEdificacao;
 use App\Enums\PoligonoFonte;
 use App\Enums\StatusResolucaoPoligono;
 use App\Enums\ViabilityRequestStatus;
+use App\Models\LotPolygonResolution;
 use App\Models\ViabilityRequest;
+use App\Services\Expresso\FluxoExpressoService;
 use App\Services\Geo\Edificacoes\AceiteMascaraIa;
 use App\Services\Geo\Edificacoes\BuildingFootprintRepository;
 use App\Services\Geo\Edificacoes\EdificacaoCandidata;
@@ -72,8 +74,27 @@ class GerarPoligonoIaJob implements ShouldBeUnique, ShouldQueue
         try {
             $this->gerar($request, $ponto['lat'], $ponto['lng'], $ortofoto, $inferencia, $aceite, $base, $complementar);
         } finally {
-            DecidirFluxoExpressoJob::dispatch($request->id, reavaliacao: $request->fresh()?->status !== ViabilityRequestStatus::Protocolada);
+            $atual = $request->fresh();
+
+            if ($atual !== null && $this->aguardandoIa($atual)) {
+                DecidirFluxoExpressoJob::dispatch($atual->id, reavaliacao: $atual->status !== ViabilityRequestStatus::Protocolada);
+            }
         }
+    }
+
+    /**
+     * O processo ainda espera a IA: pode voltar ao motor e a decisão não seguiu
+     * sem ela. Processo já decidido não recebe polígono que a decisão não usou.
+     */
+    private function aguardandoIa(ViabilityRequest $request): bool
+    {
+        $prazoEsgotado = LotPolygonResolution::query()
+            ->where('viability_request_id', $request->id)
+            ->where('source', PoligonoFonte::Ia)
+            ->where('reason', 'prazo_esgotado')
+            ->exists();
+
+        return ! $prazoEsgotado && app(FluxoExpressoService::class)->podeReavaliar($request);
     }
 
     private function gerar(
@@ -93,7 +114,9 @@ class GerarPoligonoIaJob implements ShouldBeUnique, ShouldQueue
         $existente = $base->contendoPonto(FonteEdificacao::Ia, $lat, $lng);
 
         if ($existente !== null) {
-            $complementar->gravar($request, $existente);
+            if ($this->aguardandoIa($request)) {
+                $complementar->gravar($request, $existente);
+            }
 
             return;
         }
@@ -139,6 +162,10 @@ class GerarPoligonoIaJob implements ShouldBeUnique, ShouldQueue
             duplicateOfId: null,
             notas: $normal['notas'],
         );
+
+        if (! $this->aguardandoIa($request->refresh())) {
+            return;
+        }
 
         $complementar->gravar($request, new EdificacaoCandidata(
             id: $gravado['id'],

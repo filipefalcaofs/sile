@@ -89,6 +89,32 @@ class PoligonoFonteTest extends TestCase
         $this->assertSame(PoligonoFonte::Semap, $request->fresh()->address_polygon_source);
     }
 
+    public function test_lote_oficial_achado_depois_nao_substitui_o_complementar(): void
+    {
+        Http::fake(['*geoserver.sedur*' => Http::response($this->colecao(true))]);
+        $predio = ['type' => 'MultiPolygon', 'coordinates' => [[[[-38.46, -12.98], [-38.459, -12.98], [-38.459, -12.979], [-38.46, -12.98]]]]];
+        $request = ViabilityRequest::factory()->create(['cod_log' => '24574', 'address_number' => '70']);
+        $request->forceFill(['address_polygon_geojson' => $predio, 'address_polygon_source' => PoligonoFonte::Overture])->save();
+
+        $this->assertFalse(app(PoligonoEnderecamentoService::class)->aplicar($request->fresh()));
+
+        $request->refresh();
+        $this->assertSame($predio, $request->address_polygon_geojson);
+        $this->assertSame(PoligonoFonte::Overture, $request->address_polygon_source);
+    }
+
+    public function test_lote_oficial_continua_atualizando_lote_oficial(): void
+    {
+        Http::fake(['*geoserver.sedur*' => Http::response($this->colecao(true))]);
+        $antigo = ['type' => 'Polygon', 'coordinates' => [[[-38.5, -12.98], [-38.499, -12.98], [-38.499, -12.979], [-38.5, -12.98]]]];
+        $request = ViabilityRequest::factory()->create(['cod_log' => '24574', 'address_number' => '70']);
+        $request->forceFill(['address_polygon_geojson' => $antigo, 'address_polygon_source' => PoligonoFonte::Semap])->save();
+
+        $this->assertTrue(app(PoligonoEnderecamentoService::class)->aplicar($request->fresh()));
+
+        $this->assertSame(PoligonoFonte::Chave, $request->fresh()->address_polygon_source);
+    }
+
     public function test_legenda_de_cada_fonte(): void
     {
         $this->assertSame('Contorno tracejado: polígono do endereçamento SEDUR.', PoligonoFonte::Chave->legenda());

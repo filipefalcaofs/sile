@@ -3,6 +3,7 @@
 namespace App\Services\Geo\Edificacoes;
 
 use App\Enums\FonteEdificacao;
+use App\Models\BuildingFootprint;
 use App\Models\BuildingFootprintImport;
 use Illuminate\Support\Facades\DB;
 use Throwable;
@@ -53,14 +54,26 @@ class ImportadorEdificacoes
 
         $contadores = [
             'lidos' => 0, 'fora_do_limite' => 0, 'invalidos' => 0, 'corrigidos' => 0, 'duplicados' => 0,
-            'inseridos' => 0, 'atualizados' => 0, 'aposentados' => 0,
+            'inseridos' => 0, 'atualizados' => 0, 'aposentados' => 0, 'aposentadoria_suspensa' => 0,
         ];
+        $ativasAntes = BuildingFootprint::query()->where('source', $fonte)->whereNull('retired_at')->count();
 
         try {
-            DB::transaction(function () use ($fonte, $release, $feicoes, $mapear, $importacao, &$contadores): void {
+            DB::transaction(function () use ($fonte, $release, $feicoes, $mapear, $importacao, $ativasAntes, &$contadores): void {
                 foreach ($feicoes as $feicao) {
                     $contadores['lidos']++;
                     $this->importarFeicao($fonte, $release, $feicao, $mapear, $importacao->id, $contadores);
+                }
+
+                // Carga bem menor que a base atual é parcial (um tile, arquivo
+                // cortado): aposentar o resto apagaria a cidade.
+                $gravadas = $contadores['inseridos'] + $contadores['atualizados'];
+                $fracaoMinima = (float) config('viabiliza.edificacoes.aposentadoria_fracao_minima', 0.5);
+
+                if ($ativasAntes > 0 && $gravadas < $ativasAntes * $fracaoMinima) {
+                    $contadores['aposentadoria_suspensa'] = 1;
+
+                    return;
                 }
 
                 $contadores['aposentados'] = $this->repositorio->aposentarAusentes($fonte, $importacao->id);
