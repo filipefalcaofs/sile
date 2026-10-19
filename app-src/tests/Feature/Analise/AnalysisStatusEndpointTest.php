@@ -69,6 +69,33 @@ class AnalysisStatusEndpointTest extends TestCase
         $this->assertSame($destino->id, $request->assigned_user_id);
     }
 
+    public function test_processo_em_analise_pode_ser_encaminhado_a_outro_setor(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+        $analista = User::factory()->analista()->create();
+        $destino = User::factory()->analista()->create();
+        $setor = Sector::factory()->create(['name' => 'Gabinete', 'active' => true]);
+        $destino->sectors()->attach($setor->id);
+
+        foreach ([AnalysisStatus::Analisar, AnalysisStatus::EmAnalise] as $origem) {
+            $request = ViabilityRequest::factory()->create();
+            $request->forceFill(['analysis_status' => $origem])->save();
+
+            $this->actingAs($analista, 'gestao')
+                ->post("/gestao/processos/{$request->id}/status-analise", [
+                    'status' => 'encaminhado',
+                    'sector_id' => $setor->id,
+                    'user_id' => $destino->id,
+                ])
+                ->assertSessionHasNoErrors()
+                ->assertSessionMissing('error');
+
+            $request->refresh();
+            $this->assertSame(AnalysisStatus::Encaminhado, $request->analysis_status, $origem->value);
+            $this->assertSame('Encaminhado para Gabinete', $request->rotuloStatusTramitacao());
+        }
+    }
+
     public function test_transicao_invalida_sem_override_falha(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);

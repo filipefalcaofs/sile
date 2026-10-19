@@ -709,7 +709,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
         // operacional Vistoriar/Vistoriado, situação derivada da ficha). KPIs
         // do universo, abas e busca server-driven; a consulta é auditada.
         Route::get('vistorias', VistoriaConsultaController::class)
-            ->middleware('permission:preencher-ficha-vistoria')
+            ->middleware('permission:preencher-ficha-vistoria|distribuir-processos')
             ->name('vistorias.index');
 
         // Caixa de Malha Fina: a fila do revisor — processos com in_fine_mesh
@@ -785,6 +785,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::get('/', [InspectionController::class, 'show'])->name('show');
             Route::patch('/', [InspectionController::class, 'update'])->name('update');
             Route::post('concluir', [InspectionController::class, 'concluir'])->name('concluir');
+            Route::post('encaminhar-ao-setor', [InspectionController::class, 'encaminharAoSetor'])->name('encaminhar-ao-setor');
             Route::post('poligono', [InspectionController::class, 'validarPoligono'])->name('poligono');
             Route::post('anexos', [InspectionController::class, 'storeAnexo'])->name('anexos.store');
             Route::delete('anexos/{attachment}', [InspectionController::class, 'destroyAnexo'])->name('anexos.destroy');

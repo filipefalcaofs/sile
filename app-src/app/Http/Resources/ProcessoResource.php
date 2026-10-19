@@ -51,6 +51,7 @@ class ProcessoResource extends JsonResource
             'empresa' => $this->company?->trade_name ?: $this->company?->legal_name,
             'cnpj' => $this->company?->formatted_cnpj,
             'cnaes' => $this->cnaesRotulo(),
+            'cnaes_detalhe' => $this->cnaesDetalhe(),
             'imovel' => $this->enderecoResumo(),
             // Endereço completo (com complemento e CEP) para o detalhe do
             // processo (HU-082) — o requisito da SEDUR é sempre mostrar o
@@ -73,7 +74,7 @@ class ProcessoResource extends JsonResource
             'analysis_stage' => $this->analysis_stage?->value,
             'analysis_stage_label' => $this->analysis_stage?->label(),
             'analysis_status' => $this->analysis_status?->value,
-            'analysis_status_label' => $this->analysis_status?->label(),
+            'analysis_status_label' => $this->resource->rotuloStatusTramitacao(),
             'analysis_due_at' => $this->analysis_due_at?->toIso8601String(),
             'sla' => $this->slaResumo(),
             'protocoled_at' => $this->protocoled_at?->toIso8601String(),
@@ -244,6 +245,27 @@ class ProcessoResource extends JsonResource
         }
 
         return $itens->implode(', ');
+    }
+
+    /**
+     * CNAEs da solicitação com código e descrição, principal primeiro.
+     *
+     * @return list<array{codigo: string, descricao: string, principal: bool}>
+     */
+    private function cnaesDetalhe(): array
+    {
+        $this->resource->loadMissing('cnaes');
+
+        return $this->cnaes
+            ->sortBy(fn ($cnae): string => $cnae->code)
+            ->sortByDesc(fn ($cnae): bool => (bool) $cnae->pivot->is_primary)
+            ->map(fn ($cnae): array => [
+                'codigo' => $cnae->formatted_code,
+                'descricao' => (string) $cnae->description,
+                'principal' => (bool) $cnae->pivot->is_primary,
+            ])
+            ->values()
+            ->all();
     }
 
     /**

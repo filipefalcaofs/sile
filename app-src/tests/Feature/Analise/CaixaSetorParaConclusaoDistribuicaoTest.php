@@ -175,4 +175,84 @@ class CaixaSetorParaConclusaoDistribuicaoTest extends TestCase
 
         $this->assertNull($processo->refresh()->assigned_user_id);
     }
+
+    private function chefia(Sector $setor): User
+    {
+        $chefia = User::factory()->gestor()->withAcceptedLgpdTerm()->create();
+        $chefia->sectors()->attach($setor);
+
+        return $chefia;
+    }
+
+    public function test_chefia_ve_na_aba_para_conclusao_os_processos_de_qualquer_setor(): void
+    {
+        $meuSetor = Sector::factory()->create();
+        $outroSetor = Sector::factory()->create();
+        $chefia = $this->chefia($meuSetor);
+        $doOutroSetor = $this->processoParaConclusao($outroSetor);
+
+        $this->actingAs($chefia, 'gestao')
+            ->get('/gestao/caixa-setor?visao=para_conclusao')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('contadores.para_conclusao', 1)
+                ->has('processos.data', 1)
+                ->where('processos.data.0.id', $doOutroSetor->id)
+                ->where('distribuiEmQualquerSetor', true));
+    }
+
+    public function test_chefia_continua_presa_ao_proprio_setor_nas_outras_abas(): void
+    {
+        $meuSetor = Sector::factory()->create();
+        $outroSetor = Sector::factory()->create();
+        $chefia = $this->chefia($meuSetor);
+        $this->processoParaConclusao($outroSetor, null, AnalysisStatus::ParaDistribuir);
+
+        $this->actingAs($chefia, 'gestao')
+            ->get('/gestao/caixa-setor')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('contadores.para_distribuir', 0)
+                ->where('distribuiEmQualquerSetor', false));
+    }
+
+    public function test_chefia_distribui_para_conclusao_de_outro_setor_a_analista_de_qualquer_setor(): void
+    {
+        $meuSetor = Sector::factory()->create();
+        $setorDoProcesso = Sector::factory()->create();
+        $setorDoDestino = Sector::factory()->create();
+        $chefia = $this->chefia($meuSetor);
+        $destino = $this->analista($setorDoDestino);
+        $processo = $this->processoParaConclusao($setorDoProcesso);
+
+        $this->actingAs($chefia, 'gestao')
+            ->post('/gestao/caixa-setor/distribuir', [
+                'request_ids' => [$processo->id],
+                'analista_id' => $destino->id,
+            ])
+            ->assertSessionMissing('error');
+
+        $processo->refresh();
+        $this->assertSame($destino->id, $processo->assigned_user_id);
+        $this->assertSame($setorDoDestino->id, $processo->sector_id);
+        $this->assertSame(AnalysisStatus::ParaConclusao, $processo->analysis_status);
+    }
+
+    public function test_chefia_nao_distribui_de_outro_setor_fora_da_aba_para_conclusao(): void
+    {
+        $meuSetor = Sector::factory()->create();
+        $outroSetor = Sector::factory()->create();
+        $chefia = $this->chefia($meuSetor);
+        $destino = $this->analista($outroSetor);
+        $processo = $this->processoParaConclusao($outroSetor, null, AnalysisStatus::ParaDistribuir);
+
+        $this->actingAs($chefia, 'gestao')
+            ->post('/gestao/caixa-setor/distribuir', [
+                'request_ids' => [$processo->id],
+                'analista_id' => $destino->id,
+            ])
+            ->assertSessionHas('error');
+
+        $this->assertNull($processo->refresh()->assigned_user_id);
+    }
 }

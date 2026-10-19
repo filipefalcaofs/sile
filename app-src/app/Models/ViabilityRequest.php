@@ -277,6 +277,51 @@ class ViabilityRequest extends Model
     }
 
     /**
+     * Status de tramitação como a retaguarda o lê: o rótulo da etapa, com o setor
+     * de destino quando o processo foi encaminhado e o resultado quando a análise
+     * foi concluída. Null enquanto o processo não entrou no eixo operacional.
+     */
+    public function rotuloStatusTramitacao(): ?string
+    {
+        $status = $this->analysis_status;
+
+        if ($status === null) {
+            return null;
+        }
+
+        if ($status === AnalysisStatus::Encaminhado) {
+            $setor = $this->sector?->name;
+
+            return $setor === null ? $status->label() : "{$status->label()} {$setor}";
+        }
+
+        if ($status === AnalysisStatus::AnaliseConcluida) {
+            $resultado = match ($this->status) {
+                ViabilityRequestStatus::Deferida => 'Deferido',
+                ViabilityRequestStatus::Indeferida => 'Indeferido',
+                ViabilityRequestStatus::Cassado => 'Cassado',
+                ViabilityRequestStatus::Revogado => 'Revogado',
+                ViabilityRequestStatus::Desativado => 'Desativado',
+                default => null,
+            };
+
+            return $resultado === null ? $status->label() : "{$status->label()} – {$resultado}";
+        }
+
+        return $status->label();
+    }
+
+    /**
+     * Abrigado de escritório virtual: declarou a intenção no portal ou o
+     * produto já foi decidido como abrigado.
+     */
+    public function ehAbrigadoDeEscritorioVirtual(): bool
+    {
+        return $this->wants_virtual_office_tenant === true
+            || $this->decision?->is_virtual_office_tenant === true;
+    }
+
+    /**
      * Tipo de serviço (HU-061 RN-005).
      *
      * @return BelongsTo<ViabilityServiceType, $this>

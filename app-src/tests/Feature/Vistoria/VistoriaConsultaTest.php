@@ -145,11 +145,24 @@ class VistoriaConsultaTest extends TestCase
 
     public function test_consulta_exige_permissao(): void
     {
+        $semPermissao = User::factory()->withAcceptedLgpdTerm()->create();
+        $semPermissao->givePermissionTo(['acessar-gestao', 'consultar-solicitacoes']);
+
+        $this->actingAs($semPermissao, 'gestao')
+            ->get('/gestao/vistorias')
+            ->assertForbidden();
+    }
+
+    public function test_apoio_que_distribui_tambem_abre_a_caixa(): void
+    {
         $apoio = User::factory()->withAcceptedLgpdTerm()->create();
         $apoio->assignRole('apoio');
 
         $this->actingAs($apoio, 'gestao')
             ->get('/gestao/vistorias')
-            ->assertForbidden();
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('podeDistribuir', true)
+                ->where('distribuiEmQualquerSetor', true));
     }
 }

@@ -145,7 +145,7 @@ class VisualizarFichaVistoriaTest extends TestCase
 
         $vistoriador = $this->vistoriador();
         $analista = $this->analistaConsulta();
-        $processo = ViabilityRequest::factory()->create();
+        $processo = ViabilityRequest::factory()->create(['assigned_user_id' => $vistoriador->id]);
 
         $this->actingAs($vistoriador, 'gestao')->get("/gestao/processos/{$processo->id}/vistoria");
         $this->actingAs($vistoriador, 'gestao')

@@ -38,6 +38,7 @@ interface Ficha {
     opened_at: string | null;
     concluded_at: string | null;
     vistoriador: string | null;
+    vistoriador_id: number | null;
     cod_logradouro: string | null;
     logradouro: string | null;
     numero_metrico: string | null;
@@ -511,6 +512,23 @@ function VistoriaConteudo({
     const { auth } = usePage<SharedProps>().props;
     const podePreencher = auth.permissions.includes('preencher-ficha-vistoria');
     const editavel = !somenteLeitura && ficha.editavel;
+    const podeEncaminharAoSetor =
+        !somenteLeitura &&
+        ficha.status === 'concluida' &&
+        (ficha.vistoriador_id === auth.user?.id || auth.permissions.includes('distribuir-processos'));
+    const [encaminhando, setEncaminhando] = useState(false);
+
+    function encaminharAoSetor() {
+        router.post(
+            `/gestao/processos/${processo.id}/vistoria/encaminhar-ao-setor`,
+            {},
+            {
+                preserveScroll: true,
+                onStart: () => setEncaminhando(true),
+                onFinish: () => setEncaminhando(false),
+            },
+        );
+    }
 
     // Polígono: vértices de trabalho (visualização ou redesenho em andamento).
     const [vertices, setVertices] = useState<Vertice[]>(() => geojsonParaVertices(fichaInicial.polygon_geojson));
@@ -1640,6 +1658,11 @@ function VistoriaConteudo({
                         >
                             {editavel ? 'Cancelar' : 'Voltar'}
                         </Link>
+                        {podeEncaminharAoSetor && (
+                            <Button onClick={encaminharAoSetor} loading={encaminhando}>
+                                Encaminhar para a Caixa do Setor
+                            </Button>
+                        )}
                         {editavel && (
                             <>
                                 <Button variant="outline" onClick={salvarRascunho} loading={rascunho.processing}>

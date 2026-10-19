@@ -24,4 +24,9 @@ class EncaminharVistoriaException extends DomainException
 
         return new self("O processo #{$processo->id} está em \"{$atual}\" — o encaminhamento à vistoria só vale enquanto a análise ainda está aberta.");
     }
+
+    public static function vistoriaNaoConcluida(ViabilityRequest $processo): self
+    {
+        return new self("O processo #{$processo->id} só volta à Caixa do Setor depois que a ficha de vistoria é concluída.");
+    }
 }

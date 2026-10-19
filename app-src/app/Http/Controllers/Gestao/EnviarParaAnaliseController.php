@@ -115,7 +115,7 @@ class EnviarParaAnaliseController extends Controller
             'status' => $processo->status->label(),
             'requerente' => $processo->requester?->name,
             'ja_em_analise' => $processo->analysis_status !== null,
-            'situacao_analise' => $processo->analysis_status?->label(),
+            'situacao_analise' => $processo->rotuloStatusTramitacao(),
         ];
     }
 

@@ -42,7 +42,7 @@ class InspectionAccessTest extends TestCase
     {
         $vistoriador = $this->vistoriador();
         $processo = ViabilityRequest::factory()->create();
-        $processo->forceFill(['analysis_status' => AnalysisStatus::Vistoriar])->save();
+        $processo->forceFill(['analysis_status' => AnalysisStatus::Vistoriar, 'assigned_user_id' => $vistoriador->id])->save();
 
         $this->actingAs($vistoriador, 'gestao')->get("/gestao/processos/{$processo->id}/vistoria");
         $this->actingAs($vistoriador, 'gestao')
@@ -62,7 +62,7 @@ class InspectionAccessTest extends TestCase
     {
         $vistoriador = $this->vistoriador();
         $processo = ViabilityRequest::factory()->create();
-        $processo->forceFill(['analysis_status' => AnalysisStatus::EmAnalise])->save();
+        $processo->forceFill(['analysis_status' => AnalysisStatus::EmAnalise, 'assigned_user_id' => $vistoriador->id])->save();
 
         $this->actingAs($vistoriador, 'gestao')->get("/gestao/processos/{$processo->id}/vistoria");
         $this->actingAs($vistoriador, 'gestao')
@@ -70,6 +70,20 @@ class InspectionAccessTest extends TestCase
             ->assertOk();
 
         $this->assertSame(AnalysisStatus::EmAnalise, $processo->refresh()->analysis_status);
+    }
+
+    public function test_abrir_o_processo_sem_distribuicao_nao_atribui_nem_cria_ficha(): void
+    {
+        $vistoriador = $this->vistoriador();
+        $processo = ViabilityRequest::factory()->create();
+        $processo->forceFill(['analysis_status' => AnalysisStatus::Vistoriar])->save();
+
+        $this->actingAs($vistoriador, 'gestao')
+            ->get("/gestao/processos/{$processo->id}/vistoria")
+            ->assertForbidden();
+
+        $this->assertNull($processo->refresh()->assigned_user_id);
+        $this->assertSame(0, Inspection::query()->count());
     }
 
     public function test_abertura_com_processo_atribuido_a_outro_e_recusada(): void
@@ -107,6 +121,7 @@ class InspectionAccessTest extends TestCase
         $outro = $this->vistoriador();
 
         $processo = ViabilityRequest::factory()->create();
+        $processo->forceFill(['assigned_user_id' => $vistoriador->id])->save();
 
         $this->actingAs($vistoriador, 'gestao')->get("/gestao/processos/{$processo->id}/vistoria");
 
@@ -136,6 +151,7 @@ class InspectionAccessTest extends TestCase
         $outro = $this->vistoriador();
 
         $processo = ViabilityRequest::factory()->create();
+        $processo->forceFill(['assigned_user_id' => $vistoriador->id])->save();
 
         $this->actingAs($vistoriador, 'gestao')->get("/gestao/processos/{$processo->id}/vistoria");
 

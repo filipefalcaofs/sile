@@ -1,6 +1,7 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
+import JanelaDiasToggle from '@/components/app/janela-dias-toggle';
 import FieldError from '@/components/form/field-error';
 import Label from '@/components/form/label';
 import Select from '@/components/form/select';
@@ -708,27 +709,7 @@ export default function Dashboard({ kpis, acesso }: DashboardProps) {
                         </p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
-                        <div className="inline-flex items-center gap-0.5 rounded-[10px] border border-gray-200 bg-white p-0.5 dark:border-gray-800 dark:bg-gray-900">
-                            {operacao.janelas.map((dias) => {
-                                const ativo = dias === operacao.janela_dias;
-
-                                return (
-                                    <button
-                                        key={dias}
-                                        type="button"
-                                        aria-pressed={ativo}
-                                        onClick={() => selecionarJanela(dias)}
-                                        className={`rounded-lg px-3.5 py-2 text-sm font-medium transition ${
-                                            ativo
-                                                ? 'bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-brand-300'
-                                                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
-                                        }`}
-                                    >
-                                        {dias} dias
-                                    </button>
-                                );
-                            })}
-                        </div>
+                        <JanelaDiasToggle janelas={operacao.janelas} ativa={operacao.janela_dias} onSelecionar={selecionarJanela} />
                         <ExportMenu
                             url="/gestao/relatorios/indicadores"
                             params={{ data_de: operacao.data_de, data_ate: operacao.data_ate }}

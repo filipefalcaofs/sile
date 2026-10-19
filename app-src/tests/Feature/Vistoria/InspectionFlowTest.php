@@ -38,9 +38,13 @@ class InspectionFlowTest extends TestCase
         return User::factory()->analista()->withAcceptedLgpdTerm()->create();
     }
 
-    private function processo(): ViabilityRequest
+    /**
+     * O processo só abre a ficha para o vistoriador a quem foi distribuído.
+     */
+    private function processo(?User $vistoriador = null): ViabilityRequest
     {
         return ViabilityRequest::factory()->create([
+            'assigned_user_id' => $vistoriador?->id,
             'address_street' => 'RUA CABO ASTROGILDO SALDANHA',
             'address_number' => '135',
             'address_neighborhood' => 'ITAPUÃ',
@@ -70,7 +74,7 @@ class InspectionFlowTest extends TestCase
     public function test_abrir_ficha_cria_registro_com_identificacao_e_snapshot_da_localizacao(): void
     {
         $vistoriador = $this->vistoriador();
-        $processo = $this->processo();
+        $processo = $this->processo($vistoriador);
 
         $this->actingAs($vistoriador, 'gestao')
             ->get("/gestao/processos/{$processo->id}/vistoria")
@@ -104,7 +108,7 @@ class InspectionFlowTest extends TestCase
     public function test_reabrir_ficha_nao_duplica_registro(): void
     {
         $vistoriador = $this->vistoriador();
-        $processo = $this->processo();
+        $processo = $this->processo($vistoriador);
 
         $this->actingAs($vistoriador, 'gestao')->get("/gestao/processos/{$processo->id}/vistoria")->assertOk();
         $this->actingAs($vistoriador, 'gestao')->get("/gestao/processos/{$processo->id}/vistoria")->assertOk();
@@ -115,7 +119,7 @@ class InspectionFlowTest extends TestCase
     public function test_salvar_rascunho_persiste_campos_das_secoes(): void
     {
         $vistoriador = $this->vistoriador();
-        $processo = $this->processo();
+        $processo = $this->processo($vistoriador);
 
         $this->actingAs($vistoriador, 'gestao')->get("/gestao/processos/{$processo->id}/vistoria");
 
@@ -173,7 +177,7 @@ class InspectionFlowTest extends TestCase
     public function test_rascunho_recusa_valores_fora_do_dominio(): void
     {
         $vistoriador = $this->vistoriador();
-        $processo = $this->processo();
+        $processo = $this->processo($vistoriador);
 
         $this->actingAs($vistoriador, 'gestao')->get("/gestao/processos/{$processo->id}/vistoria");
 
@@ -189,7 +193,7 @@ class InspectionFlowTest extends TestCase
     public function test_concluir_sem_parecer_e_recusado(): void
     {
         $vistoriador = $this->vistoriador();
-        $processo = $this->processo();
+        $processo = $this->processo($vistoriador);
 
         $this->actingAs($vistoriador, 'gestao')->get("/gestao/processos/{$processo->id}/vistoria");
 
@@ -207,7 +211,7 @@ class InspectionFlowTest extends TestCase
     public function test_concluir_com_parecer_finaliza_a_ficha(): void
     {
         $vistoriador = $this->vistoriador();
-        $processo = $this->processo();
+        $processo = $this->processo($vistoriador);
 
         $this->actingAs($vistoriador, 'gestao')->get("/gestao/processos/{$processo->id}/vistoria");
 
@@ -232,7 +236,7 @@ class InspectionFlowTest extends TestCase
     public function test_ficha_concluida_e_imutavel(): void
     {
         $vistoriador = $this->vistoriador();
-        $processo = $this->processo();
+        $processo = $this->processo($vistoriador);
 
         $this->actingAs($vistoriador, 'gestao')->get("/gestao/processos/{$processo->id}/vistoria");
         $this->actingAs($vistoriador, 'gestao')
@@ -249,7 +253,7 @@ class InspectionFlowTest extends TestCase
     public function test_validar_poligono_persiste_novo_desenho_com_area_e_data(): void
     {
         $vistoriador = $this->vistoriador();
-        $processo = $this->processo();
+        $processo = $this->processo($vistoriador);
 
         $this->actingAs($vistoriador, 'gestao')->get("/gestao/processos/{$processo->id}/vistoria");
 
@@ -271,7 +275,7 @@ class InspectionFlowTest extends TestCase
     public function test_poligono_invalido_e_recusado(): void
     {
         $vistoriador = $this->vistoriador();
-        $processo = $this->processo();
+        $processo = $this->processo($vistoriador);
 
         $this->actingAs($vistoriador, 'gestao')->get("/gestao/processos/{$processo->id}/vistoria");
 
@@ -291,7 +295,7 @@ class InspectionFlowTest extends TestCase
         Storage::fake('local');
 
         $vistoriador = $this->vistoriador();
-        $processo = $this->processo();
+        $processo = $this->processo($vistoriador);
 
         $this->actingAs($vistoriador, 'gestao')->get("/gestao/processos/{$processo->id}/vistoria");
 
@@ -314,7 +318,7 @@ class InspectionFlowTest extends TestCase
         Storage::fake('local');
 
         $vistoriador = $this->vistoriador();
-        $processo = $this->processo();
+        $processo = $this->processo($vistoriador);
 
         $this->actingAs($vistoriador, 'gestao')->get("/gestao/processos/{$processo->id}/vistoria");
         $this->actingAs($vistoriador, 'gestao')
@@ -337,7 +341,7 @@ class InspectionFlowTest extends TestCase
         Storage::fake('local');
 
         $vistoriador = $this->vistoriador();
-        $processo = $this->processo();
+        $processo = $this->processo($vistoriador);
         $outroProcesso = ViabilityRequest::factory()->create();
 
         $this->actingAs($vistoriador, 'gestao')->get("/gestao/processos/{$processo->id}/vistoria");
@@ -370,7 +374,7 @@ class InspectionFlowTest extends TestCase
     public function test_abertura_rascunho_e_conclusao_sao_auditados(): void
     {
         $vistoriador = $this->vistoriador();
-        $processo = $this->processo();
+        $processo = $this->processo($vistoriador);
 
         $this->actingAs($vistoriador, 'gestao')->get("/gestao/processos/{$processo->id}/vistoria");
         $this->actingAs($vistoriador, 'gestao')

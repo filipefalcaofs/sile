@@ -2,6 +2,7 @@
 
 namespace App\Services\Analise;
 
+use App\Enums\AnalysisStatus;
 use App\Enums\DecisionOutcome;
 use App\Enums\ViabilityRequestStatus;
 use App\Events\ResultadoEmitido;
@@ -40,6 +41,7 @@ class IndeferirPorPrazoConviteService
         private ViabilityRequestStateMachine $stateMachine,
         private AuditService $audit,
         private DecisionTextCatalog $textos,
+        private AnalysisStatusStateMachine $analysisStatus,
     ) {}
 
     /**
@@ -79,6 +81,14 @@ class IndeferirPorPrazoConviteService
                 null,
                 reason: $reason,
                 publicLabel: ViabilityRequestStatus::Indeferida->publicLabel(),
+            );
+
+            $this->analysisStatus->transition(
+                $request,
+                AnalysisStatus::ConviteExpirado,
+                null,
+                'Prazo do convite expirado sem resposta do requerente.',
+                force: ! $this->analysisStatus->canTransition($request->analysis_status, AnalysisStatus::ConviteExpirado),
             );
 
             $this->audit->log(

@@ -123,6 +123,9 @@ class AnalysisRecordController extends Controller
                 'status_label' => $viabilityRequest->status->label(),
                 'renovacao' => $viabilityRequest->isRenewal(),
                 'tvl_numero' => $viabilityRequest->renews?->decision?->tvl_product_number,
+                'bap' => $viabilityRequest->external_reference,
+                'servicos' => $this->servicosDoProcesso($viabilityRequest),
+                'empresa' => $viabilityRequest->company?->trade_name ?: $viabilityRequest->company?->legal_name,
             ],
             'localizacao' => $this->localizacaoDoImovel($viabilityRequest, $cadastro),
             'dadosTvl' => $this->dadosTvl($viabilityRequest, $record),
@@ -211,7 +214,7 @@ class AnalysisRecordController extends Controller
         $record = $this->records->current($viabilityRequest);
 
         try {
-            $record = $this->records->autosave($record, $request->validated());
+            $record = $this->records->autosave($record, $request->validated(), $request->user());
         } catch (AnalysisRecordImutavelException $e) {
             throw ValidationException::withMessages(['ficha' => $e->getMessage()]);
         }
@@ -530,6 +533,7 @@ class AnalysisRecordController extends Controller
             'is_public_area' => $request->is_public_area,
             'categoria_uso_lote' => $this->textoOuNulo($request->semap_use_category),
             'padrao_construtivo_lote' => $this->textoOuNulo($request->semap_construction_standard),
+            'tipo_imovel' => $this->textoOuNulo($request->tipo_imovel),
             'camadas' => $this->camadasComZonaEVia($request->camadas_incidentes, $zona, $via, $request->zona_fonte?->value),
         ];
     }
@@ -588,6 +592,22 @@ class AnalysisRecordController extends Controller
         return $informado;
     }
 
+    /**
+     * Serviço do processo: os eventos que a JUCEB enviou; sem eles, o tipo interno.
+     *
+     * @return list<string>
+     */
+    private function servicosDoProcesso(ViabilityRequest $request): array
+    {
+        $request->loadMissing(['eventos', 'serviceType:id,name', 'company']);
+
+        if ($request->eventos->isNotEmpty()) {
+            return $request->eventos->pluck('nome')->values()->all();
+        }
+
+        return array_values(array_filter([$request->serviceType?->name]));
+    }
+
     private function textoOuNulo(mixed $valor): ?string
     {
         if (! is_string($valor) && ! is_numeric($valor)) {
@@ -606,7 +626,7 @@ class AnalysisRecordController extends Controller
      * usabilidade SEDUR 19/09/2026, item 23). Sem versão vigente, devolve
      * vazio e a ficha mostra a pendência — nunca inventa opção.
      *
-     * @return array<string, list<array{codigo_louos: string, denominacao_louos: string|null, codigo_tll: string|null, especificacao_tll: string|null, valor_tll: string|null}>>
+     * @return array<string, list<array{codigo_louos: string, denominacao_louos: string|null, codigo_tll: string|null, especificacao_tll: string|null, valor_tll: string|null, risco_nivel: string|null, risco_label: string|null, fluxo: string}>>
      */
     private function enquadramentoOpcoes(AnalysisRecord $record): array
     {
@@ -632,7 +652,10 @@ class AnalysisRecordController extends Controller
 
         $linhas = TratamentoEnquadramento::query()
             ->where('rule_version_id', $versao->getKey())
-            ->get(['cnae', 'codigo_louos', 'denominacao_louos', 'codigo_tll', 'especificacao_tll']);
+            ->get(['cnae', 'codigo_louos', 'denominacao_louos', 'codigo_tll', 'especificacao_tll', 'risco']);
+
+        /** @var array<string, string> $mapaEncaminhamento */
+        $mapaEncaminhamento = Settings::get('risco.mapa_encaminhamento', []);
 
         $opcoes = [];
 
@@ -648,7 +671,7 @@ class AnalysisRecordController extends Controller
                     'codigo_tll' => $linha->codigo_tll,
                     'especificacao_tll' => $linha->especificacao_tll,
                     'valor_tll' => $this->valorTllVigente($linha->codigo_tll, $linha->especificacao_tll, $exercicio, $exercicioVigente),
-                ])
+                ] + $this->riscoDoEnquadramento((string) $linha->risco, $mapaEncaminhamento))
                 ->values()
                 ->all();
 
@@ -657,6 +680,35 @@ class AnalysisRecordController extends Controller
         }
 
         return $opcoes;
+    }
+
+    /**
+     * Risco da atividade no enquadramento (linha da planilha) e o encaminhamento
+     * que o mapa de risco dá a ele. CNLU não é nível de risco: não classifica e
+     * segue para análise.
+     *
+     * @param  array<string, string>  $mapaEncaminhamento
+     * @return array{risco_nivel: string|null, risco_label: string|null, fluxo: string}
+     */
+    private function riscoDoEnquadramento(string $risco, array $mapaEncaminhamento): array
+    {
+        $texto = mb_strtolower($risco);
+
+        if ($texto === '' || str_contains($texto, 'cnlu')) {
+            return ['risco_nivel' => null, 'risco_label' => null, 'fluxo' => 'analise'];
+        }
+
+        [$nivel, $label, $chaveDoMapa] = match (true) {
+            str_contains($texto, 'alto') => ['alto', 'Alto Risco', 'alto'],
+            str_contains($texto, 'médio'), str_contains($texto, 'medio') => ['medio', 'Médio Risco', 'baixo_b'],
+            default => ['baixo', 'Baixo Risco', 'baixo_a'],
+        };
+
+        return [
+            'risco_nivel' => $nivel,
+            'risco_label' => $label,
+            'fluxo' => ($mapaEncaminhamento[$chaveDoMapa] ?? 'analise') === 'expresso' ? 'expresso' : 'analise',
+        ];
     }
 
     /**

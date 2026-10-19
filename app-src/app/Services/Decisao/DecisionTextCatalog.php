@@ -157,9 +157,10 @@ final class DecisionTextCatalog
             'justificativa.conclusao.permitido_com_condicoes' => 'Diante do enquadramento acima, manifesta-se pelo deferimento desta atividade na zona :zona, condicionado ao cumprimento das exigências urbanísticas incidentes.',
             'justificativa.conclusao.nao_permitido' => 'Diante do enquadramento acima, manifesta-se pelo indeferimento desta atividade, por ser o uso proibido na zona :zona segundo o Quadro 10 da LOUOS.',
             'justificativa.conclusao.nao_permitido_via' => 'Diante do enquadramento acima, manifesta-se pelo indeferimento desta atividade, por ser o uso vedado na classe viária :classe_via pelo Quadro 11-A da LOUOS.',
+            'justificativa.indeferimento.inscricao_inativa' => 'Processo indeferido em razão de pendência na inscrição imobiliária junto à SEFAZ Municipal.',
             'justificativa.indeferimento.sem_bap' => 'Indeferido sem atuação: o prazo de atuação na Junta Comercial (BAP) venceu sem que o requerente concluísse o registro, e a solicitação não pôde prosseguir.',
             'justificativa.indeferimento.pergunta_sem_resposta' => 'Indeferido: o requerimento recebido não trouxe a resposta da pergunta :numero (":enunciado") da planilha de tratamento, necessária ao enquadramento da atividade :cnae.',
-            'justificativa.indeferimento.convite_expirado' => 'Indeferido por prazo do convite expirado sem resposta do requerente: os esclarecimentos solicitados pela análise técnica não foram apresentados no prazo.',
+            'justificativa.indeferimento.convite_expirado' => 'Processo indeferido pelo não atendimento ao convite no prazo estabelecido em consonância com Lei Federal nº 11.598/2007 e Resolução CGSIM nº 61/2020. Recomenda-se a abertura de novo processo contendo toda a documentação solicitada.',
             'justificativa.conclusao.padrao' => 'Não há elementos suficientes para deferir ou indeferir. Encaminha-se a atividade à análise técnica, sem sugerir desfecho locacional.',
 
             // Explicabilidade da decisão (DecisionExplanationService) — títulos.
@@ -214,6 +215,7 @@ final class DecisionTextCatalog
 
             // Fluxo expresso — motivos do encaminhamento à análise técnica,
             // registrados na transição e na queda do processo.
+            'expresso.motivo.abrigada_fora_do_anexo_b' => 'empresa abrigada em escritório virtual com atividade fora do Anexo B (:cnaes) — encaminhado para análise',
             'expresso.motivo.desativado' => 'fluxo expresso desativado',
             'expresso.motivo.alto_risco' => 'atividade de alto risco — análise técnica',
             'expresso.motivo.fora_do_expresso' => 'atividade fora do fluxo expresso (análise técnica)',

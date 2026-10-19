@@ -10,6 +10,7 @@ use App\Models\AnalysisRecord;
 use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
+use App\Services\Analise\AnaliseTecnicaDecisionService;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Event;
@@ -81,6 +82,24 @@ class ConclusaoAnaliseTest extends TestCase
         Event::assertDispatched(ResultadoEmitido::class);
     }
 
+    public function test_decidir_pela_ficha_leva_o_status_para_analise_concluida_com_o_resultado(): void
+    {
+        Event::fake([ResultadoEmitido::class]);
+
+        $processo = $this->processoComFicha([
+            ['cnae' => '4712100', 'status_escolhido' => 'indeferida'],
+        ]);
+        $processo->forceFill(['analysis_status' => AnalysisStatus::EmAnalise])->save();
+        $ficha = AnalysisRecord::query()->where('viability_request_id', $processo->id)->sole();
+
+        app(AnaliseTecnicaDecisionService::class)
+            ->decide($ficha, $this->analista(), null, 'Atividade não permitida na zona.');
+
+        $processo->refresh();
+        $this->assertSame(AnalysisStatus::AnaliseConcluida, $processo->analysis_status);
+        $this->assertSame('Análise concluída – Indeferido', $processo->rotuloStatusTramitacao());
+    }
+
     public function test_deferido_recusa_quando_ha_atividade_indeferida(): void
     {
         Event::fake([ResultadoEmitido::class]);
@@ -131,6 +150,11 @@ class ConclusaoAnaliseTest extends TestCase
                 'status' => ViabilityRequestStatus::EmAnalise,
                 'analysis_status' => AnalysisStatus::EmAnalise,
             ])->save();
+            AnalysisRecord::factory()->create([
+                'viability_request_id' => $processo->id,
+                'revision' => 1,
+                'analyst_user_id' => User::factory()->create()->id,
+            ]);
 
             $this->actingAs($this->analista(), 'gestao')
                 ->post("/gestao/processos/{$processo->id}/conclusao-analise", [

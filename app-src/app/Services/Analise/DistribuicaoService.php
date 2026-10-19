@@ -41,7 +41,7 @@ class DistribuicaoService
     {
         $ator ??= $analista;
 
-        $this->atribuir($request, $analista, $ator, 'distribuir', "Processo distribuído a {$analista->name}", $this->distribuiEmQualquerSetor($ator), $setorEscolhido);
+        $this->atribuir($request, $analista, $ator, 'distribuir', "Processo distribuído a {$analista->name}", $this->distribuiEmQualquerSetorPara($ator, $request), $setorEscolhido);
     }
 
     /**
@@ -162,6 +162,20 @@ class DistribuicaoService
     }
 
     /**
+     * Para conclusão não fica preso ao setor: quem distribui entrega a qualquer
+     * analista, e o processo passa para o setor dele. Nos demais casos vale a
+     * regra do setor, salvo para quem distribui em qualquer setor.
+     */
+    public function distribuiEmQualquerSetorPara(User $ator, ViabilityRequest $request): bool
+    {
+        if ($this->distribuiEmQualquerSetor($ator)) {
+            return true;
+        }
+
+        return $request->analysis_status === AnalysisStatus::ParaConclusao && $ator->can('distribuir-processos');
+    }
+
+    /**
      * Setor em que o processo fica depois da atribuição. Na regra do setor, é o
      * setor do processo, e o analista precisa estar nele. Em qualquer setor, o
      * processo passa para o setor do analista: o escolhido, o do processo se o
@@ -268,21 +282,15 @@ class DistribuicaoService
     }
 
     /**
-     * Processo no eixo de vistoria (Vistoriar/Vistoriado) só pode ser atribuído
-     * a vistoriador (preencher-ficha-vistoria) — a distribuição/assunção é
-     * específica nesse fluxo: quem recebe é quem abre e preenche a ficha.
+     * Processo a vistoriar só pode ser atribuído a vistoriador
+     * (preencher-ficha-vistoria): quem recebe é quem abre e preenche a ficha.
+     * Depois de vistoriado, o processo volta à análise e vai a analista.
      * Redistribuição em vistoria já é bloqueada pelo enum
      * (permiteRedistribuicao), então a regra vive no caminho de atribuição.
      */
     private function garantirVistoriadorEmVistoria(ViabilityRequest $request, User $analista): void
     {
-        $emVistoria = in_array(
-            $request->analysis_status,
-            [AnalysisStatus::Vistoriar, AnalysisStatus::Vistoriado],
-            true,
-        );
-
-        if ($emVistoria && ! $analista->can('preencher-ficha-vistoria')) {
+        if ($request->analysis_status === AnalysisStatus::Vistoriar && ! $analista->can('preencher-ficha-vistoria')) {
             throw DistribuicaoException::alvoSemPermissaoDeVistoria($analista, $request);
         }
     }

@@ -2,6 +2,7 @@
 
 namespace App\Services\Analise;
 
+use App\Enums\AnalysisStatus;
 use App\Enums\DecisionOutcome;
 use App\Enums\ResultadoViabilidade;
 use App\Enums\TvlKind;
@@ -52,6 +53,7 @@ class AnaliseTecnicaDecisionService
         private DecisionTraceBuilder $traceBuilder,
         private SedeEscritorioVirtualGatilho $sedeGatilho,
         private AbrigadoResolver $abrigadoResolver,
+        private AnalysisStatusStateMachine $analysisStatus,
     ) {}
 
     /**
@@ -117,8 +119,8 @@ class AnaliseTecnicaDecisionService
             : $this->parecerDoDeferimento($parecer);
 
         try {
-            $decision = DB::transaction(
-                fn (): ViabilityDecision => $this->registrarDecisao(
+            $decision = DB::transaction(function () use ($request, $record, $analista, $perCnae, $outcome, $justificativa, $tvlKind, $tvlValidUntil): ViabilityDecision {
+                $decision = $this->registrarDecisao(
                     $request,
                     $record,
                     $analista,
@@ -127,8 +129,12 @@ class AnaliseTecnicaDecisionService
                     $justificativa,
                     $tvlKind,
                     $tvlValidUntil,
-                ),
-            );
+                );
+
+                $this->fecharEixo($request->fresh() ?? $request, $analista, $outcome);
+
+                return $decision;
+            });
         } catch (QueryException $e) {
             // Robustez idempotente (mesma defesa da Fase 9): se uma corrida rara
             // escapar, a unique(viability_request_id) barra a 2ª decisão — recarrega
@@ -148,6 +154,25 @@ class AnaliseTecnicaDecisionService
         ResultadoEmitido::dispatch($request, $decision);
 
         return new AnaliseDecisionResult($outcome, $decision, emitted: true);
+    }
+
+    /**
+     * Decidido o processo, o status de tramitação passa a "Análise concluída"
+     * (com o resultado, no rótulo), por qualquer caminho de decisão da análise.
+     */
+    private function fecharEixo(ViabilityRequest $request, User $analista, DecisionOutcome $outcome): void
+    {
+        if ($request->analysis_status === AnalysisStatus::AnaliseConcluida) {
+            return;
+        }
+
+        $this->analysisStatus->transition(
+            $request,
+            AnalysisStatus::AnaliseConcluida,
+            $analista,
+            'Análise concluída: '.$outcome->label().'.',
+            force: ! $this->analysisStatus->canTransition($request->analysis_status, AnalysisStatus::AnaliseConcluida),
+        );
     }
 
     /**

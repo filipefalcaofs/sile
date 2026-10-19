@@ -8,6 +8,7 @@ use App\Enums\ViabilityRequestStatus;
 use App\Events\ResultadoEmitido;
 use App\Listeners\ComunicarResultadoRegin;
 use App\Models\Activity;
+use App\Models\AnalysisRecord;
 use App\Models\Parameter;
 use App\Models\User;
 use App\Models\ViabilityDecision;
@@ -130,6 +131,11 @@ class ParecerImediatoReginTest extends TestCase
         foreach (['desativado', 'cassado', 'revogado'] as $indice => $resultado) {
             $protocolo = 'BAP20'.$indice;
             $processo = $this->processoReginEmAnalise($protocolo);
+            AnalysisRecord::factory()->create([
+                'viability_request_id' => $processo->id,
+                'revision' => 1,
+                'analyst_user_id' => $analista->id,
+            ]);
 
             $this->actingAs($analista, 'gestao')
                 ->post("/gestao/processos/{$processo->id}/conclusao-analise", ['resultado' => $resultado])

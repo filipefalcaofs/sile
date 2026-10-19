@@ -30,7 +30,6 @@ class InspectionService
     public function __construct(
         private PropertyGeometryWriter $geometry,
         private AnalysisStatusStateMachine $statusMachine,
-        private EncaminharVistoriaService $encaminhamento,
         private AuditService $audit,
     ) {}
 
@@ -48,31 +47,12 @@ class InspectionService
             ->first();
 
         if ($existente !== null) {
-            return $existente;
+            return $existente->status === InspectionStatus::EmPreenchimento
+                ? $this->completarLocalizacao($existente, $processo)
+                : $existente;
         }
 
         $this->garantirPodeAssumir($processo, $vistoriador);
-
-        // Self-service coerente: abrir a ficha de um processo SEM responsável
-        // atribui o processo a quem abriu — ele sai de "Para distribuir" na
-        // caixa do setor de vistoria e a autoria fica registrada (RN-002).
-        if ($processo->assigned_user_id === null) {
-            $processo->forceFill([
-                'assigned_user_id' => $vistoriador->id,
-                'assigned_at' => now(),
-            ])->save();
-
-            $this->audit->log(
-                logName: 'vistoria',
-                event: 'vistoria-assumir',
-                description: "Vistoriador assumiu o processo #{$processo->id} ao abrir a ficha de vistoria",
-                properties: [
-                    'viability_request_id' => $processo->id,
-                    'vistoriador_user_id' => $vistoriador->id,
-                ],
-                subject: $processo,
-            );
-        }
 
         $snapshot = is_array($processo->simulation_snapshot) ? $processo->simulation_snapshot : [];
 
@@ -83,18 +63,77 @@ class InspectionService
             'status' => InspectionStatus::EmPreenchimento,
             'vistoriador_user_id' => $vistoriador->id,
             'opened_at' => now(),
-            'logradouro' => $processo->address_street,
+            'cod_logradouro' => $this->texto($processo->cod_log),
+            'logradouro' => $this->logradouroComTipo($processo),
             'numero_metrico' => $processo->address_number,
             'bairro' => $processo->address_neighborhood,
             'cep' => $processo->address_zip,
             'ponto_referencia' => $processo->address_reference,
             'zona' => $processo->zona_codigo ?? data_get($snapshot, 'zona'),
-            'via' => data_get($snapshot, 'via'),
+            'via' => $this->viaDoProcesso($processo),
             'polygon_geojson' => $processo->property_polygon_geojson,
         ]);
         $ficha->save();
 
         return $ficha;
+    }
+
+    /**
+     * Ficha ainda em preenchimento aberta antes de CodLog, Via e tipo do
+     * logradouro entrarem no snapshot: completa só o que está em branco. A
+     * ficha concluída não é tocada.
+     */
+    private function completarLocalizacao(Inspection $ficha, ViabilityRequest $processo): Inspection
+    {
+        $logradouro = $this->logradouroComTipo($processo);
+
+        $ficha->cod_logradouro ??= $this->texto($processo->cod_log);
+        $ficha->via ??= $this->viaDoProcesso($processo);
+
+        if ($logradouro !== null && $ficha->logradouro === $processo->address_street) {
+            $ficha->logradouro = $logradouro;
+        }
+
+        if ($ficha->isDirty()) {
+            $ficha->save();
+        }
+
+        return $ficha;
+    }
+
+    /**
+     * Logradouro com o tipo declarado (rua, avenida, travessa...), sem repeti-lo
+     * quando o nome já começa por ele.
+     */
+    private function logradouroComTipo(ViabilityRequest $processo): ?string
+    {
+        $rua = $this->texto($processo->address_street);
+        $declarado = is_array($processo->origem_declarada) ? $processo->origem_declarada : [];
+        $tipo = $this->texto($declarado['tipo_logradouro'] ?? null);
+
+        if ($rua === null || $tipo === null || str_starts_with(mb_strtolower($rua), mb_strtolower($tipo))) {
+            return $rua;
+        }
+
+        return $tipo.' '.$rua;
+    }
+
+    private function viaDoProcesso(ViabilityRequest $processo): ?string
+    {
+        $snapshot = is_array($processo->simulation_snapshot) ? $processo->simulation_snapshot : [];
+
+        return $this->texto(data_get($snapshot, 'via')) ?? $this->texto(data_get($processo->camadas_incidentes, 'via'));
+    }
+
+    private function texto(mixed $valor): ?string
+    {
+        if (! is_string($valor) && ! is_numeric($valor)) {
+            return null;
+        }
+
+        $texto = trim((string) $valor);
+
+        return $texto === '' ? null : $texto;
     }
 
     /**
@@ -139,8 +178,8 @@ class InspectionService
     /**
      * Conclui a ficha: grava os dados finais (o parecer obrigatório é exigido
      * pelo Form Request) e sela status/concluded_at. Imutável a partir daí.
-     * Processo em Vistoriar transiciona para Vistoriado (retorno ao analista
-     * é a transição manual Vistoriado → EmAnalise, já existente).
+     * Processo em Vistoriar transiciona para Vistoriado e fica com o vistoriador
+     * até ele encaminhá-lo à Caixa do Setor (EncaminharVistoriaService).
      *
      * @param  array<string, mixed>  $dados
      */
@@ -165,11 +204,6 @@ class InspectionService
                 $ator,
                 'Ficha de vistoria concluída.',
             );
-
-            // Retorno automático: com referral registrado, o processo volta ao
-            // setor e ao analista de origem (Vistoriado → EmAnalise). Sem
-            // referral (vistoria manual), permanece Vistoriado — retorno manual.
-            $this->encaminhamento->devolverAoAnalista($processo->refresh(), $ator);
         }
 
         return $ficha;
@@ -196,7 +230,13 @@ class InspectionService
     {
         $responsavel = $processo->assigned_user_id;
 
-        if ($responsavel !== null && $responsavel !== $vistoriador->id) {
+        if ($responsavel === null) {
+            throw new InspectionAtribuidaException(
+                'O processo ainda não foi distribuído a um vistoriador. A atribuição é feita pela distribuição, na Caixa de vistoria.'
+            );
+        }
+
+        if ($responsavel !== $vistoriador->id) {
             throw new InspectionAtribuidaException(
                 'O processo está atribuído a outro responsável. A ficha de vistoria só pode ser aberta por ele.'
             );

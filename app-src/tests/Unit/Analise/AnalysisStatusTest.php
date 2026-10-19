@@ -33,7 +33,7 @@ class AnalysisStatusTest extends TestCase
     public function test_proximas_lista_transicoes_manuais(): void
     {
         $this->assertSame(
-            ['para_conclusao', 'analise_concluida', 'em_convite', 'vistoriar'],
+            ['para_conclusao', 'analise_concluida', 'em_convite', 'vistoriar', 'encaminhado'],
             array_map(fn (AnalysisStatus $s) => $s->value, AnalysisStatus::EmAnalise->proximas()),
         );
         $this->assertSame([], AnalysisStatus::AnaliseConcluida->proximas());

@@ -31,7 +31,20 @@ final readonly class LocalizacaoInscricao
         public ?string $logradouroTributario = null,
         public ?PropertyLocationSource $origemPonto = null,
         public ?GeocodeResult $geocode = null,
+        public ?string $situacaoCadastral = null,
     ) {}
+
+    /**
+     * Situação cadastral no Cadastro Imobiliário: "0" é inscrição ativa. Outro
+     * valor informado é inscrição com pendência. Sem consulta ou sem o dado,
+     * não há como afirmar que não está ativa — devolve false.
+     */
+    public function inscricaoInativa(): bool
+    {
+        $situacao = trim((string) $this->situacaoCadastral);
+
+        return $situacao !== '' && $situacao !== '0';
+    }
 
     public function temPonto(): bool
     {

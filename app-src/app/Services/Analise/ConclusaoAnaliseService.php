@@ -2,6 +2,7 @@
 
 namespace App\Services\Analise;
 
+use App\Enums\AnalysisRecordStatus;
 use App\Enums\AnalysisStatus;
 use App\Enums\ConclusionOutcome;
 use App\Enums\SefazNotificationEvent;
@@ -33,6 +34,7 @@ class ConclusaoAnaliseService
 {
     public function __construct(
         private AnaliseTecnicaDecisionService $decisao,
+        private AnalysisRecordService $fichas,
         private ViabilityRequestStateMachine $stateMachine,
         private AnalysisStatusStateMachine $analysisStatus,
         private DesvincularInscricaoService $desvincular,
@@ -40,7 +42,7 @@ class ConclusaoAnaliseService
         private ComunicarResultadoRegin $regin,
     ) {}
 
-    public function concluir(ViabilityRequest $request, User $ator, ConclusionOutcome $resultado, ?string $parecer = null): void
+    public function concluir(ViabilityRequest $request, User $ator, ConclusionOutcome $resultado, ?string $parecer = null, bool $exigirFichaSalva = false): void
     {
         $parecer = $this->parecer($parecer);
         $motivo = $this->motivo($resultado, $parecer);
@@ -49,6 +51,10 @@ class ConclusaoAnaliseService
             throw new DomainException(
                 'Processo já deferido não pode ser indeferido. A conclusão usa Desativado, Cassado ou Revogado.',
             );
+        }
+
+        if ($exigirFichaSalva && $request->status === ViabilityRequestStatus::EmAnalise) {
+            $this->exigirFichaSalva($request);
         }
 
         if ($request->status !== $resultado->status()) {
@@ -74,7 +80,29 @@ class ConclusaoAnaliseService
             throw new DomainException('A ficha de análise ainda não foi criada para este processo.');
         }
 
+        // A ficha salva e ainda em rascunho é finalizada aqui, ficando só para consulta.
+        if (! $record->isFinalizada()) {
+            $record = $this->fichas->finalizar($record, $ator);
+        }
+
         $this->decisao->decide($record, $ator, $resultado->decisionOutcome(), $parecer);
+    }
+
+    /**
+     * A conclusão de um processo em análise exige, no mínimo, uma ficha salva
+     * pelo analista (a revisão que só nasceu pré-analisada pelo motor não conta).
+     */
+    private function exigirFichaSalva(ViabilityRequest $request): void
+    {
+        $salva = $request->analysisRecords()
+            ->where(fn ($ficha) => $ficha
+                ->whereNotNull('analyst_user_id')
+                ->orWhere('status', AnalysisRecordStatus::Finalizada->value))
+            ->exists();
+
+        if (! $salva) {
+            throw new DomainException('Salve ao menos uma ficha de análise antes de concluir o processo.');
+        }
     }
 
     private function aplicarEncerramento(

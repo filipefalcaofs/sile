@@ -3,6 +3,7 @@
 namespace App\Services\Analise;
 
 use App\Enums\AnalysisPendencyStatus;
+use App\Enums\AnalysisStatus;
 use App\Enums\ViabilityRequestStatus;
 use App\Events\PendenciaRespondida;
 use App\Events\PendenciaSolicitada;
@@ -44,7 +45,28 @@ class PendenciaService
         private ViabilityRequestStateMachine $stateMachine,
         private AuditService $audit,
         private BusinessDeadlineCalculator $prazos,
+        private AnalysisStatusStateMachine $analysisStatus,
     ) {}
+
+    /**
+     * Leva o status de tramitação ao estado do convite. Se o processo ainda não
+     * estava no estado de origem esperado (eixo não iniciado, por exemplo), o
+     * salto é forçado e fica registrado na linha do tempo.
+     */
+    private function moverEixo(ViabilityRequest $request, AnalysisStatus $para, ?User $ator, string $motivo): void
+    {
+        if ($request->analysis_status === $para) {
+            return;
+        }
+
+        $this->analysisStatus->transition(
+            $request,
+            $para,
+            $ator,
+            $motivo,
+            force: ! $this->analysisStatus->canTransition($request->analysis_status, $para),
+        );
+    }
 
     /**
      * Abre uma pendência e move o processo para em_pendencia. Exige em_analise;
@@ -81,6 +103,8 @@ class PendenciaService
                 reason: 'Convite aberto pela análise técnica',
                 publicLabel: ViabilityRequestStatus::EmPendencia->publicLabel(),
             );
+
+            $this->moverEixo($request, AnalysisStatus::EmConvite, $analista, 'Convite aberto pela análise técnica.');
 
             $this->audit->log(
                 'analise',
@@ -136,6 +160,8 @@ class PendenciaService
                 publicLabel: ViabilityRequestStatus::EmAnalise->publicLabel(),
             );
 
+            $this->moverEixo($request, AnalysisStatus::ConviteRespondido, null, 'Convite respondido pelo requerente.');
+
             $this->audit->log(
                 'analise',
                 'pendencia-respondida',
@@ -185,6 +211,8 @@ class PendenciaService
                 reason: 'Convite cancelado pela análise técnica: '.$parecer,
                 publicLabel: ViabilityRequestStatus::EmAnalise->publicLabel(),
             );
+
+            $this->moverEixo($request, AnalysisStatus::ConviteCancelado, $analista, 'Convite cancelado pela análise técnica.');
 
             $this->audit->log(
                 'analise',
