@@ -55,6 +55,13 @@ return [
         // Lote por inscrição no ArcGIS municipal (camada SEMAP — Inscrições
         // Geo), fallback do endereçamento. Desligado, a zona segue pelo ponto.
         'arcgis_semap' => true,
+        // Edificações complementares como polígono do lote quando a Prefeitura
+        // não acha o lote: Overture, Microsoft e IA sobre a ortofoto. Ligadas
+        // pelo painel de integrações depois da primeira importação.
+        'edificacoes_overture' => false,
+        'edificacoes_microsoft' => false,
+        'edificacoes_ia' => false,
+        'edificacoes_importacao_agendada' => false,
         // Ingestão do benchmark federal de tempo de viabilidade (microdados da
         // REDESIM). Desligada, as telas de benchmark mostram a lacuna com o
         // motivo — nenhum número é estimado no lugar.
