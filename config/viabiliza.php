@@ -124,6 +124,12 @@ return [
         // Faixa de área (m²) aceita na importação.
         'area_min_m2' => 10,
         'area_max_m2' => 20000,
+        // Retângulo de Salvador com as ilhas [oeste, sul, leste, norte]: corte
+        // grosso dos downloads; o recorte fino é pelo limite oficial.
+        'bbox' => [-38.70, -13.02, -38.29, -12.73],
+        'microsoft' => [
+            'dataset_links_url' => 'https://minedbuildings.z5.web.core.windows.net/global-buildings/dataset-links.csv',
+        ],
     ],
     'retencao' => [
         'access_logs' => ['dias' => 365],

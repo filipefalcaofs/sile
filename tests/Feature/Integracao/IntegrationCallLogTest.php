@@ -112,6 +112,17 @@ class IntegrationCallLogTest extends TestCase
         $this->assertSame($binario, Http::get('https://x.exemplo.test/a.png')->body());
     }
 
+    public function test_resposta_binaria_grava_marcador_em_vez_do_corpo(): void
+    {
+        $binario = "\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\x03\xab";
+
+        Http::fake(['https://x.exemplo.test/*' => Http::response($binario, 200, ['Content-Type' => 'application/octet-stream'])]);
+
+        Http::get('https://x.exemplo.test/part.csv.gz');
+
+        $this->assertSame('[conteúdo binário: 11 bytes]', IntegrationCall::query()->sole()->response_body);
+    }
+
     public function test_resposta_de_erro_grava_como_erro(): void
     {
         Http::fake([

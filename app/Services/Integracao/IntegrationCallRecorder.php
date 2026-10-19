@@ -259,6 +259,11 @@ class IntegrationCallRecorder
             return null;
         }
 
+        // Corpo binário (gzip, imagem) não cabe em coluna de texto UTF-8.
+        if (! mb_check_encoding($texto, 'UTF-8')) {
+            return '[conteúdo binário: '.strlen($texto).' bytes]';
+        }
+
         $redigido = $this->redigirTexto($texto);
         $limite = max(1, (int) config('viabiliza.integrations.log.limite_corpo', 500_000));
 
