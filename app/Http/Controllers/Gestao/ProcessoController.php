@@ -180,8 +180,10 @@ class ProcessoController extends Controller
      * timeline como props para a UI (mini-mapa/abas em 10-16). A consulta é
      * auditada. 404 honesto via route model binding (processo inexistente).
      */
-    public function show(ViabilityRequest $viabilityRequest): Response
+    public function show(Request $request, ViabilityRequest $viabilityRequest): Response
     {
+        $podeConcluir = $request->user()->can('concluir-analise');
+
         $viabilityRequest->load([
             'company',
             'sector:id,name',
@@ -269,7 +271,7 @@ class ProcessoController extends Controller
             'analysisStatusProximas' => $viabilityRequest->analysis_status
                 ? array_map(
                     fn (AnalysisStatus $s): array => ['value' => $s->value, 'label' => $s->label()],
-                    $viabilityRequest->analysis_status->proximas(),
+                    $viabilityRequest->analysis_status->proximasPara($podeConcluir),
                 )
                 : [],
         ]);
@@ -361,7 +363,9 @@ class ProcessoController extends Controller
         $from = $viabilityRequest->analysis_status;
         $force = $request->boolean('force') && $request->user()->can('forcar-transicao-analise');
 
-        if (! $force && ($from === null || ! in_array($to, $from->proximas(), true))) {
+        $podeConcluir = $request->user()->can('concluir-analise');
+
+        if (! $force && ($from === null || ! in_array($to, $from->proximasPara($podeConcluir), true))) {
             return back()->with('error', 'Transição de situação da análise não permitida.');
         }
 

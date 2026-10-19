@@ -177,6 +177,7 @@ export default function Show({
     const fichaExpresso = processo.fluxo === 'expresso';
     const podeAbrirFicha = podeAnalisar || fichaExpresso;
     const podeConcluirAnalise =
+        !fichaExpresso &&
         auth.permissions.includes('concluir-analise') &&
         (processo.status === 'em_analise' || processo.status === 'deferida');
 
@@ -300,6 +301,9 @@ export default function Show({
                                     ) : (
                                         '—'
                                     )}
+                                </DescItem>
+                                <DescItem label="Data de entrada">
+                                    {formatarDataHora(processo.protocoled_at)}
                                 </DescItem>
                             </dl>
                         </div>

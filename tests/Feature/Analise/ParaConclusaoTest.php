@@ -15,7 +15,7 @@ use Tests\TestCase;
 
 /**
  * Aba "Para Conclusão" da caixa do setor: o analista termina a ficha, muda a
- * situação para "Para conclusão" (com destinatário opcional) e o processo sai
+ * situação para "Para conclusão" (destinatário opcional) e o processo sai
  * da caixa dele para a fila centralizada do apoio. A conclusão final exige a
  * permissão concluir-analise.
  */
@@ -60,13 +60,14 @@ class ParaConclusaoTest extends TestCase
         return $processo;
     }
 
-    public function test_analista_envia_para_conclusao_sem_destinatario(): void
+    public function test_analista_servidor_envia_para_conclusao_sem_destinatario(): void
     {
         $setor = Sector::factory()->create();
-        $analista = $this->analistaDoSetor($setor);
-        $processo = $this->processoEmAnalise($setor, $analista);
+        $servidor = User::factory()->analistaServidor()->withAcceptedLgpdTerm()->create();
+        $servidor->sectors()->attach($setor);
+        $processo = $this->processoEmAnalise($setor, $servidor);
 
-        $this->actingAs($analista, 'gestao')
+        $this->actingAs($servidor, 'gestao')
             ->post("/gestao/processos/{$processo->id}/status-analise", ['status' => 'para_conclusao'])
             ->assertSessionHasNoErrors()
             ->assertSessionMissing('error');
@@ -74,7 +75,46 @@ class ParaConclusaoTest extends TestCase
         $processo->refresh();
         $this->assertSame(AnalysisStatus::ParaConclusao, $processo->analysis_status);
         $this->assertNull($processo->conclusao_encaminhada_para_user_id);
-        $this->assertSame($analista->id, $processo->assigned_user_id);
+        $this->assertSame($servidor->id, $processo->assigned_user_id);
+    }
+
+    public function test_terceirizada_em_analise_so_envia_para_conclusao(): void
+    {
+        $setor = Sector::factory()->create();
+        $analista = $this->analistaDoSetor($setor);
+
+        foreach (['analise_concluida', 'em_convite', 'vistoriar', 'encaminhado'] as $status) {
+            $processo = $this->processoEmAnalise($setor, $analista);
+
+            $this->actingAs($analista, 'gestao')
+                ->post("/gestao/processos/{$processo->id}/status-analise", [
+                    'status' => $status,
+                    'sector_id' => $setor->id,
+                    'user_id' => $analista->id,
+                ])
+                ->assertSessionHas('error');
+
+            $this->assertSame(AnalysisStatus::EmAnalise, $processo->refresh()->analysis_status, $status);
+        }
+    }
+
+    public function test_menu_de_situacao_da_terceirizada_oferece_so_para_conclusao(): void
+    {
+        $setor = Sector::factory()->create();
+        $terceirizada = $this->analistaDoSetor($setor);
+        $servidor = User::factory()->analistaServidor()->withAcceptedLgpdTerm()->create();
+        $servidor->sectors()->attach($setor);
+        $processo = $this->processoEmAnalise($setor, $terceirizada);
+
+        $valoresPara = fn (User $usuario): array => collect(
+            $this->actingAs($usuario, 'gestao')
+                ->get("/gestao/processos/{$processo->id}")
+                ->assertOk()
+                ->viewData('page')['props']['analysisStatusProximas'],
+        )->pluck('value')->all();
+
+        $this->assertSame(['para_conclusao'], $valoresPara($terceirizada));
+        $this->assertContains('analise_concluida', $valoresPara($servidor));
     }
 
     public function test_analista_envia_para_conclusao_com_destinatario(): void

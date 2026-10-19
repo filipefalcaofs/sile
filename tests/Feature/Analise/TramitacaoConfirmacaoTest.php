@@ -35,6 +35,14 @@ class TramitacaoConfirmacaoTest extends TestCase
         return $analista;
     }
 
+    private function analistaServidor(Sector $setor): User
+    {
+        $analista = User::factory()->analistaServidor()->withAcceptedLgpdTerm()->create();
+        $analista->sectors()->attach($setor);
+
+        return $analista;
+    }
+
     private function processoEmAnalise(Sector $setor, User $analista): ViabilityRequest
     {
         $processo = ViabilityRequest::factory()->create();
@@ -84,7 +92,7 @@ class TramitacaoConfirmacaoTest extends TestCase
     {
         $setor = Sector::factory()->create();
         $destinoSetor = Sector::factory()->create(['name' => 'Setor de Vistoria']);
-        $analista = $this->analista($setor);
+        $analista = $this->analistaServidor($setor);
         $destino = User::factory()->analista()->withAcceptedLgpdTerm()->create(['name' => 'João Destino']);
         $destino->sectors()->attach($destinoSetor);
         $processo = $this->processoEmAnalise($setor, $analista);

@@ -72,7 +72,7 @@ class AnalysisStatusEndpointTest extends TestCase
     public function test_processo_em_analise_pode_ser_encaminhado_a_outro_setor(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
-        $analista = User::factory()->analista()->create();
+        $analista = User::factory()->analistaServidor()->create();
         $destino = User::factory()->analista()->create();
         $setor = Sector::factory()->create(['name' => 'Gabinete', 'active' => true]);
         $destino->sectors()->attach($setor->id);
