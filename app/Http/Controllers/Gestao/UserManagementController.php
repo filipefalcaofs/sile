@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Gestao;
 
 use App\Enums\AuthType;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Gestao\StoreUserRequest;
 use App\Http\Requests\Gestao\ToggleUserActivationRequest;
 use App\Http\Requests\Gestao\UpdateUserAuthTypeRequest;
 use App\Http\Requests\Gestao\UpdateUserRoleRequest;
@@ -16,6 +17,7 @@ use App\Support\Audit\AuditService;
 use App\Support\Settings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -109,6 +111,47 @@ class UserManagementController extends Controller
                     'created_at' => $solicitacao->created_at->toIso8601String(),
                 ]),
         ]);
+    }
+
+    /**
+     * Cadastra uma conta local com papel já definido. A senha nasce
+     * inutilizável (como na conversão AD → local) e o usuário a define pelo
+     * link enviado por e-mail; e-mail_verified_at é gravado porque o cadastro
+     * é feito por quem administra o acesso. Campos fora do fillable por
+     * forceFill + auditoria explícita (HasAuditoria não os cobre).
+     */
+    public function store(StoreUserRequest $request): RedirectResponse
+    {
+        $dados = $request->validated();
+
+        $user = new User(Arr::only($dados, ['name', 'email', 'cpf', 'phone']));
+        $user->forceFill([
+            'password' => Str::random(64),
+            'auth_type' => AuthType::Local,
+            'email_verified_at' => now(),
+        ])->save();
+
+        $user->assignRole($dados['role']);
+
+        Password::broker('users')->sendResetLink(
+            ['email' => $user->email],
+            fn (User $u, string $token) => $u->sendGestaoPasswordResetNotification($token),
+        );
+
+        app(AuditService::class)->log(
+            'usuarios',
+            'usuario-criado',
+            "Conta de {$user->email} criada",
+            [
+                'target_user_id' => $user->id,
+                'auth_type' => AuthType::Local->value,
+                'papel' => $dados['role'],
+            ],
+            $user,
+            personalData: true,
+        );
+
+        return back()->with('status', "Conta criada. Enviamos a {$user->email} o link para definir a senha.");
     }
 
     /**

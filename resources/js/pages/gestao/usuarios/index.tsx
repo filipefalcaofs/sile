@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import PageHeader from '@/components/app/page-header';
 import Label from '@/components/form/label';
 import Input from '@/components/form/input';
+import MaskedInput from '@/components/form/masked-input';
 import { PowerIcon } from '@/components/icons';
 import Select from '@/components/form/select';
 import Textarea from '@/components/form/textarea';
@@ -262,6 +263,94 @@ function RoleModal({ user, roles, onClose }: { user: UserItem; roles: string[]; 
     );
 }
 
+function CreateUserModal({ roles, onClose }: { roles: string[]; onClose: () => void }) {
+    const [role, setRole] = useState('');
+
+    return (
+        <Modal isOpen onClose={onClose} className="m-4 max-w-[507px] p-6 lg:p-8">
+            <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Novo usuário</h4>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                Cria uma conta local. O usuário recebe por e-mail o link para definir a própria senha.
+            </p>
+
+            <Form action="/gestao/usuarios" method="post" onSuccess={onClose} className="mt-6">
+                {({ errors, processing }) => (
+                    <div className="flex flex-col gap-5">
+                        <div>
+                            <Label htmlFor="novo-usuario-name" required>
+                                Nome
+                            </Label>
+                            <Input id="novo-usuario-name" name="name" autoComplete="off" error={Boolean(errors.name)} />
+                            {errors.name && <FieldError>{errors.name}</FieldError>}
+                        </div>
+                        <div>
+                            <Label htmlFor="novo-usuario-email" required>
+                                E-mail
+                            </Label>
+                            <Input
+                                id="novo-usuario-email"
+                                name="email"
+                                type="email"
+                                autoComplete="off"
+                                error={Boolean(errors.email)}
+                            />
+                            {errors.email && <FieldError>{errors.email}</FieldError>}
+                        </div>
+                        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                            <div>
+                                <Label htmlFor="novo-usuario-cpf" required>
+                                    CPF
+                                </Label>
+                                <MaskedInput
+                                    id="novo-usuario-cpf"
+                                    mask="cpf"
+                                    name="cpf"
+                                    placeholder="000.000.000-00"
+                                    error={Boolean(errors.cpf)}
+                                />
+                                {errors.cpf && <FieldError>{errors.cpf}</FieldError>}
+                            </div>
+                            <div>
+                                <Label htmlFor="novo-usuario-phone">Telefone</Label>
+                                <MaskedInput
+                                    id="novo-usuario-phone"
+                                    mask="phone"
+                                    name="phone"
+                                    placeholder="(00) 00000-0000"
+                                    error={Boolean(errors.phone)}
+                                />
+                                {errors.phone && <FieldError>{errors.phone}</FieldError>}
+                            </div>
+                        </div>
+                        <div>
+                            <Label htmlFor="novo-usuario-role" required>
+                                Papel
+                            </Label>
+                            <Select
+                                id="novo-usuario-role"
+                                name="role"
+                                value={role}
+                                onChange={setRole}
+                                placeholder="Selecionar..."
+                                options={roles.map((roleOption) => ({ value: roleOption, label: roleOption }))}
+                            />
+                            {errors.role && <FieldError>{errors.role}</FieldError>}
+                        </div>
+                        <div className="flex items-center justify-end gap-3">
+                            <Button size="sm" variant="outline" onClick={onClose} disabled={processing}>
+                                Cancelar
+                            </Button>
+                            <Button size="sm" type="submit" disabled={processing}>
+                                {processing ? 'Criando...' : 'Criar usuário'}
+                            </Button>
+                        </div>
+                    </div>
+                )}
+            </Form>
+        </Modal>
+    );
+}
+
 function AuthTypeModal({ user, onClose }: { user: UserItem; onClose: () => void }) {
     const [authType, setAuthType] = useState<'ad' | 'local'>(user.auth_type);
     const [adUsername, setAdUsername] = useState(user.ad_username ?? '');
@@ -339,6 +428,7 @@ export default function UsersIndex({ users, filters, counts, roles, solicitacoes
     const [activationUser, setActivationUser] = useState<UserItem | null>(null);
     const [activationProcessing, setActivationProcessing] = useState(false);
     const [rejectItem, setRejectItem] = useState<SolicitacaoItem | null>(null);
+    const [creating, setCreating] = useState(false);
 
     const tab = filters.tab ?? 'gestao';
 
@@ -488,6 +578,11 @@ export default function UsersIndex({ users, filters, counts, roles, solicitacoes
                             ? 'Servidores e perfis internos com acesso ao console SEDUR'
                             : 'Cidadãos, contadores e procuradores que usam o portal'
                     }
+                    actions={
+                        <Button size="sm" onClick={() => setCreating(true)}>
+                            Novo usuário
+                        </Button>
+                    }
                 />
                 <CardContent>
                     <div className="space-y-5">
@@ -535,6 +630,7 @@ export default function UsersIndex({ users, filters, counts, roles, solicitacoes
                 </CardContent>
             </Card>
 
+            {creating && <CreateUserModal roles={roles} onClose={() => setCreating(false)} />}
             {roleUser && <RoleModal user={roleUser} roles={roles} onClose={() => setRoleUser(null)} />}
             {rejectItem && <RejectModal item={rejectItem} onClose={() => setRejectItem(null)} />}
 
