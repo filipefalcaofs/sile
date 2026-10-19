@@ -24,7 +24,11 @@ class PoligonoComplementarService
 {
     public function __construct(private BuildingFootprintRepository $base) {}
 
-    public function resolver(ViabilityRequest $request): ResultadoComplementar
+    /**
+     * Sem $aguardarIa, um polígono de IA já gerado ainda é reaproveitado, mas
+     * nenhuma inferência nova é pedida.
+     */
+    public function resolver(ViabilityRequest $request, bool $aguardarIa = true): ResultadoComplementar
     {
         if ($this->temPoligono($request)) {
             return new ResultadoComplementar(StatusResolucaoPoligono::Encontrado, $request->address_polygon_source);
@@ -72,6 +76,10 @@ class PoligonoComplementarService
                 $this->gravar($request, $candidata, $this->desde($inicio));
 
                 return new ResultadoComplementar(StatusResolucaoPoligono::Encontrado, $fonte->paraPoligonoFonte());
+            }
+
+            if ($fonte === FonteEdificacao::Ia && ! $aguardarIa) {
+                continue;
             }
 
             if ($fonte === FonteEdificacao::Ia) {

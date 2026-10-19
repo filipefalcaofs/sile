@@ -6,6 +6,7 @@ use App\Enums\AuthType;
 use App\Enums\CompanySource;
 use App\Enums\RuleDomain;
 use App\Enums\ViabilityRequestOrigin;
+use App\Jobs\DecidirFluxoExpressoJob;
 use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\ReginRecebimento;
@@ -17,6 +18,7 @@ use App\Models\ViabilityServiceType;
 use App\Rules\ValidCpf;
 use App\Services\Expresso\FluxoExpressoService;
 use App\Services\Geo\PoligonoEnderecamentoService;
+use App\Services\Geo\ResolucaoPoligonoPorPonto;
 use App\Services\Realty\PropertyCadastroCampos;
 use App\Services\Realty\PropertyRegistryLookup;
 use App\Services\Solicitacao\ProtocolarSolicitacaoService;
@@ -52,6 +54,7 @@ class ReginProcessoProtocolador
         private FluxoExpressoService $expresso,
         private ReginTipoImovelApplier $tipoImovel,
         private PoligonoEnderecamentoService $poligonoLote,
+        private ResolucaoPoligonoPorPonto $poligonoPorPonto,
         private TratamentoRamoResolver $tratamento,
         private PropertyRegistryLookup $cadastro,
         private AuditService $audit,
@@ -286,11 +289,20 @@ class ReginProcessoProtocolador
         // maior porção. Já fora da transação — fonte indisponível não desfaz
         // o processo. O polígono declarado no REGIN fica em
         // property_polygon_geojson e só vale se a cadeia oficial não achar.
-        // Sem polígono pela chave nem pelo SEMAP, busca o lote pelo ponto: este
-        // protocolo roda no job do REGIN (120 s), onde a espera é aceitável.
-        $this->poligonoLote->aplicar($solicitacao->fresh() ?? $solicitacao, consultarPorPonto: true);
+        $this->poligonoLote->aplicar($solicitacao->fresh() ?? $solicitacao);
 
-        $this->expresso->decide($solicitacao->fresh() ?? $solicitacao, $ator);
+        // Sem polígono pela chave nem pelo SEMAP, a busca pelo ponto (edificações
+        // complementares, IA e endereçamento pelo ponto) e a decisão ficam no job
+        // de decisão, que pode esperar a IA.
+        $solicitacao = $solicitacao->fresh() ?? $solicitacao;
+
+        if ($this->poligonoPorPonto->precisaResolver($solicitacao)) {
+            DecidirFluxoExpressoJob::dispatch($solicitacao->id);
+
+            return $solicitacao;
+        }
+
+        $this->expresso->decide($solicitacao, $ator);
 
         return $solicitacao->fresh() ?? $solicitacao;
     }

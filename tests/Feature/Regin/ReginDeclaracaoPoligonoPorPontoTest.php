@@ -2,33 +2,34 @@
 
 namespace Tests\Feature\Regin;
 
+use App\Jobs\DecidirFluxoExpressoJob;
 use App\Models\ReginRecebimento;
 use App\Models\ViabilityRequest;
 use App\Services\Geo\PoligonoEnderecamentoService;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\Queue;
 use Mockery;
 use Tests\TestCase;
 
 /**
- * A declaração REGIN busca o lote pelo ponto (consulta lenta) dentro do job do
- * recebimento. O recebimento já tem de estar vinculado ao processo nessa hora:
- * se o worker matar o job no meio, a nova tentativa não abre um segundo processo.
+ * A declaração REGIN não busca o lote pelo ponto dentro do job do recebimento:
+ * sem polígono pela chave nem pelo SEMAP, a busca pelo ponto (edificações
+ * complementares, IA e endereçamento pelo ponto) e a decisão vão para o job de
+ * decisão. O recebimento já está vinculado quando esse job é despachado: se o
+ * worker matar algo no meio, a nova tentativa não abre um segundo processo.
  */
 class ReginDeclaracaoPoligonoPorPontoTest extends TestCase
 {
     use LazilyRefreshDatabase;
 
-    public function test_recebimento_ja_esta_vinculado_quando_a_busca_por_ponto_comeca(): void
+    public function test_busca_por_ponto_vai_para_o_job_de_decisao_com_o_recebimento_ja_vinculado(): void
     {
-        $vinculadoNaBusca = [];
+        config(['viabiliza.features.geoserver_enderecamento' => true]);
+        $consultasPorPonto = 0;
         $poligono = Mockery::mock(PoligonoEnderecamentoService::class);
         $poligono->shouldReceive('aplicar')->andReturnUsing(
-            function (ViabilityRequest $request, bool $consultarPorPonto = false) use (&$vinculadoNaBusca): bool {
-                if ($consultarPorPonto) {
-                    $vinculadoNaBusca[] = ReginRecebimento::query()
-                        ->where('protocolo', 'BAP-2026-0001')
-                        ->value('viability_request_id');
-                }
+            function (ViabilityRequest $request, bool $consultarPorPonto = false) use (&$consultasPorPonto): bool {
+                $consultasPorPonto += $consultarPorPonto ? 1 : 0;
 
                 return false;
             },
@@ -39,7 +40,9 @@ class ReginDeclaracaoPoligonoPorPontoTest extends TestCase
 
         $processo = ViabilityRequest::query()->sole();
 
-        $this->assertSame([$processo->id], $vinculadoNaBusca);
+        $this->assertSame(0, $consultasPorPonto);
+        $this->assertSame($processo->id, ReginRecebimento::query()->where('protocolo', 'BAP-2026-0001')->value('viability_request_id'));
+        Queue::assertPushed(DecidirFluxoExpressoJob::class, fn (DecidirFluxoExpressoJob $job): bool => $job->viabilityRequestId === $processo->id);
     }
 
     /**
