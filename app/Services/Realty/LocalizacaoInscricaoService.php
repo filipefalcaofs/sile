@@ -54,6 +54,8 @@ class LocalizacaoInscricaoService
         $nome = $resultado->raw['LogradouroTributario'] ?? $resultado->cadastro?->logradouro_tributario;
         $nome = is_string($nome) ? trim($nome) : '';
 
+        $situacao = $resultado->cadastro?->situacao_cadastral;
+
         $temPonto = $resultado->latitude !== null && $resultado->longitude !== null;
 
         if ($temPonto) {
@@ -64,6 +66,7 @@ class LocalizacaoInscricaoService
                 codLogTributario: $codLog !== '' ? $codLog : null,
                 logradouroTributario: $nome !== '' ? $nome : null,
                 origemPonto: PropertyLocationSource::CadastroImobiliario,
+                situacaoCadastral: $situacao,
             );
         }
 
@@ -78,6 +81,7 @@ class LocalizacaoInscricaoService
                 logradouroTributario: $nome !== '' ? $nome : null,
                 origemPonto: PropertyLocationSource::Geocodificacao,
                 geocode: $geocode,
+                situacaoCadastral: $situacao,
             );
         }
 
@@ -85,6 +89,7 @@ class LocalizacaoInscricaoService
             status: LocalizacaoInscricao::SEM_COORDENADA,
             codLogTributario: $codLog !== '' ? $codLog : null,
             logradouroTributario: $nome !== '' ? $nome : null,
+            situacaoCadastral: $situacao,
         );
     }
 

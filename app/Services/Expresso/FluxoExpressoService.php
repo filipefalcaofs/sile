@@ -35,6 +35,7 @@ use App\Services\Geo\LocalizacaoDivergenciaService;
 use App\Services\Geo\PoligonoEnderecamentoService;
 use App\Services\Geo\ZonaMaiorPorcao;
 use App\Services\Geo\ZonaProcessoService;
+use App\Services\Realty\LocalizacaoInscricaoService;
 use App\Services\Solicitacao\ResolvedViability;
 use App\Services\Solicitacao\SolicitacaoViabilityResolver;
 use App\Services\Solicitacao\ViabilityRequestStateMachine;
@@ -93,6 +94,8 @@ class FluxoExpressoService
         private PoligonoEnderecamentoService $poligonoEnderecamento,
         private DecisionTextCatalog $textos,
         private PreAnaliseService $preAnalise,
+        private LocalizacaoInscricaoService $localizacaoInscricao,
+        private IndeferirInscricaoInativaService $indeferirInscricaoInativa,
     ) {}
 
     /**
@@ -153,6 +156,17 @@ class FluxoExpressoService
 
         if (! $toggleAtivo) {
             return $this->encaminharAnalise($request, $this->textos->get('expresso.motivo.desativado'), $actor);
+        }
+
+        // Inscrição imobiliária que não está ativa na SEFAZ Municipal: indefere.
+        // Só com a situação informada pelo cadastro; cadastro indisponível ou sem
+        // o dado segue o caminho normal, porque não há como afirmar a pendência.
+        $inscricao = $this->localizacaoInscricao->localizar($request->property_registration);
+
+        if ($inscricao->inscricaoInativa()) {
+            return DecisionResult::decidida(
+                $this->indeferirInscricaoInativa->indeferir($request, $inscricao->situacaoCadastral),
+            );
         }
 
         // RN-AA-03/RN-AA-05: solicitação EXCLUSIVAMENTE de exclusão de
