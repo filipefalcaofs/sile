@@ -435,7 +435,6 @@ export default function Show({
                                                                 router.post(
                                                                     `/gestao/processos/${processo.id}/status-analise`,
                                                                     { status: valor },
-                                                                    { preserveScroll: true },
                                                                 );
                                                             }
                                                         }}
@@ -461,7 +460,6 @@ export default function Show({
                                                                                     ? null
                                                                                     : Number(destinatarioConclusao),
                                                                         },
-                                                                        { preserveScroll: true },
                                                                     )
                                                                 }
                                                             >
@@ -511,7 +509,6 @@ export default function Show({
                                                                             sector_id: Number(setorEncaminhamento),
                                                                             user_id: Number(analistaEncaminhamento),
                                                                         },
-                                                                        { preserveScroll: true },
                                                                     )
                                                                 }
                                                             >
