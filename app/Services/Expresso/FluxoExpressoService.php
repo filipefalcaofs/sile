@@ -169,6 +169,19 @@ class FluxoExpressoService
             );
         }
 
+        // Empresa abrigada em escritório virtual: as atividades novas da
+        // alteração da JUCEB precisam estar no Anexo B. Fora dele, quem decide
+        // é o analista.
+        $foraDoAnexoB = $this->abrigadoResolver->cnaesForaDoAnexoBDaAbrigada($request);
+
+        if ($foraDoAnexoB !== []) {
+            return $this->encaminharAnalise(
+                $request,
+                $this->textos->render('expresso.motivo.abrigada_fora_do_anexo_b', [':cnaes' => implode(', ', $foraDoAnexoB)]),
+                $actor,
+            );
+        }
+
         // RN-AA-03/RN-AA-05: solicitação EXCLUSIVAMENTE de exclusão de
         // atividade (todos os CNAEs marcados "excluir") defere
         // automaticamente, SEM consultar o enquadramento LOUOS/risco — nada
@@ -1168,6 +1181,21 @@ class FluxoExpressoService
             }
 
             throw $e;
+        }
+
+        // APÓS o commit: a sede que deixou de ter o CNAE gatilho na alteração de
+        // atividades da JUCEB perde a condição. Cascata compartilhada (RN-EV-06).
+        if ($outcome === DecisionOutcome::Deferida) {
+            $vinculo = $this->gatilhoSede->vinculoPerdidoPorAlteracaoDeAtividades($request);
+
+            if ($vinculo !== null) {
+                $this->desvincular->desvincular(
+                    $vinculo,
+                    "alteração de atividades recebida da JUCEB sem o CNAE gatilho ({$this->gatilhoSede->cnaeGatilho()}) da sede, na solicitação #{$request->id}",
+                    $actor,
+                    SefazNotificationEvent::SedePerdeuCondicao,
+                );
+            }
         }
 
         // APÓS o commit: só decisões efetivadas geram efeitos (notificação, Regin,
