@@ -160,8 +160,10 @@ class ProcessoQueryService
     }
 
     /**
-     * Processos que o analista analisou: com ficha finalizada por ele ou com
-     * decisão registrada por ele. Do mais recente para o mais antigo.
+     * Processos que o analista analisou: com ficha finalizada por ele, com
+     * decisão registrada por ele ou que ele tramitou para Para conclusão,
+     * Encaminhado ou Análise concluída (a distribuição feita a partir de Para
+     * distribuir não conta). Do mais recente para o mais antigo.
      *
      * @return Builder<ViabilityRequest>
      */
@@ -194,7 +196,18 @@ class ProcessoQueryService
                 ->when($desde, fn (Builder $f) => $f->where('finalized_at', '>=', $desde)))
                 ->orWhereHas('decision', fn (Builder $decisao) => $decisao
                     ->where('decided_by_user_id', $user->id)
-                    ->when($desde, fn (Builder $d) => $d->where('decided_at', '>=', $desde)));
+                    ->when($desde, fn (Builder $d) => $d->where('decided_at', '>=', $desde)))
+                ->orWhereHas('analysisStatusTransitions', fn (Builder $transicao) => $transicao
+                    ->where('actor_user_id', $user->id)
+                    ->whereIn('to_status', [
+                        AnalysisStatus::ParaConclusao->value,
+                        AnalysisStatus::Encaminhado->value,
+                        AnalysisStatus::AnaliseConcluida->value,
+                    ])
+                    ->where(fn (Builder $origem) => $origem
+                        ->whereNull('from_status')
+                        ->orWhere('from_status', '!=', AnalysisStatus::ParaDistribuir->value))
+                    ->when($desde, fn (Builder $t) => $t->where('created_at', '>=', $desde)));
         });
     }
 
