@@ -36,6 +36,7 @@ use App\Services\Auditoria\DecisionExplanationService;
 use App\Services\Expresso\SedeEscritorioVirtualGatilho;
 use App\Services\Relatorios\RelatorioSedeEscritorioVirtualService;
 use App\Services\Servicos\ServicoNomenclaturaResolver;
+use App\Services\Vistoria\VistoriaAcesso;
 use App\Support\Audit\AuditService;
 use App\Support\Settings;
 use DomainException;
@@ -146,6 +147,8 @@ class AnalysisRecordController extends Controller
             'iaFicha' => $this->iaFicha($viabilityRequest),
             // A consulta na ficha de análise não cria vistoria: só informa se já existe.
             'temFichaVistoria' => $viabilityRequest->inspection()->exists(),
+            // A ficha de vistoria só é oferecida a quem pode consultá-la (VistoriaAcesso).
+            'podeConsultarVistoria' => $request->user() !== null && app(VistoriaAcesso::class)->podeConsultar($viabilityRequest, $request->user()),
             'podeEncaminharChefia' => $this->podeEncaminharChefia($viabilityRequest, $request->user()),
             // Sugestões de IA (HU-115 alertas + HU-117 resumo do processo) — prop
             // DEFERIDA (carregada sob demanda pelo card, fora do load inicial).

@@ -288,6 +288,7 @@ interface FichaAnaliseShowProps {
     iaFicha: IaFicha;
     /** Há ficha de vistoria para consultar. A ausência não cria registro. */
     temFichaVistoria: boolean;
+    podeConsultarVistoria: boolean;
     podeEncaminharChefia: boolean;
 }
 
@@ -716,6 +717,7 @@ export default function FichaAnaliseShow({
     sugestoesIa,
     iaFicha,
     temFichaVistoria,
+    podeConsultarVistoria,
     podeEncaminharChefia,
 }: FichaAnaliseShowProps) {
     const { auth } = usePage<SharedProps>().props;
@@ -2482,12 +2484,14 @@ export default function FichaAnaliseShow({
                                     )}
 
                                     {temFichaVistoria ? (
-                                        <Link
-                                            href={`/gestao/processos/${processo.id}/vistoria/visualizar`}
-                                            className={classeAcaoFantasma}
-                                        >
-                                            Visualizar ficha de vistoria
-                                        </Link>
+                                        podeConsultarVistoria && (
+                                            <Link
+                                                href={`/gestao/processos/${processo.id}/vistoria/visualizar`}
+                                                className={classeAcaoFantasma}
+                                            >
+                                                Visualizar ficha de vistoria
+                                            </Link>
+                                        )
                                     ) : (
                                         <button
                                             type="button"
