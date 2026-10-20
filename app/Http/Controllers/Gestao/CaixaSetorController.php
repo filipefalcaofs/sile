@@ -406,13 +406,17 @@ class CaixaSetorController extends Controller
 
         $resumo = $this->distribuicao->distribuirLote($processos, $analista, $request->user(), $setorEscolhido);
 
+        // Motivo real da falha (nunca genérico): vínculo de setor OU a
+        // regra da vistoria (só vistoriador recebe processo em vistoria).
+        $motivos = collect($resumo['falhas'])->pluck('motivo')->unique()->implode(' ');
+
+        if ($resumo['ok'] === 0) {
+            return back()->with('warning', 'Nenhum processo foi distribuído. '.$motivos);
+        }
+
         $response = back()->with('status', "{$resumo['ok']} processo(s) enviado(s) para a caixa de entrada de {$analista->name}.");
 
         if ($resumo['falhas'] !== []) {
-            // Motivo real da falha (nunca genérico): vínculo de setor OU a
-            // regra da vistoria (só vistoriador recebe processo em vistoria).
-            $motivos = collect($resumo['falhas'])->pluck('motivo')->unique()->implode(' ');
-
             $response->with('warning', count($resumo['falhas']).' processo(s) não distribuído(s): '.$motivos);
         }
 

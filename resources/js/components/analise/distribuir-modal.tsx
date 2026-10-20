@@ -3,7 +3,7 @@ import FieldError from '@/components/form/field-error';
 import Select from '@/components/form/select';
 import Button from '@/components/ui/button';
 import { Modal } from '@/components/ui/modal';
-import { escolhaDeSetor, type SetorDoAnalista } from '@/pages/gestao/caixa-setor/setor-destino';
+import { destinatariosDoSetor, escolhaDeSetor, type SetorDoAnalista } from '@/pages/gestao/caixa-setor/setor-destino';
 
 export interface DestinatarioDaDistribuicao {
     id: number;
@@ -43,8 +43,9 @@ export default function DistribuirModal({
         sector_id: '',
     });
 
-    const opcoes = destinatarios.map((pessoa) => ({ value: String(pessoa.id), label: pessoa.name }));
-    const destinatario = destinatarios.find((pessoa) => String(pessoa.id) === tramitacao.data.analista_id);
+    const elegiveis = destinatariosDoSetor(distribuiEmQualquerSetor, destinatarios, setoresDosProcessos);
+    const opcoes = elegiveis.map((pessoa) => ({ value: String(pessoa.id), label: pessoa.name }));
+    const destinatario = elegiveis.find((pessoa) => String(pessoa.id) === tramitacao.data.analista_id);
     const escolhaDoSetor = escolhaDeSetor(distribuiEmQualquerSetor, destinatario?.setores ?? [], setoresDosProcessos);
 
     function confirmar() {
