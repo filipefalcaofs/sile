@@ -22,6 +22,8 @@ use App\Services\Cnpj\CnpjLookup;
 use App\Services\Cnpj\SedurCnpjLookup;
 use App\Services\Expresso\DatabaseHolidayProvider;
 use App\Services\Expresso\HolidayProvider;
+use App\Services\Geo\Edificacoes\BuildingFootprintRepository;
+use App\Services\Geo\Edificacoes\PostgisBuildingFootprintRepository;
 use App\Services\Geo\Geocoder;
 use App\Services\Geo\GeoServerClassificacaoViariaClient;
 use App\Services\Geo\GeoServerEnderecamentoClient;
@@ -95,6 +97,10 @@ class AppServiceProvider extends ServiceProvider
         // fake em memória via $this->app->instance, nunca o fake no container de
         // produção.
         $this->app->bind(PrecedentRepository::class, PostgisPrecedentRepository::class);
+
+        // Base local de edificações complementares (Overture, Microsoft, IA):
+        // mesmo padrão — binding incondicional, fake nos testes SQLite.
+        $this->app->bind(BuildingFootprintRepository::class, PostgisBuildingFootprintRepository::class);
 
         // Resolução por inscrição imobiliária (HU-055) atrás de contrato: BFF
         // SEDUR/SEFAZ. Toggle features.cadastro_imobiliario desligado degrada

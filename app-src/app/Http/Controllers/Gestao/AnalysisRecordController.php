@@ -33,6 +33,7 @@ use App\Services\Analise\CadastroImobiliarioFichaService;
 use App\Services\Analise\QuadrosFichaChecklist;
 use App\Services\Auditoria\DecisionExplanationService;
 use App\Services\Expresso\SedeEscritorioVirtualGatilho;
+use App\Services\Geo\ProcedenciaPoligono;
 use App\Services\Relatorios\RelatorioSedeEscritorioVirtualService;
 use App\Support\Audit\AuditService;
 use App\Support\Settings;
@@ -488,6 +489,7 @@ class AnalysisRecordController extends Controller
      * @return array{
      *   poligono: array<string, mixed>|null,
      *   poligono_enderecamento: array<string, mixed>|null,
+     *   poligono_fonte: array<string, mixed>|null,
      *   endereco: string|null,
      *   cod_log: string|null,
      *   logradouro: string|null,
@@ -521,6 +523,7 @@ class AnalysisRecordController extends Controller
         return [
             'poligono' => $request->property_polygon_geojson,
             'poligono_enderecamento' => $request->address_polygon_geojson,
+            'poligono_fonte' => app(ProcedenciaPoligono::class)->paraTela($request),
             'endereco' => $partes === [] ? null : implode(', ', $partes),
             'cod_log' => $this->textoOuNulo($request->cod_log),
             'logradouro' => $logradouro,

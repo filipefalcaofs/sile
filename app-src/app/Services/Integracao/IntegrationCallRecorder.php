@@ -63,7 +63,7 @@ class IntegrationCallRecorder
             'request_headers' => $this->cabecalhos($request->headers()),
             'request_body' => $this->corpo($this->corpoCliente($request), $truncou),
             'response_headers' => $this->cabecalhos($response->headers()),
-            'response_body' => $this->corpo($response->body(), $truncou),
+            'response_body' => $this->corpoResposta($response, $truncou),
             'error_message' => null,
             'truncated' => $truncou,
             'correlation_id' => $this->correlacao($request->headers()),
@@ -129,6 +129,10 @@ class IntegrationCallRecorder
         $alvo = $host.$path;
 
         $regras = [
+            'overture' => ['overturemaps'],
+            'edificacoes_microsoft' => ['minedbuildings', 'bfppub'],
+            'ortofoto' => ['/imageserver/', 'mapeamento.salvador'],
+            'edificacoes_ia' => ['/segmentar', '/saude'],
             'regin' => ['api_integracao', 'juceb', 'regin'],
             'geoserver' => ['geoserver', '/wfs'],
             'geocoding' => ['nominatim'],
@@ -253,10 +257,44 @@ class IntegrationCallRecorder
         return null;
     }
 
+    /**
+     * Corpo da resposta sem carregá-lo inteiro: tipo binário (download de
+     * arquivo, imagem) vira um marcador pelo tamanho; corpo maior que o limite
+     * é lido só até o limite.
+     */
+    private function corpoResposta(ClientResponse $response, bool &$truncou): ?string
+    {
+        $stream = $response->toPsrResponse()->getBody();
+        $tamanho = $stream->getSize() ?? (int) $response->header('Content-Length');
+        $tipo = strtolower((string) $response->header('Content-Type'));
+
+        if (preg_match('#^(application/(gzip|x-gzip|zip|octet-stream|vnd\.apache\.parquet)|image/|video/|audio/)#', $tipo) === 1) {
+            return '[conteúdo binário: '.$tamanho.' bytes]';
+        }
+
+        $limite = max(1, (int) config('viabiliza.integrations.log.limite_corpo', 500_000));
+
+        if ($tamanho > $limite && $stream->isSeekable()) {
+            $stream->rewind();
+            $inicio = $stream->read($limite);
+            $stream->rewind();
+            $truncou = true;
+
+            return $this->corpo($inicio, $truncou);
+        }
+
+        return $this->corpo($response->body(), $truncou);
+    }
+
     private function corpo(?string $texto, bool &$truncou): ?string
     {
         if ($texto === null || $texto === '') {
             return null;
+        }
+
+        // Corpo binário (gzip, imagem) não cabe em coluna de texto UTF-8.
+        if (! mb_check_encoding($texto, 'UTF-8')) {
+            return '[conteúdo binário: '.strlen($texto).' bytes]';
         }
 
         $redigido = $this->redigirTexto($texto);

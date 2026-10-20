@@ -3,9 +3,12 @@
 namespace Tests\Feature\Analise;
 
 use App\Enums\AnalysisStage;
+use App\Enums\PoligonoFonte;
 use App\Enums\PropertyLocationSource;
+use App\Enums\StatusResolucaoPoligono;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\Cidadao;
+use App\Models\LotPolygonResolution;
 use App\Models\Sector;
 use App\Models\User;
 use App\Models\ViabilityDecision;
@@ -346,5 +349,86 @@ class ProcessoUiSmokeTest extends TestCase
             ->get("/gestao/processos/{$processo->id}")
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page->where('geo.poligono_enderecamento.type', 'Polygon'));
+    }
+
+    /**
+     * @param  array<string, mixed>  $resolucao
+     */
+    private function processoComPoligonoDa(?PoligonoFonte $fonte, array $resolucao = []): ViabilityRequest
+    {
+        $processo = $this->processo();
+        $processo->forceFill([
+            'address_polygon_geojson' => ['type' => 'MultiPolygon', 'coordinates' => [[[[-38.5, -12.98], [-38.499, -12.98], [-38.499, -12.979], [-38.5, -12.98]]]]],
+            'address_polygon_source' => $fonte,
+        ])->save();
+
+        if ($resolucao !== []) {
+            LotPolygonResolution::factory()->create([
+                'viability_request_id' => $processo->id,
+                'source' => $fonte,
+                'status' => StatusResolucaoPoligono::Encontrado,
+                ...$resolucao,
+            ]);
+        }
+
+        return $processo;
+    }
+
+    public function test_processo_com_poligono_overture_envia_legenda_e_atribuicao(): void
+    {
+        $processo = $this->processoComPoligonoDa(PoligonoFonte::Overture, ['source_id' => 'gers-9', 'release' => '2026-09-23.1', 'area_m2' => 135.5]);
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get("/gestao/processos/{$processo->id}")
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('geo.poligono_fonte.value', 'overture')
+                ->where('geo.poligono_fonte.legenda', 'Contorno tracejado: polígono do Overture.')
+                ->where('geo.poligono_fonte.atribuicao', '© OpenStreetMap contributors, Overture Maps Foundation')
+                ->where('geo.poligono_fonte.oficial', false)
+                ->where('geo.poligono_fonte.procedencia.source_id', 'gers-9')
+                ->where('geo.poligono_fonte.procedencia.release', '2026-09-23.1')
+                ->where('geo.poligono_fonte.procedencia.area_m2', 135.5));
+    }
+
+    public function test_processo_com_lote_sedur_mantem_legenda_atual(): void
+    {
+        $processo = $this->processoComPoligonoDa(PoligonoFonte::Chave);
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get("/gestao/processos/{$processo->id}")
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('geo.poligono_fonte.legenda', 'Contorno tracejado: polígono do endereçamento SEDUR.')
+                ->where('geo.poligono_fonte.atribuicao', null)
+                ->where('geo.poligono_fonte.oficial', true)
+                ->where('geo.poligono_fonte.procedencia', null));
+    }
+
+    public function test_semap_tem_legenda_propria(): void
+    {
+        $processo = $this->processoComPoligonoDa(PoligonoFonte::Semap);
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get("/gestao/processos/{$processo->id}")
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('geo.poligono_fonte.legenda', 'Contorno tracejado: polígono do cadastro municipal (SEMAP).'));
+    }
+
+    public function test_poligono_antigo_sem_fonte_usa_a_legenda_do_enderecamento(): void
+    {
+        $processo = $this->processoComPoligonoDa(null);
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get("/gestao/processos/{$processo->id}")
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('geo.poligono_fonte.legenda', 'Contorno tracejado: polígono do endereçamento SEDUR.'));
+    }
+
+    public function test_sem_poligono_do_lote_fonte_e_nula(): void
+    {
+        $this->actingAs($this->analista(), 'gestao')
+            ->get("/gestao/processos/{$this->processo()->id}")
+            ->assertInertia(fn (Assert $page) => $page->where('geo.poligono_fonte', null));
     }
 }

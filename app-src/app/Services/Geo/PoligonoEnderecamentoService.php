@@ -44,9 +44,7 @@ class PoligonoEnderecamentoService
             $this->auditar($request, 'enderecamento', $hit->status, $codLog, $numero, $complemento, $hit);
 
             if ($hit->encontrado()) {
-                $this->gravar($request, $hit, PoligonoFonte::Chave);
-
-                return true;
+                return $this->gravar($request, $hit, PoligonoFonte::Chave);
             }
         }
 
@@ -58,13 +56,23 @@ class PoligonoEnderecamentoService
             return $consultarPorPonto && $this->aplicarPorPonto($request);
         }
 
-        $this->gravar($request, $semap, PoligonoFonte::Semap, atributosDoLote: true);
-
-        return true;
+        return $this->gravar($request, $semap, PoligonoFonte::Semap, atributosDoLote: true);
     }
 
-    private function gravar(ViabilityRequest $request, EnderecamentoHit $hit, PoligonoFonte $fonte, bool $atributosDoLote = false): void
+    /**
+     * O polígono de uma edificação complementar (Overture, Microsoft, IA) já
+     * gravado não é substituído pelo lote oficial achado depois: o primeiro
+     * polígono do processo fica. Lote oficial continua atualizando lote oficial.
+     */
+    private function gravar(ViabilityRequest $request, EnderecamentoHit $hit, PoligonoFonte $fonte, bool $atributosDoLote = false): bool
     {
+        $atual = $request->fresh() ?? $request;
+
+        if (is_array($atual->address_polygon_geojson) && $atual->address_polygon_geojson !== []
+            && $atual->address_polygon_source !== null && ! $atual->address_polygon_source->oficial()) {
+            return false;
+        }
+
         $dados = [
             'address_polygon_geojson' => $hit->geometria,
             'address_polygon_consulted_at' => now(),
@@ -78,6 +86,8 @@ class PoligonoEnderecamentoService
         }
 
         $request->forceFill($dados)->save();
+
+        return true;
     }
 
     /**
@@ -119,9 +129,7 @@ class PoligonoEnderecamentoService
             return false;
         }
 
-        $this->gravar($request, $hit, PoligonoFonte::Ponto);
-
-        return true;
+        return $this->gravar($request, $hit, PoligonoFonte::Ponto);
     }
 
     /**

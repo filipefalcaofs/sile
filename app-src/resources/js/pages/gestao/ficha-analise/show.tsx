@@ -15,7 +15,7 @@ import {
 import { sinteseDaFicha, type EstadoLeitura } from '@/pages/gestao/ficha-analise/sintese';
 import PageHeader from '@/components/app/page-header';
 import CamadasImovelLista, { type CamadasImovel } from '@/components/geo/camadas-imovel';
-import { centroDaGeometria, ESTILO_ENDERECAMENTO } from '@/components/geo/geometria';
+import { centroDaGeometria, ESTILO_ENDERECAMENTO, resumoDaProcedencia, type FontePoligono } from '@/components/geo/geometria';
 import { MapaSection } from '@/components/geo/mapa-section';
 import Checkbox from '@/components/form/checkbox';
 import Input from '@/components/form/input';
@@ -115,6 +115,7 @@ interface TextoPadrao {
 interface Localizacao {
     poligono: GeoJsonObject | null;
     poligono_enderecamento?: GeoJsonObject | null;
+    poligono_fonte?: FontePoligono | null;
     endereco: string | null;
     cod_log: string | null;
     logradouro: string | null;
@@ -1691,13 +1692,19 @@ export default function FichaAnaliseShow({
                                                 : []),
                                         ]}
                                     />
-                                    {localizacao?.poligono_enderecamento ? (
+                                    {localizacao?.poligono_enderecamento && localizacao.poligono_fonte ? (
                                         <p className="mt-3 text-theme-xs text-gray-500 dark:text-gray-400">
-                                            Contorno tracejado: polígono do endereçamento SEDUR.
+                                            {localizacao.poligono_fonte.legenda}
+                                        </p>
+                                    ) : null}
+                                    {localizacao?.poligono_fonte && resumoDaProcedencia(localizacao.poligono_fonte) ? (
+                                        <p className="mt-1 text-theme-xs text-gray-500 dark:text-gray-400">
+                                            {resumoDaProcedencia(localizacao.poligono_fonte)}
                                         </p>
                                     ) : null}
                                     <p className="mt-3 text-theme-xs text-gray-500 dark:text-gray-400">
                                         Mapa &copy; OpenStreetMap (ODbL).
+                                        {localizacao?.poligono_fonte?.atribuicao ? ` Contorno: ${localizacao.poligono_fonte.atribuicao}.` : null}
                                     </p>
                                 </>
                             ) : (

@@ -8,6 +8,7 @@ use App\Enums\AnalysisStage;
 use App\Enums\AnalysisStatus;
 use App\Enums\IntencaoAtividade;
 use App\Enums\PoligonoFonte;
+use App\Enums\PropertyLocationPrecision;
 use App\Enums\PropertyLocationSource;
 use App\Enums\ViabilityRequestOrigin;
 use App\Enums\ViabilityRequestStatus;
@@ -141,6 +142,7 @@ class ViabilityRequest extends Model
             'property_point_lat' => 'float',
             'property_point_lng' => 'float',
             'property_location_source' => PropertyLocationSource::class,
+            'property_location_precision' => PropertyLocationPrecision::class,
             'camadas_incidentes' => 'array',
             'simulation_snapshot' => 'array',
             'simulation_rules_versions' => 'array',
@@ -185,6 +187,28 @@ class ViabilityRequest extends Model
     }
 
     /**
+     * O ponto serve para escolher a edificação complementar (Overture,
+     * Microsoft, IA)? Geocodificação só vale quando casou o número do imóvel;
+     * processo antigo geocodificado, sem a precisão gravada, não vale.
+     */
+    public function pontoElegivelParaEdificacao(): bool
+    {
+        if ($this->pontoDoImovel() === null) {
+            return false;
+        }
+
+        if ($this->centroideDoPoligono($this->property_polygon_geojson) !== null) {
+            return true;
+        }
+
+        if ($this->property_location_source !== PropertyLocationSource::Geocodificacao) {
+            return true;
+        }
+
+        return $this->property_location_precision === PropertyLocationPrecision::Numero;
+    }
+
+    /**
      * Ponto que o requerente desenhou ou que a inscrição/simulação gravou, sem
      * o lote do endereçamento. É o critério de "já localizado pela inscrição":
      * o lote achado depois não substitui a busca do ponto no Cadastro.
@@ -218,7 +242,7 @@ class ViabilityRequest extends Model
      */
     private function centroideDoPoligono(mixed $geojson): ?array
     {
-        $ring = is_array($geojson) ? ($geojson['coordinates'][0] ?? null) : null;
+        $ring = is_array($geojson) ? $this->anelExterior($geojson) : null;
 
         if (! is_array($ring) || $ring === []) {
             return null;
@@ -235,6 +259,68 @@ class ViabilityRequest extends Model
             'lat' => array_sum($lats) / count($lats),
             'lng' => array_sum($lngs) / count($lngs),
         ];
+    }
+
+    /**
+     * Anel exterior do Polygon ou, no MultiPolygon, o do polígono de maior
+     * área planar.
+     *
+     * @param  array<string, mixed>  $geojson
+     * @return array<int, mixed>|null
+     */
+    private function anelExterior(array $geojson): ?array
+    {
+        $coordenadas = $geojson['coordinates'] ?? null;
+
+        if (! is_array($coordenadas)) {
+            return null;
+        }
+
+        if (($geojson['type'] ?? null) !== 'MultiPolygon') {
+            return is_array($coordenadas[0] ?? null) ? $coordenadas[0] : null;
+        }
+
+        $maior = null;
+        $maiorArea = -1.0;
+
+        foreach ($coordenadas as $poligono) {
+            $anel = is_array($poligono) ? ($poligono[0] ?? null) : null;
+
+            if (! is_array($anel) || $anel === []) {
+                continue;
+            }
+
+            $area = $this->areaPlanar($anel);
+
+            if ($area > $maiorArea) {
+                $maior = $anel;
+                $maiorArea = $area;
+            }
+        }
+
+        return $maior;
+    }
+
+    /**
+     * @param  array<int, mixed>  $anel
+     */
+    private function areaPlanar(array $anel): float
+    {
+        $soma = 0.0;
+        $total = count($anel);
+
+        for ($i = 0; $i < $total; $i++) {
+            $a = $anel[$i];
+            $b = $anel[($i + 1) % $total];
+
+            if (! is_array($a) || ! is_array($b)) {
+                continue;
+            }
+
+            $soma += (float) $a[0] * (float) $b[1] - (float) $b[0] * (float) $a[1];
+        }
+
+        return abs($soma) / 2;
     }
 
     /**

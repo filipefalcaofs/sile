@@ -2,6 +2,7 @@
 
 use App\Models\AccessLog;
 use App\Models\ExportFile;
+use App\Support\Settings;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -43,6 +44,21 @@ Schedule::command('expresso:reavaliar')
 // (spec 2026-10-05). Respeita a agenda de cada etapa; esgota em 24 h.
 Schedule::command('processos:reprocessar-etapas')
     ->everyFifteenMinutes()
+    ->withoutOverlapping()
+    ->onOneServer();
+
+// Bases de edificações complementares (polígono do lote quando a Prefeitura
+// não acha o lote). Só rodam com o interruptor ligado no painel de integrações.
+// Overture: extrai a release mais recente e importa (idempotente por checksum).
+Schedule::exec('bash scripts/overture-salvador.sh auto-$(date +%F) storage/app/overture/salvador.geojsonseq && php artisan geo:edificacoes:importar-overture storage/app/overture/salvador.geojsonseq --release=auto-$(date +%F)')
+    ->monthlyOn(25, '03:00')
+    ->when(fn (): bool => Settings::enabled('edificacoes_importacao_agendada'))
+    ->withoutOverlapping()
+    ->onOneServer();
+
+Schedule::command('geo:edificacoes:importar-microsoft')
+    ->quarterlyOn(15, '03:30')
+    ->when(fn (): bool => Settings::enabled('edificacoes_importacao_agendada'))
     ->withoutOverlapping()
     ->onOneServer();
 

@@ -6,10 +6,11 @@ use App\Enums\ViabilityRequestStatus;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Expresso\FluxoExpressoService;
-use App\Services\Geo\PoligonoEnderecamentoService;
+use App\Services\Geo\ResolucaoPoligonoPorPonto;
 use App\Services\Realty\LocalizacaoInscricao;
 use App\Services\Solicitacao\ProtocolarSolicitacaoService;
 use App\Support\Audit\AuditService;
+use App\Support\Settings;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -41,6 +42,8 @@ class DecidirFluxoExpressoJob implements ShouldBeUnique, ShouldQueue
 
     public int $tries;
 
+    public int $triesCadastro;
+
     public int $timeout;
 
     /** @var array<int, int> */
@@ -53,7 +56,10 @@ class DecidirFluxoExpressoJob implements ShouldBeUnique, ShouldQueue
     ) {
         // Resiliência parametrizada por constante técnica (config/viabiliza.php,
         // precedente [02-02]) — fila/tries/timeout/backoff ajustáveis sem deploy.
-        $this->tries = (int) config('viabiliza.expresso.job.tries', 3);
+        // A espera da IA de edificações tem orçamento próprio, somado ao da
+        // espera do Cadastro Imobiliário.
+        $this->triesCadastro = (int) config('viabiliza.expresso.job.tries', 3);
+        $this->tries = $this->triesCadastro + (Settings::enabled('edificacoes_ia') ? (int) config('viabiliza.edificacoes.ia.espera_tentativas', 3) : 0);
         $this->timeout = (int) config('viabiliza.expresso.job.timeout', 120);
         $this->backoff = config('viabiliza.expresso.job.backoff', [30, 60, 120]);
 
@@ -72,7 +78,7 @@ class DecidirFluxoExpressoJob implements ShouldBeUnique, ShouldQueue
         return $this->viabilityRequestId.':'.($this->reavaliacao ? 'reavaliacao' : 'protocolo');
     }
 
-    public function handle(FluxoExpressoService $service, ?ProtocolarSolicitacaoService $protocolo = null, ?PoligonoEnderecamentoService $poligono = null): void
+    public function handle(FluxoExpressoService $service, ?ProtocolarSolicitacaoService $protocolo = null, ?ResolucaoPoligonoPorPonto $poligono = null): void
     {
         $request = ViabilityRequest::query()->find($this->viabilityRequestId);
 
@@ -93,9 +99,14 @@ class DecidirFluxoExpressoJob implements ShouldBeUnique, ShouldQueue
         }
 
         // O polígono do lote vem ANTES da decisão: é ele que zoneia pela maior
-        // porção. Só aqui (fila, 120 s) a consulta espacial lenta é aceitável; o
-        // protocolo síncrono não a pede. Falha não impede a decisão.
-        ($poligono ?? app(PoligonoEnderecamentoService::class))->aplicarPorPonto($request);
+        // porção. Pelo ponto: edificações complementares (Overture, Microsoft,
+        // IA) e, por último, o endereçamento SEDUR (consulta lenta, só aqui na
+        // fila). Esperando a IA, o job volta para a fila; falha não impede a decisão.
+        if (($poligono ?? app(ResolucaoPoligonoPorPonto::class))->resolver($request, podeEsperarIa: $this->attempts() < $this->tries)) {
+            $this->release((int) config('viabiliza.edificacoes.ia.espera_segundos', 60));
+
+            return;
+        }
 
         $service->decide($request, $this->atorId !== null ? User::query()->find($this->atorId) : null);
     }
@@ -116,7 +127,7 @@ class DecidirFluxoExpressoJob implements ShouldBeUnique, ShouldQueue
 
         $status = $protocolo->completarTerritorio($request);
 
-        if ($status !== LocalizacaoInscricao::INDISPONIVEL || $this->attempts() >= $this->tries) {
+        if ($status !== LocalizacaoInscricao::INDISPONIVEL || $this->attempts() >= $this->triesCadastro) {
             return false;
         }
 

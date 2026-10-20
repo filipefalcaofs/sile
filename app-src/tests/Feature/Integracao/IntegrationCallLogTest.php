@@ -6,6 +6,7 @@ use App\Jobs\DecidirFluxoExpressoJob;
 use App\Jobs\ProtocolarRecebimentoReginJob;
 use App\Models\IntegrationCall;
 use App\Models\User;
+use App\Services\Integracao\IntegrationCallRecorder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Http\Client\ConnectionException;
@@ -110,6 +111,49 @@ class IntegrationCallLogTest extends TestCase
         Http::fake(['https://x.exemplo.test/*' => Http::response($binario, 200, ['Content-Type' => 'image/png'])]);
 
         $this->assertSame($binario, Http::get('https://x.exemplo.test/a.png')->body());
+    }
+
+    public function test_resposta_binaria_grava_marcador_em_vez_do_corpo(): void
+    {
+        $binario = "\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\x03\xab";
+
+        Http::fake(['https://x.exemplo.test/*' => Http::response($binario, 200, ['Content-Type' => 'application/octet-stream'])]);
+
+        Http::get('https://x.exemplo.test/part.csv.gz');
+
+        $this->assertSame('[conteúdo binário: 11 bytes]', IntegrationCall::query()->sole()->response_body);
+    }
+
+    public function test_integracao_por_url_das_edificacoes(): void
+    {
+        $recorder = app(IntegrationCallRecorder::class);
+
+        $this->assertSame('overture', $recorder->integracao('https://overturemaps-us-west-2.s3.amazonaws.com/release/x'));
+        $this->assertSame('edificacoes_microsoft', $recorder->integracao('https://minedbuildings.z5.web.core.windows.net/global-buildings/dataset-links.csv'));
+        $this->assertSame('ortofoto', $recorder->integracao('https://geo.salvador.ba.gov.br/imageserver/rest/services/Ortofotos/2024/ImageServer/exportImage'));
+        $this->assertSame('ortofoto', $recorder->integracao('https://mapeamento.salvador.ba.gov.br/wms'));
+        $this->assertSame('edificacoes_ia', $recorder->integracao('http://footprint-ia:8080/segmentar'));
+    }
+
+    public function test_resposta_com_tipo_binario_grava_marcador_sem_ler_o_corpo(): void
+    {
+        Http::fake(['https://x.exemplo.test/*' => Http::response('texto-qualquer', 200, ['Content-Type' => 'application/gzip'])]);
+
+        Http::get('https://x.exemplo.test/part.csv.gz');
+
+        $this->assertSame('[conteúdo binário: 14 bytes]', IntegrationCall::query()->sole()->response_body);
+    }
+
+    public function test_resposta_grande_grava_so_o_inicio(): void
+    {
+        config(['viabiliza.integrations.log.limite_corpo' => 10]);
+        Http::fake(['https://x.exemplo.test/*' => Http::response(str_repeat('a', 50), 200, ['Content-Type' => 'text/plain'])]);
+
+        Http::get('https://x.exemplo.test/grande.txt');
+
+        $chamada = IntegrationCall::query()->sole();
+        $this->assertSame(str_repeat('a', 10), $chamada->response_body);
+        $this->assertTrue((bool) $chamada->truncated);
     }
 
     public function test_resposta_de_erro_grava_como_erro(): void

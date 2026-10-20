@@ -25,6 +25,7 @@ class ApiIntegracaoCatalog
             self::geocoding(),
             self::geoserver(),
             self::arcgisSemap(),
+            self::edificacoes(),
         ];
     }
 
@@ -239,6 +240,30 @@ class ApiIntegracaoCatalog
                 self::interruptor('habilitada', 'features.arcgis_semap', 'Consulta do lote por inscrição habilitada'),
                 self::url('query_url', 'integrations.arcgis_semap.query_url', 'URL de consulta da camada'),
                 self::senha('token', 'integrations.arcgis_semap.token', 'Token'),
+            ],
+        ];
+    }
+
+    /**
+     * @return Aba
+     */
+    private static function edificacoes(): array
+    {
+        return [
+            'id' => 'edificacoes',
+            'nome' => 'Edificações complementares',
+            'descricao' => 'Polígono do lote pela edificação que contém o ponto do imóvel quando a SEDUR e o SEMAP não acham o lote: Overture, Microsoft e, por último, IA sobre a ortofoto da Prefeitura.',
+            'teste' => null,
+            'espelhar_url_ativa' => null,
+            'campos' => [
+                self::interruptor('overture', 'features.edificacoes_overture', 'Edificações da Overture'),
+                self::interruptor('microsoft', 'features.edificacoes_microsoft', 'Edificações da Microsoft'),
+                self::interruptor('ia', 'features.edificacoes_ia', 'Contorno por IA na ortofoto'),
+                self::interruptor('importacao_agendada', 'features.edificacoes_importacao_agendada', 'Atualização agendada das bases'),
+                self::url('ia_url', 'integrations.edificacoes.ia_url', 'URL do serviço de inferência'),
+                self::url('ortofoto_2024_url', 'integrations.edificacoes.ortofoto_2024_url', 'Ortofoto 2024 (ImageServer)'),
+                self::url('ortofoto_2016_url', 'integrations.edificacoes.ortofoto_2016_url', 'Ortofoto 2016/2017 (WMS)'),
+                self::senha('ortofoto_token', 'integrations.edificacoes.ortofoto_token', 'Token da ortofoto'),
             ],
         ];
     }

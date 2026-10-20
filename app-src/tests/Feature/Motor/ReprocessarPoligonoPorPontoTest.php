@@ -118,4 +118,14 @@ class ReprocessarPoligonoPorPontoTest extends TestCase
 
         Queue::assertNotPushed(DecidirFluxoExpressoJob::class);
     }
+
+    public function test_reprocesso_agenda_decisao_com_edificacoes_ligadas_e_enderecamento_desligado(): void
+    {
+        config(['viabiliza.features.geoserver_enderecamento' => false, 'viabiliza.features.edificacoes_overture' => true]);
+        $processo = $this->processoEmAnaliseComPonto();
+
+        app(ReprocessarEtapasService::class)->reprocessar($processo);
+
+        Queue::assertPushed(DecidirFluxoExpressoJob::class, fn (DecidirFluxoExpressoJob $job): bool => $job->viabilityRequestId === $processo->id && $job->reavaliacao);
+    }
 }

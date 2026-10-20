@@ -15,6 +15,7 @@ enum GeoLayerType: string
     case Via = 'via';
     case Lote = 'lote';
     case Restricao = 'restricao';
+    case LimiteMunicipio = 'limite_municipio';
 
     public function label(): string
     {
@@ -24,6 +25,7 @@ enum GeoLayerType: string
             self::Via => 'Via',
             self::Lote => 'Lote',
             self::Restricao => 'Restrição territorial',
+            self::LimiteMunicipio => 'Limite do município',
         };
     }
 

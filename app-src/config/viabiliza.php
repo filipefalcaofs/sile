@@ -55,6 +55,13 @@ return [
         // Lote por inscrição no ArcGIS municipal (camada SEMAP — Inscrições
         // Geo), fallback do endereçamento. Desligado, a zona segue pelo ponto.
         'arcgis_semap' => true,
+        // Edificações complementares como polígono do lote quando a Prefeitura
+        // não acha o lote: Overture, Microsoft e IA sobre a ortofoto. Ligadas
+        // pelo painel de integrações depois da primeira importação.
+        'edificacoes_overture' => false,
+        'edificacoes_microsoft' => false,
+        'edificacoes_ia' => false,
+        'edificacoes_importacao_agendada' => false,
         // Ingestão do benchmark federal de tempo de viabilidade (microdados da
         // REDESIM). Desligada, as telas de benchmark mostram a lacuna com o
         // motivo — nenhum número é estimado no lugar.
@@ -116,6 +123,41 @@ return [
         // É limite de infraestrutura (tamanho de request), não valor de
         // negócio; ajustável sem deploy se uma base oficial maior precisar subir.
         'upload_max_mb' => 20,
+    ],
+    // Edificações complementares (Overture, Microsoft, IA) usadas como
+    // polígono do lote quando as fontes da Prefeitura não acham o lote.
+    // Constantes técnicas; URLs e interruptores ficam no painel de integrações.
+    'edificacoes' => [
+        // Faixa de área (m²) aceita na importação.
+        'area_min_m2' => 10,
+        'area_max_m2' => 20000,
+        // Carga com menos que esta fração das edificações ativas da fonte é
+        // tratada como parcial e não aposenta as ausentes.
+        'aposentadoria_fracao_minima' => 0.5,
+        // Retângulo de Salvador com as ilhas [oeste, sul, leste, norte]: corte
+        // grosso dos downloads; o recorte fino é pelo limite oficial.
+        'bbox' => [-38.70, -13.02, -38.29, -12.73],
+        'microsoft' => [
+            'dataset_links_url' => 'https://minedbuildings.z5.web.core.windows.net/global-buildings/dataset-links.csv',
+        ],
+        'ia' => [
+            // Lado (m) e tamanho (px) do recorte da ortofoto em volta do ponto.
+            'lado_recorte_m' => 60,
+            'tamanho_px' => 800,
+            'timeout' => 120,
+            // Passadas do job de decisão esperando a IA antes de seguir sem ela.
+            'espera_tentativas' => 3,
+            // Segundos entre as passadas do job de decisão esperando a IA.
+            'espera_segundos' => 60,
+            'fila' => 'default',
+            // Critérios de aceite do contorno gerado.
+            'aceite' => [
+                'area_min_m2' => 20,
+                'area_max_m2' => 5000,
+                'compacidade_min' => 0.2,
+                'margem_borda_px' => 2,
+            ],
+        ],
     ],
     'retencao' => [
         'access_logs' => ['dias' => 365],
@@ -406,6 +448,17 @@ return [
                 // espera a primeira terminar antes de seguir sem polígono.
                 'espera_trava_ponto' => 60,
             ],
+        ],
+        // Edificações complementares: serviço de inferência (contêiner Python)
+        // e ortofotos da Prefeitura (ImageServer 2024 e WMS 2016/2017).
+        'edificacoes' => [
+            'ia_url' => null,
+            'ortofoto_2024_url' => 'https://geo.salvador.ba.gov.br/imageserver/rest/services/Ortofotos/2024/ImageServer',
+            'ortofoto_2016_url' => 'https://mapeamento.salvador.ba.gov.br/wms',
+            'ortofoto_2016_layer' => 'Ortoimagem_Salvador_2016_2017',
+            // Sem uso hoje: o ImageServer responde sem token (medido em 19/10/2026).
+            'ortofoto_token' => null,
+            'timeout_ortofoto' => 30,
         ],
         'arcgis_semap' => [
             'query_url' => 'https://geo.salvador.ba.gov.br/arcgis/rest/services/MAPA_BASE/MAPA_BASE_SEFAZ/MapServer/18/query',

@@ -16,7 +16,7 @@ import DecisionExplanation, { type DecisionExplanationData } from '@/components/
 import PageHeader from '@/components/app/page-header';
 import ParecerCard, { type ParecerDecisao } from '@/components/decisao/parecer-card';
 import CamadasImovelLista, { type CamadasImovel } from '@/components/geo/camadas-imovel';
-import { centroDaGeometria, ESTILO_ENDERECAMENTO } from '@/components/geo/geometria';
+import { centroDaGeometria, ESTILO_ENDERECAMENTO, type FontePoligono } from '@/components/geo/geometria';
 import { MapaSection } from '@/components/geo/mapa-section';
 import OptionSelect from '@/components/form/option-select';
 import SearchableSelect from '@/components/form/searchable-select';
@@ -64,6 +64,7 @@ interface ShowProps {
     geo: {
         poligono: Polygon | null;
         poligono_enderecamento?: Polygon | MultiPolygon | null;
+        poligono_fonte?: FontePoligono | null;
         ponto: { lat: number; lng: number } | null;
         origem: { value: string; label: string } | null;
         camadas: CamadasImovel | null;
@@ -756,10 +757,11 @@ export default function Show({
                                                     : []),
                                             ]}
                                         />
-                                        {geo.poligono_enderecamento ? (
-                                            <p className="text-sm text-gray-600 dark:text-gray-300">
-                                                Contorno tracejado: polígono do endereçamento SEDUR.
-                                            </p>
+                                        {geo.poligono_enderecamento && geo.poligono_fonte ? (
+                                            <p className="text-sm text-gray-600 dark:text-gray-300">{geo.poligono_fonte.legenda}</p>
+                                        ) : null}
+                                        {geo.poligono_fonte?.atribuicao ? (
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">Contorno: {geo.poligono_fonte.atribuicao}.</p>
                                         ) : null}
                                         {geo.origem && !geo.poligono ? (
                                             <p className="text-sm text-gray-600 dark:text-gray-300">
