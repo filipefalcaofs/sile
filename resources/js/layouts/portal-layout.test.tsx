@@ -89,7 +89,7 @@ describe('PortalLayout: avisos do servidor', () => {
         expect(textos.some((texto) => texto.includes('Confira os dados da empresa.'))).toBe(true);
     });
 
-    it('nenhuma página do portal repete o aviso de erro que o layout já mostra', () => {
+    it('nenhuma página do portal lê o flash por conta própria, porque o layout já mostra os avisos', () => {
         const paginas = import.meta.glob(['../pages/portal/**/*.tsx', '!../pages/portal/**/*.test.tsx'], {
             query: '?raw',
             import: 'default',
@@ -97,7 +97,7 @@ describe('PortalLayout: avisos do servidor', () => {
         }) as Record<string, string>;
 
         const repetem = Object.entries(paginas)
-            .filter(([, fonte]) => /flash\??\.error/.test(fonte))
+            .filter(([, fonte]) => /\bflash\b/.test(fonte))
             .map(([caminho]) => caminho);
 
         expect(Object.keys(paginas).length).toBeGreaterThan(5);
