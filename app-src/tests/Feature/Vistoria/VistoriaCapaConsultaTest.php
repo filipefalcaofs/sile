@@ -7,7 +7,9 @@ use App\Enums\ViabilityRequestStatus;
 use App\Models\InspectionReferral;
 use App\Models\Sector;
 use App\Models\User;
+use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
+use App\Services\Vistoria\ConsultaVistoriaPdfService;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
@@ -136,5 +138,82 @@ class VistoriaCapaConsultaTest extends TestCase
 
         $this->assertSame($antes, $processo->refresh()->only(['status', 'analysis_status', 'sector_id', 'assigned_user_id']));
         $this->assertDatabaseCount('analysis_status_transitions', 0);
+    }
+
+    public function test_pdf_da_consulta_baixa_com_despacho_no_layout_de_relatorio(): void
+    {
+        $processo = $this->processo(AnalysisStatus::Vistoriar);
+        $this->despachar($processo, 'Conferir o depósito de GLP nos fundos.');
+
+        $this->actingAs($this->vistoriadorSemConsulta(), 'gestao')
+            ->get("/gestao/vistorias/{$processo->id}/consulta/imprimir")
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf')
+            ->assertDownload(app(ConsultaVistoriaPdfService::class)->nomeDoArquivo($processo));
+
+        $dados = app(ConsultaVistoriaPdfService::class)->dados($processo, null);
+        $html = view('documentos.consulta-vistoria', $dados)->render();
+
+        $this->assertStringContainsString('Orientações do analista para a vistoria', $html);
+        $this->assertStringContainsString('Conferir o depósito de GLP nos fundos.', $html);
+        $this->assertStringContainsString('Marina Analista', $html);
+        $this->assertStringContainsString((string) $processo->protocol_number, $html);
+        $this->assertDatabaseHas('activity_log', ['log_name' => 'vistoria', 'event' => 'consulta-imprimir']);
+    }
+
+    public function test_pdf_sem_encaminhamento_informa_que_nao_ha_orientacoes(): void
+    {
+        $processo = $this->processo(AnalysisStatus::Vistoriar);
+
+        $html = view('documentos.consulta-vistoria', app(ConsultaVistoriaPdfService::class)->dados($processo, null))->render();
+
+        $this->assertStringContainsString('Nenhum encaminhamento à vistoria registrado', $html);
+    }
+
+    public function test_pdf_exige_permissao_e_eixo_de_vistoria_e_nao_altera_o_processo(): void
+    {
+        $semPermissao = User::factory()->withAcceptedLgpdTerm()->create();
+        $semPermissao->givePermissionTo(['acessar-gestao', 'consultar-solicitacoes']);
+        $naVistoria = $this->processo(AnalysisStatus::Vistoriar);
+        $fora = $this->processo(AnalysisStatus::EmAnalise);
+
+        $this->actingAs($semPermissao, 'gestao')
+            ->get("/gestao/vistorias/{$naVistoria->id}/consulta/imprimir")
+            ->assertForbidden();
+
+        $vistoriador = $this->vistoriadorSemConsulta();
+        $this->actingAs($vistoriador, 'gestao')
+            ->get("/gestao/vistorias/{$fora->id}/consulta/imprimir")
+            ->assertNotFound();
+
+        $antes = $naVistoria->only(['status', 'analysis_status', 'sector_id', 'assigned_user_id']);
+        $this->actingAs($vistoriador, 'gestao')
+            ->get("/gestao/vistorias/{$naVistoria->id}/consulta/imprimir")
+            ->assertOk();
+        $this->assertSame($antes, $naVistoria->refresh()->only(['status', 'analysis_status', 'sector_id', 'assigned_user_id']));
+    }
+
+    public function test_pdf_traz_os_campos_da_tela_camadas_parecer_e_vistoriador_nao_distribuido(): void
+    {
+        $processo = $this->processo(AnalysisStatus::Vistoriar);
+        $processo->forceFill([
+            'contingency_reason' => 'Sistema da JUCEB fora do ar.',
+            'camadas_incidentes' => [
+                'zona' => ['status' => 'identificado', 'nome' => 'ZM-2', 'fonte' => 'ponto', 'porcoes' => []],
+                'bairro' => ['status' => 'identificado', 'nome' => 'Pituba'],
+                'via' => 'Via local',
+                'camadas' => [['regra' => 'borda', 'titulo' => 'Borda marítima', 'status' => 'dentro', 'elemento' => 'Trecho 3', 'incide' => true]],
+            ],
+        ])->save();
+        ViabilityDecision::factory()->indeferida()->create(['viability_request_id' => $processo->id]);
+
+        $dados = app(ConsultaVistoriaPdfService::class)->dados($processo->fresh(), null);
+        $html = view('documentos.consulta-vistoria', $dados)->render();
+
+        foreach (['Nº da viabilidade', 'Origem', 'Analista responsável', 'Prazo (SLA)', 'Parecer da decisão', 'Indeferida',
+            'Camadas do imóvel', 'ZM-2 — ponto da inscrição', 'Pituba', 'Borda marítima', 'Trecho 3 — regra incide',
+            'Motivo da contingência', 'Sistema da JUCEB fora do ar.', 'Não distribuído'] as $texto) {
+            $this->assertStringContainsString($texto, $html, $texto);
+        }
     }
 }
