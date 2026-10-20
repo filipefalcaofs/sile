@@ -6,6 +6,7 @@ use App\Enums\ViabilityRequestStatus;
 use App\Events\ResultadoEmitido;
 use App\Models\ViabilityRequest;
 use App\Services\Expresso\FluxoExpressoService;
+use App\Services\Realty\LocalizacaoInscricao;
 use App\Services\Realty\PropertyCadastroCampos;
 use App\Services\Realty\PropertyRegistryLookup;
 use App\Services\Realty\PropertyRegistryResult;
@@ -23,7 +24,7 @@ class IndeferimentoInscricaoInativaTest extends TestCase
 {
     use LazilyRefreshDatabase;
 
-    private const PARECER = 'Processo indeferido em razão de pendência na inscrição imobiliária junto à SEFAZ Municipal.';
+    private const PARECER = "Solicitação indeferida em razão de pendências identificadas na situação cadastral da inscrição imobiliária junto à SEFAZ Municipal.\n\nRecomenda-se a regularização das pendências junto à SEFAZ Municipal para possibilitar o cadastramento de um novo processo.";
 
     protected function setUp(): void
     {
@@ -95,6 +96,27 @@ class IndeferimentoInscricaoInativaTest extends TestCase
         $resultado = app(FluxoExpressoService::class)->decide($solicitacao);
 
         $this->assertSame('inscricao_inativa', $resultado->decision?->consolidated_result);
+    }
+
+    public function test_situacao_quinze_ativa_por_decreto_nao_indefere_por_este_motivo(): void
+    {
+        Event::fake([ResultadoEmitido::class]);
+        $this->cadastroComSituacao('15');
+        $solicitacao = $this->protocolada();
+
+        $resultado = app(FluxoExpressoService::class)->decide($solicitacao);
+
+        $this->assertNotSame('inscricao_inativa', $resultado->decision?->consolidated_result);
+    }
+
+    public function test_situacoes_de_um_a_dezessete_exceto_quinze_indeferem(): void
+    {
+        foreach (array_diff(range(1, 17), [15]) as $codigo) {
+            $this->assertTrue(
+                (new LocalizacaoInscricao(LocalizacaoInscricao::LOCALIZADA, situacaoCadastral: (string) $codigo))->inscricaoInativa(),
+                "código {$codigo}",
+            );
+        }
     }
 
     public function test_situacao_zero_com_espacos_e_ativa_e_nao_indefere_por_este_motivo(): void

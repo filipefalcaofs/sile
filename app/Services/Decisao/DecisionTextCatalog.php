@@ -157,7 +157,7 @@ final class DecisionTextCatalog
             'justificativa.conclusao.permitido_com_condicoes' => 'Diante do enquadramento acima, manifesta-se pelo deferimento desta atividade na zona :zona, condicionado ao cumprimento das exigências urbanísticas incidentes.',
             'justificativa.conclusao.nao_permitido' => 'Diante do enquadramento acima, manifesta-se pelo indeferimento desta atividade, por ser o uso proibido na zona :zona segundo o Quadro 10 da LOUOS.',
             'justificativa.conclusao.nao_permitido_via' => 'Diante do enquadramento acima, manifesta-se pelo indeferimento desta atividade, por ser o uso vedado na classe viária :classe_via pelo Quadro 11-A da LOUOS.',
-            'justificativa.indeferimento.inscricao_inativa' => 'Processo indeferido em razão de pendência na inscrição imobiliária junto à SEFAZ Municipal.',
+            'justificativa.indeferimento.inscricao_inativa' => "Solicitação indeferida em razão de pendências identificadas na situação cadastral da inscrição imobiliária junto à SEFAZ Municipal.\n\nRecomenda-se a regularização das pendências junto à SEFAZ Municipal para possibilitar o cadastramento de um novo processo.",
             'justificativa.indeferimento.sem_bap' => 'Indeferido sem atuação: o prazo de atuação na Junta Comercial (BAP) venceu sem que o requerente concluísse o registro, e a solicitação não pôde prosseguir.',
             'justificativa.indeferimento.pergunta_sem_resposta' => 'Indeferido: o requerimento recebido não trouxe a resposta da pergunta :numero (":enunciado") da planilha de tratamento, necessária ao enquadramento da atividade :cnae.',
             'justificativa.indeferimento.convite_expirado' => 'Processo indeferido pelo não atendimento ao convite no prazo estabelecido em consonância com Lei Federal nº 11.598/2007 e Resolução CGSIM nº 61/2020. Recomenda-se a abertura de novo processo contendo toda a documentação solicitada.',
@@ -190,7 +190,7 @@ final class DecisionTextCatalog
             'territorial.motivo.localizacao_indisponivel' => 'Não foi possível verificar a restrição territorial ":regra" (localização do imóvel não obtida: Cadastro Imobiliário indisponível ou inscrição sem coordenada) — segue para análise técnica.',
             'territorial.motivo.cadastro_indisponivel' => 'Não foi possível verificar a restrição territorial ":regra" (Cadastro Imobiliário indisponível para conferir o logradouro tributário) — segue para análise técnica.',
             'zona.motivo.empate_maior_porcao' => 'Zona urbanística indefinida (art. 18, § 2º, da Lei nº 9.148/2016): o terreno tem porções iguais nas zonas :zona_a e :zona_b — segue para análise técnica.',
-            'localizacao.motivo.divergencia_zona' => 'Localização divergente (HU-037 RN-005): o polígono informado está na zona :zona_poligono e a inscrição imobiliária, na zona :zona_inscricao — segue para análise técnica.',
+            'localizacao.motivo.divergencia_zona' => 'Localização divergente (HU-036 RN-005): o polígono informado está na zona :zona_poligono e a inscrição imobiliária, na zona :zona_inscricao — segue para análise técnica.',
             'localizacao.motivo.divergencia_zona_enderecamento' => 'Localização divergente: o polígono desenhado está na zona :zona_desenho e o polígono do endereçamento SEDUR, na zona :zona_enderecamento — segue para análise técnica.',
             // Planilha de tratamento — motivos do ramo não resolvido. A pergunta
             // sem resposta cita o enunciado da planilha (:numero, :texto).

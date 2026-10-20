@@ -23,6 +23,9 @@ final readonly class LocalizacaoInscricao
 
     public const SEM_INSCRICAO = 'sem_inscricao';
 
+    /** Códigos de situação cadastral que contam como inscrição ativa: 0 (Ativo) e 15 (Ativa - Dec. 31.232/2019). */
+    public const SITUACOES_ATIVAS = ['0', '15'];
+
     public function __construct(
         public string $status,
         public ?float $lat = null,
@@ -35,15 +38,15 @@ final readonly class LocalizacaoInscricao
     ) {}
 
     /**
-     * Situação cadastral no Cadastro Imobiliário: "0" é inscrição ativa. Outro
-     * valor informado é inscrição com pendência. Sem consulta ou sem o dado,
-     * não há como afirmar que não está ativa — devolve false.
+     * Situação cadastral no Cadastro Imobiliário: só 0 e 15 são inscrição ativa.
+     * Qualquer outro valor informado é inscrição com pendência. Sem consulta ou
+     * sem o dado, não há como afirmar que não está ativa — devolve false.
      */
     public function inscricaoInativa(): bool
     {
         $situacao = trim((string) $this->situacaoCadastral);
 
-        return $situacao !== '' && $situacao !== '0';
+        return $situacao !== '' && ! in_array($situacao, self::SITUACOES_ATIVAS, true);
     }
 
     public function temPonto(): bool
