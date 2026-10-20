@@ -83,6 +83,16 @@ class RenovacaoElegibilidadeTest extends TestCase
         $this->assertNull($resultado->motivo);
     }
 
+    public function test_pre_operacional_pode_ser_renovado(): void
+    {
+        $origem = $this->tvlDeferido(TvlKind::PreOperacional);
+
+        $resultado = app(RenovacaoElegibilidadeService::class)->avaliar($origem);
+
+        $this->assertTrue($resultado->elegivel);
+        $this->assertNull($resultado->motivo);
+    }
+
     private function tvlDeferido(TvlKind $tipo): ViabilityRequest
     {
         $origem = ViabilityRequest::factory()->create();
