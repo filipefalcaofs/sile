@@ -563,6 +563,16 @@ class ViabilityRequest extends Model
     }
 
     /**
+     * Último encaminhamento à vistoria: o despacho do analista.
+     *
+     * @return HasOne<InspectionReferral, $this>
+     */
+    public function inspectionReferral(): HasOne
+    {
+        return $this->hasOne(InspectionReferral::class)->latestOfMany();
+    }
+
+    /**
      * Quedas do fluxo expresso que originaram o encaminhamento à análise.
      *
      * @return HasMany<ExpressoQueda, $this>

@@ -41,6 +41,22 @@ class InspectionReferral extends Model
     /**
      * @return BelongsTo<Sector, $this>
      */
+    public function setorOrigem(): BelongsTo
+    {
+        return $this->belongsTo(Sector::class, 'setor_origem_id');
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function analistaOrigem(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'analista_origem_user_id');
+    }
+
+    /**
+     * @return BelongsTo<Sector, $this>
+     */
     public function setorVistoria(): BelongsTo
     {
         return $this->belongsTo(Sector::class, 'setor_vistoria_id');

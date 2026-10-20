@@ -8,6 +8,7 @@ use App\Enums\ViabilityRequestStatus;
 use App\Models\Sector;
 use App\Models\User;
 use App\Models\ViabilityRequest;
+use App\Services\Analise\ProcessoQueryService;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
@@ -77,6 +78,41 @@ class CaixaSetorParaConclusaoDistribuicaoTest extends TestCase
         $this->assertSame($destino->id, $processo->assigned_user_id);
         $this->assertSame(AnalysisStatus::ParaConclusao, $processo->analysis_status);
         $this->assertTrue($prazo->equalTo($processo->analysis_due_at));
+    }
+
+    public function test_processo_distribuido_sai_da_aba_e_do_contador_e_fica_na_caixa_do_destinatario(): void
+    {
+        $setor = Sector::factory()->create();
+        $apoio = $this->apoio($setor);
+        $destino = $this->analista($setor);
+        $processo = $this->processoParaConclusao($setor);
+        $outro = $this->processoParaConclusao($setor);
+
+        $this->actingAs($apoio, 'gestao')
+            ->get('/gestao/caixa-setor?visao=para_conclusao')
+            ->assertInertia(fn ($page) => $page->where('contadores.para_conclusao', 2));
+
+        $this->actingAs($apoio, 'gestao')
+            ->post('/gestao/caixa-setor/distribuir', [
+                'request_ids' => [$processo->id],
+                'analista_id' => $destino->id,
+            ])
+            ->assertSessionMissing('error');
+
+        $this->actingAs($apoio, 'gestao')
+            ->get('/gestao/caixa-setor?visao=para_conclusao')
+            ->assertInertia(fn ($page) => $page
+                ->where('contadores.para_conclusao', 1)
+                ->has('processos.data', 1)
+                ->where('processos.data.0.id', $outro->id));
+
+        $processo->refresh();
+        $this->assertSame(AnalysisStatus::ParaConclusao, $processo->analysis_status);
+        $this->assertSame($destino->id, $processo->conclusao_encaminhada_para_user_id);
+        $this->assertContains(
+            $processo->id,
+            app(ProcessoQueryService::class)->fila($destino)->pluck('viability_requests.id')->all(),
+        );
     }
 
     public function test_apoio_redistribui_processo_para_conclusao_que_ja_tem_responsavel(): void

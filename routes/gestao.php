@@ -711,6 +711,13 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             ->middleware('permission:preencher-ficha-vistoria|distribuir-processos')
             ->name('vistorias.index');
 
+        // Capa de consulta do processo na caixa de vistoria: a tela do detalhe,
+        // liberada a quem preenche a ficha ou distribui, sem ampliar
+        // consultar-solicitacoes. Só processos no eixo de vistoria.
+        Route::get('vistorias/{viabilityRequest}/consulta', [ProcessoController::class, 'consultaVistoria'])
+            ->middleware('permission:preencher-ficha-vistoria|distribuir-processos')
+            ->name('vistorias.consulta');
+
         // Caixa de Malha Fina: a fila do revisor — processos com in_fine_mesh
         // (o encaminhamento continua ortogonal ao status, HU-136). A consulta
         // (GET) lista com os filtros das caixas e audita; a conclusão (POST)

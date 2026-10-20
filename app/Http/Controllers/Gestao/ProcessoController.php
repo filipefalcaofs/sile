@@ -182,6 +182,26 @@ class ProcessoController extends Controller
      */
     public function show(Request $request, ViabilityRequest $viabilityRequest): Response
     {
+        return $this->detalhe($request, $viabilityRequest, false);
+    }
+
+    /**
+     * Capa de consulta aberta pela caixa de vistoria: a mesma tela do detalhe,
+     * liberada a quem preenche a ficha ou distribui, só para processo no eixo de
+     * vistoria ou com ficha. Não exige consultar-solicitacoes e não altera nada.
+     */
+    public function consultaVistoria(Request $request, ViabilityRequest $viabilityRequest): Response
+    {
+        $naVistoria = in_array($viabilityRequest->analysis_status, [AnalysisStatus::Vistoriar, AnalysisStatus::Vistoriado], true)
+            || $viabilityRequest->inspection()->exists();
+
+        abort_unless($naVistoria, 404);
+
+        return $this->detalhe($request, $viabilityRequest, true);
+    }
+
+    private function detalhe(Request $request, ViabilityRequest $viabilityRequest, bool $consultaVistoria): Response
+    {
         $podeConcluir = $request->user()->can('concluir-analise');
 
         $viabilityRequest->load([
@@ -193,6 +213,10 @@ class ProcessoController extends Controller
             'currentAnalysisRecord',
             'transitions',
             'encaminhamentoAnalise',
+            'inspectionReferral.encaminhadoPor:id,name',
+            'inspectionReferral.analistaOrigem:id,name',
+            'inspectionReferral.setorOrigem:id,name',
+            'inspectionReferral.setorVistoria:id,name',
         ]);
 
         // personalData: leitura do detalhe do processo de um cidadão expõe dados
@@ -210,8 +234,19 @@ class ProcessoController extends Controller
             personalData: true,
         );
 
+        $despacho = $viabilityRequest->inspectionReferral;
+
         return Inertia::render('gestao/processos/show', [
             'processo' => (new ProcessoResource($viabilityRequest))->resolve(),
+            'consultaVistoria' => $consultaVistoria,
+            // Despacho do analista ao encaminhar à vistoria: o que verificar em campo.
+            'despachoVistoria' => $despacho === null ? null : [
+                'orientacoes' => $despacho->motivo,
+                'analista' => $despacho->analistaOrigem?->name ?? $despacho->encaminhadoPor?->name,
+                'setor_origem' => $despacho->setorOrigem?->name,
+                'setor_vistoria' => $despacho->setorVistoria?->name,
+                'encaminhado_em' => $despacho->created_at?->toIso8601String(),
+            ],
             'parecer' => ParecerDecisao::de($viabilityRequest->decision),
             // Explicabilidade passo a passo (HU-099): projeção PURA do
             // decision_trace gravado (RN-005), só quando há decisão — sem
