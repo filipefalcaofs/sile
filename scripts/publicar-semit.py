@@ -63,7 +63,7 @@ def excluido(caminho: str, regras) -> bool:
     return caminho.startswith(SEM_BUILD)
 
 
-SELF_EXCLUDE = {"scripts/publicar-semit.py", ".phpunit.result.cache"}
+SELF_EXCLUDE = {"scripts/publicar-semit.py", ".phpunit.result.cache", "VERSION"}
 
 
 def proxima_tag(tags: list[str], minor: bool) -> str:
