@@ -63,12 +63,13 @@ export default function ConsultaLegadoModal({
     function consultar() {
         setErro(null);
         setResposta(null);
-        form.post('/portal/renovacao/legado/consultar', {
+        // as falhas já são tratadas nos callbacks; o catch evita rejeição não tratada no console
+        void Promise.resolve(form.post('/portal/renovacao/legado/consultar', {
             onSuccess: (dados: unknown) => setResposta(dados as RespostaConsulta),
             onError: (erros: Record<string, string>) => setErro(Object.values(erros)[0] ?? MENSAGEM_PADRAO),
             onHttpException: (response) => setErro(mensagemDe(response.data) ?? MENSAGEM_PADRAO),
             onNetworkError: () => setErro(MENSAGEM_PADRAO),
-        });
+        })).catch(() => undefined);
     }
 
     const podeConsultar = form.data.empresa_id !== '' && form.data.numero_viabilidade.trim() !== '';
