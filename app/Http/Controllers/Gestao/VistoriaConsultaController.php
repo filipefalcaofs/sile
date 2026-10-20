@@ -266,6 +266,7 @@ class VistoriaConsultaController extends Controller
 
         return User::query()
             ->permission('preencher-ficha-vistoria')
+            ->role(['Vistoriador', 'administrador'])
             ->when(! $qualquerSetor, fn (Builder $q) => $q->whereHas('sectors', fn ($s) => $s->whereIn('sectors.id', $setores)))
             ->with('sectors:id,name')
             ->orderBy('name')
@@ -368,6 +369,7 @@ class VistoriaConsultaController extends Controller
             'sector_id' => $processo->sector_id,
             'situacao' => $situacao,
             'situacao_label' => $situacaoLabel,
+            'pode_redistribuir' => in_array($situacao, ['distribuido', 'em_campo'], true),
             'vistoriador' => $ficha?->vistoriador?->name,
             'responsavel' => $processo->assignedTo?->name,
             'analysis_due_at' => $processo->analysis_due_at?->toIso8601String(),

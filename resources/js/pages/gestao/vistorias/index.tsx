@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import DistribuirModal, { type DestinatarioDaDistribuicao } from '@/components/analise/distribuir-modal';
 import ProcessoFiltros, { FILTROS_VAZIOS, type ProcessoFiltrosValores } from '@/components/analise/processo-filtros';
 import PageHeader from '@/components/app/page-header';
-import { ArrowRightIcon, EyeIcon } from '@/components/icons';
+import { ArrowRightIcon, EyeIcon, GroupIcon } from '@/components/icons';
 import Badge from '@/components/ui/badge';
 import Button from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -29,6 +29,7 @@ interface VistoriaItem {
     setor: string | null;
     situacao: 'designar' | 'distribuido' | 'em_campo' | 'concluida';
     situacao_label: string;
+    pode_redistribuir: boolean;
     vistoriador: string | null;
     responsavel: string | null;
     analysis_due_at: string | null;
@@ -128,6 +129,7 @@ export default function VistoriasIndex({
     const primeiraBusca = useRef(true);
     const [selecionados, setSelecionados] = useState<number[]>([]);
     const [modalAberto, setModalAberto] = useState(false);
+    const [redistribuindo, setRedistribuindo] = useState<VistoriaItem | null>(null);
 
     const { situacao: _situacao, busca: _busca, per_page: _perPage, ...filtrosDeCampo } = filtros;
     const selecaoAtiva = podeDistribuir && (filtros.situacao === 'designar' || filtros.situacao === 'todas');
@@ -286,6 +288,14 @@ export default function VistoriasIndex({
                         icon={<EyeIcon className="size-4.5" />}
                         label="Consultar processo"
                     />
+                    {podeDistribuir && item.pode_redistribuir && (
+                        <TableAction
+                            tone="neutral"
+                            onClick={() => setRedistribuindo(item)}
+                            icon={<GroupIcon className="size-4.5" />}
+                            label="Redistribuir para outro vistoriador"
+                        />
+                    )}
                     {item.situacao === 'designar' ? (
                         <span className="text-theme-xs text-gray-400 dark:text-gray-500">Aguarda distribuição</span>
                     ) : (
@@ -415,6 +425,20 @@ export default function VistoriasIndex({
                         setModalAberto(false);
                         setSelecionados([]);
                     }}
+                />
+            )}
+
+            {redistribuindo && (
+                <DistribuirModal
+                    tipo="redistribuir"
+                    ids={[redistribuindo.id]}
+                    descricao={`Processo ${redistribuindo.bap ?? redistribuindo.protocol_number ?? redistribuindo.id} — hoje com ${redistribuindo.vistoriador ?? redistribuindo.responsavel ?? 'vistoriador'}`}
+                    destinatarios={vistoriadores}
+                    papel="Vistoriador"
+                    distribuiEmQualquerSetor={distribuiEmQualquerSetor}
+                    setoresDosProcessos={[redistribuindo.sector_id]}
+                    onClose={() => setRedistribuindo(null)}
+                    onSuccess={() => setRedistribuindo(null)}
                 />
             )}
         </>

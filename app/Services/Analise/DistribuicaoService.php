@@ -4,6 +4,8 @@ namespace App\Services\Analise;
 
 use App\Enums\AnalysisStage;
 use App\Enums\AnalysisStatus;
+use App\Enums\InspectionStatus;
+use App\Models\Inspection;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Support\Audit\AuditService;
@@ -112,10 +114,11 @@ class DistribuicaoService
     }
 
     /**
-     * Redistribuição (apoio/gestor troca a analista responsável): só ANTES da
-     * conclusão da análise e SEM recalcular o SLA — o prazo é do processo, não
-     * da pessoa; trocar o responsável não zera atraso. Audita a troca com a
-     * analista anterior e a nova.
+     * Redistribuição (apoio/gestor troca o responsável): em qualquer situação
+     * antes da conclusão da análise e SEM recalcular o SLA — o prazo é do
+     * processo, não da pessoa; trocar o responsável não zera atraso. Em vistoria,
+     * a ficha em preenchimento passa ao novo vistoriador com o rascunho; ficha
+     * concluída fica com quem vistoriou. Audita a troca com o anterior e o novo.
      */
     public function redistribuir(ViabilityRequest $request, User $novaAnalista, User $ator, ?int $setorEscolhido = null): void
     {
@@ -123,9 +126,11 @@ class DistribuicaoService
 
         $status = $request->analysis_status;
 
-        if ($status === null || ! $status->permiteRedistribuicao()) {
+        if ($status !== null && ! $status->permiteRedistribuicao()) {
             throw DistribuicaoException::analiseConcluida($request);
         }
+
+        $this->garantirVistoriadorEmVistoria($request, $novaAnalista);
 
         DB::transaction(function () use ($request, $novaAnalista, $ator, $setorDestino): void {
             $analistaAnterior = $request->assigned_user_id;
@@ -135,7 +140,15 @@ class DistribuicaoService
                 'sector_id' => $setorDestino,
                 'assigned_user_id' => $novaAnalista->id,
                 'assigned_at' => now(),
-            ])->save();
+            ]);
+
+            if ($request->analysis_status === AnalysisStatus::ParaConclusao) {
+                $request->forceFill(['conclusao_encaminhada_para_user_id' => $novaAnalista->id]);
+            }
+
+            $request->save();
+
+            $ficha = $this->transferirFichaEmPreenchimento($request, $novaAnalista);
 
             $this->audit->log('analise', 'redistribuir', "Processo redistribuído para {$novaAnalista->name} (solicitação #{$request->id}).", [
                 'viability_request_id' => $request->id,
@@ -146,10 +159,40 @@ class DistribuicaoService
                 'assigned_user_id' => $novaAnalista->id,
                 'analista_nome' => $novaAnalista->name,
                 'ator_id' => $ator->id,
+                'inspection_id' => $ficha['inspection_id'] ?? null,
+                'vistoriador_anterior_id' => $ficha['vistoriador_anterior_id'] ?? null,
             ], $request);
 
             $this->colocarNaCaixaDoAnalista($request, $novaAnalista, $ator);
         });
+    }
+
+    /**
+     * Passa a ficha de vistoria ainda em preenchimento ao novo responsável,
+     * com tudo o que já foi preenchido. Ficha concluída não muda de dono.
+     *
+     * @return array{inspection_id: int, vistoriador_anterior_id: int|null}|null
+     */
+    private function transferirFichaEmPreenchimento(ViabilityRequest $request, User $novoVistoriador): ?array
+    {
+        if ($request->analysis_status !== AnalysisStatus::Vistoriar) {
+            return null;
+        }
+
+        $ficha = Inspection::query()
+            ->where('viability_request_id', $request->id)
+            ->where('status', InspectionStatus::EmPreenchimento->value)
+            ->latest('id')
+            ->first();
+
+        if ($ficha === null || $ficha->vistoriador_user_id === $novoVistoriador->id) {
+            return null;
+        }
+
+        $anterior = $ficha->vistoriador_user_id;
+        $ficha->forceFill(['vistoriador_user_id' => $novoVistoriador->id])->save();
+
+        return ['inspection_id' => $ficha->id, 'vistoriador_anterior_id' => $anterior];
     }
 
     /**
@@ -288,8 +331,7 @@ class DistribuicaoService
      * Processo a vistoriar só pode ser atribuído a vistoriador
      * (preencher-ficha-vistoria): quem recebe é quem abre e preenche a ficha.
      * Depois de vistoriado, o processo volta à análise e vai a analista.
-     * Redistribuição em vistoria já é bloqueada pelo enum
-     * (permiteRedistribuicao), então a regra vive no caminho de atribuição.
+     * Vale para a distribuição e para a redistribuição.
      */
     private function garantirVistoriadorEmVistoria(ViabilityRequest $request, User $analista): void
     {

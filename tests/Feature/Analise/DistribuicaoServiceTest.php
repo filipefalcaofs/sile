@@ -399,6 +399,35 @@ class DistribuicaoServiceTest extends TestCase
         ]);
     }
 
+    public function test_redistribuir_e_permitida_com_o_processo_em_convite(): void
+    {
+        $sector = Sector::factory()->create();
+        $analistaA = $this->analistaDoSetor($sector);
+        $analistaB = $this->analistaDoSetor($sector);
+        $request = $this->processoAtribuido($sector, $analistaA, AnalysisStatus::EmConvite);
+
+        $this->service()->redistribuir($request, $analistaB, User::factory()->create());
+
+        $fresh = $request->fresh();
+        $this->assertSame($analistaB->id, $fresh->assigned_user_id);
+        $this->assertSame(AnalysisStatus::EmConvite, $fresh->analysis_status, 'A troca não muda a situação do processo.');
+    }
+
+    public function test_redistribuir_para_conclusao_passa_a_conclusao_ao_novo_responsavel(): void
+    {
+        $sector = Sector::factory()->create();
+        $analistaA = $this->analistaDoSetor($sector);
+        $analistaB = $this->analistaDoSetor($sector);
+        $request = $this->processoAtribuido($sector, $analistaA, AnalysisStatus::ParaConclusao);
+        $request->forceFill(['conclusao_encaminhada_para_user_id' => $analistaA->id])->save();
+
+        $this->service()->redistribuir($request, $analistaB, User::factory()->create());
+
+        $fresh = $request->fresh();
+        $this->assertSame($analistaB->id, $fresh->assigned_user_id);
+        $this->assertSame($analistaB->id, $fresh->conclusao_encaminhada_para_user_id);
+    }
+
     public function test_redistribuir_exige_analista_vinculada_ao_setor(): void
     {
         $sector = Sector::factory()->create();

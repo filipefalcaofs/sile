@@ -4,8 +4,11 @@ namespace Tests\Feature\Vistoria;
 
 use App\Enums\AnalysisStage;
 use App\Enums\AnalysisStatus;
+use App\Enums\InspectionStatus;
 use App\Enums\ViabilityRequestStatus;
+use App\Models\Activity;
 use App\Models\Cnae;
+use App\Models\Inspection;
 use App\Models\Sector;
 use App\Models\User;
 use App\Models\ViabilityRequest;
@@ -221,5 +224,103 @@ class VistoriaCaixaDistribuicaoTest extends TestCase
             ->assertSessionHas('warning', fn (string $mensagem): bool => str_contains($mensagem, 'Vera de Outro Setor'));
 
         $this->assertNull($processo->refresh()->assigned_user_id);
+    }
+
+    public function test_redistribuir_vistoria_passa_a_ficha_em_preenchimento_ao_novo_vistoriador(): void
+    {
+        $setor = Sector::factory()->create();
+        $chefia = $this->chefia($setor);
+        $vera = $this->vistoriador($setor);
+        $bia = $this->vistoriador($setor, 'Bia Vistoriadora');
+        $processo = $this->processoEmVistoria($setor, $vera);
+        $ficha = Inspection::factory()->create([
+            'viability_request_id' => $processo->id,
+            'vistoriador_user_id' => $vera->id,
+            'bairro' => 'Rascunho preservado',
+        ]);
+
+        $this->actingAs($chefia, 'gestao')
+            ->post('/gestao/caixa-setor/redistribuir', [
+                'request_ids' => [$processo->id],
+                'analista_id' => $bia->id,
+            ])
+            ->assertSessionHas('status');
+
+        $this->assertSame($bia->id, $processo->fresh()->assigned_user_id);
+        $this->assertSame($bia->id, $ficha->fresh()->vistoriador_user_id);
+        $this->assertSame('Rascunho preservado', $ficha->fresh()->bairro);
+
+        $activity = Activity::query()
+            ->where('event', 'redistribuir')
+            ->where('subject_id', $processo->id)
+            ->latest('id')
+            ->first();
+        $this->assertSame($vera->id, $activity->properties['vistoriador_anterior_id']);
+        $this->assertSame($ficha->id, $activity->properties['inspection_id']);
+    }
+
+    public function test_redistribuir_vistoria_a_quem_nao_vistoria_e_recusado(): void
+    {
+        $setor = Sector::factory()->create();
+        $chefia = $this->chefia($setor);
+        $vera = $this->vistoriador($setor);
+        $semVistoria = User::factory()->withAcceptedLgpdTerm()->create();
+        $semVistoria->givePermissionTo(['acessar-gestao', 'analisar-processos']);
+        $semVistoria->sectors()->attach($setor);
+        $processo = $this->processoEmVistoria($setor, $vera);
+        $ficha = Inspection::factory()->create(['viability_request_id' => $processo->id, 'vistoriador_user_id' => $vera->id]);
+
+        $this->actingAs($chefia, 'gestao')
+            ->post('/gestao/caixa-setor/redistribuir', [
+                'request_ids' => [$processo->id],
+                'analista_id' => $semVistoria->id,
+            ])
+            ->assertSessionHas('error');
+
+        $this->assertSame($vera->id, $processo->fresh()->assigned_user_id);
+        $this->assertSame($vera->id, $ficha->fresh()->vistoriador_user_id);
+    }
+
+    public function test_redistribuir_vistoriado_mantem_a_ficha_concluida_com_quem_vistoriou(): void
+    {
+        $setor = Sector::factory()->create();
+        $chefia = $this->chefia($setor);
+        $vera = $this->vistoriador($setor);
+        $bia = $this->vistoriador($setor, 'Bia Vistoriadora');
+        $processo = $this->processoEmVistoria($setor, $vera);
+        $processo->forceFill(['analysis_status' => AnalysisStatus::Vistoriado])->save();
+        $ficha = Inspection::factory()->concluida()->create(['viability_request_id' => $processo->id, 'vistoriador_user_id' => $vera->id]);
+
+        $this->actingAs($chefia, 'gestao')
+            ->post('/gestao/caixa-setor/redistribuir', [
+                'request_ids' => [$processo->id],
+                'analista_id' => $bia->id,
+            ])
+            ->assertSessionHas('status');
+
+        $this->assertSame($bia->id, $processo->fresh()->assigned_user_id);
+        $this->assertSame($vera->id, $ficha->fresh()->vistoriador_user_id);
+        $this->assertSame(InspectionStatus::Concluida, $ficha->fresh()->status);
+    }
+
+    public function test_consulta_marca_distribuidos_e_em_campo_como_redistribuiveis(): void
+    {
+        $setor = Sector::factory()->create();
+        $chefia = $this->chefia($setor);
+        $vera = $this->vistoriador($setor);
+        $livre = $this->processoEmVistoria($setor);
+        $distribuido = $this->processoEmVistoria($setor, $vera);
+        $emCampo = $this->processoEmVistoria($setor, $vera);
+        Inspection::factory()->create(['viability_request_id' => $emCampo->id, 'vistoriador_user_id' => $vera->id]);
+
+        $this->actingAs($chefia, 'gestao')
+            ->get('/gestao/vistorias?situacao=todas')
+            ->assertInertia(function (Assert $page) use ($livre, $distribuido, $emCampo): void {
+                $linhas = collect($page->toArray()['props']['vistorias']['data'])->keyBy('id');
+
+                $this->assertFalse($linhas[$livre->id]['pode_redistribuir']);
+                $this->assertTrue($linhas[$distribuido->id]['pode_redistribuir']);
+                $this->assertTrue($linhas[$emCampo->id]['pode_redistribuir']);
+            });
     }
 }
