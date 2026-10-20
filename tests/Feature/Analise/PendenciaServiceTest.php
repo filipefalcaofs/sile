@@ -22,7 +22,7 @@ use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 /**
- * Ciclo de pendência interno (HU-083/084 + HU-090): o analista abre uma
+ * Ciclo de pendência interno (HU-079/080 + HU-086): o analista abre uma
  * pendência (em_analise→em_pendencia, grava analysis_pendencies com prazo
  * parametrizado) e dispara o evento gancho PendenciaSolicitada — o listener
  * auto-descoberto NotificarPendencia notifica o requerente de forma MULTICANAL
@@ -115,7 +115,7 @@ class PendenciaServiceTest extends TestCase
         Notification::assertSentToTimes($requester, PendenciaSolicitadaNotification::class, 1);
 
         // Multicanal pelo dispatcher: o ledger communications nasce na_fila por
-        // canal (mapa default pendencia_aberta = [email, in_app]; HU-096).
+        // canal (mapa default pendencia_aberta = [email, in_app]; HU-092).
         $this->assertDatabaseHas('communications', [
             'viability_request_id' => $request->id,
             'recipient_user_id' => $requester->id,
@@ -176,6 +176,27 @@ class PendenciaServiceTest extends TestCase
         $this->assertSame(0, AnalysisPendency::query()->count());
         $this->assertSame(0, $request->transitions()->count());
         Notification::assertNothingSent();
+    }
+
+    public function test_abrir_sem_requerente_e_bloqueado_para_nao_expirar_sem_aviso(): void
+    {
+        Notification::fake();
+        Event::fake([PendenciaSolicitada::class]);
+
+        $analista = User::factory()->create();
+        $request = $this->emAnalise();
+        $request->forceFill(['requester_user_id' => null])->save();
+
+        try {
+            $this->service()->abrir($request->refresh(), $analista, 'Envie o IPTU atualizado.');
+            $this->fail('Esperava PendenciaInvalidaException: sem requerente o convite não chega nem pode ser respondido.');
+        } catch (PendenciaInvalidaException $e) {
+            $this->assertStringContainsString('requerente', $e->getMessage());
+        }
+
+        $this->assertSame(ViabilityRequestStatus::EmAnalise, $request->refresh()->status);
+        $this->assertSame(0, AnalysisPendency::query()->count());
+        Event::assertNotDispatched(PendenciaSolicitada::class);
     }
 
     public function test_responder_grava_resposta_e_reabre_a_analise(): void
