@@ -24,6 +24,9 @@ interface OptionSelectProps {
     hint?: string;
     /** Exibe um campo de busca dentro da lista. Ligado por padrão. */
     searchable?: boolean;
+    ariaLabel?: string;
+    /** Largura mínima do painel, em px. */
+    panelMinWidth?: number;
 }
 
 interface PosicaoPainel {
@@ -50,6 +53,8 @@ export default function OptionSelect({
     error = false,
     hint,
     searchable = true,
+    ariaLabel,
+    panelMinWidth = 576,
 }: OptionSelectProps) {
     const listaId = useId();
     const hintId = useId();
@@ -110,7 +115,7 @@ export default function OptionSelect({
 
             const rect = gatilho.getBoundingClientRect();
             const margem = 8;
-            const largura = Math.min(Math.max(rect.width, 576), window.innerWidth - margem * 2);
+            const largura = Math.min(Math.max(rect.width, panelMinWidth), window.innerWidth - margem * 2);
             let left = rect.left;
 
             if (left + largura > window.innerWidth - margem) {
@@ -134,7 +139,7 @@ export default function OptionSelect({
             window.removeEventListener('resize', medir);
             window.removeEventListener('scroll', medir, true);
         };
-    }, [aberto]);
+    }, [aberto, panelMinWidth]);
 
     useEffect(() => {
         if (!aberto) {
@@ -228,6 +233,7 @@ export default function OptionSelect({
                       id={listaId}
                       role="listbox"
                       aria-labelledby={id}
+                      aria-label={id ? undefined : ariaLabel}
                       style={{
                           top: posicao.top,
                           left: posicao.left,
@@ -326,6 +332,7 @@ export default function OptionSelect({
                 type="button"
                 id={id}
                 disabled={disabled}
+                aria-label={ariaLabel}
                 aria-haspopup="listbox"
                 aria-expanded={aberto}
                 aria-controls={listaId}

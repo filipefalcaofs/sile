@@ -1,5 +1,4 @@
-import { useId, type ChangeEvent } from 'react';
-import { ChevronDownIcon } from '@/components/icons';
+import OptionSelect from './option-select';
 
 interface Option {
     value: string;
@@ -22,8 +21,8 @@ interface SelectProps {
 }
 
 /**
- * Select do TailAdmin adaptado para componente controlado (value +
- * onChange), padrão usado com useForm/<Form> do Inertia.
+ * Lista suspensa controlada (value + onChange) com campo de busca.
+ * Padrão para todas as telas; substitui o select nativo.
  */
 export default function Select({
     options,
@@ -36,59 +35,22 @@ export default function Select({
     disabled = false,
     error = false,
     hint,
-    hidePlaceholder = false,
     ariaLabel,
 }: SelectProps) {
-    const hintId = useId();
-
-    const handleChange = (e: ChangeEvent<HTMLSelectElement>) => {
-        onChange(e.target.value);
-    };
-
-    const borda = error
-        ? 'border-error-500 focus:border-error-300 focus:ring-error-500/20 dark:border-error-500 dark:focus:border-error-800'
-        : 'border-gray-300 focus:border-brand-300 focus:ring-brand-500/10 dark:border-gray-700 dark:focus:border-brand-800';
-
     return (
-        <div className="relative">
-            <select
-                name={name}
-                id={id}
-                disabled={disabled}
-                aria-label={ariaLabel}
-                aria-invalid={error || undefined}
-                aria-describedby={hint ? hintId : undefined}
-                className={`h-11 w-full appearance-none rounded-lg border bg-white px-4 py-2.5 pr-11 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:scheme-dark dark:placeholder:text-white/30 ${borda} ${
-                    value ? 'text-gray-800 dark:text-white/90' : 'text-gray-400 dark:text-gray-400'
-                } ${disabled ? 'cursor-not-allowed opacity-40' : ''} ${className}`}
-                value={value}
-                onChange={handleChange}
-            >
-                {!hidePlaceholder && (
-                    <option value="" disabled className="text-gray-700 dark:bg-gray-900 dark:text-gray-400">
-                        {placeholder}
-                    </option>
-                )}
-                {options.map((option) => (
-                    <option
-                        key={option.value}
-                        value={option.value}
-                        className="text-gray-700 dark:bg-gray-900 dark:text-gray-400"
-                    >
-                        {option.label}
-                    </option>
-                ))}
-            </select>
-            <span
-                className={`pointer-events-none absolute top-0 right-0 flex h-11 w-11 items-center justify-center text-gray-500 dark:text-gray-400 ${disabled ? 'opacity-40' : ''}`}
-            >
-                <ChevronDownIcon className="size-4" aria-hidden="true" />
-            </span>
-            {hint && (
-                <p id={hintId} role={error ? 'alert' : undefined} className={`pt-1.5 text-xs ${error ? 'text-error-500' : 'text-gray-500'}`}>
-                    {hint}
-                </p>
-            )}
-        </div>
+        <OptionSelect
+            options={options}
+            placeholder={placeholder}
+            value={value}
+            onChange={onChange}
+            className={className}
+            name={name}
+            id={id}
+            disabled={disabled}
+            error={error}
+            hint={hint}
+            ariaLabel={ariaLabel}
+            panelMinWidth={256}
+        />
     );
 }

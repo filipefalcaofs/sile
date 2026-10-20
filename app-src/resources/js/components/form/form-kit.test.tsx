@@ -130,8 +130,15 @@ describe('kit de formulário', () => {
         });
 
         expect((document.getElementById('cnpj') as HTMLInputElement).value).toBe('12.ABC.345/0001-81');
+        act(() => {
+            (document.getElementById('uf') as HTMLButtonElement).click();
+        });
+        const opcoes = Array.from(document.querySelectorAll<HTMLButtonElement>('[role="option"]'));
+        expect(opcoes.length).toBe(27);
+        act(() => {
+            opcoes.find((opcao) => opcao.textContent?.includes('Bahia'))!.click();
+        });
         expect(document.getElementById('uf')?.textContent).toContain('Bahia');
-        expect(document.querySelectorAll('#uf option').length).toBeGreaterThan(26);
     });
 
     it('grava moeda em decimal e mostra o valor em reais', () => {

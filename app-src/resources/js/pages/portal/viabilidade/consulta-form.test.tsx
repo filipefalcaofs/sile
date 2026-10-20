@@ -60,6 +60,18 @@ function digitar(el: HTMLInputElement | HTMLSelectElement, valor: string) {
     });
 }
 
+function escolher(el: HTMLElement, id: string, rotulo: string) {
+    act(() => {
+        campo<HTMLButtonElement>(el, id).click();
+    });
+    const opcao = Array.from(document.querySelectorAll<HTMLButtonElement>('[role="option"]')).find((o) =>
+        o.textContent?.includes(rotulo),
+    )!;
+    act(() => {
+        opcao.click();
+    });
+}
+
 function campo<T extends HTMLElement>(el: HTMLElement, id: string): T {
     return el.querySelector<T>(`#${id}`)!;
 }
@@ -127,8 +139,8 @@ describe('Consulta — formulário', () => {
         digitar(campo(el, 'endereco'), 'Praça da Sé, Salvador');
         digitar(campo(el, 'cnae'), '4712-1/00');
         digitar(campo(el, 'area'), '120');
-        digitar(campo<HTMLSelectElement>(el, 'tipo_imovel'), 'Galpão');
-        digitar(campo<HTMLSelectElement>(el, 'categoria_empresa'), 'outra');
+        escolher(el, 'tipo_imovel', 'Galpão');
+        escolher(el, 'categoria_empresa', 'Outra');
 
         act(() => botao(el).click());
 
