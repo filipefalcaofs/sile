@@ -269,7 +269,7 @@ class ParaConclusaoTest extends TestCase
         $processo = $this->processoEmAnalise($setor, $analista);
 
         $this->actingAs($analista, 'gestao')
-            ->post("/gestao/processos/{$processo->id}/conclusao-analise", ['resultado' => 'deferido'])
+            ->post("/gestao/processos/{$processo->id}/conclusao-analise", ['resultado' => 'deferido', 'tipo' => 'definitiva'])
             ->assertForbidden();
     }
 

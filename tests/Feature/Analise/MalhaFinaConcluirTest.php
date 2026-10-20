@@ -2,12 +2,16 @@
 
 namespace Tests\Feature\Analise;
 
+use App\Enums\DecisionOutcome;
+use App\Enums\TvlKind;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\User;
+use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Analise\MalhaFinaService;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 /**
@@ -79,6 +83,32 @@ class MalhaFinaConcluirTest extends TestCase
         ]);
     }
 
+    public function test_malha_fina_deferido_exige_tipo_e_grava_validade(): void
+    {
+        Carbon::setTestNow('2026-10-20 10:00');
+        $revisor = $this->revisor();
+        $processo = $this->processoEmMalhaFina($revisor);
+        ViabilityDecision::factory()->create([
+            'viability_request_id' => $processo->id,
+            'outcome' => DecisionOutcome::Deferida,
+            'tvl_product_number' => 'TVL-EXPRESSO-1',
+        ]);
+        $processo->forceFill(['status' => ViabilityRequestStatus::Deferida])->save();
+
+        $this->actingAs($revisor, 'gestao')
+            ->post("/gestao/malha-fina/{$processo->id}/concluir", ['resultado' => 'deferido'])
+            ->assertSessionHasErrors('tipo');
+
+        $this->actingAs($revisor, 'gestao')
+            ->post("/gestao/malha-fina/{$processo->id}/concluir", ['resultado' => 'deferido', 'tipo' => 'provisoria', 'validade_meses' => 6])
+            ->assertSessionHasNoErrors();
+
+        $decisao = $processo->fresh()->decision;
+        $this->assertSame(TvlKind::Provisoria, $decisao->tvl_kind);
+        $this->assertSame('2027-04-20', $decisao->tvl_valid_until->toDateString());
+        $this->assertSame('TVL-EXPRESSO-1', $decisao->tvl_product_number);
+    }
+
     public function test_conclui_sem_observacao(): void
     {
         $revisor = $this->revisor();
@@ -145,6 +175,7 @@ class MalhaFinaConcluirTest extends TestCase
         $this->actingAs($revisor, 'gestao')
             ->post("/gestao/malha-fina/{$processo->id}/concluir", [
                 'resultado' => 'deferido',
+                'tipo' => 'definitiva',
             ])
             ->assertSessionHasErrors('conclusao');
 

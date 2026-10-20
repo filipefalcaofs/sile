@@ -66,6 +66,7 @@ class ConclusaoExigeFichaSalvaTest extends TestCase
         return $this->actingAs($this->analista(), 'gestao')
             ->post("/gestao/processos/{$processo->id}/conclusao-analise", [
                 'resultado' => $resultado,
+                'tipo' => 'definitiva',
                 'parecer' => 'Parecer da conclusão.',
             ]);
     }

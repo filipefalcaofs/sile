@@ -69,6 +69,7 @@ class ConclusaoAnaliseTest extends TestCase
         $this->actingAs($this->analista(), 'gestao')
             ->post("/gestao/processos/{$processo->id}/conclusao-analise", [
                 'resultado' => 'deferido',
+                'tipo' => 'definitiva',
                 'parecer' => 'Atividade compatível com a zona.',
             ])
             ->assertRedirect()
@@ -112,6 +113,7 @@ class ConclusaoAnaliseTest extends TestCase
         $this->actingAs($this->analista(), 'gestao')
             ->post("/gestao/processos/{$processo->id}/conclusao-analise", [
                 'resultado' => 'deferido',
+                'tipo' => 'definitiva',
             ])
             ->assertSessionHasErrors('divergencia');
 
@@ -152,6 +154,7 @@ class ConclusaoAnaliseTest extends TestCase
         $this->actingAs($this->analista(), 'gestao')
             ->post("/gestao/processos/{$processo->id}/conclusao-analise", [
                 'resultado' => 'deferido',
+                'tipo' => 'definitiva',
                 'confirmar_divergencia' => true,
             ])
             ->assertSessionHasNoErrors();
@@ -190,12 +193,12 @@ class ConclusaoAnaliseTest extends TestCase
         $rota = "/gestao/processos/{$processo->id}/conclusao-analise";
 
         $this->actingAs($this->analista(), 'gestao')
-            ->post($rota, ['resultado' => 'deferido'])
+            ->post($rota, ['resultado' => 'deferido', 'tipo' => 'definitiva'])
             ->assertSessionHasErrors('divergencia');
         $this->assertSame(ViabilityRequestStatus::Indeferida, $processo->fresh()->status);
 
         $this->actingAs($this->analista(), 'gestao')
-            ->post($rota, ['resultado' => 'deferido', 'confirmar_divergencia' => true])
+            ->post($rota, ['resultado' => 'deferido', 'tipo' => 'definitiva', 'confirmar_divergencia' => true])
             ->assertSessionHasNoErrors();
         $this->assertSame(ViabilityRequestStatus::Deferida, $processo->fresh()->status);
     }
@@ -283,6 +286,7 @@ class ConclusaoAnaliseTest extends TestCase
             $this->actingAs($this->analista(), 'gestao')
                 ->post("/gestao/processos/{$processo->id}/conclusao-analise", [
                     'resultado' => $resultado,
+                    'tipo' => 'definitiva',
                     'parecer' => 'Revisão da conclusão.',
                 ])
                 ->assertRedirect()

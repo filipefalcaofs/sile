@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Gestao;
 
 use App\Enums\ConclusionOutcome;
+use App\Http\Requests\Gestao\Concerns\ValidaTipoDeferimento;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -14,6 +15,8 @@ use Illuminate\Validation\Rule;
  */
 class ConcluirMalhaFinaRequest extends FormRequest
 {
+    use ValidaTipoDeferimento;
+
     public function authorize(): bool
     {
         return true;
@@ -27,7 +30,7 @@ class ConcluirMalhaFinaRequest extends FormRequest
         return [
             'resultado' => ['required', Rule::enum(ConclusionOutcome::class)],
             'observacao' => ['nullable', 'string', 'max:2000'],
-        ];
+        ] + $this->regrasTipoDeferimento();
     }
 
     /**
@@ -48,6 +51,6 @@ class ConcluirMalhaFinaRequest extends FormRequest
     {
         return [
             'resultado.required' => 'Escolha o resultado da conclusão de análise.',
-        ];
+        ] + $this->mensagensTipoDeferimento();
     }
 }
