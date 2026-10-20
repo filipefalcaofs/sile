@@ -22,14 +22,14 @@ class FakePrecedentRepository implements PrecedentRepository
     /** @var array<string, array{deferidos: int, indeferidos: int, total: int}> */
     private array $cnaeZoneStats = [];
 
-    /** @var list<array{geojson: array<string, mixed>, limit: int, fallback_street: ?string, fallback_number: ?string}> */
+    /** @var list<array{geojson: array<string, mixed>, limit: int, fallback_street: ?string, fallback_number: ?string, except_request_id: ?int}> */
     public array $propertyCalls = [];
 
     /** @var list<array{cnae: string, zona: string, since: DateTimeInterface}> */
     public array $cnaeZoneCalls = [];
 
     /**
-     * @param  list<array{viability_request_id: int, protocol_number: ?string, outcome: string, decided_at: ?string, service_type: ?string, analyst: ?string}>  $rows
+     * @param  list<array{viability_request_id: int, protocol_number: ?string, bap?: ?string, outcome: string, decided_at: ?string, service_type: ?string, analyst: ?string}>  $rows
      */
     public function setPropertyPrecedents(array $rows): void
     {
@@ -44,13 +44,14 @@ class FakePrecedentRepository implements PrecedentRepository
         $this->cnaeZoneStats[$cnae.'|'.$zona] = $stats;
     }
 
-    public function propertyPrecedents(array $currentGeojson, int $limit, ?string $fallbackStreet = null, ?string $fallbackNumber = null): array
+    public function propertyPrecedents(array $currentGeojson, int $limit, ?string $fallbackStreet = null, ?string $fallbackNumber = null, ?int $exceptRequestId = null): array
     {
         $this->propertyCalls[] = [
             'geojson' => $currentGeojson,
             'limit' => $limit,
             'fallback_street' => $fallbackStreet,
             'fallback_number' => $fallbackNumber,
+            'except_request_id' => $exceptRequestId,
         ];
 
         return array_slice($this->propertyPrecedents, 0, $limit);

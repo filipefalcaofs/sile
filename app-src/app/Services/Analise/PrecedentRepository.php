@@ -15,7 +15,7 @@ use DateTimeInterface;
  * O GeoJSON do imóvel atual entra como o Polygon do property_polygon_geojson
  * (anel de pares [lng, lat] — mesma ordem do ST_GeomFromGeoJSON). LGPD (RN-004):
  * a projeção NUNCA inclui dados pessoais do requerente (jamais CPF) — só
- * protocolo, desfecho, data, serviço e analista.
+ * protocolo, BAP, desfecho, data, serviço e analista.
  */
 interface PrecedentRepository
 {
@@ -24,11 +24,12 @@ interface PrecedentRepository
      * de cada solicitação decidida e o GeoJSON atual, ordenadas por decided_at
      * desc e limitadas a `$limit`. Sem polígono (ou sem PostGIS), cai no fallback
      * portável por endereço (street + number). Sem histórico → lista vazia.
+     * O processo da ficha (`$exceptRequestId`) não entra como precedente de si mesmo.
      *
      * @param  array<string, mixed>  $currentGeojson  GeoJSON Polygon do imóvel atual (anel [lng,lat]); vazio força o fallback.
-     * @return list<array{viability_request_id: int, protocol_number: ?string, outcome: string, decided_at: ?string, service_type: ?string, analyst: ?string}>
+     * @return list<array{viability_request_id: int, protocol_number: ?string, bap: ?string, outcome: string, decided_at: ?string, service_type: ?string, analyst: ?string}>
      */
-    public function propertyPrecedents(array $currentGeojson, int $limit, ?string $fallbackStreet = null, ?string $fallbackNumber = null): array;
+    public function propertyPrecedents(array $currentGeojson, int $limit, ?string $fallbackStreet = null, ?string $fallbackNumber = null, ?int $exceptRequestId = null): array;
 
     /**
      * Agregação das decisões do CNAE na zona desde a data (janela parametrizada):
