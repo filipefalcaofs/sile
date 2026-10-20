@@ -1492,6 +1492,23 @@ export default function FichaAnaliseShow({
     }, [perCnae]);
 
     const centro = centroDaGeometria(localizacao?.poligono) ?? centroDaGeometria(localizacao?.poligono_enderecamento);
+    // Camadas memorizadas: a ficha re-renderiza a cada tecla e o mapa não precisa recalcular.
+    const camadasDoMapa = useMemo(
+        () => [
+            ...(localizacao?.poligono ? [{ id: 'imovel', type: 'imovel', geojson: localizacao.poligono }] : []),
+            ...(localizacao?.poligono_enderecamento
+                ? [
+                      {
+                          id: 'enderecamento',
+                          type: 'enderecamento',
+                          geojson: localizacao.poligono_enderecamento,
+                          estilo: ESTILO_ENDERECAMENTO,
+                      },
+                  ]
+                : []),
+        ],
+        [localizacao?.poligono, localizacao?.poligono_enderecamento],
+    );
     const temPoligono = centro !== null && (localizacao?.poligono != null || localizacao?.poligono_enderecamento != null);
 
     const vagasRequeridas = parking.vagas_requeridas;
@@ -1637,21 +1654,7 @@ export default function FichaAnaliseShow({
                                         zoom={17}
                                         draggable={false}
                                         enquadrar
-                                        camadas={[
-                                            ...(localizacao?.poligono
-                                                ? [{ id: 'imovel', type: 'imovel', geojson: localizacao.poligono }]
-                                                : []),
-                                            ...(localizacao?.poligono_enderecamento
-                                                ? [
-                                                      {
-                                                          id: 'enderecamento',
-                                                          type: 'enderecamento',
-                                                          geojson: localizacao.poligono_enderecamento,
-                                                          estilo: ESTILO_ENDERECAMENTO,
-                                                      },
-                                                  ]
-                                                : []),
-                                        ]}
+                                        camadas={camadasDoMapa}
                                     />
                                     {localizacao?.poligono_enderecamento ? (
                                         <p className="mt-3 text-theme-xs text-gray-500 dark:text-gray-400">
@@ -2551,7 +2554,7 @@ export default function FichaAnaliseShow({
                     value={parecer}
                     onChange={(event) => setParecer(event.target.value)}
                     maxLength={2000}
-                    disabled={!editavel}
+                    readOnly={!editavel}
                     placeholder="Redija o parecer técnico…"
                     className="mt-4 w-full resize-y rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/20 focus:outline-hidden disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
                 />
