@@ -403,14 +403,3 @@ html.acc-contrast {
         animation: none;
     }
 }
-
-@media print {
-    html[data-imprimindo] aside,
-    html[data-imprimindo] header {
-        display: none !important;
-    }
-
-    html[data-imprimindo] [class*='lg:ml-'] {
-        margin-left: 0 !important;
-    }
-}

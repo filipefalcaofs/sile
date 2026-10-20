@@ -11,12 +11,14 @@ use App\Models\ViabilityRequestEvento;
 use App\Models\ViabilityServiceType;
 use App\Services\Analise\DistribuicaoService;
 use App\Services\Analise\ProcessoQueryService;
+use App\Services\Vistoria\ConsultaVistoriaPdfService;
 use App\Support\Audit\AuditService;
 use App\Support\Settings;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 /**
  * Consulta de vistorias — a fila de trabalho do vistoriador. Universo: os
@@ -38,7 +40,35 @@ class VistoriaConsultaController extends Controller
         private AuditService $audit,
         private ProcessoQueryService $processos,
         private DistribuicaoService $distribuicao,
+        private ConsultaVistoriaPdfService $pdf,
     ) {}
+
+    /**
+     * PDF da capa de consulta para levar à visita: só processo no eixo de
+     * vistoria ou com ficha. Somente leitura; a emissão é auditada (RN-002).
+     */
+    public function imprimir(Request $request, ViabilityRequest $viabilityRequest): HttpResponse
+    {
+        $naVistoria = in_array($viabilityRequest->analysis_status, [AnalysisStatus::Vistoriar, AnalysisStatus::Vistoriado], true)
+            || $viabilityRequest->inspection()->exists();
+
+        abort_unless($naVistoria, 404);
+
+        $this->audit->log(
+            logName: 'vistoria',
+            event: 'consulta-imprimir',
+            description: "Impressão da consulta do processo #{$viabilityRequest->id} para vistoria",
+            properties: [
+                'viability_request_id' => $viabilityRequest->id,
+                'protocol_number' => $viabilityRequest->protocol_number,
+            ],
+            subject: $viabilityRequest,
+            personalData: true,
+        );
+
+        return $this->pdf->render($viabilityRequest, $request->user())
+            ->download($this->pdf->nomeDoArquivo($viabilityRequest));
+    }
 
     public function __invoke(Request $request): Response
     {
