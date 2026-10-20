@@ -57,6 +57,8 @@ class BenchmarkIngestion extends Model
      */
     public function scopeSucesso(Builder $query): Builder
     {
-        return $query->where('status', self::STATUS_SUCESSO);
+        // Sem linhas lidas não há dado: ingestões antigas gravadas assim (a
+        // planilha chegou corrompida) precisam ser refeitas, não pulidas.
+        return $query->where('status', self::STATUS_SUCESSO)->where('linhas_lidas', '>', 0);
     }
 }

@@ -15,7 +15,7 @@ class NormalizaCharsetResposta
     {
         $tipo = $resposta->getHeaderLine('Content-Type');
 
-        if (! preg_match('#json|text/|xml#i', $tipo)) {
+        if (! $this->ehTextual($tipo)) {
             return $resposta;
         }
 
@@ -32,5 +32,17 @@ class NormalizaCharsetResposta
             ->withBody(Utils::streamFor($convertido))
             ->withHeader('Content-Type', $tipoUtf8)
             ->withHeader('Content-Length', (string) strlen($convertido));
+    }
+
+    /**
+     * Só o tipo de mídia inteiro conta: procurar "xml" em qualquer ponto da
+     * string pegaria `vnd.openxmlformats-...` (xlsx, docx, pptx) e
+     * recodificaria um arquivo binário, corrompendo o zip.
+     */
+    private function ehTextual(string $contentType): bool
+    {
+        $tipo = strtolower(trim(explode(';', $contentType)[0]));
+
+        return (bool) preg_match('#^text/|[/+](json|xml)$#', $tipo);
     }
 }

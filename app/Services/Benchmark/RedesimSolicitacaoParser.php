@@ -40,6 +40,8 @@ class RedesimSolicitacaoParser
 
     private int $descartadas = 0;
 
+    private ?string $erro = null;
+
     /**
      * Linhas aproveitáveis da competência. Linha sem valor numérico de
      * viabilidade é descartada e contabilizada — o arquivo oficial traz muitas
@@ -50,10 +52,13 @@ class RedesimSolicitacaoParser
     public function linhas(string $conteudo): Generator
     {
         $this->descartadas = 0;
+        $this->erro = null;
 
         $arquivo = tempnam(sys_get_temp_dir(), 'redesim_');
 
         if ($arquivo === false) {
+            $this->erro = 'Não foi possível criar o arquivo temporário em '.sys_get_temp_dir().'.';
+
             return;
         }
 
@@ -73,9 +78,12 @@ class RedesimSolicitacaoParser
 
                 break;
             }
-        } catch (Throwable) {
-            // Arquivo ilegível devolve zero linhas; a ingestão registra a
-            // competência como falha em vez de gravar agregado parcial.
+        } catch (Throwable $e) {
+            // Arquivo ilegível devolve zero linhas e guarda o motivo; a
+            // ingestão registra a competência como falha em vez de gravar
+            // agregado parcial.
+            $this->erro = 'Planilha ilegível: '.$e->getMessage();
+
             return;
         } finally {
             $reader->close();
@@ -86,6 +94,14 @@ class RedesimSolicitacaoParser
     public function descartadas(): int
     {
         return $this->descartadas;
+    }
+
+    /**
+     * Motivo pelo qual a última leitura não pôde ser feita, quando houve.
+     */
+    public function erro(): ?string
+    {
+        return $this->erro;
     }
 
     /**
