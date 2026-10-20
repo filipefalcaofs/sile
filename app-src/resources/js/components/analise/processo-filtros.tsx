@@ -45,6 +45,7 @@ interface ProcessoFiltrosProps {
     analysisStatusOptions: SelectOption[];
     categoriaOptions: SelectOption[];
     analistaOptions?: SelectOption[];
+    mostrarAnalista?: boolean;
     onAplicar: (valores: ProcessoFiltrosValores) => void;
     onLimpar: () => void;
 }
@@ -103,6 +104,7 @@ export default function ProcessoFiltros({
     analysisStatusOptions,
     categoriaOptions,
     analistaOptions = [],
+    mostrarAnalista = true,
     completo = false,
     statusOptions = [],
     onAplicar,
@@ -172,10 +174,12 @@ export default function ProcessoFiltros({
                     <Label htmlFor="filtro-categoria">Categoria</Label>
                     <Select id="filtro-categoria" value={form.categoria} onChange={(v) => definir('categoria', v)} placeholder="Todas" options={categoriaOptions} />
                 </div>
-                <div>
-                    <Label htmlFor="filtro-analista">Analista</Label>
-                    <Select id="filtro-analista" value={form.analista} onChange={(v) => definir('analista', v)} placeholder="Todos" options={analistaOptions} />
-                </div>
+                {mostrarAnalista && (
+                    <div>
+                        <Label htmlFor="filtro-analista">Analista</Label>
+                        <Select id="filtro-analista" value={form.analista} onChange={(v) => definir('analista', v)} placeholder="Todos" options={analistaOptions} />
+                    </div>
+                )}
                 <div>
                     <Label htmlFor="filtro-cnae">CNAE</Label>
                     <Input id="filtro-cnae" value={form.cnae} onChange={(e) => definir('cnae', e.target.value)} placeholder="Código ou descrição" />

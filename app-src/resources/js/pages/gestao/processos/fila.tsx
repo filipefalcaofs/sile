@@ -66,7 +66,6 @@ interface FilaProps {
     servicoOptions: { value: string; label: string }[];
     analysisStatusOptions: { value: string; label: string }[];
     categoriaOptions: { value: string; label: string }[];
-    analistaOptions: { value: string; label: string }[];
 }
 
 const numberFormat = new Intl.NumberFormat('pt-BR');
@@ -102,7 +101,6 @@ export default function Fila({
     servicoOptions,
     analysisStatusOptions,
     categoriaOptions,
-    analistaOptions,
 }: FilaProps) {
     const { per_page: _perPage, ...filtrosDeCampo } = filtros;
 
@@ -302,7 +300,7 @@ export default function Fila({
                                 servicoOptions={servicoOptions}
                                 analysisStatusOptions={analysisStatusOptions}
                                 categoriaOptions={categoriaOptions}
-                                analistaOptions={analistaOptions}
+                                mostrarAnalista={false}
                                 onAplicar={(valores) => navegar({ filtros: valores })}
                                 onLimpar={() => navegar({ filtros: FILTROS_VAZIOS })}
                             />

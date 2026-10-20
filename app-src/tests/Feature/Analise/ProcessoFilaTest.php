@@ -279,6 +279,21 @@ class ProcessoFilaTest extends TestCase
         $this->assertSame(2, $props['contadores']['aguardando_analise']);
     }
 
+    public function test_caixa_de_entrada_nao_oferece_nem_aplica_filtro_de_analista(): void
+    {
+        $setor = Sector::factory()->create();
+        $analista = $this->analistaDoSetor($setor);
+        $colega = $this->analistaDoSetor($setor);
+
+        $this->processo(['sector_id' => $setor->id, 'assigned_user_id' => $analista->id]);
+        $this->processo(['sector_id' => $setor->id, 'assigned_user_id' => $analista->id]);
+
+        $props = $this->filaProps($analista, 'meus', 'analista='.$colega->id);
+
+        $this->assertArrayNotHasKey('analistaOptions', $props);
+        $this->assertCount(2, $props['processos']['data']);
+    }
+
     public function test_consulta_fila_com_filtro_e_auditada(): void
     {
         $setor = Sector::factory()->create();
