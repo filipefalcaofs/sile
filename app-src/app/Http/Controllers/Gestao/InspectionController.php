@@ -21,6 +21,7 @@ use App\Services\Vistoria\InspectionAtribuidaException;
 use App\Services\Vistoria\InspectionAutoriaException;
 use App\Services\Vistoria\InspectionConcluidaException;
 use App\Services\Vistoria\InspectionService;
+use App\Services\Vistoria\VistoriaAcesso;
 use App\Support\Audit\AuditService;
 use App\Support\Settings;
 use Illuminate\Http\JsonResponse;
@@ -81,6 +82,7 @@ class InspectionController extends Controller
     {
         $vistoriador = $request->user();
         abort_unless($vistoriador instanceof User, 401);
+        abort_unless(app(VistoriaAcesso::class)->podeAtuar($viabilityRequest, $vistoriador), 403);
 
         try {
             $ficha = $this->inspections->abrirOuRetomar($viabilityRequest, $vistoriador);
@@ -128,6 +130,7 @@ class InspectionController extends Controller
     public function visualizar(Request $request, ViabilityRequest $viabilityRequest): Response
     {
         abort_unless($request->user() instanceof User, 401);
+        abort_unless(app(VistoriaAcesso::class)->podeConsultar($viabilityRequest, $request->user()), 403);
 
         $ficha = Inspection::query()
             ->where('viability_request_id', $viabilityRequest->id)
@@ -372,12 +375,13 @@ class InspectionController extends Controller
      * Download do anexo por STREAMING autenticado a partir do disk gravado —
      * nunca URL pública (LGPD).
      */
-    public function downloadAnexo(ViabilityRequest $viabilityRequest, InspectionAttachment $attachment): StreamedResponse
+    public function downloadAnexo(Request $request, ViabilityRequest $viabilityRequest, InspectionAttachment $attachment): StreamedResponse
     {
         $ficha = $this->fichaDo($viabilityRequest);
 
         // Anti-IDOR: o anexo tem de pertencer à ficha do processo da URL.
         abort_unless($attachment->inspection_id === $ficha->id, 404);
+        abort_unless(app(VistoriaAcesso::class)->podeConsultar($viabilityRequest, $request->user()), 403);
 
         $this->audit->log(
             logName: 'vistoria',

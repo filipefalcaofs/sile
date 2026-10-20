@@ -115,7 +115,7 @@ class InspectionAccessTest extends TestCase
         $this->assertSame($responsavel->id, Inspection::query()->sole()->vistoriador_user_id);
     }
 
-    public function test_quem_nao_e_o_vistoriador_le_mas_nao_edita(): void
+    public function test_quem_nao_e_o_vistoriador_nao_abre_nem_edita(): void
     {
         $vistoriador = $this->vistoriador();
         $outro = $this->vistoriador();
@@ -125,11 +125,11 @@ class InspectionAccessTest extends TestCase
 
         $this->actingAs($vistoriador, 'gestao')->get("/gestao/processos/{$processo->id}/vistoria");
 
-        // Leitura permitida, mas somente leitura (editavel=false).
+        // O vistoriador não abre a ficha de processo atribuído a outro (SEDUR
+        // 20/10/2026: cada um vê só o que é dele, como na Caixa de entrada).
         $this->actingAs($outro, 'gestao')
             ->get("/gestao/processos/{$processo->id}/vistoria")
-            ->assertOk()
-            ->assertInertia(fn ($page) => $page->where('ficha.editavel', false));
+            ->assertForbidden();
 
         $this->actingAs($outro, 'gestao')
             ->patchJson("/gestao/processos/{$processo->id}/vistoria", ['observacoes' => 'edição alheia'])

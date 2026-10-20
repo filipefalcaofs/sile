@@ -12,6 +12,7 @@ use App\Models\ViabilityServiceType;
 use App\Services\Analise\DistribuicaoService;
 use App\Services\Analise\ProcessoQueryService;
 use App\Services\Vistoria\ConsultaVistoriaPdfService;
+use App\Services\Vistoria\VistoriaAcesso;
 use App\Support\Audit\AuditService;
 use App\Support\Settings;
 use Illuminate\Database\Eloquent\Builder;
@@ -41,6 +42,7 @@ class VistoriaConsultaController extends Controller
         private ProcessoQueryService $processos,
         private DistribuicaoService $distribuicao,
         private ConsultaVistoriaPdfService $pdf,
+        private VistoriaAcesso $acesso,
     ) {}
 
     /**
@@ -53,6 +55,7 @@ class VistoriaConsultaController extends Controller
             || $viabilityRequest->inspection()->exists();
 
         abort_unless($naVistoria, 404);
+        abort_unless($this->acesso->podeConsultar($viabilityRequest, $request->user()), 403);
 
         $this->audit->log(
             logName: 'vistoria',
@@ -93,6 +96,9 @@ class VistoriaConsultaController extends Controller
                     ->orWhereHas('inspection');
             });
 
+        // Quem não distribui vê só os processos dele, como na Caixa de entrada.
+        $universo = $this->acesso->escopar($universo, $request->user());
+
         $filtros = $this->filtrosDaCaixa($request);
 
         $universo = $this->processos->aplicarFiltros($universo, $filtros);
@@ -131,13 +137,13 @@ class VistoriaConsultaController extends Controller
         return Inertia::render('gestao/vistorias/index', [
             'vistorias' => $vistorias,
             'kpis' => $kpis,
-            'abas' => [
+            'abas' => array_values(array_filter([
                 ['id' => 'todas', 'label' => 'Todas', 'total' => $kpis['encaminhadas']],
-                ['id' => 'designar', 'label' => 'Para distribuir', 'total' => $kpis['a_designar']],
+                $podeDistribuir ? ['id' => 'designar', 'label' => 'Para distribuir', 'total' => $kpis['a_designar']] : null,
                 ['id' => 'distribuidos', 'label' => 'Distribuídos', 'total' => $kpis['distribuidos']],
                 ['id' => 'campo', 'label' => 'Em campo', 'total' => $kpis['em_campo']],
                 ['id' => 'concluida', 'label' => 'Concluídas', 'total' => $kpis['concluidas']],
-            ],
+            ])),
             'filtros' => $filtros + [
                 'situacao' => $situacao,
                 'busca' => $busca,
