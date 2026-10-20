@@ -156,6 +156,7 @@ interface CadastroImobiliario {
 interface PrecedenteImovel {
     viability_request_id: number;
     protocol_number: string | null;
+    bap: string | null;
     outcome: string | null;
     decided_at: string | null;
     service_type: string | null;
@@ -3590,33 +3591,32 @@ function PrecedentesPanel({
                                     Sem precedentes para este imóvel.
                                 </p>
                             ) : (
-                                <ul className="mt-2 space-y-2">
-                                    {dados.imovel.map((precedente) => (
-                                        <li
-                                            key={precedente.viability_request_id}
-                                            className="rounded-lg border border-gray-200 p-3 dark:border-gray-800"
-                                        >
-                                            <div className="flex flex-wrap items-center justify-between gap-2">
-                                                <Link
+                                <>
+                                    <p className="mt-3 text-theme-sm text-gray-700 dark:text-gray-300">Decididos neste imóvel</p>
+                                    <ul className="mt-1 space-y-1" aria-label="Processos decididos neste imóvel">
+                                        {dados.imovel.map((precedente) => (
+                                            <li key={precedente.viability_request_id} className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                                <a
                                                     href={`/gestao/processos/${precedente.viability_request_id}`}
-                                                    className="text-theme-sm font-medium text-brand-500 hover:text-brand-600 dark:text-brand-400"
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-theme-sm font-medium text-brand-500 hover:text-brand-600 hover:underline dark:text-brand-400"
                                                 >
-                                                    {precedente.protocol_number ?? `#${precedente.viability_request_id}`}
-                                                </Link>
+                                                    {precedente.bap ?? precedente.protocol_number ?? `#${precedente.viability_request_id}`}
+                                                    <span className="sr-only"> (abre em nova aba)</span>
+                                                </a>
+                                                {precedente.bap && precedente.protocol_number && (
+                                                    <span className="text-theme-xs text-gray-400 dark:text-gray-500">{precedente.protocol_number}</span>
+                                                )}
                                                 {precedente.outcome && (
                                                     <Badge color={statusColor(precedente.outcome)} size="sm">
                                                         {statusLabel(precedente.outcome)}
                                                     </Badge>
                                                 )}
-                                            </div>
-                                            <p className="mt-1 text-theme-xs text-gray-500 dark:text-gray-400">
-                                                {[precedente.service_type, precedente.analyst, formatarDataHora(precedente.decided_at)]
-                                                    .filter(Boolean)
-                                                    .join(' · ')}
-                                            </p>
-                                        </li>
-                                    ))}
-                                </ul>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </>
                             )}
                         </div>
 

@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\DB;
  */
 class PostgisPrecedentRepository implements PrecedentRepository
 {
-    public function propertyPrecedents(array $currentGeojson, int $limit, ?string $fallbackStreet = null, ?string $fallbackNumber = null): array
+    public function propertyPrecedents(array $currentGeojson, int $limit, ?string $fallbackStreet = null, ?string $fallbackNumber = null, ?int $exceptRequestId = null): array
     {
         $query = DB::table('viability_requests as vr')
             ->join('viability_decisions as vd', 'vd.viability_request_id', '=', 'vr.id')
@@ -41,12 +41,17 @@ class PostgisPrecedentRepository implements PrecedentRepository
             return [];
         }
 
+        if ($exceptRequestId !== null) {
+            $query->where('vr.id', '!=', $exceptRequestId);
+        }
+
         return $query
             ->orderByDesc('vd.decided_at')
             ->limit($limit)
             ->get([
                 'vr.id as viability_request_id',
                 'vr.protocol_number',
+                'vr.external_reference as bap',
                 'vd.outcome',
                 'vd.decided_at',
                 'vst.name as service_type',
@@ -55,6 +60,7 @@ class PostgisPrecedentRepository implements PrecedentRepository
             ->map(fn (object $row): array => [
                 'viability_request_id' => (int) $row->viability_request_id,
                 'protocol_number' => $row->protocol_number,
+                'bap' => $row->bap,
                 'outcome' => (string) $row->outcome,
                 'decided_at' => $row->decided_at !== null ? (string) $row->decided_at : null,
                 'service_type' => $row->service_type,

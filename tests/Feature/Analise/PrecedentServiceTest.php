@@ -197,6 +197,28 @@ class PrecedentServiceTest extends TestCase
         $this->assertStringNotContainsString($cpf, json_encode($payload, JSON_THROW_ON_ERROR));
     }
 
+    public function test_precedentes_trazem_o_bap_e_excluem_o_proprio_processo(): void
+    {
+        $ficha = $this->fichaComSnapshot($this->snapshotComZona(['status' => 'indisponivel', 'nome' => null]));
+
+        $fake = new FakePrecedentRepository;
+        $fake->setPropertyPrecedents([[
+            'viability_request_id' => 9,
+            'protocol_number' => 'VIA-2026-000009',
+            'bap' => 'BAP2601853153',
+            'outcome' => 'indeferida',
+            'decided_at' => '2026-10-16 17:20:00',
+            'service_type' => 'Viabilidade locacional',
+            'analyst' => 'Maria',
+        ]]);
+        $this->app->instance(PrecedentRepository::class, $fake);
+
+        $payload = $this->service()->forRecord($ficha);
+
+        $this->assertSame('BAP2601853153', $payload['imovel'][0]['bap']);
+        $this->assertSame($ficha->viability_request_id, $fake->propertyCalls[0]['except_request_id']);
+    }
+
     public function test_max_itens_parametrizado_limita_a_lista(): void
     {
         // RN-003: a quantidade exibida é parametrizável (HU-014). Settings::get

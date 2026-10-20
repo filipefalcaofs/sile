@@ -42,6 +42,7 @@ class PrecedentService
             $maxItens,
             $request?->address_street,
             $request?->address_number,
+            exceptRequestId: $request?->id,
         );
 
         $emAnalise = $this->emAnaliseNoImovel($request);
