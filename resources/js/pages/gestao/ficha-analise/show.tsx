@@ -574,6 +574,7 @@ function Textarea({
     placeholder,
     disabled,
     id,
+    ampliavel = false,
 }: {
     value: string;
     onChange: (value: string) => void;
@@ -581,8 +582,11 @@ function Textarea({
     placeholder?: string;
     disabled?: boolean;
     id?: string;
+    /** Parecer técnico (SEDUR 20/10/2026): cresce até 480px e pode ser redimensionado pelo canto. */
+    ampliavel?: boolean;
 }) {
     const ref = useRef<HTMLTextAreaElement>(null);
+    const teto = ampliavel ? 480 : 160;
 
     useLayoutEffect(() => {
         const el = ref.current;
@@ -591,11 +595,13 @@ function Textarea({
             return;
         }
 
+        // No campo ampliável, a altura arrastada pelo analista não encolhe ao digitar.
+        const alturaAtual = ampliavel ? el.offsetHeight : 0;
         el.style.height = 'auto';
-        const altura = Math.min(el.scrollHeight, 160);
+        const altura = Math.max(alturaAtual, Math.min(el.scrollHeight, teto));
         el.style.height = `${altura}px`;
-        el.style.overflowY = el.scrollHeight > 160 ? 'auto' : 'hidden';
-    }, [value]);
+        el.style.overflowY = el.scrollHeight > altura ? 'auto' : 'hidden';
+    }, [value, ampliavel, teto]);
 
     return (
         <textarea
@@ -607,7 +613,7 @@ function Textarea({
             placeholder={placeholder}
             onChange={(event) => onChange(event.target.value)}
             maxLength={2000}
-            className="w-full max-h-40 resize-none rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/20 focus:outline-hidden disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+            className={`w-full ${ampliavel ? 'resize-y' : 'max-h-40 resize-none'} rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/20 focus:outline-hidden disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800`}
         />
     );
 }
@@ -825,6 +831,7 @@ export default function FichaAnaliseShow({
     const [erroPendencia, setErroPendencia] = useState<string | null>(null);
     const [showCancelarConvite, setShowCancelarConvite] = useState(false);
     const [showEncaminharChefia, setShowEncaminharChefia] = useState(false);
+    const [parecerExpandido, setParecerExpandido] = useState(false);
     const [encaminhandoChefia, setEncaminhandoChefia] = useState(false);
     const [parecerCancelamento, setParecerCancelamento] = useState('');
     const [cancelarConviteProcessing, setCancelarConviteProcessing] = useState(false);
@@ -2257,27 +2264,33 @@ export default function FichaAnaliseShow({
                                 title="Parecer técnico"
                                 description="Em branco para o analista redigir — a fundamentação do sistema está na justificativa de cada atividade. Quando a IA está ligada, é possível pedir uma minuta para revisar."
                                 actions={
-                                    editavel ? (
-                                        <div className="flex flex-wrap items-center gap-2">
-                                            <Button
-                                                size="xs"
-                                                variant="outline"
-                                                onClick={sugerirMinuta}
-                                                disabled={!iaFicha.parecer_disponivel}
-                                                loading={minuta.processing || minutaStatus === 'aguardando'}
-                                            >
-                                                Sugerir minuta (IA)
-                                            </Button>
-                                            <Button size="xs" variant="ghost" onClick={() => setPickerParaParecer(true)}>
-                                                Inserir texto-padrão
-                                            </Button>
-                                        </div>
-                                    ) : undefined
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        {editavel && (
+                                            <>
+                                                <Button
+                                                    size="xs"
+                                                    variant="outline"
+                                                    onClick={sugerirMinuta}
+                                                    disabled={!iaFicha.parecer_disponivel}
+                                                    loading={minuta.processing || minutaStatus === 'aguardando'}
+                                                >
+                                                    Sugerir minuta (IA)
+                                                </Button>
+                                                <Button size="xs" variant="ghost" onClick={() => setPickerParaParecer(true)}>
+                                                    Inserir texto-padrão
+                                                </Button>
+                                            </>
+                                        )}
+                                        <Button size="xs" variant="ghost" onClick={() => setParecerExpandido(true)}>
+                                            Expandir
+                                        </Button>
+                                    </div>
                                 }
                             />
                             <CardContent>
                                 <Textarea
                                     id="parecer-editor"
+                                    ampliavel
                                     rows={6}
                                     disabled={!editavel}
                                     placeholder="Redija o parecer técnico…"
@@ -2456,6 +2469,30 @@ export default function FichaAnaliseShow({
                     }}
                 />
             )}
+
+            <Modal
+                isOpen={parecerExpandido}
+                onClose={() => setParecerExpandido(false)}
+                ariaLabel="Parecer técnico"
+                className="m-4 max-h-[90vh] w-full max-w-[1000px] overflow-y-auto p-6 lg:p-8"
+            >
+                <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Parecer técnico</h4>
+                <textarea
+                    aria-label="Parecer técnico"
+                    rows={24}
+                    value={parecer}
+                    onChange={(event) => setParecer(event.target.value)}
+                    maxLength={2000}
+                    disabled={!editavel}
+                    placeholder="Redija o parecer técnico…"
+                    className="mt-4 w-full resize-y rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/20 focus:outline-hidden disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+                />
+                <div className="mt-4 flex justify-end">
+                    <Button size="sm" variant="outline" onClick={() => setParecerExpandido(false)}>
+                        Fechar
+                    </Button>
+                </div>
+            </Modal>
 
             <ConfirmDialog
                 isOpen={showEncaminharChefia}
