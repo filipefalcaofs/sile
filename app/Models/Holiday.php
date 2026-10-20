@@ -3,11 +3,13 @@
 namespace App\Models;
 
 use App\Concerns\HasAuditoria;
+use App\Services\Expresso\DatabaseHolidayProvider;
 use Database\Factories\HolidayFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Feriado cadastrado (HU-137) — dado versionado/auditado (RN-002 via
@@ -17,13 +19,21 @@ use Illuminate\Database\Eloquent\Model;
  * inativar sem excluir. A lista municipal oficial de Salvador é pendência SEDUR
  * — degradação honesta, nunca feriado inventado.
  */
-#[Fillable(['date', 'name', 'recurring_annually', 'active'])]
+#[Fillable(['date', 'name', 'recurring_annually', 'active', 'source', 'type'])]
 class Holiday extends Model
 {
     use HasAuditoria;
 
     /** @use HasFactory<HolidayFactory> */
     use HasFactory;
+
+    protected static function booted(): void
+    {
+        $forget = static fn () => Cache::forget(DatabaseHolidayProvider::CACHE_KEY);
+
+        static::saved($forget);
+        static::deleted($forget);
+    }
 
     /**
      * @return array<string, string>

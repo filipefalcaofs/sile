@@ -28,6 +28,15 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    // FeriadosAPI (https://feriadosapi.com): feriados nacionais, estaduais e
+    // municipais de Salvador (IBGE 2927408). Token só no .env.
+    'feriados_api' => [
+        'base_url' => env('FERIADOS_API_URL', 'https://feriadosapi.com'),
+        'token' => env('FERIADOS_API_TOKEN'),
+        'ibge' => env('FERIADOS_API_IBGE', '2927408'),
+        'timeout' => 15,
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),

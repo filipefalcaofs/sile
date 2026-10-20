@@ -138,3 +138,12 @@ Schedule::command('regin:reenviar-pareceres')
     ->everyFiveMinutes()
     ->withoutOverlapping()
     ->onOneServer();
+
+// Feriados de Salvador pela FeriadosAPI: no dia 1º de cada mês sincroniza o ano
+// corrente e o seguinte (cobre a virada de ano e correções da fonte). Só grava
+// datas novas, nunca sobrescreve cadastro existente; sem FERIADOS_API_TOKEN
+// falha de forma explícita. Segura em multi-instância.
+Schedule::command('feriados:sincronizar')
+    ->monthlyOn(1, '04:00')
+    ->withoutOverlapping()
+    ->onOneServer();

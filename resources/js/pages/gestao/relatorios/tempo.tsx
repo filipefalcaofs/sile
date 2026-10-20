@@ -76,6 +76,7 @@ interface TempoProps {
     percentisPorCategoria: Record<string, PercentisViabilidade>;
     gargalos: Gargalo[];
     filtros: FiltrosAplicados;
+    calendarioOficial: boolean;
 }
 
 interface FiltrosForm {
@@ -227,6 +228,7 @@ export default function TempoAnalise({
     percentisPorCategoria,
     gargalos,
     filtros,
+    calendarioOficial,
 }: TempoProps) {
     const [form, setForm] = useState<FiltrosForm>({
         data_de: filtros.data_de ?? '',
@@ -298,7 +300,7 @@ export default function TempoAnalise({
             />
 
             <div className="space-y-4 md:space-y-6">
-                <RessalvaDiasUteis />
+                <RessalvaDiasUteis calendarioOficial={calendarioOficial} />
 
                 <Card>
                     <CardHeader
@@ -495,19 +497,32 @@ function FiltroCampo({ label, children }: { label: string; children: ReactNode }
 }
 
 /**
- * Ressalva honesta (HU-129): o tempo é medido em dias úteis, descontando fins de
- * semana e os feriados CADASTRADOS. A lista oficial de feriados municipais de
- * Salvador é pendência SEDUR — até a carga oficial, só os feriados do sistema
- * são descontados (nunca feriado inventado). Cadastro em Gestão › Feriados.
+ * Ressalva honesta (HU-120): o tempo é medido em dias úteis, descontando fins de
+ * semana e os feriados CADASTRADOS. Os feriados de Salvador vêm da FeriadosAPI
+ * (sincronização anual); enquanto não houver feriado municipal carregado, a
+ * ressalva avisa que só os demais feriados são descontados (nunca feriado
+ * inventado). Cadastro e ajustes em Gestão › Feriados.
  */
-function RessalvaDiasUteis() {
+function RessalvaDiasUteis({ calendarioOficial }: { calendarioOficial: boolean }) {
+    if (calendarioOficial) {
+        return (
+            <div className="flex items-start gap-3 rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-white/[0.03]">
+                <AlertIcon className="mt-0.5 size-5 shrink-0 text-gray-500 dark:text-gray-400" />
+                <p className="text-theme-sm text-gray-700 dark:text-gray-300">
+                    Os tempos são medidos em <strong>dias úteis</strong>, descontando fins de semana e os feriados nacionais, estaduais e
+                    municipais de Salvador cadastrados no sistema, carregados da FeriadosAPI e ajustáveis em Feriados.
+                </p>
+            </div>
+        );
+    }
+
     return (
         <div className="flex items-start gap-3 rounded-2xl border border-warning-200 bg-warning-50 p-4 dark:border-warning-500/30 dark:bg-warning-500/10">
             <AlertIcon className="mt-0.5 size-5 shrink-0 text-warning-600 dark:text-orange-400" />
             <p className="text-theme-sm text-warning-700 dark:text-orange-300">
-                Os tempos são medidos em <strong>dias úteis</strong>, descontando fins de semana e os feriados cadastrados no sistema. A lista
-                oficial de feriados municipais de Salvador ainda é pendência da SEDUR — até a carga oficial, apenas os feriados já cadastrados
-                em Feriados são descontados. Nenhum feriado é inventado.
+                Os tempos são medidos em <strong>dias úteis</strong>, descontando fins de semana e os feriados cadastrados no sistema. Os
+                feriados municipais de Salvador ainda não foram carregados — até a sincronização com a FeriadosAPI ou a carga oficial da
+                SEDUR, apenas os feriados já cadastrados em Feriados são descontados. Nenhum feriado é inventado.
             </p>
         </div>
     );
