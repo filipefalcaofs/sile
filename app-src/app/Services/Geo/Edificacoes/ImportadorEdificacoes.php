@@ -24,6 +24,8 @@ class ImportadorEdificacoes
      */
     public function importar(FonteEdificacao $fonte, string $release, string $checksum, iterable $feicoes, callable $mapear): BuildingFootprintImport
     {
+        BuildingFootprintImport::encerrarOrfas($fonte, (int) config('viabiliza.edificacoes.orfa_horas', 6));
+
         $jaConcluida = BuildingFootprintImport::query()
             ->where('source', $fonte)
             ->where('release', $release)
