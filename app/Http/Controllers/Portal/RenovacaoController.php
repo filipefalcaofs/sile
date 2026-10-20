@@ -287,6 +287,46 @@ class RenovacaoController extends Controller
             ->with('status', 'Renovação protocolada. O processo foi encaminhado para análise.');
     }
 
+    public function storeLegado(ProtocolarRenovacaoRequest $request, int $empresa, string $numero): RedirectResponse
+    {
+        $this->autorizarEmpresaId($request, $empresa);
+        $empresaModelo = Company::query()->findOrFail($empresa);
+
+        try {
+            $tvl = $this->legadoClient->tvlPorNumero((int) $numero);
+
+            if ($tvl === null) {
+                return $this->voltarAoIndice(self::MENSAGEM_LEGADO_GENERICA);
+            }
+
+            $titularidade = $this->elegibilidadeLegada->titularidade($tvl, $empresaModelo);
+
+            if ($titularidade->consultaIndisponivel) {
+                return back()->with('error', (string) $titularidade->motivo);
+            }
+
+            if (! $titularidade->titular) {
+                return $this->voltarAoIndice(self::MENSAGEM_LEGADO_GENERICA);
+            }
+
+            $renovacao = $this->protocolo->protocolarLegada(
+                $tvl,
+                $empresaModelo,
+                $this->usuarioEfetivo($request),
+                $request->safe()->only(['email', 'phone', 'mobile']),
+                $request->validated('declaration_ids'),
+            );
+        } catch (LegadoIndisponivelException) {
+            return back()->with('error', 'O serviço de consulta de viabilidades anteriores está indisponível. Tente novamente em instantes.');
+        } catch (DomainException $exception) {
+            return back()->with('error', $exception->getMessage());
+        }
+
+        return redirect()
+            ->route('portal.solicitacoes.show', $renovacao)
+            ->with('status', 'Renovação protocolada. O processo foi encaminhado para análise.');
+    }
+
     private function usuarioEfetivo(Request $request): User
     {
         return app(CurrentRepresentation::class)->effectiveUser($request->user());

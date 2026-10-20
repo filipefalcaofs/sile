@@ -151,6 +151,9 @@ Route::middleware(['auth:web', 'verified'])
                 Route::get('renovacao/legado/{empresa}/{numero}', [RenovacaoController::class, 'showLegado'])->middleware('portal.solicitacao')
                     ->whereNumber(['empresa', 'numero'])
                     ->name('renovacao.legado.show');
+                Route::post('renovacao/legado/{empresa}/{numero}', [RenovacaoController::class, 'storeLegado'])->middleware('portal.solicitacao')
+                    ->whereNumber(['empresa', 'numero'])
+                    ->name('renovacao.legado.store');
                 Route::get('renovacao/{origem}', [RenovacaoController::class, 'show'])->middleware('portal.solicitacao')
                     ->name('renovacao.show');
                 Route::post('renovacao/{origem}', [RenovacaoController::class, 'store'])->middleware('portal.solicitacao')

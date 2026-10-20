@@ -5,6 +5,7 @@ namespace App\Services\Renovacao;
 use App\Enums\AnalysisCategory;
 use App\Enums\ViabilityRequestOrigin;
 use App\Enums\ViabilityRequestStatus;
+use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\Sector;
 use App\Models\ServiceDeclaration;
@@ -13,12 +14,15 @@ use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
 use App\Services\Analise\EnviarParaAnaliseService;
+use App\Services\Legado\TvlLegadaDetalhe;
 use App\Services\Solicitacao\ProtocolarSolicitacaoService;
 use App\Services\Solicitacao\ProtocolNumberGenerator;
 use App\Services\Solicitacao\ViabilityRequestStateMachine;
 use App\Support\Audit\AuditService;
 use App\Support\Settings;
 use DomainException;
+use Illuminate\Contracts\Cache\LockTimeoutException;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -37,6 +41,7 @@ class RenovacaoProtocoloService
         private AuditService $audit,
         private ProtocolarSolicitacaoService $protocoloViabilidade,
         private EnviarParaAnaliseService $enviarAnalise,
+        private RenovacaoLegadaElegibilidadeService $elegibilidadeLegada,
     ) {}
 
     /**
@@ -79,6 +84,103 @@ class RenovacaoProtocoloService
                 'properties' => ['origem_id' => $origem->id],
             ],
         );
+    }
+
+    /**
+     * Protocola a renovação de uma TVL do sistema legado, que não tem linha
+     * local para travar: a exclusão é um lock atômico pelo número legado e a
+     * elegibilidade é reavaliada dentro dele e da transação, para o segundo
+     * pedido enxergar a renovação aberta pelo primeiro.
+     *
+     * @param  array{email?: string|null, phone?: string|null, mobile?: string|null}  $contato
+     * @param  list<int>  $declaracaoIds
+     */
+    public function protocolarLegada(TvlLegadaDetalhe $tvl, Company $empresa, User $ator, array $contato, array $declaracaoIds): ViabilityRequest
+    {
+        $avaliacao = $this->elegibilidadeLegada->avaliar($tvl, $empresa);
+
+        if (! $avaliacao->elegivel) {
+            throw new DomainException($avaliacao->motivo ?? 'Esta viabilidade não pode ser renovada.');
+        }
+
+        $lock = Cache::lock('renovacao-legada:'.$tvl->numero, 15);
+
+        try {
+            $lock->block(3);
+        } catch (LockTimeoutException) {
+            throw new DomainException('Já existe um protocolo em andamento para esta viabilidade. Aguarde alguns instantes.');
+        }
+
+        try {
+            return $this->protocolarComum(
+                atributos: [
+                    'renews_legacy_tvl_number' => $tvl->numero,
+                    'legacy_tvl_snapshot' => $this->snapshotLegado($tvl),
+                    'company_id' => $empresa->id,
+                    'property_registration' => $tvl->inscricaoImobiliaria,
+                    'address_street' => $tvl->endereco['logradouro'],
+                    'address_number' => $tvl->endereco['numero'],
+                    'address_complement' => $tvl->complemento,
+                    'address_neighborhood' => $tvl->endereco['bairro'],
+                    'address_zip' => $tvl->endereco['cep'],
+                ],
+                cnaes: $this->cnaesDoCatalogo($tvl),
+                empresa: $empresa,
+                ator: $ator,
+                contato: $contato,
+                declaracaoIds: $declaracaoIds,
+                auditoria: [
+                    'description' => fn (ViabilityRequest $renovacao): string => "Renovação da viabilidade locacional legada {$tvl->numero} protocolada como #{$renovacao->id}",
+                    'properties' => ['tvl_legada_numero' => $tvl->numero],
+                ],
+                verificar: function () use ($tvl): void {
+                    $reavaliacao = $this->elegibilidadeLegada->avaliarAposTitularidade($tvl);
+
+                    if (! $reavaliacao->elegivel) {
+                        throw new DomainException($reavaliacao->motivo ?? 'Esta viabilidade não pode ser renovada.');
+                    }
+                },
+            );
+        } finally {
+            $lock->release();
+        }
+    }
+
+    /**
+     * Só o que veio do detalhe da API, com datas em texto.
+     *
+     * @return array<string, mixed>
+     */
+    private function snapshotLegado(TvlLegadaDetalhe $tvl): array
+    {
+        $dados = get_object_vars($tvl);
+
+        foreach (['emissao', 'validade', 'ultimaRenovacaoEm'] as $campo) {
+            $dados[$campo] = $dados[$campo]?->toDateString();
+        }
+
+        return $dados;
+    }
+
+    /**
+     * @return list<array{id: int, is_primary: bool}>
+     */
+    private function cnaesDoCatalogo(TvlLegadaDetalhe $tvl): array
+    {
+        $cnaes = [];
+
+        foreach ($tvl->atividades as $indice => $atividade) {
+            $codigo = preg_replace('/\D/', '', $atividade['codigo']) ?? '';
+            $cnae = Cnae::query()->where('code', $codigo)->where('active', true)->first();
+
+            if ($cnae === null) {
+                throw new DomainException("A atividade {$atividade['codigo']} não consta mais do catálogo. Procure a SEDUR.");
+            }
+
+            $cnaes[$cnae->id] = ['id' => $cnae->id, 'is_primary' => $indice === 0];
+        }
+
+        return array_values($cnaes);
     }
 
     /**
