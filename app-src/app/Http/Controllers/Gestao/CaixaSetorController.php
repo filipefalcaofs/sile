@@ -27,7 +27,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Caixa do setor da análise técnica (HU-080/081): a fila da distribuição. O
+ * Caixa do setor da análise técnica (HU-076/077): a fila da distribuição. O
  * analista vê e ASSUME os processos em_analise do(s) seu(s) setor(es)
  * (analisar-processos); o gestor DISTRIBUI — single ou lote (RN-007) — a um
  * analista do setor (distribuir-processos), e a caixa NÃO tira o processo do
@@ -247,7 +247,7 @@ class CaixaSetorController extends Controller
             ->values();
 
         if (! $qualquerSetor && $setoresDosProcessos->count() > 1) {
-            return redirect('/gestao/caixa-setor')->with('error', 'Selecione processos de um único setor por vez para distribuir.');
+            return redirect($this->urlDaCaixa($request))->with('error', 'Selecione processos de um único setor por vez para distribuir.');
         }
 
         $analistas = $this->carga->cargaDosSetores($qualquerSetor ? null : $setoresDosProcessos);
@@ -289,6 +289,7 @@ class CaixaSetorController extends Controller
             'totalEmAnalise' => $totalEmAnalise,
             'historico' => $historico,
             'distribuiEmQualquerSetor' => $qualquerSetor,
+            'retorno' => $this->retornoDaCaixa($request),
         ]);
     }
 
@@ -323,11 +324,11 @@ class CaixaSetorController extends Controller
         $setores = $models->pluck('sector_id')->unique()->values();
 
         if (! $qualquerSetor && $setores->count() > 1) {
-            return redirect('/gestao/caixa-setor')->with('error', 'Selecione processos de um único setor por vez para distribuir.');
+            return redirect($this->urlDaCaixa($request))->with('error', 'Selecione processos de um único setor por vez para distribuir.');
         }
 
         if ($models->isEmpty()) {
-            return redirect('/gestao/caixa-setor')->with('error', 'Nenhum processo elegível para distribuir.');
+            return redirect($this->urlDaCaixa($request))->with('error', 'Nenhum processo elegível para distribuir.');
         }
 
         $carga = collect($this->carga->cargaDosSetores($qualquerSetor ? null : $setores))->keyBy('analista_id');
@@ -365,6 +366,7 @@ class CaixaSetorController extends Controller
             'alocacoes' => $sugestao['alocacoes'],
             'naoAlocados' => $sugestao['nao_alocados'],
             'totalSelecionados' => $models->count(),
+            'retorno' => $this->retornoDaCaixa($request),
         ]);
     }
 
@@ -529,7 +531,7 @@ class CaixaSetorController extends Controller
             return back()->with('error', $resultado['error']);
         }
 
-        return redirect('/gestao/caixa-setor')
+        return redirect($this->urlDaCaixa($request))
             ->with('status', "{$resultado['total']} processo(s) enviado(s) para a caixa de entrada dos analistas.");
     }
 
@@ -560,7 +562,7 @@ class CaixaSetorController extends Controller
     }
 
     /**
-     * O analista assume um processo da caixa do seu setor (HU-081). Fora dos seus
+     * O analista assume um processo da caixa do seu setor (HU-077). Fora dos seus
      * setores, a ação é negada de forma controlada (aviso), nunca silenciosa.
      */
     public function assumir(Request $request, ViabilityRequest $viabilityRequest): RedirectResponse
@@ -644,6 +646,36 @@ class CaixaSetorController extends Controller
                     ->all(),
             ])
             ->all();
+    }
+
+    /**
+     * Query string da caixa (filtros, aba e paginação) a que a central e a
+     * distribuição inteligente voltam, para o usuário não refazer os filtros.
+     * Só chaves conhecidas e não vazias: nunca ecoa entrada arbitrária.
+     */
+    private function retornoDaCaixa(Request $request): string
+    {
+        parse_str((string) $request->input('retorno', ''), $bruto);
+
+        $permitidas = [...ProcessoQueryService::CHAVES_FILTRO_CAIXA, 'visao', 'per_page'];
+        $params = [];
+
+        foreach ($permitidas as $chave) {
+            $valor = $bruto[$chave] ?? null;
+
+            if (is_string($valor) && $valor !== '') {
+                $params[$chave] = $valor;
+            }
+        }
+
+        return http_build_query($params);
+    }
+
+    private function urlDaCaixa(Request $request): string
+    {
+        $query = $this->retornoDaCaixa($request);
+
+        return '/gestao/caixa-setor'.($query === '' ? '' : '?'.$query);
     }
 
     /**

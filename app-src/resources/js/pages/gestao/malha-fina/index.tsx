@@ -142,6 +142,7 @@ export default function MalhaFinaIndex({
 
         conclusao.post(`/gestao/malha-fina/${concluindo.id}/concluir`, {
             preserveScroll: true,
+            preserveState: true,
             onSuccess: () => setConcluindo(null),
         });
     }

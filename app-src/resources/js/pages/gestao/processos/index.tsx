@@ -383,6 +383,7 @@ export default function ConsultaProcessos({
             { request_ids: selecionados, motivo },
             {
                 preserveScroll: true,
+                preserveState: true,
                 onStart: () => setEnviando(true),
                 onFinish: () => setEnviando(false),
                 onSuccess: () => {

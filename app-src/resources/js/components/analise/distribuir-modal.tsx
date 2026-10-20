@@ -52,6 +52,7 @@ export default function DistribuirModal({
 
         tramitacao.post(rota, {
             preserveScroll: true,
+            preserveState: true,
             onSuccess: () => {
                 tramitacao.reset();
                 onSuccess();

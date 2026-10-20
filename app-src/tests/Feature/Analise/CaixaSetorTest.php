@@ -16,7 +16,7 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Caixa do setor na retaguarda (HU-080/081): o analista vê e assume os processos
+ * Caixa do setor na retaguarda (HU-076/077): o analista vê e assume os processos
  * em análise do(s) seu(s) setor(es) (analisar-processos); o gestor distribui —
  * single ou lote — a um analista do setor (distribuir-processos). A caixa NÃO
  * tira o processo do setor (RN-004); a lista vem ordenada por prazo
@@ -864,6 +864,38 @@ class CaixaSetorTest extends TestCase
 
         // Auditoria de resumo para o histórico (um por analista).
         $this->assertDatabaseHas('activity_log', ['log_name' => 'analise', 'event' => 'distribuir-lote']);
+    }
+
+    public function test_distribuir_lote_volta_para_a_caixa_mantendo_os_filtros(): void
+    {
+        $setor = Sector::factory()->create();
+        $apoio = $this->apoioDoSetor($setor);
+        $analista = $this->analistaDoSetor($setor);
+        $processo = $this->processoNaCaixa($setor);
+
+        $this->actingAs($apoio, 'gestao')
+            ->post('/gestao/caixa-setor/distribuir-lote', [
+                'retorno' => 'bairro=Pituba&visao=para_distribuir&per_page=25&campo_alheio=x',
+                'alocacoes' => [
+                    ['analista_id' => $analista->id, 'request_ids' => [$processo->id]],
+                ],
+            ])
+            ->assertRedirect('/gestao/caixa-setor?'.http_build_query(['bairro' => 'Pituba', 'visao' => 'para_distribuir', 'per_page' => '25']))
+            ->assertSessionHas('status');
+    }
+
+    public function test_central_devolve_o_retorno_somente_com_chaves_conhecidas(): void
+    {
+        $setor = Sector::factory()->create();
+        $apoio = $this->apoioDoSetor($setor);
+        $processo = $this->processoNaCaixa($setor);
+
+        $props = $this->actingAs($apoio, 'gestao')
+            ->get("/gestao/caixa-setor/central?ids={$processo->id}&retorno=".urlencode('cnpj=123&evil=1'))
+            ->assertOk()
+            ->viewData('page')['props'];
+
+        $this->assertSame('cnpj=123', $props['retorno']);
     }
 
     public function test_distribuir_lote_rejeita_destinatario_sem_permissao_de_analise(): void
