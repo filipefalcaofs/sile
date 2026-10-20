@@ -2,8 +2,10 @@
 
 namespace Tests\Feature\Roles;
 
+use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\Artisan;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -32,6 +34,15 @@ class AtribuirPermissaoAosPerfisCommandTest extends TestCase
         $this->artisan('perfis:atribuir-permissao')->assertSuccessful();
 
         $this->assertFalse($this->perfil('Vistoriador')->hasPermissionTo('analisar-processos'));
+    }
+
+    public function test_lista_quantos_usuarios_tem_cada_perfil(): void
+    {
+        User::factory()->count(2)->create()->each(fn (User $usuario) => $usuario->assignRole('Vistoriador'));
+
+        Artisan::call('perfis:atribuir-permissao');
+
+        $this->assertMatchesRegularExpression('/Vistoriador\s*\|\s*2\b/', Artisan::output());
     }
 
     public function test_aplicar_atribui_aos_perfis_que_nao_tem(): void
