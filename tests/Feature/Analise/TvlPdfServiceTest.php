@@ -3,6 +3,7 @@
 namespace Tests\Feature\Analise;
 
 use App\Enums\IntencaoAtividade;
+use App\Enums\TvlKind;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\Activity;
 use App\Models\AnalysisRecord;
@@ -222,6 +223,29 @@ class TvlPdfServiceTest extends TestCase
         $this->assertStringContainsString('TVL-COD-VERIFICACAO', $html);
         // CA-02 — relatório administrativo interno (não vai ao cidadão).
         $this->assertStringContainsString('interno', $html);
+    }
+
+    public function test_template_mostra_tipo_e_validade(): void
+    {
+        $decision = $this->decisaoDeferida([
+            'tvl_kind' => TvlKind::PreOperacional,
+            'tvl_valid_until' => '2027-10-20',
+        ]);
+
+        $html = view('tvl.documento', $this->service()->montarDados($decision, 'TVL-COD'))->render();
+
+        $this->assertStringContainsString('Pré-operacional', $html);
+        $this->assertStringContainsString('Válido até:</strong> 20/10/2027', $html);
+    }
+
+    public function test_template_sem_validade_nao_mostra_valido_ate(): void
+    {
+        $decision = $this->decisaoDeferida(['tvl_kind' => TvlKind::Definitiva, 'tvl_valid_until' => null]);
+
+        $html = view('tvl.documento', $this->service()->montarDados($decision, 'TVL-COD'))->render();
+
+        $this->assertStringContainsString('Definitiva', $html);
+        $this->assertStringNotContainsString('Válido até', $html);
     }
 
     public function test_assinatura_parametrizavel_modo_imagem_embute_a_imagem(): void

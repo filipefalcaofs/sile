@@ -44,6 +44,12 @@
         <h2>Identificação</h2>
         <div class="campo"><strong>Protocolo:</strong> {{ $protocolo ?? '—' }}</div>
         <div class="campo"><strong>Data da decisão:</strong> {{ optional($decidido_em)->format('d/m/Y H:i') ?? '—' }}</div>
+        @if (! empty($tvl_tipo))
+            <div class="campo"><strong>Tipo:</strong> {{ $tvl_tipo }}</div>
+        @endif
+        @if (! empty($tvl_valido_ate))
+            <div class="campo"><strong>Válido até:</strong> {{ $tvl_valido_ate->format('d/m/Y') }}</div>
+        @endif
         <div class="campo"><strong>Emitido em:</strong> {{ optional($emitido_em)->format('d/m/Y H:i') ?? '—' }}</div>
     </div>
 
