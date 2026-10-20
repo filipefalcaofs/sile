@@ -10,6 +10,7 @@ use App\Models\Sector;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
+use App\Services\Expresso\HolidayProvider;
 use App\Services\Relatorios\ComunicacoesFalhaService;
 use App\Services\Relatorios\ContingenciaRelatorioService;
 use App\Services\Relatorios\Export\ReportExporter;
@@ -153,6 +154,7 @@ class RelatorioController extends Controller
             'percentisPorCategoria' => $this->tempoViabilidade->porCategoria($filtros),
             'gargalos' => $this->gargalos->porPeriodo($filtros),
             'filtros' => $filtros->aplicados(),
+            'calendarioOficial' => app(HolidayProvider::class)->hasOfficialCalendar(),
         ]);
     }
 

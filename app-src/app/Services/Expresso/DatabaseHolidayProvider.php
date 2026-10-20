@@ -13,7 +13,8 @@ use Illuminate\Support\Facades\Cache;
  * isHoliday por mês/dia (recorrentes anuais) e por data exata (específicos).
  *
  * hasOfficialCalendar é verdadeiro só quando há ao menos um feriado
- * NÃO-recorrente cadastrado: os nacionais fixos (recorrentes do seeder) são o
+ * NÃO-recorrente cadastrado à mão ou um feriado
+ * municipal vindo da FeriadosAPI: os nacionais fixos (recorrentes do seeder) são o
  * piso honesto, mas NÃO caracterizam o calendário municipal oficial — que é
  * pendência SEDUR. Sem ele, o relatório exibe a ressalva e o cálculo desconta
  * só fins de semana + os nacionais, jamais um feriado inventado.
@@ -25,7 +26,7 @@ class DatabaseHolidayProvider implements HolidayProvider
      * (efeito sem deploy, limitado ao cache — padrão HU-014); o CRUD futuro de
      * feriados deve esquecê-la na gravação para efeito imediato.
      */
-    private const CACHE_KEY = 'viabiliza.expresso.holidays';
+    public const CACHE_KEY = 'viabiliza.expresso.holidays';
 
     public function isHoliday(DateTimeInterface $date): bool
     {
@@ -38,14 +39,14 @@ class DatabaseHolidayProvider implements HolidayProvider
 
     public function hasOfficialCalendar(): bool
     {
-        return $this->calendar()['specific'] !== [];
+        return $this->calendar()['official'];
     }
 
     /**
      * Calendário carregado e cacheado: feriados recorrentes (mês/dia) e
      * específicos (data exata), apenas os ATIVOS.
      *
-     * @return array{recurring: list<string>, specific: list<string>}
+     * @return array{recurring: list<string>, specific: list<string>, official: bool}
      */
     private function calendar(): array
     {
@@ -53,6 +54,7 @@ class DatabaseHolidayProvider implements HolidayProvider
 
         return Cache::remember(self::CACHE_KEY, $ttl, function (): array {
             $recurring = [];
+            $official = false;
             $specific = [];
 
             foreach (Holiday::query()->active()->get() as $holiday) {
@@ -61,11 +63,15 @@ class DatabaseHolidayProvider implements HolidayProvider
                 if ($holiday->recurring_annually) {
                     $recurring[] = $date->format('m-d');
                 } else {
+
+                    // Da API, só o municipal caracteriza o calendário de Salvador;
+                    // nacional/estadual sincronizado não tira a ressalva.
+                    $official = $official || $holiday->source !== 'api' || $holiday->type === 'municipal';
                     $specific[] = $date->format('Y-m-d');
                 }
             }
 
-            return ['recurring' => $recurring, 'specific' => $specific];
+            return ['recurring' => $recurring, 'specific' => $specific, 'official' => $official];
         });
     }
 }
