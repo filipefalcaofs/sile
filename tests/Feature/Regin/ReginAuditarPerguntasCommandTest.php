@@ -8,6 +8,7 @@ use App\Models\ViabilityRequest;
 use App\Services\Regin\ReginProcessoProtocolador;
 use App\Services\Tratamento\PlanilhaTratamentoImporter;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Carbon;
 use Tests\Support\SeedsTratamentoPlanilha;
 use Tests\TestCase;
 
@@ -35,6 +36,7 @@ class ReginAuditarPerguntasCommandTest extends TestCase
 
     private function prepararPlanilha(): void
     {
+        $this->travelTo(Carbon::parse('2026-10-19 10:00:00'));
         User::factory()->create();
         $versao = $this->seedTratamentoPlanilha();
         app(PlanilhaTratamentoImporter::class)->complementar($versao, database_path('data/regras-20-08-26/planilha-regras.xlsx'));
@@ -63,7 +65,7 @@ class ReginAuditarPerguntasCommandTest extends TestCase
         ]);
 
         $this->artisan('regin:auditar-perguntas')
-            ->expectsOutputToContain('BAP2601852186  respostas incompletas  3314710  sem resposta nas perguntas 11')
+            ->expectsOutputToContain('BAP2601852186  19/10/2026 10:00  respostas incompletas  3314710  sem resposta nas perguntas 11')
             ->assertFailed();
     }
 
@@ -73,7 +75,7 @@ class ReginAuditarPerguntasCommandTest extends TestCase
         $this->protocolar('BAP2601852182', []);
 
         $this->artisan('regin:auditar-perguntas')
-            ->expectsOutputToContain('BAP2601852182  sem perguntas')
+            ->expectsOutputToContain('BAP2601852182  19/10/2026 10:00  sem perguntas')
             ->assertFailed();
     }
 
@@ -85,7 +87,7 @@ class ReginAuditarPerguntasCommandTest extends TestCase
         ]);
 
         $this->artisan('regin:auditar-perguntas')
-            ->expectsOutputToContain('BAP2601852183  sem respostas  3314710')
+            ->expectsOutputToContain('BAP2601852183  19/10/2026 10:00  sem respostas  3314710')
             ->assertFailed();
     }
 
@@ -101,6 +103,7 @@ class ReginAuditarPerguntasCommandTest extends TestCase
         $conteudo = (string) file_get_contents($arquivo);
         unlink($arquivo);
         $this->assertStringContainsString('BAP2601852185', $conteudo);
+        $this->assertStringContainsString('protocolo,entrada', $conteudo);
         $this->assertStringNotContainsString('BAP2601852184', $conteudo);
     }
 }
