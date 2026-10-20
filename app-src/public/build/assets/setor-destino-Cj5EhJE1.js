@@ -1,0 +1,1 @@
+function e(e,t,n){if(!e||t.length<=1)return`nenhuma`;let r=new Set(t.map(e=>e.id));return n.every(e=>e!==null&&r.has(e))?`opcional`:`obrigatoria`}function t(e,t,n){return e||n.length===0?t:t.filter(e=>{let t=new Set(e.setores.map(e=>e.id));return n.every(e=>e!==null&&t.has(e))})}export{e as n,t};

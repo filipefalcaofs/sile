@@ -202,4 +202,24 @@ class VistoriaCaixaDistribuicaoTest extends TestCase
 
         $this->assertSame($vera->id, $processo->refresh()->assigned_user_id);
     }
+
+    public function test_vistoriador_de_outro_setor_e_recusado_sem_aviso_de_sucesso(): void
+    {
+        $setorDaChefia = Sector::factory()->create();
+        $setorDoProcesso = Sector::factory()->create();
+        $chefia = $this->chefia($setorDaChefia);
+        $chefia->sectors()->attach($setorDoProcesso);
+        $deFora = $this->vistoriador($setorDaChefia, 'Vera de Outro Setor');
+        $processo = $this->processoEmVistoria($setorDoProcesso);
+
+        $this->actingAs($chefia, 'gestao')
+            ->post('/gestao/caixa-setor/distribuir', [
+                'request_ids' => [$processo->id],
+                'analista_id' => $deFora->id,
+            ])
+            ->assertSessionMissing('status')
+            ->assertSessionHas('warning', fn (string $mensagem): bool => str_contains($mensagem, 'Vera de Outro Setor'));
+
+        $this->assertNull($processo->refresh()->assigned_user_id);
+    }
 }

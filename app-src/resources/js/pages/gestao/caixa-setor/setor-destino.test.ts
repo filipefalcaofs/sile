@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { escolhaDeSetor } from './setor-destino';
+import { destinatariosDoSetor, escolhaDeSetor } from './setor-destino';
 
 const dois = [
     { id: 1, name: 'A' },
@@ -25,5 +25,26 @@ describe('escolhaDeSetor', () => {
 
     it('exige o setor quando algum processo está sem setor', () => {
         expect(escolhaDeSetor(true, dois, [null])).toBe('obrigatoria');
+    });
+});
+
+describe('destinatariosDoSetor', () => {
+    const pessoas = [
+        { id: 1, name: 'Do 156', setores: [{ id: 156, name: 'Vistoria' }] },
+        { id: 2, name: 'Do 249', setores: [{ id: 249, name: 'Outro' }] },
+        { id: 3, name: 'Dos dois', setores: [{ id: 156, name: 'Vistoria' }, { id: 249, name: 'Outro' }] },
+    ];
+
+    it('deixa só quem está no setor de todos os processos selecionados', () => {
+        expect(destinatariosDoSetor(false, pessoas, [156]).map((p) => p.id)).toEqual([1, 3]);
+        expect(destinatariosDoSetor(false, pessoas, [156, 249]).map((p) => p.id)).toEqual([3]);
+    });
+
+    it('não restringe quem distribui em qualquer setor', () => {
+        expect(destinatariosDoSetor(true, pessoas, [156])).toHaveLength(3);
+    });
+
+    it('não restringe sem processos selecionados', () => {
+        expect(destinatariosDoSetor(false, pessoas, [])).toHaveLength(3);
     });
 });

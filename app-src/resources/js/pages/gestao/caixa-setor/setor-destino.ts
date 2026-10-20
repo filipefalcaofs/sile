@@ -23,3 +23,24 @@ export function escolhaDeSetor(
 
     return setoresDosProcessos.every((setor) => setor !== null && ids.has(setor)) ? 'opcional' : 'obrigatoria';
 }
+
+/**
+ * Quem distribui só nos próprios setores entrega ao destinatário do setor do
+ * processo: o servidor recusa os demais, então o seletor nem os oferece. Com
+ * vários processos, vale o destinatário que está no setor de todos.
+ */
+export function destinatariosDoSetor<T extends { setores: SetorDoAnalista[] }>(
+    distribuiEmQualquerSetor: boolean,
+    destinatarios: T[],
+    setoresDosProcessos: (number | null)[],
+): T[] {
+    if (distribuiEmQualquerSetor || setoresDosProcessos.length === 0) {
+        return destinatarios;
+    }
+
+    return destinatarios.filter((pessoa) => {
+        const ids = new Set(pessoa.setores.map((setor) => setor.id));
+
+        return setoresDosProcessos.every((setor) => setor !== null && ids.has(setor));
+    });
+}

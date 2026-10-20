@@ -7,7 +7,7 @@ use App\Models\ViabilityRequest;
 use RuntimeException;
 
 /**
- * Distribuição/assunção não permitida (HU-080/081): o processo não está numa
+ * Distribuição/assunção não permitida (HU-076/077): o processo não está numa
  * caixa de setor, ou o analista não está vinculado ao setor do processo. A
  * atribuição NÃO acontece e o caller trata o erro — no lote (RN-007), vira uma
  * falha por item, sem abortar os demais.
@@ -21,7 +21,7 @@ class DistribuicaoException extends RuntimeException
 
     public static function analistaForaDoSetor(User $analista, ViabilityRequest $request): self
     {
-        return new self("Analista #{$analista->id} não está vinculado ao setor da solicitação #{$request->id}.");
+        return new self("{$analista->name} não está vinculado ao setor do processo #{$request->id}; escolha alguém do setor ou peça ao Apoio.");
     }
 
     public static function analistaSemSetor(User $analista, ViabilityRequest $request): self
