@@ -32,4 +32,10 @@ describe('sugestões de condicionante a partir da biblioteca', () => {
 
         expect(sugerirCondicionantes(textos, 'exigencia', [])).toHaveLength(5);
     });
+
+    it('reconhece a categoria condicionante em qualquer grafia', () => {
+        const textos = [texto(1, 'Deferido para escritório da empresa.', 'deferimento'), texto(2, 'Desde que seja escritório', 'Condicionantes')];
+
+        expect(sugerirCondicionantes(textos, 'escritorio', [])[0].id).toBe(2);
+    });
 });
