@@ -58,7 +58,7 @@ class TramitacaoConfirmacaoTest extends TestCase
         return $processo;
     }
 
-    public function test_envio_para_conclusao_com_destinatario_confirma_quem_recebeu(): void
+    public function test_envio_para_conclusao_com_destinatario_e_recusado(): void
     {
         $setor = Sector::factory()->create();
         $analista = $this->analista($setor);
@@ -70,9 +70,10 @@ class TramitacaoConfirmacaoTest extends TestCase
                 'status' => 'para_conclusao',
                 'encaminhado_para_user_id' => $chefia->id,
             ])
-            ->assertSessionHas('status', 'Processo enviado para conclusão de Maria Chefia. Ele já está na Caixa de entrada dessa pessoa.');
+            ->assertSessionHasErrors('encaminhado_para_user_id')
+            ->assertSessionMissing('status');
 
-        $this->assertSame('Para conclusão – Maria Chefia', $processo->refresh()->rotuloStatusTramitacao());
+        $this->assertSame('Em análise', $processo->refresh()->rotuloStatusTramitacao());
     }
 
     public function test_envio_para_conclusao_sem_destinatario_diz_onde_o_processo_ficou(): void

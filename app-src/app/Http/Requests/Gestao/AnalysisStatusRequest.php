@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Gestao;
 
 use App\Enums\AnalysisStatus;
-use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -31,9 +30,18 @@ class AnalysisStatusRequest extends FormRequest
             'force' => ['sometimes', 'boolean'],
             'sector_id' => ['required_if:status,encaminhado', 'nullable', 'integer', 'exists:sectors,id'],
             'user_id' => ['required_if:status,encaminhado', 'nullable', 'integer', 'exists:users,id'],
-            'encaminhado_para_user_id' => ['nullable', 'integer', Rule::exists('users', 'id')->where(
-                fn ($query) => $query->whereIn('id', User::permission('concluir-analise')->select('users.id')),
-            )],
+            // Para conclusão não tem destinatário: o Apoio distribui pela aba.
+            'encaminhado_para_user_id' => ['prohibited'],
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'encaminhado_para_user_id.prohibited' => 'O processo vai para a aba Para conclusão e é distribuído pelo Apoio: não escolha destinatário.',
         ];
     }
 }
