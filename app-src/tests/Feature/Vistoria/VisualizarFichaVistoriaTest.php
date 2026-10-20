@@ -197,4 +197,21 @@ class VisualizarFichaVistoriaTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->where('temFichaVistoria', true));
     }
+
+    public function test_ficha_de_analise_so_oferece_a_ficha_de_vistoria_a_quem_pode_consultar(): void
+    {
+        $analista = $this->analistaConsulta();
+        $alheio = $this->analistaConsulta();
+        $processo = ViabilityRequest::factory()->create();
+        Inspection::factory()->create(['viability_request_id' => $processo->id]);
+        $this->encaminhadoPor($processo, $analista);
+
+        $this->actingAs($analista, 'gestao')
+            ->get("/gestao/processos/{$processo->id}/ficha")
+            ->assertInertia(fn (Assert $page) => $page->where('podeConsultarVistoria', true));
+
+        $this->actingAs($alheio, 'gestao')
+            ->get("/gestao/processos/{$processo->id}/ficha")
+            ->assertInertia(fn (Assert $page) => $page->where('podeConsultarVistoria', false));
+    }
 }
