@@ -51,6 +51,8 @@ interface FiltrosAplicados {
 interface SaturacaoProps {
     resumo: Resumo;
     porBairroCnae: SaturacaoItem[];
+    /** Já ordenado pelo percentual, do maior para o menor, só com capacidade definida. */
+    maioresSaturacoes: SaturacaoItem[];
     limiares: Limiares;
     filtros: FiltrosAplicados;
 }
@@ -95,10 +97,9 @@ function formatarCnae(code: string): string {
     return /^\d{7}$/.test(code) ? `${code.slice(0, 4)}-${code.slice(4, 5)}/${code.slice(5, 7)}` : code;
 }
 
-/** Top pares por percentual de saturação (apenas com capacidade definida). */
-function saturacaoChartOption(itens: SaturacaoItem[]): EChartsOption {
-    const comCapacidade = itens.filter((item) => item.percentual !== null).slice(0, TOP_PARES);
-    const ordenado = [...comCapacidade].reverse();
+/** Top pares por percentual de saturação; o maior fica no topo do eixo. */
+function saturacaoChartOption(maiores: SaturacaoItem[]): EChartsOption {
+    const ordenado = [...maiores].reverse();
 
     return {
         tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, valueFormatter: (valor) => `${valor}%` },
@@ -134,7 +135,7 @@ const colunas: ColumnDef<SaturacaoItem>[] = [
     },
 ];
 
-export default function SaturacaoPainel({ resumo, porBairroCnae, limiares, filtros }: SaturacaoProps) {
+export default function SaturacaoPainel({ resumo, porBairroCnae, maioresSaturacoes, limiares, filtros }: SaturacaoProps) {
     const [form, setForm] = useState<FiltrosForm>({
         data_de: filtros.data_de ?? '',
         data_ate: filtros.data_ate ?? '',
@@ -278,8 +279,8 @@ export default function SaturacaoPainel({ resumo, porBairroCnae, limiares, filtr
                         description={`Top ${TOP_PARES} pares bairro × CNAE por percentual da capacidade (apenas com capacidade definida). Bairro oficial do imóvel; sem identificação, o bairro do endereço informado.`}
                     />
                     <CardContent>
-                        {porBairroCnae.some((item) => item.percentual !== null) ? (
-                            <Chart option={saturacaoChartOption(porBairroCnae)} className="h-96 w-full" />
+                        {maioresSaturacoes.length > 0 ? (
+                            <Chart option={saturacaoChartOption(maioresSaturacoes)} className="h-96 w-full" />
                         ) : (
                             <GraficoSemDados />
                         )}

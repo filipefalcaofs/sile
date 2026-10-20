@@ -27,16 +27,11 @@ class PendenciasRelatorioService
      */
     public function resumo(ReportFilters $f): array
     {
-        $agora = Carbon::now();
-
         return [
             'abertas' => (clone $this->builderSemOrdem($f))
                 ->where('status', AnalysisPendencyStatus::Aberta->value)
                 ->count(),
-            'vencidas' => (clone $this->builderSemOrdem($f))
-                ->where('status', AnalysisPendencyStatus::Aberta->value)
-                ->where('due_at', '<', $agora)
-                ->count(),
+            'vencidas' => $this->vencidas($f),
             'respondidas' => (clone $this->builderSemOrdem($f))
                 ->where('status', AnalysisPendencyStatus::Respondida->value)
                 ->count(),
@@ -45,6 +40,18 @@ class PendenciasRelatorioService
                 ->count(),
             'tempo_medio_resposta_minutos' => $this->tempoMedioResposta($f),
         ];
+    }
+
+    /**
+     * Abertas com o prazo já ultrapassado — o único número do resumo que o
+     * painel da gestão usa.
+     */
+    public function vencidas(ReportFilters $f): int
+    {
+        return (clone $this->builderSemOrdem($f))
+            ->where('status', AnalysisPendencyStatus::Aberta->value)
+            ->where('due_at', '<', Carbon::now())
+            ->count();
     }
 
     /**

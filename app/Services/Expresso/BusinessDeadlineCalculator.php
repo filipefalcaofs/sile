@@ -2,6 +2,7 @@
 
 namespace App\Services\Expresso;
 
+use App\Support\FusoNegocio;
 use DateTimeInterface;
 use Illuminate\Support\Carbon;
 
@@ -96,8 +97,10 @@ class BusinessDeadlineCalculator
      */
     public function businessDurationBetween(DateTimeInterface $from, DateTimeInterface $to): int
     {
-        $start = Carbon::instance($from);
-        $end = Carbon::instance($to);
+        // O dia útil é o de Salvador: a meia-noite, o fim de semana e o
+        // feriado são os locais, não os do UTC em que o instante foi gravado.
+        $start = Carbon::instance($from)->setTimezone(FusoNegocio::NOME);
+        $end = Carbon::instance($to)->setTimezone(FusoNegocio::NOME);
 
         if ($end->lessThanOrEqualTo($start)) {
             return 0;

@@ -7,7 +7,9 @@ use App\Models\Sector;
 use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
+use App\Services\Analise\ProcessoQueryService;
 use App\Services\Expresso\BusinessDeadlineCalculator;
+use App\Support\FusoNegocio;
 use App\Support\Settings;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
@@ -26,13 +28,6 @@ class PainelOperacaoService
     private const STATUS_EM_ANALISE = [
         ViabilityRequestStatus::EmAnalise->value,
         ViabilityRequestStatus::EmPendencia->value,
-    ];
-
-    private const STATUS_FORA_ESTOQUE = [
-        ViabilityRequestStatus::Rascunho->value,
-        ViabilityRequestStatus::Cancelada->value,
-        ViabilityRequestStatus::Deferida->value,
-        ViabilityRequestStatus::Indeferida->value,
     ];
 
     public function __construct(
@@ -63,16 +58,17 @@ class PainelOperacaoService
         $serie = $this->indicadores->serieFluxo($periodo);
         $estoque = $this->sla->estoqueTotal();
         $saldo = $protocolos - $decisoes['total'];
+        $diasDaJanela = $this->diasDeCalendario($periodo);
         $cumprimento = $this->sla->cumprimento($periodo);
         $tempoDecisao = $this->tempoAteDecisao($periodo);
         $falhas = $this->falhas->resumo($periodo);
-        $pendencias = $this->pendencias->resumo($agora);
+        $pendenciasVencidas = $this->pendencias->vencidas($agora);
 
         return [
             'janela_dias' => $janelaDias,
             'janelas' => self::JANELAS,
-            'data_de' => $periodo->from()?->toDateString(),
-            'data_ate' => $periodo->to()?->toDateString(),
+            'data_de' => $periodo->dataDe(),
+            'data_ate' => $periodo->dataAte(),
             'gerado_em' => now()->toIso8601String(),
             'protocolos' => $protocolos,
             'protocolos_periodo_anterior' => $protocolosAnteriores,
@@ -84,8 +80,8 @@ class PainelOperacaoService
             'atrasados' => $sla['vencidos'],
             'saldo_periodo' => $saldo,
             'pico_entrada' => $serie === [] ? null : max(array_column($serie, 'entrada')),
-            'projecao_30_dias' => $janelaDias > 0
-                ? (int) round($estoque + ($saldo / $janelaDias) * 30)
+            'projecao_30_dias' => $diasDaJanela > 0
+                ? (int) round($estoque + ($saldo / $diasDaJanela) * 30)
                 : null,
             'taxa_expressa' => $expressa['taxa'],
             'meta_expressa' => $expressa['meta'],
@@ -109,7 +105,7 @@ class PainelOperacaoService
                 'meta_dias' => $this->metaDias('analise.sla.analise_dias', (int) config('viabiliza.analise.sla.analise_dias', 10)),
                 'dentro_prazo_percentual' => $cumprimento['taxa'],
             ],
-            'acoes' => $this->acoes($sla, $detalheSla, $pendencias['vencidas'], $falhas),
+            'acoes' => $this->acoes($sla, $detalheSla, $pendenciasVencidas, $falhas),
             'etapas' => $this->etapas($periodo),
             'aging' => $this->agingDesdeProtocolo(),
             'carga' => [
@@ -123,14 +119,14 @@ class PainelOperacaoService
     private function filtrosDaJanela(int $janelaDias): ReportFilters
     {
         return ReportFilters::fromArray([
-            'data_de' => now()->subDays($janelaDias)->toDateString(),
-            'data_ate' => now()->toDateString(),
+            'data_de' => FusoNegocio::hoje()->subDays($janelaDias)->toDateString(),
+            'data_ate' => FusoNegocio::hoje()->toDateString(),
         ]);
     }
 
     private function filtrosAnteriores(int $janelaDias): ReportFilters
     {
-        $inicioAtual = now()->subDays($janelaDias)->startOfDay();
+        $inicioAtual = FusoNegocio::hoje()->subDays($janelaDias)->startOfDay();
         $fimAnterior = $inicioAtual->copy()->subDay();
 
         return ReportFilters::fromArray([
@@ -258,22 +254,25 @@ class PainelOperacaoService
     }
 
     /**
-     * @return list<array{chave: string, label: string, media_dias: float|null, meta_dias: int|null, amostras: int}>
+     * @return list<array{chave: string, label: string, media_dias: float|null, meta_dias: int|float|null, meta_unidade: 'corridos'|'uteis'|null, amostras: int}>
      */
     private function etapas(ReportFilters $f): array
     {
         $porEtapa = collect($this->tempos->tempoPorEtapa($f)['etapas'])->keyBy('etapa');
         $tvl = $this->tempos->tempoEmissaoTvl($f);
         $metaAnalise = $this->metaDias('analise.sla.analise_dias', (int) config('viabiliza.analise.sla.analise_dias', 10));
-        $metaPendencia = $this->metaDias(
-            'analise.pendencia.prazo_resposta_dias',
-            (int) config('viabiliza.analise.pendencia.prazo_resposta_dias', 15),
-        );
+        // O convite vence em horas úteis (PendenciaService); dia útil = 24 h,
+        // a mesma régua da média da etapa.
+        $metaPendencia = round((int) Settings::get(
+            'analise.convite.prazo_resposta_horas_uteis',
+            config('viabiliza.analise.pendencia.prazo_resposta_horas_uteis', 48),
+        ) / 24, 1);
 
+        // O prazo da análise é contado em dias corridos (AnalysisSlaService).
         $linhas = [
-            ['chave' => 'espera', 'label' => 'Espera (encaminhamento e Junta)', 'etapa' => 'espera', 'meta' => null],
-            ['chave' => 'analise', 'label' => 'Análise técnica', 'etapa' => 'analise', 'meta' => $metaAnalise],
-            ['chave' => 'pendencia', 'label' => 'Espera pelo requerente', 'etapa' => 'pendencia', 'meta' => $metaPendencia],
+            ['chave' => 'espera', 'label' => 'Espera (encaminhamento e Junta)', 'etapa' => 'espera', 'meta' => null, 'unidade' => null],
+            ['chave' => 'analise', 'label' => 'Análise técnica', 'etapa' => 'analise', 'meta' => $metaAnalise, 'unidade' => 'corridos'],
+            ['chave' => 'pendencia', 'label' => 'Espera pelo requerente', 'etapa' => 'pendencia', 'meta' => $metaPendencia, 'unidade' => 'uteis'],
         ];
 
         $resultado = array_map(function (array $linha) use ($porEtapa): array {
@@ -285,6 +284,7 @@ class PainelOperacaoService
                 'label' => $linha['label'],
                 'media_dias' => $minutos === null ? null : round($minutos / 1440, 1),
                 'meta_dias' => $linha['meta'],
+                'meta_unidade' => $linha['unidade'],
                 'amostras' => (int) ($medida['amostras'] ?? 0),
             ];
         }, $linhas);
@@ -294,6 +294,7 @@ class PainelOperacaoService
             'label' => 'Emissão da viabilidade',
             'media_dias' => $tvl['media_minutos'] === null ? null : round($tvl['media_minutos'] / 1440, 1),
             'meta_dias' => null,
+            'meta_unidade' => null,
             'amostras' => $tvl['amostras'],
         ];
 
@@ -305,12 +306,12 @@ class PainelOperacaoService
      */
     private function agingDesdeProtocolo(): array
     {
-        $limite5 = now()->copy()->subDays(5)->startOfDay();
-        $limite10 = now()->copy()->subDays(10)->startOfDay();
-        $limite20 = now()->copy()->subDays(20)->startOfDay();
+        $limite5 = FusoNegocio::hoje()->subDays(5)->startOfDay()->utc();
+        $limite10 = FusoNegocio::hoje()->subDays(10)->startOfDay()->utc();
+        $limite20 = FusoNegocio::hoje()->subDays(20)->startOfDay()->utc();
 
         $totais = ViabilityRequest::query()
-            ->whereNotIn('status', self::STATUS_FORA_ESTOQUE)
+            ->whereIn('status', ProcessoQueryService::statusDoGrupo('em_andamento'))
             ->selectRaw(
                 'sum(case when protocoled_at is not null and protocoled_at >= ? then 1 else 0 end) as faixa_0_5,
                 sum(case when protocoled_at is not null and protocoled_at >= ? and protocoled_at < ? then 1 else 0 end) as faixa_6_10,
@@ -478,6 +479,21 @@ class PainelOperacaoService
 
             return $linha;
         })->all();
+    }
+
+    /**
+     * Dias de calendário cobertos pelo recorte, contando o primeiro e o último.
+     */
+    private function diasDeCalendario(ReportFilters $periodo): int
+    {
+        $de = $periodo->dataDe();
+        $ate = $periodo->dataAte();
+
+        if ($de === null || $ate === null) {
+            return 0;
+        }
+
+        return (int) Carbon::parse($de)->diffInDays(Carbon::parse($ate)) + 1;
     }
 
     private function metaDias(string $chave, int $fallback): int

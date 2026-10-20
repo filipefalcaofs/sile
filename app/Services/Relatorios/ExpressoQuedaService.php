@@ -9,6 +9,7 @@ use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityRequestTransition;
 use App\Services\Analise\ProcessoQueryService;
+use App\Support\FusoNegocio;
 use App\Support\Settings;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
@@ -76,8 +77,8 @@ class ExpressoQuedaService
     public function serieTemporal(ReportFilters $f): array
     {
         $dias = (int) config('viabiliza.relatorios.expresso.janela_dias', 30);
-        $inicio = $f->from() ?? Carbon::now()->subDays($dias)->startOfDay();
-        $fim = $f->to() ?? Carbon::now()->endOfDay();
+        $inicio = $f->from() ?? FusoNegocio::hoje()->subDays($dias)->startOfDay()->utc();
+        $fim = $f->to() ?? FusoNegocio::hoje()->endOfDay()->utc();
 
         $respondidas = ViabilityDecision::query()
             ->where('flow', self::FLOW_EXPRESSO)
@@ -85,7 +86,7 @@ class ExpressoQuedaService
             ->whereBetween('decided_at', [$inicio, $fim])
             ->groupBy('dia')
             ->get([
-                DB::raw('date(decided_at) as dia'),
+                DB::raw(FusoNegocio::diaSql('decided_at').' as dia'),
                 DB::raw('count(*) as total'),
             ])
             ->mapWithKeys(fn ($linha): array => [(string) $linha->dia => (int) $linha->total])
@@ -97,7 +98,7 @@ class ExpressoQuedaService
             ->whereBetween('created_at', [$inicio, $fim])
             ->groupBy('dia')
             ->get([
-                DB::raw('date(created_at) as dia'),
+                DB::raw(FusoNegocio::diaSql('created_at').' as dia'),
                 DB::raw('count(*) as total'),
             ])
             ->mapWithKeys(fn ($linha): array => [(string) $linha->dia => (int) $linha->total])

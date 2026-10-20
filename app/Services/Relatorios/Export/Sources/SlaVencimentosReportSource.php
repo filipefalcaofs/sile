@@ -7,6 +7,7 @@ use App\Services\Relatorios\Export\ReportDefinition;
 use App\Services\Relatorios\Export\ReportSource;
 use App\Services\Relatorios\ReportFilters;
 use App\Services\Relatorios\SlaVencimentosService;
+use App\Support\FusoNegocio;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 
@@ -63,8 +64,8 @@ final class SlaVencimentosReportSource implements ReportSource
             $l['etapa'],
             $l['setor'],
             $l['analista'],
-            $l['iniciado_em'] !== null ? Carbon::parse($l['iniciado_em'])->format('d/m/Y H:i') : null,
-            $l['limite_em'] !== null ? Carbon::parse($l['limite_em'])->format('d/m/Y H:i') : null,
+            $l['iniciado_em'] !== null ? FusoNegocio::local(Carbon::parse($l['iniciado_em']))->format('d/m/Y H:i') : null,
+            $l['limite_em'] !== null ? FusoNegocio::local(Carbon::parse($l['limite_em']))->format('d/m/Y H:i') : null,
             $l['situacao_label'],
             $l['restante'],
         ];

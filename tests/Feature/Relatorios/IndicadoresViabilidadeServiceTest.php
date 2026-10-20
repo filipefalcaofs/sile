@@ -104,9 +104,9 @@ class IndicadoresViabilidadeServiceTest extends TestCase
     #[Test]
     public function por_periodo_respeita_o_filtro_de_categoria(): void
     {
-        $this->protocolada(['analysis_category' => AnalysisCategory::Expresso, 'protocoled_at' => Carbon::parse('2026-03-10')]);
-        $this->protocolada(['analysis_category' => AnalysisCategory::Expresso, 'protocoled_at' => Carbon::parse('2026-03-10')]);
-        $this->protocolada(['analysis_category' => AnalysisCategory::SemiExpresso, 'protocoled_at' => Carbon::parse('2026-03-10')]);
+        $this->protocolada(['analysis_category' => AnalysisCategory::Expresso, 'protocoled_at' => Carbon::parse('2026-03-10 12:00:00')]);
+        $this->protocolada(['analysis_category' => AnalysisCategory::Expresso, 'protocoled_at' => Carbon::parse('2026-03-10 12:00:00')]);
+        $this->protocolada(['analysis_category' => AnalysisCategory::SemiExpresso, 'protocoled_at' => Carbon::parse('2026-03-10 12:00:00')]);
 
         $serie = $this->service()->porPeriodo(ReportFilters::fromArray(['categoria' => 'expresso']));
 

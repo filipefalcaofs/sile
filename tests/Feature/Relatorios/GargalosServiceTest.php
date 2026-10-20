@@ -7,6 +7,7 @@ use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Relatorios\GargalosService;
 use App\Services\Relatorios\ReportFilters;
+use App\Support\FusoNegocio;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
@@ -32,7 +33,7 @@ class GargalosServiceTest extends TestCase
     {
         $request = ViabilityRequest::factory()->protocoled()->create([
             'protocol_number' => fake()->unique()->numerify('VIA-2026-######'),
-            'protocoled_at' => Carbon::parse($etapas[0][1]),
+            'protocoled_at' => Carbon::parse($etapas[0][1], FusoNegocio::NOME)->utc(),
         ]);
 
         $anterior = null;
@@ -43,14 +44,14 @@ class GargalosServiceTest extends TestCase
                 'to_status' => $status,
             ]);
 
-            $transicao->forceFill(['created_at' => Carbon::parse($em)])->save();
+            $transicao->forceFill(['created_at' => Carbon::parse($em, FusoNegocio::NOME)->utc()])->save();
 
             $anterior = $status;
         }
 
         ViabilityDecision::factory()->for($request, 'viabilityRequest')->create([
             'tvl_product_number' => fake()->unique()->numerify('TVL-2026-######'),
-            'decided_at' => Carbon::parse($decididoEm),
+            'decided_at' => Carbon::parse($decididoEm, FusoNegocio::NOME)->utc(),
         ]);
 
         return $request->fresh();

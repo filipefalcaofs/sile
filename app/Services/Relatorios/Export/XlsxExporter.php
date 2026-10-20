@@ -2,6 +2,7 @@
 
 namespace App\Services\Relatorios\Export;
 
+use App\Support\FusoNegocio;
 use OpenSpout\Common\Entity\Cell;
 use OpenSpout\Common\Entity\Cell\FormulaCell;
 use OpenSpout\Common\Entity\Row;
@@ -26,7 +27,7 @@ use Symfony\Component\HttpFoundation\Response;
  * metadados da geração).
  *
  * Driver XLSX do contrato de exportação (HU-131) — openspout v4 por STREAMING de
- * baixa memória: itera o Builder filtrado da tela com ->cursor() (RN-005, nunca
+ * baixa memória: itera o Builder filtrado da tela em lotes com ->lazy() (RN-005, nunca
  * all() em memória) e escreve linha a linha.
  *
  * Pitfall 4: o XLSX é um ZIP e exige um arquivo de filesystem gravável (não um
@@ -69,7 +70,7 @@ final class XlsxExporter implements ReportFormatExporter
     private const HAIRLINE = 'E4E7EC';
 
     /**
-     * Streaming (RN-005, baixa memória via cursor()) — o mesmo loop serve ao
+     * Streaming (RN-005, baixa memória via lazy()) — o mesmo loop serve ao
      * síncrono e ao assíncrono. A CAPA precisa do total antes dos dados; o
      * DICIONÁRIO precisa do tipo inferido durante o streaming, por isso nasce
      * depois da aba DADOS.
@@ -78,7 +79,7 @@ final class XlsxExporter implements ReportFormatExporter
     {
         $colunas = $definition->columnLabels();
         $n = count($colunas);
-        $gerado = now();
+        $gerado = FusoNegocio::hoje();
         $max = $definition->maxRows;
         $total = $definition->builder()->count();
         $registros = $max !== null ? min($total, $max) : $total;
@@ -118,7 +119,9 @@ final class XlsxExporter implements ReportFormatExporter
         $tipos = array_fill(0, $n, 'vazio');
         $emitidas = 0;
 
-        foreach ($definition->builder()->cursor() as $model) {
+        // lazy() pagina em lotes e carrega os with() de cada lote; cursor()
+        // ignoraria o eager loading e consultaria as relações linha a linha.
+        foreach ($definition->builder()->lazy((int) config('viabiliza.relatorios.export.chunk', 200)) as $model) {
             if ($max !== null && $emitidas >= $max) {
                 break;
             }
@@ -246,7 +249,7 @@ final class XlsxExporter implements ReportFormatExporter
             $linhas[] = [$rotulo, $valor ?? 'Todos (sem filtro)', 'Filtro da tela'];
         }
         $linhas[] = ['Usuário', auth()->user()?->name ?? '—', 'Quem gerou'];
-        $linhas[] = ['Gerado em', $gerado->format('d/m/Y H:i:s'), (string) config('app.timezone')];
+        $linhas[] = ['Gerado em', $gerado->format('d/m/Y H:i:s'), FusoNegocio::NOME];
         $linhas[] = ['Relatório', $definition->titulo, 'Contrato único de exportação'];
         $linhas[] = ['Registros', (string) $registros, 'Total do recorte exportado'];
 

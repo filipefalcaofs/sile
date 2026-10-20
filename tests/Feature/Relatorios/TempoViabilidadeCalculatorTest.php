@@ -8,6 +8,7 @@ use App\Models\Holiday;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Relatorios\TempoViabilidadeCalculator;
+use App\Support\FusoNegocio;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
@@ -33,11 +34,11 @@ class TempoViabilidadeCalculatorTest extends TestCase
     private function processoDecidido(string $protocoladoEm, string $decididoEm): ViabilityRequest
     {
         $request = ViabilityRequest::factory()->protocoled()->create([
-            'protocoled_at' => Carbon::parse($protocoladoEm),
+            'protocoled_at' => Carbon::parse($protocoladoEm, FusoNegocio::NOME)->utc(),
         ]);
 
         ViabilityDecision::factory()->for($request, 'viabilityRequest')->create([
-            'decided_at' => Carbon::parse($decididoEm),
+            'decided_at' => Carbon::parse($decididoEm, FusoNegocio::NOME)->utc(),
         ]);
 
         return $request->fresh();
@@ -49,10 +50,10 @@ class TempoViabilidadeCalculatorTest extends TestCase
             'status' => $respondidaEm === null
                 ? AnalysisPendencyStatus::Aberta
                 : AnalysisPendencyStatus::Respondida,
-            'responded_at' => $respondidaEm === null ? null : Carbon::parse($respondidaEm),
+            'responded_at' => $respondidaEm === null ? null : Carbon::parse($respondidaEm, FusoNegocio::NOME)->utc(),
         ]);
 
-        $pendencia->forceFill(['created_at' => Carbon::parse($abertaEm)])->save();
+        $pendencia->forceFill(['created_at' => Carbon::parse($abertaEm, FusoNegocio::NOME)->utc()])->save();
     }
 
     public function test_desconta_o_fim_de_semana_entre_o_protocolo_e_a_decisao(): void
@@ -108,7 +109,7 @@ class TempoViabilidadeCalculatorTest extends TestCase
     public function test_processo_sem_decisao_nao_tem_tempo_de_viabilidade(): void
     {
         $request = ViabilityRequest::factory()->protocoled()->create([
-            'protocoled_at' => Carbon::parse('2026-03-02 00:00:00'),
+            'protocoled_at' => Carbon::parse('2026-03-02 00:00:00', FusoNegocio::NOME)->utc(),
         ]);
 
         $this->assertNull($this->calculator()->horasUteis($request));
@@ -119,7 +120,7 @@ class TempoViabilidadeCalculatorTest extends TestCase
         $request = ViabilityRequest::factory()->draft()->create(['protocoled_at' => null]);
 
         ViabilityDecision::factory()->for($request, 'viabilityRequest')->create([
-            'decided_at' => Carbon::parse('2026-03-04 00:00:00'),
+            'decided_at' => Carbon::parse('2026-03-04 00:00:00', FusoNegocio::NOME)->utc(),
         ]);
 
         $this->assertNull($this->calculator()->horasUteis($request->fresh()));

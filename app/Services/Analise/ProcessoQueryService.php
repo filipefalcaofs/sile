@@ -6,9 +6,11 @@ use App\Enums\AnalysisCategory;
 use App\Enums\AnalysisRecordStatus;
 use App\Enums\AnalysisStatus;
 use App\Enums\ViabilityRequestStatus;
+use App\Http\Resources\ProcessoResource;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Servicos\ServicoNomenclaturaResolver;
+use App\Support\FusoNegocio;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
@@ -59,6 +61,25 @@ class ProcessoQueryService
         'cancelado' => ['cancelada'],
     ];
 
+    /**
+     * Status de um grupo do filtro macro. Os indicadores de estoque leem daqui
+     * para contar exatamente o que a lista do grupo mostra.
+     *
+     * @return list<string>
+     */
+    public static function statusDoGrupo(string $grupo): array
+    {
+        return self::GRUPOS_STATUS[$grupo] ?? [];
+    }
+
+    /**
+     * Relações que a {@see ProcessoResource} lê em cada linha
+     * da listagem e das exportações de solicitações.
+     *
+     * @var list<string>
+     */
+    public const RELACOES_LISTAGEM = ['company', 'sector:id,name', 'assignedTo:id,name', 'conclusaoEncaminhadaPara:id,name', 'decision', 'encaminhamentoAnalise', 'serviceType:id,name', 'eventos'];
+
     /** Status que compõem a fila de trabalho do analista (HU-144). */
     private const STATUS_FILA = [
         ViabilityRequestStatus::EmAnalise->value,
@@ -74,8 +95,7 @@ class ProcessoQueryService
      */
     public function filtered(array $filtros): Builder
     {
-        $query = ViabilityRequest::query()
-            ->with(['company', 'sector:id,name', 'assignedTo:id,name', 'conclusaoEncaminhadaPara:id,name', 'decision', 'encaminhamentoAnalise', 'serviceType:id,name', 'eventos']);
+        $query = ViabilityRequest::query()->with(self::RELACOES_LISTAGEM);
 
         return $this->aplicarOrdem($this->aplicarFiltros($query, $filtros), $this->valor($filtros, 'ordem'));
     }
@@ -119,8 +139,8 @@ class ProcessoQueryService
             ->when($this->valor($filtros, 'cnpj'), fn (Builder $q, string $v) => $this->aplicarDocumento($q, $v))
             ->when($this->valor($filtros, 'cnae'), fn (Builder $q, string $v) => $this->aplicarCnae($q, $v))
             ->when($this->valor($filtros, 'complemento'), fn (Builder $q, string $v) => $q->whereLike('address_complement', "%{$v}%", caseSensitive: false))
-            ->when($this->data($filtros, 'data_de'), fn (Builder $q, string $d) => $q->whereDate('protocoled_at', '>=', $d))
-            ->when($this->data($filtros, 'data_ate'), fn (Builder $q, string $d) => $q->whereDate('protocoled_at', '<=', $d))
+            ->when($this->data($filtros, 'data_de'), fn (Builder $q, string $d) => $q->where('protocoled_at', '>=', FusoNegocio::inicioDoDia($d)))
+            ->when($this->data($filtros, 'data_ate'), fn (Builder $q, string $d) => $q->where('protocoled_at', '<=', FusoNegocio::fimDoDia($d)))
             ->when($this->categoria($filtros), fn (Builder $q, string $cat) => $this->aplicarCategoria($q, $cat));
     }
 
@@ -185,7 +205,7 @@ class ProcessoQueryService
      */
     public function contadorAnalisados(User $user, int $dias): int
     {
-        $desde = now()->subDays($dias)->startOfDay();
+        $desde = FusoNegocio::hoje()->subDays($dias)->startOfDay()->utc();
 
         return $this->analisadosPor($user, $desde)->count();
     }
@@ -239,7 +259,7 @@ class ProcessoQueryService
             'vencendo_hoje' => $this->escopo($user)
                 ->whereIn('status', self::STATUS_FILA)
                 ->whereNotNull('analysis_due_at')
-                ->where('analysis_due_at', '<=', now()->endOfDay())
+                ->where('analysis_due_at', '<=', FusoNegocio::hoje()->endOfDay()->utc())
                 ->count(),
         ];
     }

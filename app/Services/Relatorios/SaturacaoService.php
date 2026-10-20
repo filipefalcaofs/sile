@@ -30,12 +30,100 @@ class SaturacaoService
     /** Bairro oficial com o digitado de reserva (coalesce portável). */
     private const BAIRRO = 'coalesce(viability_requests.bairro_oficial, viability_requests.address_neighborhood)';
 
+    /** Linhas devolvidas para a tabela da tela. */
+    public const LIMITE_TABELA = 500;
+
+    /** Pares exibidos no gráfico de maiores saturações. */
+    public const TOP_SATURACOES = 15;
+
     /**
-     * Saturação por par bairro×CNAE (estabelecimentos deferidos vs capacidade).
+     * Saturação por par bairro×CNAE (estabelecimentos deferidos vs capacidade),
+     * do maior volume para o menor.
      *
      * @return list<array{bairro: string, cnae: string, ativos: int, capacidade: int|null, percentual: float|null, situacao: string}>
      */
-    public function porBairroCnae(ReportFilters $f, int $limite = 500): array
+    public function porBairroCnae(ReportFilters $f, int $limite = self::LIMITE_TABELA): array
+    {
+        return array_slice($this->pares($f), 0, $limite);
+    }
+
+    /**
+     * Resumo do recorte por situação (para os KPIs do painel), sobre TODOS os
+     * pares — não só os que cabem na tabela.
+     *
+     * @return array{pares_avaliados: int, saturados: int, saturando: int, sem_capacidade: int}
+     */
+    public function resumo(ReportFilters $f): array
+    {
+        return $this->resumir($this->pares($f));
+    }
+
+    /**
+     * Tudo o que a tela usa, a partir de uma única agregação: resumo sobre
+     * todos os pares, tabela limitada por volume e ranking pelo percentual.
+     *
+     * @return array{resumo: array{pares_avaliados: int, saturados: int, saturando: int, sem_capacidade: int}, porBairroCnae: list<array<string, mixed>>, maioresSaturacoes: list<array<string, mixed>>}
+     */
+    public function painel(ReportFilters $f, int $limiteTabela = self::LIMITE_TABELA): array
+    {
+        $pares = $this->pares($f);
+
+        return [
+            'resumo' => $this->resumir($pares),
+            'porBairroCnae' => array_slice($pares, 0, $limiteTabela),
+            'maioresSaturacoes' => $this->maioresSaturacoes($pares),
+        ];
+    }
+
+    /**
+     * Pares com capacidade definida, do maior percentual para o menor.
+     *
+     * @param  list<array{bairro: string, cnae: string, ativos: int, capacidade: int|null, percentual: float|null, situacao: string}>  $pares
+     * @return list<array{bairro: string, cnae: string, ativos: int, capacidade: int|null, percentual: float|null, situacao: string}>
+     */
+    private function maioresSaturacoes(array $pares): array
+    {
+        $comCapacidade = array_values(array_filter($pares, fn (array $par): bool => $par['percentual'] !== null));
+
+        usort($comCapacidade, fn (array $a, array $b): int => [$b['percentual'], $b['ativos'], $a['bairro'], $a['cnae']]
+            <=> [$a['percentual'], $a['ativos'], $b['bairro'], $b['cnae']]);
+
+        return array_slice($comCapacidade, 0, self::TOP_SATURACOES);
+    }
+
+    /**
+     * @param  list<array{situacao: string}>  $pares
+     * @return array{pares_avaliados: int, saturados: int, saturando: int, sem_capacidade: int}
+     */
+    private function resumir(array $pares): array
+    {
+        $saturados = 0;
+        $saturando = 0;
+        $semCapacidade = 0;
+
+        foreach ($pares as $par) {
+            match ($par['situacao']) {
+                'saturado' => $saturados++,
+                'saturando' => $saturando++,
+                'sem_capacidade' => $semCapacidade++,
+                default => null,
+            };
+        }
+
+        return [
+            'pares_avaliados' => count($pares),
+            'saturados' => $saturados,
+            'saturando' => $saturando,
+            'sem_capacidade' => $semCapacidade,
+        ];
+    }
+
+    /**
+     * Todos os pares bairro×CNAE do recorte, classificados.
+     *
+     * @return list<array{bairro: string, cnae: string, ativos: int, capacidade: int|null, percentual: float|null, situacao: string}>
+     */
+    private function pares(ReportFilters $f): array
     {
         $capacidades = $this->capacidades();
         $alerta = (float) Settings::get('relatorios.saturacao.alerta_percentual', 80);
@@ -50,10 +138,11 @@ class SaturacaoService
             })
             ->join('viability_request_cnaes as vrc', 'vrc.viability_request_id', '=', 'viability_requests.id')
             ->join('cnaes as c', 'c.id', '=', 'vrc.cnae_id')
+            ->when($f->cnaeCodigo(), fn (Builder $q, string $codigo): Builder => $q->where('c.code', $codigo))
             ->groupBy('bairro', 'c.code')
             ->orderByDesc('ativos')
             ->orderBy('bairro')
-            ->limit($limite)
+            ->orderBy('c.code')
             ->get([
                 DB::raw(self::BAIRRO.' as bairro'),
                 'c.code as cnae_code',
@@ -79,33 +168,17 @@ class SaturacaoService
     }
 
     /**
-     * Resumo do recorte por situação (para os KPIs do painel).
+     * Solicitações que formam os pares do recorte: deferidas, com bairro e com
+     * o CNAE filtrado (base da exportação da tela).
      *
-     * @return array{pares_avaliados: int, saturados: int, saturando: int, sem_capacidade: int}
+     * @return Builder<ViabilityRequest>
      */
-    public function resumo(ReportFilters $f): array
+    public function solicitacoes(ReportFilters $f): Builder
     {
-        $linhas = $this->porBairroCnae($f);
-
-        $saturados = 0;
-        $saturando = 0;
-        $semCapacidade = 0;
-
-        foreach ($linhas as $linha) {
-            match ($linha['situacao']) {
-                'saturado' => $saturados++,
-                'saturando' => $saturando++,
-                'sem_capacidade' => $semCapacidade++,
-                default => null,
-            };
-        }
-
-        return [
-            'pares_avaliados' => count($linhas),
-            'saturados' => $saturados,
-            'saturando' => $saturando,
-            'sem_capacidade' => $semCapacidade,
-        ];
+        return $this->baseQuery($f)
+            ->whereNotNull(DB::raw(self::BAIRRO))
+            ->whereHas('decision', fn (Builder $d): Builder => $d->where('outcome', DecisionOutcome::Deferida->value))
+            ->whereHas('cnaes', fn (Builder $c): Builder => $c->when($f->cnaeCodigo(), fn (Builder $q, string $codigo): Builder => $q->where('cnaes.code', $codigo)));
     }
 
     /**

@@ -9,6 +9,7 @@ use App\Models\VirtualOfficeInscriptionLock;
 use App\Services\Relatorios\RelatorioSedeEscritorioVirtualService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 /**
@@ -143,5 +144,18 @@ class RelatorioSedeQueryTest extends TestCase
     private function service(): RelatorioSedeEscritorioVirtualService
     {
         return app(RelatorioSedeEscritorioVirtualService::class);
+    }
+
+    public function test_mapear_as_linhas_nao_consulta_o_banco_por_linha(): void
+    {
+        $linhas = $this->service()->builder(['sede' => 'TVL-2026-SEDE1'])->get();
+
+        DB::enableQueryLog();
+        $tipos = $linhas->map(fn (ViabilityRequest $r): string => $this->service()->linha($r)['tipo'])->all();
+        $consultas = count(DB::getQueryLog());
+        DB::disableQueryLog();
+
+        $this->assertSame(['sede', 'abrigado', 'abrigado'], $tipos);
+        $this->assertSame(0, $consultas);
     }
 }

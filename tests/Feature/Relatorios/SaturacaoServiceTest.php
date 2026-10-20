@@ -185,4 +185,65 @@ class SaturacaoServiceTest extends TestCase
         $this->assertSame([], $porDigitadoSubstituido);
         $this->assertSame(['Barra'], array_column($porDigitadoSemOficial, 'bairro'));
     }
+
+    public function test_filtro_de_cnae_restringe_pares_e_resumo(): void
+    {
+        $comercio = Cnae::factory()->create(['code' => '4712100']);
+        $restaurante = Cnae::factory()->create(['code' => '5611201']);
+
+        $this->deferidaComCnae('Pituba', $comercio);
+        $this->deferidaComCnae('Pituba', $restaurante);
+        $this->deferidaComCnae('Barra', $restaurante);
+
+        $filtros = $this->filtros(['cnae' => '4712-1/00']);
+
+        $this->assertSame(['4712100'], array_values(array_unique(array_column($this->service()->porBairroCnae($filtros), 'cnae'))));
+        $this->assertSame(1, $this->service()->resumo($filtros)['pares_avaliados']);
+        $this->assertSame(['4712100'], array_column($this->service()->painel($filtros)['maioresSaturacoes'], 'cnae'));
+    }
+
+    public function test_resumo_conta_todos_os_pares_mesmo_alem_do_limite_da_tabela(): void
+    {
+        $comercio = Cnae::factory()->create(['code' => '4712100']);     // capacidade 2
+        $restaurante = Cnae::factory()->create(['code' => '5611201']);  // capacidade 5
+
+        // Par de maior volume, mas sem saturação: 3/5 = 60%.
+        $this->deferidaComCnae('Pituba', $restaurante);
+        $this->deferidaComCnae('Pituba', $restaurante);
+        $this->deferidaComCnae('Pituba', $restaurante);
+
+        // Par pequeno e saturado: 2/2 = 100%.
+        $this->deferidaComCnae('Barra', $comercio);
+        $this->deferidaComCnae('Barra', $comercio);
+
+        $painel = $this->service()->painel($this->filtros(), limiteTabela: 1);
+
+        $this->assertCount(1, $painel['porBairroCnae']);
+        $this->assertSame('Pituba', $painel['porBairroCnae'][0]['bairro']);
+        $this->assertSame(2, $painel['resumo']['pares_avaliados']);
+        $this->assertSame(1, $painel['resumo']['saturados']);
+        $this->assertSame('Barra', $painel['maioresSaturacoes'][0]['bairro']);
+    }
+
+    public function test_maiores_saturacoes_ordena_pelo_percentual_e_ignora_sem_capacidade(): void
+    {
+        $comercio = Cnae::factory()->create(['code' => '4712100']);      // capacidade 2
+        $restaurante = Cnae::factory()->create(['code' => '5611201']);   // capacidade 5
+        $semCapacidade = Cnae::factory()->create(['code' => '3333333']);
+
+        foreach (range(1, 4) as $i) {
+            $this->deferidaComCnae('Pituba', $restaurante); // 80%
+        }
+        $this->deferidaComCnae('Barra', $comercio);
+        $this->deferidaComCnae('Barra', $comercio);
+        $this->deferidaComCnae('Barra', $comercio);         // 150%
+        foreach (range(1, 6) as $i) {
+            $this->deferidaComCnae('Itapuã', $semCapacidade);
+        }
+        $this->deferidaComCnae('Ondina', $comercio);        // 50%
+
+        $maiores = $this->service()->painel($this->filtros())['maioresSaturacoes'];
+
+        $this->assertSame([150.0, 80.0, 50.0], array_column($maiores, 'percentual'));
+    }
 }

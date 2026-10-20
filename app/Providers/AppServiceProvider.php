@@ -118,7 +118,7 @@ class AppServiceProvider extends ServiceProvider
         // duração em tempo útil. Singleton porque a lista é cacheada (TTL técnico).
         // Sem feriado municipal cadastrado, degrada honesto (hasOfficialCalendar
         // = false) — nunca inventa feriado. A lista oficial é pendência SEDUR.
-        $this->app->singleton(HolidayProvider::class, DatabaseHolidayProvider::class);
+        $this->app->scoped(HolidayProvider::class, DatabaseHolidayProvider::class);
 
         // Parecer ao Regin/Junta: provider HTTP real (api_integracao, header JWT).
         // SEFAZ e BAP continuam bloqueados honestos — o Unavailable lança e o

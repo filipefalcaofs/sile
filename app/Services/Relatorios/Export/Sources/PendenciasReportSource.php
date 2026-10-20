@@ -7,6 +7,7 @@ use App\Services\Relatorios\Export\ReportDefinition;
 use App\Services\Relatorios\Export\ReportSource;
 use App\Services\Relatorios\PendenciasRelatorioService;
 use App\Services\Relatorios\ReportFilters;
+use App\Support\FusoNegocio;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 
@@ -61,9 +62,9 @@ final class PendenciasReportSource implements ReportSource
             $l['descricao'],
             $l['status_label'],
             $l['analista'],
-            $l['aberta_em'] !== null ? Carbon::parse($l['aberta_em'])->format('d/m/Y H:i') : null,
-            $l['limite_em'] !== null ? Carbon::parse($l['limite_em'])->format('d/m/Y H:i') : null,
-            $l['respondida_em'] !== null ? Carbon::parse($l['respondida_em'])->format('d/m/Y H:i') : null,
+            $l['aberta_em'] !== null ? FusoNegocio::local(Carbon::parse($l['aberta_em']))->format('d/m/Y H:i') : null,
+            $l['limite_em'] !== null ? FusoNegocio::local(Carbon::parse($l['limite_em']))->format('d/m/Y H:i') : null,
+            $l['respondida_em'] !== null ? FusoNegocio::local(Carbon::parse($l['respondida_em']))->format('d/m/Y H:i') : null,
             $l['tempo_resposta_minutos'],
         ];
     }

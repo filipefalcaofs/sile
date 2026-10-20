@@ -7,6 +7,7 @@ use App\Services\Relatorios\ComunicacoesFalhaService;
 use App\Services\Relatorios\Export\ReportDefinition;
 use App\Services\Relatorios\Export\ReportSource;
 use App\Services\Relatorios\ReportFilters;
+use App\Support\FusoNegocio;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 
@@ -62,7 +63,7 @@ final class ComunicacoesFalhaReportSource implements ReportSource
             $l['titulo'],
             $l['status_label'],
             $l['erro'],
-            $l['em'] !== null ? Carbon::parse($l['em'])->format('d/m/Y H:i') : null,
+            $l['em'] !== null ? FusoNegocio::local(Carbon::parse($l['em']))->format('d/m/Y H:i') : null,
         ];
     }
 }

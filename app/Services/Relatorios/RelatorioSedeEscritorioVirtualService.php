@@ -50,6 +50,12 @@ class RelatorioSedeEscritorioVirtualService
 
         return ViabilityRequest::query()
             ->with(['company', 'decision'])
+            // Marca a sede na própria consulta, em vez de uma consulta por linha.
+            ->addSelect(['eh_sede' => VirtualOfficeInscriptionLock::query()
+                ->selectRaw('1')
+                ->where('active', true)
+                ->whereColumn('sede_viability_request_id', 'viability_requests.id')
+                ->limit(1)])
             ->whereIn('property_registration', $inscricoes->all())
             ->where(function (Builder $q) use ($sedeIds): void {
                 $q->whereIn('id', $sedeIds->all())
@@ -130,6 +136,10 @@ class RelatorioSedeEscritorioVirtualService
 
     private function ehSede(ViabilityRequest $r): bool
     {
+        if (array_key_exists('eh_sede', $r->getAttributes())) {
+            return $r->getAttribute('eh_sede') !== null;
+        }
+
         return VirtualOfficeInscriptionLock::query()
             ->where('active', true)
             ->where('sede_viability_request_id', $r->id)

@@ -108,8 +108,11 @@ class ReportFiltersTest extends TestCase
 
         $this->assertInstanceOf(Carbon::class, $filtros->from());
         $this->assertInstanceOf(Carbon::class, $filtros->to());
-        $this->assertSame('2026-01-01 00:00:00', $filtros->from()->toDateTimeString());
-        $this->assertSame('2026-03-31 23:59:59', $filtros->to()->toDateTimeString());
+        // Dias de Salvador convertidos para o UTC das colunas gravadas.
+        $this->assertSame('2026-01-01 03:00:00', $filtros->from()->toDateTimeString());
+        $this->assertSame('2026-04-01 02:59:59', $filtros->to()->toDateTimeString());
+        $this->assertSame('2026-01-01', $filtros->dataDe());
+        $this->assertSame('2026-03-31', $filtros->dataAte());
         $this->assertSame(3, $filtros->setorId());
         $this->assertSame(7, $filtros->analistaId());
         $this->assertSame('Pituba', $filtros->bairro());

@@ -2,8 +2,10 @@
 
 namespace Tests\Feature\Relatorios;
 
+use App\Enums\AnalysisPendencyStatus;
 use App\Enums\DecisionOutcome;
 use App\Enums\ViabilityRequestStatus;
+use App\Models\AnalysisPendency;
 use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
@@ -346,5 +348,108 @@ class DashboardKpisTest extends TestCase
             'protocol_number' => null,
             'protocoled_at' => Carbon::parse(self::ANTES_DA_JANELA),
         ]);
+    }
+
+    #[Test]
+    public function aging_nao_conta_processo_encerrado(): void
+    {
+        Carbon::setTestNow(self::AGORA);
+
+        $gestor = User::factory()->gestor()->withAcceptedLgpdTerm()->create();
+
+        ViabilityRequest::factory()->create([
+            'status' => ViabilityRequestStatus::EmAnalise,
+            'protocoled_at' => Carbon::parse('2026-05-01 09:00:00'),
+        ]);
+
+        foreach ([ViabilityRequestStatus::Cassado, ViabilityRequestStatus::Revogado, ViabilityRequestStatus::Desativado] as $status) {
+            ViabilityRequest::factory()->create([
+                'status' => $status,
+                'protocoled_at' => Carbon::parse('2026-05-01 09:00:00'),
+            ]);
+        }
+
+        $this->actingAs($gestor, 'gestao')
+            ->get('/gestao')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('kpis.operacao.estoque_total', 1)
+                ->where('kpis.operacao.aging', function ($faixas): bool {
+                    return collect($faixas)->sum('total') === 1;
+                }));
+    }
+
+    #[Test]
+    public function projecao_divide_o_saldo_pelos_dias_reais_da_janela(): void
+    {
+        Carbon::setTestNow(self::AGORA);
+
+        $gestor = User::factory()->gestor()->withAcceptedLgpdTerm()->create();
+
+        // Janela de 7: 08/06 a 15/06, oito dias de calendário.
+        foreach (range(1, 8) as $i) {
+            $this->protocolada('2026-06-12 09:00:00');
+        }
+
+        // estoque 8 + (saldo 8 ÷ 8 dias) × 30 = 38.
+        $this->actingAs($gestor, 'gestao')
+            ->get('/gestao?janela=7')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('kpis.operacao.data_de', '2026-06-08')
+                ->where('kpis.operacao.saldo_periodo', 8)
+                ->where('kpis.operacao.estoque_total', 8)
+                ->where('kpis.operacao.projecao_30_dias', 38));
+    }
+
+    #[Test]
+    public function meta_da_espera_pelo_requerente_e_o_prazo_do_convite_em_horas_uteis(): void
+    {
+        Carbon::setTestNow(self::AGORA);
+
+        $gestor = User::factory()->gestor()->withAcceptedLgpdTerm()->create();
+
+        $this->actingAs($gestor, 'gestao')
+            ->get('/gestao')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('kpis.operacao.etapas', function ($etapas): bool {
+                    $porChave = collect($etapas)->keyBy('chave');
+
+                    return (float) $porChave['pendencia']['meta_dias'] === 2.0
+                        && $porChave['pendencia']['meta_unidade'] === 'uteis'
+                        && $porChave['analise']['meta_unidade'] === 'corridos'
+                        && $porChave['espera']['meta_unidade'] === null;
+                }));
+    }
+
+    #[Test]
+    public function acao_de_pendencia_conta_so_as_abertas_vencidas(): void
+    {
+        Carbon::setTestNow(self::AGORA);
+
+        $gestor = User::factory()->gestor()->withAcceptedLgpdTerm()->create();
+        $processo = $this->protocolada(self::DENTRO_DA_JANELA.' 09:00:00');
+
+        foreach ([
+            [AnalysisPendencyStatus::Aberta, '2026-06-14 12:00:00'],
+            [AnalysisPendencyStatus::Aberta, '2026-06-16 12:00:00'],
+            [AnalysisPendencyStatus::Respondida, '2026-06-14 12:00:00'],
+            [AnalysisPendencyStatus::Expirada, '2026-06-01 12:00:00'],
+        ] as [$status, $prazo]) {
+            AnalysisPendency::factory()->create([
+                'viability_request_id' => $processo->id,
+                'requested_by_user_id' => $gestor->id,
+                'status' => $status,
+                'due_at' => Carbon::parse($prazo),
+                'responded_at' => $status === AnalysisPendencyStatus::Respondida ? Carbon::parse('2026-06-13 12:00:00') : null,
+            ]);
+        }
+
+        $this->actingAs($gestor, 'gestao')
+            ->get('/gestao')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('kpis.operacao.acoes', fn ($acoes): bool => (collect($acoes)->keyBy('chave')['pendencias']['valor'] ?? null) === 1));
     }
 }

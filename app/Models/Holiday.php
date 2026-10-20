@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Cache;
 
 /**
  * Feriado cadastrado (HU-137) — dado versionado/auditado (RN-002 via
@@ -29,7 +28,7 @@ class Holiday extends Model
 
     protected static function booted(): void
     {
-        $forget = static fn () => Cache::forget(DatabaseHolidayProvider::CACHE_KEY);
+        $forget = static fn () => DatabaseHolidayProvider::esquecer();
 
         static::saved($forget);
         static::deleted($forget);

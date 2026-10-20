@@ -7,6 +7,7 @@ use App\Models\ExpressoQueda;
 use App\Services\Relatorios\Export\ReportDefinition;
 use App\Services\Relatorios\Export\ReportSource;
 use App\Services\Relatorios\ReportFilters;
+use App\Support\FusoNegocio;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
@@ -40,7 +41,7 @@ final class ExpressoQuedaReportSource implements ReportSource
                 $this->rotuloGatilho($linha->tipo_gatilho),
                 (string) ($linha->dimensao ?? '—'),
                 (string) $linha->motivo,
-                (string) $linha->created_at?->format('d/m/Y H:i'),
+                (string) FusoNegocio::local($linha->created_at)?->format('d/m/Y H:i'),
             ],
             filtrosAplicados: $filtros->aplicados(),
             logName: 'relatorios',

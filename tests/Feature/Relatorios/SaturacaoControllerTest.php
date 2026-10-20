@@ -111,6 +111,7 @@ class SaturacaoControllerTest extends TestCase
         $this->assertSame('saturado', $linha['situacao']);
 
         $this->assertSame(1, $props['resumo']['saturados']);
+        $this->assertSame('4712100', $props['maioresSaturacoes'][0]['cnae']);
 
         $this->assertDatabaseHas('activity_log', [
             'log_name' => 'relatorios',

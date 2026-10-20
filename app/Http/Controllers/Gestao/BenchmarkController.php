@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Services\Benchmark\BenchmarkRankingService;
 use App\Services\Relatorios\DistanciaBenchmarkService;
 use App\Support\Audit\AuditService;
+use App\Support\FusoNegocio;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
@@ -54,7 +55,7 @@ class BenchmarkController extends Controller
                 ],
                 'capitais' => [],
                 'serie' => $this->ranking->serieSalvador(),
-                'evolucao' => $this->distancia->evolucaoMensal(now()),
+                'evolucao' => $this->distancia->evolucaoMensal(FusoNegocio::hoje()),
             ]);
         }
 
@@ -63,7 +64,7 @@ class BenchmarkController extends Controller
             'posicao' => $this->ranking->posicaoNacional($competencia['ano'], $competencia['mes']),
             'capitais' => $this->ranking->rankingCapitais($competencia['ano'], $competencia['mes']),
             'serie' => $this->ranking->serieSalvador(),
-            'evolucao' => $this->distancia->evolucaoMensal(now()),
+            'evolucao' => $this->distancia->evolucaoMensal(FusoNegocio::hoje()),
         ]);
     }
 }

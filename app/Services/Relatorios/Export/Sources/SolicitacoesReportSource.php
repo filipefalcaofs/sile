@@ -27,7 +27,7 @@ use Illuminate\Database\Eloquent\Builder;
  * bairro e da decisão (quando/resultado); o CNPJ vem já formatado da
  * {@see ProcessoResource} (PII minimizada na origem — RN-007). personalData=true.
  */
-final class SolicitacoesReportSource implements ReportSource
+class SolicitacoesReportSource implements ReportSource
 {
     public function __construct(private readonly ProcessoQueryService $processos) {}
 
@@ -47,9 +47,7 @@ final class SolicitacoesReportSource implements ReportSource
                 ['key' => 'decidido_em', 'label' => 'Decidido em'],
                 ['key' => 'resultado', 'label' => 'Resultado'],
             ],
-            // RN-005: o MESMO Builder filtrado da consulta de processos, recortado
-            // pelas 17 chaves do bag — zero filtro duplicado.
-            builder: fn (): Builder => $this->processos->filtered($filtros->toProcessoFiltros()),
+            builder: fn (): Builder => $this->populacao($filtros),
             mapRow: fn (ViabilityRequest $solicitacao): array => $this->linha($solicitacao),
             filtrosAplicados: $filtros->aplicados(),
             logName: 'relatorios',
@@ -57,6 +55,26 @@ final class SolicitacoesReportSource implements ReportSource
             personalData: true,
             arquivoBase: 'solicitacoes',
         );
+    }
+
+    /**
+     * Solicitações exportadas. Aqui, o MESMO Builder filtrado da consulta de
+     * processos, recortado pelas 17 chaves do bag (RN-005); a fonte de cada
+     * relatório troca pelo recorte da própria tela.
+     *
+     * @return Builder<ViabilityRequest>
+     */
+    protected function populacao(ReportFilters $filtros): Builder
+    {
+        return $this->processos->filtered($filtros->toProcessoFiltros());
+    }
+
+    /**
+     * Bairro exibido na linha. Aqui, o do endereço informado.
+     */
+    protected function bairro(ViabilityRequest $solicitacao): ?string
+    {
+        return $solicitacao->address_neighborhood;
     }
 
     /**
@@ -76,7 +94,7 @@ final class SolicitacoesReportSource implements ReportSource
             $dados['cnpj'],
             $dados['status_label'],
             $dados['categoria'],
-            $solicitacao->address_neighborhood,
+            $this->bairro($solicitacao),
             $dados['analista'],
             $dados['protocoled_at'],
             $solicitacao->decision?->decided_at?->toIso8601String(),

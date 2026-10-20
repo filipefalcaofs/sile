@@ -3,6 +3,7 @@
 namespace App\Services\Relatorios;
 
 use App\Services\Analise\ProcessoQueryService;
+use App\Support\FusoNegocio;
 use Illuminate\Support\Carbon;
 
 /**
@@ -124,20 +125,37 @@ final readonly class ReportFilters
     }
 
     /**
-     * Início do recorte de período (data_de no começo do dia), normalizado como o
-     * ProcessoQueryService (formato YYYY-MM-DD). Sem data válida → null.
+     * Início do recorte: o começo do dia data_de em Salvador, convertido para
+     * UTC, o fuso das colunas gravadas. Sem data válida → null.
      */
     public function from(): ?Carbon
     {
-        return $this->parseData('data_de')?->startOfDay();
+        $data = $this->dataDe();
+
+        return $data === null ? null : FusoNegocio::inicioDoDia($data);
     }
 
     /**
-     * Fim do recorte de período (data_ate no fim do dia). Sem data válida → null.
+     * Fim do recorte: o último instante do dia data_ate em Salvador, em UTC
+     * (limite inclusivo). Sem data válida → null.
      */
     public function to(): ?Carbon
     {
-        return $this->parseData('data_ate')?->endOfDay();
+        $data = $this->dataAte();
+
+        return $data === null ? null : FusoNegocio::fimDoDia($data);
+    }
+
+    /** Dia inicial do recorte como informado (YYYY-MM-DD), para exibição. */
+    public function dataDe(): ?string
+    {
+        return $this->parseData('data_de')?->toDateString();
+    }
+
+    /** Dia final do recorte como informado (YYYY-MM-DD), para exibição. */
+    public function dataAte(): ?string
+    {
+        return $this->parseData('data_ate')?->toDateString();
     }
 
     public function setorId(): ?int
@@ -158,6 +176,24 @@ final readonly class ReportFilters
     public function cnae(): ?string
     {
         return $this->texto('cnae');
+    }
+
+    /**
+     * Código CNAE sem a pontuação ("4712-1/00" → "4712100"), para comparar com
+     * `cnaes.code`. Texto sem dígito volta como veio: o filtro continua valendo
+     * e não casa com nenhum código, em vez de ser descartado.
+     */
+    public function cnaeCodigo(): ?string
+    {
+        $cnae = $this->cnae();
+
+        if ($cnae === null) {
+            return null;
+        }
+
+        $digitos = preg_replace('/\D/', '', $cnae);
+
+        return $digitos === '' ? $cnae : $digitos;
     }
 
     /**

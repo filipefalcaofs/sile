@@ -28,6 +28,31 @@ class DatabaseHolidayProvider implements HolidayProvider
      */
     public const CACHE_KEY = 'viabiliza.expresso.holidays';
 
+    /**
+     * Calendário já lido nesta instância. O binding é scoped (uma instância por
+     * requisição ou job), então um cálculo que pergunta dia a dia lê o cache
+     * uma vez só.
+     *
+     * @var array{recurring: list<string>, specific: list<string>, official: bool}|null
+     */
+    private ?array $carregado = null;
+
+    /** Geração do calendário lida em {@see $carregado}. */
+    private int $geracaoCarregada = -1;
+
+    /** Sobe a cada gravação de feriado no processo; invalida o que foi lido antes. */
+    private static int $geracao = 0;
+
+    /**
+     * Descarta o calendário cacheado e o já lido pelas instâncias deste
+     * processo — chamado quando um feriado é gravado ou removido.
+     */
+    public static function esquecer(): void
+    {
+        self::$geracao++;
+        Cache::forget(self::CACHE_KEY);
+    }
+
     public function isHoliday(DateTimeInterface $date): bool
     {
         $calendar = $this->calendar();
@@ -50,9 +75,14 @@ class DatabaseHolidayProvider implements HolidayProvider
      */
     private function calendar(): array
     {
+        if ($this->carregado !== null && $this->geracaoCarregada === self::$geracao) {
+            return $this->carregado;
+        }
+
+        $this->geracaoCarregada = self::$geracao;
         $ttl = (int) config('viabiliza.relatorios.cache_ttl_segundos', 300);
 
-        return Cache::remember(self::CACHE_KEY, $ttl, function (): array {
+        return $this->carregado = Cache::remember(self::CACHE_KEY, $ttl, function (): array {
             $recurring = [];
             $official = false;
             $specific = [];

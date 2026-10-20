@@ -4,6 +4,7 @@ namespace Tests\Feature\Relatorios;
 
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
+use App\Support\FusoNegocio;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
@@ -21,7 +22,7 @@ class TempoViabilidadeGravacaoTest extends TestCase
     private function processoProtocolado(string $protocoladoEm = '2026-03-02 00:00:00'): ViabilityRequest
     {
         return ViabilityRequest::factory()->protocoled()->create([
-            'protocoled_at' => Carbon::parse($protocoladoEm),
+            'protocoled_at' => Carbon::parse($protocoladoEm, FusoNegocio::NOME)->utc(),
         ]);
     }
 
@@ -30,7 +31,7 @@ class TempoViabilidadeGravacaoTest extends TestCase
         $request = $this->processoProtocolado();
 
         ViabilityDecision::factory()->for($request, 'viabilityRequest')->create([
-            'decided_at' => Carbon::parse('2026-03-04 00:00:00'),
+            'decided_at' => Carbon::parse('2026-03-04 00:00:00', FusoNegocio::NOME)->utc(),
         ]);
 
         $this->assertEqualsWithDelta(48.0, $request->fresh()->viabilidade_horas_uteis, 0.01);
@@ -41,7 +42,7 @@ class TempoViabilidadeGravacaoTest extends TestCase
         $request = ViabilityRequest::factory()->draft()->create(['protocoled_at' => null]);
 
         ViabilityDecision::factory()->for($request, 'viabilityRequest')->create([
-            'decided_at' => Carbon::parse('2026-03-04 00:00:00'),
+            'decided_at' => Carbon::parse('2026-03-04 00:00:00', FusoNegocio::NOME)->utc(),
         ]);
 
         $this->assertNull($request->fresh()->viabilidade_horas_uteis);
@@ -52,7 +53,7 @@ class TempoViabilidadeGravacaoTest extends TestCase
         $request = $this->processoProtocolado();
 
         ViabilityDecision::factory()->for($request, 'viabilityRequest')->create([
-            'decided_at' => Carbon::parse('2026-03-04 00:00:00'),
+            'decided_at' => Carbon::parse('2026-03-04 00:00:00', FusoNegocio::NOME)->utc(),
         ]);
 
         $request->forceFill(['viabilidade_horas_uteis' => null])->save();
@@ -67,7 +68,7 @@ class TempoViabilidadeGravacaoTest extends TestCase
         $request = $this->processoProtocolado();
 
         ViabilityDecision::factory()->for($request, 'viabilityRequest')->create([
-            'decided_at' => Carbon::parse('2026-03-04 00:00:00'),
+            'decided_at' => Carbon::parse('2026-03-04 00:00:00', FusoNegocio::NOME)->utc(),
         ]);
 
         $this->artisan('viabilidade:recalcular-horas-uteis')->assertSuccessful();

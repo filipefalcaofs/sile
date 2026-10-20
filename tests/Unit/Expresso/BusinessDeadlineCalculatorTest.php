@@ -6,9 +6,13 @@ use App\Models\Holiday;
 use App\Services\Expresso\BusinessDeadlineCalculator;
 use App\Services\Expresso\DatabaseHolidayProvider;
 use App\Services\Expresso\HolidayProvider;
+use App\Support\FusoNegocio;
 use DateTimeInterface;
+use Illuminate\Cache\Events\CacheHit;
+use Illuminate\Cache\Events\CacheMissed;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Event;
 use Tests\TestCase;
 
 /**
@@ -94,8 +98,8 @@ class BusinessDeadlineCalculatorTest extends TestCase
         $this->assertSame(
             1440,
             $calculator->businessDurationBetween(
-                Carbon::parse('2026-03-03 00:00:00'),
-                Carbon::parse('2026-03-05 00:00:00'),
+                Carbon::parse('2026-03-03 00:00:00', FusoNegocio::NOME)->utc(),
+                Carbon::parse('2026-03-05 00:00:00', FusoNegocio::NOME)->utc(),
             ),
         );
     }
@@ -158,5 +162,29 @@ class BusinessDeadlineCalculatorTest extends TestCase
                 return $this->hasOfficial;
             }
         };
+    }
+
+    public function test_calendario_de_feriados_e_lido_uma_vez_por_requisicao(): void
+    {
+        $leituras = 0;
+        Event::listen([CacheHit::class, CacheMissed::class], function (CacheHit|CacheMissed $evento) use (&$leituras): void {
+            if ($evento->key === DatabaseHolidayProvider::CACHE_KEY) {
+                $leituras++;
+            }
+        });
+
+        $calculator = app(BusinessDeadlineCalculator::class);
+        $calculator->businessDurationBetween(
+            Carbon::parse('2026-03-02 00:00:00', FusoNegocio::NOME)->utc(),
+            Carbon::parse('2026-03-31 00:00:00', FusoNegocio::NOME)->utc(),
+        );
+
+        $this->assertSame(1, $leituras);
+
+        // Feriado gravado depois vale na requisição seguinte (instância nova).
+        Holiday::factory()->create(['date' => '2026-03-04', 'recurring_annually' => false, 'active' => true]);
+        app()->forgetScopedInstances();
+
+        $this->assertTrue(app(HolidayProvider::class)->isHoliday(Carbon::parse('2026-03-04', FusoNegocio::NOME)));
     }
 }

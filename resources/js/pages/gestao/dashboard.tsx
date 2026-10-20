@@ -45,6 +45,8 @@ interface EtapaPainel {
     label: string;
     media_dias: number | null;
     meta_dias: number | null;
+    /** A análise vence em dias corridos; o convite, em horas úteis. */
+    meta_unidade: 'corridos' | 'uteis' | null;
     amostras: number;
 }
 
@@ -417,7 +419,8 @@ function etapasChartOption(etapas: EtapaPainel[]): EChartsOption {
                     return `${etapa?.label ?? ''} — sem amostra`;
                 }
 
-                const meta = etapa.meta_dias === null ? '' : `<br/>meta ${numberFormat.format(etapa.meta_dias)} d`;
+                const unidade = etapa.meta_unidade === 'corridos' ? 'd corridos' : 'd úteis';
+                const meta = etapa.meta_dias === null ? '' : `<br/>prazo ${decimalFormat.format(etapa.meta_dias)} ${unidade}`;
 
                 return `${etapa.label}<br/>${decimalFormat.format(etapa.media_dias)} d úteis${meta}`;
             },
@@ -687,10 +690,10 @@ export default function Dashboard({ kpis, acesso }: DashboardProps) {
     const saldoPositivo = operacao.saldo_periodo > 0;
     const notaTempo =
         operacao.tempo_decisao.media_minutos === null
-            ? `sem decisão no período · prazo da análise: ${numberFormat.format(operacao.tempo_decisao.meta_dias)} dias úteis`
+            ? `sem decisão no período · prazo da análise: ${numberFormat.format(operacao.tempo_decisao.meta_dias)} dias corridos`
             : operacao.tempo_decisao.dentro_prazo_percentual === null
-              ? `prazo da análise: ${numberFormat.format(operacao.tempo_decisao.meta_dias)} dias úteis`
-              : `prazo da análise: ${numberFormat.format(operacao.tempo_decisao.meta_dias)} dias úteis · ${formatarPercentual(operacao.tempo_decisao.dentro_prazo_percentual)} dentro do prazo`;
+              ? `prazo da análise: ${numberFormat.format(operacao.tempo_decisao.meta_dias)} dias corridos`
+              : `prazo da análise: ${numberFormat.format(operacao.tempo_decisao.meta_dias)} dias corridos · ${formatarPercentual(operacao.tempo_decisao.dentro_prazo_percentual)} dentro do prazo`;
 
     function selecionarJanela(dias: number) {
         router.get('/gestao', { janela: dias }, { preserveScroll: true, preserveState: true, replace: true });
@@ -839,7 +842,7 @@ export default function Dashboard({ kpis, acesso }: DashboardProps) {
                     <Surface className="min-w-0 rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
                         <h3 className="text-base font-semibold text-gray-800 dark:text-white/90">Onde o processo para</h3>
                         <p className="mt-1 text-[13px] text-gray-500 dark:text-gray-400">
-                            Tempo médio por etapa contra o prazo parametrizado, em dias úteis.
+                            Tempo médio por etapa em dias úteis. O prazo da análise é contado em dias corridos; o do convite, em horas úteis.
                         </p>
                         <Chart option={optionEtapas} className="mt-2 h-56 w-full" />
                         <p className="mt-4 border-t border-gray-100 pt-3 text-[13px] leading-[18px] text-gray-500 dark:border-gray-800 dark:text-gray-400">

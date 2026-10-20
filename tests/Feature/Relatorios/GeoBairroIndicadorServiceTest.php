@@ -4,6 +4,7 @@ namespace Tests\Feature\Relatorios;
 
 use App\Enums\DecisionOutcome;
 use App\Enums\ViabilityRequestStatus;
+use App\Models\Cnae;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Relatorios\GeoBairroIndicadorService;
@@ -136,5 +137,38 @@ class GeoBairroIndicadorServiceTest extends TestCase
 
         $resumo = $this->service()->resumo($this->filtros());
         $this->assertSame(0, $resumo['total']);
+    }
+
+    public function test_resumo_e_filtro_usam_o_bairro_oficial_com_o_digitado_de_reserva(): void
+    {
+        $this->protocolada(['bairro_oficial' => 'PITUBA', 'address_neighborhood' => null]);
+        $this->protocolada(['bairro_oficial' => 'PITUBA', 'address_neighborhood' => 'Pitubinha']);
+        $this->protocolada(['bairro_oficial' => null, 'address_neighborhood' => 'Barra']);
+        $this->protocolada(['bairro_oficial' => null, 'address_neighborhood' => null]);
+
+        $resumo = $this->service()->resumo($this->filtros());
+        $linhas = $this->service()->porBairro($this->filtros())['itens'];
+
+        $this->assertSame(4, $resumo['total']);
+        $this->assertSame(1, $resumo['sem_bairro']);
+        $this->assertSame(2, $resumo['bairros_distintos']);
+        $this->assertSame(count($linhas), $resumo['bairros_distintos']);
+        $this->assertSame($resumo['total'] - $resumo['sem_bairro'], array_sum(array_column($linhas, 'total')));
+
+        $pituba = $this->service()->resumo($this->filtros(['bairro' => 'pituba']));
+        $this->assertSame(2, $pituba['total']);
+        $this->assertSame([], $this->service()->porBairro($this->filtros(['bairro' => 'Pitubinha']))['itens']);
+    }
+
+    public function test_filtro_de_cnae_aceita_codigo_com_pontuacao(): void
+    {
+        $cnae = Cnae::factory()->create(['code' => '4712100']);
+        $outro = Cnae::factory()->create(['code' => '5611201']);
+
+        $this->protocolada(['address_neighborhood' => 'Pituba'])->cnaes()->attach($cnae->id, ['is_primary' => true]);
+        $this->protocolada(['address_neighborhood' => 'Pituba'])->cnaes()->attach($outro->id, ['is_primary' => true]);
+
+        $this->assertSame(1, $this->service()->resumo($this->filtros(['cnae' => '4712-1/00']))['total']);
+        $this->assertSame(1, $this->service()->resumo($this->filtros(['cnae' => '4712100']))['total']);
     }
 }

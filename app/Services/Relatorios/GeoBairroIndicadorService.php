@@ -30,6 +30,9 @@ use Illuminate\Support\Facades\DB;
  */
 class GeoBairroIndicadorService
 {
+    /** Bairro oficial com o digitado de reserva — a mesma chave em resumo, linhas e filtro. */
+    private const BAIRRO = 'coalesce(viability_requests.bairro_oficial, viability_requests.address_neighborhood)';
+
     /**
      * Resumo do recorte: total protocolado, bairros distintos e quantos sem
      * bairro informado (transparência da degradação — não viram bucket fantasma).
@@ -41,13 +44,13 @@ class GeoBairroIndicadorService
         $total = $this->baseQuery($f)->count();
 
         $semBairro = $this->baseQuery($f)
-            ->whereNull('viability_requests.address_neighborhood')
+            ->whereNull(DB::raw(self::BAIRRO))
             ->count();
 
         $bairros = $this->baseQuery($f)
-            ->whereNotNull('viability_requests.address_neighborhood')
+            ->whereNotNull(DB::raw(self::BAIRRO))
             ->distinct()
-            ->count('viability_requests.address_neighborhood');
+            ->count(DB::raw(self::BAIRRO));
 
         return [
             'total' => $total,
@@ -76,14 +79,14 @@ class GeoBairroIndicadorService
         $indeferida = DecisionOutcome::Indeferida->value;
 
         $itens = $this->baseQuery($f)
-            ->whereNotNull(DB::raw('coalesce(viability_requests.bairro_oficial, viability_requests.address_neighborhood)'))
+            ->whereNotNull(DB::raw(self::BAIRRO))
             ->leftJoin('viability_decisions as vd', 'vd.viability_request_id', '=', 'viability_requests.id')
             ->groupBy('bairro')
             ->orderByDesc('total')
             ->orderBy('bairro')
             ->limit($limite)
             ->get([
-                DB::raw('coalesce(viability_requests.bairro_oficial, viability_requests.address_neighborhood) as bairro'),
+                DB::raw(self::BAIRRO.' as bairro'),
                 DB::raw('count(distinct viability_requests.id) as total'),
                 DB::raw("count(distinct case when vd.outcome = '{$deferida}' then viability_requests.id end) as deferidas"),
                 DB::raw("count(distinct case when vd.outcome = '{$indeferida}' then viability_requests.id end) as indeferidas"),
@@ -162,6 +165,16 @@ class GeoBairroIndicadorService
     }
 
     /**
+     * Solicitações que o painel conta no recorte (base da exportação da tela).
+     *
+     * @return Builder<ViabilityRequest>
+     */
+    public function solicitacoes(ReportFilters $f): Builder
+    {
+        return $this->baseQuery($f);
+    }
+
+    /**
      * Builder base: população PROTOCOLADA filtrada pelos filtros comuns
      * (período/setor/analista/bairro/categoria/cnae) via `when()`, espelhando o
      * {@see IndicadoresViabilidadeService}. Colunas SEMPRE qualificadas para
@@ -177,9 +190,9 @@ class GeoBairroIndicadorService
             ->when($f->to(), fn (Builder $q, $to): Builder => $q->where('viability_requests.protocoled_at', '<=', $to))
             ->when($f->setorId(), fn (Builder $q, int $id): Builder => $q->where('viability_requests.sector_id', $id))
             ->when($f->analistaId(), fn (Builder $q, int $id): Builder => $q->where('viability_requests.assigned_user_id', $id))
-            ->when($f->bairro(), fn (Builder $q, string $b): Builder => $q->whereLike('viability_requests.address_neighborhood', "%{$b}%", caseSensitive: false))
+            ->when($f->bairro(), fn (Builder $q, string $b): Builder => $q->whereLike(DB::raw(self::BAIRRO), "%{$b}%", caseSensitive: false))
             ->when($f->categoria(), fn (Builder $q, string $c): Builder => $this->aplicarCategoria($q, $c))
-            ->when($f->cnae(), fn (Builder $q, string $cnae): Builder => $q->whereHas('cnaes', fn (Builder $c) => $c->where('cnaes.code', $cnae)));
+            ->when($f->cnaeCodigo(), fn (Builder $q, string $cnae): Builder => $q->whereHas('cnaes', fn (Builder $c) => $c->where('cnaes.code', $cnae)));
     }
 
     /**

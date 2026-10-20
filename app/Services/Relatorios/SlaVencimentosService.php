@@ -8,6 +8,7 @@ use App\Enums\ViabilityRequestStatus;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Analise\AnalysisSlaService;
+use App\Services\Analise\ProcessoQueryService;
 use App\Services\Analise\SlaStatus;
 use App\Support\Settings;
 use Carbon\CarbonInterface;
@@ -39,13 +40,6 @@ class SlaVencimentosService
         '80_100' => '80–100%',
         'acima_100' => '>100%',
         'indeterminada' => 'Indeterminada',
-    ];
-
-    private const STATUS_FORA_ESTOQUE = [
-        ViabilityRequestStatus::Rascunho->value,
-        ViabilityRequestStatus::Cancelada->value,
-        ViabilityRequestStatus::Deferida->value,
-        ViabilityRequestStatus::Indeferida->value,
     ];
 
     public function __construct(private readonly AnalysisSlaService $sla) {}
@@ -270,8 +264,8 @@ class SlaVencimentosService
             'dentro_sla' => $dentro,
             'com_prazo' => $comPrazo,
             'taxa' => $comPrazo > 0 ? round($dentro / $comPrazo * 100, 1) : null,
-            'data_de' => $f->from()?->toDateString(),
-            'data_ate' => $f->to()?->toDateString(),
+            'data_de' => $f->dataDe(),
+            'data_ate' => $f->dataAte(),
         ];
     }
 
@@ -307,7 +301,7 @@ class SlaVencimentosService
      */
     private function estoqueBase(): Builder
     {
-        return ViabilityRequest::query()->whereNotIn('status', self::STATUS_FORA_ESTOQUE);
+        return ViabilityRequest::query()->whereIn('status', ProcessoQueryService::statusDoGrupo('em_andamento'));
     }
 
     private function progressoSql(): string

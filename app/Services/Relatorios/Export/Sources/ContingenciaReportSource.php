@@ -7,6 +7,7 @@ use App\Services\Relatorios\ContingenciaRelatorioService;
 use App\Services\Relatorios\Export\ReportDefinition;
 use App\Services\Relatorios\Export\ReportSource;
 use App\Services\Relatorios\ReportFilters;
+use App\Support\FusoNegocio;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 
@@ -58,7 +59,7 @@ final class ContingenciaReportSource implements ReportSource
             $l['processo'],
             $l['motivo'],
             $l['operador'],
-            $l['protocolado_em'] !== null ? Carbon::parse($l['protocolado_em'])->format('d/m/Y H:i') : null,
+            $l['protocolado_em'] !== null ? FusoNegocio::local(Carbon::parse($l['protocolado_em']))->format('d/m/Y H:i') : null,
             $l['status_label'],
         ];
     }

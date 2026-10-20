@@ -13,6 +13,7 @@ use App\Services\Relatorios\Export\XlsxExporter;
 use App\Services\Relatorios\ReportFilters;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
@@ -193,5 +194,32 @@ class XlsxExporterTest extends TestCase
         $this->assertSame(['Bairro'], $linhas[0]);
         $this->assertCount(2, $linhas);
         $this->assertSame('Pituba', $linhas[1][0]);
+    }
+
+    #[Test]
+    public function write_carrega_as_relacoes_em_lote_sem_consulta_por_linha(): void
+    {
+        $consultasPara = function (int $linhas): int {
+            ViabilityRequest::query()->delete();
+            ViabilityRequest::factory()->count($linhas)->create(['address_neighborhood' => 'Pituba']);
+
+            $definicao = new ReportDefinition(
+                titulo: 'Processos',
+                colunas: [['key' => 'empresa', 'label' => 'Empresa']],
+                builder: fn (): Builder => ViabilityRequest::query()->with('company')->orderBy('id'),
+                mapRow: fn (ViabilityRequest $r): array => [$r->company?->legal_name],
+                arquivoBase: 'processos',
+            );
+
+            DB::flushQueryLog();
+            DB::enableQueryLog();
+            app(XlsxExporter::class)->write($definicao, storage_path('framework/testing/n1-'.$linhas.'.xlsx'));
+            $total = count(DB::getQueryLog());
+            DB::disableQueryLog();
+
+            return $total;
+        };
+
+        $this->assertSame($consultasPara(2), $consultasPara(6));
     }
 }

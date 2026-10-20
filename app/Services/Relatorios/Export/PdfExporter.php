@@ -2,6 +2,7 @@
 
 namespace App\Services\Relatorios\Export;
 
+use App\Support\FusoNegocio;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Barryvdh\DomPDF\PDF as DomPdf;
 use Symfony\Component\HttpFoundation\Response;
@@ -56,7 +57,7 @@ class PdfExporter implements ReportFormatExporter
             'colunas' => $definition->columnLabels(),
             'linhas' => $linhas,
             'total' => count($linhas),
-            'geradoEm' => now(),
+            'geradoEm' => FusoNegocio::hoje(),
             'filtros' => $definition->filtrosAplicados,
             'filtrosCard' => ReportFilterLabels::pares($definition->filtrosAplicados),
             'responsavel' => auth()->user()?->name ?? '—',

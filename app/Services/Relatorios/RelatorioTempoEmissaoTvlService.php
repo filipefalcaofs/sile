@@ -66,7 +66,7 @@ class RelatorioTempoEmissaoTvlService
             ->when($f->to(), fn (Builder $q, $to): Builder => $q->where('vd.decided_at', '<=', $to))
             ->when($this->servicoId($f), fn (Builder $q, int $id): Builder => $q->where('viability_requests.service_type_id', $id))
             ->when($this->resultado($f), fn (Builder $q, string $r): Builder => $q->where('vd.outcome', $r))
-            ->when($f->cnae(), fn (Builder $q, string $cnae): Builder => $q->whereHas('cnaes', fn (Builder $c) => $c->where('cnaes.code', $cnae)))
+            ->when($f->cnaeCodigo(), fn (Builder $q, string $cnae): Builder => $q->whereHas('cnaes', fn (Builder $c) => $c->where('cnaes.code', $cnae)))
             // Revisão via REDESIM não homologada: nunca simula dados (CA-R2-05).
             ->when($this->ehRevisao($f), fn (Builder $q): Builder => $q->whereRaw('1 = 0'))
             ->orderByDesc('vd.decided_at')

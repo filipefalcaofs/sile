@@ -8,6 +8,7 @@ use App\Models\Sector;
 use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
+use App\Services\Analise\ProcessoQueryService;
 use App\Services\Relatorios\ReportFilters;
 use App\Services\Relatorios\SlaVencimentosService;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -385,5 +386,28 @@ class SlaVencimentosTest extends TestCase
         $this->assertSame('Sem etapa operacional', $porStatus['null']['label']);
         $this->assertSame(1, $porStatus['em_analise']['total']);
         $this->assertSame(1, $service->resumo(ReportFilters::fromArray([]))['vencidos']);
+    }
+
+    public function test_estoque_exclui_encerrados_e_bate_com_a_lista_em_andamento(): void
+    {
+        foreach ([
+            ViabilityRequestStatus::Protocolada,
+            ViabilityRequestStatus::AguardandoBap,
+            ViabilityRequestStatus::EmAnalise,
+            ViabilityRequestStatus::EmPendencia,
+            ViabilityRequestStatus::Desativado,
+            ViabilityRequestStatus::Cassado,
+            ViabilityRequestStatus::Revogado,
+            ViabilityRequestStatus::Deferida,
+        ] as $status) {
+            ViabilityRequest::factory()->create(['status' => $status, 'protocoled_at' => now()]);
+        }
+
+        $service = app(SlaVencimentosService::class);
+        $lista = app(ProcessoQueryService::class)->filtered(['grupo' => 'em_andamento'])->count();
+
+        $this->assertSame(4, $service->estoqueTotal());
+        $this->assertSame($lista, $service->estoqueTotal());
+        $this->assertSame(4, array_sum(array_column($service->estoquePorStatus(), 'total')));
     }
 }

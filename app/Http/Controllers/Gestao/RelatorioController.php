@@ -19,12 +19,14 @@ use App\Services\Relatorios\Export\Sources\ComunicacoesFalhaReportSource;
 use App\Services\Relatorios\Export\Sources\ContingenciaReportSource;
 use App\Services\Relatorios\Export\Sources\EscritorioVirtualReportSource;
 use App\Services\Relatorios\Export\Sources\ExpressoQuedaReportSource;
+use App\Services\Relatorios\Export\Sources\GeoBairroReportSource;
+use App\Services\Relatorios\Export\Sources\IndicadoresReportSource;
 use App\Services\Relatorios\Export\Sources\PendenciasReportSource;
 use App\Services\Relatorios\Export\Sources\ProdutividadeReportSource;
 use App\Services\Relatorios\Export\Sources\RelatorioSedeReportSource;
 use App\Services\Relatorios\Export\Sources\RelatorioTempoEmissaoTvlReportSource;
+use App\Services\Relatorios\Export\Sources\SaturacaoReportSource;
 use App\Services\Relatorios\Export\Sources\SlaVencimentosReportSource;
-use App\Services\Relatorios\Export\Sources\SolicitacoesReportSource;
 use App\Services\Relatorios\Export\Sources\TempoAnaliseReportSource;
 use App\Services\Relatorios\ExpressoQuedaService;
 use App\Services\Relatorios\GargalosService;
@@ -41,6 +43,7 @@ use App\Services\Relatorios\TempoAnaliseService;
 use App\Services\Relatorios\TempoViabilidadeService;
 use App\Services\Relatorios\TrilhaProcessoService;
 use App\Support\Audit\AuditService;
+use App\Support\FusoNegocio;
 use App\Support\Settings;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Inertia\Inertia;
@@ -114,7 +117,7 @@ class RelatorioController extends Controller
         }
 
         if ($formato = $this->formato($request)) {
-            return $this->exportar(app(SolicitacoesReportSource::class), $filtros, $formato, $request);
+            return $this->exportar(app(IndicadoresReportSource::class), $filtros, $formato, $request);
         }
 
         $this->auditarConsulta('consulta-indicadores', 'Consulta dos indicadores de viabilidade', $filtros);
@@ -221,7 +224,7 @@ class RelatorioController extends Controller
         $filtros = $request->toReportFilters();
 
         if ($formato = $this->formato($request)) {
-            return $this->exportar(app(SolicitacoesReportSource::class), $filtros, $formato, $request);
+            return $this->exportar(app(GeoBairroReportSource::class), $filtros, $formato, $request);
         }
 
         $this->auditarConsulta('consulta-geo-bairro', 'Consulta do painel geoeconômico por bairro', $filtros);
@@ -248,14 +251,13 @@ class RelatorioController extends Controller
         $filtros = $request->toReportFilters();
 
         if ($formato = $this->formato($request)) {
-            return $this->exportar(app(SolicitacoesReportSource::class), $filtros, $formato, $request);
+            return $this->exportar(app(SaturacaoReportSource::class), $filtros, $formato, $request);
         }
 
         $this->auditarConsulta('consulta-saturacao', 'Consulta do observatório de saturação locacional', $filtros);
 
         return Inertia::render('gestao/relatorios/saturacao', [
-            'resumo' => $this->saturacao->resumo($filtros),
-            'porBairroCnae' => $this->saturacao->porBairroCnae($filtros),
+            ...$this->saturacao->painel($filtros),
             'limiares' => $this->saturacao->limiares(),
             'filtros' => $filtros->aplicados(),
         ]);
@@ -373,8 +375,8 @@ class RelatorioController extends Controller
             'filtros' => array_merge(
                 $estoque->only(['setor', 'analista']),
                 [
-                    'data_de' => $cumprimentoFiltros->from()?->toDateString(),
-                    'data_ate' => $cumprimentoFiltros->to()?->toDateString(),
+                    'data_de' => $cumprimentoFiltros->dataDe(),
+                    'data_ate' => $cumprimentoFiltros->dataAte(),
                 ],
             ),
             'perPageOptions' => self::PER_PAGE_OPTIONS,
@@ -556,8 +558,8 @@ class RelatorioController extends Controller
                 'relatorios.dashboard.janela_dias',
                 config('viabiliza.relatorios.dashboard.janela_dias', 30),
             );
-            $bag['data_de'] = now()->subDays($janela)->toDateString();
-            $bag['data_ate'] = now()->toDateString();
+            $bag['data_de'] = FusoNegocio::hoje()->subDays($janela)->toDateString();
+            $bag['data_ate'] = FusoNegocio::hoje()->toDateString();
         }
 
         return ReportFilters::fromArray($bag);

@@ -6,6 +6,7 @@ use App\Enums\ViabilityRequestStatus;
 use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
+use App\Support\FusoNegocio;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -47,18 +48,18 @@ class TempoViabilidadeTelaTest extends TestCase
     {
         $request = ViabilityRequest::factory()->protocoled()->create([
             'protocol_number' => fake()->unique()->numerify('VIA-2026-######'),
-            'protocoled_at' => Carbon::parse('2026-03-02 00:00:00'),
+            'protocoled_at' => Carbon::parse('2026-03-02 00:00:00', FusoNegocio::NOME)->utc(),
         ]);
 
         $transicao = $request->transitions()->create([
             'from_status' => null,
             'to_status' => ViabilityRequestStatus::EmAnalise,
         ]);
-        $transicao->forceFill(['created_at' => Carbon::parse('2026-03-02 00:00:00')])->save();
+        $transicao->forceFill(['created_at' => Carbon::parse('2026-03-02 00:00:00', FusoNegocio::NOME)->utc()])->save();
 
         ViabilityDecision::factory()->for($request, 'viabilityRequest')->create([
             'tvl_product_number' => fake()->unique()->numerify('TVL-2026-######'),
-            'decided_at' => Carbon::parse('2026-03-03 00:00:00'),
+            'decided_at' => Carbon::parse('2026-03-03 00:00:00', FusoNegocio::NOME)->utc(),
         ]);
 
         return $request->fresh();

@@ -10,6 +10,7 @@ use App\Models\RuleVersion;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Analise\ProcessoQueryService;
+use App\Support\FusoNegocio;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\JoinClause;
 use Illuminate\Support\Facades\DB;
@@ -47,7 +48,7 @@ class IndicadoresViabilidadeService
             ->groupBy('dia')
             ->orderBy('dia')
             ->get([
-                DB::raw('date(protocoled_at) as dia'),
+                DB::raw(FusoNegocio::diaSql('protocoled_at').' as dia'),
                 DB::raw('count(*) as total'),
             ])
             ->map(fn ($linha): array => [
@@ -71,7 +72,7 @@ class IndicadoresViabilidadeService
             ->groupBy('dia')
             ->orderBy('dia')
             ->get([
-                DB::raw('date(viability_requests.protocoled_at) as dia'),
+                DB::raw(FusoNegocio::diaSql('viability_requests.protocoled_at').' as dia'),
                 DB::raw('count(*) as total'),
             ]))
             ->keyBy(fn ($linha): string => (string) $linha->dia);
@@ -80,7 +81,7 @@ class IndicadoresViabilidadeService
             ->groupBy('dia')
             ->orderBy('dia')
             ->get([
-                DB::raw('date(viability_decisions.decided_at) as dia'),
+                DB::raw(FusoNegocio::diaSql('viability_decisions.decided_at').' as dia'),
                 DB::raw('count(*) as total'),
             ]))
             ->keyBy(fn ($linha): string => (string) $linha->dia);
@@ -112,7 +113,7 @@ class IndicadoresViabilidadeService
             ->keyBy(fn ($linha): string => (string) $linha->flow);
 
         return [
-            'total' => $this->decisoesBase($f)->count(),
+            'total' => (int) $porFlow->sum('total'),
             'expresso' => (int) ($porFlow->get('expresso')?->total ?? 0),
             'humano' => (int) ($porFlow->get('analise_tecnica')?->total ?? 0),
         ];
@@ -238,6 +239,17 @@ class IndicadoresViabilidadeService
     }
 
     /**
+     * Solicitações que os indicadores de volume contam no recorte (base da
+     * exportação da tela).
+     *
+     * @return Builder<ViabilityRequest>
+     */
+    public function solicitacoes(ReportFilters $f): Builder
+    {
+        return $this->baseQuery($f);
+    }
+
+    /**
      * Builder base dos indicadores de solicitação: população PROTOCOLADA filtrada
      * pelos filtros comuns (período/setor/analista/bairro/categoria/cnae) via
      * `when()`, espelhando o ProcessoQueryService. Colunas SEMPRE qualificadas
@@ -255,7 +267,7 @@ class IndicadoresViabilidadeService
             ->when($f->analistaId(), fn (Builder $q, int $id): Builder => $q->where('viability_requests.assigned_user_id', $id))
             ->when($f->bairro(), fn (Builder $q, string $b): Builder => $q->whereLike('viability_requests.address_neighborhood', "%{$b}%", caseSensitive: false))
             ->when($f->categoria(), fn (Builder $q, string $c): Builder => $this->aplicarCategoria($q, $c))
-            ->when($f->cnae(), fn (Builder $q, string $cnae): Builder => $q->whereHas('cnaes', fn (Builder $c) => $c->where('cnaes.code', $cnae)));
+            ->when($f->cnaeCodigo(), fn (Builder $q, string $cnae): Builder => $q->whereHas('cnaes', fn (Builder $c) => $c->where('cnaes.code', $cnae)));
     }
 
     /**
@@ -350,7 +362,7 @@ class IndicadoresViabilidadeService
             ->when($f->analistaId(), fn (Builder $q, int $id): Builder => $q->where('viability_requests.assigned_user_id', $id))
             ->when($f->bairro(), fn (Builder $q, string $b): Builder => $q->whereLike('viability_requests.address_neighborhood', "%{$b}%", caseSensitive: false))
             ->when($f->categoria(), fn (Builder $q, string $c): Builder => $this->aplicarCategoria($q, $c))
-            ->when($f->cnae(), fn (Builder $q, string $cnae): Builder => $q->whereExists(function ($sub) use ($cnae): void {
+            ->when($f->cnaeCodigo(), fn (Builder $q, string $cnae): Builder => $q->whereExists(function ($sub) use ($cnae): void {
                 $sub->selectRaw('1')
                     ->from('viability_request_cnaes as vrc_f')
                     ->join('cnaes as cnae_f', 'cnae_f.id', '=', 'vrc_f.cnae_id')
