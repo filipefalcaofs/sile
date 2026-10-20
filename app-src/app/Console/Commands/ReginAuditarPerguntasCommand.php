@@ -10,7 +10,7 @@ use App\Services\Tratamento\TratamentoRamoResolver;
 use Illuminate\Console\Command;
 
 /**
- * Lista os processos da JUCEB cujo envelope veio sem perguntas, ou sem
+ * Lista, com a data de entrada, os processos da JUCEB cujo envelope veio sem perguntas, ou sem
  * resposta para algum CNAE que a planilha vigente exibe perguntas. Só lê:
  * recalcula o casamento pelo envelope recebido e não grava nada.
  */
@@ -47,9 +47,10 @@ class ReginAuditarPerguntasCommand extends Command
             $total++;
             $protocolo = (string) $processo->external_reference;
             $recebimento = ReginRecebimento::query()->where('protocolo', $protocolo)->latest('id')->first();
+            $entrada = ($recebimento?->created_at ?? $processo->created_at)?->format('d/m/Y H:i') ?? '';
 
             if ($recebimento === null) {
-                $achados[] = [$protocolo, 'sem envelope', '', 'nenhum recebimento gravado'];
+                $achados[] = [$protocolo, $entrada, 'sem envelope', '', 'nenhum recebimento gravado'];
 
                 continue;
             }
@@ -57,7 +58,7 @@ class ReginAuditarPerguntasCommand extends Command
             $snapshot = $protocolador->snapshotDoRecebimento($recebimento);
 
             if ($snapshot === null) {
-                $achados[] = [$protocolo, 'sem perguntas', '', 'o envelope não trouxe pergunta respondida'];
+                $achados[] = [$protocolo, $entrada, 'sem perguntas', '', 'o envelope não trouxe pergunta respondida'];
 
                 continue;
             }
@@ -77,7 +78,7 @@ class ReginAuditarPerguntasCommand extends Command
                 $dadas = $respostas[$cnae->code] ?? [];
 
                 if ($dadas === []) {
-                    $achados[] = [$protocolo, 'sem respostas', $cnae->code, count($exibidas).' pergunta(s) na planilha, nenhuma respondida'];
+                    $achados[] = [$protocolo, $entrada, 'sem respostas', $cnae->code, count($exibidas).' pergunta(s) na planilha, nenhuma respondida'];
 
                     continue;
                 }
@@ -89,13 +90,13 @@ class ReginAuditarPerguntasCommand extends Command
 
                 if ($faltam !== []) {
                     $numeros = implode(', ', array_column($faltam, 'numero'));
-                    $achados[] = [$protocolo, 'respostas incompletas', $cnae->code, 'sem resposta nas perguntas '.$numeros];
+                    $achados[] = [$protocolo, $entrada, 'respostas incompletas', $cnae->code, 'sem resposta nas perguntas '.$numeros];
                 }
             }
         }
 
-        foreach ($achados as [$protocolo, $problema, $cnae, $detalhe]) {
-            $this->line(trim("{$protocolo}  {$problema}  {$cnae}  {$detalhe}"));
+        foreach ($achados as [$protocolo, $entrada, $problema, $cnae, $detalhe]) {
+            $this->line(trim("{$protocolo}  {$entrada}  {$problema}  {$cnae}  {$detalhe}"));
         }
 
         $this->gravarCsv($achados);
@@ -107,7 +108,7 @@ class ReginAuditarPerguntasCommand extends Command
     }
 
     /**
-     * @param  list<array{string, string, string, string}>  $achados
+     * @param  list<array{string, string, string, string, string}>  $achados
      */
     private function gravarCsv(array $achados): void
     {
@@ -118,7 +119,7 @@ class ReginAuditarPerguntasCommand extends Command
         }
 
         $arquivo = fopen($caminho, 'w');
-        fputcsv($arquivo, ['protocolo', 'problema', 'cnae', 'detalhe'], ',', '"', '');
+        fputcsv($arquivo, ['protocolo', 'entrada', 'problema', 'cnae', 'detalhe'], ',', '"', '');
 
         foreach ($achados as $linha) {
             fputcsv($arquivo, $linha, ',', '"', '');
