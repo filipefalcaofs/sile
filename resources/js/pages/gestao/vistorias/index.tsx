@@ -15,6 +15,7 @@ import KpiCard from '@/components/ui/kpi-card';
 import Pagination, { type PaginationLink } from '@/components/ui/pagination';
 import TableAction from '@/components/ui/table-action';
 import GestaoLayout from '@/layouts/gestao-layout';
+import { distribuiveis, podeSelecionar } from './selecao';
 
 interface VistoriaItem {
     id: number;
@@ -130,7 +131,8 @@ export default function VistoriasIndex({
 
     const { situacao: _situacao, busca: _busca, per_page: _perPage, ...filtrosDeCampo } = filtros;
     const selecaoAtiva = podeDistribuir && (filtros.situacao === 'designar' || filtros.situacao === 'todas');
-    const todosSelecionados = linhas.length > 0 && linhas.every((item) => selecionados.includes(item.id));
+    const selecionaveis = distribuiveis(linhas);
+    const todosSelecionados = selecionaveis.length > 0 && selecionaveis.every((item) => selecionados.includes(item.id));
 
     function navegar(params: Record<string, string | number>, camposDoFiltro: Partial<ProcessoFiltrosValores> = filtrosDeCampo) {
         setSelecionados([]);
@@ -152,7 +154,7 @@ export default function VistoriasIndex({
     }
 
     function alternarTodos() {
-        setSelecionados(todosSelecionados ? [] : linhas.map((item) => item.id));
+        setSelecionados(todosSelecionados ? [] : selecionaveis.map((item) => item.id));
     }
 
     // Busca com debounce — server-driven, sem recarregar a página inteira.
@@ -179,6 +181,7 @@ export default function VistoriasIndex({
                               type="checkbox"
                               aria-label="Selecionar todos os processos da página"
                               checked={todosSelecionados}
+                              disabled={selecionaveis.length === 0}
                               onChange={alternarTodos}
                               className="size-4 rounded border-gray-300 bg-white text-brand-600 scheme-light focus:ring-brand-500 dark:border-gray-400 dark:bg-gray-900 dark:scheme-dark"
                           />
@@ -189,6 +192,8 @@ export default function VistoriasIndex({
                               type="checkbox"
                               aria-label={`Selecionar processo ${item.bap ?? item.protocol_number ?? item.id}`}
                               checked={selecionados.includes(item.id)}
+                              disabled={!podeSelecionar(item)}
+                              title={!podeSelecionar(item) ? 'Só processos para distribuir podem ser selecionados' : undefined}
                               onChange={() => alternarSelecao(item.id)}
                               className="size-4 rounded border-gray-300 bg-white text-brand-600 scheme-light focus:ring-brand-500 dark:border-gray-400 dark:bg-gray-900 dark:scheme-dark"
                           />
