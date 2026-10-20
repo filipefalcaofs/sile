@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Gestao;
 
 use App\Http\Controllers\Controller;
 use App\Services\Benchmark\BenchmarkRankingService;
+use App\Services\Relatorios\DistanciaBenchmarkService;
 use App\Support\Audit\AuditService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -23,6 +24,7 @@ class BenchmarkController extends Controller
 {
     public function __construct(
         private readonly BenchmarkRankingService $ranking,
+        private readonly DistanciaBenchmarkService $distancia,
         private readonly AuditService $audit,
     ) {}
 
@@ -52,6 +54,7 @@ class BenchmarkController extends Controller
                 ],
                 'capitais' => [],
                 'serie' => $this->ranking->serieSalvador(),
+                'evolucao' => $this->distancia->evolucaoMensal(now()),
             ]);
         }
 
@@ -60,6 +63,7 @@ class BenchmarkController extends Controller
             'posicao' => $this->ranking->posicaoNacional($competencia['ano'], $competencia['mes']),
             'capitais' => $this->ranking->rankingCapitais($competencia['ano'], $competencia['mes']),
             'serie' => $this->ranking->serieSalvador(),
+            'evolucao' => $this->distancia->evolucaoMensal(now()),
         ]);
     }
 }
