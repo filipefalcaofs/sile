@@ -80,8 +80,9 @@ class RenovacaoLegadaPortalTest extends TestCase
     {
         $cidadao = $this->portalUser();
         $empresa = $this->empresaDe($cidadao);
+        $this->empresaDe($this->portalUser(), self::OUTRO_CNPJ);
         $this->mockClient(function (MockInterface $client): void {
-            $client->shouldReceive('provisoriasPorCnpj')->andReturn([]);
+            $client->shouldReceive('provisoriasPorCnpj')->with(self::CNPJ)->andReturn([]);
         });
 
         $this->actingAs($cidadao)

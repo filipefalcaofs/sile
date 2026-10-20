@@ -60,7 +60,7 @@ export default function LegadoItemCard({ item }: { item: LegadoItem }) {
                 <div className="flex flex-wrap items-start justify-between gap-2">
                     <div>
                         <p className="text-sm text-gray-500 dark:text-gray-400">Viabilidade {item.numero}</p>
-                        <h3 className="text-base font-semibold text-gray-800 dark:text-white/90">{item.empresa}</h3>
+                        <h2 className="text-base font-semibold text-gray-800 dark:text-white/90">{item.empresa}</h2>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                         <Badge color="info" variant="light">

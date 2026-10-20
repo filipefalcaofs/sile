@@ -1,5 +1,5 @@
 import { useHttp } from '@inertiajs/react';
-import { useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import Input from '@/components/form/input';
 import Label from '@/components/form/label';
 import Select from '@/components/form/select';
@@ -53,29 +53,70 @@ export default function ConsultaLegadoModal({
     onClose: () => void;
     empresas: EmpresaVinculada[];
 }) {
-    const form = useHttp<{ empresa_id: string; numero_viabilidade: string }, RespostaConsulta>({
+    const inicial = {
         empresa_id: empresas.length === 1 ? String(empresas[0].id) : '',
         numero_viabilidade: '',
-    });
+    };
+    const form = useHttp<{ empresa_id: string; numero_viabilidade: string }, RespostaConsulta>(inicial);
     const [resposta, setResposta] = useState<RespostaConsulta | null>(null);
     const [erro, setErro] = useState<string | null>(null);
+    const ajudaId = useId();
+    const dadosAtuais = useRef(form.data);
+    dadosAtuais.current = form.data;
+    const geracao = useRef(0);
+
+    function limparResultado() {
+        setResposta(null);
+        setErro(null);
+    }
+
+    function alterar(campo: 'empresa_id' | 'numero_viabilidade', valor: string) {
+        geracao.current += 1;
+        limparResultado();
+        form.setData(campo, valor);
+    }
+
+    function fechar() {
+        geracao.current += 1;
+        limparResultado();
+        form.setData(inicial);
+        onClose();
+    }
 
     function consultar() {
-        setErro(null);
-        setResposta(null);
-        // as falhas já são tratadas nos callbacks; o catch evita rejeição não tratada no console
-        void Promise.resolve(form.post('/portal/renovacao/legado/consultar', {
-            onSuccess: (dados: unknown) => setResposta(dados as RespostaConsulta),
-            onError: (erros: Record<string, string>) => setErro(Object.values(erros)[0] ?? MENSAGEM_PADRAO),
-            onHttpException: (response) => setErro(mensagemDe(response.data) ?? MENSAGEM_PADRAO),
-            onNetworkError: () => setErro(MENSAGEM_PADRAO),
-        })).catch(() => undefined);
+        const enviado = { ...form.data };
+        const minhaGeracao = (geracao.current += 1);
+        const atual = () =>
+            minhaGeracao === geracao.current &&
+            enviado.empresa_id === dadosAtuais.current.empresa_id &&
+            enviado.numero_viabilidade === dadosAtuais.current.numero_viabilidade;
+
+        limparResultado();
+        Promise.resolve(
+            form.post('/portal/renovacao/legado/consultar', {
+                onSuccess: (dados: unknown) => atual() && setResposta(dados as RespostaConsulta),
+                onError: (erros: Record<string, string>) => atual() && setErro(Object.values(erros)[0] ?? MENSAGEM_PADRAO),
+                onHttpException: (response) => atual() && setErro(mensagemDe(response.data) ?? MENSAGEM_PADRAO),
+                onNetworkError: () => atual() && setErro(MENSAGEM_PADRAO),
+            }),
+        ).catch((falha: unknown) => {
+            // Falhas HTTP já foram tratadas nos callbacks; qualquer outra é erro de programação e segue para o console.
+            if (falha instanceof Error && falha.name.startsWith('Http')) {
+                return;
+            }
+
+            if (atual()) {
+                setErro(MENSAGEM_PADRAO);
+            }
+
+            throw falha;
+        });
     }
 
     const podeConsultar = form.data.empresa_id !== '' && form.data.numero_viabilidade.trim() !== '';
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} className="max-w-2xl p-6 sm:p-8">
+        <Modal isOpen={isOpen} onClose={fechar} className="max-w-2xl p-6 sm:p-8">
             <h2 className="mb-1 pr-12 text-lg font-semibold text-gray-800 dark:text-white/90">
                 Renovar viabilidade do sistema anterior
             </h2>
@@ -102,7 +143,8 @@ export default function ConsultaLegadoModal({
                             value: String(empresa.id),
                             label: [empresa.nome, empresa.cnpj].filter(Boolean).join(' — '),
                         }))}
-                        onChange={(valor) => form.setData('empresa_id', valor)}
+                        disabled={form.processing}
+                        onChange={(valor) => alterar('empresa_id', valor)}
                     />
                 </div>
                 <div>
@@ -111,9 +153,13 @@ export default function ConsultaLegadoModal({
                         id="legado-numero"
                         autoComplete="off"
                         value={form.data.numero_viabilidade}
-                        placeholder="Número da viabilidade (7 dígitos) ou do processo (0000000000-00000000/0000)"
-                        onChange={(event) => form.setData('numero_viabilidade', event.target.value)}
+                        disabled={form.processing}
+                        aria-describedby={ajudaId}
+                        onChange={(event) => alterar('numero_viabilidade', event.target.value)}
                     />
+                    <p id={ajudaId} className="mt-1.5 text-theme-xs text-gray-500 dark:text-gray-400">
+                        Número da viabilidade (7 dígitos) ou do processo (0000000000-00000000/0000)
+                    </p>
                 </div>
                 <div>
                     <Button type="submit" className="min-h-11" loading={form.processing} disabled={!podeConsultar}>
