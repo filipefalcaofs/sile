@@ -92,7 +92,7 @@ O `POST /fiscalizacao/dados-localizacao` encapsula o ponto-em-polígono nestas v
 |---|---|
 | Identificar zona/bairro/via/restrição de um ponto | `ws-sigs` (já testado em HML) |
 | Overlay no mapa Leaflet | WMS deste GeoServer |
-| Importar camada versionada para `geo_layers` (HU-107) | WFS 1.1 → GeoJSON (`srsName=EPSG:4326`) |
+| Importar camada versionada para `geo_layers` (HU-108) | WFS 1.1 → GeoJSON (`srsName=EPSG:4326`) |
 | Consulta espacial fina (polígono × logradouro) | WFS `Intersects` / `Contains` |
 | Oracle / `pdo_oci` | Fora de uso — a origem é o GeoServer |
 
@@ -103,7 +103,7 @@ O `POST /fiscalizacao/dados-localizacao` encapsula o ponto-em-polígono nestas v
 Schemas obtidos por `DescribeFeatureType` (WFS 1.1) em 16/09/2026.
 Geometria: campo `GEOMETRY` (ou `GEOM` no CLE), tipo GML.
 
-### 5.1 Bairro oficial — HU-034
+### 5.1 Bairro oficial — HU-043
 
 `bairro_oficial:VM_BAIRRO_OFICIAL`
 
@@ -119,7 +119,7 @@ Geometria: campo `GEOMETRY` (ou `GEOM` no CLE), tipo GML.
 Alias: `lei_bairros:VM_LEI_BAIRRO`, `sedur:LEI_BAIRRO`.
 No catálogo público: [WFS bairro_oficial](https://geoserver.sedur.salvador.ba.gov.br/geoserver/bairro_oficial/ows?SERVICE=WFS&REQUEST=GetCapabilities).
 
-### 5.2 Zona urbanística LOUOS — HU-031 / Quadro 10
+### 5.2 Zona urbanística LOUOS — HU-040 / Quadro 10
 
 Uma FeatureType por zona. Atributos típicos: `SUBZONA`, `LOCAL`, `CA_MIN`, `CA_BAS`, `CA_MAX`, `INSTITUIDO_POR`, `ALTERADO_POR`, `GEOMETRY`. ZPAM/ZDE acrescentam `IDENTIFICACAO`. ZPR-1/ZPR-3 têm `OBS`.
 
@@ -140,11 +140,11 @@ Uma FeatureType por zona. Atributos típicos: `SUBZONA`, `LOCAL`, `CA_MIN`, `CA_
 | ZCLMU | `louos_zona_uso_zclmu:…` | `sedur:L_Z_USO_ZCLMU` |
 | ZCME / ZCMU | `louos_zcme_*` / `louos_zcmu_*` | `sedur:L_Z_USO_ZCME_*` / `ZCMU_*` |
 
-ZEIS (HU-035 / exceção de risco): `NOME_ZEIS`, `TIPO_ZEIS`, `OBSERVACAO`, `AREA`, `UNIDADE_AREA`.
+ZEIS (HU-044 / exceção de risco): `NOME_ZEIS`, `TIPO_ZEIS`, `OBSERVACAO`, `AREA`, `UNIDADE_AREA`.
 
 O `ws-sigs` já devolve essas camadas em `camadas_incidentes` (ex.: `louos_zpr3:VM_L_Z_USO_ZPR_3` em Nazaré). Falta o dicionário SEDUR `IDENTIFICADOR_TECNICO` → código do Quadro 10.
 
-### 5.3 Classificação da via — HU-032
+### 5.3 Classificação da via — HU-041
 
 **Atributo LOUOS existe.** Não está mais “sem fonte”.
 
@@ -170,7 +170,7 @@ O simulador REGIN continua preenchendo `CLASSE_VIA_LOUOS` a partir do catálogo 
 
 Pendência restante: confirmar com a SEDUR se a classe do Quadro 11A é o `CLASSIFICACAO_VIARIA` desta camada ou o `HIERARQUIA` do logradouro. Trocar a fonte é mudança de config.
 
-### 5.4 Lote e matrícula — HU-033 / HU-037
+### 5.4 Lote e matrícula — HU-042 / HU-045
 
 `parcelamento_lotes:VM_PARCELAMENTO_LOTES_EDIF` (alias `sedur:PARCELAMENTO_LOTES_EDIF`)
 
@@ -188,7 +188,7 @@ Não há inscrição imobiliária neste schema. A inscrição vem do `ws-sigs` (
 
 `enderecamento:VM_ENDERECAMENTO` — `CODLOG`, `NUMERACAO_METRICA`, `COMPLEMENTO`, `SUB_UNIDADE`, `ALVARA`, `PROCESSO`, `ANO_PROCESSO`, `ORIGEM`.
 
-### 5.5 Restrições — HU-035
+### 5.5 Restrições — HU-044
 
 | Camada | typeName | Atributos vistos |
 |---|---|---|

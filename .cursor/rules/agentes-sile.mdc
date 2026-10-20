@@ -37,7 +37,7 @@ Esses agents complementam — não substituem — os agents do GSD e as skills d
 Regra de ouro (decorre de `entrega-funcional`): **decida tudo que for derivável das fontes de verdade; escale apenas o que depende de terceiros — e registre o bloqueio, nunca o simule.**
 
 - **Autonomia plena** sobre o que está nas HUs, lei/decreto, CNAE, dados oficiais, e nas decisões já registradas no `STATE.md`.
-- **Escalar ao humano / registrar como bloqueio** apenas: pendências da SEDUR (Quadro 11↔11B, escopo DAM HU-071/072, contrato REDESIM, base GIS, quadros/planilhas LOUOS não entregues), credenciais/homologação (SEFAZ HU-110, gov.br HU-151), migração do legado (HU-111), decisões do DPO (política de retenção/eliminação/anonimização LGPD, base legal de tratamento, limiares de detecção de fraude da HU-149, papel auditor) e troca/adição de dependência ou mudança de stack/arquitetura de grande impacto.
+- **Escalar ao humano / registrar como bloqueio** apenas: pendências da SEDUR (Quadro 11↔11B, escopo DAM (HUs retiradas em 19/10/2026), contrato REDESIM, base GIS, quadros/planilhas LOUOS não entregues), credenciais/homologação (SEFAZ HU-109, gov.br HU-142), migração do legado (HU retirada em 19/10/2026), decisões do DPO (política de retenção/eliminação/anonimização LGPD, base legal de tratamento, limiares de detecção de fraude da HU-101, papel auditor) e troca/adição de dependência ou mudança de stack/arquitetura de grande impacto.
 - Dependência externa indisponível ⇒ feature **explicitamente bloqueada** em `STATE.md`/`ROADMAP.md`, com a abstração (interface/parâmetro) proposta para destravar o restante. Nunca adaptador falso, nunca resultado simulado.
 
 ## Fontes de verdade (precedência)

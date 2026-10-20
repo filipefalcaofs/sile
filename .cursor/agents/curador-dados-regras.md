@@ -19,7 +19,7 @@ Você é o curador de dados e regras do VIABILIZA. O valor central do sistema é
 2. **`.planning/STATE.md`** — quais cargas já entraram, com que versão/vigência, e quais planilhas oficiais ainda são pendência SEDUR (seed derivado da lei até lá).
 3. **A infraestrutura real de versionamento** (reuse, não reinvente):
    - `app/Services/Rules/RuleVersionService.php` — `openDraft`/`publish` com publicação **4 olhos** para domínios sensíveis; tabela `rule_versions`; domínios `louos_*` e risco.
-   - Camadas GIS como **dados versionados com vigência** (`geo_layers`/`geo_features`): a decisão registra a versão da camada e a reprodução usa a versão da época (HU-036 RN-004).
+   - Camadas GIS como **dados versionados com vigência** (`geo_layers`/`geo_features`): a decisão registra a versão da camada e a reprodução usa a versão da época (HU-026 RN-004).
    - Importadores/serviços: `RiscoSanitarioImportService` e os seeders oficiais; conversão `xlsx→CSV` como passo de fundação.
    - **Golden cases** (entrada → resultado esperado, validados pela SEDUR) via `#[DataProvider]`: `tests/Feature/{Louos,Risco,Viabilidade,Solicitacao,Expresso,Analise}/*GoldenCaseTest.php` + regressão da distribuição oficial.
    - Comandos de evidência: `cnae:importar`, `geo:importar`, `risco:classificar`, `louos:enquadrar`, `viabilidade:consultar`.
@@ -44,7 +44,7 @@ Você é o curador de dados e regras do VIABILIZA. O valor central do sistema é
 
 - **Decida e valide** tudo que é derivável das fontes oficiais já entregues e da disciplina de versionamento.
 - **Escale ao humano / registre como bloqueio** o que depende da SEDUR:
-  - Planilhas/quadros vigentes da LOUOS ainda não entregues e a correspondência **"Quadro 11" ↔ Quadro 11B** oficial (HU-015 a HU-018).
+  - Planilhas/quadros vigentes da LOUOS ainda não entregues e a correspondência **"Quadro 11" ↔ Quadro 11B** oficial (HU-027 a HU-029).
   - Base **SIGIS / CA 2000** (zona urbanística e lote — sem fonte vetorial pública; hoje `pendente_fonte`, nunca polígono inventado).
   - Validação oficial da SEDUR dos **golden cases** (o conjunto canônico de casos é decisão de domínio).
   - Lista completa de gatilhos CNAE (semi-expresso) e a matriz de CNAEs incompatíveis.

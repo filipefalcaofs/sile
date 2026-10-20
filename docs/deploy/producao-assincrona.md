@@ -35,8 +35,8 @@ O que está agendado hoje (`php artisan schedule:list`):
 - Idempotente: `->withoutOverlapping()` (não sobrepõe execuções longas) e
   `->onOneServer()` (em multi-instância, só um servidor executa).
 
-Esse é o padrão herdado pelas rotinas futuras (prazo BAP — HU-134;
-escalonamento por SLA — HU-147).
+Esse é o padrão herdado pelas rotinas futuras (prazo BAP — HU-066;
+escalonamento por SLA — HU-091).
 
 ## 2. Worker de fila em produção
 
@@ -101,7 +101,7 @@ relatório do serviço — a operação fica rastreável.
 ## 6. Retenção de dados
 
 A rotina de pruning aplica o parâmetro **`retencao.access_logs.dias`**
-(administrável por interface — HU-014, default 365), com efeito **sem deploy**
+(administrável por interface — HU-008, default 365), com efeito **sem deploy**
 (limitado ao cache de parâmetros). A trilha de auditoria de decisões
 (`activity_log`) fica **FORA** do pruning — retenção longa por compliance; a
 política completa de retenção/LGPD da auditoria é da Fase 12.

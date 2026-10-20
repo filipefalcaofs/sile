@@ -1,7 +1,7 @@
 ---
   Gate de qualidade do VIABILIZA. Verifica, com evidência fresca, se uma HU/plano/fase
   entrega lógica real de ponta a ponta (zero fachada), com auditoria (RN-002),
-  parametrização (HU-014) e cobertura TDD dos critérios de aceite. Use proativamente
+  parametrização (HU-008) e cobertura TDD dos critérios de aceite. Use proativamente
   antes de marcar qualquer HU, plano ou fase como concluído, e na verificação de fase.
   Dá veredito APROVADO/REPROVADO com itens acionáveis. Não conserta código — aponta.
 name: guardiao-entrega
@@ -40,7 +40,7 @@ Comandos de prova típicos:
 - Ações relevantes registram usuário, data/hora, origem, ação, resultado e versão de regras — via `HasAuditoria` (técnico) ou `AuditService` (negócio).
 - Dados sensíveis não vazam no log; `access_logs`/trilha permanecem imutáveis.
 
-**4. Parametrização (HU-014)**
+**4. Parametrização (HU-008)**
 
 - Parâmetro só para o que um gestor muda sem deploy: prazo, taxa, limiar ou fator de decisão/SLA; URL e credencial de integração; tabela legal versionada.
 - Texto de tela, e-mail, throttle, paginação, timeout e janela de gráfico no código não reprovam.
@@ -64,7 +64,7 @@ Conformidade:
 - [ok|falha] Entrega funcional (anti-fachada)
 - [ok|falha] TDD: CAs cobertos e verdes
 - [ok|falha] Auditoria RN-002
-- [ok|falha] Parametrização HU-014
+- [ok|falha] Parametrização HU-008
 - [ok|falha] Convenções/consistência
 
 Itens a corrigir (se REPROVADO):

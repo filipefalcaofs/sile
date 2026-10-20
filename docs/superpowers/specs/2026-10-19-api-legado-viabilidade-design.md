@@ -123,8 +123,50 @@ independente e somente leitura. A SEDUR pode consumi-la em outros projetos.
 
 ## Pontos em aberto para o construtor
 
-- Mapear de qual tabela vêm as atividades da TVL legada (`FICHA_TVL`, `FICHA_MATRIZ_REQUERENTE`)
-  e como `TVL_FLAG_SEDE` e inclusão/exclusão de CNAE entram no detalhe.
+- **Resolvido (20/10/2026, medido no banco real, amostra de 69 provisórias deferidas vigentes):** as
+  atividades da TVL legada vêm de `MATRIZ_REQUERENTE` (`MAT_REQ_TVL_ID` = `TVL_ID` da linha vigente,
+  `MAT_REQ_CNAE_ID` → `CNAE`), que cobre 69 de 69. A ficha (`FICHA_TVL` + `FICHA_MATRIZ_REQUERENTE`)
+  cobre só 41 de 69, e nas 41 que têm as duas os conjuntos de CNAE são idênticos. `EXCLUSAO_CNAE`
+  veio vazia na amostra. Segue em aberto como `TVL_FLAG_SEDE` e inclusão/exclusão de CNAE entram
+  no detalhe.
+- **Endereço deslocado no legado:** em cerca de 10% da amostra (7 de 69) o CEP está em
+  `TVL_NUMERO_PORTA`, `TVL_CEP` traz o bairro, `TVL_BAIRRO` traz o município, `TVL_LOGRADOURO` traz o
+  número da porta, `TVL_TIPO_LOGRADOURO_SEDUR` traz "ESPÉCIE; NOME" e `TVL_DESCRICAO_LOGRADOURO_SEDUR`
+  traz o código do logradouro (e não o número, como se supôs antes; confirmado contra o cadastro em
+  20/10/2026). A conferência de titularidade por
+  endereço falha fechado nesses casos, e a renovação grava no processo novo o endereço embaralhado.
+  **Decisão (20/10/2026), que substitui a de aceitar o deslocamento: o endereço da TVL legada passa
+  a vir do cadastro imobiliário, buscado pela inscrição imobiliária da TVL, e não das colunas do
+  legado.** Vale para (1) a conferência de titularidade, quando a TVL não tem CNPJ gravado: razão
+  social igual e endereço do imóvel compatível com o da empresa na consulta de CNPJ; (2) o endereço
+  gravado no processo novo; (3) o endereço mostrado no assistente. Chamadas do cadastro: razão social
+  primeiro (razão diferente nunca consulta o cadastro). Sem inscrição na TVL, ou inscrição não
+  encontrada, a conferência de titularidade bloqueia com orientação de procurar a SEDUR; cadastro
+  fora do ar bloqueia com pedido de tentar depois e marca o serviço como indisponível. A inscrição
+  sozinha continua não provando titularidade. Fica fora desta entrega o endereço exibido nas linhas
+  das listas, que segue o do legado. Custo se a decisão se mostrar errada: uma consulta externa a
+  mais por renovação de TVL sem CNPJ gravado; reverter é voltar a ler o endereço do detalhe da API.
+  **Validado em produção em 20/10/2026 (13 consultas ao cadastro real):** o cadastro devolveu
+  `endereco` composto "Logradouro, NÚMERO — Edifício", `numero_porta` sem zeros à esquerda, bairro e
+  CEP no formato NNNNN-NNN, com o endereço do tipo "Localização" em todos os casos testados; a
+  inscrição com 7 dígitos, com 8 (`05148081`) e com 10 (`0005148081`) resolve o mesmo imóvel, então
+  não é preciso completar com zeros; inscrição inexistente dá 404 (vira "não encontrada"). Nos 5
+  casos de layout normal e nos 4 de layout deslocado o CEP, o logradouro e o bairro do cadastro
+  coincidem com o legado; a inscrição curta `7145` devolve o mesmo logradouro, bairro e CEP que o
+  legado grava. O resolvedor, rodado sobre esses 10 endereços reais, devolveu logradouro sem número
+  nem complemento e CEP formatado. **Achado na mesma validação (produção, 5 pares de inscrição e
+  CNPJ de titulares conhecidos):** a consulta de CNPJ em produção (`SedurCnpjLookup`) entrega o
+  endereço da empresa como uma única string em `CnpjData::street` ("Rua X, 103, BAIRRO, 41100000"),
+  com `number`, `neighborhood` e `zipCode` nulos; a conferência de titularidade, que lia esses campos
+  separados, nunca casava. Corrigido só na `ConferenciaTitularidade`, que passou a ler o endereço
+  composto (CEP = último bloco `NNNNN-NNN`, logradouro = primeiro segmento, número = segundo se for
+  numérico), sem alterar `SedurCnpjLookup` porque outros fluxos usam o `street` composto. Resultado
+  nos 5 pares reais: 4 conferem pelo CEP e 1 não confere (imóvel na Av. Jorge Amado, 76, e empresa
+  com endereço na Receita em outra rua e outro CEP), isto é, titular legítimo com sede em outro
+  endereço fica bloqueado e deve procurar a SEDUR. Limites conhecidos do parse: outro bloco de 8
+  dígitos depois do CEP (telefone) faz o último errar, e CEP com espaço não é reconhecido; ambos
+  falham fechado. Um CEP diferente não bloqueia quando logradouro e número são iguais (regra
+  anterior, mantida). Segue não verificado: um caso completo de renovação no ambiente real.
 - Reavaliar a cobertura de titular depois de `PROCESSO_REGIN` carregar, e tratar os registros
   rejeitados da carga (`FICHA_TVL`, `FICHA_MATRIZ_REQUERENTE`, `log_atualizacao_matriz_requerente`).
 - Verificar disponibilidade do `pdo_sqlsrv` para o PHP usado no Dockerfile do Viabiliza.

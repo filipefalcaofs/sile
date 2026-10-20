@@ -1,0 +1,543 @@
+{
+ "contagem": {
+  "F7": "Sudoeste Informática",
+  "F8": "Viabiliza — Portal do cidadão",
+  "F9": "Recontagem IFPUG - Projeto de Desenvolvimento (parte Portal)",
+  "F10": "DV-SILE-003-P",
+  "F11": "Equipe de Análise — Sudoeste Informática",
+  "N10": "4.0",
+  "T7": 700,
+  "tipo_cell": "L15",
+  "data": "2026-10-19",
+  "proposito": "Esta planilha cobre a parte Portal do cidadão do Viabiliza (HU-140 a HU-181). A parte Retaguarda (HU-001 a HU-139) tem planilha própria e a soma das duas é a contagem integral de 1.719 PF. Cada função foi contada uma só vez, na parte que a executa ou, no caso de arquivo lógico, na parte que o mantém; as funções da outra parte que usam esses arquivos continuam referenciando-os nas colunas de TD e AR. Recontagem integral do tamanho funcional do Viabiliza em 16/10/2026, como projeto de desenvolvimento, seguindo o Manual de Práticas de Contagem IFPUG CPM 4.3.1. A contagem foi refeita a partir do código-fonte atual (rotas, telas, serviços, models, migrations, comandos agendados e testes), sem presumir que as funções da contagem de 01/10/2026 (versão 3.3, 1.618 PF não ajustados) continuassem válidas: cada função anterior foi conferida no código e classificada como mantida, alterada ou removida, e as funções novas foram identificadas. A coluna Observações traz, para cada função, a prova no código, a justificativa de processo elementar ou de arquivo lógico, a classificação, a lista dos DER que formam o TD e dos arquivos que formam o AR/TR, e a situação em relação à contagem anterior. Resultado: 1719 PF não ajustados. As funções removidas, as correções e as premissas estão na memória de cálculo entregue com esta planilha.",
+  "escopo": "Esta planilha cobre a parte Portal do cidadão do Viabiliza (HU-140 a HU-181). A parte Retaguarda (HU-001 a HU-139) tem planilha própria e a soma das duas é a contagem integral de 1.719 PF. Cada função foi contada uma só vez, na parte que a executa ou, no caso de arquivo lógico, na parte que o mantém; as funções da outra parte que usam esses arquivos continuam referenciando-os nas colunas de TD e AR. Fronteira: aplicação Viabiliza (Sistema de Licenciamento Eletrônico da SEDUR) completa, no estado do código em 16/10/2026. Inclui o console de gestão da SEDUR, o Portal do Cidadão (conta, empresas, procurações, solicitação, renovação e acompanhamento), a consulta prévia de viabilidade, a consulta pública de protocolo, a verificação pública de documentos, o recebimento de declarações do REGIN/JUCEB, as rotinas automáticas de prazos e controle, a importação mensal do benchmark REDESIM e os dados externos efetivamente lidos (GeoServer da SEDUR, contatos cadastrais da SEDUR, cadastro imobiliário da SEFAZ, lotes do SEMAP, diretório da SEDUR e geocodificação).\n\nFora da contagem: login gov.br (implementado, mas desligado e sem credencial), envio à SEFAZ (bloqueado, HU-109), migração do legado, dados de código (CPM Parte 1 §5.4.2 d e Parte 3 Cap. 1: tipo de serviço, zona urbanística e via) e as transações que só os mantêm, funções técnicas sem efeito para o usuário (teste de conexão, ping, metadados, documentação OpenAPI, retenção de dados, reprocessamento técnico, comandos de suporte) e efeitos automáticos de outra função (envio do parecer à JUCEB, notificações e e-mails).\n\nCritério de conferência: linhas F1, F2 etc. são grupos funcionais e não pontuam. Cada função contável tem tipo, TD, AR/TR e Observações com a prova e a lista de DER e de arquivos. Todo arquivo citado no AR é ALI ou AIE desta contagem; subgrupos aparecem pelo arquivo pai. Registros automáticos em arquivos de log (trilha de auditoria, registro de acesso, chamada de integração, envio de e-mail, notificação e comunicação) contam como arquivo referenciado quando gravados no mesmo processamento (CPM Parte 1 §5.5.3 e §5.5.4)."
+ },
+ "grupos": [
+  {
+   "grupo": "Conta do cidadão no portal",
+   "funcoes": [
+    {
+     "nome": "Cadastro do cidadão - criar conta",
+     "tipo": "EE",
+     "td": 8,
+     "ar": 6,
+     "iaet": "I",
+     "obs": "Prova: Rota POST /portal/register (Fortify, sem login). Tela: auth/register. O cidadão informa nome, CPF, telefone, e-mail e senha; App\\Actions\\Fortify\\CreateNewUser valida CPF (dígitos verificadores, único), e-mail único, telefone com DDD e a política de senha, grava o Usuário e atribui o Perfil de acesso definido no parâmetro portal.perfil_cidadao (App\\Support\\PerfilCidadao). User::sendEmailVerificationNotification grava no mesmo request o Registro de envio de e-mail (situação na fila) do link de confirmação. O listener RecordRegistrationActivity grava o evento 'cadastro' na trilha; em seguida o Fortify autentica a conta e o RecordSuccessfulLogin grava o Registro de acesso. Teste: tests/Feature/Auth/RegistrationTest.php::test_usuario_se_cadastra_com_sucesso (também test_cadastro_usa_o_perfil_definido_no_parametro e test_cadastro_gera_auditoria). Processo elementar independente: menor unidade com significado para o cidadão; completa por si (do formulário à conta criada); deixa o negócio consistente (CPF e e-mail únicos, perfil de cidadão atribuído); lógica própria, diferente de qualquer cadastro da gestão (autocadastro com perfil parametrizado). Não estava na contagem anterior. Classificação: intenção primária é manter Usuário: EE (§5.5.3). TD=8 (nome, CPF, telefone, e-mail, senha, confirmação da senha, mensagem de erro/sucesso, ação cadastrar). AR=6 (Usuário, Parâmetro, Perfil de acesso, Trilha de auditoria, Registro de acesso, Registro de envio de e-mail). Recontagem 16/10/2026: nova (não constava da contagem de 01/10/2026)."
+    },
+    {
+     "nome": "Confirmação de e-mail - confirmar e-mail",
+     "tipo": "EE",
+     "td": 3,
+     "ar": 2,
+     "iaet": "I",
+     "obs": "Prova: Rota GET /portal/email/verify/{id}/{hash} (Fortify, auth:web, link assinado com validade). Tela: auth/verify-email. O cidadão abre o link recebido; o Fortify marca email_verified_at no Usuário e dispara Verified; o listener RecordEmailVerifiedActivity grava 'email-confirmado' na trilha. Link expirado ou hash inválido não confirmam. Teste: tests/Feature/Auth/EmailVerificationTest.php::test_email_e_verificado_com_link_assinado (também test_verificacao_gera_auditoria e test_hash_invalido_nao_verifica). Processo elementar independente: menor unidade com significado para o cidadão; completa por si (do link ao e-mail confirmado); deixa o negócio consistente (só conta confirmada usa o portal e a gestão); lógica única. O reenvio do link (POST /portal/email/verification-notification) repete o e-mail já previsto no cadastro, sem manter dado: reprocessamento de entrega, não conta à parte. Não estava na contagem anterior. Classificação: mantém Usuário (data de confirmação): EE. TD=3 (link de confirmação (conta e e-mail), mensagem de resultado (confirmado, expirado, inválido), ação abrir o link). AR=2 (Usuário, Trilha de auditoria). Recontagem 16/10/2026: nova (não constava da contagem de 01/10/2026)."
+    }
+   ]
+  },
+  {
+   "grupo": "Perfil e senha do usuário",
+   "funcoes": [
+    {
+     "nome": "Perfil do usuário - consultar dados pessoais",
+     "tipo": "CE",
+     "td": 5,
+     "ar": 1,
+     "iaet": "I",
+     "obs": "Prova: Rotas GET /portal/conta/perfil (Settings\\ProfileController@edit, auth:web) e GET /gestao/conta/perfil (Gestao\\Conta\\ProfileController@edit, acessar-gestao), mesma lógica contada uma vez. Telas: settings/profile e gestao/conta/perfil. O usuário abre os próprios dados; lê o Usuário autenticado e não grava. Teste: tests/Feature/Settings/ProfileTest.php::test_pagina_de_perfil_renderiza_com_dados. Processo elementar independente: menor unidade com significado para o usuário; completa por si (abrir e ver os próprios dados, inclusive o CPF, que não é editável); deixa o negócio consistente (nada muda); lógica única (só a conta autenticada). Classificação: só recupera e mostra: CE. TD=5 (nome, e-mail, CPF, telefone, ação abrir). AR=1 (Usuário). Recontagem 16/10/2026: mantida (linha 31 da contagem de 01/10/2026)."
+    },
+    {
+     "nome": "Perfil do usuário - alterar dados pessoais",
+     "tipo": "EE",
+     "td": 5,
+     "ar": 3,
+     "iaet": "I",
+     "obs": "Prova: Rotas PATCH /portal/conta/perfil (Settings\\ProfileController@update) e PATCH /gestao/conta/perfil (Gestao\\Conta\\ProfileController@update), mesma lógica contada uma vez. Telas: settings/profile e gestao/conta/perfil. O usuário altera nome, e-mail e telefone (App\\Http\\Requests\\ProfileUpdateRequest: e-mail único, telefone com DDD); e-mail novo zera a confirmação e reenvia o link, gravando o Registro de envio de e-mail; a alteração é auditada sem campos sensíveis (HasAuditoria). Teste: tests/Feature/Settings/ProfileTest.php::test_atualiza_nome_e_telefone (também test_atualizacao_gera_auditoria_sem_campos_sensiveis e test_alterar_email_reexige_verificacao). Processo elementar independente: menor unidade com significado para o usuário; completa por si (do formulário aos dados salvos); deixa o negócio consistente (e-mail único e confirmado de novo); lógica única (CPF imutável). Classificação: mantém Usuário: EE. TD=5 (nome, e-mail, telefone, mensagem, ação salvar). AR=3 (Usuário, Trilha de auditoria, Registro de envio de e-mail). Recontagem 16/10/2026: alterada (linha 30 da contagem de 01/10/2026: \"Perfil do usuário - alterar dados pessoais\", EE Média 4 PF, TD 5, AR 2). Motivo: AR 2→3: com e-mail novo, User::sendEmailVerificationNotification grava no mesmo request o Registro de envio de e-mail."
+    },
+    {
+     "nome": "Senha - alterar senha",
+     "tipo": "EE",
+     "td": 5,
+     "ar": 2,
+     "iaet": "I",
+     "obs": "Prova: Rotas PUT /portal/conta/senha (Settings\\PasswordController@update), PUT /portal/user/password (Fortify) e PUT /gestao/conta/senha (Gestao\\Conta\\PasswordController@update), todas com App\\Actions\\Fortify\\UpdateUserPassword, contadas uma vez. Telas: settings/password e gestao/conta/senha. O usuário informa a senha atual e a nova; o sistema confere a senha atual, aplica a política, grava no Usuário e registra 'senha-alterada' na trilha; na gestão conta AD é recusada (variação da mesma lógica). Teste: tests/Feature/Settings/PasswordUpdateTest.php::test_senha_e_alterada_com_dados_validos (também test_alteracao_gera_auditoria e test_senha_atual_incorreta_bloqueia). Processo elementar independente: menor unidade com significado para o usuário; completa por si (informa as senhas e recebe o resultado); deixa o negócio consistente (credencial conforme a política); lógica única. Classificação: mantém Usuário: EE. TD=5 (senha atual, nova senha, confirmação da senha, mensagem, ação salvar). AR=2 (Usuário, Trilha de auditoria). Recontagem 16/10/2026: alterada (linha 34 da contagem de 01/10/2026: \"Senha - alterar senha\", EE Baixa 3 PF, TD 5, AR 1). Motivo: AR 1→2: UpdateUserPassword grava o evento 'senha-alterada' na trilha (AuditService), verificado em teste; a contagem anterior não o considerou."
+    }
+   ]
+  },
+  {
+   "grupo": "Termo de consentimento LGPD",
+   "funcoes": [
+    {
+     "nome": "Termo LGPD - consultar termo vigente",
+     "tipo": "CE",
+     "td": 4,
+     "ar": 2,
+     "iaet": "I",
+     "obs": "Prova: Rotas GET /portal/termo-lgpd (Portal\\LgpdTermController@show, auth:web) e GET /gestao/termo-lgpd (Gestao\\TermoLgpdController@show, auth:gestao), mesma lógica contada uma vez. Telas: portal/termo-lgpd e gestao/termo-lgpd. Mostra a versão vigente do termo a quem ainda não aceitou; quem já aceitou volta ao painel. Lê Termo legal e os aceites do Usuário (subgrupo aceite de termo). Teste: tests/Feature/Lgpd/TermAcceptanceTest.php::test_pagina_do_termo_renderiza_conteudo_vigente e tests/Feature/Lgpd/TermoLgpdPorAmbienteTest.php::test_servidor_sem_aceite_vai_para_o_termo_do_console. Processo elementar independente: menor unidade com significado para o usuário; completa por si (abre e recebe o termo vigente); deixa o negócio consistente (nada é gravado); portal e gestão têm os mesmos DER, FTR e lógica (só muda o guard e o destino do redirecionamento): um só processo (§5.5.2.2). Classificação: só recupera e mostra: CE. TD=4 (versão, título, conteúdo, ação abrir). AR=2 (Termo legal, Usuário). Recontagem 16/10/2026: alterada (linha 86 da contagem de 01/10/2026: \"Termo LGPD - consultar no portal\", CE Baixa 3 PF, TD 4, AR 2). Motivo: Nome: deixa de ser 'no portal' porque passa a representar também a rota da gestão (linha 404 removida por duplicidade). AR: Aceite de termo legal substituído por Usuário (aceite virou subgrupo do Usuário no catálogo). TD, AR e PF iguais."
+    },
+    {
+     "nome": "Termo LGPD - aceitar termo vigente",
+     "tipo": "EE",
+     "td": 3,
+     "ar": 3,
+     "iaet": "I",
+     "obs": "Prova: Rotas POST /portal/termo-lgpd (Portal\\LgpdTermController@accept) e POST /gestao/termo-lgpd (Gestao\\TermoLgpdController@accept), mesma lógica contada uma vez. O usuário marca o aceite; o sistema grava o aceite da versão vigente (subgrupo aceite de termo do Usuário) com IP, navegador e data (firstOrCreate, sem duplicar) e a auditoria do registro. Teste: tests/Feature/Lgpd/TermAcceptanceTest.php::test_aceite_grava_versao_ip_e_audita e tests/Feature/Lgpd/TermoLgpdPorAmbienteTest.php::test_servidor_aceita_o_termo_no_console. Processo elementar independente: menor unidade com significado para o usuário; completa por si (aceita e é liberado); deixa o negócio consistente (consentimento por versão registrado); portal e gestão com os mesmos DER, FTR e lógica: um só processo (§5.5.2.2). Classificação: mantém Usuário (aceite de termo): EE. TD=3 (aceite, mensagem, ação aceitar). AR=3 (Usuário, Termo legal, Trilha de auditoria). Recontagem 16/10/2026: alterada (linha 87 da contagem de 01/10/2026: \"Termo LGPD - aceitar no portal\", EE Baixa 3 PF, TD 3, AR 2). Motivo: Nome passa a cobrir também a gestão (linha 405 removida por duplicidade); Aceite de termo legal substituído por Usuário (subgrupo); AR 2→3: o aceite é auditado (HasAuditoria em LegalTermAcceptance), verificado em teste."
+    }
+   ]
+  },
+  {
+   "grupo": "Histórico de acessos",
+   "funcoes": [
+    {
+     "nome": "Histórico de acessos - consultar acessos de um usuário",
+     "tipo": "SE",
+     "td": 7,
+     "ar": 3,
+     "iaet": "I",
+     "obs": "Prova: Rota GET /gestao/acessos/{user} (Gestao\\AccessHistoryController, permissão consultar-acessos-de-qualquer-conta). Tela: gestao/acessos. O administrador abre o histórico de outra conta; o sistema lê o Usuário-alvo e o Registro de acesso (por usuário ou pelo e-mail, incluindo falhas e bloqueios sem usuário) e grava na trilha a consulta como acesso a dado pessoal de terceiro. Teste: tests/Feature/AccessHistory/AccessHistoryTest.php::test_consulta_administrativa_e_auditada (também test_admin_consulta_acessos_de_qualquer_conta). Processo elementar independente: menor unidade com significado para o administrador; completa por si (escolhe a conta e recebe o histórico); deixa o negócio consistente (consulta de terceiro auditada); lógica única. A exportação pelo parâmetro ?formato= usa o exportador de relatórios e pertence à função de exportação. Classificação: apresenta informação e atualiza Trilha de auditoria e Chamada de integração: SE (§5.5.3). TD=7 (nome do usuário-alvo, e-mail do usuário-alvo, evento, IP, canal, data/hora, ação consultar). AR=3 (Registro de acesso, Usuário, Trilha de auditoria). Recontagem 16/10/2026: alterada (linha 59 da contagem de 01/10/2026: \"Histórico de acessos - consultar\", SE Média 5 PF, TD 7, AR 3). Motivo: Nome e escopo: passa a representar só a consulta administrativa da gestão; a consulta do próprio usuário no portal tem FTR e lógica diferentes e foi contada à parte. TD, AR e tipo iguais."
+    },
+    {
+     "nome": "Histórico de acessos - consultar os próprios acessos",
+     "tipo": "CE",
+     "td": 5,
+     "ar": 1,
+     "iaet": "I",
+     "obs": "Prova: Rota GET /portal/acessos (Portal\\AccessHistoryController, auth:web). Tela: portal/acessos. O cidadão vê os próprios acessos; o sistema lê o Registro de acesso por usuário ou pelo e-mail (inclui falhas e bloqueios antes do login), paginado; não grava. Teste: tests/Feature/AccessHistory/AccessHistoryTest.php::test_usuario_ve_somente_os_proprios_acessos (também test_acessos_exibem_evento_data_e_ip). Processo elementar independente: menor unidade com significado para o cidadão; completa por si (abre e recebe a lista); deixa o negócio consistente (nada muda). A contagem anterior a juntou à consulta administrativa, mas os processos diferem em DER (sem nome e e-mail da conta-alvo), em FTR (não lê outra conta nem grava trilha) e em lógica (escopo fixo na própria conta): são processos distintos (§5.5.2.2). Classificação: só recupera e mostra: CE. TD=5 (evento, IP, canal, data/hora, ação abrir). AR=1 (Registro de acesso). Recontagem 16/10/2026: nova (não constava da contagem de 01/10/2026)."
+    }
+   ]
+  },
+  {
+   "grupo": "Painel do cidadão",
+   "funcoes": [
+    {
+     "nome": "Painel do cidadão - consultar",
+     "tipo": "SE",
+     "td": 11,
+     "ar": 3,
+     "iaet": "I",
+     "obs": "Prova: Rota GET /portal/painel (Portal\\DashboardController, auth:web). Tela: portal/dashboard. App\\Services\\Painel\\PainelCidadaoService monta, para o usuário efetivo (o representado quando há representação): indicadores calculados por contagem agrupada por situação (em análise, total de processos, em convite/pendência), a lista do que pede ação (pendências abertas com prazo e rascunhos a protocolar) e as últimas solicitações. Lê Solicitação de viabilidade, Pendência da análise e Empresa; o nome do tipo de serviço é dado de código e não conta como FTR; não grava. Os atalhos de serviços são menu estático e não contam. Teste: tests/Feature/Portal/PainelCidadaoTest.php::test_painel_exibe_indicadores_reais (também test_painel_atencao_traz_pendencias_abertas_e_rascunhos_do_efetivo e test_painel_em_representacao_mostra_do_representado_sem_vazar). Processo elementar independente: menor unidade com significado para o cidadão; completa por si (abre o painel e recebe indicadores e listas); deixa o negócio consistente (nada muda); lógica própria (totais por situação e itens que pedem ação), diferente da lista de solicitações. Não estava na contagem anterior. Classificação: os indicadores são contagens calculadas: SE (§5.5.3). TD=11 (quantidade em análise, total de processos, quantidade em convite, protocolo, situação, tipo de serviço, razão social da empresa, data de criação, descrição da pendência, prazo da pendência, ação abrir). AR=3 (Solicitação de viabilidade, Pendência da análise, Empresa). Recontagem 16/10/2026: nova (não constava da contagem de 01/10/2026)."
+    }
+   ]
+  },
+  {
+   "grupo": "Central de notificações",
+   "funcoes": [
+    {
+     "nome": "Dados - Notificação ao usuário",
+     "tipo": "ALI",
+     "td": 8,
+     "ar": 1,
+     "iaet": "I",
+     "obs": "Prova: Tabela notifications (canal database do Laravel), migration database/migrations/2026_06_15_034848_create_notifications_table.php. Gravada pelo NotificationDispatcher e pelas notificações em app/Notifications; marcada como lida na central (NotificationCenterController@markAsRead). Teste: tests/Feature/Comunicacao/NotificationCenterTest.php::test_portal_marca_uma_notificacao_como_lida. Arquivo lógico: grupo lógico reconhecido pelo usuário: os avisos do sininho, com conteúdo e situação de leitura próprios; cada aviso tem vida própria (lido ou não) e não é atributo do usuário; não é dado de código. TD=8 (tipo, destinatário, título, mensagem, protocolo, link, lida em, data). TR=1 (Notificação ao usuário). Para demonstrar: features.notificacao_in_app ligado. Recontagem 16/10/2026: mantida (linha 518 da contagem de 01/10/2026)."
+    },
+    {
+     "nome": "Notificações - consultar",
+     "tipo": "SE",
+     "td": 7,
+     "ar": 2,
+     "iaet": "I",
+     "obs": "Prova: Rotas GET /portal/notificacoes e GET /gestao/notificacoes (NotificationCenterController@index), mesma lógica contada uma vez. Telas: portal/notificacoes/index e gestao/notificacoes/index (componente notificacoes/notification-center). O usuário vê as próprias notificações, separadas em não lidas e lidas, com a quantidade de não lidas (contagem de unreadNotifications); o NotificationResource normaliza título e resumo e anula o link de processo inexistente (lê Solicitação de viabilidade). Não grava. Teste: tests/Feature/Comunicacao/NotificationCenterTest.php::test_portal_lista_notificacoes_e_expoe_badge_de_nao_lidas (também test_gestao_lista_marca_e_expoe_badge). Processo elementar independente: menor unidade com significado para o usuário; completa por si (abre a central e recebe a lista); deixa o negócio consistente (nada é gravado); lógica única (escopo do próprio usuário). Classificação: apresenta informação com contagem calculada: SE (§5.5.3). TD=7 (título, mensagem, recebida em, link do processo, situação de leitura, quantidade de não lidas, ação abrir). AR=2 (Notificação ao usuário, Solicitação de viabilidade). Recontagem 16/10/2026: alterada (linha 22 da contagem de 01/10/2026: \"Notificações - consultar\", CE Média 4 PF, TD 8, AR 2). Motivo: Tipo CE→SE e TD 8→7: a tela não mostra tipo nem data de leitura; mostra a quantidade de não lidas, contagem calculada no servidor (badge do sininho), o que torna a função SE."
+    },
+    {
+     "nome": "Notificações - marcar como lida",
+     "tipo": "EE",
+     "td": 2,
+     "ar": 1,
+     "iaet": "I",
+     "obs": "Prova: Rotas POST /portal/notificacoes/{notification}/ler e POST /gestao/notificacoes/{notification}/ler (NotificationCenterController@markAsRead), mesma lógica contada uma vez. O usuário marca uma notificação; o sistema grava read_at na Notificação ao usuário, só do próprio dono (404 fora do escopo). A marcação de todas (POST .../ler-todas) é variação em lote deste processo e está incluída aqui. Teste: tests/Feature/Comunicacao/NotificationCenterTest.php::test_portal_marca_uma_notificacao_como_lida (também test_portal_marca_todas_as_notificacoes_como_lidas e test_usuario_nao_marca_notificacao_de_outro_anti_idor). Processo elementar independente: menor unidade com significado para o usuário; completa por si (clica e a notificação fica lida); deixa o negócio consistente (contador atualizado); lógica única (marcação de leitura com escopo do dono). Classificação: mantém Notificação ao usuário: EE. TD=2 (notificação selecionada, ação marcar como lida). AR=1 (Notificação ao usuário). Recontagem 16/10/2026: mantida (linha 23 da contagem de 01/10/2026)."
+    }
+   ]
+  },
+  {
+   "grupo": "Empresas do cidadão",
+   "funcoes": [
+    {
+     "nome": "Dados - Empresa",
+     "tipo": "ALI",
+     "td": 21,
+     "ar": 2,
+     "iaet": "I",
+     "obs": "Prova: Model app/Models/Company.php; migrations database/migrations/2026_06_12_035745_create_companies_table.php, 2026_06_12_035746_create_company_cnae_table.php e 2026_10_03_142733_add_origem_declarada_to_viability_requests_and_nullable_cnpj_on_companies.php (CNPJ opcional para empresa recebida do REGIN). Mantido pelo cadastro e alteração no portal (Portal\\CompanyController), pela definição de CNAEs (CompanyCnaeService) e pelo recebimento do REGIN. Teste: tests/Feature/Companies/CompanyRegistrationTest.php::test_cadastro_cria_empresa_e_vinculo_responsavel_ativo. Arquivo lógico: grupo lógico reconhecido pelo requerente e pela SEDUR: a empresa que pede viabilidade, com suas atividades (CNAE da empresa, com indicador de principal) como subgrupo; não é dado de código. TD=21 (CNPJ, razão social, nome fantasia, código da natureza jurídica, natureza jurídica, código do porte, porte, logradouro, número, complemento, bairro, cidade, UF, CEP, e-mail, telefone, origem, protocolo REDESIM, sincronizada em, CNAE da empresa, indicador de CNAE principal). TR=2 (Empresa, CNAE da empresa). Recontagem 16/10/2026: mantida (linha 52 da contagem de 01/10/2026)."
+    },
+    {
+     "nome": "Dados - Vínculo de usuário com empresa",
+     "tipo": "ALI",
+     "td": 6,
+     "ar": 1,
+     "iaet": "I",
+     "obs": "Prova: Model app/Models/CompanyUser.php; migration database/migrations/2026_06_12_035746_create_company_user_table.php. Criado no cadastro da empresa (Portal\\CompanyController@store) e encerrado em Portal\\CompanyLinkController@destroy (data e motivo, sem exclusão); lido pela CompanyPolicy e nas listas. Teste: tests/Feature/Companies/EndCompanyLinkTest.php::test_usuario_encerra_o_proprio_vinculo_com_motivo. Arquivo lógico: entidade associativa com atributos próprios (papel, início, encerramento, motivo) que a regra de negócio exige reter mesmo depois de encerrada (histórico de vínculos visível no detalhe da empresa): CPM Parte 3, Cap. 2, entidade associativa, situação 3. O requerente a reconhece como o seu vínculo com a empresa. TD=6 (empresa, usuário, papel no vínculo, início, encerramento, motivo do encerramento). TR=1 (Vínculo de usuário com empresa). Recontagem 16/10/2026: mantida (linha 500 da contagem de 01/10/2026)."
+    },
+    {
+     "nome": "Empresas - consultar",
+     "tipo": "CE",
+     "td": 10,
+     "ar": 3,
+     "iaet": "I",
+     "obs": "Prova: Rota GET /portal/empresas (Portal\\CompanyController@index, auth:web). Tela: portal/empresas/index. Lista as empresas com vínculo (ativo ou encerrado) do usuário efetivo, com CNAE principal, origem e situação do vínculo; busca por razão social, nome fantasia ou início do CNPJ. Lê Empresa, Vínculo de usuário com empresa e CNAE; não grava. Teste: tests/Feature/Companies/MyCompaniesTest.php::test_item_traz_cnae_principal_e_situacao_do_vinculo. Processo elementar independente: menor unidade com significado para o requerente; completa por si (abre a lista); deixa o negócio consistente (nada muda); lógica única de listagem das empresas vinculadas. Classificação: só recupera e mostra: CE. TD=10 (razão social, CNPJ, nome fantasia, código do CNAE principal, descrição do CNAE principal, origem do cadastro, situação do vínculo, papel no vínculo, busca, ação abrir). AR=3 (Empresa, Vínculo de usuário com empresa, CNAE). Para demonstrar: features.portal_servicos ligado (parâmetro que liga os serviços do portal, desligado por padrão; commit df19754c de 16/10/2026). Recontagem 16/10/2026: alterada (linha 53 da contagem de 01/10/2026: \"Empresas - consultar\", CE Média 4 PF, TD 12, AR 3). Motivo: TD 12→10: a tela não mostra situação cadastral, município nem total de empresas; mostra origem do cadastro, que não estava listada."
+    },
+    {
+     "nome": "Empresas - consultar detalhe",
+     "tipo": "CE",
+     "td": 27,
+     "ar": 4,
+     "iaet": "I",
+     "obs": "Prova: Rota GET /portal/empresas/{company} (Portal\\CompanyController@show, auth:web, policy view: vínculo ativo ou encerrado). Tela: portal/empresas/detalhe. Mostra os dados cadastrais, o CNAE principal e os secundários e o histórico de vínculos com o nome do usuário. Lê Empresa, CNAE, Vínculo de usuário com empresa e Usuário; não grava (o 403 do não vinculado é auditado pelo tratamento global de acesso negado). Teste: tests/Feature/Companies/CompanyUpdateTest.php::test_vinculado_ativo_ve_o_detalhe. Processo elementar independente: menor unidade com significado para o requerente; completa por si (abre a empresa); deixa o negócio consistente (nada muda); lógica única de detalhe com CNAEs e vínculos. Classificação: só recupera e mostra: CE. TD=27 (19 dados cadastrais: razão social, nome fantasia, CNPJ, código da natureza jurídica, natureza jurídica, código do porte, porte, logradouro, número, complemento, bairro, cidade, UF, CEP, e-mail, telefone, origem, protocolo REDESIM, sincronizada em; código do CNAE, descrição do CNAE; usuário vinculado, papel, início, encerramento, motivo do encerramento; ação abrir). AR=4 (Empresa, CNAE, Vínculo de usuário com empresa, Usuário). Para demonstrar: features.portal_servicos ligado (parâmetro que liga os serviços do portal, desligado por padrão; commit df19754c de 16/10/2026). Recontagem 16/10/2026: mantida (linha 55 da contagem de 01/10/2026)."
+    },
+    {
+     "nome": "Empresas - incluir",
+     "tipo": "EE",
+     "td": 18,
+     "ar": 3,
+     "iaet": "I",
+     "obs": "Prova: Rota POST /portal/empresas (Portal\\CompanyController@store, auth:web). Tela: portal/empresas/cadastrar. O cidadão (ou o procurador em nome do representado) cadastra a empresa; StoreCompanyRequest valida CNPJ (único, dígitos ou alfanumérico), telefone com DDD e CEP; o sistema grava a Empresa e o vínculo de responsável ativo na mesma transação e a auditoria dos registros. Teste: tests/Feature/Companies/CompanyRegistrationTest.php::test_cadastro_cria_empresa_e_vinculo_responsavel_ativo (também test_cadastro_e_auditado e test_cnpj_duplicado_e_bloqueado_com_mensagem_clara). Processo elementar independente: menor unidade com significado para o requerente; completa por si (preenche e salva); deixa o negócio consistente (empresa nunca sem responsável); lógica única de cadastro com vínculo. Classificação: mantém Empresa e Vínculo: EE. TD=18 (CNPJ, razão social, nome fantasia, código da natureza jurídica, natureza jurídica, código do porte, porte, logradouro, número, complemento, bairro, cidade, UF, CEP, e-mail, telefone, mensagem, ação salvar). AR=3 (Empresa, Vínculo de usuário com empresa, Trilha de auditoria). Para demonstrar: features.portal_servicos ligado (parâmetro que liga os serviços do portal, desligado por padrão; commit df19754c de 16/10/2026). Recontagem 16/10/2026: alterada (linha 54 da contagem de 01/10/2026: \"Empresas - incluir\", EE Alta 6 PF, TD 18, AR 2). Motivo: AR 2→3: o cadastro é auditado (HasAuditoria em Company e CompanyUser), verificado em teste. PF inalterado."
+    },
+    {
+     "nome": "Empresas - alterar",
+     "tipo": "EE",
+     "td": 17,
+     "ar": 3,
+     "iaet": "I",
+     "obs": "Prova: Rota PUT /portal/empresas/{company} (Portal\\CompanyController@update, auth:web, policy update: vínculo ativo). Tela: portal/empresas/detalhe. O vinculado ativo atualiza os dados complementares; o CNPJ é imutável (fora de UpdateCompanyRequest); o sistema grava a Empresa e a auditoria com as diferenças. Teste: tests/Feature/Companies/CompanyUpdateTest.php::test_vinculado_ativo_atualiza_dados_complementares (também test_atualizacao_e_auditada_com_diff e test_vinculo_encerrado_nao_atualiza). Processo elementar independente: menor unidade com significado para o requerente; completa por si (edita e salva); deixa o negócio consistente (só vínculo ativo altera); lógica única. Classificação: mantém Empresa: EE. TD=17 (razão social, nome fantasia, código da natureza jurídica, natureza jurídica, código do porte, porte, logradouro, número, complemento, bairro, cidade, UF, CEP, e-mail, telefone, mensagem, ação salvar). AR=3 (Empresa, Vínculo de usuário com empresa, Trilha de auditoria). Para demonstrar: features.portal_servicos ligado (parâmetro que liga os serviços do portal, desligado por padrão; commit df19754c de 16/10/2026). Recontagem 16/10/2026: alterada (linha 56 da contagem de 01/10/2026: \"Empresas - alterar\", EE Alta 6 PF, TD 17, AR 2). Motivo: AR 2→3: a alteração é auditada com antes e depois (HasAuditoria), verificado em teste. PF inalterado."
+    },
+    {
+     "nome": "Empresas - consultar CNPJ na base de contatos da SEDUR",
+     "tipo": "SE",
+     "td": 7,
+     "ar": 3,
+     "iaet": "I",
+     "obs": "Prova: Rota POST /portal/empresas/consultar-cnpj (Portal\\CnpjLookupController, auth:web, throttle cnpj-lookup). Tela: portal/empresas/cadastrar (botão Buscar CNPJ). O cidadão informa o CNPJ; o binding de App\\Services\\Cnpj\\CnpjLookup no AppServiceProvider é SedurCnpjLookup, que consulta a base cadastral da SEDUR (SedurContatoClient::consultarCnpj) e devolve os dados para preencher o formulário, sem gravar a empresa; sucesso, não encontrado, indisponível e recurso desligado são gravados na trilha, e a chamada HTTP é gravada em Chamada de integração (listener RegistrarChamadaIntegracao, no mesmo request). Teste: tests/Feature/Companies/CnpjLookupTest.php::test_consulta_com_sucesso_retorna_dados_para_o_formulario (também test_consulta_com_sucesso_e_auditada e test_cnpj_inexistente_responde_404_com_mensagem). Processo elementar independente: menor unidade com significado para o requerente; completa por si (informa o CNPJ e recebe os dados); deixa o negócio consistente (consulta registrada, nada cadastrado); lógica única de busca cadastral externa. Classificação: apresenta informação e atualiza a Trilha de auditoria: SE (§5.5.3). TD=7 (CNPJ, razão social, nome fantasia, telefone, endereço, mensagem (não encontrado, indisponível, desativado), ação buscar). AR=3 (Contato cadastral da SEDUR (CNPJ), Trilha de auditoria, Chamada de integração). Para demonstrar: features.cnpj_lookup ligado, integrations.sedur_contato configurada e features.portal_servicos ligado. Recontagem 16/10/2026: alterada (linha 112 da contagem de 01/10/2026: \"Empresas - consultar CNPJ na base de contatos da SEDUR\", CE Média 4 PF, TD 21, AR 1). Motivo: Tipo CE→SE, TD 21→7, AR 1→3: o único provedor ligado (SedurCnpjLookup) só devolve CNPJ, razão social, nome fantasia, telefone e endereço (os demais campos vêm sempre nulos); cada consulta grava a trilha 'consulta-cnpj' e a Chamada de integração (atualiza ALI)."
+    },
+    {
+     "nome": "Empresas - definir CNAE principal",
+     "tipo": "EE",
+     "td": 4,
+     "ar": 3,
+     "iaet": "I",
+     "obs": "Prova: Rota PUT /portal/empresas/{company}/cnae-principal (Portal\\CompanyCnaeController@updatePrimary, auth:web, policy manageCnaes). Tela: portal/empresas/detalhe. O requerente escolhe um CNAE ativo (UpdatePrimaryCnaeRequest); CompanyCnaeService::setPrimary demove o principal anterior, grava o novo no subgrupo CNAE da empresa e audita antes e depois. Teste: tests/Feature/Companies/PrimaryCnaeTest.php::test_endpoint_define_principal (também test_troca_de_principal_demove_o_antigo e test_cnae_inativo_e_rejeitado). Processo elementar independente: menor unidade com significado para o requerente; completa por si (escolha até o principal gravado); deixa o negócio consistente (um único principal). Unicidade conferida com a definição dos secundários: DER diferentes (um CNAE contra um conjunto), lógica diferente (troca e demoção do anterior contra sincronização do conjunto excluindo o principal) e requisitos distintos (HU-153 e HU-154): processos distintos (§5.5.2.2). Classificação: mantém Empresa: EE. TD=4 (empresa, CNAE principal, mensagem, ação salvar). AR=3 (Empresa, CNAE, Trilha de auditoria). Para demonstrar: features.portal_servicos ligado (parâmetro que liga os serviços do portal, desligado por padrão; commit df19754c de 16/10/2026). Recontagem 16/10/2026: mantida (linha 40 da contagem de 01/10/2026)."
+    },
+    {
+     "nome": "Empresas - definir CNAEs secundários",
+     "tipo": "EE",
+     "td": 4,
+     "ar": 3,
+     "iaet": "I",
+     "obs": "Prova: Rota PUT /portal/empresas/{company}/cnaes-secundarios (Portal\\CompanyCnaeController@updateSecondaries, auth:web, policy manageCnaes). Tela: portal/empresas/detalhe. O requerente marca o conjunto de secundários (UpdateSecondaryCnaesRequest: só ativos, sem repetição); CompanyCnaeService::syncSecondaries sincroniza exatamente o conjunto, preserva o principal, recusa CNAE igual ao principal e audita antes e depois. Teste: tests/Feature/Companies/SecondaryCnaesTest.php::test_endpoint_sincroniza_secundarios (também test_secundario_igual_ao_principal_e_rejeitado e test_sincronizacao_e_auditada_com_antes_e_depois). Processo elementar independente: menor unidade com significado para o requerente; completa por si (seleção até o conjunto gravado); deixa o negócio consistente (sem repetição nem conflito com o principal); distinto da definição do principal (ver unicidade naquela função). A busca de CNAE do seletor (GET /portal/cnaes) é apoio desta função. Classificação: mantém Empresa: EE. TD=4 (empresa, CNAEs secundários, mensagem, ação salvar). AR=3 (Empresa, CNAE, Trilha de auditoria). Para demonstrar: features.portal_servicos ligado (parâmetro que liga os serviços do portal, desligado por padrão; commit df19754c de 16/10/2026). Recontagem 16/10/2026: mantida (linha 41 da contagem de 01/10/2026)."
+    },
+    {
+     "nome": "Empresas - encerrar vínculo do usuário",
+     "tipo": "EE",
+     "td": 4,
+     "ar": 3,
+     "iaet": "I",
+     "obs": "Prova: Rota DELETE /portal/empresas/{company}/vinculo (Portal\\CompanyLinkController@destroy, auth:web, policy endLink). Tela: portal/empresas/detalhe. O requerente, ou o procurador em nome do outorgante, encerra o próprio vínculo com motivo opcional; EndCompanyLinkRequest bloqueia o último responsável ativo; o sistema grava data e motivo no vínculo, lê a Empresa e grava o evento 'encerramento-vinculo' na trilha. Teste: tests/Feature/Companies/EndCompanyLinkTest.php::test_usuario_encerra_o_proprio_vinculo_com_motivo (também test_ultimo_responsavel_ativo_e_bloqueado e test_encerramento_e_auditado). Processo elementar independente: menor unidade com significado para o requerente; completa por si (pedido até o vínculo encerrado); deixa o negócio consistente (empresa nunca fica sem responsável); lógica única. Classificação: mantém Vínculo: EE. TD=4 (empresa, motivo do encerramento, mensagem, ação encerrar). AR=3 (Vínculo de usuário com empresa, Empresa, Trilha de auditoria). Para demonstrar: features.portal_servicos ligado (parâmetro que liga os serviços do portal, desligado por padrão; commit df19754c de 16/10/2026). Recontagem 16/10/2026: alterada (linha 80 da contagem de 01/10/2026: \"Empresas - encerrar vínculo do usuário\", EE Média 4 PF, TD 4, AR 4). Motivo: AR 4→3: Procuração saiu; a leitura da procuração em representação é resolvida de forma transversal (middleware ResolveRepresentation) para todas as funções do portal e não foi contada em nenhuma outra. PF inalterado."
+    }
+   ]
+  },
+  {
+   "grupo": "Procurações e representação",
+   "funcoes": [
+    {
+     "nome": "Dados - Procuração",
+     "tipo": "ALI",
+     "td": 6,
+     "ar": 1,
+     "iaet": "I",
+     "obs": "Prova: Model app/Models/Procuration.php; migration database/migrations/2026_06_10_023838_create_procurations_table.php. Mantido por Procurações - incluir e revogar (Portal\\ProcurationController), auditado por HasAuditoria; lido na representação em nome de terceiro (RepresentationController e App\\Support\\Representation\\CurrentRepresentation). Teste: tests/Feature/Procuration/LinkAttorneyTest.php::test_vinculo_de_procurador_criado_com_sucesso. Arquivo lógico: outorga de poderes de um usuário a outro, com vigência e revogação, retida mesmo depois de revogada ou vencida: entidade associativa com atributos e retenção própria, contada como arquivo lógico (CPM Parte 3, Cap. 2, situação 3); não é dado de código. TD=6 (outorgante, procurador, início, validade, revogada em, revogada por). TR=1 (Procuração). Recontagem 16/10/2026: mantida (linha 93 da contagem de 01/10/2026)."
+    },
+    {
+     "nome": "Procurações - consultar",
+     "tipo": "CE",
+     "td": 7,
+     "ar": 2,
+     "iaet": "I",
+     "obs": "Prova: Rota GET /portal/procuracoes (Portal\\ProcurationController@index, auth:web). Tela: portal/procuracoes/index. O requerente vê as procurações que outorgou e as que recebeu; lê Procuração e Usuário (outorgante ou procurador); não grava. Teste: tests/Feature/Procuration/LinkAttorneyTest.php::test_pagina_de_procuracoes_renderiza. Processo elementar independente: menor unidade com significado para o requerente; completa por si (abre e recebe as duas listas); deixa o negócio consistente (nada é gravado); lógica única. Classificação: só recupera e mostra (a situação ativa vem do próprio registro): CE. TD=7 (nome, e-mail, início, validade, revogada em, situação ativa, ação abrir). AR=2 (Procuração, Usuário). Para demonstrar: features.portal_servicos ligado (parâmetro que liga os serviços do portal, desligado por padrão; commit df19754c de 16/10/2026). Recontagem 16/10/2026: mantida (linha 94 da contagem de 01/10/2026)."
+    },
+    {
+     "nome": "Procurações - incluir",
+     "tipo": "EE",
+     "td": 4,
+     "ar": 3,
+     "iaet": "I",
+     "obs": "Prova: Rota POST /portal/procuracoes (Portal\\ProcurationController@store, auth:web). Tela: portal/procuracoes/index. O requerente informa o e-mail de uma conta existente e a validade opcional; StoreProcurationRequest lê o Usuário e a Procuração para barrar auto-procuração e procuração ativa duplicada; o sistema grava a Procuração e a auditoria. Teste: tests/Feature/Procuration/LinkAttorneyTest.php::test_vinculo_de_procurador_criado_com_sucesso (também test_vinculo_gera_auditoria e test_duplicidade_ativa_bloqueada). Processo elementar independente: menor unidade com significado para o requerente; completa por si (informa e recebe confirmação); deixa o negócio consistente (sem auto-procuração nem duplicidade); lógica única. Classificação: mantém Procuração: EE. TD=4 (e-mail do procurador, validade, mensagem, ação vincular). AR=3 (Usuário, Procuração, Trilha de auditoria). Para demonstrar: features.portal_servicos ligado (parâmetro que liga os serviços do portal, desligado por padrão; commit df19754c de 16/10/2026). Recontagem 16/10/2026: mantida (linha 95 da contagem de 01/10/2026)."
+    },
+    {
+     "nome": "Procurações - revogar",
+     "tipo": "EE",
+     "td": 3,
+     "ar": 2,
+     "iaet": "I",
+     "obs": "Prova: Rota DELETE /portal/procuracoes/{procuration} (Portal\\ProcurationController@destroy, auth:web, policy delete). Tela: portal/procuracoes/index. O outorgante revoga; o sistema grava data e autor da revogação na Procuração (sem exclusão) e a auditoria; a representação cessa de imediato. Teste: tests/Feature/Procuration/RevokeAttorneyTest.php::test_revogacao_tem_efeito_imediato (também test_revogacao_gera_auditoria e test_terceiro_nao_revoga_procuracao_alheia). Processo elementar independente: menor unidade com significado para o requerente; completa por si (confirma e recebe aviso); deixa o negócio consistente (vínculo encerrado com histórico); lógica única (só o outorgante revoga). Classificação: mantém Procuração: EE. TD=3 (procuração selecionada, mensagem, ação revogar). AR=2 (Procuração, Trilha de auditoria). Para demonstrar: features.portal_servicos ligado (parâmetro que liga os serviços do portal, desligado por padrão; commit df19754c de 16/10/2026). Recontagem 16/10/2026: mantida (linha 96 da contagem de 01/10/2026)."
+    },
+    {
+     "nome": "Representação - iniciar atuação em nome de terceiro",
+     "tipo": "EE",
+     "td": 4,
+     "ar": 3,
+     "iaet": "I",
+     "obs": "Prova: Rota POST /portal/representacao (Portal\\RepresentationController@store, auth:web). O procurador escolhe uma procuração ativa recebida; o sistema lê a Procuração e o outorgante (Usuário), passa a atuar em nome dele e grava 'representacao-iniciada' na trilha. Teste: tests/Feature/Procuration/RevokeAttorneyTest.php::test_procurador_ativa_representacao (também test_procuracao_expirada_nao_ativa_representacao e test_acoes_durante_representacao_carregam_em_nome_de). Processo elementar independente: menor unidade com significado para o procurador; completa por si (escolha à atuação ativa); deixa o negócio consistente (só procuração ativa e própria); lógica única. Não é controle técnico de sessão: muda em nome de quem todas as ações seguintes são feitas e auditadas. Classificação: intenção primária é alterar o comportamento do sistema: EE (§5.5.3). TD=4 (procuração, nome do outorgante, mensagem, ação atuar). AR=3 (Procuração, Usuário, Trilha de auditoria). Para demonstrar: features.portal_servicos ligado (parâmetro que liga os serviços do portal, desligado por padrão; commit df19754c de 16/10/2026). Recontagem 16/10/2026: mantida (linha 104 da contagem de 01/10/2026)."
+    },
+    {
+     "nome": "Representação - encerrar atuação em nome de terceiro",
+     "tipo": "EE",
+     "td": 2,
+     "ar": 1,
+     "iaet": "I",
+     "obs": "Prova: Rota DELETE /portal/representacao (Portal\\RepresentationController@destroy, auth:web; continua disponível com os serviços do portal desligados). O procurador encerra a atuação; o sistema volta a agir em nome próprio e grava 'representacao-encerrada' na trilha. Teste: tests/Feature/Procuration/RevokeAttorneyTest.php::test_attorney_encerra_a_propria_representacao. Processo elementar independente: menor unidade com significado para o procurador; completa por si (do clique ao fim da atuação); deixa o negócio consistente (sem atuação residual em nome de terceiro); lógica única. Diferente de sair do sistema: não encerra a sessão, encerra um papel de negócio com efeito legal e registro próprio na trilha. Classificação: altera o comportamento do sistema: EE. TD=2 (mensagem, ação encerrar). AR=1 (Trilha de auditoria). Recontagem 16/10/2026: mantida (linha 105 da contagem de 01/10/2026)."
+    }
+   ]
+  },
+  {
+   "grupo": "Solicitação de viabilidade no portal",
+   "funcoes": [
+    {
+     "nome": "Dados - Solicitação de viabilidade",
+     "tipo": "ALI",
+     "td": 102,
+     "ar": 9,
+     "iaet": "I",
+     "obs": "Prova: Model ViabilityRequest e subgrupos ViabilityRequestTransition, AnalysisStatusTransition, ExpressoQueda, ViabilityRequestEtapa, ViabilityRequestEvento, ViabilityRequestDocument e ServiceDeclarationAcceptance; migrations 2026_06_14_104830_create_viability_requests_table, 2026_06_14_104832 (CNAEs), 2026_06_14_104833 (documentos), 2026_06_14_104834 (tramitação), 2026_06_14_132810, 2026_06_14_163233, 2026_06_14_215042, 2026_06_15_000004 (quedas), 2026_07_14_100000, 2026_07_14_100100 (situação da análise), 2026_07_16_100000, 2026_08_28_105000, 2026_08_31_100000, 2026_08_31_110000, 2026_09_15_160000, 2026_09_18_110000, 2026_09_23_191745, 2026_09_26_174800, 2026_09_26_190000, 2026_09_28_165400, 2026_09_28_170600 (aceites) e, depois de 01/10/2026, 2026_10_02_120000, 2026_10_03_142733, 2026_10_03_185143, 2026_10_03_192332, 2026_10_05_100000 (etapas), 2026_10_14_120000, 2026_10_14_213851 (eventos), 2026_10_15_180101, 2026_10_15_185552 e 2026_10_15_192821 (requerente opcional, sem DER novo). Mantido por incluir, informar imóvel e atividades, anexar e remover documento, simular, protocolar, cancelar e renovar no portal, além das funções de análise, contingência e REGIN de outras áreas. Teste: tests/Feature/Solicitacao/ProtocolarSolicitacaoTest.php::test_protocola_gera_numero_unico; tests/Feature/Motor/ViabilityRequestEtapaTest.php::test_etapa_pertence_ao_processo_e_converte_enums; tests/Feature/Regin/ReginEventosTest.php::test_protocolar_grava_os_eventos_no_processo. Arquivo lógico: grupo lógico central do negócio, a solicitação de viabilidade. Teste de independência (Parte 3, Cap. 1; regra de dependência): documentos anexados (FK com cascadeOnDelete, só existem dentro da solicitação), aceites de declaração (associativa solicitação × declaração com atributos não-chave, cascadeOnDelete), etapas do motor (uma por processo e etapa, exibidas na ficha do expresso) e eventos da JUCEB (vários por processo, exibidos na caixa do setor) não têm significado sem a solicitação e por isso são subgrupos, não ALI próprios. A declaração de serviço em si (ServiceDeclaration) é texto quase estático carregado por seeder, sem manutenção na aplicação: dado de código, não conta. TD=102 (protocolo, situação, origem, tipo de serviço, empresa, requerente, criado por, área utilizada, inscrição imobiliária, tipo de imóvel, logradouro, número, complemento, bairro, CEP, referência, polígono do imóvel, latitude, longitude, fonte da localização, zona, fonte da zona, bairro oficial, código do logradouro (CODLOG), camadas incidentes, polígono do lote (endereçamento), lote consultado em, fonte do polígono do lote, categoria de uso do lote (SEMAP), padrão construtivo do lote (SEMAP), escritório virtual, área pública, acesso independente, deseja ser sede de escritório virtual, deseja ser abrigado em escritório virtual, confirma perda da condição de sede, simulação por CNAE, versões de regras da simulação, resultado da simulação, simulado em, prosseguiu apesar do resultado, motivo de contingência, referência externa, justificativa do parecer à JUCEB, dados declarados na origem (REGIN), protocolado em, cancelado em, motivo do cancelamento, cancelado por, prazo do BAP, BAP vinculado em, setor, analista, atribuído em, categoria de análise, em malha fina, etapa da análise, situação da análise, prazo da análise, conclusão encaminhada para, tempo de viabilidade em horas úteis, solicitação renovada, atendimento assistido, CNAE da solicitação, CNAE principal, intenção da atividade, situação anterior da tramitação, nova situação da tramitação, motivo da tramitação, rótulo público da tramitação, responsável pela tramitação, data da tramitação, situação anterior da análise, nova situação da análise, motivo da mudança da análise, responsável pela mudança da análise, data da mudança da análise, CNAE da queda do expresso, tipo de gatilho da queda, dimensão da queda, motivo da queda, data da queda, etapa do motor, serviço de terceiro da etapa, situação da etapa, motivo da etapa, tentativas da etapa, próxima tentativa em, etapa esgotada em, código do evento JUCEB, nome do evento JUCEB, requisito documental do anexo, arquivo anexado, nome original do arquivo, tipo do arquivo, tamanho do arquivo, anexo enviado por, anexo enviado em, declaração aceita, versão da declaração aceita, aceite feito por, aceito em). TR=9 (dados da solicitação, CNAEs da solicitação, histórico de tramitação, histórico da situação da análise, quedas do fluxo expresso, etapas do motor, eventos da JUCEB, documentos anexados, aceites de declaração de serviço). Recontagem 16/10/2026: alterada (linha 506 da contagem de 01/10/2026: \"Dados - Solicitação de viabilidade\", ALI Alta 15 PF, TD 55, AR 5). Motivo: TD 55→102 e TR 5→9. Entram os atributos gravados depois de 01/10/2026 (polígono e fonte do lote, data da consulta do lote, fonte da zona, categoria de uso e padrão construtivo da SEMAP, dados declarados na origem, tempo em horas úteis, conclusão encaminhada para, justificativa do parecer à JUCEB) e os DER dos subgrupos que a contagem anterior não listava (tramitação, situação da análise, quedas do expresso). Ganha quatro subgrupos: etapas do motor (2026_10_05) e eventos da JUCEB (2026_10_14), novos, e documentos anexados e aceites de declaração, que deixam de ser ALI próprios pelo teste de independência. Complexidade continua Alta (15 PF)."
+    },
+    {
+     "nome": "Solicitações - consultar minhas solicitações",
+     "tipo": "CE",
+     "td": 11,
+     "ar": 3,
+     "iaet": "I",
+     "obs": "Prova: Rota GET /portal/solicitacoes (auth:web, verified, lgpd.accepted). Tela: portal/solicitacoes/index. O requerente busca, filtra por estado e ordena as próprias solicitações (ou as do representado). Lê Solicitação, Empresa e Parâmetro (estados canceláveis); o nome do tipo de serviço exibido vem de dado de código; não grava nem audita. Teste: tests/Feature/Solicitacao/CriarSolicitacaoTest.php::test_minhas_solicitacoes_lista_somente_do_dono; tests/Feature/Solicitacao/FiltroStatusSolicitacoesTest.php::test_filtra_pelo_estado_informado. Processo elementar independente: menor unidade com significado para o requerente; completa por si (busca até a lista); deixa o negócio consistente (nada muda); lógica única (lista só do dono efetivo, com ações permitidas pelo estado). O filtro por estado é filtro da mesma lista, não processo separado. Classificação: recupera e mostra sem cálculo nem gravação, portanto CE (§5.5.3). TD=11 (protocolo, situação, tipo de serviço, razão social, CNPJ, data de criação, indicador editável, indicador cancelável, busca por protocolo/razão social, estado filtrado, ação consultar). AR=3 (Solicitação de viabilidade, Empresa, Parâmetro). Recontagem 16/10/2026: alterada (linha 108 da contagem de 01/10/2026: \"Solicitações - consultar minhas solicitações\", CE Alta 6 PF, TD 10, AR 4). Motivo: Catálogo: Tipo de serviço retirado do AR (dado de código). AR 4→3; PF 6→4 (CE FTR 3, DER 11 = Média)."
+    },
+    {
+     "nome": "Solicitações - incluir",
+     "tipo": "EE",
+     "td": 7,
+     "ar": 5,
+     "iaet": "I",
+     "obs": "Prova: Rota POST /portal/solicitacoes (auth:web, portal.solicitacao). Tela: portal/solicitacoes/wizard. O requerente escolhe tipo de serviço ativo e empresa com vínculo ativo. DuplicateRequestDetector avisa reincidência no CNPJ (janela parametrizada) sem bloquear. Grava Solicitação em rascunho e auditoria. Desde 15/10/2026 o interruptor portal.solicitacao (config features.portal_solicitacao, variável de ambiente) pode tirar a criação do ar com aviso; não é Parâmetro nem função nova. Teste: tests/Feature/Solicitacao/CriarSolicitacaoTest.php::test_cidadao_cria_rascunho; tests/Feature/Portal/PortalSolicitacaoInterruptorTest.php::test_desligado_bloqueia_criacao_de_solicitacao. Registros automáticos contados como FTR (premissa P4): Trilha de auditoria: AuditService::log ou HasAuditoria do model no mesmo request. Processo elementar independente: menor unidade com significado para o requerente; completa por si (escolha até o rascunho criado); deixa o negócio consistente (rascunho do dono efetivo, auditado); lógica única (validação de vínculo e alerta de reincidência). A tela GET /portal/solicitacoes/nova só abre o formulário e não é função própria. Classificação: grava a solicitação, EE. TD=7 (tipo de serviço, empresa, mensagem de sucesso/erro, protocolo do processo anterior (alerta), situação do processo anterior, data do processo anterior, ação criar). AR=5 (Solicitação de viabilidade, Empresa, Vínculo de usuário com empresa, Parâmetro, Trilha de auditoria). Recontagem 16/10/2026: alterada (linha 109 da contagem de 01/10/2026: \"Solicitações - incluir\", EE Alta 6 PF, TD 7, AR 6). Motivo: Catálogo: Tipo de serviço retirado do AR (dado de código). AR 6→5; PF inalterado (Alta)."
+    },
+    {
+     "nome": "Solicitação - informar dados do imóvel",
+     "tipo": "EE",
+     "td": 23,
+     "ar": 7,
+     "iaet": "I",
+     "obs": "Prova: Rota PUT /portal/solicitacoes/{solicitacao}/imovel (auth:web, portal.solicitacao, policy update). Tela: portal/solicitacoes/wizard. O cidadão desenha o polígono e informa o endereço; SolicitacaoImovelController identifica o território pelo centroide (TerritoryService), materializa zona, bairro e CODLOG (TerritorioProcessoService), calcula a área do polígono e a divergência pela tolerância do parâmetro solicitacao.area_poligono.tolerancia_percentual, grava na solicitação, invalida a simulação e audita a divergência. Teste: tests/Feature/Solicitacao/InformarImovelTest.php::test_dono_informa_imovel. Registros automáticos contados como FTR (premissa P4): Trilha de auditoria: AuditService::log ou HasAuditoria do model no mesmo request; Chamada de integração: listener síncrono RegistrarChamadaIntegracao grava cada chamada HTTP de saída (IntegrationCallRecorder). TerritoryService::identify consulta a zona no GeoServer (GeoServerWfsZonaClient) e a classe viária pelo CODLOG (GeoServerClassificacaoViariaClient). Processo elementar independente: menor unidade com significado para o requerente; completa por si (preenche o passo do imóvel e salva); deixa a solicitação localizada no território; lógica única de enquadramento territorial do rascunho. Classificação: intenção primária é manter a solicitação, EE. TD=23 (polígono, área utilizada, logradouro, número, complemento, bairro, CEP, ponto de referência, inscrição imobiliária, escritório virtual, quer ser sede, quer ser abrigado, área pública, acesso independente, território: bairro, via, zona, lote, restrições, área do polígono e divergência, mensagem, ação salvar). AR=7 (Solicitação de viabilidade, Camada geográfica, Zonas urbanísticas do GeoServer da SEDUR, Classificação viária dos logradouros do GeoServer da SEDUR, Parâmetro, Trilha de auditoria, Chamada de integração). Para demonstrar: zona remota só com features.geoserver_zona ligado e GeoServer da SEDUR configurado. Recontagem 16/10/2026: alterada (linha 37 da contagem de 01/10/2026: \"Solicitação - informar dados do imóvel\", EE Alta 6 PF, TD 23, AR 4). Motivo: AR 4→7: Classificação viária do GeoServer (TerritoryService::comClasseViaria), Trilha de auditoria (TerritoryService::identify e divergência de área) e Chamada de integração (consultas WFS ao GeoServer). PF inalterado (Alta)."
+    },
+    {
+     "nome": "Solicitação - informar atividades",
+     "tipo": "EE",
+     "td": 7,
+     "ar": 6,
+     "iaet": "I",
+     "obs": "Prova: Rota PUT /portal/solicitacoes/{solicitacao}/atividades (auth:web, portal.solicitacao, policy update). Tela: portal/solicitacoes/wizard. O requerente informa as atividades. UpdateSolicitacaoAtividadesRequest valida CNAE ativo, limite parametrizado (solicitacao.cnaes_complementares.max), atividades permitidas em escritório virtual e bloqueio de inscrição de sede; SolicitacaoAtividadeController grava os CNAEs com intenção (alteração de atividade), a confirmação de perda de sede e a pergunta vinculada, marca a simulação como desatualizada e audita antes/depois. Teste: tests/Feature/EscritorioVirtual/AtividadesPortalEscritorioVirtualTest.php::test_marcacao_de_exclusao_e_persistida_na_intencao_do_pivot. Registros automáticos contados como FTR (premissa P4): Trilha de auditoria: AuditService::log ou HasAuditoria do model no mesmo request. Processo elementar independente: menor unidade com significado para o requerente; completa por si (escolhe as atividades e recebe a confirmação); deixa o negócio consistente (conjunto exato de CNAEs e simulação invalidada); lógica única (intenção por CNAE e regras de escritório virtual). Classificação: mantém a solicitação, EE. TD=7 (CNAE principal, CNAEs complementares, atividades a excluir, confirmação de perda da condição de sede, quer ser sede de escritório virtual, mensagem, ação salvar). AR=6 (Solicitação de viabilidade, CNAE, Atividade permitida em escritório virtual, Bloqueio de inscrição de escritório virtual, Parâmetro, Trilha de auditoria). Recontagem 16/10/2026: alterada (linha 83 da contagem de 01/10/2026: \"Solicitação - informar atividades\", EE Alta 6 PF, TD 7, AR 5). Motivo: AR 5→6: entram Parâmetro (limite de CNAEs complementares) e Trilha de auditoria; sai Tipo de serviço (revisão do catálogo, dado de código; o tipo só decide se há intenção por CNAE). PF inalterado (Alta)."
+    },
+    {
+     "nome": "Solicitação - anexar documento",
+     "tipo": "EE",
+     "td": 7,
+     "ar": 4,
+     "iaet": "I",
+     "obs": "Prova: Rota POST /portal/solicitacoes/{solicitacao}/documentos (auth:web, portal.solicitacao, policy update). Tela: portal/solicitacoes/wizard (passo de documentos). O cidadão anexa um arquivo a um requisito; StoreSolicitacaoDocumentoRequest valida tipo e tamanho (parâmetro solicitacao.anexos.max_mb) e o requisito; SolicitacaoDocumentoController substitui o anexo anterior do mesmo requisito, grava o documento com hash e audita. Teste: tests/Feature/Solicitacao/AnexarDocumentoTest.php::test_anexa_documento. Registros automáticos contados como FTR (premissa P4): Trilha de auditoria: AuditService::log ou HasAuditoria do model no mesmo request. Processo elementar independente: menor unidade com significado para o requerente; completa por si (escolhe e envia); deixa a solicitação com o requisito atendido; lógica única de anexação com substituição por requisito. Classificação: mantém a solicitação (subgrupo documentos anexados), EE. TD=7 (arquivo, requisito documental, nome, tipo, tamanho, mensagem, ação anexar). AR=4 (Solicitação de viabilidade, Requisito documental, Parâmetro, Trilha de auditoria). Recontagem 16/10/2026: alterada (linha 99 da contagem de 01/10/2026: \"Solicitação - anexar documento\", EE Alta 6 PF, TD 7, AR 3). Motivo: AR 3→4: o Documento anexado deixa de ser ALI próprio e passa a subgrupo da Solicitação; entram Parâmetro (tamanho máximo do anexo) e Trilha de auditoria. PF inalterado (Alta)."
+    },
+    {
+     "nome": "Solicitação - baixar documento anexo",
+     "tipo": "SE",
+     "td": 4,
+     "ar": 2,
+     "iaet": "I",
+     "obs": "Prova: Rota GET /portal/solicitacoes/{solicitacao}/documentos/{documento}/download (auth:web, policy view). Tela: portal/solicitacoes/wizard. O dono baixa o arquivo que anexou; o controller confere que o documento é da solicitação, grava a auditoria do download e entrega o arquivo armazenado. Teste: tests/Feature/Solicitacao/AnexarDocumentoTest.php::test_download_so_autenticado_e_dono. Registros automáticos contados como FTR (premissa P4): Trilha de auditoria: AuditService::log ou HasAuditoria do model no mesmo request. Processo elementar independente: menor unidade com significado para o requerente; completa por si (clica e recebe o arquivo); deixa o negócio consistente (download auditado); lógica única de entrega do anexo ao dono. Não é 'baixar arquivo já gerado' por consequência de outra função: o arquivo é dado do requerente recuperado a pedido. Classificação: apresenta informação e atualiza um ALI (Trilha de auditoria), portanto SE e não CE (§5.5.3). TD=4 (documento, nome, tipo, ação baixar). AR=2 (Solicitação de viabilidade, Trilha de auditoria). Recontagem 16/10/2026: alterada (linha 100 da contagem de 01/10/2026: \"Solicitação - baixar documento anexo\", CE Baixa 3 PF, TD 4, AR 2). Motivo: CE→SE e AR 2→2 com outros arquivos: o download grava a Trilha de auditoria (AuditService::log 'documento-download'), o que pela regra do §5.5.3 impede CE; o Documento anexado passa a subgrupo da Solicitação. PF 3→4."
+    },
+    {
+     "nome": "Solicitação - remover documento anexo",
+     "tipo": "EE",
+     "td": 3,
+     "ar": 2,
+     "iaet": "I",
+     "obs": "Prova: Rota DELETE /portal/solicitacoes/{solicitacao}/documentos/{documento} (auth:web, portal.solicitacao, policy update). Tela: portal/solicitacoes/wizard. O dono remove o documento antes do protocolo; o controller apaga arquivo e registro e audita. Teste: tests/Feature/Solicitacao/AnexarDocumentoTest.php::test_substituir_e_remover_antes_do_protocolo. Registros automáticos contados como FTR (premissa P4): Trilha de auditoria: AuditService::log ou HasAuditoria do model no mesmo request. Processo elementar independente: menor unidade com significado para o requerente; completa por si (remove); deixa o requisito novamente pendente; lógica única de exclusão antes do protocolo. Classificação: mantém a solicitação, EE. TD=3 (documento, mensagem, ação remover). AR=2 (Solicitação de viabilidade, Trilha de auditoria). Recontagem 16/10/2026: mantida (linha 101 da contagem de 01/10/2026)."
+    },
+    {
+     "nome": "Solicitação - simular viabilidade",
+     "tipo": "SE",
+     "td": 12,
+     "ar": 15,
+     "iaet": "I",
+     "obs": "Prova: Rota POST /portal/solicitacoes/{solicitacao}/simular (auth:web, portal.solicitacao, policy update). Tela: portal/solicitacoes/wizard. O requerente simula. SimulacaoSolicitacaoService chama SolicitacaoViabilityResolver, que roda por CNAE os motores reais (enquadramento LOUOS pela planilha e Quadros 10/11A, risco, território do ponto com a zona da maior porção do lote e o CODLOG), com a categoria da empresa; grava o snapshot na solicitação e audita. Resultado: tendência orientativa que não bloqueia o protocolo. Teste: tests/Feature/Solicitacao/SimulacaoSolicitacaoTest.php::test_simula_por_cnae_propagando_veredito. Registros automáticos contados como FTR (premissa P4): Trilha de auditoria: AuditService::log ou HasAuditoria do model no mesmo request; Chamada de integração: listener síncrono RegistrarChamadaIntegracao grava cada chamada HTTP de saída (IntegrationCallRecorder). A classe viária vem de TerritoryService::comCodLogOficial (GeoServerClassificacaoViariaClient). Processo elementar independente: menor unidade com significado para o requerente; completa por si (aciona e recebe a tendência por CNAE); deixa o negócio consistente (snapshot com versões de regras); lógica única (consolidação orientativa sem mudar o status). Classificação: a intenção principal é mostrar resultado calculado pelos motores; a gravação do snapshot é acessória, portanto SE. TD=12 (resultado consolidado, CNAE, atividade principal, tendência por CNAE, fundamentação, motivo do veredito pendente, pergunta sem resposta, zona, versões de regras, simulado em, mensagem, ação simular). AR=15 (Solicitação de viabilidade, Empresa, CNAE, Planilha de enquadramento, Permissão de uso por zona (Quadro 10), Condição de instalação por via (Quadro 11A), Classificação de risco municipal, Gatilho de risco, Camada geográfica, Zonas urbanísticas do GeoServer da SEDUR, Classificação viária dos logradouros do GeoServer da SEDUR, Regra territorial, Texto decisório, Trilha de auditoria, Chamada de integração). Recontagem (catálogo): Versão de regras deixou de ser arquivo lógico próprio e é subgrupo de arquivo já listado no AR; AR ajustado. Recontagem 16/10/2026: alterada (linha 68 da contagem de 01/10/2026: \"Solicitação - simular viabilidade\", SE Alta 7 PF, TD 10, AR 9). Motivo: TD 10→12 e AR 9→16. Desde 02–07/10/2026 a simulação usa a zona da maior porção do lote, o CODLOG oficial com a classe viária do GeoServer e a categoria da empresa, e devolve o motivo do veredito pendente e a pergunta sem resposta. Entram Empresa, Planilha de enquadramento, Zonas e Classificação viária do GeoServer, Regra territorial (observação do Quadro 10 em LouosEnquadramentoService via TerritorialRuleService::observacaoQuadro10Permite), Texto decisório e Chamada de integração. PF inalterado (Alta). Catálogo: retirado Versão de regras (subgrupo de outro arquivo)."
+    },
+    {
+     "nome": "Solicitação - protocolar",
+     "tipo": "EE",
+     "td": 5,
+     "ar": 19,
+     "iaet": "I",
+     "obs": "Prova: Rota POST /portal/solicitacoes/{solicitacao}/protocolar (auth:web, portal.solicitacao, policy protocol). Tela: portal/solicitacoes/wizard (revisão). ProtocolarSolicitacaoService confere dados mínimos e documentos exigidos, gera o número único, registra a ciência de prosseguir com simulação desfavorável, transiciona rascunho→protocolada (tramitação e auditoria) e completa o território fora da transação: ponto pela inscrição no Cadastro imobiliário da SEFAZ, zona/bairro/CODLOG, logradouro tributário, polígono do lote e zona da maior porção. Teste: tests/Feature/Solicitacao/ProtocolarSolicitacaoTest.php::test_protocola_gera_numero_unico; tests/Feature/Geo/PoligonoEnderecamentoProtocoloTest.php::test_ca_pe_01_um_poligono_e_gravado_com_a_data_da_consulta. Registros automáticos contados como FTR (premissa P4): Trilha de auditoria: AuditService::log ou HasAuditoria do model no mesmo request; Chamada de integração: listener síncrono RegistrarChamadaIntegracao grava cada chamada HTTP de saída (IntegrationCallRecorder). Processo elementar independente: menor unidade com significado para o requerente; completa por si (revisa e protocola); deixa a solicitação protocolada e encaminhada à decisão; lógica única de validação, numeração e materialização do território. Decisão do fluxo expresso: o evento SolicitacaoProtocolada aciona o listener AvaliarFluxoExpresso, que enfileira DecidirFluxoExpressoJob; o job busca o lote pelo ponto (aplicarPorPonto, 14/10/2026), aguarda o Cadastro imobiliário se estiver fora do ar e chama FluxoExpressoService::decide. Não há nova entrada de dados nem ação do usuário: é processamento consequente do protocolo, executado em fila só por resiliência (Parte 1 §5.5.2: efeito automático de outra EE não é processo elementar próprio), por isso não é contado à parte. A mesma lógica atende o protocolo vindo do REGIN (função \"REGIN - receber declaração e abrir processo\"). Classificação: mantém a solicitação, EE. TD=5 (ciência para prosseguir com simulação desfavorável, número do protocolo, pendências impeditivas, mensagem, ação protocolar). AR=19 (Solicitação de viabilidade, Requisito documental, Cadastro imobiliário da SEFAZ, Endereços geocodificados do OpenStreetMap, Camada geográfica, Zonas urbanísticas do GeoServer da SEDUR, Classificação viária dos logradouros do GeoServer da SEDUR, Lotes do endereçamento do GeoServer da SEDUR, Lotes por inscrição do SEMAP, Texto decisório, Trilha de auditoria, Chamada de integração, Decisão de viabilidade, Planilha de enquadramento, Permissão de uso por zona (Quadro 10), Condição de instalação por via (Quadro 11A), Regra territorial, Poligonais territoriais do GeoServer da SEDUR, Bloqueio de inscrição de escritório virtual). Recontagem (consolidação): a decisão do fluxo expresso disparada pelo protocolo faz parte deste processo elementar (não é contada à parte), então os arquivos que ela lê e grava entram no AR: FluxoExpressoService grava a Decisão de viabilidade e lê enquadramento, Quadros 10 e 11A, regras territoriais com as poligonais do GeoServer (TerritorialRuleService::avaliar via GeoServerWfsCamadaClient) e o bloqueio de inscrição de escritório virtual. Recontagem 16/10/2026: alterada (linha 71 da contagem de 01/10/2026: \"Solicitação - protocolar\", EE Alta 6 PF, TD 6, AR 5). Motivo: TD 6→5 (a data do protocolo não volta na resposta) e AR 5→12. O Documento anexado passa a subgrupo da Solicitação. Entram as fontes da materialização do território, que desde 02–14/10/2026 corre no protocolo: Endereços do OpenStreetMap (LocalizacaoInscricaoService geocodifica quando o cadastro traz endereço sem coordenada), Zonas e Classificação viária do GeoServer (materializar e registrarClasseViaria), Lotes do endereçamento do GeoServer (PoligonoEnderecamentoService, por CODLOG, número e complemento), Lotes por inscrição do SEMAP (SemapLoteClient, sem polígono no endereçamento), Texto decisório (ZonaProcessoService) e os registros automáticos Trilha de auditoria e Chamada de integração. PF inalterado (Alta). Consolidação: incluídos no AR os arquivos lidos e gravados pela decisão expressa consequente."
+    },
+    {
+     "nome": "Solicitação - cancelar",
+     "tipo": "EE",
+     "td": 4,
+     "ar": 3,
+     "iaet": "I",
+     "obs": "Prova: Rota DELETE /portal/solicitacoes/{solicitacao} (auth:web, policy cancel). Tela: portal/solicitacoes/index. O requerente cancela com motivo obrigatório se o estado estiver entre os canceláveis (parâmetro solicitacao.cancelamento.estados_cancelaveis). CancelarSolicitacaoService grava a solicitação cancelada, a transição na tramitação e a auditoria; bloqueio é auditado. Teste: tests/Feature/Solicitacao/CancelarSolicitacaoTest.php::test_cancela_protocolada_antes_da_decisao. Registros automáticos contados como FTR (premissa P4): Trilha de auditoria: AuditService::log ou HasAuditoria do model no mesmo request. Processo elementar independente: menor unidade com significado para o requerente; completa por si (motivo até a solicitação cancelada); deixa o negócio consistente (estado e histórico atualizados); lógica única (cancelamento restrito aos estados parametrizados). Não passa pelo interruptor portal.solicitacao. Classificação: mantém a solicitação, EE. TD=4 (solicitação (protocolo), motivo do cancelamento, mensagem, ação cancelar). AR=3 (Solicitação de viabilidade, Parâmetro, Trilha de auditoria). Recontagem 16/10/2026: mantida (linha 77 da contagem de 01/10/2026)."
+    },
+    {
+     "nome": "Solicitação - obter resumo para conferência",
+     "tipo": "SE",
+     "td": 5,
+     "ar": 5,
+     "iaet": "I",
+     "obs": "Prova: Rota GET /portal/solicitacoes/{solicitacao}/editar, prop adiada sugestoesResumo (SolicitacaoController@edit), carregada pelo card de conferência da etapa de revisão do assistente (components/solicitacao/etapa-revisao.tsx, WhenVisible). Ao carregar, ResumoSolicitacaoService::processar verifica o parâmetro features.ia_resumo e o provedor de texto ativo (AiFeatureGate) e dispara ResumoSolicitacaoJob, que resume os dados declarados (imóvel, área, CNAEs) e grava a Sugestão de texto por IA; a tela mostra as sugestões gravadas da solicitação. Teste: tests/Feature/Ai/ResumoSolicitacaoTest.php::test_revisao_do_wizard_dispara_resumo_ao_carregar_sugestao. Processo elementar independente: o requerente abre a revisão e recebe o resumo para conferir antes de protocolar (HU-179); completo e com saída própria, distinta de \"Ficha de análise - obter resumo do processo\" (outro ator, outros dados de entrada e outro tipo de sugestão). Classificação: a intenção primária é apresentar informação, com dado derivado gerado (resumo), SE (CPM Parte 1 §5.5.3). TD=5 (texto do resumo, fonte, situação da sugestão, mensagem de apoio à conferência, ação de abrir a revisão). AR=5 (Solicitação de viabilidade, CNAE, Sugestão de texto por IA, Provedor de inteligência artificial, Parâmetro). Para demonstrar: features.ia_resumo ligado e provedor de texto ativo. Recontagem 16/10/2026: nova (não constava da contagem de 01/10/2026). Incluída após o cruzamento com as HUs (HU-179): card da etapa de revisão do portal sem função correspondente."
+    }
+   ]
+  },
+  {
+   "grupo": "Acompanhamento do protocolo no portal",
+   "funcoes": [
+    {
+     "nome": "Solicitações - consultar andamento no portal",
+     "tipo": "SE",
+     "td": 26,
+     "ar": 7,
+     "iaet": "I",
+     "obs": "Prova: Rota GET /portal/solicitacoes/{solicitacao} (auth:web, policy view). Tela: portal/solicitacoes/protocolo. O requerente acompanha a solicitação. ConsultaProtocoloController lê solicitação e tramitação, empresa, serviço, CNAEs, decisão (parecer) e explicação por IA (prop sob demanda que grava a sugestão uma vez); TimelineSolicitacao monta a linha do tempo e o prazo estimado; gera o link público assinado e grava auditoria. Teste: tests/Feature/Solicitacao/ConsultarProtocoloTest.php::test_dono_consulta_protocolo; tests/Feature/Solicitacao/ConsultarProtocoloTest.php::test_prazo_estimado_parametrizado_com_ressalva. Registros automáticos contados como FTR (premissa P4): Trilha de auditoria: AuditService::log ou HasAuditoria do model no mesmo request. Processo elementar independente: menor unidade com significado para o requerente; completa por si (abrir e ver o andamento); deixa o negócio consistente (consulta auditada); lógica única (linha do tempo em linguagem simples, parecer e link público assinado). Classificação: monta dado derivado (linha do tempo, prazo, link assinado com validade) e grava a Trilha de auditoria, portanto SE e não CE. TD=26 (protocolo, situação (rótulo público), protocolado em, criada em, tipo de serviço, razão social, CNPJ, área utilizada, logradouro, número, bairro, referência, código do CNAE, descrição do CNAE, CNAE principal, etapa da linha do tempo, data da etapa, pendências do requerente, prazo estimado, ressalva do prazo, link público de consulta, parecer da decisão, explicação por IA, situação da explicação, data da explicação, ação abrir). AR=7 (Solicitação de viabilidade, Empresa, CNAE, Decisão de viabilidade, Sugestão de texto por IA, Parâmetro, Trilha de auditoria). Para demonstrar: explicação por IA só com features.ia_explicacao ligado e provedor de IA configurado. Recontagem 16/10/2026: alterada (linha 49 da contagem de 01/10/2026: \"Solicitações - consultar andamento no portal\", SE Alta 7 PF, TD 24, AR 7). Motivo: TD 24→26 e AR 7→7: entram prazo estimado e ressalva (Parâmetro solicitacao.prazo_estimado_dias); sai Tipo de serviço (revisão do catálogo, dado de código). A explicação por IA é gerada em fila (ExplicacaoCidadaoJob), sem Chamada de integração no request. PF inalterado (Alta)."
+    },
+    {
+     "nome": "Protocolo - consultar publicamente",
+     "tipo": "SE",
+     "td": 8,
+     "ar": 3,
+     "iaet": "I",
+     "obs": "Prova: Rota GET /portal/protocolo/{solicitacao} (pública, signed, throttle:consulta-protocolo). Tela: portal/solicitacoes/protocolo-publico. Qualquer pessoa com o link consulta. ConsultaProtocoloPublicaController lê a solicitação e a tramitação (linha do tempo pública) e o Parâmetro do prazo estimado; grava a auditoria com causer nulo. Payload mínimo, sem empresa, CNPJ, endereço ou CNAE. Teste: tests/Feature/Solicitacao/ConsultarProtocoloPublicoTest.php::test_nao_expoe_dados_sensiveis; tests/Feature/Solicitacao/ConsultarProtocoloPublicoTest.php::test_auditoria_publica_com_causer_null. Registros automáticos contados como FTR (premissa P4): Trilha de auditoria: AuditService::log ou HasAuditoria do model no mesmo request. Processo elementar independente: menor unidade com significado para o cidadão; completa por si (abre o link e recebe a situação); deixa o negócio consistente (consulta auditada); lógica única (payload mínimo LGPD e linha do tempo pública, sem login), diferente da consulta autenticada em DER e lógica. Classificação: apresenta informação e atualiza um ALI (Trilha de auditoria), além do prazo derivado do parâmetro, portanto SE. TD=8 (protocolo, situação pública, protocolado em, etapa, data da etapa, prazo estimado, ressalva do prazo, ação abrir link). AR=3 (Solicitação de viabilidade, Parâmetro, Trilha de auditoria). Recontagem 16/10/2026: alterada (linha 90 da contagem de 01/10/2026: \"Protocolo - consultar publicamente\", CE Média 4 PF, TD 8, AR 2). Motivo: CE→SE e AR 2→3: a consulta grava a Trilha de auditoria com causer nulo (teste test_auditoria_publica_com_causer_null), o que pela regra do §5.5.3 impede CE; a Trilha entra como FTR. PF 4→5."
+    },
+    {
+     "nome": "Protocolo - emitir comprovante",
+     "tipo": "SE",
+     "td": 16,
+     "ar": 4,
+     "iaet": "I",
+     "obs": "Prova: Rota GET /portal/solicitacoes/{solicitacao}/comprovante (auth:web, policy view). ComprovanteProtocoloService lê solicitação, empresa e CNAEs, calcula o código de verificação (HMAC do protocolo), formata a área, gera o PDF e audita; rascunho é recusado (422). Teste: tests/Feature/Solicitacao/ComprovanteProtocoloTest.php::test_dono_baixa_comprovante_pdf_da_solicitacao_protocolada. Registros automáticos contados como FTR (premissa P4): Trilha de auditoria: AuditService::log ou HasAuditoria do model no mesmo request. Processo elementar independente: menor unidade com significado para o requerente; completa por si (do pedido ao PDF entregue); deixa o negócio consistente (emissão auditada); lógica única (comprovante só de solicitação protocolada, com código de verificação determinístico). Classificação: gera documento com dado derivado (código de verificação) e grava a Trilha de auditoria, portanto SE. TD=16 (protocolo, protocolado em, emitido em, razão social, nome fantasia, CNPJ, endereço, bairro, CEP, código do CNAE, descrição do CNAE, CNAE principal, código de verificação, URL de verificação, mensagem de erro, ação emitir). AR=4 (Solicitação de viabilidade, Empresa, CNAE, Trilha de auditoria). Recontagem 16/10/2026: mantida (linha 115 da contagem de 01/10/2026)."
+    },
+    {
+     "nome": "Pendências - consultar no portal",
+     "tipo": "CE",
+     "td": 7,
+     "ar": 2,
+     "iaet": "I",
+     "obs": "Prova: Rota GET /portal/solicitacoes/{solicitacao}/pendencias (auth:web, policy view). Tela: portal/solicitacoes/pendencias. O requerente vê as pendências abertas. PendenciaRespostaController lê a solicitação e as pendências abertas; não grava nem audita. Teste: tests/Feature/Analise/PendenciaRespostaPortalTest.php::test_show_lista_a_pendencia_aberta. Processo elementar independente: menor unidade com significado para o requerente; completa por si (abre e recebe as pendências); deixa o negócio consistente (nada é gravado); lógica única (só pendências abertas da própria solicitação). Classificação: recupera e mostra sem cálculo nem gravação, CE. TD=7 (protocolo, situação, descrição da pendência, situação da pendência, prazo, aberta em, ação abrir). AR=2 (Solicitação de viabilidade, Pendência da análise). Recontagem 16/10/2026: mantida (linha 118 da contagem de 01/10/2026)."
+    },
+    {
+     "nome": "Pendências - responder",
+     "tipo": "EE",
+     "td": 3,
+     "ar": 5,
+     "iaet": "I",
+     "obs": "Prova: Rota POST /portal/solicitacoes/{solicitacao}/pendencias/{pendency}/responder (auth:web, policy view). Tela: portal/solicitacoes/pendencias. O requerente responde. PendenciaService grava a resposta na pendência, transiciona a solicitação de volta à análise (tramitação) e audita. Teste: tests/Feature/Analise/PendenciaRespostaPortalTest.php::test_dono_responde_e_reabre_a_analise. Registros automáticos contados como FTR (premissa P4): Trilha de auditoria: AuditService::log ou HasAuditoria do model no mesmo request; Comunicação ao requerente: NotificationDispatcher::deliver cria a linha em communications no mesmo request (listener síncrono NotificarRespostaPendencia). Processo elementar independente: menor unidade com significado para o requerente; completa por si (escreve e recebe confirmação); deixa o negócio consistente (análise reaberta); lógica única (pendência vinculada à solicitação e ainda aberta). Classificação: mantém pendência e solicitação, EE. TD=3 (resposta, mensagem, ação responder). AR=5 (Pendência da análise, Solicitação de viabilidade, Parâmetro, Trilha de auditoria, Comunicação ao requerente). Recontagem 16/10/2026: alterada (linha 119 da contagem de 01/10/2026: \"Pendências - responder\", EE Média 4 PF, TD 3, AR 3). Motivo: AR 3→5: o evento PendenciaRespondida aciona no mesmo request o listener síncrono NotificarRespostaPendencia, que lê o Parâmetro notificacoes.mapa_canais e cria a Comunicação ao requerente (canal in_app) para o analista; a notificação em si sai em fila e não é contada. PF inalterado (Média 4)."
+    }
+   ]
+  },
+  {
+   "grupo": "Consulta prévia de viabilidade",
+   "funcoes": [
+    {
+     "nome": "Dados - Consulta prévia de viabilidade realizada",
+     "tipo": "ALI",
+     "td": 8,
+     "ar": 1,
+     "iaet": "I",
+     "obs": "Prova: Model ViabilityQuery, migration 2026_06_14_080224_create_viability_queries_table (sem alteração depois de 01/10/2026). Gravada pela consulta prévia autenticada (ConsultaViabilidadeController::registrarHistorico) e lida no histórico (HistoricoConsultaController). Teste: tests/Feature/Viabilidade/HistoricoConsultaTest.php::test_consulta_autenticada_grava_snapshot_no_historico. Arquivo lógico: grupo lógico reconhecido pelo cidadão: cada consulta prévia realizada fica guardada com a entrada, o resultado e as versões de regra aplicadas, para reprodução. Teste de independência: não depende da solicitação e sobrevive à exclusão do usuário (user_id nullOnDelete), logo é ALI próprio. Não é dado de código. TD=8 (usuário, tipo de entrada, dados informados, resultado detalhado, versões de regras, resultado, IP, data da consulta). TR=1. Recontagem 16/10/2026: mantida (linha 508 da contagem de 01/10/2026)."
+    },
+    {
+     "nome": "Consulta de viabilidade - consultar por endereço",
+     "tipo": "SE",
+     "td": 18,
+     "ar": 14,
+     "iaet": "I",
+     "obs": "Prova: Rota POST /portal/viabilidade/endereco (pública, throttle:consulta-viabilidade). Tela: portal/viabilidade/consulta. O cidadão informa endereço, CNAE e área. Geocodifica, identifica território e aplica LOUOS e risco (ConsultaViabilidadeService); grava histórico só se logado. A consulta passou a ficar dentro do portal para quem está logado (13/10/2026): só muda o layout da mesma página portal/viabilidade/consulta, com os mesmos DER, FTR e lógica, então é a mesma função, contada uma vez (§5.5.2.2). As respostas às perguntas aceitam opção e conjunto de opções desde 07/10/2026, sem DER novo. Teste: tests/Feature/Viabilidade/ConsultaViabilidadePublicaTest.php::test_consulta_por_endereco_anonima_retorna_resultado_e_e_auditada; tests/Feature/Viabilidade/ConsultaViabilidadePaginaTest.php::test_pagina_continua_acessivel_para_cidadao_logado. Registros automáticos contados como FTR (premissa P4): Trilha de auditoria: AuditService::log ou HasAuditoria do model no mesmo request; Chamada de integração: listener síncrono RegistrarChamadaIntegracao grava cada chamada HTTP de saída (IntegrationCallRecorder). A geocodificação usa NominatimGeocoder (OpenStreetMap). Processo elementar independente: menor unidade com significado para o cidadão; completa por si (informa endereço e atividade e recebe o veredito); deixa o negócio consistente (histórico gravado só para usuário autenticado); lógica única (geocodificação e identificação territorial pelo endereço). Classificação: a intenção principal é apresentar o veredito calculado pelo motor (dado derivado); a gravação do histórico é acessória, portanto SE. TD=18 (endereço, CNAE, área, respostas às perguntas, coordenada geocodificada, zona, via, bairro, restrições, enquadramento LOUOS, classificação de risco, resultado, motivo, fundamentação, avisos, versões de regras, perguntas exibidas, ação consultar). AR=14 (Consulta prévia de viabilidade realizada, CNAE, Planilha de enquadramento, Permissão de uso por zona (Quadro 10), Condição de instalação por via (Quadro 11A), Classificação de risco municipal, Texto decisório, Camada geográfica, Zonas urbanísticas do GeoServer da SEDUR, Classificação viária dos logradouros do GeoServer da SEDUR, Regra territorial, Endereços geocodificados do OpenStreetMap, Trilha de auditoria, Chamada de integração). Para demonstrar: features.consulta_viabilidade e features.geocoding ligados; zona remota com features.geoserver_zona. Recontagem (catálogo): Versão de regras deixou de ser arquivo lógico próprio e é subgrupo de arquivo já listado no AR; AR ajustado. Recontagem 16/10/2026: alterada (linha 44 da contagem de 01/10/2026: \"Consulta de viabilidade - consultar por endereço\", SE Alta 7 PF, TD 18, AR 10). Motivo: AR 10→15: entram Endereços do OpenStreetMap (NominatimGeocoder), Classificação viária do GeoServer (TerritoryService), Regra territorial (observação do Quadro 10 no enquadramento) e os registros automáticos Trilha de auditoria (ConsultaViabilidadeService e TerritoryService::identify auditam cada consulta) e Chamada de integração (geocodificação e WFS). PF inalterado (Alta). Catálogo: retirado Versão de regras (subgrupo de outro arquivo)."
+    },
+    {
+     "nome": "Consulta de viabilidade - consultar por CNAE",
+     "tipo": "SE",
+     "td": 12,
+     "ar": 6,
+     "iaet": "I",
+     "obs": "Prova: Rota POST /portal/viabilidade/cnae (pública, throttle:consulta-viabilidade). Tela: portal/viabilidade/consulta. O cidadão informa só CNAE e área. Aplica o risco e a planilha de enquadramento por área, sem localização; grava histórico só se logado. A consulta passou a ficar dentro do portal para quem está logado (13/10/2026): só muda o layout da mesma página portal/viabilidade/consulta, com os mesmos DER, FTR e lógica, então é a mesma função, contada uma vez (§5.5.2.2). As respostas às perguntas aceitam opção e conjunto de opções desde 07/10/2026, sem DER novo. Teste: tests/Feature/Viabilidade/ConsultaViabilidadePublicaTest.php::test_consulta_por_cnae_anonima_roda_risco_e_quadro7 (nome anterior à retirada do Quadro 7; o enquadramento por área está na planilha). Registros automáticos contados como FTR (premissa P4): Trilha de auditoria: AuditService::log ou HasAuditoria do model no mesmo request. Processo elementar independente: menor unidade com significado para o cidadão; completa por si (informa a atividade e recebe o veredito); deixa o negócio consistente (histórico só para autenticado); lógica única (classificação sem dimensão territorial). Classificação: apresenta o veredito calculado pelo motor; a gravação do histórico é acessória, portanto SE. TD=12 (CNAE, área, respostas às perguntas, enquadramento LOUOS, classificação de risco, resultado, motivo, fundamentação, avisos, versões de regras, perguntas exibidas, ação consultar). AR=6 (Consulta prévia de viabilidade realizada, CNAE, Planilha de enquadramento, Classificação de risco municipal, Texto decisório, Trilha de auditoria). Para demonstrar: features.consulta_viabilidade ligado. Recontagem (catálogo): Versão de regras deixou de ser arquivo lógico próprio e é subgrupo de arquivo já listado no AR; AR ajustado. Recontagem 16/10/2026: mantida (linha 45 da contagem de 01/10/2026)."
+    },
+    {
+     "nome": "Consulta de viabilidade - consultar por inscrição imobiliária",
+     "tipo": "SE",
+     "td": 18,
+     "ar": 15,
+     "iaet": "I",
+     "obs": "Prova: Rota POST /portal/viabilidade/inscricao (pública, throttle:consulta-viabilidade). Tela: portal/viabilidade/consulta. O cidadão informa inscrição, CNAE e área. Localiza o imóvel pelo cadastro imobiliário, identifica território e aplica LOUOS e risco; degrada com aviso sem inventar ponto. A consulta passou a ficar dentro do portal para quem está logado (13/10/2026): só muda o layout da mesma página portal/viabilidade/consulta, com os mesmos DER, FTR e lógica, então é a mesma função, contada uma vez (§5.5.2.2). As respostas às perguntas aceitam opção e conjunto de opções desde 07/10/2026, sem DER novo. Teste: tests/Feature/Viabilidade/ConsultaViabilidadePublicaTest.php::test_consulta_por_inscricao_degrada_com_aviso_e_nunca_inventa_ponto. Registros automáticos contados como FTR (premissa P4): Trilha de auditoria: AuditService::log ou HasAuditoria do model no mesmo request; Chamada de integração: listener síncrono RegistrarChamadaIntegracao grava cada chamada HTTP de saída (IntegrationCallRecorder). Processo elementar independente: menor unidade com significado para o cidadão; completa por si (informa a inscrição e recebe o veredito); deixa o negócio consistente (histórico só para autenticado); lógica única (localização pela inscrição no cadastro imobiliário). Classificação: apresenta o veredito calculado pelo motor; a gravação do histórico é acessória, portanto SE. TD=18 (inscrição imobiliária, CNAE, área, respostas às perguntas, localização do imóvel, zona, via, bairro, restrições, enquadramento LOUOS, classificação de risco, resultado, motivo, fundamentação, avisos, versões de regras, perguntas exibidas, ação consultar). AR=15 (Consulta prévia de viabilidade realizada, CNAE, Planilha de enquadramento, Permissão de uso por zona (Quadro 10), Condição de instalação por via (Quadro 11A), Classificação de risco municipal, Texto decisório, Camada geográfica, Cadastro imobiliário da SEFAZ, Zonas urbanísticas do GeoServer da SEDUR, Classificação viária dos logradouros do GeoServer da SEDUR, Regra territorial, Endereços geocodificados do OpenStreetMap, Trilha de auditoria, Chamada de integração). Para demonstrar: features.consulta_viabilidade e features.cadastro_imobiliario ligados e integrations.inscricao_imobiliaria configurada. Recontagem (catálogo): Versão de regras deixou de ser arquivo lógico próprio e é subgrupo de arquivo já listado no AR; AR ajustado. Recontagem 16/10/2026: alterada (linha 46 da contagem de 01/10/2026: \"Consulta de viabilidade - consultar por inscrição imobiliária\", SE Alta 7 PF, TD 18, AR 10). Motivo: AR 10→16: entram Zonas e Classificação viária do GeoServer (o ponto da inscrição segue por TerritoryService::identify), Regra territorial (observação do Quadro 10), Endereços do OpenStreetMap (LocalizacaoInscricaoService geocodifica quando o cadastro não traz coordenada) e os registros automáticos Trilha de auditoria e Chamada de integração. PF inalterado (Alta). Catálogo: retirado Versão de regras (subgrupo de outro arquivo)."
+    },
+    {
+     "nome": "Consultas de viabilidade - consultar histórico",
+     "tipo": "SE",
+     "td": 6,
+     "ar": 2,
+     "iaet": "I",
+     "obs": "Prova: Rota GET /portal/viabilidade/historico (auth:web, verified, lgpd.accepted). Tela: portal/viabilidade/historico. O requerente vê as próprias consultas prévias, da mais recente para a mais antiga, com tipo de entrada, dados informados, resultado e data; HistoricoConsultaController lê as consultas do usuário e grava a auditoria da consulta. Teste: tests/Feature/Viabilidade/HistoricoConsultaPaginaTest.php::test_pagina_do_historico_renderiza_consultas_do_dono. Registros automáticos contados como FTR (premissa P4): Trilha de auditoria: AuditService::log ou HasAuditoria do model no mesmo request. Processo elementar independente: menor unidade com significado para o requerente; completa por si (abrir o histórico até a lista); deixa o negócio consistente (consulta auditada); lógica única (consultas do próprio dono). Classificação: apresenta informação e atualiza um ALI (Trilha de auditoria), portanto SE e não CE (§5.5.3). TD=6 (tipo de entrada, dados informados, resultado, detalhe do resultado, consultado em, ação consultar). AR=2 (Consulta prévia de viabilidade realizada, Trilha de auditoria). Recontagem 16/10/2026: alterada (linha 62 da contagem de 01/10/2026: \"Consultas de viabilidade - consultar histórico\", CE Baixa 3 PF, TD 6, AR 1). Motivo: CE→SE e AR 1→2: a abertura do histórico grava a Trilha de auditoria (AuditService::log 'consulta-historico'), o que pela regra do §5.5.3 impede CE; a Trilha entra como FTR. PF 3→5."
+    }
+   ]
+  },
+  {
+   "grupo": "Renovação da viabilidade locacional",
+   "funcoes": [
+    {
+     "nome": "Renovação - consultar viabilidades renováveis",
+     "tipo": "SE",
+     "td": 8,
+     "ar": 5,
+     "iaet": "I",
+     "obs": "Prova: Rota GET /portal/renovacao (auth:web, portal.solicitacao). Tela: portal/renovacao/index. Lista as viabilidades locacionais das empresas do cidadão; RenovacaoElegibilidadeService deriva elegibilidade e motivo pelo intervalo do parâmetro renovacao.intervalo_meses e pela existência de renovação em aberto. Desde 15/10/2026 a rota passa pelo interruptor portal.solicitacao (config features.portal_solicitacao, variável de ambiente): desligado, volta ao painel com aviso. É configuração técnica, não Parâmetro, e não cria função (teste tests/Feature/Portal/PortalSolicitacaoInterruptorTest.php::test_desligado_bloqueia_a_renovacao). Teste: tests/Feature/Renovacao/RenovacaoPortalTest.php::test_lista_so_os_tvls_das_empresas_do_cidadao. Processo elementar independente: menor unidade com significado para o requerente; completa por si (abre a lista); não grava; lógica única de cálculo de elegibilidade à renovação. Classificação: elegibilidade e motivo são dados derivados por regra com parâmetro de prazo, portanto SE. TD=8 (número da viabilidade, empresa, CNPJ, data de emissão, validade, elegível, motivo da inelegibilidade, ação consultar). AR=5 (Solicitação de viabilidade, Decisão de viabilidade, Empresa, Vínculo de usuário com empresa, Parâmetro). Recontagem 16/10/2026: alterada (linha 461 da contagem de 01/10/2026: \"Renovação - consultar TVLs renováveis\", SE Alta 7 PF, TD 8, AR 5). Motivo: Só o nome: 'TVLs renováveis' passa a 'viabilidades renováveis', como a tela chama desde 05/10/2026. TD, AR e tipo mantidos."
+    },
+    {
+     "nome": "Renovação - localizar viabilidade por CNPJ",
+     "tipo": "SE",
+     "td": 10,
+     "ar": 7,
+     "iaet": "I",
+     "obs": "Prova: Rota POST /portal/renovacao/consultar-cnpj (auth:web, portal.solicitacao). Tela: portal/renovacao/index. O cidadão informa o CNPJ; RenovacaoController consulta o cadastro da SEDUR via SedurContatoClient e cruza com as viabilidades locais, derivando a elegibilidade. Desde 15/10/2026 a rota passa pelo interruptor portal.solicitacao (config features.portal_solicitacao, variável de ambiente): desligado, volta ao painel com aviso. É configuração técnica, não Parâmetro, e não cria função (teste tests/Feature/Portal/PortalSolicitacaoInterruptorTest.php::test_desligado_bloqueia_a_renovacao). Teste: tests/Feature/Renovacao/RenovacaoConsultaCnpjTest.php::test_consulta_cnpj_devolve_cadastro_da_sedur_e_a_viabilidade_local. Registros automáticos contados como FTR (premissa P4): Chamada de integração: listener síncrono RegistrarChamadaIntegracao grava cada chamada HTTP de saída (IntegrationCallRecorder). Processo elementar independente: menor unidade com significado para o requerente; completa por si (informa CNPJ e recebe o resultado); não grava; lógica única de localização com cadastro externo e elegibilidade. Classificação: combina dado externo com elegibilidade derivada, portanto SE. TD=10 (CNPJ, razão social, situação cadastral, endereço, número da viabilidade, data de emissão, validade, elegível, mensagem, ação consultar). AR=7 (Contato cadastral da SEDUR (CNPJ), Empresa, Vínculo de usuário com empresa, Solicitação de viabilidade, Decisão de viabilidade, Parâmetro, Chamada de integração). Para demonstrar: integrations.sedur_contato configurada. Recontagem 16/10/2026: alterada (linha 462 da contagem de 01/10/2026: \"Renovação - localizar TVL por CNPJ\", SE Alta 7 PF, TD 10, AR 6). Motivo: Nome: 'TVL' passa a 'viabilidade', como a tela chama desde 05/10/2026. AR 6→7: entra a Chamada de integração, gravada pelo listener síncrono RegistrarChamadaIntegracao na chamada ao ws-contato da SEDUR (SedurContatoClient usa o cliente HTTP do Laravel). PF inalterado (Alta)."
+    },
+    {
+     "nome": "Renovação - consultar dados da renovação",
+     "tipo": "CE",
+     "td": 12,
+     "ar": 6,
+     "iaet": "I",
+     "obs": "Prova: Rota GET /portal/renovacao/{origem} (auth:web, portal.solicitacao). Tela: portal/renovacao/wizard. Confere o vínculo com a empresa e a elegibilidade (inelegível volta à lista com o motivo) e mostra os dados herdados da viabilidade de origem e as declarações vigentes do tipo de serviço de renovação. Desde 15/10/2026 a rota passa pelo interruptor portal.solicitacao (config features.portal_solicitacao, variável de ambiente): desligado, volta ao painel com aviso. É configuração técnica, não Parâmetro, e não cria função (teste tests/Feature/Portal/PortalSolicitacaoInterruptorTest.php::test_desligado_bloqueia_a_renovacao). Teste: tests/Feature/Renovacao/RenovacaoPortalTest.php::test_wizard_de_tvl_elegivel_traz_declaracoes; tests/Feature/Renovacao/RenovacaoPortalTest.php::test_wizard_de_tvl_inelegivel_volta_com_motivo. Processo elementar independente: menor unidade com significado para o requerente; completa por si (abre a renovação de uma viabilidade); não grava; lógica única de preparação do pedido com dados herdados. Entrega consulta completa dos dados de origem, por isso não é mera tela de formulário. Classificação: recupera e mostra; a elegibilidade só filtra o acesso e não é apresentada como resultado calculado; não grava, portanto CE. TD=12 (número da viabilidade de origem, empresa, CNPJ, endereço do imóvel, atividades (CNAE), tipo da viabilidade, validade, e-mail, telefone, declarações exigidas, motivo da inelegibilidade, ação abrir). AR=6 (Solicitação de viabilidade, Decisão de viabilidade, Empresa, CNAE, Vínculo de usuário com empresa, Parâmetro). Recontagem 16/10/2026: mantida (linha 463 da contagem de 01/10/2026)."
+    },
+    {
+     "nome": "Renovação - protocolar renovação",
+     "tipo": "EE",
+     "td": 6,
+     "ar": 24,
+     "iaet": "I",
+     "obs": "Prova: Rota POST /portal/renovacao/{origem} (auth:web, portal.solicitacao). Tela: portal/renovacao/wizard. O cidadão confirma contatos e aceita as declarações; RenovacaoProtocoloService confere a elegibilidade e as declarações obrigatórias, cria a nova solicitação a partir da origem (endereço e atividades copiados), grava os aceites com a versão, atualiza o contato da empresa, gera o número e registra a tramitação; fora da transação completa o território (ProtocolarSolicitacaoService::completarTerritorio), põe o processo no setor de triagem e envia à análise (EnviarParaAnaliseService). Desde 15/10/2026 a rota passa pelo interruptor portal.solicitacao (config features.portal_solicitacao, variável de ambiente): desligado, volta ao painel com aviso. É configuração técnica, não Parâmetro, e não cria função (teste tests/Feature/Portal/PortalSolicitacaoInterruptorTest.php::test_desligado_bloqueia_a_renovacao). Teste: tests/Feature/Renovacao/RenovacaoPortalTest.php::test_protocolar_renovacao_pelo_portal; tests/Feature/Renovacao/RenovacaoTerritorioMotorTest.php::test_protocolo_completa_territorio_e_deixa_o_motor_na_ficha. Registros automáticos contados como FTR (premissa P4): Trilha de auditoria: AuditService::log ou HasAuditoria do model no mesmo request; Chamada de integração: listener síncrono RegistrarChamadaIntegracao grava cada chamada HTTP de saída (IntegrationCallRecorder). Processo elementar independente: menor unidade com significado para o requerente; completa por si (confirma e protocola); deixa a renovação protocolada, com aceites registrados e na fila de análise; lógica única de renovação a partir da viabilidade de origem, distinta do protocolo comum (sem documentos, sem simulação, sem fluxo expresso). Classificação: mantém solicitação e empresa, EE. TD=6 (e-mail, telefone, celular, declarações aceitas, mensagem, ação protocolar). AR=24 (Solicitação de viabilidade, Empresa, Decisão de viabilidade, Vínculo de usuário com empresa, Parâmetro, Setor, Feriado, Cadastro imobiliário da SEFAZ, Endereços geocodificados do OpenStreetMap, Camada geográfica, Zonas urbanísticas do GeoServer da SEDUR, Classificação viária dos logradouros do GeoServer da SEDUR, Lotes do endereçamento do GeoServer da SEDUR, Lotes por inscrição do SEMAP, Ficha de análise técnica, CNAE, Planilha de enquadramento, Permissão de uso por zona (Quadro 10), Condição de instalação por via (Quadro 11A), Classificação de risco municipal, Regra territorial, Texto decisório, Trilha de auditoria, Chamada de integração). Recontagem (catálogo): Versão de regras deixou de ser arquivo lógico próprio e é subgrupo de arquivo já listado no AR; AR ajustado. Recontagem 16/10/2026: alterada (linha 464 da contagem de 01/10/2026: \"Renovação - protocolar renovação\", EE Alta 6 PF, TD 6, AR 6). Motivo: AR 6→25. Desde 07–14/10/2026 RenovacaoProtocoloService completa o território como no protocolo comum (SEFAZ, OpenStreetMap, camadas, zona e classe viária do GeoServer, lotes do endereçamento e do SEMAP), põe o processo no setor de triagem (Parâmetro analise.setor_triagem_id, Setor) e envia à análise: EnviarParaAnaliseService calcula o prazo em dias úteis (AnalysisSlaService com BusinessDeadlineCalculator, que lê Feriado) e dispara EncaminhadoParaAnalise, cujo listener síncrono PreAnalisarProcesso roda o motor (CNAE, planilha, Quadros 10 e 11A, risco, versões, regra territorial, textos) e grava a Ficha de análise técnica. O Aceite de declaração passa a subgrupo da Solicitação e Tipo de serviço sai. PF inalterado (Alta). Catálogo: retirado Versão de regras (subgrupo de outro arquivo)."
+    }
+   ]
+  },
+  {
+   "grupo": "Verificação pública de documentos",
+   "funcoes": [
+    {
+     "nome": "Documentos oficiais - verificar autenticidade",
+     "tipo": "SE",
+     "td": 7,
+     "ar": 3,
+     "iaet": "I",
+     "obs": "Prova: Rota GET /verificar-documento/{codigo} (pública, throttle:consulta-protocolo). Tela: verificacao-documento. Qualquer pessoa informa o código impresso; VerificacaoDocumentoService procura viabilidade locacional emitida (TVL-), documento de indeferimento (IND-) ou, para o comprovante (CMP-), recalcula o HMAC e confere o protocolo; devolve tipo, protocolo e data, sem dado sensível; código adulterado ou inexistente é inválido. O controller audita cada consulta. Teste: tests/Feature/Documentos/VerificacaoDocumentoTest.php::test_codigo_tvl_valido_confirma_autenticidade_sem_expor_dados_sensiveis; tests/Feature/Documentos/VerificacaoDocumentoTest.php::test_codigo_de_comprovante_adulterado_e_invalido. Registros automáticos contados como FTR (premissa P4): Trilha de auditoria: AuditService::log ou HasAuditoria do model no mesmo request. Processo elementar independente: menor unidade com significado para quem recebe um documento da SEDUR; completa por si (código informado até a resposta); deixa o negócio consistente (só leitura de negócio, consulta auditada); lógica única (autenticidade pública de documento emitido). Classificação: tem cálculo (HMAC recomputado) e atualiza um ALI (Trilha de auditoria), portanto SE e não CE. TD=7 (código de verificação, válido, tipo de documento, protocolo, data, mensagem (inválido), ação verificar). AR=3 (Decisão de viabilidade, Solicitação de viabilidade, Trilha de auditoria). Recontagem (catálogo): Termo de Viabilidade de Localização emitido, Documento de indeferimento emitido deixou de ser arquivo lógico próprio e é subgrupo de arquivo já listado no AR; AR ajustado. Recontagem 16/10/2026: alterada (linha 19 da contagem de 01/10/2026: \"Documentos oficiais - verificar autenticidade\", CE Média 4 PF, TD 7, AR 3). Motivo: CE→SE e AR 3→5: a verificação recalcula o HMAC do código do comprovante (cálculo) e grava a Trilha de auditoria a cada consulta, o que pela regra do §5.5.3 impede CE; entram Decisão de viabilidade (o protocolo do TVL e do indeferimento é lido pela decisão) e Trilha de auditoria. PF 4→7. Catálogo: retirado Termo de Viabilidade de Localização emitido, Documento de indeferimento emitido (subgrupo de outro arquivo)."
+    }
+   ]
+  },
+  {
+   "grupo": "Dados externos consultados pelo Viabiliza",
+   "funcoes": [
+    {
+     "nome": "Dados externos - Contato cadastral da SEDUR (CNPJ)",
+     "tipo": "AIE",
+     "td": 5,
+     "ar": 1,
+     "iaet": "I",
+     "obs": "Prova: app/Services/Sedur/SedurContatoClient.php::consultarCnpj faz GET {base}/pessoajuridica/cnpj/{cnpj} na API cadastral da SEDUR e devolve SedurPessoaJuridica; SedurCnpjLookup adapta para o cadastro de empresa (binding CnpjLookup no AppServiceProvider); também usado por RenovacaoController e ConsultarDocumentoContingenciaController (POST gestao/contingencia/consultar-cnpj). Mantido pela SEDUR, só lido. Teste: tests/Feature/Sedur/SedurContatoClientTest.php::test_consulta_cnpj_le_razao_social_na_raiz. Arquivo lógico: cadastro de pessoa jurídica da base da SEDUR, que preenche a empresa do requerente; mantido por outro sistema e apenas consultado. TD=5 (CNPJ, razão social, nome fantasia, telefone, endereço). TR=1 (Contato cadastral da SEDUR (CNPJ)). Para demonstrar: features.cnpj_lookup ligado e integrations.sedur_contato.base_url configurado. Recontagem 16/10/2026: mantida (linha 16 da contagem de 01/10/2026)."
+    }
+   ]
+  }
+ ]
+}

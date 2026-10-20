@@ -15,11 +15,11 @@
 
 | Indicador | Contagem anterior (01/10) | Recontagem (16/10) | Diferença |
 |---|---:|---:|---:|
-| PF não ajustados | 1618 | 1713 | +95 (+5.9%) |
-| Funções contáveis | 328 | 334 | +6 |
+| PF não ajustados | 1618 | 1719 | +101 (+6.2%) |
+| Funções contáveis | 328 | 335 | +7 |
 | ALI (qtd / PF) | 54 / 408 | 46 / 361 | -8 / -47 |
 | AIE (qtd / PF) | 4 / 20 | 10 / 50 | +6 / +30 |
-| EE (qtd / PF) | 152 / 615 | 154 / 640 | +2 / +25 |
+| EE (qtd / PF) | 152 / 615 | 155 / 646 | +3 / +31 |
 | SE (qtd / PF) | 59 / 358 | 87 / 530 | +28 / +172 |
 | CE (qtd / PF) | 59 / 217 | 37 / 132 | -22 / -85 |
 
@@ -30,13 +30,13 @@ Situação das funções:
 | Mantidas (mesmo nome, tipo, TD e AR) | 127 | 0 |
 | Alteradas com mudança de tipo, complexidade ou PF | 71 | +71 (saldo) |
 | Alteradas só em TD, AR ou nome, sem mudança de PF | 93 | 0 |
-| Novas | 43 | +195 |
+| Novas | 44 | +201 |
 | Removidas (linhas da contagem anterior) | 37 | −171 |
-| **Total** | | **1618 → 1713** |
+| **Total** | | **1618 → 1719** |
 
-Conciliação: 1618 − 171 (removidas) + 195 (novas) +71 (saldo das alteradas) = 1713 PF.
+Conciliação: 1618 − 171 (removidas) + 201 (novas) +71 (saldo das alteradas) = 1719 PF.
 
-Análise de sensibilidade (premissa P4): sem contar como arquivo referenciado os registros automáticos em arquivos de log, a recontagem daria **1580 PF**.
+Análise de sensibilidade (premissa P4): sem contar como arquivo referenciado os registros automáticos em arquivos de log, a recontagem daria **1584 PF**.
 
 Distribuição por complexidade (Sumário da planilha):
 
@@ -44,19 +44,19 @@ Distribuição por complexidade (Sumário da planilha):
 |---|---:|---:|---:|
 | ALI | 38 | 5 | 3 |
 | AIE | 10 | 0 | 0 |
-| EE | 44 | 76 | 34 |
+| EE | 44 | 76 | 35 |
 | SE | 5 | 32 | 50 |
 | CE | 22 | 12 | 3 |
 
-Validação da planilha (recalculada no LibreOffice): Sumário!G49 = Sumário!E57 = Contagem!Y8 = 1713 PF; PF de cada linha (coluna O) igual ao calculado pelas Tabelas do CPM; nenhuma linha de grupo pontua; o nome CF e as fórmulas E57:E60 do Sumário foram ampliados de 12:101 (modelo) para 12:1000, porque o modelo deixaria de fora as funções abaixo da linha 101.
+Validação da planilha (recalculada no LibreOffice): Sumário!G49 = Sumário!E57 = Contagem!Y8 = 1719 PF; PF de cada linha (coluna O) igual ao calculado pelas Tabelas do CPM; nenhuma linha de grupo pontua; o nome CF e as fórmulas E57:E60 do Sumário foram ampliados de 12:101 (modelo) para 12:1000, porque o modelo deixaria de fora as funções abaixo da linha 101.
 
 ## 2. Premissas adotadas
 
-- **P1 — Fronteira.** Aplicação Viabiliza completa (gestão, portal, consultas públicas, recebimento REGIN, rotinas agendadas). Login gov.br fica fora: está implementado, mas desligado (features.govbr_login = 0) e sem client_id/secret; o AIE de identidade gov.br também saiu, pois nenhuma transação contada o lê. Envio à SEFAZ continua fora (HU-110 bloqueada).
+- **P1 — Fronteira.** Aplicação Viabiliza completa (gestão, portal, consultas públicas, recebimento REGIN, rotinas agendadas). Login gov.br fica fora: está implementado, mas desligado (features.govbr_login = 0) e sem client_id/secret; o AIE de identidade gov.br também saiu, pois nenhuma transação contada o lê. Envio à SEFAZ continua fora (HU-109 bloqueada).
 - **P2 — Dados de código.** CPM Parte 1 §5.4.2 d e Parte 3 Cap. 1: entidades de substituição código/descrição ou de valores válidos não são arquivo lógico e as transações que só as mantêm não contam. Aplicado a Tipo de serviço, Zona urbanística e Via, com os atributos de cada tabela registrados. Tipo de imóvel, Feriado, Setor e Texto decisório continuam contáveis porque têm atributos que mudam o comportamento ou entram em cálculo.
 - **P3 — Teste de independência.** CPM Parte 3 Cap. 2: entidades que só existem com o pai (FK obrigatória com exclusão em cascata e sem ciclo próprio) passam a subgrupo (RLR): versão das regras, documento anexado, aceite de declaração, aceite de termo, TVL emitido, solicitação de acesso. Ficha de análise, Decisão, Ficha de vistoria e Pendência foram mantidas como ALI porque têm ciclo de vida e manutenção próprios (ver pendência 4).
 - **P4 — Registros automáticos de log.** CPM Parte 1 §5.5.4 (conta-se um ALR para cada função de dados lida ou mantida) e §5.5.3, Tabela 5 (uma CE não atualiza ALI). Quando a transação grava no mesmo processamento registro em Trilha de auditoria, Registro de acesso, Registro de envio de e-mail, Chamada de integração, Notificação ao usuário ou Comunicação ao requerente, esse arquivo conta como AR, e uma consulta que grava o próprio registro passa a SE. Só com evidência no código (chamada explícita, trait HasAuditoria, listener síncrono); gravações enfileiradas não contam. A contagem anterior aplicava isso de forma parcial.
-- **P5 — Efeitos automáticos.** Não são função própria: decisão do fluxo expresso disparada pelo protocolo (os arquivos que ela lê e grava entram no AR do protocolo e do recebimento REGIN), envio do parecer à JUCEB, notificações, e-mails e reprocessamentos técnicos agendados (processos:reprocessar-etapas, expresso:reavaliar, regin:reenviar-pareceres). O reprocessamento acionado pelo analista no botão "Reprocessar" da ficha do expresso é contado (HU-171), assim como o resumo de conferência do portal (HU-116); as duas funções entraram após o cruzamento com as HUs, por decisão do responsável pela aplicação em 16/10/2026.
+- **P5 — Efeitos automáticos.** Não são função própria: decisão do fluxo expresso disparada pelo protocolo (os arquivos que ela lê e grava entram no AR do protocolo e do recebimento REGIN), envio do parecer à JUCEB, notificações, e-mails e reprocessamentos técnicos agendados (processos:reprocessar-etapas, expresso:reavaliar, regin:reenviar-pareceres). O reprocessamento acionado pelo analista no botão "Reprocessar" da ficha do expresso é contado (HU-084), assim como o resumo de conferência do portal (HU-179); as duas funções entraram após o cruzamento com as HUs, por decisão do responsável pela aplicação em 16/10/2026.
 - **P6 — Unicidade.** CPM Parte 1 §5.5.2.2: mesma ação no portal e na gestão com os mesmos DER, AR e lógica conta uma vez (termo LGPD, notificações); ações com DER, AR ou lógica diferentes contam separadas (login do portal x login da gestão, abas de alteração das APIs, funções do Quadro 10 x Quadro 11A, aprovar x recusar solicitação de acesso).
 - **P7 — Abas e telas.** Abas que são cadastros independentes contam como funções separadas, mesmo quando a tela as carrega juntas: na configuração das APIs, cada integração é consultada e alterada como cadastro próprio (decisão do responsável pela aplicação em 16/10/2026; a tela única é solução de interface). Telas GET que só abrem formulário, seletores de lista, menus, downloads estáticos, documentação OpenAPI, testes de conexão, metadados de interface e logout não contam.
 - **P8 — Funções sem acesso do usuário.** Rotas implementadas mas sem tela ou botão que as chame não contam: emissão do documento de indeferimento (botão retirado em 22/09), exportações por ?formato= sem botão (usuários, perfis, CNAEs, parâmetros), PUT /gestao/louos/publicar, telas legadas config-regin e config-inscricao-imobiliaria fora do menu, comandos artisan manuais.
@@ -194,6 +194,7 @@ Também foram descartadas na consolidação, sem linha na contagem anterior: "Pa
 | Usuários e solicitações de acesso | Solicitações de acesso - consultar pendentes | CE | 7 | 2 | 4 |
 | Usuários e solicitações de acesso | Solicitações de acesso - aprovar | EE | 4 | 3 | 4 |
 | Usuários e solicitações de acesso | Solicitações de acesso - recusar | EE | 4 | 2 | 3 |
+| Cadastrar usuário pela gestão | Usuários - cadastrar usuário pela gestão (tela Novo usuário, incluída em 19/10/2026) | EE | 7 | 4 | 6 |
 | Configuração das APIs | APIs - consultar configuração Cadastro municipal (SEMAP) | CE | 7 | 1 | 3 |
 | Configuração das APIs | APIs - alterar configuração Cadastro municipal (SEMAP) | EE | 5 | 2 | 4 |
 | Quadro 11A da LOUOS (condição de instalação por via) | Quadro 11A da LOUOS - consultar rascunho | SE | 11 | 2 | 5 |
@@ -295,7 +296,7 @@ Também foram descartadas na consolidação, sem linha na contagem anterior: "Pa
 
 ## 7. Pendências e pontos para validação com o fiscal
 
-1. Critério de log (P4): é a maior fonte de variação. Sem ele, a contagem daria 1580 PF (-133). Confirmar com o fiscal antes do aceite.
+1. Critério de log (P4): é a maior fonte de variação. Sem ele, a contagem daria 1584 PF (-135). Confirmar com o fiscal antes do aceite.
 2. Documento de indeferimento: rota e teste existem, mas sem botão desde 22/09. Se a SEDUR ainda exigir o documento, o botão precisa voltar e entra uma SE de cerca de 7 PF.
 3. Independência de Ficha de análise, Decisão, Ficha de vistoria e Pendência: também são excluídas em cascata com a Solicitação. Foram mantidas como ALI (ciclo e manutenção próprios). Aplicar o teste ao pé da letra reduziria a contagem; a decisão precisa ser uniforme.
 4. Seletor de rascunhos da simulação LOUOS (linha 192): removido como lista auxiliar. Pelo exemplo "Drop-Down List Box" do CPM Parte 4 voltaria como CE Baixa (3 PF).
@@ -315,3 +316,30 @@ Também foram descartadas na consolidação, sem linha na contagem anterior: "Pa
 3. Harmonização entre áreas: catálogo único de arquivos lógicos, critério único para registros de log (P4), atribuição única de funções compartilhadas e substituição dos arquivos que viraram subgrupo.
 4. Consolidação automática com conferências: cada linha anterior com um único destino, TD e AR do texto iguais aos das colunas, todo AR referindo arquivos do catálogo, todo ALI mantido por alguma transação e todo AIE lido por alguma transação.
 5. Preenchimento da aba Funções sobre o modelo contagem-2391.xlsx, só nas colunas de entrada (C, H, I, J, K, Q), mantendo as fórmulas de A, B, L a P, e recálculo da planilha para conferir Sumário e Contagem.
+
+## 9. Vínculo das funções às HUs (20/10/2026)
+
+Sete funções (36 PF) já estavam contadas e nenhuma HU as descrevia. Em 20/10/2026 foram vinculadas, sem alterar o total de 1.719 PF nem a lista de funções:
+
+| HU | Funções vinculadas |
+|---|---|
+| HU-011 Alertar falta de tabela TLL do exercício | TLL - alertar falta de tabela do exercício (SE, 5 PF) |
+| HU-086 Desvincular inscrição de escritório virtual | Dados - Bloqueio de inscrição de escritório virtual (ALI, 7 PF); Escritório virtual - desvincular inscrição (EE, 4 PF) |
+| HU-149 Consultar painel do cidadão | Painel do cidadão - consultar (SE, 5 PF) |
+| HU-181 Consultar central de notificações | Dados - Notificação ao usuário (ALI, 7 PF); Notificações - marcar como lida (EE, 3 PF); Notificações - consultar (SE, 5 PF), já citada pelas HUs de aviso |
+| HU-067 e HU-068 (contingência e atendimento presencial) | Dados externos - Contato cadastral da SEDUR (CPF) (AIE, 5 PF), lido pela consulta de CPF que essas HUs já citavam |
+
+A HU-086 descreve uma rota da gestão sem botão em tela (status Parcial). Os números de HU deste documento são os de 20/10/2026.
+
+## 10. Planilhas por parte (20/10/2026)
+
+Além da planilha integral, há uma planilha para cada documento de HUs. Cada função foi contada uma só vez: a transação, na parte cujas HUs a citam (quando as duas citam, pela rota `/portal` ou `/gestao`), e o arquivo lógico, na parte que o mantém (`Dados - CNAE` fica na Retaguarda, por causa de Manter CNAEs).
+
+| Planilha | HUs | Funções | PF |
+|---|---|---:|---:|
+| contagem-viabiliza-retaguarda-2026-10-16.xlsx | HU-001 a HU-139 | 278 | 1.413 |
+| contagem-viabiliza-portal-2026-10-16.xlsx | HU-140 a HU-181 | 57 | 306 |
+| Soma (igual à planilha integral) | HU-001 a HU-181 | 335 | 1.719 |
+
+As funções de uma parte que usam arquivos da outra continuam referenciando esses arquivos em TD e AR. Os arquivos recontagem-funcoes-retaguarda.json e recontagem-funcoes-portal.json geram as duas planilhas sobre o modelo contagem-2391.xlsx.
+

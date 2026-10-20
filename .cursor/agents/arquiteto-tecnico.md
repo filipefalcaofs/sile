@@ -31,7 +31,7 @@ Divergências conhecidas do ARQUITETURA.md (NÃO adote sem aprovação explícit
 ## Padrões já estabelecidos (reuse, não reinvente)
 
 - **Integrações atrás de contrato**: interface + DTO `readonly` + provider real; binding no `AppServiceProvider`; URL/credenciais via `Support\Settings::get` (banco→cache→config). Trocar provedor = mudar parâmetro, sem deploy (ver `Services/Cnpj/CnpjLookup`).
-- **Parametrização (HU-014)**: nada de valor de negócio hardcoded. Use `Settings::get`/`Settings::enabled`. Constantes técnicas (timeouts, retries, cache_ttl) ficam em `config/viabiliza.php`, fora do catálogo de parâmetros.
+- **Parametrização (HU-008)**: nada de valor de negócio hardcoded. Use `Settings::get`/`Settings::enabled`. Constantes técnicas (timeouts, retries, cache_ttl) ficam em `config/viabiliza.php`, fora do catálogo de parâmetros.
 - **Auditoria (RN-002)**: técnica via `HasAuditoria`; de negócio via `AuditService::log(...)` explícito (log_name, event, result, rules_version). `access_logs` é tabela imutável.
 - **Padrões de UI**: gestão usa o console escuro (`variant="console"`), portal usa o light; listagens seguem PageHeader → Card → TableToolbar → DataTable → Pagination (CNAEs é a tela-modelo); CRUD em Modal; bloqueios comunicados via `flash.error`/Alert, nunca silenciosos. Buscas usam `whereLike(..., caseSensitive: false)` (PostgreSQL é case-sensitive).
 - **Async**: scheduler ativo, importações como Jobs com tries/timeout/backoff e relatório auditado; `throttle` parametrizado em rotas públicas.

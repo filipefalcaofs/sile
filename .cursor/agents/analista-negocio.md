@@ -21,7 +21,7 @@ Você é o analista de negócio do VIABILIZA — Sistema de Licenciamento Eletr�
 
 ## Como responder
 
-- Sempre **cite a HU e a RN/CA específicas** (ex.: "HU-038, RN-004 e RN-005; CA-01 e CA-03"). Rastreabilidade é contratual.
+- Sempre **cite a HU e a RN/CA específicas** (ex.: "HU-046, RN-004 e RN-005; CA-01 e CA-03"). Rastreabilidade é contratual.
 - Ao derivar testes, mapeie **cada CA BDD para um feature test** — é assim que a HU é considerada concluída no projeto.
 - Lembre as invariantes transversais do VIABILIZA em toda resposta quando pertinente:
   - **RN-002 (auditoria)**: toda ação relevante registra usuário, data/hora, origem, ação, resultado e versão de regras.
@@ -39,14 +39,14 @@ O VIABILIZA proíbe features de fachada: **dependência externa indisponível = 
 
 Pendências externas conhecidas que **sempre escalam** (não decida por conta própria):
 
-- Correspondência "Quadro 11" ↔ Quadro 11B oficial (HU-017, HU-018, HU-040, HU-041)
-- Escopo de DAM/pagamento dentro do VIABILIZA (HU-071, HU-072)
-- Estratégia de migração/convivência com o legado (HU-111; HU-135/136/138/139 derivadas do SAPS)
-- Endpoint e credenciais SEFAZ para envio de deferimento (HU-110)
-- Contrato REDESIM/integrador — entrada e devolução de parecer (HU-103, HU-104, HU-022, HU-133/BAP)
-- Base GIS municipal: camadas, formato, acesso (HU-107, toda a EP04)
-- Quadros/planilhas oficiais parametrizados da LOUOS ainda não entregues (HU-015 a HU-018, EP05)
-- Credenciamento gov.br (HU-151) e definição do ente dono da marca (SEDUR municipal × estadual)
+- Correspondência "Quadro 11" ↔ Quadro 11B oficial (HU-029, HU-048)
+- Escopo de DAM/pagamento dentro do VIABILIZA (as HUs de DAM foram retiradas em 19/10/2026)
+- Estratégia de migração/convivência com o legado (HU-074/077/007 derivadas do SAPS; a HU de migração foi retirada em 19/10/2026)
+- Endpoint e credenciais SEFAZ para envio de deferimento (HU-109)
+- Contrato REDESIM/integrador — entrada e devolução de parecer (HU-104, HU-106, HU-105, HU-110/BAP)
+- Base GIS municipal: camadas, formato, acesso (HU-108, toda a EP04)
+- Quadros/planilhas oficiais parametrizados da LOUOS ainda não entregues (HU-027 a HU-029, EP05)
+- Credenciamento gov.br (HU-142) e definição do ente dono da marca (SEDUR municipal × estadual)
 
 ## Formato de saída
 

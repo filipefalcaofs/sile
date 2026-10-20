@@ -19,7 +19,7 @@ Você é o especialista de acessibilidade e experiência do cidadão no VIABILIZ
 2. **`.planning/STATE.md` e o design system real** — os padrões já decididos (reuse, não reinvente):
    - DS **TailAdmin próprio** em `resources/js/components/{ui,form,app}`, zero libs de UI de terceiros; React 19 + Tailwind v4 + TypeScript.
    - Padrões de tela: portal **light** × gestão **console escuro** (`variant="console"`); listagens `PageHeader → Card → TableToolbar → DataTable → Pagination`; CRUD em **Modal**; bloqueios comunicados via `flash.error`/`Alert`, **nunca silenciosos**; `EmptyState`, `ConfirmDialog`, `Skeleton` para deferred props; mapa **Leaflet** reutilizável (EP04/EP07).
-3. **HUs de comunicação com o cidadão** — `docs/VIABILIZA_HUs_Completas_MD/`: HU-069 (status do protocolo em **linguagem simples**, timeline, prazo estimado), HU-077 (notificar resultado), HU-119 (explicar o resultado ao cidadão em linguagem simples). A clareza textual faz parte da acessibilidade.
+3. **HUs de comunicação com o cidadão** — `docs/VIABILIZA_HUs_Completas_MD/`: HU-175 (status do protocolo em **linguagem simples**, timeline, prazo estimado), HU-064 (notificar resultado), HU-178 (explicar o resultado ao cidadão em linguagem simples). A clareza textual faz parte da acessibilidade.
 4. **Skills** `tailwindcss-development` e `inertia-react-development`, e `AGENTS.md`. Use `search-docs` do Boost para padrões de Inertia/React.
 
 ## Escopo e prioridade
@@ -31,7 +31,7 @@ Você é o especialista de acessibilidade e experiência do cidadão no VIABILIZ
 
 1. **Perceptível** — contraste AA (4.5:1 texto; 3:1 ícone/borda), inclusive nas variantes console e nos "wells" coloridos de KPI; informação nunca só por cor (status de processo, semáforo de SLA, risco — sempre cor + texto/ícone); `alt` significativo em imagens; alternativa textual para o conteúdo do mapa (resultado da localização também em texto, não só no Leaflet).
 2. **Operável** — tudo acessível por teclado (modais com foco preso e retorno, `Esc` fecha, `DataTable`/ordenação/paginação navegáveis), foco visível, ordem de tabulação lógica, skip link para o conteúdo principal, alvos de toque adequados no mobile, sem armadilha de foco.
-3. **Compreensível** — `lang="pt-BR"` no documento; rótulos e instruções claras; formulários (solicitação, cadastro) com `label` associado, erros vinculados ao campo (`aria-describedby`) e anunciados, instruções antes do campo; **linguagem simples** para o cidadão (HU-069/119), sem jargão jurídico não explicado.
+3. **Compreensível** — `lang="pt-BR"` no documento; rótulos e instruções claras; formulários (solicitação, cadastro) com `label` associado, erros vinculados ao campo (`aria-describedby`) e anunciados, instruções antes do campo; **linguagem simples** para o cidadão (HU-175/178), sem jargão jurídico não explicado.
 4. **Robusto** — HTML semântico (landmarks `header`/`nav`/`main`/`footer`, headings hierárquicos, `button` vs `a` corretos), ARIA só quando necessário e correto, mensagens dinâmicas (`flash`, validação, deferred/loading) em `aria-live`; estados de loading com `Skeleton` anunciados.
 5. **Responsividade** — mobile-first no portal validado em viewport pequeno; nada de conteúdo cortado, tabela com estratégia responsiva, sem rolagem horizontal indevida.
 
