@@ -15,7 +15,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
-use Spatie\Permission\Models\Role;
 
 /**
  * Manutenção dos setores da SEDUR (HU-138) — a "caixa de análise" da
@@ -84,25 +83,31 @@ class SectorController extends Controller
     }
 
     /**
-     * Candidatos reais ao vínculo analista↔setor (RN-005): usuários ativos cujo
-     * papel concede `analisar-processos` (analista/gestor/admin) — a mesma
-     * permissão que governa a caixa. Alimenta o multiselect da tela sem inventar
-     * opções; a permissão vive no guard web (padrão cross-guard do projeto).
+     * Candidatos ao vínculo usuário↔setor (RN-005): toda a equipe interna ativa
+     * (AD ou perfil com acesso à gestão), seja qual for o papel — vistoriador,
+     * subcoordenador, analista etc. Quem recebe cada tipo de tarefa continua
+     * sendo decidido pela permissão do papel na distribuição.
      *
-     * @return list<array{id: int, name: string}>
+     * Cada item leva perfis, setores atuais e login (AD ou e-mail) para o gestor
+     * distinguir homônimos e saber onde a pessoa já está.
+     *
+     * @return list<array{id: int, name: string, login: ?string, perfis: list<string>, setores: list<string>}>
      */
     private function analistasDisponiveis(): array
     {
-        $roleIds = Role::query()
-            ->whereHas('permissions', fn ($query) => $query->where('name', 'analisar-processos'))
-            ->pluck('id');
-
         return User::query()
-            ->whereHas('roles', fn ($query) => $query->whereIn('roles.id', $roleIds))
+            ->equipeSedur()
             ->whereNull('inactivated_at')
+            ->with(['roles:id,name', 'sectors:id,name'])
             ->orderBy('name')
-            ->get(['id', 'name'])
-            ->map(fn (User $user): array => ['id' => $user->id, 'name' => $user->name])
+            ->get(['id', 'name', 'email', 'ad_username'])
+            ->map(fn (User $user): array => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'login' => $user->ad_username ?? $user->email,
+                'perfis' => $user->roles->pluck('name')->sort()->values()->all(),
+                'setores' => $user->sectors->pluck('name')->sort()->values()->all(),
+            ])
             ->all();
     }
 

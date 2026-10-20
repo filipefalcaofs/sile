@@ -29,6 +29,12 @@ interface AnalystOption {
     name: string;
 }
 
+interface UserOption extends AnalystOption {
+    login: string | null;
+    perfis: string[];
+    setores: string[];
+}
+
 interface SectorItem {
     id: number;
     name: string;
@@ -46,7 +52,7 @@ interface SectorsIndexProps {
         to: number | null;
         total: number;
     };
-    analistasDisponiveis: AnalystOption[];
+    analistasDisponiveis: UserOption[];
     filters: {
         search: string;
         sort: string;
@@ -72,7 +78,7 @@ function CreateSectorModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
         <Modal isOpen={isOpen} onClose={onClose} className="m-4 max-h-[90vh] max-w-[560px] overflow-y-auto p-6 lg:p-8">
             <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Novo setor</h4>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                O setor é a caixa de análise da distribuição. Depois de criado, vincule os analistas responsáveis.
+                O setor é a caixa de análise da distribuição. Depois de criado, vincule os usuários responsáveis.
             </p>
 
             <Form action="/gestao/setores" method="post" resetOnSuccess onSuccess={onClose} className="mt-6">
@@ -169,18 +175,33 @@ function EditSectorModal({ sector, onClose }: { sector: SectorItem; onClose: () 
     );
 }
 
-/** Vínculo analista↔setor (RN-005): multiselect dos analistas disponíveis. */
+function normalizar(texto: string): string {
+    return texto
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase();
+}
+
+/** Vínculo usuário↔setor (RN-005): multiselect da equipe interna, com perfil e setores de cada um. */
 function ManageAnalystsModal({
     sector,
     disponiveis,
     onClose,
 }: {
     sector: SectorItem;
-    disponiveis: AnalystOption[];
+    disponiveis: UserOption[];
     onClose: () => void;
 }) {
     const [selecionados, setSelecionados] = useState<number[]>(() => sector.analysts.map((analyst) => analyst.id));
+    const [busca, setBusca] = useState('');
     const [processing, setProcessing] = useState(false);
+
+    const termo = normalizar(busca.trim());
+    const visiveis = termo
+        ? disponiveis.filter((usuario) =>
+              normalizar([usuario.name, usuario.login ?? '', ...usuario.perfis, ...usuario.setores].join(' ')).includes(termo),
+          )
+        : disponiveis;
 
     function alternar(id: number, marcado: boolean) {
         setSelecionados((atual) => (marcado ? [...atual, id] : atual.filter((item) => item !== id)));
@@ -200,27 +221,90 @@ function ManageAnalystsModal({
     }
 
     return (
-        <Modal isOpen onClose={onClose} className="m-4 max-h-[90vh] max-w-[560px] overflow-y-auto p-6 lg:p-8">
-            <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Analistas do setor {sector.name}</h4>
+        <Modal isOpen onClose={onClose} className="m-4 max-h-[90vh] max-w-[680px] overflow-y-auto p-6 lg:p-8">
+            <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Usuários do setor {sector.name}</h4>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                Marque os analistas responsáveis por esta caixa. Um analista pode cobrir vários setores.
+                Marque os usuários responsáveis por esta caixa. Um usuário pode cobrir vários setores.
             </p>
 
-            <div className="mt-5 space-y-3">
+            {disponiveis.length > 0 && (
+                <div className="mt-4 space-y-2">
+                    <Input
+                        type="search"
+                        value={busca}
+                        onChange={(event) => setBusca(event.target.value)}
+                        placeholder="Buscar por nome, login, perfil ou setor"
+                        aria-label="Buscar usuário"
+                    />
+                    <p className="text-xs text-gray-500 dark:text-gray-400" aria-live="polite">
+                        {selecionados.length} marcado(s) · {visiveis.length} de {disponiveis.length} exibido(s)
+                    </p>
+                </div>
+            )}
+
+            <div className="mt-3 max-h-[52vh] divide-y divide-gray-100 overflow-y-auto rounded-lg border border-gray-200 dark:divide-gray-800 dark:border-gray-800">
                 {disponiveis.length === 0 ? (
                     <EmptyState
-                        title="Nenhum analista disponível"
-                        description="Cadastre usuários com o papel de analista para vinculá-los a um setor."
+                        title="Nenhum usuário disponível"
+                        description="Cadastre usuários internos para vinculá-los a um setor."
                     />
+                ) : visiveis.length === 0 ? (
+                    <p className="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
+                        Nenhum usuário encontrado para “{busca}”.
+                    </p>
                 ) : (
-                    disponiveis.map((analyst) => (
-                        <Checkbox
-                            key={analyst.id}
-                            label={analyst.name}
-                            checked={selecionados.includes(analyst.id)}
-                            onChange={(marcado) => alternar(analyst.id, marcado)}
-                        />
-                    ))
+                    visiveis.map((usuario) => {
+                        const marcado = selecionados.includes(usuario.id);
+
+                        return (
+                            <div
+                                key={usuario.id}
+                                className={`flex items-start gap-3 px-4 py-3 ${marcado ? 'bg-brand-50/40 dark:bg-brand-500/5' : ''}`}
+                            >
+                                <div className="pt-0.5">
+                                    <Checkbox
+                                        id={`usuario-${usuario.id}`}
+                                        checked={marcado}
+                                        onChange={(valor) => alternar(usuario.id, valor)}
+                                    />
+                                </div>
+                                <label htmlFor={`usuario-${usuario.id}`} className="min-w-0 flex-1 cursor-pointer">
+                                    <span className="block text-sm font-medium text-gray-800 dark:text-white/90">
+                                        {usuario.name}
+                                    </span>
+                                    {usuario.login && (
+                                        <span className="block truncate text-xs text-gray-500 dark:text-gray-400">
+                                            {usuario.login}
+                                        </span>
+                                    )}
+                                    <span className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                                        {usuario.perfis.length === 0 ? (
+                                            <Badge size="sm" color="warning">
+                                                Sem perfil
+                                            </Badge>
+                                        ) : (
+                                            usuario.perfis.map((perfil) => (
+                                                <Badge key={perfil} size="sm" color="info">
+                                                    {perfil}
+                                                </Badge>
+                                            ))
+                                        )}
+                                        {usuario.setores.length === 0 ? (
+                                            <Badge size="sm" color="light">
+                                                Sem setor
+                                            </Badge>
+                                        ) : (
+                                            usuario.setores.map((setor) => (
+                                                <Badge key={setor} size="sm" color="light">
+                                                    {setor}
+                                                </Badge>
+                                            ))
+                                        )}
+                                    </span>
+                                </label>
+                            </div>
+                        );
+                    })
                 )}
             </div>
 
@@ -301,7 +385,7 @@ export default function SectorsIndex({ sectors, analistasDisponiveis, filters, p
                               <TableAction
                                   tone="neutral"
                                   icon={<GroupIcon className="size-4.5" />}
-                                  label="Gerenciar analistas"
+                                  label="Gerenciar usuários"
                                   onClick={() => setManaging(sector)}
                               />
                               <TableAction

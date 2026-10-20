@@ -71,6 +71,60 @@ class SectorCrudTest extends TestCase
         $this->assertArrayHasKey('perPageOptions', $page['props']);
     }
 
+    public function test_lista_para_vinculo_traz_toda_a_equipe_interna_ativa(): void
+    {
+        $vistoriador = User::factory()->ad()->withAcceptedLgpdTerm()->create();
+        $vistoriador->assignRole('Vistoriador');
+        $analista = $this->analista();
+        $inativo = User::factory()->ad()->inactive()->create();
+        $inativo->assignRole('Vistoriador');
+        $cidadao = User::factory()->cidadao()->create();
+
+        $page = $this->actingAs($this->administrador(), 'gestao')
+            ->get('/gestao/setores')
+            ->assertOk()
+            ->viewData('page');
+
+        $ids = collect($page['props']['analistasDisponiveis'])->pluck('id');
+
+        $this->assertTrue($ids->contains($vistoriador->id));
+        $this->assertTrue($ids->contains($analista->id));
+        $this->assertFalse($ids->contains($inativo->id));
+        $this->assertFalse($ids->contains($cidadao->id));
+    }
+
+    public function test_lista_para_vinculo_traz_perfis_setores_e_login_de_cada_usuario(): void
+    {
+        $setor = Sector::factory()->create(['name' => 'Setor de Vistoria']);
+        $vistoriador = User::factory()->ad('augustocarvalho')->withAcceptedLgpdTerm()->create();
+        $vistoriador->assignRole('Vistoriador');
+        $vistoriador->sectors()->attach($setor->id);
+
+        $page = $this->actingAs($this->administrador(), 'gestao')
+            ->get('/gestao/setores')
+            ->assertOk()
+            ->viewData('page');
+
+        $item = collect($page['props']['analistasDisponiveis'])->firstWhere('id', $vistoriador->id);
+
+        $this->assertSame(['Vistoriador'], $item['perfis']);
+        $this->assertSame(['Setor de Vistoria'], $item['setores']);
+        $this->assertSame('augustocarvalho', $item['login']);
+    }
+
+    public function test_vistoriador_pode_ser_vinculado_ao_setor(): void
+    {
+        $setor = Sector::factory()->create();
+        $vistoriador = User::factory()->withAcceptedLgpdTerm()->create();
+        $vistoriador->assignRole('Vistoriador');
+
+        $this->actingAs($this->administrador(), 'gestao')
+            ->put("/gestao/setores/{$setor->id}/analistas", ['analyst_ids' => [$vistoriador->id]])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('sector_user', ['sector_id' => $setor->id, 'user_id' => $vistoriador->id]);
+    }
+
     public function test_cria_setor_auditado(): void
     {
         $this->actingAs($this->administrador(), 'gestao')
