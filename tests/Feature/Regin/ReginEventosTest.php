@@ -10,6 +10,7 @@ use App\Models\ViabilityRequestEvento;
 use App\Services\Regin\ReginEventos;
 use App\Services\Regin\ReginProcessoProtocolador;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 /**
@@ -139,6 +140,21 @@ class ReginEventosTest extends TestCase
             'exibir' => false,
         ]);
         $this->assertDatabaseHas('servico_nomenclaturas', ['de' => self::INSCRICAO['PEV_NOME_EVENTO'], 'para' => 'Abertura', 'exibir' => true]);
+    }
+
+    public function test_evento_ja_gravado_no_processo_nao_consulta_a_nomenclatura_de_novo(): void
+    {
+        $processo = ViabilityRequest::factory()->create(['external_reference' => 'BAP2601848001']);
+        $recebimento = $this->recebimento($this->corpoComEventos([self::INSCRICAO]));
+        ReginEventos::gravar($processo, $recebimento);
+
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+        ReginEventos::gravar($processo, $recebimento);
+        $consultas = collect(DB::getQueryLog())->filter(fn (array $q): bool => str_contains($q['query'], 'servico_nomenclaturas'));
+        DB::disableQueryLog();
+
+        $this->assertCount(0, $consultas);
     }
 
     public function test_comando_preenche_os_eventos_dos_processos_ja_recebidos(): void

@@ -7,8 +7,10 @@ use App\Http\Requests\Gestao\StoreServicoNomenclaturaRequest;
 use App\Http\Requests\Gestao\UpdateServicoNomenclaturaRequest;
 use App\Models\ServicoNomenclatura;
 use App\Models\ViabilityRequestEvento;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -76,7 +78,11 @@ class ServicoNomenclaturaController extends Controller
 
     public function store(StoreServicoNomenclaturaRequest $request): RedirectResponse
     {
-        ServicoNomenclatura::create($request->validated());
+        try {
+            ServicoNomenclatura::create($request->validated());
+        } catch (UniqueConstraintViolationException) {
+            throw ValidationException::withMessages(['de' => 'Já existe uma linha para este serviço.']);
+        }
 
         return back()->with('status', 'Nomenclatura cadastrada com sucesso.');
     }

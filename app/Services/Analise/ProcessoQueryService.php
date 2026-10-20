@@ -8,6 +8,7 @@ use App\Enums\AnalysisStatus;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\User;
 use App\Models\ViabilityRequest;
+use App\Services\Servicos\ServicoNomenclaturaResolver;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
@@ -40,6 +41,9 @@ class ProcessoQueryService
     /** Filtros oferecidos nas caixas (setor e analista) — subconjunto do SAPS. */
     /** Prefixo do valor do filtro `servico` que aponta para um evento da JUCEB, e não para o tipo interno. */
     public const PREFIXO_EVENTO = 'e';
+
+    /** Filtro "Serviço" pelo nome parametrizado (De x Para), normalizado. */
+    public const PREFIXO_NOME_SERVICO = 'n';
 
     public const CHAVES_FILTRO_CAIXA = ['analysis_status', 'servico', 'protocolo', 'bap', 'data_de', 'data_ate', 'nome', 'cnpj', 'bairro', 'categoria', 'analista', 'cnae', 'complemento'];
 
@@ -87,6 +91,8 @@ class ProcessoQueryService
      */
     public function aplicarFiltros(Builder $query, array $filtros): Builder
     {
+        $codigosDoServico = $this->eventosDoServico($filtros);
+
         return $query
             ->when($this->valor($filtros, 'grupo'), fn (Builder $q, string $grupo) => $this->aplicarGrupo($q, $grupo))
             ->when($this->valor($filtros, 'status'), fn (Builder $q, string $status) => $q->where('status', $status))
@@ -102,7 +108,7 @@ class ProcessoQueryService
             ->when($this->valor($filtros, 'bap'), fn (Builder $q, string $v) => $q->whereLike('external_reference', "%{$v}%", caseSensitive: false))
             ->when($this->valor($filtros, 'produto_tvl'), fn (Builder $q, string $v) => $q->whereHas('decision', fn ($d) => $d->whereLike('tvl_product_number', "%{$v}%", caseSensitive: false)))
             ->when($this->inteiro($filtros, 'servico'), fn (Builder $q, int $id) => $q->where('service_type_id', $id))
-            ->when($this->eventosDoServico($filtros), fn (Builder $q, array $codigos) => $q->whereHas('eventos', fn ($e) => $e->whereIn('codigo', $codigos)))
+            ->when($codigosDoServico !== null, fn (Builder $q) => $q->whereHas('eventos', fn ($e) => $e->whereIn('codigo', $codigosDoServico)))
             ->when($this->inteiro($filtros, 'setor'), fn (Builder $q, int $id) => $q->where('sector_id', $id))
             ->when($this->inteiro($filtros, 'analista'), fn (Builder $q, int $id) => $q->where('assigned_user_id', $id))
             ->when($this->valor($filtros, 'inscricao'), fn (Builder $q, string $v) => $q->whereLike('property_registration', "%{$v}%", caseSensitive: false))
@@ -513,8 +519,9 @@ class ProcessoQueryService
     }
 
     /**
-     * Códigos de evento do filtro "Serviço" ("e244" ou "e101,102"): vários
-     * eventos podem ter o mesmo nome parametrizado.
+     * Códigos de evento do filtro "Serviço": pelo nome parametrizado
+     * ("nviabilidade de localizacao") ou pelos códigos, formato anterior
+     * ("e244", "e101,102"). Nome sem evento recebido não traz processo.
      *
      * @param  array<string, mixed>  $filtros
      * @return list<string>|null
@@ -522,6 +529,10 @@ class ProcessoQueryService
     private function eventosDoServico(array $filtros): ?array
     {
         $valor = $this->valor($filtros, 'servico');
+
+        if ($valor !== null && str_starts_with($valor, self::PREFIXO_NOME_SERVICO)) {
+            return app(ServicoNomenclaturaResolver::class)->codigosDoNome(substr($valor, strlen(self::PREFIXO_NOME_SERVICO)));
+        }
 
         if ($valor === null || ! str_starts_with($valor, self::PREFIXO_EVENTO)) {
             return null;

@@ -6,6 +6,7 @@ use App\Models\ServicoNomenclatura;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia as Assert;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
@@ -82,6 +83,29 @@ class ServicoNomenclaturaCrudTest extends TestCase
         $this->actingAs($this->administrador(), 'gestao')
             ->post('/gestao/servicos-nomenclatura', ['de' => 'INSCRICAO DE PRIMEIRO ESTABELECIMENTO', 'para' => 'Outro', 'exibir' => '1'])
             ->assertSessionHasErrors(['de' => 'Já existe uma linha para este serviço.']);
+    }
+
+    public function test_cadastro_simultaneo_do_mesmo_de_devolve_a_mensagem_e_nao_erro(): void
+    {
+        $admin = $this->administrador();
+        $inseriu = false;
+        DB::listen(function ($consulta) use (&$inseriu): void {
+            if ($inseriu || ! str_starts_with($consulta->sql, 'select exists') || ! str_contains($consulta->sql, 'servico_nomenclaturas')) {
+                return;
+            }
+
+            $inseriu = true;
+            DB::table('servico_nomenclaturas')->insert([
+                'de' => 'Baixa de inscrição', 'chave' => 'baixa de inscricao', 'para' => 'Baixa de inscrição',
+                'exibir' => false, 'created_at' => now(), 'updated_at' => now(),
+            ]);
+        });
+
+        $this->actingAs($admin, 'gestao')
+            ->post('/gestao/servicos-nomenclatura', ['de' => 'Baixa de inscrição', 'para' => 'Encerramento', 'exibir' => '1'])
+            ->assertSessionHasErrors(['de' => 'Já existe uma linha para este serviço.']);
+
+        $this->assertTrue($inseriu);
     }
 
     public function test_exige_de_e_para(): void

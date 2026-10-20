@@ -6,6 +6,7 @@ use App\Models\ServicoNomenclatura;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityRequestEvento;
 use App\Services\Analise\ProcessoQueryService;
+use Illuminate\Support\Collection;
 
 /**
  * Nome dos serviços exibido no Viabiliza a partir dos eventos da JUCEB, pelo
@@ -40,7 +41,7 @@ class ServicoNomenclaturaResolver
 
         return ($exibidos->isNotEmpty() ? $exibidos : $mapeados)
             ->pluck('para')
-            ->unique()
+            ->unique(fn (string $para): string => ServicoNomenclatura::chaveDe($para))
             ->values()
             ->all();
     }
@@ -52,24 +53,48 @@ class ServicoNomenclaturaResolver
 
     /**
      * Opções do filtro "Serviço": uma por nome Para entre os eventos já
-     * recebidos, com os códigos de todos os eventos que levam a esse nome.
+     * recebidos, sem diferenciar caixa ou acento. O valor é o nome normalizado,
+     * estável mesmo quando um evento novo passa a levar ao mesmo nome.
      *
      * @return list<array{value: string, label: string}>
      */
     public function opcoesDeEvento(): array
     {
-        return ViabilityRequestEvento::query()
-            ->select(['codigo', 'nome'])
-            ->distinct()
-            ->get()
-            ->groupBy(fn (ViabilityRequestEvento $evento): string => $this->nomePara($evento->nome))
-            ->map(fn ($eventos, string $para): array => [
-                'value' => ProcessoQueryService::PREFIXO_EVENTO.$eventos->pluck('codigo')->unique()->sort(SORT_NATURAL)->implode(','),
-                'label' => $para,
+        return $this->eventosPorNome()
+            ->map(fn (array $grupo, string $chave): array => [
+                'value' => ProcessoQueryService::PREFIXO_NOME_SERVICO.$chave,
+                'label' => $grupo['label'],
             ])
             ->sortBy('label', SORT_NATURAL | SORT_FLAG_CASE)
             ->values()
             ->all();
+    }
+
+    /**
+     * Códigos dos eventos recebidos cujo nome Para tem a chave informada.
+     *
+     * @return list<string>
+     */
+    public function codigosDoNome(string $chaveDoNome): array
+    {
+        return $this->eventosPorNome()->get($chaveDoNome)['codigos'] ?? [];
+    }
+
+    /**
+     * @return Collection<string, array{label: string, codigos: list<string>}>
+     */
+    private function eventosPorNome(): Collection
+    {
+        return ViabilityRequestEvento::query()
+            ->select(['codigo', 'nome'])
+            ->distinct()
+            ->get()
+            ->sortBy('codigo', SORT_NATURAL)
+            ->groupBy(fn (ViabilityRequestEvento $evento): string => ServicoNomenclatura::chaveDe($this->nomePara($evento->nome)))
+            ->map(fn (Collection $eventos): array => [
+                'label' => $this->nomePara($eventos->first()->nome),
+                'codigos' => $eventos->pluck('codigo')->unique()->values()->all(),
+            ]);
     }
 
     private function linha(string $nomeEvento): ?ServicoNomenclatura

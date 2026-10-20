@@ -1,10 +1,10 @@
 <?php
 
-use App\Models\ServicoNomenclatura;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 /**
  * De x Para dos nomes dos serviços (eventos da JUCEB) exibidos no Viabiliza.
@@ -37,13 +37,13 @@ return new class extends Migration
         $chaves = [];
 
         foreach (self::CARGA_SEDUR as $de => $para) {
-            $chaves[ServicoNomenclatura::chaveDe($de)] = ['de' => $de, 'para' => $para, 'exibir' => true];
+            $chaves[$this->chave($de)] = ['de' => $de, 'para' => $para, 'exibir' => true];
         }
 
         $recebidos = DB::table('viability_request_eventos')->distinct()->orderBy('nome')->pluck('nome');
 
         foreach ($recebidos as $nome) {
-            $chave = ServicoNomenclatura::chaveDe((string) $nome);
+            $chave = $this->chave((string) $nome);
 
             if ($chave !== '' && ! isset($chaves[$chave])) {
                 $chaves[$chave] = ['de' => $nome, 'para' => $nome, 'exibir' => false];
@@ -53,6 +53,15 @@ return new class extends Migration
         foreach ($chaves as $chave => $linha) {
             DB::table('servico_nomenclaturas')->insert($linha + ['chave' => $chave, 'created_at' => $agora, 'updated_at' => $agora]);
         }
+    }
+
+    /**
+     * Mesma normalização de ServicoNomenclatura::chaveDe na data desta
+     * migration, copiada para que ela não mude se o model mudar.
+     */
+    private function chave(string $nome): string
+    {
+        return trim((string) preg_replace('/\s+/u', ' ', mb_strtolower(Str::ascii($nome))));
     }
 
     public function down(): void
