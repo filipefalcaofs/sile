@@ -5,11 +5,13 @@ namespace App\Services\Renovacao;
 use App\Services\Realty\PropertyNotFoundException;
 use App\Services\Realty\PropertyRegistryLookup;
 use App\Services\Realty\PropertyRegistryUnavailableException;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 /**
  * Transforma a inscrição imobiliária no endereço do imóvel pelo cadastro.
  * Resultados bem-sucedidos ficam guardados por inscrição durante a requisição
- * (registrar como scoped); falhas não são guardadas nem engolidas.
+ * (registrar como scoped); falhas não são guardadas. Qualquer falha inesperada do cadastro vira indisponível.
  */
 class ResolvedorEnderecoImovel
 {
@@ -46,6 +48,10 @@ class ResolvedorEnderecoImovel
         } catch (PropertyNotFoundException) {
             throw new EnderecoImovelNaoEncontradoException(self::M_NAO_ENCONTRADA);
         } catch (PropertyRegistryUnavailableException) {
+            throw new EnderecoImovelIndisponivelException(self::M_INDISPONIVEL);
+        } catch (Throwable $falha) {
+            Log::warning('Falha inesperada ao consultar o cadastro imobiliário.', ['excecao' => $falha::class]);
+
             throw new EnderecoImovelIndisponivelException(self::M_INDISPONIVEL);
         }
 

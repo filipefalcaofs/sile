@@ -11,6 +11,7 @@ use App\Services\Renovacao\EnderecoDoImovel;
 use App\Services\Renovacao\EnderecoImovelIndisponivelException;
 use App\Services\Renovacao\EnderecoImovelNaoEncontradoException;
 use App\Services\Renovacao\ResolvedorEnderecoImovel;
+use Illuminate\Support\Facades\Log;
 use Tests\TestCase;
 
 class ResolvedorEnderecoImovelTest extends TestCase
@@ -41,6 +42,10 @@ class ResolvedorEnderecoImovelTest extends TestCase
 
                 if ($this->falha === 'nao_encontrada') {
                     throw new PropertyNotFoundException($inscricao);
+                }
+
+                if ($this->falha === 'inesperada') {
+                    throw new \RuntimeException('detalhe interno '.$inscricao);
                 }
 
                 return new PropertyRegistryResult(
@@ -159,6 +164,25 @@ class ResolvedorEnderecoImovelTest extends TestCase
         } catch (EnderecoImovelIndisponivelException $e) {
             $this->assertSame(ResolvedorEnderecoImovel::M_INDISPONIVEL, $e->getMessage());
         }
+    }
+
+    public function test_falha_inesperada_do_cadastro_vira_indisponivel_e_loga_so_a_classe(): void
+    {
+        $this->fakeCadastro(null, 'inesperada');
+        Log::spy();
+
+        try {
+            $this->resolvedor()->resolver('0123456789');
+            $this->fail('Deveria lançar exceção.');
+        } catch (EnderecoImovelIndisponivelException $e) {
+            $this->assertSame(ResolvedorEnderecoImovel::M_INDISPONIVEL, $e->getMessage());
+        }
+
+        Log::shouldHaveReceived('warning')->once()->withArgs(function (string $mensagem, array $contexto = []): bool {
+            return ! str_contains($mensagem.json_encode($contexto), '0123456789')
+                && ! str_contains($mensagem.json_encode($contexto), 'detalhe interno')
+                && str_contains(json_encode($contexto), 'RuntimeException');
+        });
     }
 
     public function test_mesma_inscricao_consulta_o_cadastro_uma_so_vez(): void
