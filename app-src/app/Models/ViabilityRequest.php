@@ -50,7 +50,7 @@ use Illuminate\Support\Collection;
  */
 #[Fillable([
     'origin',
-    'service_type_id', 'renews_viability_request_id', 'company_id', 'requester_cidadao_id', 'created_by_type', 'created_by_id', 'assisted_attendance_id',
+    'service_type_id', 'renews_viability_request_id', 'renews_legacy_tvl_number', 'legacy_tvl_snapshot', 'company_id', 'requester_cidadao_id', 'created_by_type', 'created_by_id', 'assisted_attendance_id',
     'used_area_m2', 'property_registration',
     'address_street', 'address_number', 'address_complement', 'address_neighborhood', 'address_zip', 'address_reference',
     'property_polygon_geojson',
@@ -136,6 +136,8 @@ class ViabilityRequest extends Model
             'property_polygon_geojson' => 'array',
             'address_polygon_geojson' => 'array',
             'origem_declarada' => 'array',
+            'renews_legacy_tvl_number' => 'integer',
+            'legacy_tvl_snapshot' => 'array',
             'address_polygon_consulted_at' => 'datetime',
             'address_polygon_source' => PoligonoFonte::class,
             'zona_fonte' => ZonaFonte::class,

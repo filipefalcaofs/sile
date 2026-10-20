@@ -377,6 +377,12 @@ return [
             'base_url' => 'https://api.sedur.salvador.ba.gov.br/k8s/prd/ws-contato',
             'timeout' => 8,
         ],
+        'legado_api' => [
+            // A base aceita com ou sem o sufixo /v1.
+            'base_url' => env('LEGADO_API_URL', ''),
+            'token' => env('LEGADO_API_TOKEN', ''),
+            'timeout' => 8,
+        ],
         'geocoding' => [
             'base_url' => 'https://nominatim-hmlg.salvador.ba.gov.br',
             'user_agent' => 'Viabiliza-SEDUR-Salvador/1.0 (contato@sedur.salvador.ba.gov.br)',

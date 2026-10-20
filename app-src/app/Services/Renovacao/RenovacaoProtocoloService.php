@@ -6,18 +6,23 @@ use App\Enums\AnalysisCategory;
 use App\Enums\ViabilityRequestOrigin;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\Cidadao;
+use App\Models\Cnae;
+use App\Models\Company;
 use App\Models\Sector;
 use App\Models\ServiceDeclaration;
 use App\Models\ServiceDeclarationAcceptance;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
 use App\Services\Analise\EnviarParaAnaliseService;
+use App\Services\Legado\TvlLegadaDetalhe;
 use App\Services\Solicitacao\ProtocolarSolicitacaoService;
 use App\Services\Solicitacao\ProtocolNumberGenerator;
 use App\Services\Solicitacao\ViabilityRequestStateMachine;
 use App\Support\Audit\AuditService;
 use App\Support\Settings;
 use DomainException;
+use Illuminate\Contracts\Cache\LockTimeoutException;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -36,6 +41,8 @@ class RenovacaoProtocoloService
         private AuditService $audit,
         private ProtocolarSolicitacaoService $protocoloViabilidade,
         private EnviarParaAnaliseService $enviarAnalise,
+        private RenovacaoLegadaElegibilidadeService $elegibilidadeLegada,
+        private ResolvedorEnderecoImovel $enderecoImovel,
     ) {}
 
     /**
@@ -50,6 +57,187 @@ class RenovacaoProtocoloService
             throw new DomainException($avaliacao->motivo ?? 'Esta viabilidade não pode ser renovada.');
         }
 
+        $origem->loadMissing(['cnaes', 'company']);
+
+        return $this->protocolarComum(
+            atributos: [
+                'renews_viability_request_id' => $origem->id,
+                'company_id' => $origem->company_id,
+                'used_area_m2' => $origem->used_area_m2,
+                'property_registration' => $origem->property_registration,
+                'address_street' => $origem->address_street,
+                'address_number' => $origem->address_number,
+                'address_complement' => $origem->address_complement,
+                'address_neighborhood' => $origem->address_neighborhood,
+                'address_zip' => $origem->address_zip,
+                'address_reference' => $origem->address_reference,
+                'property_polygon_geojson' => $origem->property_polygon_geojson,
+            ],
+            cnaes: $origem->cnaes
+                ->map(fn ($cnae): array => ['id' => $cnae->id, 'is_primary' => (bool) $cnae->pivot->is_primary])
+                ->all(),
+            empresa: $origem->company,
+            ator: $ator,
+            contato: $contato,
+            declaracaoIds: $declaracaoIds,
+            auditoria: [
+                'description' => fn (ViabilityRequest $renovacao): string => "Renovação da viabilidade locacional da solicitação #{$origem->id} protocolada como #{$renovacao->id}",
+                'properties' => ['origem_id' => $origem->id],
+            ],
+        );
+    }
+
+    /**
+     * Protocola a renovação de uma TVL do sistema legado, que não tem linha
+     * local para travar: a exclusão é um lock atômico pelo número legado e a
+     * elegibilidade é reavaliada dentro dele e da transação, para o segundo
+     * pedido enxergar a renovação aberta pelo primeiro.
+     *
+     * @param  array{email?: string|null, phone?: string|null, mobile?: string|null}  $contato
+     * @param  list<int>  $declaracaoIds
+     */
+    public function protocolarLegada(TvlLegadaDetalhe $tvl, Company $empresa, Cidadao $ator, array $contato, array $declaracaoIds): ViabilityRequest
+    {
+        $avaliacao = $this->elegibilidadeLegada->avaliar($tvl, $empresa);
+
+        if (! $avaliacao->elegivel) {
+            throw new DomainException($avaliacao->motivo ?? 'Esta viabilidade não pode ser renovada.');
+        }
+
+        $endereco = $this->enderecoDoProcessoLegado($tvl);
+
+        $lock = Cache::lock('renovacao-legada:'.$tvl->numero, 60);
+
+        try {
+            $lock->block(3);
+        } catch (LockTimeoutException) {
+            throw new DomainException('Já existe um protocolo em andamento para esta viabilidade. Aguarde alguns instantes.');
+        }
+
+        try {
+            return $this->protocolarComum(
+                atributos: [
+                    'renews_legacy_tvl_number' => $tvl->numero,
+                    'legacy_tvl_snapshot' => $this->snapshotLegado($tvl),
+                    'company_id' => $empresa->id,
+                    'property_registration' => $tvl->inscricaoImobiliaria,
+                    'address_street' => $endereco['logradouro'],
+                    'address_number' => $endereco['numero'],
+                    'address_complement' => $tvl->complemento,
+                    'address_neighborhood' => $endereco['bairro'],
+                    'address_zip' => $endereco['cep'],
+                ],
+                cnaes: $this->cnaesDoCatalogo($tvl),
+                empresa: $empresa,
+                ator: $ator,
+                contato: $contato,
+                declaracaoIds: $declaracaoIds,
+                auditoria: [
+                    'description' => fn (ViabilityRequest $renovacao): string => "Renovação da viabilidade locacional legada {$tvl->numero} protocolada como #{$renovacao->id}",
+                    'properties' => ['tvl_legada_numero' => $tvl->numero],
+                ],
+                verificar: function () use ($tvl): void {
+                    $reavaliacao = $this->elegibilidadeLegada->avaliarAposTitularidade($tvl);
+
+                    if (! $reavaliacao->elegivel) {
+                        throw new DomainException($reavaliacao->motivo ?? 'Esta viabilidade não pode ser renovada.');
+                    }
+                },
+            );
+        } finally {
+            $lock->release();
+        }
+    }
+
+    /**
+     * Endereço do processo: o do imóvel no cadastro, pela inscrição da TVL.
+     * Sem inscrição, mantém o endereço registrado no legado.
+     *
+     * @return array{logradouro: ?string, numero: ?string, bairro: ?string, cep: ?string}
+     *
+     * @throws DomainException
+     */
+    private function enderecoDoProcessoLegado(TvlLegadaDetalhe $tvl): array
+    {
+        if (! $this->enderecoImovel->temInscricao($tvl->inscricaoImobiliaria)) {
+            return $tvl->endereco;
+        }
+
+        try {
+            $imovel = $this->enderecoImovel->resolver($tvl->inscricaoImobiliaria);
+        } catch (EnderecoImovelNaoEncontradoException $e) {
+            throw new DomainException($e->getMessage());
+        } catch (EnderecoImovelIndisponivelException) {
+            throw new DomainException(ResolvedorEnderecoImovel::M_INDISPONIVEL);
+        }
+
+        return [
+            'logradouro' => $imovel->logradouro,
+            'numero' => $imovel->numero,
+            'bairro' => $imovel->bairro,
+            'cep' => $imovel->cep,
+        ];
+    }
+
+    /**
+     * Só o que veio do detalhe da API, com datas em texto.
+     *
+     * @return array<string, mixed>
+     */
+    private function snapshotLegado(TvlLegadaDetalhe $tvl): array
+    {
+        $dados = get_object_vars($tvl);
+
+        foreach (['emissao', 'validade', 'ultimaRenovacaoEm'] as $campo) {
+            $dados[$campo] = $dados[$campo]?->toDateString();
+        }
+
+        return $dados;
+    }
+
+    /**
+     * @return list<array{id: int, is_primary: bool}>
+     */
+    private function cnaesDoCatalogo(TvlLegadaDetalhe $tvl): array
+    {
+        $cnaes = [];
+
+        foreach ($tvl->atividades as $indice => $atividade) {
+            $codigo = preg_replace('/\D/', '', $atividade['codigo']) ?? '';
+            $cnae = Cnae::query()->where('code', $codigo)->where('active', true)->first();
+
+            if ($cnae === null) {
+                throw new DomainException("A atividade {$atividade['codigo']} não consta mais do catálogo. Procure a SEDUR.");
+            }
+
+            $cnaes[$cnae->id] = ['id' => $cnae->id, 'is_primary' => $indice === 0];
+        }
+
+        return array_values($cnaes);
+    }
+
+    /**
+     * Parte comum do protocolo: declarações, criação do processo, número,
+     * transições, auditoria, território, setor de triagem e envio à análise.
+     * O verificador, quando informado, roda dentro da transação antes de criar
+     * qualquer coisa.
+     *
+     * @param  array<string, mixed>  $atributos
+     * @param  list<array{id: int, is_primary: bool}>  $cnaes
+     * @param  array{email?: string|null, phone?: string|null, mobile?: string|null}  $contato
+     * @param  list<int>  $declaracaoIds
+     * @param  array{description: callable, properties: array<string, mixed>}  $auditoria
+     */
+    private function protocolarComum(
+        array $atributos,
+        array $cnaes,
+        ?Company $empresa,
+        Cidadao $ator,
+        array $contato,
+        array $declaracaoIds,
+        array $auditoria,
+        ?callable $verificar = null,
+    ): ViabilityRequest {
         $tipo = ViabilityServiceType::query()->where('code', 'renovacao-tvl')->first();
 
         if ($tipo === null) {
@@ -65,33 +253,25 @@ class RenovacaoProtocoloService
             throw new DomainException('Marque todas as declarações de responsabilidade para protocolar a renovação.');
         }
 
-        $renovacao = DB::transaction(function () use ($origem, $ator, $contato, $tipo, $obrigatorias): ViabilityRequest {
-            $origem->loadMissing(['cnaes', 'company']);
+        $renovacao = DB::transaction(function () use ($atributos, $cnaes, $empresa, $ator, $contato, $auditoria, $verificar, $tipo, $obrigatorias): ViabilityRequest {
+            if ($verificar !== null) {
+                $verificar();
+            }
 
             $renovacao = ViabilityRequest::query()->create([
                 'origin' => ViabilityRequestOrigin::Portal,
                 'service_type_id' => $tipo->id,
-                'renews_viability_request_id' => $origem->id,
-                'company_id' => $origem->company_id,
                 'requester_cidadao_id' => $ator->id,
                 'created_by_type' => $ator->getMorphClass(),
                 'created_by_id' => $ator->id,
-                'used_area_m2' => $origem->used_area_m2,
-                'property_registration' => $origem->property_registration,
-                'address_street' => $origem->address_street,
-                'address_number' => $origem->address_number,
-                'address_complement' => $origem->address_complement,
-                'address_neighborhood' => $origem->address_neighborhood,
-                'address_zip' => $origem->address_zip,
-                'address_reference' => $origem->address_reference,
-                'property_polygon_geojson' => $origem->property_polygon_geojson,
+                ...$atributos,
             ]);
 
             $renovacao->refresh();
 
-            foreach ($origem->cnaes as $cnae) {
-                $renovacao->cnaes()->attach($cnae->id, [
-                    'is_primary' => (bool) $cnae->pivot->is_primary,
+            foreach ($cnaes as $cnae) {
+                $renovacao->cnaes()->attach($cnae['id'], [
+                    'is_primary' => $cnae['is_primary'],
                 ]);
             }
 
@@ -105,7 +285,7 @@ class RenovacaoProtocoloService
                 ]);
             }
 
-            $this->atualizarContato($origem, $contato);
+            $this->atualizarContato($empresa, $contato);
 
             $renovacao->forceFill([
                 'protocol_number' => $this->numeros->generate(),
@@ -134,9 +314,9 @@ class RenovacaoProtocoloService
             $this->audit->log(
                 logName: 'solicitacoes',
                 event: 'renovacao_protocolada',
-                description: "Renovação da viabilidade locacional da solicitação #{$origem->id} protocolada como #{$renovacao->id}",
+                description: ($auditoria['description'])($renovacao),
                 properties: [
-                    'origem_id' => $origem->id,
+                    ...$auditoria['properties'],
                     'renovacao_id' => $renovacao->id,
                     'protocol_number' => $renovacao->protocol_number,
                     'mobile' => $contato['mobile'] ?? null,
@@ -189,10 +369,8 @@ class RenovacaoProtocoloService
     /**
      * @param  array{email?: string|null, phone?: string|null, mobile?: string|null}  $contato
      */
-    private function atualizarContato(ViabilityRequest $origem, array $contato): void
+    private function atualizarContato(?Company $empresa, array $contato): void
     {
-        $empresa = $origem->company;
-
         if ($empresa === null) {
             return;
         }
