@@ -98,9 +98,11 @@ class ConferenciaTitularidade
 
     private function enderecoConfere(EnderecoDoImovel $imovel, CnpjData $empresa): bool
     {
+        [$cepEmpresa, $logradouroEmpresa, $numeroEmpresa] = $this->enderecoDaEmpresa($empresa);
+
         $cepImovel = $this->cepUtilizavel($imovel->cep);
 
-        if ($cepImovel !== '' && $cepImovel === $this->cepUtilizavel($empresa->zipCode)) {
+        if ($cepImovel !== '' && $cepImovel === $cepEmpresa) {
             return true;
         }
 
@@ -109,8 +111,37 @@ class ConferenciaTitularidade
 
         return $logradouroImovel !== ''
             && $numeroImovel !== ''
-            && $logradouroImovel === $this->normalizarLogradouro($empresa->street)
-            && $numeroImovel === $this->numeroUtilizavel($empresa->number);
+            && $logradouroImovel === $logradouroEmpresa
+            && $numeroImovel === $numeroEmpresa;
+    }
+
+    /**
+     * Endereço da empresa como [cep, logradouro normalizado, número], com '' no
+     * que não puder ser lido. A consulta pela SEDUR traz tudo em `street`
+     * ("Rua X, 10, BAIRRO, 41830000"), sem CEP nem número separados; a BrasilAPI
+     * traz os campos separados.
+     *
+     * @return array{string, string, string}
+     */
+    private function enderecoDaEmpresa(CnpjData $empresa): array
+    {
+        $cep = $this->cepUtilizavel($empresa->zipCode);
+
+        if ($cep !== '' || trim((string) $empresa->number) !== '') {
+            return [$cep, $this->normalizarLogradouro($empresa->street), $this->numeroUtilizavel($empresa->number)];
+        }
+
+        $composto = (string) $empresa->street;
+        $segmentos = array_map('trim', explode(',', $composto));
+
+        preg_match_all('/\b\d{5}-?\d{3}\b/', $composto, $ceps);
+        $ultimoCep = $ceps[0] === [] ? null : end($ceps[0]);
+
+        $numero = isset($segmentos[1]) && preg_match('/^\d+\s*[A-Za-z]?$/', $segmentos[1]) === 1
+            ? $this->numeroUtilizavel($segmentos[1])
+            : '';
+
+        return [$this->cepUtilizavel($ultimoCep), $this->normalizarLogradouro($segmentos[0]), $numero];
     }
 
     private function cepUtilizavel(?string $cep): string

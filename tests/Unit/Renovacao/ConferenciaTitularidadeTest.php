@@ -339,6 +339,144 @@ class ConferenciaTitularidadeTest extends TestCase
         $this->assertTrue($resultado->confere);
     }
 
+    /**
+     * @return array<string, array{string, string, string, string}>
+     */
+    public static function paresReaisDaConsultaSedur(): array
+    {
+        return [
+            'thomaz gonzaga' => ['Rua Thomaz Gonzaga, 103, PERNAMBUÉS, 41100000', 'Rua Thomaz Gonzaga', '103', '41100-000'],
+            'beira mar' => ['Avenida Beira Mar, 317, RIBEIRA, 40420340', 'Avenida Beira Mar', '317', '40420-340'],
+            'desembargador' => ['Rua Desembargador Manoel de Andrade Teixeira, 2, STELLA MARIS, 41601115', 'Rua Desembargador Manoel de Andrade Teixeira', '2', '41601-115'],
+            'artur gonzales' => ['Rua Doutor Artur Gonzales, 158, PAU DA LIMA, 41235005', 'Rua Doutor Artur Gonzales', '158', '41235-005'],
+        ];
+    }
+
+    #[DataProvider('paresReaisDaConsultaSedur')]
+    public function test_endereco_composto_da_consulta_sedur_confere_com_o_imovel(string $composto, string $logradouro, string $numero, string $cep): void
+    {
+        $resultado = $this->conferir(
+            $this->tvl(razao: self::RAZAO),
+            $this->empresaSedur($composto),
+            $this->imovel($logradouro, $numero, $cep),
+        );
+
+        $this->assertTrue($resultado->confere);
+    }
+
+    public function test_endereco_composto_de_outro_imovel_nao_confere(): void
+    {
+        $resultado = $this->conferir(
+            $this->tvl(razao: self::RAZAO),
+            $this->empresaSedur('Rua Professor Lourival Pimenta Bastos, 426, COSTA AZUL, 41760010'),
+            $this->imovel('Avenida Jorge Amado', '76', '41720-040'),
+        );
+
+        $this->assertFalse($resultado->confere);
+        $this->assertSame(ConferenciaTitularidade::M_DIVERGE, $resultado->motivo);
+    }
+
+    public function test_composto_com_municipio_e_uf_antes_do_cep_extrai_o_cep(): void
+    {
+        $resultado = $this->conferir(
+            $this->tvl(razao: self::RAZAO),
+            $this->empresaSedur('Rua X, 10, PITUBA, SALVADOR, BA, 41830000'),
+            $this->imovel('Rua Y', '99', '41830-000'),
+        );
+
+        $this->assertTrue($resultado->confere);
+    }
+
+    public function test_composto_sem_cep_confere_por_logradouro_e_numero(): void
+    {
+        $igual = $this->conferir(
+            $this->tvl(razao: self::RAZAO),
+            $this->empresaSedur('Rua X, 10, PITUBA'),
+            $this->imovel('Rua X', '10', null),
+        );
+        $numeroDiferente = $this->conferir(
+            $this->tvl(razao: self::RAZAO),
+            $this->empresaSedur('Rua X, 10, PITUBA'),
+            $this->imovel('Rua X', '12', null),
+        );
+
+        $this->assertTrue($igual->confere);
+        $this->assertFalse($numeroDiferente->confere);
+    }
+
+    public function test_composto_com_segundo_segmento_nao_numerico_deixa_o_numero_ausente(): void
+    {
+        $porLogradouro = $this->conferir(
+            $this->tvl(razao: self::RAZAO),
+            $this->empresaSedur('Rua X, S/N, PITUBA'),
+            $this->imovel('Rua X', 'S/N', null),
+        );
+        $porCep = $this->conferir(
+            $this->tvl(razao: self::RAZAO),
+            $this->empresaSedur('Rua X, S/N, PITUBA, 41830000'),
+            $this->imovel('Rua Z', '5', '41830-000'),
+        );
+
+        $this->assertFalse($porLogradouro->confere);
+        $this->assertTrue($porCep->confere);
+    }
+
+    #[DataProvider('compostosComCepInutilizavel')]
+    public function test_composto_com_cep_inutilizavel_conta_como_ausente(string $composto): void
+    {
+        $resultado = $this->conferir(
+            $this->tvl(razao: self::RAZAO),
+            $this->empresaSedur($composto),
+            $this->imovel('Rua Y', '99', '00000-000'),
+        );
+
+        $this->assertFalse($resultado->confere);
+    }
+
+    /**
+     * @return array<string, array{string}>
+     */
+    public static function compostosComCepInutilizavel(): array
+    {
+        return [
+            'zeros' => ['Rua X, 10, PITUBA, 00000000'],
+            'sete digitos' => ['Rua X, 10, PITUBA, 4183000'],
+        ];
+    }
+
+    public function test_composto_com_cep_de_sete_digitos_nao_casa_com_cep_do_imovel(): void
+    {
+        $resultado = $this->conferir(
+            $this->tvl(razao: self::RAZAO),
+            $this->empresaSedur('Rua X, 10, PITUBA, 4183000'),
+            $this->imovel('Rua Y', '99', '41830-000'),
+        );
+
+        $this->assertFalse($resultado->confere);
+    }
+
+    public function test_composto_cujo_primeiro_segmento_e_so_numero_tem_logradouro_ausente(): void
+    {
+        $resultado = $this->conferir(
+            $this->tvl(razao: self::RAZAO),
+            $this->empresaSedur('1234, 10, PITUBA'),
+            $this->imovel('1234', '10', null),
+        );
+
+        $this->assertFalse($resultado->confere);
+    }
+
+    public function test_formato_estruturado_da_brasilapi_continua_funcionando(): void
+    {
+        $resultado = $this->conferir(
+            $this->tvl(razao: self::RAZAO),
+            $this->empresa(razao: self::RAZAO, rua: 'Rua X', numero: '10', cep: '41830-000'),
+            $this->imovel('Rua X', '10', null),
+        );
+
+        $this->assertTrue($resultado->confere);
+    }
+
     #[DataProvider('razoes')]
     public function test_normalizar_razao(string $entrada, string $esperado): void
     {
@@ -435,5 +573,10 @@ class ConferenciaTitularidadeTest extends TestCase
             email: null,
             registrationStatus: null,
         );
+    }
+
+    private function empresaSedur(string $enderecoComposto): CnpjData
+    {
+        return $this->empresa(razao: self::RAZAO, rua: $enderecoComposto);
     }
 }
