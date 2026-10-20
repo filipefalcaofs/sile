@@ -2343,7 +2343,7 @@ export default function FichaAnaliseShow({
                                 <div className="flex flex-col gap-2">
                                     {editavel ? (
                                         <>
-                                            <Button onClick={() => salvarRascunho(true)} variant="outline" size="sm">
+                                            <Button onClick={() => salvarRascunho(true)} variant="destaque" size="sm">
                                                 Salvar Ficha
                                             </Button>
                                             <Button onClick={() => setShowFinalizar(true)} size="sm">
