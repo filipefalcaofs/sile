@@ -10,10 +10,10 @@ use App\Http\Resources\DecisionExplanationResource;
 use App\Http\Resources\ViabilityDecisionResource;
 use App\Models\Activity;
 use App\Models\ViabilityRequest;
-use App\Models\ViabilityRequestEvento;
 use App\Models\ViabilityServiceType;
 use App\Services\Analise\ProcessoQueryService;
 use App\Services\Auditoria\DecisionExplanationService;
+use App\Services\Servicos\ServicoNomenclaturaResolver;
 use App\Support\Audit\AuditService;
 use App\Support\Settings;
 use Illuminate\Database\Eloquent\Collection;
@@ -194,12 +194,7 @@ class ResultadoExpressoController extends Controller
      */
     private function servicoOptions(): array
     {
-        $eventos = ViabilityRequestEvento::query()
-            ->selectRaw('codigo, min(nome) as nome')
-            ->groupBy('codigo')
-            ->orderBy('nome')
-            ->get()
-            ->map(fn ($evento): array => ['value' => ProcessoQueryService::PREFIXO_EVENTO.$evento->codigo, 'label' => $evento->nome]);
+        $eventos = collect(app(ServicoNomenclaturaResolver::class)->opcoesDeEvento());
 
         $tipos = ViabilityServiceType::query()
             ->orderBy('name')

@@ -102,7 +102,7 @@ class ProcessoQueryService
             ->when($this->valor($filtros, 'bap'), fn (Builder $q, string $v) => $q->whereLike('external_reference', "%{$v}%", caseSensitive: false))
             ->when($this->valor($filtros, 'produto_tvl'), fn (Builder $q, string $v) => $q->whereHas('decision', fn ($d) => $d->whereLike('tvl_product_number', "%{$v}%", caseSensitive: false)))
             ->when($this->inteiro($filtros, 'servico'), fn (Builder $q, int $id) => $q->where('service_type_id', $id))
-            ->when($this->eventoDoServico($filtros), fn (Builder $q, string $codigo) => $q->whereHas('eventos', fn ($e) => $e->where('codigo', $codigo)))
+            ->when($this->eventosDoServico($filtros), fn (Builder $q, array $codigos) => $q->whereHas('eventos', fn ($e) => $e->whereIn('codigo', $codigos)))
             ->when($this->inteiro($filtros, 'setor'), fn (Builder $q, int $id) => $q->where('sector_id', $id))
             ->when($this->inteiro($filtros, 'analista'), fn (Builder $q, int $id) => $q->where('assigned_user_id', $id))
             ->when($this->valor($filtros, 'inscricao'), fn (Builder $q, string $v) => $q->whereLike('property_registration', "%{$v}%", caseSensitive: false))
@@ -513,9 +513,13 @@ class ProcessoQueryService
     }
 
     /**
+     * Códigos de evento do filtro "Serviço" ("e244" ou "e101,102"): vários
+     * eventos podem ter o mesmo nome parametrizado.
+     *
      * @param  array<string, mixed>  $filtros
+     * @return list<string>|null
      */
-    private function eventoDoServico(array $filtros): ?string
+    private function eventosDoServico(array $filtros): ?array
     {
         $valor = $this->valor($filtros, 'servico');
 
@@ -523,9 +527,12 @@ class ProcessoQueryService
             return null;
         }
 
-        $codigo = substr($valor, strlen(self::PREFIXO_EVENTO));
+        $codigos = array_values(array_filter(
+            array_map('trim', explode(',', substr($valor, strlen(self::PREFIXO_EVENTO)))),
+            fn (string $codigo): bool => $codigo !== '',
+        ));
 
-        return $codigo === '' ? null : $codigo;
+        return $codigos === [] ? null : $codigos;
     }
 
     /**

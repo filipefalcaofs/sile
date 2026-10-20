@@ -146,7 +146,7 @@ class VistoriaCaixaDistribuicaoTest extends TestCase
         $this->actingAs($chefia, 'gestao')
             ->get('/gestao/vistorias')
             ->assertInertia(fn (Assert $page) => $page
-                ->where('vistorias.data.0.servicos', ['Alteração de endereço dentro do mesmo município']));
+                ->where('vistorias.data.0.servicos', ['Revisão de Endereço']));
     }
 
     public function test_filtros_das_caixas_valem_na_caixa_de_vistoria(): void

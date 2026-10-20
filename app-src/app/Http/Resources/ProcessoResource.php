@@ -6,6 +6,7 @@ use App\Enums\ViabilityRequestStatus;
 use App\Models\ViabilityRequest;
 use App\Services\Analise\AnalysisSlaService;
 use App\Services\Analise\ProcessoQueryService;
+use App\Services\Servicos\ServicoNomenclaturaResolver;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -64,10 +65,8 @@ class ProcessoResource extends JsonResource
             // completa fica em `categorias`.
             'categoria' => $categorias[0]['label'] ?? null,
             'servico' => $this->serviceType?->name,
-            // Serviço legível: os eventos que a JUCEB enviou; sem eles, o tipo interno.
-            'servicos' => $this->eventos->isNotEmpty()
-                ? $this->eventos->pluck('nome')->values()->all()
-                : array_values(array_filter([$this->serviceType?->name])),
+            // Serviço legível: nome parametrizado dos eventos da JUCEB; sem eles, o tipo interno.
+            'servicos' => app(ServicoNomenclaturaResolver::class)->servicos($this->resource),
             'analista' => $this->assignedTo?->name,
             'assigned_user_id' => $this->assigned_user_id,
             'setor' => $this->sector?->name,

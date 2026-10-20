@@ -21,7 +21,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 /**
- * Consulta de processos da retaguarda (HU-082): a SEDUR busca processos com os
+ * Consulta de processos da retaguarda (HU-078): a SEDUR busca processos com os
  * filtros completos do SAPS (status, número do processo, BAP, produto TVL,
  * serviço, setor, inscrição, nome, CNPJ, CEP, logradouro, bairro, datas) MAIS o
  * filtro por analista responsável e por categoria derivada (Expresso,
@@ -487,7 +487,7 @@ class ProcessoConsultaTest extends TestCase
                 ->where('processos.data.0.fluxo', 'analise_tecnica'));
     }
 
-    public function test_servico_da_linha_sao_os_eventos_da_juceb_ou_o_tipo_interno(): void
+    public function test_servico_da_linha_e_o_nome_parametrizado_dos_eventos_da_juceb_ou_o_tipo_interno(): void
     {
         $servico = ViabilityServiceType::factory()->create();
         $daJuceb = $this->processo(['service_type_id' => $servico->id]);
@@ -503,7 +503,7 @@ class ProcessoConsultaTest extends TestCase
         )->keyBy('id');
 
         $this->assertSame(
-            ['Alteração de endereço dentro do mesmo município', 'Alteração de atividades econômicas (principal e secundárias)'],
+            ['Revisão de Endereço', 'Revisão de Atividade - Inclusão'],
             $linhas[$daJuceb->id]['servicos'],
         );
         $this->assertSame([$servico->name], $linhas[$doPortal->id]['servicos']);

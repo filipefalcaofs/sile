@@ -132,7 +132,7 @@ class CaixaSetorTest extends TestCase
         $this->assertTrue($linha['cnaes'][0]['principal']);
     }
 
-    public function test_servico_da_linha_sao_os_eventos_da_juceb_ou_o_tipo_interno(): void
+    public function test_servico_da_linha_e_o_nome_parametrizado_dos_eventos_da_juceb_ou_o_tipo_interno(): void
     {
         $setor = Sector::factory()->create();
         $analista = $this->analistaDoSetor($setor);
@@ -154,7 +154,7 @@ class CaixaSetorTest extends TestCase
         )->keyBy('id');
 
         $this->assertSame(
-            ['Alteração de endereço dentro do mesmo município', 'Alteração de atividades econômicas (principal e secundárias)'],
+            ['Revisão de Endereço', 'Revisão de Atividade - Inclusão'],
             $linhas[$daJuceb->id]['servicos'],
         );
         $this->assertSame([$servico->name], $linhas[$doPortal->id]['servicos']);
@@ -178,9 +178,52 @@ class CaixaSetorTest extends TestCase
         $this->assertContains($comEvento->id, $ids);
         $this->assertNotContains($semEvento->id, $ids);
         $this->assertContains(
-            ['value' => 'e244', 'label' => 'Alteração de atividades econômicas (principal e secundárias)'],
+            ['value' => 'e244', 'label' => 'Revisão de Atividade - Inclusão'],
             $props['servicoOptions'],
         );
+    }
+
+    public function test_filtro_de_servico_agrupa_eventos_com_o_mesmo_nome_parametrizado(): void
+    {
+        $setor = Sector::factory()->create();
+        $apoio = $this->apoioDoSetor($setor);
+
+        $primeiro = $this->processoNaCaixa($setor);
+        ViabilityRequestEvento::factory()->create(['viability_request_id' => $primeiro->id, 'codigo' => '101', 'nome' => 'Inscrição de primeiro estabelecimento']);
+        $demais = $this->processoNaCaixa($setor);
+        ViabilityRequestEvento::factory()->create(['viability_request_id' => $demais->id, 'codigo' => '102', 'nome' => 'Inscrição dos demais estabelecimentos']);
+        $alteracao = $this->processoNaCaixa($setor);
+        ViabilityRequestEvento::factory()->create(['viability_request_id' => $alteracao->id, 'codigo' => '244', 'nome' => 'Alteração de atividades econômicas (principal e secundárias)']);
+
+        $opcoes = $this->actingAs($apoio, 'gestao')
+            ->get('/gestao/caixa-setor')
+            ->viewData('page')['props']['servicoOptions'];
+
+        $this->assertContains(['value' => 'e101,102', 'label' => 'Viabilidade de Localização'], $opcoes);
+        $this->assertSame(1, collect($opcoes)->where('label', 'Viabilidade de Localização')->count());
+
+        $ids = collect($this->actingAs($apoio, 'gestao')
+            ->get('/gestao/caixa-setor?servico=e101,102')
+            ->viewData('page')['props']['processos']['data'])->pluck('id')->all();
+
+        $this->assertEqualsCanonicalizing([$primeiro->id, $demais->id], $ids);
+    }
+
+    public function test_opcoes_de_tipo_interno_vem_depois_das_de_evento(): void
+    {
+        $setor = Sector::factory()->create();
+        $apoio = $this->apoioDoSetor($setor);
+        $tipo = ViabilityServiceType::factory()->create(['name' => 'Renovação']);
+        $processo = $this->processoNaCaixa($setor);
+        ViabilityRequestEvento::factory()->create(['viability_request_id' => $processo->id, 'codigo' => '101', 'nome' => 'Inscrição de primeiro estabelecimento']);
+
+        $opcoes = $this->actingAs($apoio, 'gestao')
+            ->get('/gestao/caixa-setor')
+            ->viewData('page')['props']['servicoOptions'];
+
+        $this->assertSame(['value' => 'e101', 'label' => 'Viabilidade de Localização'], $opcoes[0]);
+        $this->assertContains(['value' => (string) $tipo->id, 'label' => 'Renovação'], array_slice($opcoes, 1));
+        $this->assertTrue(collect(array_slice($opcoes, 1))->every(fn (array $opcao): bool => ctype_digit($opcao['value'])));
     }
 
     public function test_index_lista_ordenada_por_prazo(): void
