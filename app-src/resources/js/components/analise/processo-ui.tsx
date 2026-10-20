@@ -114,6 +114,7 @@ export interface ProcessoItem {
     id: number;
     protocol_number: string | null;
     bap: string | null;
+    renovacao?: boolean;
     tvl_product_number: string | null;
     status: string;
     status_label: string;

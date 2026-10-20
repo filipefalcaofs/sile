@@ -124,6 +124,7 @@ class MalhaFinaCaixaController extends Controller
             'id' => $processo->id,
             'protocol_number' => $processo->protocol_number,
             'bap' => $processo->external_reference,
+            'renovacao' => $processo->isRenewal(),
             'protocoled_at' => $processo->protocoled_at?->toIso8601String(),
             'empresa' => $processo->company?->trade_name ?: $processo->company?->legal_name,
             'requerente' => $processo->requester?->name,

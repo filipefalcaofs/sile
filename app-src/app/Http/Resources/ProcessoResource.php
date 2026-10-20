@@ -36,6 +36,7 @@ class ProcessoResource extends JsonResource
             // Três identificadores do processo (RN-007).
             'protocol_number' => $this->protocol_number,
             'bap' => $this->external_reference,
+            'renovacao' => $this->isRenewal(),
             'tvl_product_number' => $this->decision?->tvl_product_number,
             'status' => $this->status->value,
             'status_label' => $this->status->label(),
