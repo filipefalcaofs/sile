@@ -13,6 +13,7 @@ import {
     type AreaEmbarqueRequerente,
 } from '@/pages/gestao/ficha-analise/area-embarque';
 import { desfechoDaAnalise, type DesfechoAnalise } from '@/pages/gestao/ficha-analise/sintese';
+import { sugerirCondicionantes } from '@/pages/gestao/ficha-analise/sugestoes-condicionante';
 import PageHeader from '@/components/app/page-header';
 import CamadasImovelLista, { type CamadasImovel } from '@/components/geo/camadas-imovel';
 import { centroDaGeometria, ESTILO_ENDERECAMENTO } from '@/components/geo/geometria';
@@ -746,8 +747,14 @@ export default function FichaAnaliseShow({
     );
     const [sedeEscritorioVirtual, setSedeEscritorioVirtual] = useState<boolean>(() => ficha.is_virtual_office_hq ?? false);
     const [novaCondicao, setNovaCondicao] = useState('');
+    const [sugestaoAtiva, setSugestaoAtiva] = useState(-1);
+    const [sugestoesAbertas, setSugestoesAbertas] = useState(false);
     const analysisReasons = ficha.analysis_reasons ?? [];
     const desfecho = desfechoDaAnalise(processo.status);
+    const sugestoesCondicao = useMemo(
+        () => sugerirCondicionantes(textosPadrao, novaCondicao, conditions),
+        [textosPadrao, novaCondicao, conditions],
+    );
     const [addressConfirmed, setAddressConfirmed] = useState<boolean | null>(() => ficha.address_confirmed ?? null);
     const [saveState, setSaveState] = useState<'idle' | 'salvando' | 'salvo' | 'erro'>('idle');
 
@@ -2092,29 +2099,85 @@ export default function FichaAnaliseShow({
                                 ) : (
                                     <p className="text-theme-sm text-gray-500 dark:text-gray-400">
                                         Nenhuma condicionante neste processo — o motor não identificou obrigação
-                                        urbanística. A busca, o texto livre e a biblioteca servem só para
-                                        acrescentar uma obrigação que o motor não sugeriu.
+                                        urbanística. O texto livre e a biblioteca servem só para acrescentar uma
+                                        obrigação que o motor não sugeriu. Ao digitar, aparecem sugestões da
+                                        biblioteca.
                                     </p>
                                 )}
 
                                 {editavel && (
                                     <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
-                                        <div className="flex-1">
+                                        <div className="relative flex-1">
                                             <Label htmlFor="nova-condicao">Adicionar condicionante (texto livre)</Label>
                                             <Input
                                                 id="nova-condicao"
                                                 type="text"
+                                                role="combobox"
+                                                autoComplete="off"
+                                                aria-autocomplete="list"
+                                                aria-controls="sugestoes-condicao"
+                                                aria-expanded={sugestoesAbertas && sugestoesCondicao.length > 0}
+                                                aria-activedescendant={
+                                                    sugestoesAbertas && sugestaoAtiva >= 0
+                                                        ? `sugestao-condicao-${sugestoesCondicao[sugestaoAtiva]?.id}`
+                                                        : undefined
+                                                }
                                                 value={novaCondicao}
                                                 placeholder="Descreva a condicionante…"
-                                                onChange={(event) => setNovaCondicao(event.target.value)}
+                                                onChange={(event) => {
+                                                    setNovaCondicao(event.target.value);
+                                                    setSugestaoAtiva(-1);
+                                                    setSugestoesAbertas(true);
+                                                }}
+                                                onBlur={() => setSugestoesAbertas(false)}
                                                 onKeyDown={(event) => {
-                                                    if (event.key === 'Enter') {
+                                                    const abertas = sugestoesAbertas && sugestoesCondicao.length > 0;
+
+                                                    if (event.key === 'ArrowDown' && abertas) {
                                                         event.preventDefault();
-                                                        adicionarCondicao(novaCondicao);
+                                                        setSugestaoAtiva((atual) => (atual + 1) % sugestoesCondicao.length);
+                                                    } else if (event.key === 'ArrowUp' && abertas) {
+                                                        event.preventDefault();
+                                                        setSugestaoAtiva((atual) => (atual <= 0 ? sugestoesCondicao.length - 1 : atual - 1));
+                                                    } else if (event.key === 'Escape') {
+                                                        setSugestoesAbertas(false);
+                                                    } else if (event.key === 'Enter') {
+                                                        event.preventDefault();
+                                                        const escolhida = abertas && sugestaoAtiva >= 0 ? sugestoesCondicao[sugestaoAtiva] : null;
+                                                        adicionarCondicao(escolhida ? escolhida.content : novaCondicao);
                                                         setNovaCondicao('');
+                                                        setSugestaoAtiva(-1);
                                                     }
                                                 }}
                                             />
+                                            {sugestoesAbertas && sugestoesCondicao.length > 0 && (
+                                                <ul
+                                                    id="sugestoes-condicao"
+                                                    role="listbox"
+                                                    aria-label="Sugestões da biblioteca"
+                                                    className="absolute inset-x-0 top-full z-10 mt-1 max-h-64 overflow-y-auto rounded-lg border border-gray-200 bg-white py-1 shadow-theme-lg dark:border-gray-800 dark:bg-gray-900"
+                                                >
+                                                    {sugestoesCondicao.map((sugestao, indice) => (
+                                                        <li
+                                                            key={sugestao.id}
+                                                            id={`sugestao-condicao-${sugestao.id}`}
+                                                            role="option"
+                                                            aria-selected={indice === sugestaoAtiva}
+                                                            onMouseDown={(event) => {
+                                                                event.preventDefault();
+                                                                adicionarCondicao(sugestao.content);
+                                                                setNovaCondicao('');
+                                                                setSugestaoAtiva(-1);
+                                                            }}
+                                                            className={`cursor-pointer px-3 py-2 text-theme-sm text-gray-700 dark:text-gray-300 ${
+                                                                indice === sugestaoAtiva ? 'bg-gray-100 dark:bg-white/5' : 'hover:bg-gray-50 dark:hover:bg-white/[0.03]'
+                                                            }`}
+                                                        >
+                                                            {sugestao.content}
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            )}
                                         </div>
                                         <div className="flex gap-2">
                                             <Button
