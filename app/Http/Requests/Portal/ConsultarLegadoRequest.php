@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Portal;
 
-use App\Models\CompanyUser;
 use App\Support\Representation\CurrentRepresentation;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -21,13 +20,7 @@ class ConsultarLegadoRequest extends FormRequest
             return true;
         }
 
-        $usuario = app(CurrentRepresentation::class)->grantor() ?? $this->user();
-
-        return CompanyUser::query()
-            ->where('user_id', $usuario->id)
-            ->whereNull('ended_at')
-            ->where('company_id', (int) $empresa)
-            ->exists();
+        return app(CurrentRepresentation::class)->actsForCompany($this->user(), (int) $empresa);
     }
 
     protected function prepareForValidation(): void

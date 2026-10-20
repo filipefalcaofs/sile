@@ -8,7 +8,6 @@ use App\Http\Requests\Portal\ConsultarLegadoRequest;
 use App\Http\Requests\Portal\LookupCnpjRequest;
 use App\Http\Requests\Portal\ProtocolarRenovacaoRequest;
 use App\Models\Company;
-use App\Models\CompanyUser;
 use App\Models\ServiceDeclaration;
 use App\Models\User;
 use App\Models\ViabilityRequest;
@@ -158,8 +157,8 @@ class RenovacaoController extends Controller
 
     public function showLegado(Request $request, int $empresa, string $numero): Response|RedirectResponse
     {
+        $this->autorizarEmpresaId($request, $empresa);
         $empresaModelo = Company::query()->findOrFail($empresa);
-        $this->autorizarEmpresaId($request, $empresaModelo->id);
 
         try {
             $tvl = $this->legadoClient->tvlPorNumero((int) $numero);
@@ -290,7 +289,7 @@ class RenovacaoController extends Controller
 
     private function usuarioEfetivo(Request $request): User
     {
-        return app(CurrentRepresentation::class)->grantor() ?? $request->user();
+        return app(CurrentRepresentation::class)->effectiveUser($request->user());
     }
 
     /**
@@ -298,12 +297,7 @@ class RenovacaoController extends Controller
      */
     private function empresasDo(User $usuario): array
     {
-        return CompanyUser::query()
-            ->where('user_id', $usuario->id)
-            ->whereNull('ended_at')
-            ->pluck('company_id')
-            ->map(fn (mixed $id): int => (int) $id)
-            ->all();
+        return app(CurrentRepresentation::class)->companyIds($usuario);
     }
 
     private function voltarAoIndice(string $mensagem): RedirectResponse
@@ -314,7 +308,7 @@ class RenovacaoController extends Controller
     private function autorizarEmpresaId(Request $request, int $empresaId): void
     {
         abort_unless(
-            in_array($empresaId, $this->empresasDo($this->usuarioEfetivo($request)), true),
+            app(CurrentRepresentation::class)->actsForCompany($request->user(), $empresaId),
             403,
         );
     }
@@ -322,7 +316,7 @@ class RenovacaoController extends Controller
     private function autorizarEmpresa(Request $request, ViabilityRequest $origem): void
     {
         abort_unless(
-            in_array((int) $origem->company_id, $this->empresasDo($this->usuarioEfetivo($request)), true),
+            app(CurrentRepresentation::class)->actsForCompany($request->user(), (int) $origem->company_id),
             403,
         );
     }

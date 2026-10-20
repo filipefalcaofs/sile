@@ -211,13 +211,15 @@ class RenovacaoLegadaPortalTest extends TestCase
             ->get("/portal/renovacao/legado/{$empresa->id}/1234567")
             ->assertRedirect('/portal/renovacao')
             ->assertSessionHas('error', $generica);
+        $mensagemOutroTitular = session('error');
 
         $this->actingAs($cidadao)
             ->get("/portal/renovacao/legado/{$empresa->id}/7654321")
             ->assertRedirect('/portal/renovacao')
             ->assertSessionHas('error', $generica);
+        $mensagemInexistente = session('error');
 
-        $this->assertStringNotContainsString('outra empresa', $generica);
+        $this->assertSame($mensagemInexistente, $mensagemOutroTitular);
     }
 
     public function test_show_com_conferencia_cadastral_indisponivel_pede_nova_tentativa(): void
@@ -313,6 +315,100 @@ class RenovacaoLegadaPortalTest extends TestCase
             ->postJson('/portal/renovacao/consultar-cnpj', ['cnpj' => '11444777000161'])
             ->assertOk()
             ->assertJson(['legado' => []]);
+    }
+
+    public function test_procurador_consulta_com_empresa_do_outorgante(): void
+    {
+        [$procurador, $outorgante, $procuracao] = $this->procuracao();
+        $empresaDoOutorgante = $this->empresaDe($outorgante);
+        $this->mockClient(function (MockInterface $client): void {
+            $client->shouldReceive('tvlPorNumero')->with(1234567)->andReturn($this->detalhe(1234567));
+        });
+
+        $this->actingAs($procurador)
+            ->withSession(['acting_procuration_id' => $procuracao->id])
+            ->postJson('/portal/renovacao/legado/consultar', [
+                'empresa_id' => $empresaDoOutorgante->id,
+                'numero_viabilidade' => '1234567',
+            ])
+            ->assertOk()
+            ->assertJsonPath('itens.0.numero', 1234567);
+    }
+
+    public function test_procurador_atuando_nao_usa_a_propria_empresa_em_consultar_nem_show(): void
+    {
+        [$procurador, $outorgante, $procuracao] = $this->procuracao();
+        $this->empresaDe($outorgante);
+        $propria = $this->empresaDe($procurador, self::OUTRO_CNPJ);
+        $this->mockClient(function (MockInterface $client): void {
+            $client->shouldNotReceive('tvlPorNumero');
+        });
+
+        $this->actingAs($procurador)
+            ->withSession(['acting_procuration_id' => $procuracao->id])
+            ->postJson('/portal/renovacao/legado/consultar', [
+                'empresa_id' => $propria->id,
+                'numero_viabilidade' => '1234567',
+            ])
+            ->assertForbidden();
+
+        $this->actingAs($procurador)
+            ->withSession(['acting_procuration_id' => $procuracao->id])
+            ->get("/portal/renovacao/legado/{$propria->id}/1234567")
+            ->assertForbidden();
+    }
+
+    public function test_vinculo_encerrado_nao_autoriza_consultar_nem_show(): void
+    {
+        $cidadao = $this->portalUser();
+        $empresa = $this->empresaDe($cidadao);
+        $empresa->links()->update(['ended_at' => now()->subDay()]);
+        $this->mockClient(function (MockInterface $client): void {
+            $client->shouldNotReceive('tvlPorNumero');
+        });
+
+        $this->actingAs($cidadao)
+            ->postJson('/portal/renovacao/legado/consultar', [
+                'empresa_id' => $empresa->id,
+                'numero_viabilidade' => '1234567',
+            ])
+            ->assertForbidden();
+
+        $this->actingAs($cidadao)
+            ->get("/portal/renovacao/legado/{$empresa->id}/1234567")
+            ->assertForbidden();
+    }
+
+    public function test_show_nao_enumera_ids_de_empresa(): void
+    {
+        $cidadao = $this->portalUser();
+        $alheia = Company::factory()->create(['cnpj' => self::CNPJ]);
+        $this->mockClient(function (MockInterface $client): void {
+            $client->shouldNotReceive('tvlPorNumero');
+        });
+
+        $this->actingAs($cidadao)
+            ->get("/portal/renovacao/legado/{$alheia->id}/1234567")
+            ->assertForbidden();
+
+        $this->actingAs($cidadao)
+            ->get('/portal/renovacao/legado/999999/1234567')
+            ->assertForbidden();
+    }
+
+    /**
+     * @return array{0: User, 1: User, 2: Procuration}
+     */
+    private function procuracao(): array
+    {
+        $outorgante = $this->portalUser();
+        $procurador = $this->portalUser();
+        $procuracao = Procuration::factory()->create([
+            'grantor_user_id' => $outorgante->id,
+            'attorney_user_id' => $procurador->id,
+        ]);
+
+        return [$procurador, $outorgante, $procuracao];
     }
 
     private function cadastroSedur(string $cnpj): void
