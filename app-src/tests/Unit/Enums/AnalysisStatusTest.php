@@ -6,40 +6,24 @@ use App\Enums\AnalysisStatus;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Regra única da redistribuição (spec 2026-09-22): a troca da analista
- * responsável pelo apoio/gestor só é permitida ANTES da conclusão da análise.
+ * Regra única da redistribuição (spec 2026-10-20): o apoio/gestor troca o
+ * responsável em qualquer situação, menos depois da conclusão da análise.
  */
 class AnalysisStatusTest extends TestCase
 {
-    public function test_redistribuicao_permitida_antes_da_conclusao(): void
+    public function test_redistribuicao_permitida_em_todas_as_situacoes_antes_da_conclusao(): void
     {
-        $permitidos = [
-            AnalysisStatus::ParaDistribuir,
-            AnalysisStatus::Encaminhado,
-            AnalysisStatus::Analisar,
-            AnalysisStatus::EmAnalise,
-        ];
+        foreach (AnalysisStatus::cases() as $status) {
+            if ($status === AnalysisStatus::AnaliseConcluida) {
+                continue;
+            }
 
-        foreach ($permitidos as $status) {
             $this->assertTrue($status->permiteRedistribuicao(), "{$status->value} deveria permitir redistribuição.");
         }
     }
 
-    public function test_redistribuicao_bloqueada_apos_conclusao_ou_em_convite_ou_vistoria(): void
+    public function test_redistribuicao_bloqueada_apos_a_conclusao_da_analise(): void
     {
-        $bloqueados = [
-            AnalysisStatus::ParaConclusao,
-            AnalysisStatus::AnaliseConcluida,
-            AnalysisStatus::EmConvite,
-            AnalysisStatus::ConviteRespondido,
-            AnalysisStatus::ConviteCancelado,
-            AnalysisStatus::ConviteExpirado,
-            AnalysisStatus::Vistoriar,
-            AnalysisStatus::Vistoriado,
-        ];
-
-        foreach ($bloqueados as $status) {
-            $this->assertFalse($status->permiteRedistribuicao(), "{$status->value} não deveria permitir redistribuição.");
-        }
+        $this->assertFalse(AnalysisStatus::AnaliseConcluida->permiteRedistribuicao());
     }
 }

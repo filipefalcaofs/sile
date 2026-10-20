@@ -8,10 +8,10 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 /**
- * Validação da distribuição da caixa do setor (HU-080) — single e LOTE (RN-007):
+ * Validação da distribuição da caixa do setor (HU-076) — single e LOTE (RN-007):
  * um ou mais processos EM ANÁLISE são atribuídos a um analista. A autorização é
  * o middleware permission:distribuir-processos da rota. O vínculo do analista ao
- * setor de CADA processo (RN-004/HU-081) é regra de domínio do
+ * setor de CADA processo (RN-004/HU-077) é regra de domínio do
  * DistribuicaoService — aqui valida-se a estrutura: ids existentes e em_analise,
  * e um analista existente.
  */
@@ -46,6 +46,16 @@ class DistribuirProcessoRequest extends FormRequest
             ],
             'analista_id' => ['required', 'integer', Rule::exists('users', 'id')],
             'sector_id' => ['nullable', 'integer', Rule::exists('sectors', 'id')],
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'request_ids.*.exists' => 'Um dos processos selecionados não está mais em análise e não pode ser distribuído. Atualize a lista.',
         ];
     }
 

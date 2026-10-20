@@ -22,6 +22,7 @@ use App\Support\Settings;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -176,7 +177,7 @@ class CaixaSetorController extends Controller
         // lista quando a linha está no eixo de vistoria (a regra é enforced
         // pelo DistribuicaoService; aqui é a conveniência da tela).
         $vistoriadores = $podeDistribuir
-            ? $this->destinatarios('preencher-ficha-vistoria', $sectorIds, $qualquerSetor)
+            ? $this->destinatarios('preencher-ficha-vistoria', $sectorIds, $qualquerSetor, ['Vistoriador', 'administrador'])
             : [];
 
         $this->audit->log('analise', 'consulta-caixa', 'Consulta da caixa do setor', [
@@ -399,7 +400,7 @@ class CaixaSetorController extends Controller
             ->get();
 
         if ($processos->count() !== $pedidos->count()) {
-            return back()->with('error', 'Alguns processos não estão disponíveis para distribuição na sua caixa.');
+            return back()->with('error', $this->motivoDeIndisponibilidade($pedidos, $processos->pluck('id'), $request->user()));
         }
 
         $setorEscolhido = $request->filled('sector_id') ? $request->integer('sector_id') : null;
@@ -454,7 +455,7 @@ class CaixaSetorController extends Controller
                     ->keyBy('id');
 
                 if ($processos->count() !== $todosIds->unique()->count()) {
-                    return ['error' => 'Alguns processos não estão disponíveis para distribuição na sua caixa.'];
+                    return ['error' => $this->motivoDeIndisponibilidade($todosIds->unique(), $processos->keys(), $request->user())];
                 }
 
                 if (! $qualquerSetor && $processos->pluck('sector_id')->unique()->count() > 1) {
@@ -589,6 +590,53 @@ class CaixaSetorController extends Controller
      *
      * @param  Builder<ViabilityRequest>  $query
      */
+    /**
+     * Explica, processo a processo, por que não pode ser distribuído pelo ator.
+     *
+     * @param  Collection<int, int>  $pedidos
+     * @param  Collection<int, int>  $disponiveis
+     */
+    private function motivoDeIndisponibilidade(Collection $pedidos, Collection $disponiveis, User $ator): string
+    {
+        $faltantes = $pedidos->diff($disponiveis)->values();
+        $encontrados = ViabilityRequest::query()
+            ->with(['sector:id,name', 'assignedTo:id,name'])
+            ->whereIn('id', $faltantes)
+            ->get()
+            ->keyBy('id');
+        $setoresDoAtor = $ator->sectors()->pluck('sectors.id')->map(fn ($id): int => (int) $id);
+
+        $motivos = $faltantes->map(function (int $id) use ($encontrados, $setoresDoAtor): string {
+            $processo = $encontrados->get($id);
+
+            if ($processo === null) {
+                return "O processo #{$id} não foi encontrado.";
+            }
+
+            $nome = $processo->external_reference ?: ($processo->protocol_number ?: "#{$id}");
+
+            if ($processo->status !== ViabilityRequestStatus::EmAnalise) {
+                return "{$nome}: não está em análise (situação atual: {$processo->status->label()}).";
+            }
+
+            if ($processo->assigned_user_id !== null && $processo->analysis_status !== AnalysisStatus::ParaConclusao) {
+                $responsavel = $processo->assignedTo?->name ?? 'outro analista';
+
+                return "{$nome}: já está distribuído para {$responsavel}. Use a redistribuição.";
+            }
+
+            if (! $setoresDoAtor->contains((int) $processo->sector_id)) {
+                $setor = $processo->sector?->name ?? 'sem setor';
+
+                return "{$nome}: pertence ao setor {$setor}, que não é um dos seus setores. Peça o vínculo ao setor ou a permissão de distribuir em qualquer setor.";
+            }
+
+            return "{$nome}: não está disponível na sua caixa.";
+        });
+
+        return 'Não foi possível distribuir. '.$motivos->implode(' ');
+    }
+
     private function semResponsavelOuParaConclusao(Builder $query): void
     {
         $query->whereNull('assigned_user_id')
@@ -634,10 +682,11 @@ class CaixaSetorController extends Controller
      * @param  iterable<int, int>  $sectorIds
      * @return list<array{id: int, name: string, perfis: list<string>, setores: list<array{id: int, name: string}>}>
      */
-    private function destinatarios(string $permissao, iterable $sectorIds, bool $qualquerSetor): array
+    private function destinatarios(string $permissao, iterable $sectorIds, bool $qualquerSetor, ?array $perfis = null): array
     {
         return User::query()
             ->permission($permissao)
+            ->when($perfis !== null, fn ($query) => $query->role($perfis))
             ->when(! $qualquerSetor, fn ($query) => $query->whereHas('sectors', fn ($setores) => $setores->whereIn('sectors.id', $sectorIds)))
             ->with(['sectors:id,name', 'roles:id,name'])
             ->orderBy('name')

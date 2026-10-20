@@ -13,6 +13,7 @@ use App\Models\ViabilityRequestEvento;
 use App\Models\ViabilityServiceType;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 /**
@@ -322,6 +323,8 @@ class CaixaSetorTest extends TestCase
     {
         $vistoriador = User::factory()->withAcceptedLgpdTerm()->create();
         $vistoriador->givePermissionTo(['analisar-processos', 'preencher-ficha-vistoria']);
+        Role::firstOrCreate(['name' => 'Vistoriador', 'guard_name' => 'web']);
+        $vistoriador->assignRole('Vistoriador');
         $vistoriador->sectors()->attach($sector);
 
         return $vistoriador;
@@ -373,6 +376,11 @@ class CaixaSetorTest extends TestCase
         $gestor->sectors()->attach($setor);
         $vistoriador = $this->vistoriadorDoSetor($setor);
         $analistaComum = $this->analistaSemVistoria($setor);
+        $analistaComPermissaoDeVistoria = $this->vistoriadorDoSetor($setor);
+        $analistaComPermissaoDeVistoria->removeRole('Vistoriador');
+        $administrador = $this->vistoriadorDoSetor($setor);
+        $administrador->removeRole('Vistoriador');
+        $administrador->assignRole(Role::firstOrCreate(['name' => 'administrador', 'guard_name' => 'web']));
         $processo = $this->processoEmVistoria($setor);
 
         $response = $this->actingAs($gestor, 'gestao')
@@ -384,6 +392,8 @@ class CaixaSetorTest extends TestCase
         $vistoriadoresIds = collect($props['vistoriadores'])->pluck('id')->all();
         $this->assertContains($vistoriador->id, $vistoriadoresIds);
         $this->assertNotContains($analistaComum->id, $vistoriadoresIds);
+        $this->assertNotContains($analistaComPermissaoDeVistoria->id, $vistoriadoresIds);
+        $this->assertContains($administrador->id, $vistoriadoresIds);
 
         $linha = collect($props['processos']['data'])->firstWhere('id', $processo->id);
         $this->assertSame('vistoriar', $linha['analysis_status']);
@@ -510,6 +520,27 @@ class CaixaSetorTest extends TestCase
 
         $this->assertNull($processoDoSetorA->fresh()->assigned_user_id);
         $this->assertNull($processoDoSetorB->fresh()->assigned_user_id);
+    }
+
+    public function test_distribuir_informa_o_motivo_de_cada_processo_indisponivel(): void
+    {
+        $setorA = Sector::factory()->create(['name' => 'Setor Alfa']);
+        $setorB = Sector::factory()->create(['name' => 'Setor Beta']);
+        $gestor = $this->gestorDoSetor($setorA);
+        $analista = $this->analistaDoSetor($setorA);
+        $alheio = $this->processoNaCaixa($setorB);
+        $jaDistribuido = $this->processoNaCaixa($setorA);
+        $jaDistribuido->forceFill(['assigned_user_id' => $analista->id, 'assigned_at' => now()])->save();
+
+        $this->actingAs($gestor, 'gestao')
+            ->post('/gestao/caixa-setor/distribuir', [
+                'request_ids' => [$alheio->id, $jaDistribuido->id],
+                'analista_id' => $analista->id,
+            ])
+            ->assertSessionHas('error', function (string $mensagem) use ($analista): bool {
+                return str_contains($mensagem, 'pertence ao setor Setor Beta')
+                    && str_contains($mensagem, "já está distribuído para {$analista->name}");
+            });
     }
 
     public function test_analista_assume_processo_da_sua_caixa(): void
