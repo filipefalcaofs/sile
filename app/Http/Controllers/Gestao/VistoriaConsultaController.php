@@ -7,10 +7,10 @@ use App\Enums\InspectionStatus;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\ViabilityRequest;
-use App\Models\ViabilityRequestEvento;
 use App\Models\ViabilityServiceType;
 use App\Services\Analise\DistribuicaoService;
 use App\Services\Analise\ProcessoQueryService;
+use App\Services\Servicos\ServicoNomenclaturaResolver;
 use App\Services\Vistoria\ConsultaVistoriaPdfService;
 use App\Services\Vistoria\VistoriaAcesso;
 use App\Support\Audit\AuditService;
@@ -294,12 +294,7 @@ class VistoriaConsultaController extends Controller
      */
     private function servicoOptions(): array
     {
-        $eventos = ViabilityRequestEvento::query()
-            ->selectRaw('codigo, min(nome) as nome')
-            ->groupBy('codigo')
-            ->orderBy('nome')
-            ->get()
-            ->map(fn ($evento): array => ['value' => ProcessoQueryService::PREFIXO_EVENTO.$evento->codigo, 'label' => $evento->nome]);
+        $eventos = collect(app(ServicoNomenclaturaResolver::class)->opcoesDeEvento());
 
         $tipos = ViabilityServiceType::query()
             ->orderBy('name')
@@ -367,9 +362,7 @@ class VistoriaConsultaController extends Controller
                 trim(implode(', ', array_filter([$processo->address_street, $processo->address_number]))),
                 $processo->address_neighborhood,
             ])),
-            'servicos' => $processo->eventos->isNotEmpty()
-                ? $processo->eventos->pluck('nome')->values()->all()
-                : array_values(array_filter([$processo->serviceType?->name])),
+            'servicos' => app(ServicoNomenclaturaResolver::class)->servicos($processo),
             'zona' => $processo->zona_codigo,
             'setor' => $processo->sector?->name,
             'sector_id' => $processo->sector_id,

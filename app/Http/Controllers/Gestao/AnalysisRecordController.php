@@ -35,6 +35,7 @@ use App\Services\Analise\QuadrosFichaChecklist;
 use App\Services\Auditoria\DecisionExplanationService;
 use App\Services\Expresso\SedeEscritorioVirtualGatilho;
 use App\Services\Relatorios\RelatorioSedeEscritorioVirtualService;
+use App\Services\Servicos\ServicoNomenclaturaResolver;
 use App\Support\Audit\AuditService;
 use App\Support\Settings;
 use DomainException;
@@ -601,7 +602,7 @@ class AnalysisRecordController extends Controller
     }
 
     /**
-     * Serviço do processo: os eventos que a JUCEB enviou; sem eles, o tipo interno.
+     * Serviço do processo: nome parametrizado dos eventos da JUCEB; sem eles, o tipo interno.
      *
      * @return list<string>
      */
@@ -609,11 +610,7 @@ class AnalysisRecordController extends Controller
     {
         $request->loadMissing(['eventos', 'serviceType:id,name', 'company']);
 
-        if ($request->eventos->isNotEmpty()) {
-            return $request->eventos->pluck('nome')->values()->all();
-        }
-
-        return array_values(array_filter([$request->serviceType?->name]));
+        return app(ServicoNomenclaturaResolver::class)->servicos($request);
     }
 
     private function textoOuNulo(mixed $valor): ?string
