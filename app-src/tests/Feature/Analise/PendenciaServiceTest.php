@@ -186,7 +186,7 @@ class PendenciaServiceTest extends TestCase
 
         $analista = User::factory()->create();
         $request = $this->emAnalise();
-        $request->forceFill(['requester_user_id' => null])->save();
+        $request->forceFill(['requester_cidadao_id' => null])->save();
 
         try {
             $this->service()->abrir($request->refresh(), $analista, 'Envie o IPTU atualizado.');

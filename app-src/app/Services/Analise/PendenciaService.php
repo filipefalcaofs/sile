@@ -81,7 +81,7 @@ class PendenciaService
         // Processo sem requerente (REGIN: a JUCEB não envia o solicitante) não
         // recebe o aviso nem consegue responder no portal; o prazo correria até o
         // indeferimento automático sem que ninguém soubesse do convite.
-        if ($request->requester_user_id === null) {
+        if ($request->requester_cidadao_id === null) {
             throw PendenciaInvalidaException::semRequerente($request);
         }
 
