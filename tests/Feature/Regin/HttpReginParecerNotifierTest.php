@@ -179,6 +179,28 @@ class HttpReginParecerNotifierTest extends TestCase
         );
     }
 
+    public function test_decisao_da_analise_tecnica_sem_motivo_nao_e_atribuida_ao_motor(): void
+    {
+        $request = ViabilityRequest::factory()->protocoled()->create(['external_reference' => '00990028']);
+        $decision = ViabilityDecision::factory()->create([
+            'viability_request_id' => $request->id,
+            'outcome' => DecisionOutcome::Deferida,
+            'flow' => 'analise_tecnica',
+            'reason' => null,
+            'fundamentacao' => ['Lei nº 9.148/2016 (LOUOS) — nR2-12'],
+        ]);
+
+        $espiao = $this->clienteEspiao();
+        $this->app->instance(ReginHttpClient::class, $espiao);
+
+        $this->app->make(HttpReginParecerNotifier::class)->notifyParecer($request, $decision);
+
+        $this->assertSame(
+            'Viabilidade deferida após análise técnica.',
+            $espiao->envios[0]['dadosProcesso']['ANALISES']['AREA'][0]['JUSTIFICATIVA_ANALISE'],
+        );
+    }
+
     public function test_justificativa_respeita_o_limite_do_campo(): void
     {
         $request = ViabilityRequest::factory()->protocoled()->create(['external_reference' => '1']);

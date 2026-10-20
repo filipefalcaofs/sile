@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -21,6 +22,7 @@ class InertiaErroNegocioTest extends TestCase
 
         Route::middleware('web')->group(function (): void {
             Route::post('/_teste/abort-422', fn () => abort(422, 'Regra de negócio recusou.'));
+            Route::get('/_teste/abort-422', fn () => abort(422, 'Regra de negócio recusou.'));
             Route::post('/_teste/abort-403', fn () => abort(403));
             Route::post('/_teste/validacao', fn (Request $request) => $request->validate(['campo' => 'required']));
         });
@@ -54,5 +56,16 @@ class InertiaErroNegocioTest extends TestCase
         $this->withHeaders(['X-Inertia' => 'true'])
             ->post('/_teste/abort-403')
             ->assertForbidden();
+    }
+
+    public function test_422_em_get_inertia_nao_redireciona_para_nao_entrar_em_laco(): void
+    {
+        $this->from('/_teste/abort-422')
+            ->withHeaders([
+                'X-Inertia' => 'true',
+                'X-Inertia-Version' => app(HandleInertiaRequests::class)->version(request()),
+            ])
+            ->get('/_teste/abort-422')
+            ->assertStatus(422);
     }
 }

@@ -184,7 +184,9 @@ return Application::configure(basePath: dirname(__DIR__))
                 return back()->with('error', __('Sua sessão expirou. Tente novamente.'));
             }
 
-            if ($response->getStatusCode() === 422 && $request->header('X-Inertia') && ! $request->expectsJson()) {
+            // Só em envio (POST/PUT/PATCH/DELETE): num GET, voltar à página anterior
+            // pode ser a própria URL e entrar em laço de redirecionamento.
+            if ($response->getStatusCode() === 422 && $request->header('X-Inertia') && ! $request->isMethod('GET') && ! $request->expectsJson()) {
                 $mensagem = $e instanceof HttpExceptionInterface && $e->getMessage() !== ''
                     ? $e->getMessage()
                     : __('Não foi possível concluir a operação.');
