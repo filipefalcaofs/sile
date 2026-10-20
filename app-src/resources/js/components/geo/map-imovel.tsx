@@ -9,6 +9,8 @@ import type { PathOptions } from 'leaflet';
 import { useEffect } from 'react';
 import { GeoJSON, MapContainer, Marker, Popup, TileLayer, useMap, useMapEvent } from 'react-leaflet';
 
+import { chaveDaGeometria } from './geometria';
+
 // Pitfall 10: sem isto o caminho dos assets do marcador quebra no bundle Vite
 // e o pin some em produção. Os PNGs importados viram URLs resolvidas pelo Vite.
 L.Icon.Default.mergeOptions({ iconUrl, iconRetinaUrl, shadowUrl });
@@ -32,6 +34,8 @@ export interface MapImovelProps {
     camadas?: MapLayer[];
     /** Disparado ao arrastar o marcador ou clicar no mapa, com a nova coordenada. */
     onMove?: (latlng: { lat: number; lng: number }) => void;
+    /** Enquadra o mapa nas camadas, para o contorno de um lote pequeno não sumir sob o marcador. */
+    enquadrar?: boolean;
 }
 
 /**
@@ -48,7 +52,28 @@ function Recenter({ lat, lng }: { lat: number; lng: number }) {
     return null;
 }
 
-/** Clique no mapa reposiciona o ponto (posicionamento manual — HU-037). */
+/** Ajusta o zoom e o centro para mostrar todas as camadas inteiras. */
+function EnquadrarCamadas({ camadas }: { camadas: MapLayer[] }) {
+    const map = useMap();
+    const chave = camadas.map((camada) => `${camada.id}:${chaveDaGeometria(camada.geojson)}`).join('|');
+
+    useEffect(() => {
+        if (camadas.length === 0) {
+            return;
+        }
+
+        const limites = L.geoJSON(camadas.map((camada) => camada.geojson) as never).getBounds();
+
+        if (limites.isValid()) {
+            map.fitBounds(limites, { padding: [40, 40], maxZoom: 19 });
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [map, chave]);
+
+    return null;
+}
+
+/** Clique no mapa reposiciona o ponto (posicionamento manual — HU-036). */
 function ClickToMove({ onMove }: { onMove: (latlng: { lat: number; lng: number }) => void }) {
     useMapEvent('click', (event) => onMove({ lat: event.latlng.lat, lng: event.latlng.lng }));
 
@@ -78,7 +103,7 @@ function InvalidateOnResize() {
  * reuso nas Fases 7 e 8. Deve ser montado apenas no cliente (ver `MapaSection`),
  * pois o Leaflet acessa `window` na importação (Pitfall 9 — SSR do Inertia v3).
  */
-export function MapImovel({ lat, lng, zoom = 17, draggable = true, camadas, onMove }: MapImovelProps) {
+export function MapImovel({ lat, lng, zoom = 17, draggable = true, camadas, onMove, enquadrar = false }: MapImovelProps) {
     return (
         <MapContainer
             center={[lat, lng]}
@@ -93,6 +118,7 @@ export function MapImovel({ lat, lng, zoom = 17, draggable = true, camadas, onMo
             />
             <Recenter lat={lat} lng={lng} />
             <InvalidateOnResize />
+            {enquadrar && camadas && <EnquadrarCamadas camadas={camadas} />}
             {draggable && onMove && <ClickToMove onMove={onMove} />}
             <Marker
                 draggable={draggable}
@@ -108,7 +134,7 @@ export function MapImovel({ lat, lng, zoom = 17, draggable = true, camadas, onMo
                 <Popup>Localização do imóvel</Popup>
             </Marker>
             {camadas?.map((camada) => (
-                <GeoJSON key={camada.id} data={camada.geojson} style={camada.estilo} />
+                <GeoJSON key={`${camada.id}:${chaveDaGeometria(camada.geojson)}`} data={camada.geojson} style={camada.estilo} />
             ))}
         </MapContainer>
     );

@@ -1,4 +1,4 @@
-import type { GeoJsonObject, MultiPolygon, Polygon } from 'geojson';
+import type { Feature, GeoJsonObject, MultiPolygon, Polygon } from 'geojson';
 import type { PathOptions } from 'leaflet';
 
 /** Contorno do polígono do endereçamento SEDUR, distinto do desenho do requerente. */
@@ -6,9 +6,11 @@ export const ESTILO_ENDERECAMENTO: PathOptions = { color: '#f79009', weight: 2, 
 
 /**
  * Centro aproximado (média dos vértices do anel exterior) para centralizar o
- * mini-mapa. Null quando a geometria não é Polygon/MultiPolygon.
+ * mini-mapa. Aceita a geometria solta ou dentro de uma Feature. Null quando
+ * não é Polygon/MultiPolygon.
  */
-export function centroDaGeometria(geometria: GeoJsonObject | null | undefined): { lat: number; lng: number } | null {
+export function centroDaGeometria(entrada: GeoJsonObject | null | undefined): { lat: number; lng: number } | null {
+    const geometria: GeoJsonObject | null | undefined = entrada?.type === 'Feature' ? (entrada as Feature).geometry : entrada;
     let anel: number[][] | undefined;
 
     if (geometria?.type === 'Polygon') {
@@ -56,3 +58,18 @@ export function resumoDaProcedencia(fonte: FontePoligono): string | null {
     return partes.filter((parte): parte is string => parte !== null).join(' · ');
 }
 
+
+/**
+ * Chave curta e estável do conteúdo da geometria (hash djb2 do JSON): força o
+ * react-leaflet a redesenhar o contorno quando as coordenadas mudam.
+ */
+export function chaveDaGeometria(geometria: GeoJsonObject): string {
+    const texto = JSON.stringify(geometria);
+    let hash = 5381;
+
+    for (let i = 0; i < texto.length; i++) {
+        hash = ((hash << 5) + hash + texto.charCodeAt(i)) | 0;
+    }
+
+    return (hash >>> 0).toString(16);
+}
