@@ -2,6 +2,7 @@
 
 namespace App\Services\Analise;
 
+use App\Enums\AnalysisStatus;
 use App\Models\Activity;
 use App\Models\AnalysisRecord;
 use App\Models\Inspection;
@@ -17,12 +18,25 @@ use App\Models\ViabilityRequest;
  * registros técnicos não entram. Os eventos das fichas são gravados com a
  * própria ficha como sujeito. Cada item tem o mesmo formato da linha do tempo
  * de status.
+ *
+ * Uma ação, uma linha: o espelho da situação de análise e o registro de
+ * pendência/convite gravados junto com uma mudança de situação do processo
+ * ficam de fora, assim como o "Encaminhado para" gravado junto com a
+ * atribuição. O passo automático "Analisar" e os avisos de notificação não
+ * entram.
  */
 class TramitacaoProcessoService
 {
     private const ATRIBUICAO = ['distribuir', 'assumir', 'redistribuir'];
 
     private const FICHA_ANALISE = ['ficha-salvar', 'ficha-finalizar'];
+
+    private const PENDENCIA = ['pendencia-aberta', 'pendencia-respondida', 'convite-cancelado', 'convite-expirado-indeferido'];
+
+    private const EIXO_DO_CONVITE = [AnalysisStatus::EmConvite, AnalysisStatus::ConviteRespondido, AnalysisStatus::ConviteCancelado, AnalysisStatus::ConviteExpirado];
+
+    /** Registros gravados na mesma ação ficam a segundos um do outro. */
+    private const MESMO_MOMENTO_SEGUNDOS = 60;
 
     /** @var array<string, array{tipo: string, titulo: string}> */
     private const EVENTOS = [
@@ -64,13 +78,28 @@ class TramitacaoProcessoService
                     ->where('subject_type', (new Inspection)->getMorphClass())
                     ->whereIn('subject_id', Inspection::query()->where('viability_request_id', $processo->getKey())->select('id'))
                     ->where('event', 'ficha-conclusao')))
+            ->where(fn ($q) => $q->whereNull('log_name')->orWhere('log_name', '!=', 'notificacoes'))
             ->oldest('id')
             ->get();
 
         $usuarios = $this->usuarios($atividades, $processo);
+        $mudancasDeSituacao = $processo->transitions()->pluck('created_at')->filter()->map->getTimestamp()->all();
+        $atribuicoes = $atividades
+            ->filter(fn (Activity $a): bool => in_array($a->event, [...self::ATRIBUICAO, 'vistoria-encaminhar'], true))
+            ->map(fn (Activity $a): ?int => $a->created_at?->getTimestamp())
+            ->filter()
+            ->all();
         $itens = [];
 
         foreach ($processo->analysisStatusTransitions()->oldest('id')->get() as $t) {
+            $momento = $t->created_at?->getTimestamp();
+
+            if ($t->to_status === AnalysisStatus::Analisar
+                || (in_array($t->to_status, self::EIXO_DO_CONVITE, true) && $this->noMesmoMomento($momento, $mudancasDeSituacao))
+                || ($t->to_status === AnalysisStatus::Encaminhado && $this->noMesmoMomento($momento, $atribuicoes))) {
+                continue;
+            }
+
             $itens[] = $this->item(
                 tipo: 'analise',
                 titulo: 'Análise: '.($t->to_status?->label() ?? '—'),
@@ -82,6 +111,10 @@ class TramitacaoProcessoService
         }
 
         foreach ($atividades as $a) {
+            if (in_array($a->event, self::PENDENCIA, true) && $this->noMesmoMomento($a->created_at?->getTimestamp(), $mudancasDeSituacao)) {
+                continue;
+            }
+
             $item = $this->deAtividade($a, $usuarios);
 
             if ($item !== null) {
@@ -90,6 +123,24 @@ class TramitacaoProcessoService
         }
 
         return $itens;
+    }
+
+    /**
+     * @param  array<int, int>  $momentos
+     */
+    private function noMesmoMomento(?int $momento, array $momentos): bool
+    {
+        if ($momento === null) {
+            return false;
+        }
+
+        foreach ($momentos as $outro) {
+            if (abs($momento - $outro) <= self::MESMO_MOMENTO_SEGUNDOS) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
