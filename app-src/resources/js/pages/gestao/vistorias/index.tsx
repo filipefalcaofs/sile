@@ -316,9 +316,9 @@ export default function VistoriasIndex({
             <Head title="Consulta de vistorias" />
             <PageHeader title="Consulta de vistorias" breadcrumbs={[{ label: 'Painel', href: '/gestao' }]} />
 
-            <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
+            <div className={`mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 ${podeDistribuir ? 'xl:grid-cols-5' : 'xl:grid-cols-4'}`}>
                 <KpiCard label="Encaminhadas" value={kpis.encaminhadas} tone="brand" note="no eixo de vistoria" />
-                <KpiCard label="Para distribuir" value={kpis.a_designar} tone="warning" note="sem vistoriador" />
+                {podeDistribuir && <KpiCard label="Para distribuir" value={kpis.a_designar} tone="warning" note="sem vistoriador" />}
                 <KpiCard label="Em campo" value={kpis.em_campo} tone="info" note="ficha em preenchimento" />
                 <KpiCard label="Prazo vencido" value={kpis.prazo_vencido} tone="error" note="exigem atenção" />
                 <KpiCard label="Concluídas no mês" value={kpis.concluidas_mes} tone="success" note={`${kpis.concluidas} no total`} />
