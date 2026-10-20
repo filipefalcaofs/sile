@@ -146,6 +146,11 @@ Route::middleware(['auth:web', 'verified'])
                     ->name('renovacao.index');
                 Route::post('renovacao/consultar-cnpj', [RenovacaoController::class, 'consultarCnpj'])->middleware('portal.solicitacao')
                     ->name('renovacao.consultar-cnpj');
+                Route::post('renovacao/legado/consultar', [RenovacaoController::class, 'consultarLegado'])->middleware('portal.solicitacao')
+                    ->name('renovacao.legado.consultar');
+                Route::get('renovacao/legado/{empresa}/{numero}', [RenovacaoController::class, 'showLegado'])->middleware('portal.solicitacao')
+                    ->whereNumber(['empresa', 'numero'])
+                    ->name('renovacao.legado.show');
                 Route::get('renovacao/{origem}', [RenovacaoController::class, 'show'])->middleware('portal.solicitacao')
                     ->name('renovacao.show');
                 Route::post('renovacao/{origem}', [RenovacaoController::class, 'store'])->middleware('portal.solicitacao')
