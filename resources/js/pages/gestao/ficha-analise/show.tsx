@@ -433,44 +433,6 @@ function imprimirExtratoTramitacao(protocolo: string | null, itens: TramitacaoIt
     janela.print();
 }
 
-/**
- * Centroide aproximado do anel externo do polígono (GeoJSON [lng, lat]) para
- * centralizar o mini-mapa. Devolve null quando não há polígono confiável —
- * nunca uma coordenada inventada (anti-fachada).
- */
-function centroideDoPoligono(geojson: GeoJsonObject | null | undefined): { lat: number; lng: number } | null {
-    if (!geojson || typeof geojson !== 'object') {
-        return null;
-    }
-
-    const objeto = geojson as { type?: string; coordinates?: unknown; geometry?: { coordinates?: unknown } };
-    const coordenadas =
-        objeto.type === 'Feature' ? (objeto.geometry?.coordinates ?? null) : (objeto.coordinates ?? null);
-
-    if (!Array.isArray(coordenadas) || !Array.isArray(coordenadas[0])) {
-        return null;
-    }
-
-    const anel = coordenadas[0] as unknown[];
-    let somaLat = 0;
-    let somaLng = 0;
-    let total = 0;
-
-    for (const ponto of anel) {
-        if (Array.isArray(ponto) && typeof ponto[0] === 'number' && typeof ponto[1] === 'number') {
-            somaLng += ponto[0];
-            somaLat += ponto[1];
-            total += 1;
-        }
-    }
-
-    if (total === 0) {
-        return null;
-    }
-
-    return { lat: somaLat / total, lng: somaLng / total };
-}
-
 /** Exibe "—" para valores nulos/vazios — nunca inventa dado (anti-fachada). */
 function valorOuTraco(valor: string | null | undefined): string {
     return valor && valor.trim() !== '' ? valor : '—';
@@ -1512,7 +1474,7 @@ export default function FichaAnaliseShow({
         return Array.from(conjunto);
     }, [perCnae]);
 
-    const centro = centroideDoPoligono(localizacao?.poligono) ?? centroDaGeometria(localizacao?.poligono_enderecamento);
+    const centro = centroDaGeometria(localizacao?.poligono) ?? centroDaGeometria(localizacao?.poligono_enderecamento);
     const temPoligono = centro !== null && (localizacao?.poligono != null || localizacao?.poligono_enderecamento != null);
 
     const vagasRequeridas = parking.vagas_requeridas;
@@ -1621,7 +1583,7 @@ export default function FichaAnaliseShow({
                     <Card>
                         <CardHeader
                             title="Localização / Endereço Inscrição Imobiliária"
-                            description="Endereço da solicitação, cadastro imobiliário e camadas geográficas do imóvel. O bairro vem da inscrição imobiliária; a zona urbanística aparece no polígono."
+                            description="Endereço da solicitação e cadastro imobiliário. O bairro vem da inscrição imobiliária; a zona urbanística e as camadas geográficas aparecem no polígono."
                         />
                         <CardContent>
                             <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -1644,18 +1606,6 @@ export default function FichaAnaliseShow({
                             </p>
 
                             <CadastroImobiliarioPanel cadastro={cadastroImobiliario} />
-
-                            {localizacao?.camadas && (
-                                <div className="mt-6 border-t border-gray-100 pt-6 dark:border-gray-800">
-                                    <h4 className="text-theme-sm font-medium text-gray-800 dark:text-white/90">Camadas do imóvel</h4>
-                                    <p className="mt-1 text-theme-xs text-gray-400 dark:text-gray-500">
-                                        Elemento identificado em cada camada geográfica no ponto do imóvel.
-                                    </p>
-                                    <div className="mt-2">
-                                        <CamadasImovelLista camadas={localizacao.camadas} somentePoligonais />
-                                    </div>
-                                </div>
-                            )}
                         </CardContent>
                     </Card>
 
@@ -1669,6 +1619,7 @@ export default function FichaAnaliseShow({
                                         lng={centro.lng}
                                         zoom={17}
                                         draggable={false}
+                                        enquadrar
                                         camadas={[
                                             ...(localizacao?.poligono
                                                 ? [{ id: 'imovel', type: 'imovel', geojson: localizacao.poligono }]
@@ -1756,6 +1707,18 @@ export default function FichaAnaliseShow({
                                 Área pública é informada pelo requerente na solicitação; "Endereço correto?" é uma confirmação do
                                 analista.
                             </p>
+
+                            {localizacao?.camadas && (
+                                <div className="mt-6 border-t border-gray-100 pt-6 dark:border-gray-800">
+                                    <h4 className="text-theme-sm font-medium text-gray-800 dark:text-white/90">Camadas do imóvel</h4>
+                                    <p className="mt-1 text-theme-xs text-gray-400 dark:text-gray-500">
+                                        Elemento identificado em cada camada geográfica no ponto do imóvel.
+                                    </p>
+                                    <div className="mt-2">
+                                        <CamadasImovelLista camadas={localizacao.camadas} somentePoligonais />
+                                    </div>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
                 </div>
