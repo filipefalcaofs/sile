@@ -140,6 +140,8 @@ class ProcessoController extends Controller
         foreach (ProcessoQueryService::CHAVES_FILTRO_CAIXA as $chave) {
             $filtros[$chave] = $request->string($chave)->toString();
         }
+        // A caixa de entrada é pessoal: não filtra por outro analista.
+        $filtros['analista'] = '';
         $perPage = $this->perPage($request);
         $visao = $request->string('visao')->toString() === 'analisados' ? 'analisados' : 'analise';
         $janela = $this->janelaDeAnalisados($request);
@@ -171,7 +173,6 @@ class ProcessoController extends Controller
             'servicoOptions' => $this->servicoOptions(),
             'analysisStatusOptions' => AnalysisStatus::options(),
             'categoriaOptions' => $this->categoriaOptions(),
-            'analistaOptions' => $this->processos->analistasParaFiltro($user),
         ]);
     }
 
