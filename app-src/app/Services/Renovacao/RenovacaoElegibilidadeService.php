@@ -2,7 +2,6 @@
 
 namespace App\Services\Renovacao;
 
-use App\Enums\TvlKind;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\ViabilityRequest;
 use App\Support\Settings;
@@ -29,7 +28,7 @@ class RenovacaoElegibilidadeService
             return new RenovacaoElegibilidade(false, self::MOTIVO_SEM_VINCULO);
         }
 
-        if ($decisao->tvl_kind !== TvlKind::Provisoria) {
+        if ($decisao->tvl_kind?->renovavel() !== true) {
             return new RenovacaoElegibilidade(false, self::MOTIVO_DEFINITIVA);
         }
 
