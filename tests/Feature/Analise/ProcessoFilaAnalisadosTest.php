@@ -2,8 +2,10 @@
 
 namespace Tests\Feature\Analise;
 
+use App\Enums\AnalysisStatus;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\AnalysisRecord;
+use App\Models\AnalysisStatusTransition;
 use App\Models\Sector;
 use App\Models\User;
 use App\Models\ViabilityRequest;
@@ -46,6 +48,96 @@ class ProcessoFilaAnalisadosTest extends TestCase
         ]);
 
         return $processo;
+    }
+
+    /**
+     * Processo em análise com outra pessoa, sem ficha finalizada pelo analista:
+     * só a tramitação liga o analista a ele.
+     */
+    private function processoComTransicao(User $ator, ?AnalysisStatus $de, AnalysisStatus $para, int $diasAtras = 0): ViabilityRequest
+    {
+        $processo = ViabilityRequest::factory()->create(['status' => ViabilityRequestStatus::EmAnalise]);
+        $this->transicao($processo, $ator, $de, $para, $diasAtras);
+
+        return $processo;
+    }
+
+    private function transicao(ViabilityRequest $processo, User $ator, ?AnalysisStatus $de, AnalysisStatus $para, int $diasAtras = 0): void
+    {
+        /** @var AnalysisStatusTransition $transicao */
+        $transicao = $processo->analysisStatusTransitions()->create([
+            'from_status' => $de,
+            'to_status' => $para,
+            'actor_user_id' => $ator->id,
+        ]);
+        $transicao->forceFill(['created_at' => now()->subDays($diasAtras)])->save();
+    }
+
+    /**
+     * @return list<int>
+     */
+    private function idsAnalisados(User $analista, string $query = ''): array
+    {
+        $props = $this->actingAs($analista, 'gestao')
+            ->get('/gestao/processos/fila?visao=analisados'.$query)
+            ->assertOk()
+            ->viewData('page')['props'];
+
+        return array_column($props['processos']['data'], 'id');
+    }
+
+    public function test_enviado_para_conclusao_pela_analista_aparece_em_analisados(): void
+    {
+        $analista = $this->analista();
+        $processo = $this->processoComTransicao($analista, AnalysisStatus::EmAnalise, AnalysisStatus::ParaConclusao);
+
+        $this->assertContains($processo->id, $this->idsAnalisados($analista));
+    }
+
+    public function test_encaminhado_pela_analista_aparece_em_analisados(): void
+    {
+        $analista = $this->analista();
+        $processo = $this->processoComTransicao($analista, AnalysisStatus::EmAnalise, AnalysisStatus::Encaminhado);
+
+        $this->assertContains($processo->id, $this->idsAnalisados($analista));
+    }
+
+    public function test_analise_concluida_pela_analista_aparece_em_analisados(): void
+    {
+        $analista = $this->analista();
+        $processo = $this->processoComTransicao($analista, AnalysisStatus::EmAnalise, AnalysisStatus::AnaliseConcluida);
+
+        $this->assertContains($processo->id, $this->idsAnalisados($analista));
+    }
+
+    public function test_distribuicao_feita_pelo_apoio_nao_conta_como_analisado(): void
+    {
+        $apoio = $this->analista();
+        $processo = $this->processoComTransicao($apoio, AnalysisStatus::ParaDistribuir, AnalysisStatus::Encaminhado);
+
+        $this->assertNotContains($processo->id, $this->idsAnalisados($apoio));
+    }
+
+    public function test_processo_com_ficha_e_transicao_aparece_uma_vez(): void
+    {
+        $analista = $this->analista();
+        $processo = $this->processoAnalisadoPor($analista, 1);
+        $this->transicao($processo, $analista, AnalysisStatus::EmAnalise, AnalysisStatus::ParaConclusao);
+
+        $this->assertSame([$processo->id], $this->idsAnalisados($analista));
+    }
+
+    public function test_janela_de_dias_usa_a_data_da_transicao(): void
+    {
+        $analista = $this->analista();
+        $this->processoComTransicao($analista, AnalysisStatus::EmAnalise, AnalysisStatus::ParaConclusao, 40);
+
+        $contador = fn (int $janela): int => $this->actingAs($analista, 'gestao')
+            ->get("/gestao/processos/fila?janela={$janela}")
+            ->viewData('page')['props']['contadores']['analisados'];
+
+        $this->assertSame(0, $contador(30));
+        $this->assertSame(1, $contador(90));
     }
 
     public function test_aba_analisados_lista_o_que_o_analista_finalizou_e_nada_de_outros(): void
