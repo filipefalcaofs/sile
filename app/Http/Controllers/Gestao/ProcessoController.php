@@ -269,11 +269,6 @@ class ProcessoController extends Controller
                     'enviada' => app(JustificativaReginService::class)->parecerJaEnviado($viabilityRequest),
                 ],
             'setoresEncaminhamento' => Sector::query()->where('active', true)->orderBy('name')->get(['id', 'name']),
-            'destinatariosConclusao' => User::permission('concluir-analise')
-                ->orderBy('name')
-                ->get(['users.id', 'users.name'])
-                ->map(fn (User $usuario): array => ['value' => (string) $usuario->id, 'label' => $usuario->name])
-                ->all(),
             'analistasEncaminhamento' => User::query()
                 ->with('sectors:id')
                 ->orderBy('name')
@@ -422,12 +417,10 @@ class ProcessoController extends Controller
             ])->save();
         }
 
+        // Para conclusão vai sempre para a aba da Caixa do setor: quem recebe é
+        // definido na distribuição pelo Apoio.
         if ($to === AnalysisStatus::ParaConclusao) {
-            $viabilityRequest->forceFill([
-                'conclusao_encaminhada_para_user_id' => $request->filled('encaminhado_para_user_id')
-                    ? $request->integer('encaminhado_para_user_id')
-                    : null,
-            ]);
+            $viabilityRequest->forceFill(['conclusao_encaminhada_para_user_id' => null]);
         }
 
         try {
@@ -463,9 +456,7 @@ class ProcessoController extends Controller
 
         return match ($to) {
             AnalysisStatus::Encaminhado => "Processo encaminhado para {$viabilityRequest->assignedTo?->name} ({$viabilityRequest->sector?->name}). Ele já está na Caixa de entrada dessa pessoa.",
-            AnalysisStatus::ParaConclusao => $viabilityRequest->conclusaoEncaminhadaPara === null
-                ? "Processo enviado para conclusão. Ele está na aba Para conclusão da Caixa do setor {$viabilityRequest->sector?->name}, aguardando distribuição."
-                : "Processo enviado para conclusão de {$viabilityRequest->conclusaoEncaminhadaPara->name}. Ele já está na Caixa de entrada dessa pessoa.",
+            AnalysisStatus::ParaConclusao => "Processo enviado para conclusão. Ele está na aba Para conclusão da Caixa do setor {$viabilityRequest->sector?->name}, aguardando distribuição.",
             default => "Situação da análise atualizada para {$to->label()}.",
         };
     }

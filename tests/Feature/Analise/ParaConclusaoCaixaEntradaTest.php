@@ -68,7 +68,7 @@ class ParaConclusaoCaixaEntradaTest extends TestCase
         return app(ProcessoQueryService::class)->fila($user)->pluck('viability_requests.id')->all();
     }
 
-    public function test_destinatario_escolhido_recebe_o_processo_na_caixa_de_entrada(): void
+    public function test_envio_para_conclusao_nao_entra_na_caixa_de_entrada_de_ninguem(): void
     {
         $setor = Sector::factory()->create();
         $analista = $this->analista($setor);
@@ -76,14 +76,11 @@ class ParaConclusaoCaixaEntradaTest extends TestCase
         $processo = $this->processo($setor, $analista, AnalysisStatus::EmAnalise);
 
         $this->actingAs($analista, 'gestao')
-            ->post("/gestao/processos/{$processo->id}/status-analise", [
-                'status' => 'para_conclusao',
-                'encaminhado_para_user_id' => $chefia->id,
-            ])
+            ->post("/gestao/processos/{$processo->id}/status-analise", ['status' => 'para_conclusao'])
             ->assertSessionHasNoErrors()
             ->assertSessionMissing('error');
 
-        $this->assertContains($processo->id, $this->caixaDeEntrada($chefia));
+        $this->assertNotContains($processo->id, $this->caixaDeEntrada($chefia));
         $this->assertNotContains($processo->id, $this->caixaDeEntrada($analista));
     }
 

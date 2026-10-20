@@ -176,11 +176,9 @@ export default function Show({
     conclusaoOpcoes,
     setoresEncaminhamento = [],
     analistasEncaminhamento = [],
-    destinatariosConclusao = [],
     consultaVistoria = false,
     despachoVistoria = null,
 }: ShowProps & {
-    destinatariosConclusao?: { value: string; label: string }[];
     setoresEncaminhamento?: SetorEncaminhamento[];
     analistasEncaminhamento?: AnalistaEncaminhamento[];
 }) {
@@ -204,7 +202,6 @@ export default function Show({
     const [situacaoAnalise, setSituacaoAnalise] = useState('');
     const [setorEncaminhamento, setSetorEncaminhamento] = useState('');
     const [analistaEncaminhamento, setAnalistaEncaminhamento] = useState('');
-    const [destinatarioConclusao, setDestinatarioConclusao] = useState('');
 
     function concluirAnalise(confirmarDivergencia = false) {
         setErroConclusao(null);
@@ -526,32 +523,16 @@ export default function Show({
                                                         }}
                                                     />
                                                     {situacaoAnalise === 'para_conclusao' && (
-                                                        <>
-                                                            <SearchableSelect
-                                                                id="destinatario-conclusao"
-                                                                value={destinatarioConclusao}
-                                                                placeholder="Encaminhar para (opcional)"
-                                                                options={destinatariosConclusao}
-                                                                onChange={setDestinatarioConclusao}
-                                                            />
-                                                            <Button
-                                                                size="sm"
-                                                                onClick={() =>
-                                                                    router.post(
-                                                                        `/gestao/processos/${processo.id}/status-analise`,
-                                                                        {
-                                                                            status: 'para_conclusao',
-                                                                            encaminhado_para_user_id:
-                                                                                destinatarioConclusao === ''
-                                                                                    ? null
-                                                                                    : Number(destinatarioConclusao),
-                                                                        },
-                                                                    )
-                                                                }
-                                                            >
-                                                                Enviar para conclusão
-                                                            </Button>
-                                                        </>
+                                                        <Button
+                                                            size="sm"
+                                                            onClick={() =>
+                                                                router.post(`/gestao/processos/${processo.id}/status-analise`, {
+                                                                    status: 'para_conclusao',
+                                                                })
+                                                            }
+                                                        >
+                                                            Enviar para conclusão
+                                                        </Button>
                                                     )}
                                                     {situacaoAnalise === 'encaminhado' && (
                                                         <>

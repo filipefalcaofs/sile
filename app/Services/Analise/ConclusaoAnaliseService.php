@@ -49,6 +49,8 @@ class ConclusaoAnaliseService
 
     public function concluir(ViabilityRequest $request, User $ator, ConclusionOutcome $resultado, ?string $parecer = null, bool $exigirFichaSalva = false, bool $confirmarDivergencia = false, ?ValidadeDeferimento $validade = null): void
     {
+        $this->decisao->exigirDistribuicaoDaConclusao($request, $ator);
+
         $parecer = $this->parecer($parecer);
         $motivo = $this->motivo($resultado, $parecer);
 

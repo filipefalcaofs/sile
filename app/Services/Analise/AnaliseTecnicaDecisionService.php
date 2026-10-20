@@ -89,6 +89,8 @@ class AnaliseTecnicaDecisionService
             );
         }
 
+        $this->exigirDistribuicaoDaConclusao($request, $analista);
+
         $perCnae = $this->perCnaeDaFicha($record);
 
         if ($perCnae === []) {
@@ -157,6 +159,20 @@ class AnaliseTecnicaDecisionService
         ResultadoEmitido::dispatch($request, $decision);
 
         return new AnaliseDecisionResult($outcome, $decision, emitted: true);
+    }
+
+    /**
+     * Processo em Para conclusão é distribuído antes de concluir: só quem o
+     * recebeu (conclusao_encaminhada_para_user_id) conclui.
+     *
+     * @throws DomainException
+     */
+    public function exigirDistribuicaoDaConclusao(ViabilityRequest $request, User $ator): void
+    {
+        if ($request->analysis_status === AnalysisStatus::ParaConclusao
+            && $request->conclusao_encaminhada_para_user_id !== $ator->id) {
+            throw new DomainException('Processo em Para conclusão: distribua-o antes. Só quem o recebeu pode concluí-lo.');
+        }
     }
 
     /**

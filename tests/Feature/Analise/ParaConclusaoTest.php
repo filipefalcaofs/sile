@@ -170,7 +170,7 @@ class ParaConclusaoTest extends TestCase
         $this->assertSame(AnalysisStatus::Encaminhado, $processo->refresh()->analysis_status);
     }
 
-    public function test_analista_envia_para_conclusao_com_destinatario(): void
+    public function test_envio_para_conclusao_nao_aceita_destinatario(): void
     {
         $setor = Sector::factory()->create();
         $analista = $this->analistaDoSetor($setor);
@@ -182,14 +182,14 @@ class ParaConclusaoTest extends TestCase
                 'status' => 'para_conclusao',
                 'encaminhado_para_user_id' => $chefia->id,
             ])
-            ->assertSessionHasNoErrors();
+            ->assertSessionHasErrors(['encaminhado_para_user_id' => 'O processo vai para a aba Para conclusão e é distribuído pelo Apoio: não escolha destinatário.']);
 
         $processo->refresh();
-        $this->assertSame(AnalysisStatus::ParaConclusao, $processo->analysis_status);
-        $this->assertSame($chefia->id, $processo->conclusao_encaminhada_para_user_id);
+        $this->assertSame(AnalysisStatus::EmAnalise, $processo->analysis_status);
+        $this->assertNull($processo->conclusao_encaminhada_para_user_id);
     }
 
-    public function test_destinatario_precisa_poder_concluir(): void
+    public function test_envio_para_conclusao_recusa_destinatario_mesmo_sem_permissao_de_concluir(): void
     {
         $setor = Sector::factory()->create();
         $analista = $this->analistaDoSetor($setor);
@@ -296,5 +296,66 @@ class ParaConclusaoTest extends TestCase
         $processo->refresh();
         $this->assertSame(AnalysisStatus::AnaliseConcluida, $processo->analysis_status);
         $this->assertNull($processo->conclusao_encaminhada_para_user_id);
+    }
+
+    /**
+     * Processo na aba Para conclusão precisa ser distribuído antes: só quem o
+     * recebeu conclui (caso BAP2601914782, concluído direto da aba).
+     *
+     * @return array{0: ViabilityRequest, 1: User}
+     */
+    private function paraConclusaoSemDistribuir(?User $destinatario = null): array
+    {
+        $setor = Sector::factory()->create();
+        $analista = $this->analistaDoSetor($setor);
+        $chefia = User::factory()->gestor()->withAcceptedLgpdTerm()->create();
+        $processo = $this->processoEmAnalise($setor, $analista);
+        $processo->forceFill([
+            'analysis_status' => AnalysisStatus::ParaConclusao,
+            'conclusao_encaminhada_para_user_id' => $destinatario?->id,
+        ])->save();
+        AnalysisRecord::factory()->finalizada()->create([
+            'viability_request_id' => $processo->id,
+            'revision' => 1,
+            'per_cnae' => [],
+        ]);
+
+        return [$processo, $chefia];
+    }
+
+    public function test_para_conclusao_sem_distribuir_nao_pode_ser_concluido(): void
+    {
+        [$processo, $chefia] = $this->paraConclusaoSemDistribuir();
+
+        $this->actingAs($chefia, 'gestao')
+            ->post("/gestao/processos/{$processo->id}/conclusao-analise", ['resultado' => 'desativado'])
+            ->assertSessionHasErrors(['conclusao' => 'Processo em Para conclusão: distribua-o antes. Só quem o recebeu pode concluí-lo.']);
+
+        $processo->refresh();
+        $this->assertSame(ViabilityRequestStatus::EmAnalise, $processo->status);
+        $this->assertSame(AnalysisStatus::ParaConclusao, $processo->analysis_status);
+    }
+
+    public function test_para_conclusao_distribuido_a_outra_pessoa_nao_pode_ser_concluido_por_quem_nao_recebeu(): void
+    {
+        $outra = User::factory()->gestor()->withAcceptedLgpdTerm()->create();
+        [$processo, $chefia] = $this->paraConclusaoSemDistribuir($outra);
+
+        $this->actingAs($chefia, 'gestao')
+            ->post("/gestao/processos/{$processo->id}/conclusao-analise", ['resultado' => 'desativado'])
+            ->assertSessionHasErrors(['conclusao' => 'Processo em Para conclusão: distribua-o antes. Só quem o recebeu pode concluí-lo.']);
+
+        $this->assertSame(AnalysisStatus::ParaConclusao, $processo->fresh()->analysis_status);
+    }
+
+    public function test_decisao_pela_ficha_tambem_exige_distribuir_o_para_conclusao(): void
+    {
+        [$processo, $chefia] = $this->paraConclusaoSemDistribuir();
+
+        $this->actingAs($chefia, 'gestao')
+            ->post("/gestao/processos/{$processo->id}/decidir", ['decisao' => 'indeferida'])
+            ->assertSessionHasErrors(['decisao' => 'Processo em Para conclusão: distribua-o antes. Só quem o recebeu pode concluí-lo.']);
+
+        $this->assertSame(ViabilityRequestStatus::EmAnalise, $processo->fresh()->status);
     }
 }
