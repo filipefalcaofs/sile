@@ -7,7 +7,7 @@ use App\Models\ViabilityRequest;
 use RuntimeException;
 
 /**
- * Operação do ciclo de pendência não permitida no estado atual (HU-083/084,
+ * Operação do ciclo de pendência não permitida no estado atual (HU-079/080,
  * CA-03): abrir uma pendência exige o processo em em_analise; responder exige a
  * pendência aberta com o processo em em_pendencia. A operação NÃO acontece (nada
  * é gravado/transicionado); o caller (controller do portal/endpoint gestão)
@@ -19,6 +19,13 @@ class PendenciaInvalidaException extends RuntimeException
     {
         return new self(
             "Não é possível abrir convite: a solicitação #{$request->id} não está em análise (estado atual: {$request->status->label()}).",
+        );
+    }
+
+    public static function semRequerente(ViabilityRequest $request): self
+    {
+        return new self(
+            "Não é possível abrir convite: a solicitação #{$request->id} não tem requerente vinculado, então o aviso não chega e o portal não permite a resposta. Entre em contato com o interessado por outro meio e registre o resultado no parecer.",
         );
     }
 

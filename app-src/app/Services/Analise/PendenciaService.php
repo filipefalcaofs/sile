@@ -17,7 +17,7 @@ use App\Support\Settings;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Ciclo de pendência interno da análise técnica (HU-083/084 — PARCIAL).
+ * Ciclo de pendência interno da análise técnica (HU-079/080 — PARCIAL).
  *
  * abrir(): o analista pede complementação ao requerente. Em UMA transação cria a
  * analysis_pendencies (aberta, prazo = analise.pendencia.prazo_resposta_dias),
@@ -32,11 +32,11 @@ use Illuminate\Support\Facades\DB;
  * response/responded_at (respondida) e transiciona em_pendencia→em_analise
  * (reabre a análise), auditando (RN-002). APÓS o commit, dispara o evento gancho
  * PendenciaRespondida — o listener auto-descoberto NotificarRespostaPendencia
- * avisa o analista responsável que a análise reabriu (HU-091/092).
+ * avisa o analista responsável que a análise reabriu (HU-087/088).
  *
  * Anti-fachada: estado em_pendencia, portal Viabiliza e a comunicação multicanal real
  * executam de verdade; os eventos são ganchos honestos, nunca um "enviado"
- * simulado. A expiração por prazo (HU-147) é gancho do scheduler do EP11 — fora
+ * simulado. A expiração por prazo (HU-136) é gancho do scheduler do EP11 — fora
  * do escopo; o due_at já fica gravado.
  */
 class PendenciaService
@@ -76,6 +76,13 @@ class PendenciaService
     {
         if ($request->status !== ViabilityRequestStatus::EmAnalise) {
             throw PendenciaInvalidaException::naoAbrivel($request);
+        }
+
+        // Processo sem requerente (REGIN: a JUCEB não envia o solicitante) não
+        // recebe o aviso nem consegue responder no portal; o prazo correria até o
+        // indeferimento automático sem que ninguém soubesse do convite.
+        if ($request->requester_user_id === null) {
+            throw PendenciaInvalidaException::semRequerente($request);
         }
 
         $pendency = DB::transaction(function () use ($request, $analista, $descricao): AnalysisPendency {
@@ -123,7 +130,7 @@ class PendenciaService
             return $pendency;
         });
 
-        // APÓS o commit: o evento gancho (EP11). O listener auto-descoberto
+        // APÓS o commit: o evento de domínio. O listener auto-descoberto
         // NotificarPendencia notifica o requerente (multicanal) — o serviço NÃO
         // notifica direto (anti-duplicação). Efeito só de uma abertura efetivada.
         PendenciaSolicitada::dispatch($request, $pendency);
