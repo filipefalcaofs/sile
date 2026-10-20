@@ -199,21 +199,23 @@ class ProcessoQueryService
     }
 
     /**
-     * Contadores da caixa de entrada por status (HU-144), no escopo do usuário:
-     * aguardando análise (em_analise sem analista — fica zerado aqui, porque a
-     * fila só tem o que já está atribuído), em análise, em pendência e vencendo
-     * hoje (prazo <= fim do dia).
+     * Contadores da caixa de entrada por status (HU-134), no escopo do usuário:
+     * aguardando análise (tudo o que está na caixa), em análise (os que já têm
+     * ficha aberta por alguém — a pré-análise do motor nasce sem analista e não
+     * conta), em pendência e vencendo hoje (prazo <= fim do dia).
      *
      * @return array{aguardando_analise: int, em_analise: int, em_pendencia: int, vencendo_hoje: int}
      */
     public function contadores(User $user): array
     {
-        $emAnalise = ViabilityRequestStatus::EmAnalise->value;
         $emPendencia = ViabilityRequestStatus::EmPendencia->value;
 
         return [
-            'aguardando_analise' => $this->escopo($user)->where('status', $emAnalise)->whereNull('assigned_user_id')->count(),
-            'em_analise' => $this->escopo($user)->where('status', $emAnalise)->whereNotNull('assigned_user_id')->count(),
+            'aguardando_analise' => $this->escopo($user)->whereIn('status', self::STATUS_FILA)->count(),
+            'em_analise' => $this->escopo($user)
+                ->whereIn('status', self::STATUS_FILA)
+                ->whereHas('analysisRecords', fn (Builder $ficha) => $ficha->whereNotNull('analyst_user_id'))
+                ->count(),
             'em_pendencia' => $this->escopo($user)->where('status', $emPendencia)->count(),
             'vencendo_hoje' => $this->escopo($user)
                 ->whereIn('status', self::STATUS_FILA)
