@@ -166,4 +166,64 @@ class BenchmarkIngestionServiceTest extends TestCase
             'result' => 'falha',
         ]);
     }
+
+    public function test_planilha_chega_intacta_com_o_content_type_real_da_origem(): void
+    {
+        config(['viabiliza.features.benchmark_redesim' => true]);
+
+        Http::fake([
+            '*' => Http::response(
+                (string) file_get_contents(base_path('tests/Fixtures/Benchmark/redesim-ba-202608.xlsx')),
+                200,
+                ['Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+            ),
+        ]);
+
+        $ingestao = $this->service()->ingerir('BA', 2026, 8);
+
+        $this->assertSame(BenchmarkIngestion::STATUS_SUCESSO, $ingestao->status);
+        $this->assertSame(11, $ingestao->linhas_lidas);
+        $this->assertSame(3, BenchmarkMunicipalityMetric::query()->count());
+    }
+
+    public function test_arquivo_ilegivel_registra_falha_com_motivo_em_vez_de_sucesso_vazio(): void
+    {
+        config(['viabiliza.features.benchmark_redesim' => true]);
+
+        Http::fake([
+            '*' => Http::response(
+                'isto não é uma planilha',
+                200,
+                ['Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+            ),
+        ]);
+
+        $ingestao = $this->service()->ingerir('BA', 2026, 8);
+
+        $this->assertSame(BenchmarkIngestion::STATUS_FALHA, $ingestao->status);
+        $this->assertNotEmpty($ingestao->motivo);
+        $this->assertSame(0, BenchmarkMunicipalityMetric::query()->count());
+    }
+
+    public function test_falha_de_planilha_nao_conta_para_a_cobertura_da_competencia(): void
+    {
+        config(['viabiliza.features.benchmark_redesim' => true]);
+
+        Http::fake(['*' => Http::response('lixo', 200, ['Content-Type' => 'application/octet-stream'])]);
+
+        $this->service()->ingerir('BA', 2026, 8);
+
+        $this->assertSame(0, BenchmarkIngestion::query()->sucesso()->count());
+    }
+
+    public function test_ingestao_antiga_de_sucesso_sem_linhas_nao_conta_como_importada(): void
+    {
+        BenchmarkIngestion::create([
+            'uf' => 'BA', 'ano' => 2026, 'mes' => 9, 'status' => BenchmarkIngestion::STATUS_SUCESSO,
+            'url' => 'https://exemplo', 'bytes' => 1229533, 'hash' => 'x',
+            'linhas_lidas' => 0, 'linhas_descartadas' => 0, 'motivo' => null,
+        ]);
+
+        $this->assertSame(0, BenchmarkIngestion::query()->sucesso()->count());
+    }
 }

@@ -95,7 +95,8 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $query->where(fn (Builder $inner) => $inner
             ->where('auth_type', AuthType::Ad->value)
-            ->orWhereHas('roles.permissions', fn ($permissions) => $permissions->where('name', 'acessar-gestao')));
+            ->orWhereHas('roles.permissions', fn ($permissions) => $permissions->where('name', 'acessar-gestao'))
+            ->orWhereHas('permissions', fn ($permissions) => $permissions->where('name', 'acessar-gestao')));
     }
 
     /**
@@ -105,7 +106,8 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $query
             ->where('auth_type', '!=', AuthType::Ad->value)
-            ->whereDoesntHave('roles.permissions', fn ($permissions) => $permissions->where('name', 'acessar-gestao'));
+            ->whereDoesntHave('roles.permissions', fn ($permissions) => $permissions->where('name', 'acessar-gestao'))
+            ->whereDoesntHave('permissions', fn ($permissions) => $permissions->where('name', 'acessar-gestao'));
     }
 
     public function sendEmailVerificationNotification(): void

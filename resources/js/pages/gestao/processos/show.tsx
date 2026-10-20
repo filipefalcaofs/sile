@@ -1,7 +1,7 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import type { MultiPolygon, Polygon } from 'geojson';
 import type { ReactNode } from 'react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import ConclusaoAnaliseForm from '@/components/analise/conclusao-analise-form';
 import BaixarTvl from '@/components/analise/baixar-tvl';
 import JustificativaReginCard, { type JustificativaRegin } from '@/components/analise/justificativa-regin-card';
@@ -203,22 +203,6 @@ export default function Show({
     const [analistaEncaminhamento, setAnalistaEncaminhamento] = useState('');
     const [destinatarioConclusao, setDestinatarioConclusao] = useState('');
 
-    // O atributo no <html> ativa o CSS de impressão (esconde menu e barra do layout).
-    useEffect(() => {
-        const limpar = () => document.documentElement.removeAttribute('data-imprimindo');
-        window.addEventListener('afterprint', limpar);
-
-        return () => {
-            window.removeEventListener('afterprint', limpar);
-            limpar();
-        };
-    }, []);
-
-    function imprimirConsulta() {
-        document.documentElement.setAttribute('data-imprimindo', 'true');
-        window.print();
-    }
-
     function concluirAnalise(confirmarDivergencia = false) {
         setErroConclusao(null);
         setDivergenciaConclusao(null);
@@ -273,7 +257,7 @@ export default function Show({
             <div className="space-y-6">
                 <Link
                     href={consultaVistoria ? '/gestao/vistorias' : '/gestao/processos'}
-                    className="inline-flex items-center gap-1.5 text-theme-sm font-medium text-brand-500 transition hover:text-brand-600 print:hidden dark:text-brand-400"
+                    className="inline-flex items-center gap-1.5 text-theme-sm font-medium text-brand-500 transition hover:text-brand-600 dark:text-brand-400"
                 >
                     <ArrowRightIcon className="size-4 rotate-180" />
                     {consultaVistoria ? 'Voltar às vistorias' : 'Voltar à consulta'}
@@ -338,12 +322,15 @@ export default function Show({
                             </dl>
                         </div>
 
-                        <div className="mt-5 border-t border-gray-100 pt-5 print:hidden dark:border-gray-800">
+                        <div className="mt-5 border-t border-gray-100 pt-5 dark:border-gray-800">
                             <div className="flex flex-wrap items-center gap-3">
                                 {consultaVistoria && (
-                                    <Button variant="outline" onClick={imprimirConsulta}>
-                                        Imprimir consulta
-                                    </Button>
+                                    <a
+                                        href={`/gestao/vistorias/${processo.id}/consulta/imprimir`}
+                                        className="inline-flex items-center justify-center gap-2 rounded-lg px-5 py-3 text-sm font-medium text-gray-700 ring-1 ring-inset ring-gray-300 transition hover:bg-gray-50 focus:outline-hidden dark:text-gray-300 dark:ring-gray-700 dark:hover:bg-white/[0.03]"
+                                    >
+                                        Imprimir consulta (PDF)
+                                    </a>
                                 )}
                                 {podeAbrirFicha && (
                                     <Link
@@ -398,7 +385,7 @@ export default function Show({
                         <div
                             role="tablist"
                             aria-label="Seções do processo"
-                            className="inline-flex rounded-lg print:hidden border border-gray-200 bg-gray-50 p-1 dark:border-gray-800 dark:bg-white/[0.03]"
+                            className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-1 dark:border-gray-800 dark:bg-white/[0.03]"
                         >
                             {abas.map((item) => {
                                 const ativa = item.value === aba;
@@ -467,7 +454,7 @@ export default function Show({
                                             {processo.analysis_status_label ?? '—'}
                                         </DescItem>
                                         {podeAnalisar && podeConcluirAnalise && (
-                                            <DescItem label="Conclusão de Análise" className="print:hidden">
+                                            <DescItem label="Conclusão de Análise">
                                                 <ConclusaoAnaliseForm
                                                     resultadoId="resultado-conclusao"
                                                     resultado={resultadoConclusao}
@@ -485,7 +472,7 @@ export default function Show({
                                             </DescItem>
                                         )}
                                         {podeAnalisar && analysisStatusProximas.length > 0 && (
-                                            <DescItem label="Alterar situação da análise" className="print:hidden">
+                                            <DescItem label="Alterar situação da análise">
                                                 <div className="flex flex-col gap-2">
                                                     <Select
                                                         ariaLabel="Situação da análise"

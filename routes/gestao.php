@@ -717,6 +717,9 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
         Route::get('vistorias/{viabilityRequest}/consulta', [ProcessoController::class, 'consultaVistoria'])
             ->middleware('permission:preencher-ficha-vistoria|distribuir-processos')
             ->name('vistorias.consulta');
+        Route::get('vistorias/{viabilityRequest}/consulta/imprimir', [VistoriaConsultaController::class, 'imprimir'])
+            ->middleware('permission:preencher-ficha-vistoria|distribuir-processos')
+            ->name('vistorias.consulta.imprimir');
 
         // Caixa de Malha Fina: a fila do revisor — processos com in_fine_mesh
         // (o encaminhamento continua ortogonal ao status, HU-136). A consulta

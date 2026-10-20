@@ -36,7 +36,7 @@ class BenchmarkIngestionService
         $download = $this->client->baixar($uf, $ano, $mes);
 
         if (! $download->sucesso) {
-            return $this->registrarFalha($uf, $ano, $mes, $download);
+            return $this->registrarFalha($uf, $ano, $mes, $download->url, (string) $download->motivo);
         }
 
         /** @var array<string, list<float>> $porMunicipio */
@@ -66,6 +66,19 @@ class BenchmarkIngestionService
         }
 
         $descartadas = $this->parser->descartadas();
+
+        // Zero linhas lidas nunca é sucesso: arquivo ilegível ou sem estrutura
+        // reconhecida gravado como sucesso fecha a competência sem dado e,
+        // por ser "já importada", ninguém mais a refaz.
+        if ($lidas === 0) {
+            return $this->registrarFalha(
+                $uf,
+                $ano,
+                $mes,
+                $download->url,
+                $this->parser->erro() ?? 'A planilha não trouxe nenhuma linha aproveitável.',
+            );
+        }
 
         return DB::transaction(function () use (
             $uf, $ano, $mes, $download, $porMunicipio, $cnaeSalvador, $cnaeBrasil, $lidas, $descartadas
@@ -135,18 +148,18 @@ class BenchmarkIngestionService
         }
     }
 
-    private function registrarFalha(string $uf, int $ano, int $mes, RedesimDownload $download): BenchmarkIngestion
+    private function registrarFalha(string $uf, int $ano, int $mes, string $url, string $motivo): BenchmarkIngestion
     {
         $ingestao = BenchmarkIngestion::updateOrCreate(
             ['uf' => $uf, 'ano' => $ano, 'mes' => $mes],
             [
                 'status' => BenchmarkIngestion::STATUS_FALHA,
-                'url' => $download->url,
+                'url' => $url,
                 'bytes' => 0,
                 'hash' => null,
                 'linhas_lidas' => 0,
                 'linhas_descartadas' => 0,
-                'motivo' => $download->motivo,
+                'motivo' => $motivo,
             ],
         );
 
