@@ -138,4 +138,125 @@ class DistanciaBenchmarkServiceTest extends TestCase
 
         $this->assertNotEmpty($this->service()->calcular($this->filtros())['ressalva']);
     }
+
+    private function processoDecididoEm(float $horas, string $decididoEm): void
+    {
+        $request = ViabilityRequest::factory()->protocoled()->create([
+            'protocol_number' => fake()->unique()->numerify('VIA-2026-######'),
+            'protocoled_at' => Carbon::parse($decididoEm)->subDay(),
+        ]);
+
+        ViabilityDecision::factory()->for($request, 'viabilityRequest')->create([
+            'tvl_product_number' => fake()->unique()->numerify('TVL-2026-######'),
+            'decided_at' => Carbon::parse($decididoEm),
+        ]);
+
+        $request->forceFill(['viabilidade_horas_uteis' => $horas])->save();
+    }
+
+    private function redesimDeSalvador(int $ano, int $mes, float $media): void
+    {
+        BenchmarkMunicipalityMetric::factory()->salvador()->create([
+            'ano' => $ano, 'mes' => $mes, 'media' => $media, 'n' => 600,
+        ]);
+    }
+
+    public function test_evolucao_compara_o_mes_atual_do_viabiliza_com_o_mes_anterior_da_redesim(): void
+    {
+        $this->redesimDeSalvador(2026, 9, 21.0);
+        $this->processoDecididoEm(2.0, '2026-10-05 10:00:00');
+        $this->processoDecididoEm(4.0, '2026-10-06 10:00:00');
+        $this->processoDecididoEm(90.0, '2026-09-20 10:00:00');
+
+        $evolucao = $this->service()->evolucaoMensal(Carbon::parse('2026-10-15'));
+
+        $this->assertSame(['ano' => 2026, 'mes' => 9], [
+            'ano' => $evolucao['anterior']['ano'], 'mes' => $evolucao['anterior']['mes'],
+        ]);
+        $this->assertEqualsWithDelta(21.0, $evolucao['anterior']['media'], 0.01);
+        $this->assertSame(['ano' => 2026, 'mes' => 10], [
+            'ano' => $evolucao['atual']['ano'], 'mes' => $evolucao['atual']['mes'],
+        ]);
+        $this->assertEqualsWithDelta(3.0, $evolucao['atual']['media'], 0.01);
+        $this->assertSame(2, $evolucao['atual']['n']);
+        $this->assertEqualsWithDelta(-18.0, $evolucao['diferenca_horas'], 0.01);
+        $this->assertEqualsWithDelta(-85.71, $evolucao['diferenca_percentual'], 0.01);
+        $this->assertSame(DistanciaBenchmarkService::RESSALVA, $evolucao['ressalva']);
+    }
+
+    public function test_evolucao_atravessa_a_virada_do_ano(): void
+    {
+        $this->redesimDeSalvador(2025, 12, 30.0);
+        $this->processoDecididoEm(6.0, '2026-01-10 10:00:00');
+
+        $evolucao = $this->service()->evolucaoMensal(Carbon::parse('2026-01-15'));
+
+        $this->assertSame(2025, $evolucao['anterior']['ano']);
+        $this->assertSame(12, $evolucao['anterior']['mes']);
+        $this->assertEqualsWithDelta(6.0, $evolucao['atual']['media'], 0.01);
+    }
+
+    public function test_evolucao_sem_mes_anterior_da_redesim_nao_calcula_diferenca(): void
+    {
+        $this->processoDecididoEm(2.0, '2026-10-05 10:00:00');
+
+        $evolucao = $this->service()->evolucaoMensal(Carbon::parse('2026-10-15'));
+
+        $this->assertNull($evolucao['anterior']['media']);
+        $this->assertSame(0, $evolucao['anterior']['n']);
+        $this->assertEqualsWithDelta(2.0, $evolucao['atual']['media'], 0.01);
+        $this->assertNull($evolucao['diferenca_horas']);
+        $this->assertNull($evolucao['diferenca_percentual']);
+    }
+
+    public function test_evolucao_sem_processo_no_mes_atual_nao_calcula_diferenca(): void
+    {
+        $this->redesimDeSalvador(2026, 9, 21.0);
+
+        $evolucao = $this->service()->evolucaoMensal(Carbon::parse('2026-10-15'));
+
+        $this->assertNull($evolucao['atual']['media']);
+        $this->assertSame(0, $evolucao['atual']['n']);
+        $this->assertNull($evolucao['diferenca_horas']);
+    }
+
+    public function test_evolucao_com_referencia_zero_nao_divide_por_zero(): void
+    {
+        $this->redesimDeSalvador(2026, 9, 0.0);
+        $this->processoDecididoEm(2.0, '2026-10-05 10:00:00');
+
+        $evolucao = $this->service()->evolucaoMensal(Carbon::parse('2026-10-15'));
+
+        $this->assertEqualsWithDelta(2.0, $evolucao['diferenca_horas'], 0.01);
+        $this->assertNull($evolucao['diferenca_percentual']);
+    }
+
+    public function test_evolucao_traz_a_redesim_do_mes_atual_quando_ja_foi_importada(): void
+    {
+        $this->redesimDeSalvador(2026, 9, 21.0);
+        $this->redesimDeSalvador(2026, 10, 10.0);
+        $this->processoDecididoEm(4.0, '2026-10-05 10:00:00');
+
+        $evolucao = $this->service()->evolucaoMensal(Carbon::parse('2026-10-15'));
+
+        $this->assertSame(10, $evolucao['redesim_atual']['mes']);
+        $this->assertEqualsWithDelta(10.0, $evolucao['redesim_atual']['media'], 0.01);
+        $this->assertEqualsWithDelta(-6.0, $evolucao['diferenca_mesmo_mes_horas'], 0.01);
+        $this->assertEqualsWithDelta(-60.0, $evolucao['diferenca_mesmo_mes_percentual'], 0.01);
+        $this->assertEqualsWithDelta(-17.0, $evolucao['diferenca_horas'], 0.01);
+    }
+
+    public function test_evolucao_sem_a_redesim_do_mes_atual_deixa_a_terceira_medida_em_aberto(): void
+    {
+        $this->redesimDeSalvador(2026, 9, 21.0);
+        $this->processoDecididoEm(4.0, '2026-10-05 10:00:00');
+
+        $evolucao = $this->service()->evolucaoMensal(Carbon::parse('2026-10-15'));
+
+        $this->assertSame(10, $evolucao['redesim_atual']['mes']);
+        $this->assertNull($evolucao['redesim_atual']['media']);
+        $this->assertSame(0, $evolucao['redesim_atual']['n']);
+        $this->assertNull($evolucao['diferenca_mesmo_mes_horas']);
+        $this->assertNull($evolucao['diferenca_mesmo_mes_percentual']);
+    }
 }

@@ -3,6 +3,7 @@
 namespace App\Services\Relatorios;
 
 use App\Services\Benchmark\BenchmarkRankingService;
+use Illuminate\Support\Carbon;
 
 /**
  * Distância entre o desempenho atual do VIABILIZA e a referência federal.
@@ -59,6 +60,93 @@ class DistanciaBenchmarkService
             'diferenca_percentual' => $referencia > 0 ? round($diferenca / $referencia * 100, 2) : null,
             'motivo' => null,
             'ressalva' => self::RESSALVA,
+        ];
+    }
+
+    /**
+     * Evolução de Salvador em três medidas: a REDESIM do mês anterior, o
+     * VIABILIZA do mês corrente (processos decididos de dia 1º até hoje, em
+     * tempo real) e a REDESIM do mês corrente, que só existe depois que a
+     * origem consolida a competência e o benchmark a importa — normalmente no
+     * mês seguinte. Medida sem dado volta com média nula e n zero, nunca com
+     * zero medido.
+     *
+     * A diferença principal é do VIABILIZA contra a REDESIM do mês anterior. A
+     * diferença "do mesmo mês" só existe quando as duas medidas do mês corrente
+     * estão disponíveis — é a única comparação entre competências iguais.
+     *
+     * @return array{anterior: array{ano: int, mes: int, media: ?float, p50: ?float, p90: ?float, n: int}, atual: array{ano: int, mes: int, media: ?float, p50: ?float, p90: ?float, n: int}, redesim_atual: array{ano: int, mes: int, media: ?float, p50: ?float, p90: ?float, n: int}, diferenca_horas: ?float, diferenca_percentual: ?float, diferenca_mesmo_mes_horas: ?float, diferenca_mesmo_mes_percentual: ?float, ressalva: string}
+     */
+    public function evolucaoMensal(Carbon $hoje): array
+    {
+        $mesAnterior = $hoje->copy()->startOfMonth()->subMonthNoOverflow();
+
+        $anterior = $this->pontoRedesim($mesAnterior->year, $mesAnterior->month);
+        $redesimAtual = $this->pontoRedesim($hoje->year, $hoje->month);
+
+        $interno = $this->tempoViabilidade->porPeriodo(ReportFilters::fromArray([
+            'data_de' => $hoje->copy()->startOfMonth()->toDateString(),
+            'data_ate' => $hoje->toDateString(),
+        ]));
+
+        $viabiliza = [
+            'ano' => $hoje->year,
+            'mes' => $hoje->month,
+            'media' => $interno['media'],
+            'p50' => $interno['p50'],
+            'p90' => $interno['p90'],
+            'n' => $interno['n'],
+        ];
+
+        [$horas, $percentual] = $this->diferenca($viabiliza['media'], $anterior['media']);
+        [$horasMesmoMes, $percentualMesmoMes] = $this->diferenca($viabiliza['media'], $redesimAtual['media']);
+
+        return [
+            'anterior' => $anterior,
+            'atual' => $viabiliza,
+            'redesim_atual' => $redesimAtual,
+            'diferenca_horas' => $horas,
+            'diferenca_percentual' => $percentual,
+            'diferenca_mesmo_mes_horas' => $horasMesmoMes,
+            'diferenca_mesmo_mes_percentual' => $percentualMesmoMes,
+            'ressalva' => self::RESSALVA,
+        ];
+    }
+
+    /**
+     * @return array{ano: int, mes: int, media: ?float, p50: ?float, p90: ?float, n: int}
+     */
+    private function pontoRedesim(int $ano, int $mes): array
+    {
+        $metrica = $this->ranking->metricaDeSalvador($ano, $mes);
+
+        return [
+            'ano' => $ano,
+            'mes' => $mes,
+            'media' => $metrica?->media,
+            'p50' => $metrica?->p50,
+            'p90' => $metrica?->p90,
+            'n' => (int) ($metrica?->n ?? 0),
+        ];
+    }
+
+    /**
+     * Diferença em horas e em percentual sobre a referência. Sem as duas
+     * medidas, ou com referência zero, o que não puder ser calculado fica nulo.
+     *
+     * @return array{0: ?float, 1: ?float}
+     */
+    private function diferenca(?float $interno, ?float $referencia): array
+    {
+        if ($interno === null || $referencia === null) {
+            return [null, null];
+        }
+
+        $diferenca = $interno - $referencia;
+
+        return [
+            round($diferenca, 2),
+            $referencia > 0 ? round($diferenca / $referencia * 100, 2) : null,
         ];
     }
 
