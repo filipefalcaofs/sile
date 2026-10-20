@@ -111,7 +111,7 @@ class JustificativaReginTest extends TestCase
             && $r['dadosProcesso']['ANALISES']['AREA'][0]['JUSTIFICATIVA_ANALISE'] === 'Texto escrito pelo analista no processo.');
     }
 
-    public function test_texto_padrao_diz_o_fundamento_legal_e_separa_as_condicionantes(): void
+    public function test_texto_padrao_sem_motivo_nao_leva_fundamento_nem_condicionantes(): void
     {
         [$processo, $decisao] = $this->processoDeferido('BAP9000002', [
             'fundamentacao' => [
@@ -126,8 +126,7 @@ class JustificativaReginTest extends TestCase
 
         event(new ResultadoEmitido($processo, $decisao));
 
-        $esperado = "Deferida com fundamento em: Decreto Municipal nº 32.636/2020, com os Anexos na redação do Decreto Municipal nº 41.758/2026; Lei nº 9.148/2016 (LOUOS) — nR2-12\n\n"
-            .'Condicionantes: Desde que seja escritório da empresa; Desde que a área utilizada não ultrapasse 1.250m² (mil duzentos e cinquenta metros quadrados).';
+        $esperado = 'Viabilidade deferida pelo motor de regras.';
 
         Http::assertSent(fn ($r) => str_ends_with($r->url(), '/recebe')
             && $r['dadosProcesso']['ANALISES']['AREA'][0]['JUSTIFICATIVA_ANALISE'] === $esperado);
@@ -204,7 +203,7 @@ class JustificativaReginTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('gestao/processos/show')
                 ->where('justificativaRegin.personalizada', false)
-                ->where('justificativaRegin.texto', 'Deferida com fundamento em: Lei nº 9.148/2016 (LOUOS) — nR2-12'));
+                ->where('justificativaRegin.texto', 'Viabilidade deferida pelo motor de regras.'));
 
         $processo->forceFill(['regin_justificativa' => 'Texto do analista.'])->save();
 

@@ -16,20 +16,6 @@ use App\Support\Settings;
  */
 class HttpReginParecerNotifier implements ReginParecerNotifier
 {
-    /**
-     * Trechos que marcam nota interna do motor (falha de camada, indisponibilidade,
-     * encaminhamento à análise): vão para a trilha do processo, não para a JUCEB.
-     *
-     * @var list<string>
-     */
-    private const MARCAS_NOTA_INTERNA = [
-        'geoserver',
-        'indispon',
-        'resposta incompleta',
-        'não foi possível verificar',
-        'segue para análise técnica',
-    ];
-
     public function __construct(private ReginHttpClient $client, private ReginIntegrationSettings $settings) {}
 
     public function notifyParecer(ViabilityRequest $request, ViabilityDecision $decision): void
@@ -83,8 +69,9 @@ class HttpReginParecerNotifier implements ReginParecerNotifier
 
     /**
      * Texto do campo JUSTIFICATIVA_ANALISE (limite de 10.000 caracteres da PSCS).
-     * Vale o texto gravado no processo pelo analista; sem ele, o motivo da decisão
-     * e o fundamento legal registrado, com as condicionantes separadas.
+     * Vale o texto gravado no processo pelo analista; sem ele, o motivo da decisão.
+     * A fundamentação legal e as condicionantes não vão para a JUCEB (SEDUR,
+     * 20/10/2026).
      */
     public function justificativaPara(ViabilityRequest $request, ViabilityDecision $decision): string
     {
@@ -95,85 +82,11 @@ class HttpReginParecerNotifier implements ReginParecerNotifier
         }
 
         $motivo = trim((string) $decision->reason);
-        $linhas = $this->fundamentacao($decision);
-        $condicionantes = array_values(array_filter($linhas, fn (string $linha): bool => $this->ehCondicionante($linha)));
-        $base = array_values(array_filter($linhas, fn (string $linha): bool => ! $this->ehCondicionante($linha)));
 
-        $partes = [];
-
-        if ($motivo !== '') {
-            $partes[] = $motivo;
-        }
-
-        if ($base !== []) {
-            $abertura = $motivo !== '' ? 'Fundamentação legal: ' : $this->abertura($decision);
-            $partes[] = $abertura.implode('; ', $base);
-        }
-
-        if ($condicionantes !== []) {
-            $partes[] = 'Condicionantes: '.implode('; ', $condicionantes);
-        }
-
-        $texto = $partes === []
-            ? "Viabilidade {$decision->outcome->value} pelo motor de regras."
-            : implode("\n\n", $partes);
+        $texto = $motivo !== ''
+            ? $motivo
+            : "Viabilidade {$decision->outcome->value} pelo motor de regras.";
 
         return mb_substr($texto, 0, 10000);
-    }
-
-    private function abertura(ViabilityDecision $decision): string
-    {
-        return match ($decision->outcome) {
-            DecisionOutcome::Deferida => 'Deferida com fundamento em: ',
-            DecisionOutcome::Indeferida => 'Indeferida com fundamento em: ',
-            default => 'Fundamentação legal: ',
-        };
-    }
-
-    private function ehCondicionante(string $linha): bool
-    {
-        return preg_match('/^\s*desde que\b/iu', $linha) === 1;
-    }
-
-    /**
-     * Linhas de fundamento da decisão, sem as notas internas do motor.
-     *
-     * @return list<string>
-     */
-    private function fundamentacao(ViabilityDecision $decision): array
-    {
-        $fundacao = $decision->fundamentacao;
-
-        if (is_string($fundacao) && $fundacao !== '') {
-            return [$fundacao];
-        }
-
-        if (! is_array($fundacao)) {
-            return [];
-        }
-
-        $texto = $fundacao['texto'] ?? null;
-
-        if (is_string($texto) && $texto !== '') {
-            return [$texto];
-        }
-
-        return array_values(array_filter(
-            $fundacao,
-            fn (mixed $linha): bool => is_string($linha) && $linha !== '' && ! $this->ehNotaInterna($linha),
-        ));
-    }
-
-    private function ehNotaInterna(string $linha): bool
-    {
-        $texto = mb_strtolower($linha);
-
-        foreach (self::MARCAS_NOTA_INTERNA as $marca) {
-            if (str_contains($texto, $marca)) {
-                return true;
-            }
-        }
-
-        return false;
     }
 }
