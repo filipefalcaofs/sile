@@ -7,6 +7,15 @@ export interface ParecerDecisao {
     motivo: string | null;
     fundamentacao: string[];
     decidido_em: string | null;
+    /** Tipo do deferimento (Definitiva, Provisória, Pré-operacional) e validade em AAAA-MM-DD. */
+    tipo?: string | null;
+    valido_ate?: string | null;
+}
+
+function dataCurta(iso: string): string {
+    const [ano, mes, dia] = iso.split('-');
+
+    return `${dia}/${mes}/${ano}`;
 }
 
 interface ParecerCardProps {
@@ -32,6 +41,13 @@ export default function ParecerCard({ parecer }: ParecerCardProps) {
             />
             <CardContent>
                 <div className="flex flex-col gap-5">
+                    {(parecer.tipo || parecer.valido_ate) && (
+                        <p className="text-sm text-gray-700 dark:text-gray-300">
+                            {parecer.tipo && <span>Tipo: {parecer.tipo}</span>}
+                            {parecer.tipo && parecer.valido_ate && <span> · </span>}
+                            {parecer.valido_ate && <span>Válido até {dataCurta(parecer.valido_ate)}</span>}
+                        </p>
+                    )}
                     {parecer.motivo && (
                         <section aria-labelledby="parecer-motivo">
                             <h4 id="parecer-motivo" className="text-sm font-medium text-gray-800 dark:text-white/90">

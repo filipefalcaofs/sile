@@ -110,6 +110,8 @@ class TvlPdfService
             'url_verificacao' => url('/verificar-documento/'.$verificationCode),
             'emitido_em' => $emitidoEm ?? now(),
             'decidido_em' => $decision->decided_at,
+            'tvl_tipo' => $decision->tvl_kind?->label(),
+            'tvl_valido_ate' => $decision->tvl_valid_until,
             'protocolo' => $request?->protocol_number,
             'empresa' => $this->dadosEmpresa($request?->company),
             'imovel' => $this->dadosImovel($request),

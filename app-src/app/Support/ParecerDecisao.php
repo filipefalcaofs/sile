@@ -11,7 +11,7 @@ use App\Models\ViabilityDecision;
 final class ParecerDecisao
 {
     /**
-     * @return array{outcome: string, outcome_label: string, motivo: ?string, fundamentacao: list<string>, decidido_em: ?string}|null
+     * @return array{outcome: string, outcome_label: string, motivo: ?string, fundamentacao: list<string>, decidido_em: ?string, tipo: ?string, valido_ate: ?string}|null
      */
     public static function de(?ViabilityDecision $decision): ?array
     {
@@ -31,6 +31,8 @@ final class ParecerDecisao
             'motivo' => $motivo !== '' ? $motivo : null,
             'fundamentacao' => $fundamentacao,
             'decidido_em' => $decision->decided_at?->toIso8601String(),
+            'tipo' => $decision->tvl_kind?->label(),
+            'valido_ate' => $decision->tvl_valid_until?->toDateString(),
         ];
     }
 }
