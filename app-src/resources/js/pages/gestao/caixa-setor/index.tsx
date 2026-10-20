@@ -322,12 +322,17 @@ export default function CaixaSetorIndex({
             cell: (item) =>
                 item.assigned_to ?? <span className="text-gray-400 dark:text-gray-500">Não atribuído</span>,
         },
-        {
-            id: 'status_tramitacao',
-            header: 'Status',
-            cellClassName: 'whitespace-nowrap',
-            cell: (item) => item.status_tramitacao ?? <span className="text-gray-400 dark:text-gray-500">—</span>,
-        },
+        ...(visao === 'para_conclusao'
+            ? []
+            : [
+                  {
+                      id: 'status_tramitacao',
+                      header: 'Status',
+                      cellClassName: 'whitespace-nowrap',
+                      cell: (item: ProcessoItem) =>
+                          item.status_tramitacao ?? <span className="text-gray-400 dark:text-gray-500">—</span>,
+                  },
+              ]),
         ...(visao === 'para_conclusao'
             ? [
                   {

@@ -342,6 +342,7 @@ class VistoriaConsultaController extends Controller
             'responsavel' => $processo->assignedTo?->name,
             'analysis_due_at' => $processo->analysis_due_at?->toIso8601String(),
             'ficha_url' => route('gestao.processos.vistoria.show', ['viabilityRequest' => $processo->id]),
+            'consulta_url' => route('gestao.vistorias.consulta', ['viabilityRequest' => $processo->id]),
         ];
     }
 }

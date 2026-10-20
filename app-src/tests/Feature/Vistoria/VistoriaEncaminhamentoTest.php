@@ -243,8 +243,8 @@ class VistoriaEncaminhamentoTest extends TestCase
         $this->assertSame($vistoriador->id, $fresh->assigned_user_id);
         $this->assertSame(InspectionStatus::Concluida, Inspection::query()->sole()->status);
 
-        // 4. Encaminhar para a Caixa do Setor: volta ao setor e ao analista de
-        //    origem e segue Vistoriado, até o analista retomar a ficha.
+        // 4. Encaminhar para a Caixa do Setor: volta ao setor de origem, sem
+        //    responsável, e segue Vistoriado; o setor distribui de novo.
         $this->actingAs($vistoriador, 'gestao')
             ->post("/gestao/processos/{$processo->id}/vistoria/encaminhar-ao-setor")
             ->assertRedirect()
@@ -253,7 +253,8 @@ class VistoriaEncaminhamentoTest extends TestCase
         $fresh = $processo->refresh();
         $this->assertSame(AnalysisStatus::Vistoriado, $fresh->analysis_status);
         $this->assertSame($setorAnalise->id, $fresh->sector_id);
-        $this->assertSame($analista->id, $fresh->assigned_user_id);
+        $this->assertNull($fresh->assigned_user_id);
+        $this->assertNull($fresh->assigned_at);
         $this->assertDatabaseHas('activity_log', [
             'log_name' => 'vistoria',
             'event' => 'vistoria-devolver',
@@ -263,6 +264,52 @@ class VistoriaEncaminhamentoTest extends TestCase
             ->map(fn ($transicao) => $transicao->to_status->value)
             ->all();
         $this->assertContains(AnalysisStatus::Vistoriado->value, $transicoes);
+    }
+
+    public function test_apos_a_devolucao_o_setor_distribui_o_processo_a_um_analista(): void
+    {
+        $setorAnalise = Sector::factory()->create();
+        $setorVistoria = Sector::factory()->create();
+        $analista = $this->analista();
+        $analista->sectors()->attach($setorAnalise);
+        $outraAnalista = $this->analista();
+        $outraAnalista->sectors()->attach($setorAnalise);
+        $vistoriador = $this->analista();
+        $apoio = User::factory()->apoio()->withAcceptedLgpdTerm()->create();
+
+        $processo = $this->processoEmAnalise($setorAnalise, $analista);
+        $this->actingAs($analista, 'gestao')
+            ->post("/gestao/processos/{$processo->id}/vistoria/encaminhar", [
+                'setor_vistoria_id' => $setorVistoria->id,
+                'motivo' => 'Conferir a atividade no local.',
+            ]);
+        $processo->forceFill(['assigned_user_id' => $vistoriador->id])->save();
+        $this->actingAs($vistoriador, 'gestao')->get("/gestao/processos/{$processo->id}/vistoria");
+        $this->actingAs($vistoriador, 'gestao')
+            ->postJson("/gestao/processos/{$processo->id}/vistoria/concluir", ['parecer' => 'Atividade conforme.'])
+            ->assertOk();
+        $this->actingAs($vistoriador, 'gestao')
+            ->post("/gestao/processos/{$processo->id}/vistoria/encaminhar-ao-setor")
+            ->assertSessionMissing('error');
+
+        $this->actingAs($apoio, 'gestao')
+            ->get('/gestao/caixa-setor')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('contadores.para_distribuir', 1)
+                ->where('processos.data.0.id', $processo->id));
+
+        $this->actingAs($apoio, 'gestao')
+            ->post('/gestao/caixa-setor/distribuir', [
+                'request_ids' => [$processo->id],
+                'analista_id' => $outraAnalista->id,
+            ])
+            ->assertSessionMissing('error');
+
+        $fresh = $processo->refresh();
+        $this->assertSame($outraAnalista->id, $fresh->assigned_user_id);
+        $this->assertSame($setorAnalise->id, $fresh->sector_id);
+        $this->assertSame(AnalysisStatus::Vistoriado, $fresh->analysis_status);
+        $this->assertSame(InspectionStatus::Concluida, Inspection::query()->sole()->status);
     }
 
     public function test_encaminhar_ao_setor_exige_ficha_concluida(): void

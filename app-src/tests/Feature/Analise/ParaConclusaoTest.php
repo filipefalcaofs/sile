@@ -205,7 +205,7 @@ class ParaConclusaoTest extends TestCase
         $this->assertSame(1, $servico->contadores($analista)['em_analise']);
     }
 
-    public function test_aba_para_conclusao_lista_com_analista_e_encaminhado_para(): void
+    public function test_aba_para_conclusao_lista_so_os_sem_destinatario_com_o_analista_de_origem(): void
     {
         $setor = Sector::factory()->create();
         $analista = $this->analistaDoSetor($setor);
@@ -230,11 +230,10 @@ class ParaConclusaoTest extends TestCase
         $linhas = collect($page['props']['processos']['data'])->keyBy('id');
 
         $this->assertSame('para_conclusao', $page['props']['visao']);
-        $this->assertEqualsCanonicalizing([$comDestino->id, $semDestino->id], $linhas->keys()->all());
-        $this->assertSame($chefia->name, $linhas[$comDestino->id]['encaminhado_para']);
+        $this->assertSame([$semDestino->id], $linhas->keys()->all());
         $this->assertNull($linhas[$semDestino->id]['encaminhado_para']);
-        $this->assertSame($analista->name, $linhas[$comDestino->id]['assigned_to']);
-        $this->assertSame(2, $page['props']['contadores']['para_conclusao']);
+        $this->assertSame($analista->name, $linhas[$semDestino->id]['assigned_to']);
+        $this->assertSame(1, $page['props']['contadores']['para_conclusao']);
 
         $outras = $this->actingAs($apoio, 'gestao')
             ->get('/gestao/caixa-setor?visao=distribuidos')

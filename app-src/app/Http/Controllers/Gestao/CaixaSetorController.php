@@ -85,10 +85,13 @@ class CaixaSetorController extends Controller
         $base = $this->processos->aplicarFiltros($base, $filtros);
 
         // Para conclusão é cross-setor para quem distribui: a conclusão não fica presa ao setor.
+        // Com destinatário (distribuído, assumido ou escolhido no envio) o processo sai da aba
+        // e fica na caixa de entrada dele.
         $baseConclusao = $this->processos->aplicarFiltros(
             $this->paraConclusaoDoUsuario(ViabilityRequest::query(), $request->user())
                 ->where('status', ViabilityRequestStatus::EmAnalise->value)
-                ->where('analysis_status', $paraConclusao),
+                ->where('analysis_status', $paraConclusao)
+                ->whereNull('conclusao_encaminhada_para_user_id'),
             $filtros,
         );
         $foraDaConclusao = fn ($query) => $query->where(

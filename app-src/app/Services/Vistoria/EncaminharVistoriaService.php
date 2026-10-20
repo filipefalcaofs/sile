@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\DB;
  * A vistoria COMPÕE o processo (sem número novo): a origem (setor/analista) é
  * registrada no referral. Concluída a ficha, o processo fica Vistoriado com o
  * vistoriador, que o encaminha de volta à Caixa do Setor (encaminharAoSetor).
+ * O retorno é ao setor de origem, sem responsável: o setor distribui de novo.
  */
 class EncaminharVistoriaService
 {
@@ -113,10 +114,10 @@ class EncaminharVistoriaService
 
     /**
      * Encaminha à Caixa do Setor o processo cuja ficha de vistoria foi concluída,
-     * para a análise continuar. Com a origem registrada, volta ao setor e à
-     * analista de origem; sem ela (vistoria marcada à mão), segue no setor atual
-     * sem responsável, para distribuir. O status continua Vistoriado até a
-     * analista retomar a ficha.
+     * para a análise continuar. Com a origem registrada, volta ao setor de
+     * origem; sem ela (vistoria marcada à mão), segue no setor atual. Nos dois
+     * casos fica sem responsável, para o setor distribuir a um analista. O
+     * status continua Vistoriado até a analista retomar a ficha.
      */
     public function encaminharAoSetor(ViabilityRequest $processo, User $ator): void
     {
@@ -135,12 +136,10 @@ class EncaminharVistoriaService
             ->first();
 
         DB::transaction(function () use ($processo, $referral, $ator): void {
-            $analista = $referral?->analista_origem_user_id;
-
             $processo->forceFill([
                 'sector_id' => $referral?->setor_origem_id ?? $processo->sector_id,
-                'assigned_user_id' => $analista,
-                'assigned_at' => $analista === null ? null : now(),
+                'assigned_user_id' => null,
+                'assigned_at' => null,
             ])->save();
 
             $this->audit->log(
@@ -151,7 +150,7 @@ class EncaminharVistoriaService
                     'viability_request_id' => $processo->id,
                     'inspection_referral_id' => $referral?->id,
                     'setor_origem_id' => $referral?->setor_origem_id,
-                    'analista_origem_user_id' => $analista,
+                    'analista_origem_user_id' => $referral?->analista_origem_user_id,
                     'ator_id' => $ator->id,
                 ],
                 subject: $processo,

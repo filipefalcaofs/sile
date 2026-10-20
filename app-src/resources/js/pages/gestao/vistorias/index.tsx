@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import DistribuirModal, { type DestinatarioDaDistribuicao } from '@/components/analise/distribuir-modal';
 import ProcessoFiltros, { FILTROS_VAZIOS, type ProcessoFiltrosValores } from '@/components/analise/processo-filtros';
 import PageHeader from '@/components/app/page-header';
-import { ArrowRightIcon } from '@/components/icons';
+import { ArrowRightIcon, EyeIcon } from '@/components/icons';
 import Badge from '@/components/ui/badge';
 import Button from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -32,6 +32,7 @@ interface VistoriaItem {
     responsavel: string | null;
     analysis_due_at: string | null;
     ficha_url: string;
+    consulta_url: string;
 }
 
 type OpcaoDeFiltro = { value: string; label: string };
@@ -273,7 +274,13 @@ export default function VistoriasIndex({
             align: 'end',
             cellClassName: 'whitespace-nowrap',
             cell: (item) => (
-                <div className="flex justify-end">
+                <div className="flex justify-end gap-2">
+                    <TableAction
+                        tone="neutral"
+                        href={item.consulta_url}
+                        icon={<EyeIcon className="size-4.5" />}
+                        label="Consultar processo"
+                    />
                     {item.situacao === 'designar' ? (
                         <span className="text-theme-xs text-gray-400 dark:text-gray-500">Aguarda distribuição</span>
                     ) : (

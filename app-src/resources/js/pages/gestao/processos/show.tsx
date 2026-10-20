@@ -1,7 +1,7 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import type { MultiPolygon, Polygon } from 'geojson';
 import type { ReactNode } from 'react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import ConclusaoAnaliseForm from '@/components/analise/conclusao-analise-form';
 import BaixarTvl from '@/components/analise/baixar-tvl';
 import JustificativaReginCard, { type JustificativaRegin } from '@/components/analise/justificativa-regin-card';
@@ -77,6 +77,16 @@ interface ShowProps {
     /** Próximas transições manuais oferecidas ao analista (Tarefa 10). */
     analysisStatusProximas: { value: string; label: string }[];
     conclusaoOpcoes: { value: string; label: string }[];
+    /** Capa aberta pela caixa de vistoria: voltar à consulta de vistorias e permitir imprimir. */
+    consultaVistoria?: boolean;
+    /** Despacho do analista ao encaminhar o processo à vistoria; null sem encaminhamento. */
+    despachoVistoria?: {
+        orientacoes: string;
+        analista: string | null;
+        setor_origem: string | null;
+        setor_vistoria: string | null;
+        encaminhado_em: string | null;
+    } | null;
 }
 
 type Aba = 'informacoes' | 'tramitacao' | 'explicabilidade';
@@ -167,6 +177,8 @@ export default function Show({
     setoresEncaminhamento = [],
     analistasEncaminhamento = [],
     destinatariosConclusao = [],
+    consultaVistoria = false,
+    despachoVistoria = null,
 }: ShowProps & {
     destinatariosConclusao?: { value: string; label: string }[];
     setoresEncaminhamento?: SetorEncaminhamento[];
@@ -190,6 +202,22 @@ export default function Show({
     const [setorEncaminhamento, setSetorEncaminhamento] = useState('');
     const [analistaEncaminhamento, setAnalistaEncaminhamento] = useState('');
     const [destinatarioConclusao, setDestinatarioConclusao] = useState('');
+
+    // O atributo no <html> ativa o CSS de impressão (esconde menu e barra do layout).
+    useEffect(() => {
+        const limpar = () => document.documentElement.removeAttribute('data-imprimindo');
+        window.addEventListener('afterprint', limpar);
+
+        return () => {
+            window.removeEventListener('afterprint', limpar);
+            limpar();
+        };
+    }, []);
+
+    function imprimirConsulta() {
+        document.documentElement.setAttribute('data-imprimindo', 'true');
+        window.print();
+    }
 
     function concluirAnalise(confirmarDivergencia = false) {
         setErroConclusao(null);
@@ -236,17 +264,19 @@ export default function Show({
                 title={processo.protocol_number ?? 'Processo'}
                 breadcrumbs={[
                     { label: 'Painel', href: '/gestao' },
-                    { label: 'Processos', href: '/gestao/processos' },
+                    consultaVistoria
+                        ? { label: 'Consulta de vistorias', href: '/gestao/vistorias' }
+                        : { label: 'Processos', href: '/gestao/processos' },
                 ]}
             />
 
             <div className="space-y-6">
                 <Link
-                    href="/gestao/processos"
-                    className="inline-flex items-center gap-1.5 text-theme-sm font-medium text-brand-500 transition hover:text-brand-600 dark:text-brand-400"
+                    href={consultaVistoria ? '/gestao/vistorias' : '/gestao/processos'}
+                    className="inline-flex items-center gap-1.5 text-theme-sm font-medium text-brand-500 transition hover:text-brand-600 print:hidden dark:text-brand-400"
                 >
                     <ArrowRightIcon className="size-4 rotate-180" />
-                    Voltar à consulta
+                    {consultaVistoria ? 'Voltar às vistorias' : 'Voltar à consulta'}
                 </Link>
 
                 {/* Cabeçalho com os três identificadores (RN-007) */}
@@ -308,8 +338,13 @@ export default function Show({
                             </dl>
                         </div>
 
-                        <div className="mt-5 border-t border-gray-100 pt-5 dark:border-gray-800">
+                        <div className="mt-5 border-t border-gray-100 pt-5 print:hidden dark:border-gray-800">
                             <div className="flex flex-wrap items-center gap-3">
+                                {consultaVistoria && (
+                                    <Button variant="outline" onClick={imprimirConsulta}>
+                                        Imprimir consulta
+                                    </Button>
+                                )}
                                 {podeAbrirFicha && (
                                     <Link
                                         href={`/gestao/processos/${processo.id}/ficha`}
@@ -337,13 +372,33 @@ export default function Show({
                     </CardContent>
                 </Card>
 
+                {despachoVistoria && (
+                    <Card>
+                        <CardHeader
+                            title="Orientações do analista para a vistoria"
+                            description={[
+                                despachoVistoria.analista && `Analista: ${despachoVistoria.analista}`,
+                                despachoVistoria.setor_origem && `Setor de origem: ${despachoVistoria.setor_origem}`,
+                                despachoVistoria.encaminhado_em && `Encaminhado em ${formatarDataHora(despachoVistoria.encaminhado_em)}`,
+                            ]
+                                .filter(Boolean)
+                                .join(' · ')}
+                        />
+                        <CardContent>
+                            <p className="whitespace-pre-line text-theme-sm text-gray-700 dark:text-gray-200">
+                                {despachoVistoria.orientacoes}
+                            </p>
+                        </CardContent>
+                    </Card>
+                )}
+
                 <div className="grid gap-6 lg:grid-cols-3">
                     {/* Coluna principal: abas */}
                     <div className="space-y-5 lg:col-span-2">
                         <div
                             role="tablist"
                             aria-label="Seções do processo"
-                            className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-1 dark:border-gray-800 dark:bg-white/[0.03]"
+                            className="inline-flex rounded-lg print:hidden border border-gray-200 bg-gray-50 p-1 dark:border-gray-800 dark:bg-white/[0.03]"
                         >
                             {abas.map((item) => {
                                 const ativa = item.value === aba;
@@ -412,7 +467,7 @@ export default function Show({
                                             {processo.analysis_status_label ?? '—'}
                                         </DescItem>
                                         {podeAnalisar && podeConcluirAnalise && (
-                                            <DescItem label="Conclusão de Análise">
+                                            <DescItem label="Conclusão de Análise" className="print:hidden">
                                                 <ConclusaoAnaliseForm
                                                     resultadoId="resultado-conclusao"
                                                     resultado={resultadoConclusao}
@@ -430,7 +485,7 @@ export default function Show({
                                             </DescItem>
                                         )}
                                         {podeAnalisar && analysisStatusProximas.length > 0 && (
-                                            <DescItem label="Alterar situação da análise">
+                                            <DescItem label="Alterar situação da análise" className="print:hidden">
                                                 <div className="flex flex-col gap-2">
                                                     <Select
                                                         ariaLabel="Situação da análise"
