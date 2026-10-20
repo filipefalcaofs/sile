@@ -16,7 +16,7 @@ use Tests\TestCase;
  * orquestra o PendenciaService::abrir (10-11) — a transição em_analise→
  * em_pendencia, a auditoria e o e-mail ao requerente já vivem no serviço. Gated
  * por analisar-processos (403 auditado — CA-04); descrição é obrigatória (422 de
- * validação) e abrir fora de em_analise é recusado com 422.
+ * validação) e abrir fora de em_analise volta com erro no campo descricao.
  */
 class ProcessoPendenciaEndpointTest extends TestCase
 {
@@ -97,14 +97,17 @@ class ProcessoPendenciaEndpointTest extends TestCase
         $this->assertSame(ViabilityRequestStatus::EmAnalise, $processo->fresh()->status);
     }
 
-    public function test_abrir_fora_de_em_analise_e_recusado_com_422(): void
+    public function test_abrir_fora_de_em_analise_volta_com_erro_no_campo_descricao(): void
     {
-        // CA-03: só abre pendência sobre processo em análise; deferida → 422.
+        // CA-03: só abre convite sobre processo em análise; a recusa volta à
+        // ficha com a mensagem no campo, em vez da página genérica de erro.
         $processo = $this->processo(ViabilityRequestStatus::Deferida);
 
         $this->actingAs($this->analista(), 'gestao')
+            ->from("/gestao/processos/{$processo->id}/ficha")
             ->post("/gestao/processos/{$processo->id}/pendencias", ['descricao' => 'Complementar a documentação.'])
-            ->assertStatus(422);
+            ->assertRedirect("/gestao/processos/{$processo->id}/ficha")
+            ->assertSessionHasErrors(['descricao']);
 
         $this->assertDatabaseCount('analysis_pendencies', 0);
         $this->assertSame(ViabilityRequestStatus::Deferida, $processo->fresh()->status);
