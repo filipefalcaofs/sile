@@ -192,6 +192,12 @@ class ConclusaoValidadeTest extends TestCase
         $this->assertNull($processo->fresh()->decision->tvl_kind);
     }
 
+    public function test_indeferir_com_tipo_provisorio_sem_validade_nao_e_recusado(): void
+    {
+        $this->postarConclusao($this->processoComFicha(), ['resultado' => 'indeferido', 'tipo' => 'provisoria'])
+            ->assertSessionDoesntHaveErrors(['tipo', 'validade_meses']);
+    }
+
     public function test_renovacao_nao_exige_tipo_na_conclusao(): void
     {
         $origem = ViabilityRequest::factory()->create();
