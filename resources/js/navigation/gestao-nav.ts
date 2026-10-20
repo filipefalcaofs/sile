@@ -136,6 +136,7 @@ export const GESTAO_NAV_GROUPS: GestaoNavGroup[] = [
         items: [
             { name: 'CNAEs', href: '/gestao/cnaes', icon: 'barcode', permission: 'consultar-cnaes' },
             { name: 'Tipos de serviço', href: '/gestao/tipos-servico', icon: 'briefcase', permission: 'manter-tipos-servico' },
+            { name: 'Nomenclatura dos serviços', href: '/gestao/servicos-nomenclatura', icon: 'briefcase', permission: 'manter-nomenclatura-servicos' },
             { name: 'Tipos de imóvel', href: '/gestao/tipos-imovel', icon: 'home', permission: 'manter-tipos-imovel' },
             {
                 name: 'Gatilhos de risco',

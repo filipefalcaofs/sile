@@ -92,6 +92,12 @@ final class PermissionCatalog
                 'group' => 'Atendimento',
             ],
             [
+                'name' => 'manter-nomenclatura-servicos',
+                'label' => 'Parametrizar nomenclatura dos serviços',
+                'description' => 'Define o nome exibido de cada serviço enviado pela JUCEB (De x Para).',
+                'group' => 'Atendimento',
+            ],
+            [
                 'name' => 'manter-tipos-imovel',
                 'label' => 'Cadastrar tipos de imóvel',
                 'description' => 'Cria e edita os tipos de imóvel que dirigem a regra de roteamento do expresso.',

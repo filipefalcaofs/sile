@@ -63,6 +63,7 @@ use App\Http\Controllers\Gestao\RiskTriggerController;
 use App\Http\Controllers\Gestao\RoleController;
 use App\Http\Controllers\Gestao\SalaDeControleController;
 use App\Http\Controllers\Gestao\SectorController;
+use App\Http\Controllers\Gestao\ServicoNomenclaturaController;
 use App\Http\Controllers\Gestao\SolicitacaoAcessoController;
 use App\Http\Controllers\Gestao\StandardTextController;
 use App\Http\Controllers\Gestao\TermoLgpdController;
@@ -470,6 +471,14 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::post('/', [ViabilityServiceTypeController::class, 'store'])->name('store');
             Route::put('{serviceType}', [ViabilityServiceTypeController::class, 'update'])->name('update');
             Route::put('{serviceType}/ativacao', [ViabilityServiceTypeController::class, 'toggleActivation'])->name('ativacao.update');
+        });
+
+        // De x Para dos nomes dos serviços enviados pela JUCEB (pedido da SEDUR).
+        Route::middleware('permission:manter-nomenclatura-servicos')->prefix('servicos-nomenclatura')->name('servicos-nomenclatura.')->group(function () {
+            Route::get('/', [ServicoNomenclaturaController::class, 'index'])->name('index');
+            Route::post('/', [ServicoNomenclaturaController::class, 'store'])->name('store');
+            Route::put('{servicoNomenclatura}', [ServicoNomenclaturaController::class, 'update'])->name('update');
+            Route::put('{servicoNomenclatura}/exibir', [ServicoNomenclaturaController::class, 'toggleExibir'])->name('exibir.update');
         });
 
         // Tipos de imóvel reconhecidos do REGIN: drives_rule derruba o processo

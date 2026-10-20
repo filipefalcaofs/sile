@@ -36,6 +36,7 @@ class RolesAndPermissionsSeederTest extends TestCase
             'atendimento-presencial',
             'consultar-solicitacoes',
             'manter-tipos-servico',
+            'manter-nomenclatura-servicos',
             'manter-requisitos-documentais',
         ];
 
@@ -149,6 +150,7 @@ class RolesAndPermissionsSeederTest extends TestCase
             'atendimento-presencial',
             'consultar-solicitacoes',
             'manter-tipos-servico',
+            'manter-nomenclatura-servicos',
             'manter-requisitos-documentais',
         ];
 
@@ -576,7 +578,7 @@ class RolesAndPermissionsSeederTest extends TestCase
         $this->seed(RolesAndPermissionsSeeder::class);
 
         $this->assertSame(19, Role::query()->count());
-        $this->assertSame(39, Permission::query()->count());
+        $this->assertSame(41, Permission::query()->count());
     }
 
     public function test_seeder_aditivo_preserva_ajustes_feitos_pela_interface(): void
