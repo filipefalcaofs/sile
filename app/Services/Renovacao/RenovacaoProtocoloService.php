@@ -5,6 +5,7 @@ namespace App\Services\Renovacao;
 use App\Enums\AnalysisCategory;
 use App\Enums\ViabilityRequestOrigin;
 use App\Enums\ViabilityRequestStatus;
+use App\Models\Company;
 use App\Models\Sector;
 use App\Models\ServiceDeclaration;
 use App\Models\ServiceDeclarationAcceptance;
@@ -50,6 +51,58 @@ class RenovacaoProtocoloService
             throw new DomainException($avaliacao->motivo ?? 'Esta viabilidade não pode ser renovada.');
         }
 
+        $origem->loadMissing(['cnaes', 'company']);
+
+        return $this->protocolarComum(
+            atributos: [
+                'renews_viability_request_id' => $origem->id,
+                'company_id' => $origem->company_id,
+                'used_area_m2' => $origem->used_area_m2,
+                'property_registration' => $origem->property_registration,
+                'address_street' => $origem->address_street,
+                'address_number' => $origem->address_number,
+                'address_complement' => $origem->address_complement,
+                'address_neighborhood' => $origem->address_neighborhood,
+                'address_zip' => $origem->address_zip,
+                'address_reference' => $origem->address_reference,
+                'property_polygon_geojson' => $origem->property_polygon_geojson,
+            ],
+            cnaes: $origem->cnaes
+                ->map(fn ($cnae): array => ['id' => $cnae->id, 'is_primary' => (bool) $cnae->pivot->is_primary])
+                ->all(),
+            empresa: $origem->company,
+            ator: $ator,
+            contato: $contato,
+            declaracaoIds: $declaracaoIds,
+            auditoria: [
+                'description' => fn (ViabilityRequest $renovacao): string => "Renovação da viabilidade locacional da solicitação #{$origem->id} protocolada como #{$renovacao->id}",
+                'properties' => ['origem_id' => $origem->id],
+            ],
+        );
+    }
+
+    /**
+     * Parte comum do protocolo: declarações, criação do processo, número,
+     * transições, auditoria, território, setor de triagem e envio à análise.
+     * O verificador, quando informado, roda dentro da transação antes de criar
+     * qualquer coisa.
+     *
+     * @param  array<string, mixed>  $atributos
+     * @param  list<array{id: int, is_primary: bool}>  $cnaes
+     * @param  array{email?: string|null, phone?: string|null, mobile?: string|null}  $contato
+     * @param  list<int>  $declaracaoIds
+     * @param  array{description: callable, properties: array<string, mixed>}  $auditoria
+     */
+    private function protocolarComum(
+        array $atributos,
+        array $cnaes,
+        ?Company $empresa,
+        User $ator,
+        array $contato,
+        array $declaracaoIds,
+        array $auditoria,
+        ?callable $verificar = null,
+    ): ViabilityRequest {
         $tipo = ViabilityServiceType::query()->where('code', 'renovacao-tvl')->first();
 
         if ($tipo === null) {
@@ -65,32 +118,24 @@ class RenovacaoProtocoloService
             throw new DomainException('Marque todas as declarações de responsabilidade para protocolar a renovação.');
         }
 
-        $renovacao = DB::transaction(function () use ($origem, $ator, $contato, $tipo, $obrigatorias): ViabilityRequest {
-            $origem->loadMissing(['cnaes', 'company']);
+        $renovacao = DB::transaction(function () use ($atributos, $cnaes, $empresa, $ator, $contato, $auditoria, $verificar, $tipo, $obrigatorias): ViabilityRequest {
+            if ($verificar !== null) {
+                $verificar();
+            }
 
             $renovacao = ViabilityRequest::query()->create([
                 'origin' => ViabilityRequestOrigin::Portal,
                 'service_type_id' => $tipo->id,
-                'renews_viability_request_id' => $origem->id,
-                'company_id' => $origem->company_id,
                 'requester_user_id' => $ator->id,
                 'created_by_user_id' => $ator->id,
-                'used_area_m2' => $origem->used_area_m2,
-                'property_registration' => $origem->property_registration,
-                'address_street' => $origem->address_street,
-                'address_number' => $origem->address_number,
-                'address_complement' => $origem->address_complement,
-                'address_neighborhood' => $origem->address_neighborhood,
-                'address_zip' => $origem->address_zip,
-                'address_reference' => $origem->address_reference,
-                'property_polygon_geojson' => $origem->property_polygon_geojson,
+                ...$atributos,
             ]);
 
             $renovacao->refresh();
 
-            foreach ($origem->cnaes as $cnae) {
-                $renovacao->cnaes()->attach($cnae->id, [
-                    'is_primary' => (bool) $cnae->pivot->is_primary,
+            foreach ($cnaes as $cnae) {
+                $renovacao->cnaes()->attach($cnae['id'], [
+                    'is_primary' => $cnae['is_primary'],
                 ]);
             }
 
@@ -104,7 +149,7 @@ class RenovacaoProtocoloService
                 ]);
             }
 
-            $this->atualizarContato($origem, $contato);
+            $this->atualizarContato($empresa, $contato);
 
             $renovacao->forceFill([
                 'protocol_number' => $this->numeros->generate(),
@@ -133,9 +178,9 @@ class RenovacaoProtocoloService
             $this->audit->log(
                 logName: 'solicitacoes',
                 event: 'renovacao_protocolada',
-                description: "Renovação da viabilidade locacional da solicitação #{$origem->id} protocolada como #{$renovacao->id}",
+                description: ($auditoria['description'])($renovacao),
                 properties: [
-                    'origem_id' => $origem->id,
+                    ...$auditoria['properties'],
                     'renovacao_id' => $renovacao->id,
                     'protocol_number' => $renovacao->protocol_number,
                     'mobile' => $contato['mobile'] ?? null,
@@ -188,10 +233,8 @@ class RenovacaoProtocoloService
     /**
      * @param  array{email?: string|null, phone?: string|null, mobile?: string|null}  $contato
      */
-    private function atualizarContato(ViabilityRequest $origem, array $contato): void
+    private function atualizarContato(?Company $empresa, array $contato): void
     {
-        $empresa = $origem->company;
-
         if ($empresa === null) {
             return;
         }
