@@ -21,6 +21,7 @@ use App\Services\Renovacao\RenovacaoElegibilidade;
 use App\Services\Renovacao\RenovacaoElegibilidadeService;
 use App\Services\Renovacao\RenovacaoLegadaElegibilidadeService;
 use App\Services\Renovacao\RenovacaoProtocoloService;
+use App\Services\Renovacao\ResolvedorEnderecoImovel;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use DomainException;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -30,6 +31,7 @@ use Tests\TestCase;
 
 class RenovacaoLegadaProtocoloTest extends TestCase
 {
+    use FakeCadastroImobiliario;
     use LazilyRefreshDatabase;
 
     private const CNPJ = '11222333000181';
@@ -65,6 +67,7 @@ class RenovacaoLegadaProtocoloTest extends TestCase
     {
         $empresa = Company::factory()->create(['cnpj' => self::CNPJ]);
         $ator = User::factory()->create();
+        $this->cadastroImobiliario('RUA DA ENGOMADEIRA, 508', '508', '41200000');
         $tvl = $this->detalhe(['inscricao_imobiliaria' => '0123456789', 'complemento' => 'Sala 2']);
 
         $renovacao = $this->servico()->protocolarLegada(
@@ -323,6 +326,129 @@ class RenovacaoLegadaProtocoloTest extends TestCase
         $resposta->assertRedirect(route('portal.solicitacoes.show', $renovacao));
         $this->assertSame($empresa->id, $renovacao->company_id);
         $this->assertSame($cidadao->id, $renovacao->requester_user_id);
+    }
+
+    public function test_endereco_do_processo_vem_do_cadastro_pela_inscricao(): void
+    {
+        $empresa = Company::factory()->create(['cnpj' => self::CNPJ]);
+        $chamadas = $this->cadastroImobiliario('Rua do Cadastro, 77 — Loja', '77', '40000111');
+        $tvl = $this->detalhe([
+            'inscricao_imobiliaria' => '051.480-81',
+            'complemento' => 'Sala 2',
+            'endereco' => ['logradouro' => '508', 'numero' => 'RUA DA ENGOMADEIRA', 'bairro' => 'CEP TROCADO', 'cep' => '99999999'],
+        ]);
+
+        $renovacao = $this->servico()->protocolarLegada($tvl, $empresa, User::factory()->create(), ['phone' => '71999990000'], [$this->declaracao->id]);
+
+        $this->assertSame('Rua do Cadastro', $renovacao->address_street);
+        $this->assertSame('77', $renovacao->address_number);
+        $this->assertSame('40000111', $renovacao->address_zip);
+        $this->assertNull($renovacao->address_neighborhood);
+        $this->assertSame('Sala 2', $renovacao->address_complement);
+        $this->assertSame('051.480-81', $renovacao->property_registration);
+        $this->assertSame(['05148081', '05148081'], $chamadas->getArrayCopy(), 'Uma consulta do endereço e outra do território, que é etapa à parte.');
+    }
+
+    public function test_tvl_sem_inscricao_mantem_o_endereco_do_legado(): void
+    {
+        $empresa = Company::factory()->create(['cnpj' => self::CNPJ]);
+        $chamadas = $this->cadastroImobiliario('Rua do Cadastro', '77', '40000111');
+
+        $renovacao = $this->servico()->protocolarLegada($this->detalhe(), $empresa, User::factory()->create(), ['phone' => '71999990000'], [$this->declaracao->id]);
+
+        $this->assertSame('RUA DA ENGOMADEIRA', $renovacao->address_street);
+        $this->assertSame('508', $renovacao->address_number);
+        $this->assertSame('PITUBA', $renovacao->address_neighborhood);
+        $this->assertSame('41200000', $renovacao->address_zip);
+        $this->assertCount(0, $chamadas);
+    }
+
+    public function test_cadastro_fora_do_ar_nao_cria_o_processo(): void
+    {
+        $empresa = Company::factory()->create(['cnpj' => self::CNPJ]);
+        $this->cadastroImobiliario(falha: 'indisponivel');
+
+        try {
+            $this->servico()->protocolarLegada($this->detalhe(['inscricao_imobiliaria' => '0123456789']), $empresa, User::factory()->create(), ['phone' => '71999990000'], [$this->declaracao->id]);
+            $this->fail('Esperava DomainException.');
+        } catch (DomainException $exception) {
+            $this->assertSame(ResolvedorEnderecoImovel::M_INDISPONIVEL, $exception->getMessage());
+        }
+
+        $this->assertSame(0, ViabilityRequest::query()->count());
+        $this->assertSame(0, ServiceDeclarationAcceptance::query()->count());
+    }
+
+    public function test_inscricao_nao_encontrada_nao_cria_o_processo(): void
+    {
+        $empresa = Company::factory()->create(['cnpj' => self::CNPJ]);
+        $this->cadastroImobiliario(falha: 'nao_encontrada');
+
+        try {
+            $this->servico()->protocolarLegada($this->detalhe(['inscricao_imobiliaria' => '0123456789']), $empresa, User::factory()->create(), ['phone' => '71999990000'], [$this->declaracao->id]);
+            $this->fail('Esperava DomainException.');
+        } catch (DomainException $exception) {
+            $this->assertSame(ResolvedorEnderecoImovel::M_NAO_ENCONTRADA, $exception->getMessage());
+        }
+
+        $this->assertSame(0, ViabilityRequest::query()->count());
+    }
+
+    public function test_cadastro_sem_dados_de_endereco_nao_cria_o_processo(): void
+    {
+        $empresa = Company::factory()->create(['cnpj' => self::CNPJ]);
+        $this->cadastroImobiliario(semCadastro: true);
+
+        $this->expectException(DomainException::class);
+        $this->expectExceptionMessage(ResolvedorEnderecoImovel::M_NAO_ENCONTRADA);
+
+        $this->servico()->protocolarLegada($this->detalhe(['inscricao_imobiliaria' => '0123456789']), $empresa, User::factory()->create(), ['phone' => '71999990000'], [$this->declaracao->id]);
+    }
+
+    public function test_store_sem_cnpj_gravado_consulta_o_cadastro_uma_vez_e_grava_o_endereco_do_imovel(): void
+    {
+        [$cidadao, $empresa] = $this->cidadaoComEmpresa();
+        $this->app->instance(CnpjLookup::class, new class implements CnpjLookup
+        {
+            public function lookup(string $cnpj): CnpjData
+            {
+                return new CnpjData($cnpj, 'PADARIA ESTRELA LTDA', null, null, null, null, null, null, [], null, null, null, null, null, null, '40000111', null, null, null);
+            }
+        });
+        $chamadas = $this->cadastroImobiliario('Rua do Cadastro', '77', '40000111');
+        $this->mockClient(function (MockInterface $client): void {
+            $client->shouldReceive('tvlPorNumero')->with(1234567)
+                ->andReturn($this->detalhe(['titular' => ['documento' => null], 'inscricao_imobiliaria' => '0123456789']));
+        });
+
+        $this->actingAs($cidadao)
+            ->post("/portal/renovacao/legado/{$empresa->id}/1234567", $this->corpo())
+            ->assertSessionMissing('error');
+
+        $renovacao = ViabilityRequest::query()->sole();
+        $this->assertSame('Rua do Cadastro', $renovacao->address_street);
+        $this->assertSame('40000111', $renovacao->address_zip);
+        $this->assertSame(
+            ['0123456789', '0123456789'],
+            $chamadas->getArrayCopy(),
+            'Titularidade e endereço compartilham uma consulta; a outra é a do território, etapa à parte.',
+        );
+    }
+
+    public function test_store_com_cadastro_fora_do_ar_volta_com_a_mensagem_sem_criar(): void
+    {
+        [$cidadao, $empresa] = $this->cidadaoComEmpresa();
+        $this->cadastroImobiliario(falha: 'indisponivel');
+        $this->mockClient(function (MockInterface $client): void {
+            $client->shouldReceive('tvlPorNumero')->with(1234567)
+                ->andReturn($this->detalhe(['inscricao_imobiliaria' => '0123456789']));
+        });
+
+        $this->actingAs($cidadao)
+            ->post("/portal/renovacao/legado/{$empresa->id}/1234567", $this->corpo())
+            ->assertSessionHas('error', ResolvedorEnderecoImovel::M_INDISPONIVEL);
+
+        $this->assertSame(0, ViabilityRequest::query()->count());
     }
 
     public function test_store_ignora_dados_postados_alem_de_contato_e_declaracoes(): void

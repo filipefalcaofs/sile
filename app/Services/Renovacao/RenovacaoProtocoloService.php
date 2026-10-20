@@ -42,6 +42,7 @@ class RenovacaoProtocoloService
         private ProtocolarSolicitacaoService $protocoloViabilidade,
         private EnviarParaAnaliseService $enviarAnalise,
         private RenovacaoLegadaElegibilidadeService $elegibilidadeLegada,
+        private ResolvedorEnderecoImovel $enderecoImovel,
     ) {}
 
     /**
@@ -103,6 +104,8 @@ class RenovacaoProtocoloService
             throw new DomainException($avaliacao->motivo ?? 'Esta viabilidade não pode ser renovada.');
         }
 
+        $endereco = $this->enderecoDoProcessoLegado($tvl);
+
         $lock = Cache::lock('renovacao-legada:'.$tvl->numero, 60);
 
         try {
@@ -118,11 +121,11 @@ class RenovacaoProtocoloService
                     'legacy_tvl_snapshot' => $this->snapshotLegado($tvl),
                     'company_id' => $empresa->id,
                     'property_registration' => $tvl->inscricaoImobiliaria,
-                    'address_street' => $tvl->endereco['logradouro'],
-                    'address_number' => $tvl->endereco['numero'],
+                    'address_street' => $endereco['logradouro'],
+                    'address_number' => $endereco['numero'],
                     'address_complement' => $tvl->complemento,
-                    'address_neighborhood' => $tvl->endereco['bairro'],
-                    'address_zip' => $tvl->endereco['cep'],
+                    'address_neighborhood' => $endereco['bairro'],
+                    'address_zip' => $endereco['cep'],
                 ],
                 cnaes: $this->cnaesDoCatalogo($tvl),
                 empresa: $empresa,
@@ -144,6 +147,36 @@ class RenovacaoProtocoloService
         } finally {
             $lock->release();
         }
+    }
+
+    /**
+     * Endereço do processo: o do imóvel no cadastro, pela inscrição da TVL.
+     * Sem inscrição, mantém o endereço registrado no legado.
+     *
+     * @return array{logradouro: ?string, numero: ?string, bairro: ?string, cep: ?string}
+     *
+     * @throws DomainException
+     */
+    private function enderecoDoProcessoLegado(TvlLegadaDetalhe $tvl): array
+    {
+        if (preg_replace('/\D+/', '', (string) $tvl->inscricaoImobiliaria) === '') {
+            return $tvl->endereco;
+        }
+
+        try {
+            $imovel = $this->enderecoImovel->resolver($tvl->inscricaoImobiliaria);
+        } catch (EnderecoImovelNaoEncontradoException $e) {
+            throw new DomainException($e->getMessage());
+        } catch (EnderecoImovelIndisponivelException) {
+            throw new DomainException(ResolvedorEnderecoImovel::M_INDISPONIVEL);
+        }
+
+        return [
+            'logradouro' => $imovel->logradouro,
+            'numero' => $imovel->numero,
+            'bairro' => $imovel->bairro,
+            'cep' => $imovel->cep,
+        ];
     }
 
     /**

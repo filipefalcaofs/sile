@@ -14,6 +14,7 @@ use App\Services\Legado\LegadoIndisponivelException;
 use App\Services\Legado\LegadoViabilidadeClient;
 use App\Services\Legado\TvlLegada;
 use App\Services\Legado\TvlLegadaDetalhe;
+use App\Services\Renovacao\ResolvedorEnderecoImovel;
 use App\Services\Sedur\SedurContatoClient;
 use App\Services\Sedur\SedurPessoaJuridica;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -25,6 +26,7 @@ use Tests\TestCase;
 
 class RenovacaoLegadaPortalTest extends TestCase
 {
+    use FakeCadastroImobiliario;
     use LazilyRefreshDatabase;
 
     private const CNPJ = '11222333000181';
@@ -305,6 +307,96 @@ class RenovacaoLegadaPortalTest extends TestCase
             );
     }
 
+    public function test_assistente_mostra_o_endereco_do_imovel(): void
+    {
+        $cidadao = $this->portalUser();
+        $empresa = $this->empresaDe($cidadao);
+        $chamadas = $this->cadastroImobiliario('Rua do Cadastro, 77', '77', '40000111');
+        $this->mockClient(function (MockInterface $client): void {
+            $client->shouldReceive('tvlPorNumero')->with(1234567)
+                ->andReturn($this->detalheComInscricao(1234567, '0123456789'));
+        });
+
+        $this->actingAs($cidadao)
+            ->get("/portal/renovacao/legado/{$empresa->id}/1234567")
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('origem.endereco', 'Rua do Cadastro, 77, 40000111')
+            );
+
+        $this->assertSame(['0123456789'], $chamadas->getArrayCopy());
+    }
+
+    public function test_assistente_com_cadastro_fora_do_ar_volta_ao_indice_com_a_mensagem(): void
+    {
+        $cidadao = $this->portalUser();
+        $empresa = $this->empresaDe($cidadao);
+        $this->cadastroImobiliario(falha: 'indisponivel');
+        $this->mockClient(function (MockInterface $client): void {
+            $client->shouldReceive('tvlPorNumero')->with(1234567)
+                ->andReturn($this->detalheComInscricao(1234567, '0123456789'));
+        });
+
+        $this->actingAs($cidadao)
+            ->get("/portal/renovacao/legado/{$empresa->id}/1234567")
+            ->assertRedirect('/portal/renovacao')
+            ->assertSessionHas('error', ResolvedorEnderecoImovel::M_INDISPONIVEL);
+    }
+
+    public function test_assistente_com_inscricao_nao_encontrada_volta_ao_indice_com_a_mensagem(): void
+    {
+        $cidadao = $this->portalUser();
+        $empresa = $this->empresaDe($cidadao);
+        $this->cadastroImobiliario(falha: 'nao_encontrada');
+        $this->mockClient(function (MockInterface $client): void {
+            $client->shouldReceive('tvlPorNumero')->with(1234567)
+                ->andReturn($this->detalheComInscricao(1234567, '0123456789'));
+        });
+
+        $this->actingAs($cidadao)
+            ->get("/portal/renovacao/legado/{$empresa->id}/1234567")
+            ->assertRedirect('/portal/renovacao')
+            ->assertSessionHas('error', ResolvedorEnderecoImovel::M_NAO_ENCONTRADA);
+    }
+
+    public function test_assistente_sem_cnpj_gravado_consulta_o_cadastro_uma_vez_para_titularidade_e_endereco(): void
+    {
+        $cidadao = $this->portalUser();
+        $empresa = $this->empresaDe($cidadao);
+        $this->cnpjDaEmpresaConfere();
+        $chamadas = $this->cadastroImobiliario('Rua do Cadastro', '77', '40000111');
+        $this->mockClient(function (MockInterface $client): void {
+            $client->shouldReceive('tvlPorNumero')->with(1234567)
+                ->andReturn($this->detalheComInscricao(1234567, '0123456789', null));
+        });
+
+        $this->actingAs($cidadao)
+            ->get("/portal/renovacao/legado/{$empresa->id}/1234567")
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->where('origem.endereco', 'Rua do Cadastro, 77, 40000111'));
+
+        $this->assertCount(1, $chamadas);
+    }
+
+    public function test_assistente_de_quem_nao_e_titular_nao_consulta_o_cadastro_alem_da_titularidade(): void
+    {
+        $cidadao = $this->portalUser();
+        $empresa = $this->empresaDe($cidadao);
+        $this->cnpjDaEmpresaConfere('OUTRA RAZAO SOCIAL LTDA');
+        $chamadas = $this->cadastroImobiliario('Rua do Cadastro', '77', '40000111');
+        $this->mockClient(function (MockInterface $client): void {
+            $client->shouldReceive('tvlPorNumero')->with(1234567)
+                ->andReturn($this->detalheComInscricao(1234567, '0123456789', null));
+        });
+
+        $this->actingAs($cidadao)
+            ->get("/portal/renovacao/legado/{$empresa->id}/1234567")
+            ->assertRedirect('/portal/renovacao')
+            ->assertSessionHas('error', 'Esta viabilidade não pôde ser carregada para esta empresa.');
+
+        $this->assertCount(0, $chamadas);
+    }
+
     public function test_consultar_cnpj_devolve_legado_da_empresa_vinculada(): void
     {
         $cidadao = $this->portalUser();
@@ -490,6 +582,24 @@ class RenovacaoLegadaPortalTest extends TestCase
     private function detalhe(int $numero, ?string $titular = self::CNPJ, bool $renovadaDepois = false): TvlLegadaDetalhe
     {
         return TvlLegadaDetalhe::fromArray($this->payload($numero, $titular, $renovadaDepois));
+    }
+
+    private function detalheComInscricao(int $numero, string $inscricao, ?string $titular = self::CNPJ): TvlLegadaDetalhe
+    {
+        return TvlLegadaDetalhe::fromArray($this->payload($numero, $titular, false) + ['inscricao_imobiliaria' => $inscricao]);
+    }
+
+    private function cnpjDaEmpresaConfere(string $razao = self::RAZAO): void
+    {
+        $this->app->instance(CnpjLookup::class, new class($razao) implements CnpjLookup
+        {
+            public function __construct(private string $razao) {}
+
+            public function lookup(string $cnpj): CnpjData
+            {
+                return new CnpjData($cnpj, $this->razao, null, null, null, null, null, null, [], null, null, null, null, null, null, '40000111', null, null, null);
+            }
+        });
     }
 
     private function resumo(int $numero): TvlLegada

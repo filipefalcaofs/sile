@@ -14,10 +14,14 @@ use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
 use App\Services\Legado\LegadoIndisponivelException;
 use App\Services\Legado\LegadoViabilidadeClient;
+use App\Services\Legado\TvlLegadaDetalhe;
+use App\Services\Renovacao\EnderecoImovelIndisponivelException;
+use App\Services\Renovacao\EnderecoImovelNaoEncontradoException;
 use App\Services\Renovacao\ProvisoriasLegadasService;
 use App\Services\Renovacao\RenovacaoElegibilidadeService;
 use App\Services\Renovacao\RenovacaoLegadaElegibilidadeService;
 use App\Services\Renovacao\RenovacaoProtocoloService;
+use App\Services\Renovacao\ResolvedorEnderecoImovel;
 use App\Services\Sedur\SedurContatoClient;
 use App\Services\Sedur\SedurContatoIndisponivelException;
 use App\Services\Sedur\SedurContatoNaoEncontradoException;
@@ -46,6 +50,7 @@ class RenovacaoController extends Controller
         private ProvisoriasLegadasService $legado,
         private LegadoViabilidadeClient $legadoClient,
         private RenovacaoLegadaElegibilidadeService $elegibilidadeLegada,
+        private ResolvedorEnderecoImovel $enderecoImovel,
     ) {}
 
     public function index(Request $request): Response
@@ -190,6 +195,12 @@ class RenovacaoController extends Controller
             return $this->voltarAoIndice((string) $avaliacao->motivo);
         }
 
+        try {
+            $enderecoTexto = $this->enderecoLegadoTexto($tvl);
+        } catch (EnderecoImovelNaoEncontradoException|EnderecoImovelIndisponivelException $exception) {
+            return $this->voltarAoIndice($exception->getMessage());
+        }
+
         $tipo = ViabilityServiceType::query()->where('code', 'renovacao-tvl')->first();
 
         return Inertia::render('portal/renovacao/wizard', [
@@ -200,12 +211,7 @@ class RenovacaoController extends Controller
                 'empresa_id' => $empresaModelo->id,
                 'empresa' => $empresaModelo->legal_name,
                 'cnpj' => $empresaModelo->formatted_cnpj,
-                'endereco' => collect([
-                    $tvl->endereco['logradouro'],
-                    $tvl->endereco['numero'],
-                    $tvl->endereco['bairro'],
-                    $tvl->endereco['cep'],
-                ])->filter()->implode(', '),
+                'endereco' => $enderecoTexto,
                 'atividades' => collect($tvl->atividades)
                     ->map(fn (array $atividade): string => trim($atividade['codigo'].' '.$atividade['descricao']))
                     ->values(),
@@ -342,6 +348,26 @@ class RenovacaoController extends Controller
     private function empresasDo(User $usuario): array
     {
         return app(CurrentRepresentation::class)->companyIds($usuario);
+    }
+
+    /**
+     * Endereço do imóvel pela inscrição da TVL; sem inscrição, o do legado.
+     *
+     * @throws EnderecoImovelNaoEncontradoException
+     * @throws EnderecoImovelIndisponivelException
+     */
+    private function enderecoLegadoTexto(TvlLegadaDetalhe $tvl): string
+    {
+        if (preg_replace('/\D+/', '', (string) $tvl->inscricaoImobiliaria) !== '') {
+            return $this->enderecoImovel->resolver($tvl->inscricaoImobiliaria)->texto();
+        }
+
+        return collect([
+            $tvl->endereco['logradouro'],
+            $tvl->endereco['numero'],
+            $tvl->endereco['bairro'],
+            $tvl->endereco['cep'],
+        ])->filter()->implode(', ');
     }
 
     private function voltarAoIndice(string $mensagem): RedirectResponse
