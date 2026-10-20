@@ -302,7 +302,7 @@ class RenovacaoController extends Controller
             $titularidade = $this->elegibilidadeLegada->titularidade($tvl, $empresaModelo);
 
             if ($titularidade->consultaIndisponivel) {
-                return back()->with('error', (string) $titularidade->motivo);
+                return $this->voltarAoIndice((string) $titularidade->motivo);
             }
 
             if (! $titularidade->titular) {

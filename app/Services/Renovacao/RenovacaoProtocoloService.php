@@ -103,7 +103,7 @@ class RenovacaoProtocoloService
             throw new DomainException($avaliacao->motivo ?? 'Esta viabilidade não pode ser renovada.');
         }
 
-        $lock = Cache::lock('renovacao-legada:'.$tvl->numero, 15);
+        $lock = Cache::lock('renovacao-legada:'.$tvl->numero, 60);
 
         try {
             $lock->block(3);

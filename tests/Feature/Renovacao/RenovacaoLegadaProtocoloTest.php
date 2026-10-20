@@ -17,7 +17,9 @@ use App\Services\Cnpj\CnpjLookup;
 use App\Services\Cnpj\CnpjLookupException;
 use App\Services\Legado\LegadoViabilidadeClient;
 use App\Services\Legado\TvlLegadaDetalhe;
+use App\Services\Renovacao\RenovacaoElegibilidade;
 use App\Services\Renovacao\RenovacaoElegibilidadeService;
+use App\Services\Renovacao\RenovacaoLegadaElegibilidadeService;
 use App\Services\Renovacao\RenovacaoProtocoloService;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use DomainException;
@@ -243,6 +245,53 @@ class RenovacaoLegadaProtocoloTest extends TestCase
         $this->assertSame(0, ViabilityRequest::query()->count());
     }
 
+    public function test_reavaliacao_dentro_do_lock_recusa_renovacao_aberta_entre_a_checagem_previa_e_a_transacao(): void
+    {
+        $empresa = Company::factory()->create(['cnpj' => self::CNPJ]);
+
+        $this->partialMock(RenovacaoLegadaElegibilidadeService::class, function (MockInterface $mock): void {
+            $mock->shouldReceive('avaliar')->once()->andReturnUsing(function (): RenovacaoElegibilidade {
+                $concorrente = ViabilityRequest::factory()->create(['renews_legacy_tvl_number' => 1234567]);
+                $concorrente->forceFill(['status' => ViabilityRequestStatus::EmAnalise])->save();
+
+                return new RenovacaoElegibilidade(true, null);
+            });
+        });
+
+        try {
+            $this->servico()->protocolarLegada(
+                $this->detalhe(),
+                $empresa,
+                User::factory()->create(),
+                ['phone' => '71999990000'],
+                [$this->declaracao->id],
+            );
+            $this->fail('Esperava DomainException.');
+        } catch (DomainException $exception) {
+            $this->assertSame(RenovacaoElegibilidadeService::MOTIVO_EM_ANALISE, $exception->getMessage());
+        }
+
+        $this->assertSame(1, ViabilityRequest::query()->where('renews_legacy_tvl_number', 1234567)->count());
+        $this->assertSame(0, ViabilityRequest::query()->whereNotNull('protocol_number')->count());
+        $this->assertSame(0, ServiceDeclarationAcceptance::query()->count());
+    }
+
+    public function test_store_com_conferencia_cadastral_indisponivel_volta_ao_indice(): void
+    {
+        [$cidadao, $empresa] = $this->cidadaoComEmpresa();
+        $this->mockClient(function (MockInterface $client): void {
+            $client->shouldReceive('tvlPorNumero')->with(1234567)
+                ->andReturn($this->detalhe(['titular' => ['documento' => null]]));
+        });
+
+        $this->actingAs($cidadao)
+            ->post("/portal/renovacao/legado/{$empresa->id}/1234567", $this->corpo())
+            ->assertRedirect('/portal/renovacao')
+            ->assertSessionHas('error', 'Não foi possível conferir o CNPJ agora. Tente novamente em instantes.');
+
+        $this->assertSame(0, ViabilityRequest::query()->count());
+    }
+
     public function test_lock_e_liberado_apos_o_protocolo(): void
     {
         $empresa = Company::factory()->create(['cnpj' => self::CNPJ]);
@@ -255,7 +304,7 @@ class RenovacaoLegadaProtocoloTest extends TestCase
             [$this->declaracao->id],
         );
 
-        $lock = Cache::lock('renovacao-legada:1234567', 15);
+        $lock = Cache::lock('renovacao-legada:1234567', 60);
         $this->assertTrue($lock->get());
         $lock->release();
     }
