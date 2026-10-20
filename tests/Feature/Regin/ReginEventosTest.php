@@ -3,6 +3,7 @@
 namespace Tests\Feature\Regin;
 
 use App\Models\ReginRecebimento;
+use App\Models\ServicoNomenclatura;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityRequestEvento;
@@ -118,6 +119,26 @@ class ReginEventosTest extends TestCase
             ['101', '244'],
             $processo->eventos()->pluck('codigo')->all(),
         );
+    }
+
+    public function test_protocolar_cadastra_evento_novo_na_nomenclatura(): void
+    {
+        User::factory()->create();
+        ServicoNomenclatura::query()->where('chave', ServicoNomenclatura::chaveDe(self::INSCRICAO['PEV_NOME_EVENTO']))
+            ->update(['para' => 'Abertura']);
+        $recebimento = $this->recebimento(array_replace_recursive($this->corpoMinimo(), $this->corpoComEventos([
+            self::INSCRICAO,
+            ['PEV_COD_EVENTO' => '211', 'PEV_NOME_EVENTO' => 'Alteração de nome empresarial'],
+        ])));
+
+        app(ReginProcessoProtocolador::class)->protocolar($recebimento);
+
+        $this->assertDatabaseHas('servico_nomenclaturas', [
+            'de' => 'Alteração de nome empresarial',
+            'para' => 'Alteração de nome empresarial',
+            'exibir' => false,
+        ]);
+        $this->assertDatabaseHas('servico_nomenclaturas', ['de' => self::INSCRICAO['PEV_NOME_EVENTO'], 'para' => 'Abertura', 'exibir' => true]);
     }
 
     public function test_comando_preenche_os_eventos_dos_processos_ja_recebidos(): void

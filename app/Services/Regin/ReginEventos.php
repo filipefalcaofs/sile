@@ -3,6 +3,7 @@
 namespace App\Services\Regin;
 
 use App\Models\ReginRecebimento;
+use App\Models\ServicoNomenclatura;
 use App\Models\ViabilityRequest;
 
 /**
@@ -31,7 +32,8 @@ class ReginEventos
     }
 
     /**
-     * Grava os eventos do recebimento no processo, sem repetir o código já gravado.
+     * Grava os eventos do recebimento no processo, sem repetir o código já gravado,
+     * e cadastra na nomenclatura o evento que ainda não tem De x Para.
      */
     public static function gravar(ViabilityRequest $processo, ReginRecebimento $recebimento): int
     {
@@ -39,6 +41,8 @@ class ReginEventos
         $gravados = 0;
 
         foreach (self::doRecebimento($recebimento) as $evento) {
+            ServicoNomenclatura::garantir($evento['nome']);
+
             if (in_array($evento['codigo'], $existentes, true)) {
                 continue;
             }
