@@ -829,6 +829,7 @@ export default function FichaAnaliseShow({
         parecer: string | null;
         is_virtual_office_hq: boolean;
         address_confirmed: boolean | null;
+        manual?: boolean;
     }>({
         per_cnae: [],
         conditions: [],
@@ -941,13 +942,13 @@ export default function FichaAnaliseShow({
         [perCnae, conditions, parking, parecer, sedeEscritorioVirtual, addressConfirmed],
     );
 
-    const salvarRascunho = useCallback(() => {
+    const salvarRascunho = useCallback((manual = false) => {
         if (!editavel) {
             return;
         }
 
         setSaveState('salvando');
-        autosave.transform(() => construirPayload());
+        autosave.transform(() => (manual ? { ...construirPayload(), manual: true } : construirPayload()));
         autosave.patch(fichaUrl, {
             onSuccess: () => setSaveState('salvo'),
             onError: () => setSaveState('erro'),
@@ -2523,7 +2524,7 @@ export default function FichaAnaliseShow({
                                 <div className="flex flex-col gap-2">
                                     {editavel ? (
                                         <>
-                                            <Button onClick={salvarRascunho} variant="outline" size="sm">
+                                            <Button onClick={() => salvarRascunho(true)} variant="outline" size="sm">
                                                 Salvar Ficha
                                             </Button>
                                             <Button onClick={() => setShowFinalizar(true)} size="sm">

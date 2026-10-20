@@ -207,7 +207,9 @@ class AnalysisRecordController extends Controller
 
     /**
      * Autosave do rascunho (RN-008): atualiza só os campos enviados. Numa revisão
-     * finalizada (RN-003), recusa com 422 — não edita silenciosamente.
+     * finalizada (RN-003), recusa com 422 — não edita silenciosamente. O
+     * salvamento pelo botão (`manual`) é auditado como ficha-salvar e aparece na
+     * tramitação do processo.
      */
     public function autosave(AnalysisRecordRequest $request, ViabilityRequest $viabilityRequest): JsonResponse
     {
@@ -219,10 +221,14 @@ class AnalysisRecordController extends Controller
             throw ValidationException::withMessages(['ficha' => $e->getMessage()]);
         }
 
+        $manual = $request->boolean('manual');
+
         $this->audit->log(
             logName: 'analise',
-            event: 'ficha-autosave',
-            description: "Autosave da ficha de análise do processo #{$viabilityRequest->id}",
+            event: $manual ? 'ficha-salvar' : 'ficha-autosave',
+            description: $manual
+                ? "Ficha de análise do processo #{$viabilityRequest->id} salva"
+                : "Autosave da ficha de análise do processo #{$viabilityRequest->id}",
             properties: [
                 'viability_request_id' => $viabilityRequest->id,
                 'revision' => $record->revision,

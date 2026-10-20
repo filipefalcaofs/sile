@@ -3,19 +3,26 @@
 namespace App\Services\Analise;
 
 use App\Models\Activity;
+use App\Models\AnalysisRecord;
+use App\Models\Inspection;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 
 /**
  * Eventos da tramitação do processo que não são mudança de status: situação da
  * análise, atribuições, pendências e convites, vistoria, malha fina, anexos,
- * TVL e os envios à JUCEB e à SEFAZ. Vêm da auditoria por uma lista fechada de
- * eventos: consulta de tela, autosave da ficha e demais registros técnicos não
- * entram. Cada item tem o mesmo formato da linha do tempo de status.
+ * TVL, a ficha de análise salva pelo botão ou finalizada, a ficha de vistoria
+ * concluída e os envios à JUCEB e à SEFAZ. Vêm da auditoria por uma lista
+ * fechada de eventos: consulta de tela, autosave automático da ficha e demais
+ * registros técnicos não entram. Os eventos das fichas são gravados com a
+ * própria ficha como sujeito. Cada item tem o mesmo formato da linha do tempo
+ * de status.
  */
 class TramitacaoProcessoService
 {
     private const ATRIBUICAO = ['distribuir', 'assumir', 'redistribuir'];
+
+    private const FICHA_ANALISE = ['ficha-salvar', 'ficha-finalizar'];
 
     /** @var array<string, array{tipo: string, titulo: string}> */
     private const EVENTOS = [
@@ -33,7 +40,8 @@ class TramitacaoProcessoService
         'malha-fina-resolver' => ['tipo' => 'malha_fina', 'titulo' => 'Malha fina resolvida'],
         'documento-anexado' => ['tipo' => 'documento', 'titulo' => 'Documento anexado'],
         'tvl-emitido' => ['tipo' => 'documento', 'titulo' => 'TVL emitido'],
-        'ficha-conclusao' => ['tipo' => 'analise', 'titulo' => 'Ficha de análise concluída'],
+        'ficha-conclusao' => ['tipo' => 'vistoria', 'titulo' => 'Ficha de vistoria concluída'],
+        'ficha-salvar' => ['tipo' => 'analise', 'titulo' => 'Ficha de análise salva'],
         'ficha-finalizar' => ['tipo' => 'analise', 'titulo' => 'Ficha de análise finalizada'],
     ];
 
@@ -43,9 +51,19 @@ class TramitacaoProcessoService
     public function eventos(ViabilityRequest $processo): array
     {
         $atividades = Activity::query()
-            ->where('subject_type', $processo->getMorphClass())
-            ->where('subject_id', $processo->getKey())
-            ->whereIn('event', [...array_keys(self::EVENTOS), 'regin-parecer', 'sefaz-viabilidade'])
+            ->where(fn ($q) => $q
+                ->where(fn ($q) => $q
+                    ->where('subject_type', $processo->getMorphClass())
+                    ->where('subject_id', $processo->getKey())
+                    ->whereIn('event', [...array_keys(self::EVENTOS), 'regin-parecer', 'sefaz-viabilidade']))
+                ->orWhere(fn ($q) => $q
+                    ->where('subject_type', (new AnalysisRecord)->getMorphClass())
+                    ->whereIn('subject_id', $processo->analysisRecords()->select('id'))
+                    ->whereIn('event', self::FICHA_ANALISE))
+                ->orWhere(fn ($q) => $q
+                    ->where('subject_type', (new Inspection)->getMorphClass())
+                    ->whereIn('subject_id', Inspection::query()->where('viability_request_id', $processo->getKey())->select('id'))
+                    ->where('event', 'ficha-conclusao')))
             ->oldest('id')
             ->get();
 
@@ -114,7 +132,9 @@ class TramitacaoProcessoService
             return null;
         }
 
-        $detalhe = (string) $a->description;
+        $detalhe = in_array($a->event, self::FICHA_ANALISE, true) && isset($a->properties['revision'])
+            ? 'Revisão '.$a->properties['revision'].' da ficha.'
+            : (string) $a->description;
         $atribuido = in_array($a->event, self::ATRIBUICAO, true) && isset($a->properties['assigned_user_id'])
             ? ($usuarios[(int) $a->properties['assigned_user_id']]?->name ?? null)
             : null;
