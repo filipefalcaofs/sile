@@ -19,6 +19,9 @@ use Illuminate\Validation\Rule;
  * análise" é status do PROCESSO, não do CNAE — por isso não é opção aqui.
  * Null é aceito enquanto o analista não escolheu (a conclusão do processo
  * exige escolha explícita — AnaliseTecnicaDecisionService).
+ *
+ * `manual` marca o salvamento pelo botão "Salvar Ficha", que entra na
+ * tramitação do processo; o autosave automático não envia o campo.
  */
 class AnalysisRecordRequest extends FormRequest
 {
@@ -52,6 +55,7 @@ class AnalysisRecordRequest extends FormRequest
             'analysis_reasons' => ['sometimes', 'array'],
             'analysis_reasons.*' => ['string'],
             'address_confirmed' => ['sometimes', 'nullable', 'boolean'],
+            'manual' => ['sometimes', 'boolean'],
         ];
     }
 
