@@ -4,6 +4,7 @@ namespace Tests\Feature\Servicos;
 
 use App\Models\ServicoNomenclatura;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 /**
@@ -31,6 +32,31 @@ class ServicoNomenclaturaTest extends TestCase
 
         ServicoNomenclatura::garantir('BAIXA DE INSCRIÇÃO');
 
+        $this->assertSame(1, ServicoNomenclatura::query()->where('chave', 'baixa de inscricao')->count());
+    }
+
+    public function test_garantir_devolve_a_linha_criada_por_outro_recebimento_ao_mesmo_tempo(): void
+    {
+        $inseriu = false;
+        DB::listen(function ($consulta) use (&$inseriu): void {
+            if ($inseriu || ! str_starts_with($consulta->sql, 'select') || ! str_contains($consulta->sql, 'servico_nomenclaturas')) {
+                return;
+            }
+
+            $inseriu = true;
+            DB::table('servico_nomenclaturas')->insert([
+                'de' => 'Baixa de inscrição',
+                'chave' => 'baixa de inscricao',
+                'para' => 'Encerramento',
+                'exibir' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        });
+
+        $linha = ServicoNomenclatura::garantir('Baixa de inscrição');
+
+        $this->assertSame('Encerramento', $linha->para);
         $this->assertSame(1, ServicoNomenclatura::query()->where('chave', 'baixa de inscricao')->count());
     }
 
