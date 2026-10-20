@@ -2561,9 +2561,11 @@ export default function FichaAnaliseShow({
                                         </Button>
                                     )}
 
-                                    <Button onClick={() => setShowPendencia(true)} variant="ghost" size="sm">
-                                        Colocar em convite
-                                    </Button>
+                                    {processo.status === 'em_analise' && (
+                                        <Button onClick={() => setShowPendencia(true)} variant="ghost" size="sm">
+                                            Colocar em convite
+                                        </Button>
+                                    )}
 
                                     {processo.status === 'em_pendencia' && (
                                         <Button onClick={() => setShowCancelarConvite(true)} variant="ghost" size="sm">
