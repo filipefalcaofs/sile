@@ -427,7 +427,7 @@ class ConferenciaTitularidadeTest extends TestCase
         $resultado = $this->conferir(
             $this->tvl(razao: self::RAZAO),
             $this->empresaSedur($composto),
-            $this->imovel('Rua Y', '99', '00000-000'),
+            $this->imovel('Rua Y', '99', '41830-000'),
         );
 
         $this->assertFalse($resultado->confere);
@@ -450,6 +450,34 @@ class ConferenciaTitularidadeTest extends TestCase
             $this->tvl(razao: self::RAZAO),
             $this->empresaSedur('Rua X, 10, PITUBA, 4183000'),
             $this->imovel('Rua Y', '99', '41830-000'),
+        );
+
+        $this->assertFalse($resultado->confere);
+    }
+
+    public function test_composto_com_dois_trechos_parecidos_com_cep_vale_o_ultimo(): void
+    {
+        $confere = $this->conferir(
+            $this->tvl(razao: self::RAZAO),
+            $this->empresaSedur('Rua X, Sala 12345-678, PITUBA, 41830000'),
+            $this->imovel('Rua Y', '99', '41830-000'),
+        );
+        $espelho = $this->conferir(
+            $this->tvl(razao: self::RAZAO),
+            $this->empresaSedur('Rua X, Sala 12345-678, PITUBA, 41830000'),
+            $this->imovel('Rua Y', '99', '12345-678'),
+        );
+
+        $this->assertTrue($confere->confere);
+        $this->assertFalse($espelho->confere);
+    }
+
+    public function test_composto_com_segundo_segmento_de_texto_deixa_o_numero_ausente(): void
+    {
+        $resultado = $this->conferir(
+            $this->tvl(razao: self::RAZAO),
+            $this->empresaSedur('Rua Dr., João, 12, PITUBA'),
+            $this->imovel('Rua Dr', '12', null),
         );
 
         $this->assertFalse($resultado->confere);

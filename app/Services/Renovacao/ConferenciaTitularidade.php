@@ -121,6 +121,10 @@ class ConferenciaTitularidade
      * ("Rua X, 10, BAIRRO, 41830000"), sem CEP nem número separados; a BrasilAPI
      * traz os campos separados.
      *
+     * Limites conhecidos: se o trecho final tiver outro bloco de 8 dígitos (por
+     * exemplo um telefone), o último trecho parecido com CEP erra e o caso falha
+     * fechado; CEP com espaço ("41100 000") não é reconhecido.
+     *
      * @return array{string, string, string}
      */
     private function enderecoDaEmpresa(CnpjData $empresa): array
