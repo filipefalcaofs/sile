@@ -41,11 +41,11 @@ class ReginEventos
         $gravados = 0;
 
         foreach (self::doRecebimento($recebimento) as $evento) {
-            ServicoNomenclatura::garantir($evento['nome']);
-
             if (in_array($evento['codigo'], $existentes, true)) {
                 continue;
             }
+
+            ServicoNomenclatura::garantir($evento['nome']);
 
             $processo->eventos()->create($evento);
             $gravados++;

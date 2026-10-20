@@ -89,6 +89,26 @@ class ServicoNomenclaturaResolverTest extends TestCase
         $this->assertSame([], $this->servicos($semTipo));
     }
 
+    public function test_para_com_caixa_diferente_aparece_uma_vez_com_a_primeira_grafia(): void
+    {
+        ServicoNomenclatura::query()->where('chave', ServicoNomenclatura::chaveDe('Alteração de endereço entre estados'))
+            ->update(['para' => 'Revisão de endereço']);
+        $processo = $this->processoCom('Alteração de endereço dentro do mesmo município', 'Alteração de endereço entre estados');
+
+        $this->assertSame(['Revisão de Endereço'], $this->servicos($processo));
+    }
+
+    public function test_opcoes_agrupam_para_com_caixa_diferente_e_tem_valor_estavel_pelo_nome(): void
+    {
+        ServicoNomenclatura::query()->where('chave', ServicoNomenclatura::chaveDe('Alteração de endereço entre estados'))
+            ->update(['para' => 'Revisão de endereço']);
+        $this->processoCom('Alteração de endereço dentro do mesmo município', 'Alteração de endereço entre estados');
+
+        $opcoes = app(ServicoNomenclaturaResolver::class)->opcoesDeEvento();
+
+        $this->assertSame([['value' => 'nrevisao de endereco', 'label' => 'Revisão de Endereço']], $opcoes);
+    }
+
     public function test_carrega_a_tabela_uma_unica_vez(): void
     {
         $processos = collect(range(1, 5))
