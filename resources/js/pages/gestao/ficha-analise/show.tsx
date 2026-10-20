@@ -597,40 +597,11 @@ function DescItem({ label, children }: { label: string; children: ReactNode }) {
     );
 }
 
-/** Severidade para o risco do estabelecimento (usabilidade SEDUR item 24). */
-function riscoRank(valor: string | null | undefined): number {
-    const normalizado = (valor ?? '').toLowerCase();
-
-    if (normalizado === 'alto') {
-        return 3;
-    }
-
-    if (normalizado.startsWith('médio') || normalizado.startsWith('medio')) {
-        return 2;
-    }
-
-    if (normalizado.startsWith('baixo')) {
-        return 1;
-    }
-
-    return 0;
-}
-
 function rotuloEnquadramento(opcao: EnquadramentoOpcao): string {
     const denominacao = opcao.denominacao_louos ? ` — ${opcao.denominacao_louos}` : '';
     const tll = opcao.codigo_tll ? ` · TLL ${opcao.codigo_tll}` : '';
 
     return `${opcao.codigo_louos}${denominacao}${tll}`;
-}
-
-function rotuloRiscoSanitario(valor: string | null | undefined): string | null {
-    if (valor == null || valor === '') {
-        return null;
-    }
-
-    const mapa: Record<string, string> = { baixo: 'Baixo', medio: 'Médio Risco', alto: 'Alto' };
-
-    return mapa[valor.toLowerCase()] ?? valor;
 }
 
 /** Textarea no padrão visual do design system (sem componente dedicado no kit). */
@@ -1949,16 +1920,6 @@ export default function FichaAnaliseShow({
                                                         </div>
                                                     </div>
 
-                                                    {item.motivo_fora_do_expresso && (
-                                                        <div
-                                                            role="note"
-                                                            className="mt-3 rounded-lg border border-warning-300 bg-warning-50 p-3 text-theme-sm text-warning-800 dark:border-warning-500/30 dark:bg-warning-500/10 dark:text-warning-200"
-                                                        >
-                                                            <p className="font-medium">Por que não seguiu o fluxo expresso</p>
-                                                            <p className="mt-1">{item.motivo_fora_do_expresso}</p>
-                                                        </div>
-                                                    )}
-
                                                     {(item.quadros?.length ?? 0) > 0 && (
                                                         <QuadrosChecklist quadros={item.quadros ?? []} />
                                                     )}
@@ -2111,133 +2072,6 @@ export default function FichaAnaliseShow({
                                 )}
                             </CardContent>
                         </Card>
-
-                        {/* Justificativa do processo — consolidada no início, fora da
-                            ficha (relatório de usabilidade SEDUR 19/09, item 24):
-                            atividades com LOUOS × TLL × valor, risco do
-                            estabelecimento com o CNAE que elevou e só a
-                            fundamentação legal vigente. */}
-                        {perCnae.length > 0 && (
-                            <Card>
-                                <CardHeader
-                                    title="Classificação de Risco e Fundamentação Legal"
-                                    description="Enquadramento e risco por atividade, com a fundamentação legal vigente."
-                                />
-                                <CardContent>
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-left text-theme-sm">
-                                            <thead>
-                                                <tr className="border-b border-gray-200 text-theme-xs font-medium tracking-wide text-gray-400 uppercase dark:border-gray-800 dark:text-gray-500">
-                                                    <th className="py-2 pr-4">Atividade</th>
-                                                    <th className="py-2 pr-4">LOUOS</th>
-                                                    <th className="py-2 pr-4">TLL</th>
-                                                    <th className="py-2 pr-4">Valor TLL</th>
-                                                    <th className="py-2">Risco</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {perCnae.map((item, indice) => (
-                                                    <tr
-                                                        key={`justificativa-${item.cnae}-${indice}`}
-                                                        className="border-b border-gray-100 last:border-0 dark:border-gray-800"
-                                                    >
-                                                        <td className="py-2 pr-4 text-gray-700 dark:text-gray-300">
-                                                            <span className="font-medium">{item.cnae_formatado ?? item.cnae}</span>
-                                                            {item.descricao && (
-                                                                <span className="ml-2 text-gray-500 dark:text-gray-400">{item.descricao}</span>
-                                                            )}
-                                                        </td>
-                                                        <td className="py-2 pr-4 text-gray-600 dark:text-gray-400">
-                                                            {item.codigo_louos ?? '—'}
-                                                        </td>
-                                                        <td className="py-2 pr-4 text-gray-600 dark:text-gray-400">
-                                                            {item.codigo_tll ?? '—'}
-                                                        </td>
-                                                        <td className="py-2 pr-4 text-gray-600 dark:text-gray-400">
-                                                            {item.valor_tll != null && item.valor_tll !== ''
-                                                                ? formatarMoeda(item.valor_tll)
-                                                                : '—'}
-                                                        </td>
-                                                        <td className="py-2 text-gray-600 dark:text-gray-400">
-                                                            {[item.risco_municipal, rotuloRiscoSanitario(item.risco_sanitario)]
-                                                                .filter(Boolean)
-                                                                .join(' · ') || '—'}
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-
-                                    {(() => {
-                                        const maisRestritivo = perCnae.reduce<(typeof perCnae)[number] | null>(
-                                            (maior, item) => {
-                                                const rank = Math.max(
-                                                    riscoRank(item.risco_municipal),
-                                                    riscoRank(rotuloRiscoSanitario(item.risco_sanitario)),
-                                                );
-                                                const rankMaior =
-                                                    maior === null
-                                                        ? 0
-                                                        : Math.max(
-                                                              riscoRank(maior.risco_municipal),
-                                                              riscoRank(rotuloRiscoSanitario(maior.risco_sanitario)),
-                                                          );
-
-                                                return rank > rankMaior ? item : maior;
-                                            },
-                                            null,
-                                        );
-
-                                        if (maisRestritivo === null) {
-                                            return null;
-                                        }
-
-                                        const riscoEstabelecimento = [
-                                            maisRestritivo.risco_municipal,
-                                            rotuloRiscoSanitario(maisRestritivo.risco_sanitario),
-                                        ]
-                                            .filter(Boolean)
-                                            .join(' · ');
-
-                                        return (
-                                            <p className="mt-4 text-theme-sm text-gray-700 dark:text-gray-300">
-                                                Risco do estabelecimento: <strong>{riscoEstabelecimento}</strong>
-                                                {perCnae.length > 1 && (
-                                                    <>
-                                                        {' '}
-                                                        — elevado pelo CNAE{' '}
-                                                        {maisRestritivo.cnae_formatado ?? maisRestritivo.cnae} (mais
-                                                        restritivo da solicitação)
-                                                    </>
-                                                )}
-                                                .
-                                            </p>
-                                        );
-                                    })()}
-
-                                    {(() => {
-                                        const fundamentacao = [
-                                            ...new Set(
-                                                perCnae.flatMap((item) => item.fundamentacao ?? []),
-                                            ),
-                                        ];
-
-                                        if (fundamentacao.length === 0) {
-                                            return null;
-                                        }
-
-                                        return (
-                                            <ul className="mt-3 list-inside list-disc text-theme-xs text-gray-500 dark:text-gray-400">
-                                                {fundamentacao.map((ref) => (
-                                                    <li key={ref}>{ref}</li>
-                                                ))}
-                                            </ul>
-                                        );
-                                    })()}
-                                </CardContent>
-                            </Card>
-                        )}
 
                         {/* Condicionantes */}
                         <Card>
@@ -3350,7 +3184,6 @@ function ResumoProcessoCard({
                                 >
                                     <summary className="cursor-pointer text-theme-sm font-medium text-gray-800 dark:text-white/90">
                                         Minuta de parecer (sugestão, revise)
-                                        {sugestao.confianca ? ` · confiança ${confiancaLabel(sugestao.confianca).toLowerCase()}` : ''}
                                     </summary>
                                     <p className="mt-3 text-theme-sm whitespace-pre-line text-gray-800 dark:text-white/90">{minutaTexto}</p>
                                     {editavel && (
@@ -3374,23 +3207,6 @@ function ResumoProcessoCard({
             </CardContent>
         </Card>
     );
-}
-
-/** Nível de confiança da IA → rótulo em pt-BR (texto, nunca só cor — eMAG). */
-function confiancaLabel(confianca: string): string {
-    if (confianca === 'alta') {
-        return 'Alta';
-    }
-
-    if (confianca === 'media') {
-        return 'Média';
-    }
-
-    if (confianca === 'baixa') {
-        return 'Baixa';
-    }
-
-    return confianca;
 }
 
 /**
@@ -3452,11 +3268,6 @@ function MinutaJustificativaCard({
                                         )}
                                     </div>
                                     <div className="flex flex-wrap items-center gap-2">
-                                        {sugestao.confianca && (
-                                            <Badge color="light" size="sm">
-                                                Confiança: {confiancaLabel(sugestao.confianca)}
-                                            </Badge>
-                                        )}
                                         <Badge color={sugestao.status === 'escalada_humano' ? 'error' : 'light'} size="sm">
                                             {sugestao.status_label}
                                         </Badge>
