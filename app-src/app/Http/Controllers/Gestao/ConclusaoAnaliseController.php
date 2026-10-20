@@ -37,6 +37,7 @@ class ConclusaoAnaliseController extends Controller
                 $request->validated('parecer'),
                 exigirFichaSalva: true,
                 confirmarDivergencia: $request->boolean('confirmar_divergencia'),
+                validade: $request->validadeDeferimento(),
             );
         } catch (DivergenciaConclusaoException $e) {
             throw ValidationException::withMessages(['divergencia' => $e->getMessage()]);
