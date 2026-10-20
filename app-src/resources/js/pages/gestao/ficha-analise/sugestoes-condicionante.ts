@@ -39,8 +39,9 @@ export function sugerirCondicionantes(
         return palavras.every((palavra) => conteudo.includes(palavra));
     });
 
-    const condicionantes = combinam.filter((texto) => texto.category === 'condicionante');
-    const demais = combinam.filter((texto) => texto.category !== 'condicionante');
+    const ehCondicionante = (texto: TextoDaBiblioteca) => normalizar(texto.category).startsWith('condicionante');
+    const condicionantes = combinam.filter(ehCondicionante);
+    const demais = combinam.filter((texto) => !ehCondicionante(texto));
 
     return [...condicionantes, ...demais].slice(0, limite).map(({ id, content }) => ({ id, content }));
 }
