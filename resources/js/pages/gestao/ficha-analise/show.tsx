@@ -286,6 +286,7 @@ interface FichaAnaliseShowProps {
     iaFicha: IaFicha;
     /** Há ficha de vistoria para consultar. A ausência não cria registro. */
     temFichaVistoria: boolean;
+    podeEncaminharChefia: boolean;
 }
 
 interface IaFicha {
@@ -774,6 +775,7 @@ export default function FichaAnaliseShow({
     sugestoesIa,
     iaFicha,
     temFichaVistoria,
+    podeEncaminharChefia,
 }: FichaAnaliseShowProps) {
     const { auth } = usePage<SharedProps>().props;
     // Encaminhar à vistoria é ação do analista (handoff ao setor de vistoria).
@@ -901,6 +903,8 @@ export default function FichaAnaliseShow({
     const [descricaoPendencia, setDescricaoPendencia] = useState('');
     const [erroPendencia, setErroPendencia] = useState<string | null>(null);
     const [showCancelarConvite, setShowCancelarConvite] = useState(false);
+    const [showEncaminharChefia, setShowEncaminharChefia] = useState(false);
+    const [encaminhandoChefia, setEncaminhandoChefia] = useState(false);
     const [parecerCancelamento, setParecerCancelamento] = useState('');
     const [cancelarConviteProcessing, setCancelarConviteProcessing] = useState(false);
     const [showVistoria, setShowVistoria] = useState(false);
@@ -1161,6 +1165,20 @@ export default function FichaAnaliseShow({
                           ? primeiro[0]
                           : '';
                     setErroPendencia(texto || 'A descrição passou do limite de 2.000 caracteres.');
+                },
+            },
+        );
+    }
+
+    function encaminharParaChefia() {
+        router.post(
+            `/gestao/processos/${processo.id}/status-analise`,
+            { status: 'para_conclusao', voltar_para_caixa: true },
+            {
+                onStart: () => setEncaminhandoChefia(true),
+                onFinish: () => {
+                    setEncaminhandoChefia(false);
+                    setShowEncaminharChefia(false);
                 },
             },
         );
@@ -2561,6 +2579,12 @@ export default function FichaAnaliseShow({
                                         </Button>
                                     )}
 
+                                    {podeEncaminharChefia && (
+                                        <Button onClick={() => setShowEncaminharChefia(true)} variant="outline" size="sm">
+                                            Encaminhar para Chefia
+                                        </Button>
+                                    )}
+
                                     {processo.status === 'em_analise' && (
                                         <Button onClick={() => setShowPendencia(true)} variant="ghost" size="sm">
                                             Colocar em convite
@@ -2631,6 +2655,17 @@ export default function FichaAnaliseShow({
                     }}
                 />
             )}
+
+            <ConfirmDialog
+                isOpen={showEncaminharChefia}
+                variant="info"
+                title="Encaminhar para Chefia?"
+                description="O processo vai para a aba Para conclusão da Caixa do setor e sai da sua Caixa de entrada."
+                confirmLabel="Encaminhar"
+                processing={encaminhandoChefia}
+                onConfirm={encaminharParaChefia}
+                onClose={() => setShowEncaminharChefia(false)}
+            />
 
             <ConfirmDialog
                 isOpen={showFinalizar}

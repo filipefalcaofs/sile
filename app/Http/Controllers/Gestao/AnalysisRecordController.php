@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Gestao;
 
+use App\Enums\AnalysisStatus;
 use App\Enums\ConclusionOutcome;
 use App\Enums\DecisionOutcome;
 use App\Enums\RuleDomain;
@@ -144,6 +145,7 @@ class AnalysisRecordController extends Controller
             'iaFicha' => $this->iaFicha($viabilityRequest),
             // A consulta na ficha de análise não cria vistoria: só informa se já existe.
             'temFichaVistoria' => $viabilityRequest->inspection()->exists(),
+            'podeEncaminharChefia' => $this->podeEncaminharChefia($viabilityRequest, $request->user()),
             // Sugestões de IA (HU-115 alertas + HU-117 resumo do processo) — prop
             // DEFERIDA (carregada sob demanda pelo card, fora do load inicial).
             // Ao resolver, gera o resumo no mesmo request (gated; já existente ⇒
@@ -957,5 +959,20 @@ class AnalysisRecordController extends Controller
                 'version' => $texto->version,
             ])
             ->all();
+    }
+
+    /**
+     * "Encaminhar para Chefia" (Para conclusão sem destinatário) só aparece
+     * quando a tramitação permite sair do estado atual para Para conclusão.
+     */
+    private function podeEncaminharChefia(ViabilityRequest $viabilityRequest, ?User $user): bool
+    {
+        if ($user === null || ! $user->can('analisar-processos')) {
+            return false;
+        }
+
+        $proximas = $viabilityRequest->analysis_status?->proximasPara($user->can('concluir-analise')) ?? [];
+
+        return in_array(AnalysisStatus::ParaConclusao, $proximas, true);
     }
 }

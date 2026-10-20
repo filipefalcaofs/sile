@@ -3,6 +3,7 @@
 namespace Tests\Feature\Analise;
 
 use App\Enums\AnalysisRecordStatus;
+use App\Enums\AnalysisStatus;
 use App\Enums\RuleDomain;
 use App\Enums\RuleVersionStatus;
 use App\Enums\ViabilityRequestStatus;
@@ -44,6 +45,27 @@ class FichaUiSmokeTest extends TestCase
     private function analista(): User
     {
         return User::factory()->analista()->withAcceptedLgpdTerm()->create();
+    }
+
+    public function test_ficha_oferece_encaminhar_para_chefia_so_em_analise(): void
+    {
+        $analista = $this->analista();
+
+        $emAnalise = ViabilityRequest::factory()->create(['status' => ViabilityRequestStatus::EmAnalise]);
+        $emAnalise->forceFill(['analysis_status' => AnalysisStatus::EmAnalise, 'assigned_user_id' => $analista->id])->save();
+        AnalysisRecord::factory()->create(['viability_request_id' => $emAnalise->id, 'revision' => 1]);
+
+        $analisar = ViabilityRequest::factory()->create(['status' => ViabilityRequestStatus::EmAnalise]);
+        $analisar->forceFill(['analysis_status' => AnalysisStatus::Analisar, 'assigned_user_id' => $analista->id])->save();
+        AnalysisRecord::factory()->create(['viability_request_id' => $analisar->id, 'revision' => 1]);
+
+        $this->actingAs($analista, 'gestao')
+            ->get("/gestao/processos/{$emAnalise->id}/ficha")
+            ->assertInertia(fn (Assert $page) => $page->where('podeEncaminharChefia', true));
+
+        $this->actingAs($analista, 'gestao')
+            ->get("/gestao/processos/{$analisar->id}/ficha")
+            ->assertInertia(fn (Assert $page) => $page->where('podeEncaminharChefia', false));
     }
 
     public function test_ficha_renderiza_componente_inertia_com_as_props_essenciais(): void

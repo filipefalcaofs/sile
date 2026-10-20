@@ -440,7 +440,15 @@ class ProcessoController extends Controller
             return back()->with('error', $e->getMessage());
         }
 
-        return back()->with('status', $this->confirmacaoDaTramitacao($viabilityRequest, $to));
+        $confirmacao = $this->confirmacaoDaTramitacao($viabilityRequest, $to);
+
+        // "Encaminhar para Chefia" na ficha: o processo saiu da caixa de quem
+        // encaminhou, então a volta é para a Caixa de entrada, não para a ficha.
+        if ($request->boolean('voltar_para_caixa')) {
+            return redirect()->route('gestao.processos.fila')->with('status', $confirmacao);
+        }
+
+        return back()->with('status', $confirmacao);
     }
 
     /**

@@ -60,6 +60,24 @@ class ParaConclusaoTest extends TestCase
         return $processo;
     }
 
+    public function test_encaminhar_para_chefia_pela_ficha_volta_para_a_caixa_de_entrada(): void
+    {
+        $setor = Sector::factory()->create();
+        $servidor = User::factory()->analistaServidor()->withAcceptedLgpdTerm()->create();
+        $servidor->sectors()->attach($setor);
+        $processo = $this->processoEmAnalise($setor, $servidor);
+
+        $this->actingAs($servidor, 'gestao')
+            ->from("/gestao/processos/{$processo->id}/ficha")
+            ->post("/gestao/processos/{$processo->id}/status-analise", ['status' => 'para_conclusao', 'voltar_para_caixa' => '1'])
+            ->assertRedirect(route('gestao.processos.fila'))
+            ->assertSessionHas('status', fn (string $mensagem): bool => str_contains($mensagem, 'aba Para conclusão'));
+
+        $processo->refresh();
+        $this->assertSame(AnalysisStatus::ParaConclusao, $processo->analysis_status);
+        $this->assertNull($processo->conclusao_encaminhada_para_user_id);
+    }
+
     public function test_analista_servidor_envia_para_conclusao_sem_destinatario(): void
     {
         $setor = Sector::factory()->create();
@@ -202,7 +220,7 @@ class ParaConclusaoTest extends TestCase
 
         $this->assertNotContains($processo->id, $ids);
         $this->assertContains($outro->id, $ids);
-        $this->assertSame(1, $servico->contadores($analista)['em_analise']);
+        $this->assertSame(1, $servico->contadores($analista)['aguardando_analise']);
     }
 
     public function test_aba_para_conclusao_lista_so_os_sem_destinatario_com_o_analista_de_origem(): void
