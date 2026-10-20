@@ -197,15 +197,21 @@ export default function CaixaSetorIndex({
         setModal(novo);
     }
 
+    const retorno = new URLSearchParams({
+        visao,
+        per_page: String(filtros.per_page),
+        ...Object.fromEntries(Object.entries(filtrosDeCampo).filter(([, v]) => v !== '')),
+    }).toString();
+
     function irParaCentral(ids: number[]) {
         if (ids.length === 0) {
             return;
         }
-        router.get('/gestao/caixa-setor/central', { ids: ids.join(',') }, { preserveScroll: true });
+        router.get('/gestao/caixa-setor/central', { ids: ids.join(','), retorno }, { preserveScroll: true });
     }
 
     function distribuicaoInteligente(ids: number[] | null) {
-        const params: Record<string, string | number> = {};
+        const params: Record<string, string | number> = { retorno };
         if (ids === null) {
             params.todos = 1;
             for (const [chave, valor] of Object.entries(filtrosDeCampo)) {

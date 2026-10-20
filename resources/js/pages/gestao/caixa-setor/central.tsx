@@ -42,6 +42,7 @@ interface CentralProps {
     totalEmAnalise: number;
     historico: HistoricoItem[];
     distribuiEmQualquerSetor: boolean;
+    retorno: string;
 }
 
 type Ordenacao = 'menor' | 'maior' | 'nome';
@@ -67,7 +68,9 @@ export default function CentralDistribuicao({
     totalEmAnalise,
     historico,
     distribuiEmQualquerSetor,
+    retorno,
 }: CentralProps) {
+    const urlDaCaixa = retorno === '' ? '/gestao/caixa-setor' : `/gestao/caixa-setor?${retorno}`;
     const [busca, setBusca] = useState('');
     const [ordenacao, setOrdenacao] = useState<Ordenacao>('menor');
     const [selecionado, setSelecionado] = useState<number | null>(null);
@@ -81,7 +84,7 @@ export default function CentralDistribuicao({
         analista_id: '',
     });
 
-    const loteForm = useForm<{ alocacoes: { analista_id: number; request_ids: number[] }[] }>({ alocacoes: [] });
+    const loteForm = useForm<{ alocacoes: { analista_id: number; request_ids: number[] }[]; retorno: string }>({ alocacoes: [], retorno });
 
     const maiorCarga = useMemo(
         () => analistas.reduce((max, a) => Math.max(max, a.total), 0),
@@ -154,10 +157,10 @@ export default function CentralDistribuicao({
             return;
         }
 
-        form.transform((data) => ({ ...data, analista_id: String(selecionado), sector_id: setorDestino || null }));
+        form.transform((data) => ({ ...data, retorno, analista_id: String(selecionado), sector_id: setorDestino || null }));
         form.post('/gestao/caixa-setor/distribuir', {
             preserveScroll: true,
-            onSuccess: () => router.visit('/gestao/caixa-setor'),
+            onSuccess: () => router.visit(urlDaCaixa),
         });
     }
 
@@ -166,6 +169,7 @@ export default function CentralDistribuicao({
             return;
         }
         loteForm.transform(() => ({
+            retorno,
             alocacoes: alocacaoPrevia.map((g) => ({ analista_id: g.analista_id, request_ids: g.request_ids })),
         }));
         loteForm.post('/gestao/caixa-setor/distribuir-lote', {
@@ -180,7 +184,7 @@ export default function CentralDistribuicao({
                 title="Central de distribuição"
                 breadcrumbs={[
                     { label: 'Painel', href: '/gestao' },
-                    { label: 'Caixa do setor', href: '/gestao/caixa-setor' },
+                    { label: 'Caixa do setor', href: urlDaCaixa },
                 ]}
             />
 
@@ -450,7 +454,7 @@ export default function CentralDistribuicao({
                                 <div className="flex items-center gap-3">
                                     <Button
                                         variant="outline"
-                                        onClick={() => router.visit('/gestao/caixa-setor')}
+                                        onClick={() => router.visit(urlDaCaixa)}
                                         disabled={loteForm.processing}
                                     >
                                         Cancelar
@@ -505,7 +509,7 @@ export default function CentralDistribuicao({
                                     )}
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    <Button variant="outline" onClick={() => router.visit('/gestao/caixa-setor')} disabled={form.processing}>
+                                    <Button variant="outline" onClick={() => router.visit(urlDaCaixa)} disabled={form.processing}>
                                         Cancelar
                                     </Button>
                                     <Button

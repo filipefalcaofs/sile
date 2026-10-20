@@ -34,13 +34,15 @@ interface Props {
     alocacoes: Alocacao[];
     naoAlocados: NaoAlocado[];
     totalSelecionados: number;
+    retorno: string;
 }
 
 function rotulo(processo: { bap: string | null; protocol_number: string | null; id: number }): string {
     return processo.bap ?? processo.protocol_number ?? `#${processo.id}`;
 }
 
-export default function DistribuicaoInteligente({ criterio, alocacoes, naoAlocados, totalSelecionados }: Props) {
+export default function DistribuicaoInteligente({ criterio, alocacoes, naoAlocados, totalSelecionados, retorno }: Props) {
+    const urlDaCaixa = retorno === '' ? '/gestao/caixa-setor' : `/gestao/caixa-setor?${retorno}`;
     const [proposta] = useState<Alocacao[]>(alocacoes);
     const [atual, setAtual] = useState<Alocacao[]>(alocacoes);
     const [abertos, setAbertos] = useState<number[]>([]);
@@ -126,6 +128,7 @@ export default function DistribuicaoInteligente({ criterio, alocacoes, naoAlocad
 
         form.transform(() => ({
             origem: 'inteligente',
+            retorno,
             alocacoes: atual
                 .filter((linha) => linha.processos.length > 0)
                 .map((linha) => ({
@@ -151,7 +154,7 @@ export default function DistribuicaoInteligente({ criterio, alocacoes, naoAlocad
                 title="Distribuição inteligente em lote"
                 breadcrumbs={[
                     { label: 'Painel', href: '/gestao' },
-                    { label: 'Caixa do setor', href: '/gestao/caixa-setor' },
+                    { label: 'Caixa do setor', href: urlDaCaixa },
                 ]}
             />
 
@@ -262,7 +265,7 @@ export default function DistribuicaoInteligente({ criterio, alocacoes, naoAlocad
                 </Card>
 
                 <div className="flex flex-wrap justify-end gap-3">
-                    <Button variant="outline" onClick={() => router.visit('/gestao/caixa-setor')} disabled={form.processing}>
+                    <Button variant="outline" onClick={() => router.visit(urlDaCaixa)} disabled={form.processing}>
                         Cancelar
                     </Button>
                     <Button variant="outline" onClick={recalcular} disabled={form.processing}>
