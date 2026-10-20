@@ -2,8 +2,10 @@
 
 namespace App\Console\Commands;
 
+use App\Models\User;
 use App\Support\Audit\AuditService;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
@@ -35,9 +37,16 @@ class PerfisAtribuirPermissaoCommand extends Command
             ->where('guard_name', 'web')
             ->where('protegido', false)
             ->whereDoesntHave('permissions', fn ($permissoes) => $permissoes->where('name', $nome))
-            ->withCount('users')
             ->orderBy('name')
             ->get();
+
+        // Conta pela tabela de vínculos: a relação `users` do Spatie segue o guard
+        // padrão, que no terminal pode apontar para outro modelo.
+        $usuariosPorPerfil = DB::table('model_has_roles')
+            ->where('model_type', (new User)->getMorphClass())
+            ->selectRaw('role_id, count(*) as total')
+            ->groupBy('role_id')
+            ->pluck('total', 'role_id');
 
         if ($perfis->isEmpty()) {
             $this->info('Nenhum perfil a alterar.');
@@ -47,7 +56,7 @@ class PerfisAtribuirPermissaoCommand extends Command
 
         $this->table(
             ['Perfil', 'Usuários'],
-            $perfis->map(fn (Role $perfil): array => [$perfil->name, $perfil->users_count])->all(),
+            $perfis->map(fn (Role $perfil): array => [$perfil->name, (int) ($usuariosPorPerfil[$perfil->id] ?? 0)])->all(),
         );
 
         if (! $this->option('aplicar')) {
@@ -63,7 +72,7 @@ class PerfisAtribuirPermissaoCommand extends Command
                 logName: 'perfis',
                 event: 'permissao-atribuida',
                 description: "Permissão {$nome} atribuída ao perfil por comando",
-                properties: ['perfil' => $perfil->name, 'permissao' => $nome, 'usuarios' => $perfil->users_count],
+                properties: ['perfil' => $perfil->name, 'permissao' => $nome, 'usuarios' => (int) ($usuariosPorPerfil[$perfil->id] ?? 0)],
                 subject: $perfil,
             );
         }
