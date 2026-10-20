@@ -11,6 +11,21 @@ export interface ConclusaoOpcao {
     label: string;
 }
 
+/** Tipo do deferimento (SEDUR 20/10/2026): o valor é o tipo de validade gravado na decisão. */
+export const TIPO_DEFERIMENTO_OPCOES: ConclusaoOpcao[] = [
+    { value: 'definitiva', label: 'Deferido' },
+    { value: 'provisoria', label: 'Provisório' },
+    { value: 'pre_operacional', label: 'Pré-operacional' },
+];
+
+export const VALIDADE_OPCOES: ConclusaoOpcao[] = [
+    { value: '6', label: '6 meses' },
+    { value: '12', label: '1 ano' },
+    { value: '24', label: '2 anos' },
+];
+
+const TIPOS_COM_VALIDADE = ['provisoria', 'pre_operacional'];
+
 interface ConclusaoAnaliseFormProps {
     resultadoId: string;
     resultado: string;
@@ -30,6 +45,13 @@ interface ConclusaoAnaliseFormProps {
     onConfirm: () => void;
     onCancel?: () => void;
     confirmLabel?: string;
+    /** Sem onTipo (ex.: renovação, que tem diálogo próprio), Tipo e Validade não aparecem. */
+    tipo?: string;
+    onTipo?: (valor: string) => void;
+    validadeMeses?: string;
+    onValidadeMeses?: (valor: string) => void;
+    erroTipo?: string | null;
+    erroValidade?: string | null;
 }
 
 export async function copiarTexto(texto: string): Promise<void> {
@@ -72,7 +94,17 @@ export default function ConclusaoAnaliseForm({
     onConfirm,
     onCancel,
     confirmLabel = 'Concluir análise',
+    tipo = '',
+    onTipo,
+    validadeMeses = '',
+    onValidadeMeses,
+    erroTipo = null,
+    erroValidade = null,
 }: ConclusaoAnaliseFormProps) {
+    const pedeTipo = onTipo !== undefined && resultado === 'deferido';
+    const pedeValidade = pedeTipo && TIPOS_COM_VALIDADE.includes(tipo);
+    const faltaCampo = (pedeTipo && tipo === '') || (pedeValidade && validadeMeses === '');
+
     const [copiado, setCopiado] = useState(false);
     const [erroCopia, setErroCopia] = useState(false);
     const textoParaCopiar = (parecerDaFicha ?? '').trim() !== '' ? (parecerDaFicha ?? '') : parecer;
@@ -104,6 +136,36 @@ export default function ConclusaoAnaliseForm({
                     options={opcoes}
                 />
             </div>
+            {pedeTipo && (
+                <div>
+                    <Label htmlFor="tipo-deferimento" required>
+                        Tipo
+                    </Label>
+                    <Select
+                        id="tipo-deferimento"
+                        value={tipo}
+                        onChange={(valor) => onTipo?.(valor)}
+                        placeholder="Selecione o tipo"
+                        options={TIPO_DEFERIMENTO_OPCOES}
+                    />
+                    {erroTipo && <FieldError>{erroTipo}</FieldError>}
+                </div>
+            )}
+            {pedeValidade && (
+                <div>
+                    <Label htmlFor="validade-deferimento" required>
+                        Data da Validade
+                    </Label>
+                    <Select
+                        id="validade-deferimento"
+                        value={validadeMeses}
+                        onChange={(valor) => onValidadeMeses?.(valor)}
+                        placeholder="Selecione a validade"
+                        options={VALIDADE_OPCOES}
+                    />
+                    {erroValidade && <FieldError>{erroValidade}</FieldError>}
+                </div>
+            )}
             {onParecer && (
                 <div>
                     <div className="flex items-center justify-between gap-2">
@@ -151,7 +213,7 @@ export default function ConclusaoAnaliseForm({
                         Confirmar mesmo assim
                     </Button>
                 ) : (
-                    <Button type="button" size="sm" onClick={onConfirm} disabled={resultado === ''} loading={processing}>
+                    <Button type="button" size="sm" onClick={onConfirm} disabled={resultado === '' || faltaCampo} loading={processing}>
                         {confirmLabel}
                     </Button>
                 )}

@@ -23,6 +23,7 @@ interface MalhaFinaItem {
     id: number;
     protocol_number: string | null;
     bap: string | null;
+    renovacao: boolean;
     protocoled_at: string | null;
     empresa: string | null;
     requerente: string | null;
@@ -112,7 +113,7 @@ export default function MalhaFinaIndex({
 }: MalhaFinaIndexProps) {
     const linhas = Array.isArray(processos?.data) ? processos.data : [];
     const [concluindo, setConcluindo] = useState<MalhaFinaItem | null>(null);
-    const conclusao = useForm({ resultado: '', observacao: '' });
+    const conclusao = useForm({ resultado: '', observacao: '', tipo: '', validade_meses: '' });
 
     const { aba, per_page: _perPage, ...filtrosDeCampo } = filtros;
 
@@ -356,8 +357,29 @@ export default function MalhaFinaIndex({
                     <ConclusaoAnaliseForm
                         resultadoId="concluir-resultado"
                         resultado={conclusao.data.resultado}
-                        onResultado={(valor) => conclusao.setData('resultado', valor)}
+                        onResultado={(valor) =>
+                            conclusao.setData((dados) => ({
+                                ...dados,
+                                resultado: valor,
+                                ...(valor !== 'deferido' ? { tipo: '', validade_meses: '' } : {}),
+                            }))
+                        }
                         opcoes={conclusaoOpcoes}
+                        tipo={conclusao.data.tipo}
+                        onTipo={
+                            concluindo?.renovacao
+                                ? undefined
+                                : (valor) =>
+                                      conclusao.setData((dados) => ({
+                                          ...dados,
+                                          tipo: valor,
+                                          ...(valor === 'definitiva' ? { validade_meses: '' } : {}),
+                                      }))
+                        }
+                        validadeMeses={conclusao.data.validade_meses}
+                        onValidadeMeses={(valor) => conclusao.setData('validade_meses', valor)}
+                        erroTipo={(conclusao.errors as Record<string, string | undefined>).tipo ?? null}
+                        erroValidade={(conclusao.errors as Record<string, string | undefined>).validade_meses ?? null}
                         parecerId="concluir-observacao"
                         parecer={conclusao.data.observacao}
                         onParecer={(valor) => conclusao.setData('observacao', valor)}

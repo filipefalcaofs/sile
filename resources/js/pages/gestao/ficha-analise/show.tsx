@@ -917,6 +917,9 @@ export default function FichaAnaliseShow({
     const [showConclusao, setShowConclusao] = useState(false);
     const [resultadoConclusao, setResultadoConclusao] = useState('');
     const [parecerConclusao, setParecerConclusao] = useState('');
+    const [tipoDeferimento, setTipoDeferimento] = useState('');
+    const [validadeMeses, setValidadeMeses] = useState('');
+    const [errosTipo, setErrosTipo] = useState<{ tipo: string | null; validade: string | null }>({ tipo: null, validade: null });
     const [conclusaoProcessing, setConclusaoProcessing] = useState(false);
     const [erroConclusao, setErroConclusao] = useState<string | null>(null);
     const [divergenciaConclusao, setDivergenciaConclusao] = useState<string | null>(null);
@@ -1097,9 +1100,16 @@ export default function FichaAnaliseShow({
     function concluirAnalise(confirmarDivergencia = false) {
         setErroConclusao(null);
         setDivergenciaConclusao(null);
+        setErrosTipo({ tipo: null, validade: null });
         router.post(
             `/gestao/processos/${processo.id}/conclusao-analise`,
-            { resultado: resultadoConclusao, parecer: parecerConclusao, confirmar_divergencia: confirmarDivergencia },
+            {
+                resultado: resultadoConclusao,
+                parecer: parecerConclusao,
+                confirmar_divergencia: confirmarDivergencia,
+                tipo: tipoDeferimento,
+                validade_meses: validadeMeses,
+            },
             {
                 preserveScroll: true,
                 onStart: () => setConclusaoProcessing(true),
@@ -1108,12 +1118,18 @@ export default function FichaAnaliseShow({
                     setShowConclusao(false);
                     setResultadoConclusao('');
                     setParecerConclusao('');
+                    setTipoDeferimento('');
+                    setValidadeMeses('');
                 },
                 onError: (erros) => {
                     const mapa = erros as Record<string, string>;
                     setDivergenciaConclusao(mapa.divergencia ?? null);
+                    setErrosTipo({ tipo: mapa.tipo ?? null, validade: mapa.validade_meses ?? null });
+                    const erroDeTipo = mapa.tipo !== undefined || mapa.validade_meses !== undefined;
                     setErroConclusao(
-                        mapa.divergencia ? null : (mapa.conclusao ?? mapa.resultado ?? 'Não foi possível concluir a análise.'),
+                        mapa.divergencia || erroDeTipo
+                            ? null
+                            : (mapa.conclusao ?? mapa.resultado ?? 'Não foi possível concluir a análise.'),
                     );
                 },
             },
@@ -2762,8 +2778,27 @@ export default function FichaAnaliseShow({
                             onResultado={(valor) => {
                                 setResultadoConclusao(valor);
                                 setDivergenciaConclusao(null);
+                                if (valor !== 'deferido') {
+                                    setTipoDeferimento('');
+                                    setValidadeMeses('');
+                                }
                             }}
                             opcoes={conclusaoOpcoes}
+                            tipo={tipoDeferimento}
+                            onTipo={
+                                processo.renovacao
+                                    ? undefined
+                                    : (valor) => {
+                                          setTipoDeferimento(valor);
+                                          if (valor === 'definitiva') {
+                                              setValidadeMeses('');
+                                          }
+                                      }
+                            }
+                            validadeMeses={validadeMeses}
+                            onValidadeMeses={setValidadeMeses}
+                            erroTipo={errosTipo.tipo}
+                            erroValidade={errosTipo.validade}
                             parecer={parecerConclusao}
                             onParecer={setParecerConclusao}
                             parecerDaFicha={parecer}

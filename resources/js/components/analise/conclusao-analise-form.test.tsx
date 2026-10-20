@@ -78,3 +78,84 @@ describe('ConclusaoAnaliseForm — copiar parecer', () => {
         expect(botaoCopiar().disabled).toBe(true);
     });
 });
+
+describe('ConclusaoAnaliseForm — tipo do deferimento e validade', () => {
+    let root: Root;
+    let host: HTMLDivElement;
+
+    (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+
+    afterEach(() => {
+        act(() => {
+            root.unmount();
+        });
+        host.remove();
+    });
+
+    function montar(propriedades: { resultado: string; tipo?: string; validadeMeses?: string; semTipo?: boolean }) {
+        host = document.createElement('div');
+        document.body.appendChild(host);
+        root = createRoot(host);
+        act(() => {
+            root.render(
+                <ConclusaoAnaliseForm
+                    resultadoId="resultado"
+                    resultado={propriedades.resultado}
+                    onResultado={() => undefined}
+                    opcoes={[
+                        { value: 'deferido', label: 'Deferido' },
+                        { value: 'indeferido', label: 'Indeferido' },
+                    ]}
+                    tipo={propriedades.tipo ?? ''}
+                    onTipo={propriedades.semTipo ? undefined : () => undefined}
+                    validadeMeses={propriedades.validadeMeses ?? ''}
+                    onValidadeMeses={() => undefined}
+                    onConfirm={() => undefined}
+                />,
+            );
+        });
+    }
+
+    function botaoConcluir(): HTMLButtonElement {
+        const botao = Array.from(host.querySelectorAll('button')).find((item) => item.textContent?.includes('Concluir análise'));
+
+        if (!botao) {
+            throw new Error('botão Concluir análise não encontrado');
+        }
+
+        return botao as HTMLButtonElement;
+    }
+
+    it('mostra Tipo só quando o resultado é deferido', () => {
+        montar({ resultado: 'indeferido' });
+        expect(host.querySelector('#tipo-deferimento')).toBeNull();
+        act(() => root.unmount());
+        host.remove();
+
+        montar({ resultado: 'deferido' });
+        expect(host.querySelector('#tipo-deferimento')).not.toBeNull();
+    });
+
+    it('mostra Data da Validade só para provisório e pré-operacional', () => {
+        montar({ resultado: 'deferido', tipo: 'definitiva' });
+        expect(host.querySelector('#validade-deferimento')).toBeNull();
+        act(() => root.unmount());
+        host.remove();
+
+        montar({ resultado: 'deferido', tipo: 'provisoria' });
+        expect(host.querySelector('#validade-deferimento')).not.toBeNull();
+    });
+
+    it('desabilita concluir sem a validade obrigatória', () => {
+        montar({ resultado: 'deferido', tipo: 'provisoria', validadeMeses: '' });
+
+        expect(botaoConcluir().disabled).toBe(true);
+    });
+
+    it('sem onTipo não mostra os campos (renovação)', () => {
+        montar({ resultado: 'deferido', semTipo: true });
+
+        expect(host.querySelector('#tipo-deferimento')).toBeNull();
+        expect(botaoConcluir().disabled).toBe(false);
+    });
+});
