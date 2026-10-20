@@ -176,10 +176,20 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Sessão/CSRF expirado (419) em navegação web volta à página anterior
         // com aviso amigável (padrão recomendado pelo Inertia) em vez da
-        // página de erro crua. JSON (api/*) mantém o status original.
+        // página de erro crua. JSON (api/*) mantém o status original. O mesmo
+        // vale para a recusa de regra de negócio (422 fora de validação) numa
+        // visita Inertia: volta com a mensagem em vez da página "Oops".
         $exceptions->respond(function (SymfonyResponse $response, Throwable $e, Request $request) {
             if ($response->getStatusCode() === 419 && ! $request->expectsJson()) {
                 return back()->with('error', __('Sua sessão expirou. Tente novamente.'));
+            }
+
+            if ($response->getStatusCode() === 422 && $request->header('X-Inertia') && ! $request->expectsJson()) {
+                $mensagem = $e instanceof HttpExceptionInterface && $e->getMessage() !== ''
+                    ? $e->getMessage()
+                    : __('Não foi possível concluir a operação.');
+
+                return back()->with('error', $mensagem);
             }
 
             return $response;

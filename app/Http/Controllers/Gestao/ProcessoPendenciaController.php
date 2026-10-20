@@ -11,13 +11,15 @@ use App\Models\ViabilityRequest;
 use App\Services\Analise\PendenciaInvalidaException;
 use App\Services\Analise\PendenciaService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Abertura e cancelamento de convite (ex-pendência) pelo analista (HU-083 +
  * relatório SEDUR 2026-07-09). Controller FINO: valida e delega ao
  * PendenciaService, que transiciona o estado, audita (RN-002) e notifica.
  * Gated por analisar-processos (403 auditado — CA-04); operação inválida no
- * estado atual lança PendenciaInvalidaException, traduzida em aviso controlado.
+ * estado atual lança PendenciaInvalidaException, traduzida em aviso controlado
+ * (na abertura, erro no campo descrição, exibido dentro do modal).
  */
 class ProcessoPendenciaController extends Controller
 {
@@ -28,7 +30,7 @@ class ProcessoPendenciaController extends Controller
         try {
             $this->pendencias->abrir($viabilityRequest, $request->user(), $request->validated('descricao'));
         } catch (PendenciaInvalidaException $e) {
-            abort(422, $e->getMessage());
+            throw ValidationException::withMessages(['descricao' => $e->getMessage()]);
         }
 
         return back()->with('status', 'Convite aberto. O processo aguarda a resposta do requerente.');
