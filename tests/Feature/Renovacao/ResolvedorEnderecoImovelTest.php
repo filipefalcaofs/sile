@@ -171,6 +171,71 @@ class ResolvedorEnderecoImovelTest extends TestCase
         $this->assertCount(1, $this->chamadas);
     }
 
+    public function test_endereco_no_formato_real_vira_logradouro_limpo(): void
+    {
+        $this->fakeCadastro($this->campos('Rua das Flores, 123 — Edifício Centro Médico', '123', 'Pituba', '41830-000'));
+
+        $endereco = $this->resolvedor()->resolver('123');
+
+        $this->assertSame('Rua das Flores', $endereco->logradouro);
+        $this->assertSame('123', $endereco->numero);
+        $this->assertSame('Rua das Flores, 123, Pituba, 41830-000', $endereco->texto());
+    }
+
+    public function test_endereco_sem_complemento_remove_so_o_numero(): void
+    {
+        $this->fakeCadastro($this->campos('Rua das Flores, 123', '123', null, null));
+
+        $endereco = $this->resolvedor()->resolver('123');
+
+        $this->assertSame('Rua das Flores', $endereco->logradouro);
+        $this->assertSame('Rua das Flores, 123', $endereco->texto());
+    }
+
+    public function test_endereco_sem_numero_fica_como_esta(): void
+    {
+        $this->fakeCadastro($this->campos('Rua das Flores', null, 'Pituba', null));
+
+        $endereco = $this->resolvedor()->resolver('123');
+
+        $this->assertSame('Rua das Flores', $endereco->logradouro);
+        $this->assertNull($endereco->numero);
+    }
+
+    public function test_numero_porta_diferente_do_texto_so_remove_o_complemento(): void
+    {
+        $this->fakeCadastro($this->campos('Rua das Flores, 456 — Edifício Centro', '123', null, null));
+
+        $endereco = $this->resolvedor()->resolver('123');
+
+        $this->assertSame('Rua das Flores, 456', $endereco->logradouro);
+        $this->assertSame('123', $endereco->numero);
+    }
+
+    public function test_corta_so_no_primeiro_travessao(): void
+    {
+        $this->fakeCadastro($this->campos('Rua das Flores, 123 — Edifício Centro — Bloco B', '123', null, null));
+
+        $this->assertSame('Rua das Flores', $this->resolvedor()->resolver('123')->logradouro);
+    }
+
+    public function test_numero_no_sufixo_ignora_maiusculas_e_espacos(): void
+    {
+        $this->fakeCadastro($this->campos('  Rua B, 12A  ', ' 12a ', null, null));
+
+        $this->assertSame('Rua B', $this->resolvedor()->resolver('123')->logradouro);
+    }
+
+    public function test_resolvedor_e_scoped(): void
+    {
+        $a = $this->resolvedor();
+        $this->assertSame($a, $this->resolvedor());
+
+        $this->app->forgetScopedInstances();
+
+        $this->assertNotSame($a, $this->resolvedor());
+    }
+
     public function test_texto_junta_campos_preenchidos(): void
     {
         $endereco = new EnderecoDoImovel('Rua das Flores', '123', 'Pituba', '41830-000');

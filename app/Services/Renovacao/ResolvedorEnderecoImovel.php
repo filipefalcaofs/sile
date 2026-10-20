@@ -49,9 +49,11 @@ class ResolvedorEnderecoImovel
             throw new EnderecoImovelIndisponivelException(self::M_INDISPONIVEL);
         }
 
+        $numero = $this->limpar($resultado->cadastro?->numero_porta);
+
         $endereco = new EnderecoDoImovel(
-            $this->limpar($resultado->cadastro?->endereco),
-            $this->limpar($resultado->cadastro?->numero_porta),
+            $this->logradouroLimpo($this->limpar($resultado->cadastro?->endereco), $numero),
+            $numero,
             $this->limpar($resultado->cadastro?->bairro),
             $this->limpar($resultado->cadastro?->cep),
         );
@@ -61,6 +63,29 @@ class ResolvedorEnderecoImovel
         }
 
         return $endereco;
+    }
+
+    /**
+     * O cadastro devolve "Logradouro, NÚMERO — Complemento"; fica só o logradouro.
+     */
+    private function logradouroLimpo(?string $endereco, ?string $numero): ?string
+    {
+        if ($endereco === null) {
+            return null;
+        }
+
+        $logradouro = trim(explode(' — ', $endereco, 2)[0]);
+
+        if ($numero !== null) {
+            $sufixo = ', '.$numero;
+            $tamanho = mb_strlen($sufixo);
+
+            if (mb_strlen($logradouro) > $tamanho && mb_strtolower(mb_substr($logradouro, -$tamanho)) === mb_strtolower($sufixo)) {
+                $logradouro = trim(mb_substr($logradouro, 0, -$tamanho));
+            }
+        }
+
+        return $this->limpar($logradouro);
     }
 
     private function limpar(?string $valor): ?string
