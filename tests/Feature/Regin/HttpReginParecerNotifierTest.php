@@ -90,7 +90,7 @@ class HttpReginParecerNotifierTest extends TestCase
         $this->assertSame(4, $espiao->envios[0]['dadosProcesso']['ANALISES']['AREA'][0]['STATUS_ANALISE']);
     }
 
-    public function test_justificativa_nao_leva_notas_internas_do_motor(): void
+    public function test_justificativa_sem_motivo_nao_leva_fundamentacao_nem_condicionantes(): void
     {
         $request = ViabilityRequest::factory()->protocoled()->create(['external_reference' => 'BAP2601875586']);
         $decision = ViabilityDecision::factory()->create([
@@ -115,15 +115,7 @@ class HttpReginParecerNotifierTest extends TestCase
 
         $justificativa = $espiao->envios[0]['dadosProcesso']['ANALISES']['AREA'][0]['JUSTIFICATIVA_ANALISE'];
 
-        $this->assertStringNotContainsString('GeoServer', $justificativa);
-        $this->assertStringNotContainsString('indisponível', $justificativa);
-        $this->assertStringNotContainsString('indisponivel', $justificativa);
-        $this->assertStringNotContainsString('segue para análise técnica', $justificativa);
-        $this->assertStringNotContainsString('Não foi possível verificar', $justificativa);
-        $this->assertStringContainsString('Decreto Municipal nº 32.636/2020', $justificativa);
-        $this->assertStringContainsString('Lei nº 9.148/2016 (LOUOS)', $justificativa);
-        $this->assertStringContainsString('Desde que seja escritório da empresa', $justificativa);
-        $this->assertStringContainsString('1.250m²', $justificativa);
+        $this->assertSame('Viabilidade deferida pelo motor de regras.', $justificativa);
     }
 
     public function test_justificativa_so_com_notas_internas_cai_no_texto_padrao(): void
@@ -147,7 +139,7 @@ class HttpReginParecerNotifierTest extends TestCase
         );
     }
 
-    public function test_indeferimento_envia_a_justificativa_seguida_da_fundamentacao(): void
+    public function test_indeferimento_envia_so_o_motivo_da_decisao(): void
     {
         $request = ViabilityRequest::factory()->protocoled()->create(['external_reference' => '00990026']);
         $decision = ViabilityDecision::factory()->indeferida()->create([
@@ -163,8 +155,28 @@ class HttpReginParecerNotifierTest extends TestCase
 
         $justificativa = $espiao->envios[0]['dadosProcesso']['ANALISES']['AREA'][0]['JUSTIFICATIVA_ANALISE'];
 
-        $this->assertStringStartsWith('A solicitação está localizada no logradouro 212', $justificativa);
-        $this->assertStringContainsString('Fundamentação legal: art. 172-A da Lei Municipal nº 9.148/2016', $justificativa);
+        $this->assertSame('A solicitação está localizada no logradouro 212 – Avenida Lafayette Coutinho.', $justificativa);
+    }
+
+    public function test_motivo_com_condicionantes_na_fundamentacao_vai_sem_elas(): void
+    {
+        $request = ViabilityRequest::factory()->protocoled()->create(['external_reference' => '00990027']);
+        $decision = ViabilityDecision::factory()->create([
+            'viability_request_id' => $request->id,
+            'outcome' => DecisionOutcome::Deferida,
+            'reason' => 'Deferida conforme análise técnica.',
+            'fundamentacao' => ['Lei nº 9.148/2016 (LOUOS) — nR2-12', 'Desde que seja escritório da empresa'],
+        ]);
+
+        $espiao = $this->clienteEspiao();
+        $this->app->instance(ReginHttpClient::class, $espiao);
+
+        $this->app->make(HttpReginParecerNotifier::class)->notifyParecer($request, $decision);
+
+        $this->assertSame(
+            'Deferida conforme análise técnica.',
+            $espiao->envios[0]['dadosProcesso']['ANALISES']['AREA'][0]['JUSTIFICATIVA_ANALISE'],
+        );
     }
 
     public function test_justificativa_respeita_o_limite_do_campo(): void
