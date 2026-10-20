@@ -1,14 +1,12 @@
 import FieldError from '@/components/form/field-error';
-import { Head, useForm, usePage } from '@inertiajs/react';
+import { Head, useForm } from '@inertiajs/react';
 import type { FormEvent, ReactNode } from 'react';
 import PageHeader from '@/components/app/page-header';
 import { CheckCircleIcon, InfoIcon } from '@/components/icons';
-import Alert from '@/components/ui/alert';
 import Badge from '@/components/ui/badge';
 import Button from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import PortalLayout from '@/layouts/portal-layout';
-import type { SharedProps } from '@/types';
 
 interface StatusInfo {
     value: string;
@@ -120,7 +118,6 @@ function PendenciaForm({ solicitacaoId, pendencia }: { solicitacaoId: number; pe
 }
 
 export default function Pendencias({ solicitacao, pendencias }: PendenciasProps) {
-    const { flash } = usePage<SharedProps>().props;
     const titulo = solicitacao.protocol_number ?? 'Solicitação de viabilidade';
 
     return (
@@ -141,8 +138,6 @@ export default function Pendencias({ solicitacao, pendencias }: PendenciasProps)
             />
 
             <div className="flex flex-col gap-4 md:gap-6">
-                {flash.error && <Alert variant="error" title="Não foi possível concluir" message={flash.error} />}
-
                 {pendencias.length === 0 ? (
                     <Card>
                         <CardContent>

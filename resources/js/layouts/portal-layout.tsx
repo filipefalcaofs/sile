@@ -62,6 +62,11 @@ export default function PortalLayout({ children }: PortalLayoutProps) {
                         <Alert variant="warning" title="Atenção" message={flash.warning} />
                     </div>
                 )}
+                {flash.error && (
+                    <div className="mb-6">
+                        <Alert variant="error" title="Não foi possível continuar" message={flash.error} />
+                    </div>
+                )}
                 <div className="pb-24">{children}</div>
             </AppShell>
         </ThemeProvider>
