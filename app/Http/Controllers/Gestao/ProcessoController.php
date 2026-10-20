@@ -26,6 +26,7 @@ use App\Services\Relatorios\Export\ReportExporter;
 use App\Services\Relatorios\Export\Sources\ProcessosReportSource;
 use App\Services\Relatorios\PainelOperacaoService;
 use App\Services\Relatorios\ReportFilters;
+use App\Services\Vistoria\VistoriaAcesso;
 use App\Support\Audit\AuditService;
 use App\Support\ParecerDecisao;
 use App\Support\Settings;
@@ -197,6 +198,7 @@ class ProcessoController extends Controller
             || $viabilityRequest->inspection()->exists();
 
         abort_unless($naVistoria, 404);
+        abort_unless(app(VistoriaAcesso::class)->podeConsultar($viabilityRequest, $request->user()), 403);
 
         return $this->detalhe($request, $viabilityRequest, true);
     }

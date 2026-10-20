@@ -38,6 +38,11 @@ class VistoriaCapaConsultaTest extends TestCase
         return $usuario;
     }
 
+    private function atribuir(ViabilityRequest $processo, User $vistoriador): void
+    {
+        $processo->forceFill(['assigned_user_id' => $vistoriador->id])->save();
+    }
+
     private function processo(AnalysisStatus $status): ViabilityRequest
     {
         $processo = ViabilityRequest::factory()->create();
@@ -70,6 +75,7 @@ class VistoriaCapaConsultaTest extends TestCase
         $vistoriador = $this->vistoriadorSemConsulta();
         $processo = $this->processo(AnalysisStatus::Vistoriar);
         $this->despachar($processo, 'Conferir o depósito de GLP nos fundos.');
+        $this->atribuir($processo, $vistoriador);
 
         $this->actingAs($vistoriador, 'gestao')
             ->get("/gestao/vistorias/{$processo->id}/consulta")
@@ -100,8 +106,10 @@ class VistoriaCapaConsultaTest extends TestCase
     public function test_capa_sem_encaminhamento_registrado_abre_sem_despacho(): void
     {
         $processo = $this->processo(AnalysisStatus::Vistoriar);
+        $vistoriador = $this->vistoriadorSemConsulta();
+        $this->atribuir($processo, $vistoriador);
 
-        $this->actingAs($this->vistoriadorSemConsulta(), 'gestao')
+        $this->actingAs($vistoriador, 'gestao')
             ->get("/gestao/vistorias/{$processo->id}/consulta")
             ->assertOk()
             ->assertInertia(fn ($page) => $page->where('despachoVistoria', null));
@@ -130,9 +138,11 @@ class VistoriaCapaConsultaTest extends TestCase
     public function test_abrir_a_capa_nao_altera_o_processo(): void
     {
         $processo = $this->processo(AnalysisStatus::Vistoriar);
-        $antes = $processo->only(['status', 'analysis_status', 'sector_id', 'assigned_user_id']);
+        $vistoriador = $this->vistoriadorSemConsulta();
+        $this->atribuir($processo, $vistoriador);
+        $antes = $processo->refresh()->only(['status', 'analysis_status', 'sector_id', 'assigned_user_id']);
 
-        $this->actingAs($this->vistoriadorSemConsulta(), 'gestao')
+        $this->actingAs($vistoriador, 'gestao')
             ->get("/gestao/vistorias/{$processo->id}/consulta")
             ->assertOk();
 
@@ -144,8 +154,10 @@ class VistoriaCapaConsultaTest extends TestCase
     {
         $processo = $this->processo(AnalysisStatus::Vistoriar);
         $this->despachar($processo, 'Conferir o depósito de GLP nos fundos.');
+        $vistoriador = $this->vistoriadorSemConsulta();
+        $this->atribuir($processo, $vistoriador);
 
-        $this->actingAs($this->vistoriadorSemConsulta(), 'gestao')
+        $this->actingAs($vistoriador, 'gestao')
             ->get("/gestao/vistorias/{$processo->id}/consulta/imprimir")
             ->assertOk()
             ->assertHeader('content-type', 'application/pdf')
@@ -186,7 +198,8 @@ class VistoriaCapaConsultaTest extends TestCase
             ->get("/gestao/vistorias/{$fora->id}/consulta/imprimir")
             ->assertNotFound();
 
-        $antes = $naVistoria->only(['status', 'analysis_status', 'sector_id', 'assigned_user_id']);
+        $this->atribuir($naVistoria, $vistoriador);
+        $antes = $naVistoria->refresh()->only(['status', 'analysis_status', 'sector_id', 'assigned_user_id']);
         $this->actingAs($vistoriador, 'gestao')
             ->get("/gestao/vistorias/{$naVistoria->id}/consulta/imprimir")
             ->assertOk();

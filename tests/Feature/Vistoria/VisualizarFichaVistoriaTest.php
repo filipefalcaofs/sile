@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Vistoria;
 
+use App\Enums\AnalysisStatus;
 use App\Models\Inspection;
 use App\Models\InspectionAttachment;
 use App\Models\User;
@@ -36,6 +37,18 @@ class VisualizarFichaVistoriaTest extends TestCase
         return $analista;
     }
 
+    /**
+     * O analista que mandou o processo para a vistoria é quem o consulta depois.
+     */
+    private function encaminhadoPor(ViabilityRequest $processo, User $analista): void
+    {
+        $processo->analysisStatusTransitions()->create([
+            'from_status' => AnalysisStatus::EmAnalise,
+            'to_status' => AnalysisStatus::Vistoriar,
+            'actor_user_id' => $analista->id,
+        ]);
+    }
+
     private function vistoriador(): User
     {
         return User::factory()->analista()->withAcceptedLgpdTerm()->create();
@@ -45,6 +58,7 @@ class VisualizarFichaVistoriaTest extends TestCase
     {
         $analista = $this->analistaConsulta();
         $processo = ViabilityRequest::factory()->create();
+        $this->encaminhadoPor($processo, $analista);
 
         $this->actingAs($analista, 'gestao')
             ->get("/gestao/processos/{$processo->id}/vistoria/visualizar")
@@ -75,6 +89,7 @@ class VisualizarFichaVistoriaTest extends TestCase
             'vistoriador_user_id' => $vistoriador->id,
             'parecer' => 'Parecer de campo.',
         ]);
+        $this->encaminhadoPor($processo, $analista);
 
         $this->actingAs($analista, 'gestao')
             ->get("/gestao/processos/{$processo->id}/vistoria/visualizar")
@@ -155,6 +170,7 @@ class VisualizarFichaVistoriaTest extends TestCase
             ->assertRedirect();
 
         $anexo = InspectionAttachment::query()->sole();
+        $this->encaminhadoPor($processo, $analista);
 
         $this->actingAs($analista, 'gestao')
             ->get("/gestao/processos/{$processo->id}/vistoria/anexos/{$anexo->id}")

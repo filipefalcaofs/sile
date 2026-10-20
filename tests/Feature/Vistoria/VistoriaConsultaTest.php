@@ -79,11 +79,19 @@ class VistoriaConsultaTest extends TestCase
         return compact('designar', 'campo', 'concluida', 'fora');
     }
 
-    public function test_consulta_renderiza_universo_kpis_e_situacao(): void
+    private function apoio(): User
+    {
+        $apoio = User::factory()->withAcceptedLgpdTerm()->create();
+        $apoio->assignRole('apoio');
+
+        return $apoio;
+    }
+
+    public function test_quem_distribui_ve_todo_o_universo(): void
     {
         $this->cenario();
 
-        $this->actingAs($this->vistoriador, 'gestao')
+        $this->actingAs($this->apoio(), 'gestao')
             ->get('/gestao/vistorias')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
@@ -95,15 +103,41 @@ class VistoriaConsultaTest extends TestCase
                 ->where('kpis.concluidas', 1)
                 ->where('kpis.concluidas_mes', 1)
                 ->where('kpis.prazo_vencido', 1)
-                ->has('abas')
+                ->where('abas.1.id', 'designar')
                 ->has('filtros'));
+    }
+
+    public function test_vistoriador_ve_so_os_processos_dele(): void
+    {
+        $cenario = $this->cenario();
+        $outroVistoriador = User::factory()->analista()->withAcceptedLgpdTerm()->create();
+        $alheio = $this->processoEmVistoria(AnalysisStatus::Vistoriar, ['protocol_number' => 'VIA-2026-000105']);
+        Inspection::factory()->create([
+            'viability_request_id' => $alheio->id,
+            'vistoriador_user_id' => $outroVistoriador->id,
+        ]);
+        $atribuido = $this->processoEmVistoria(AnalysisStatus::Vistoriar, ['protocol_number' => 'VIA-2026-000106']);
+        $atribuido->forceFill(['assigned_user_id' => $this->vistoriador->id])->save();
+
+        $resposta = $this->actingAs($this->vistoriador, 'gestao')
+            ->get('/gestao/vistorias')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('vistorias.data', 3)
+                ->where('kpis.encaminhadas', 3)
+                ->where('kpis.a_designar', 0));
+
+        $props = $resposta->viewData('page')['props'];
+        $ids = array_column($props['vistorias']['data'], 'id');
+        $this->assertEqualsCanonicalizing([$cenario['campo']->id, $cenario['concluida']->id, $atribuido->id], $ids);
+        $this->assertNotContains('designar', array_column($props['abas'], 'id'));
     }
 
     public function test_consulta_filtra_por_aba(): void
     {
         $this->cenario();
 
-        $this->actingAs($this->vistoriador, 'gestao')
+        $this->actingAs($this->apoio(), 'gestao')
             ->get('/gestao/vistorias?situacao=designar')
             ->assertInertia(fn (Assert $page) => $page
                 ->has('vistorias.data', 1)
