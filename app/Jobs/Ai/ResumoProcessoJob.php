@@ -14,7 +14,7 @@ use Laravel\Ai\Contracts\Agent;
 use Laravel\Ai\Files\File;
 
 /**
- * Execução do resumo do processo para o analista (HU-117). Subclasse fina do
+ * Execução do resumo do processo para o analista (HU-109). Subclasse fina do
  * RunAiAgentJob: carrega só IDs e monta o input MINIMIZADO de TEXTO (capability
  * 'text', sem anexos) com a síntese do que já existe no processo — pré-análise
  * do motor (engine_snapshot/per_cnae), inconsistências sinalizadas (Onda 1),
@@ -44,7 +44,7 @@ class ResumoProcessoJob extends RunAiAgentJob
 
     /**
      * Toggle COMPARTILHADO da síntese (HU-014): o resumo da solicitação no portal
-     * (HU-116) e o resumo do processo na ficha (HU-117) vivem ambos sob
+     * (HU-108) e o resumo do processo na ficha (HU-109) vivem ambos sob
      * features.ia_resumo. A function()/event de auditoria seguem específicas por
      * HU ('resumo_processo'); só o portão é compartilhado.
      */

@@ -24,7 +24,7 @@ use Tests\TestCase;
  * caminho de sistema), restaurando o toggle para OFF ao final; produz ≥1 acesso a
  * dado pessoal pelo AuditService (personal_data=true) e leva um processo dedicado
  * à decisão pela análise técnica (ViabilityDecision com decision_trace), além de
- * uma decisão legada SEM trace (sub-passo "não registrado" da HU-099).
+ * uma decisão legada SEM trace (sub-passo "não registrado" da HU-095).
  *
  * Asserções de PRESENÇA (não contagem global frágil): provam que o dev navegável
  * nasce do fluxo real e é idempotente. Roda em SQLite (RefreshDatabase) — a
@@ -76,7 +76,7 @@ class AuditoriaDevSeederTest extends TestCase
 
         // O acesso ao detalhe de um processo de terceiro é marcado personal_data
         // pelo AuditService (mesmo call site do ProcessoController@show) — base de
-        // medição do painel LGPD (HU-102).
+        // medição do painel LGPD (HU-098).
         $this->assertTrue(
             Activity::query()
                 ->where('event', 'consulta-processo')
@@ -100,7 +100,7 @@ class AuditoriaDevSeederTest extends TestCase
     {
         $this->seed();
 
-        // Explicabilidade navegável (HU-099): um processo dedicado é DECIDIDO pela
+        // Explicabilidade navegável (HU-095): um processo dedicado é DECIDIDO pela
         // análise técnica (a partir da ficha) — a decisão nasce com decision_trace.
         $decidido = ViabilityRequest::query()
             ->where('address_reference', AuditoriaDevSeeder::MARK_DECISAO)
@@ -112,7 +112,7 @@ class AuditoriaDevSeederTest extends TestCase
         $this->assertSame('analise_tecnica', $decisao->flow);
         $this->assertNotEmpty($decisao->decision_trace, 'A decisão da análise técnica deve nascer com decision_trace.');
 
-        // Sub-passo "não registrado" (HU-099): uma decisão LEGADA sem trace.
+        // Sub-passo "não registrado" (HU-095): uma decisão LEGADA sem trace.
         $legado = ViabilityRequest::query()
             ->where('address_reference', AuditoriaDevSeeder::MARK_LEGADO)
             ->first();

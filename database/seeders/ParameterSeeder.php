@@ -628,7 +628,7 @@ class ParameterSeeder extends Seeder
                 'type' => 'decimal',
                 'default_value' => '1.0',
                 'validation_rules' => ['required', 'numeric', 'min:0'],
-                'description' => 'Fator multiplicador aplicado ao valor do DAM da TLL quando o CNAE de maior valor exige fator multiplicador (HU-071 RN-004); 1.0 é neutro',
+                'description' => 'Fator multiplicador aplicado ao valor do DAM da TLL quando o CNAE de maior valor exige fator multiplicador (HU-145); 1.0 é neutro',
             ],
             'analise.pendencia.prazo_resposta_dias' => [
                 'group' => 'analise',
@@ -766,7 +766,7 @@ class ParameterSeeder extends Seeder
                 'description' => 'CODIGO_AREA da análise no envelope Resposta: código da área/secretaria da Prefeitura no REGIN',
             ],
             // Auditoria e compliance (EP12). O toggle de detecção de abuso
-            // (HU-149) nasce DESLIGADO (nunca pune — só registra alerta e
+            // (HU-138) nasce DESLIGADO (nunca pune — só registra alerta e
             // encaminha à malha fina). Paginação da trilha fica em config/viabiliza.php.
             'features.deteccao_abuso' => [
                 'group' => 'features',
@@ -775,7 +775,7 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'boolean'],
                 'description' => 'Habilita a detecção de padrões de abuso/fraude; nasce desligada e NUNCA pune — apenas registra alerta e encaminha à malha fina',
             ],
-            // Limiares dos detectores determinísticos (HU-149) — grupo 'abuso'.
+            // Limiares dos detectores determinísticos (HU-138) — grupo 'abuso'.
             // Defaults conservadores; a SEDUR ajusta sem deploy (HU-014).
             'abuso.janela_dias' => [
                 'group' => 'abuso',

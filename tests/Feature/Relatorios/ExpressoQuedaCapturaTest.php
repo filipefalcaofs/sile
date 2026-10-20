@@ -26,7 +26,7 @@ use Tests\Support\Geo\FakeSpatialRepository;
 use Tests\TestCase;
 
 /**
- * Captura ESTRUTURADA da queda ao analista (HU-145), ADITIVA em
+ * Captura ESTRUTURADA da queda ao analista (HU-135), ADITIVA em
  * {@see FluxoExpressoService::encaminharAnalise}: no momento do encaminhamento à
  * análise técnica, cada CNAE que caiu vira uma {@see ExpressoQueda} com o gatilho
  * semi-expresso e a dimensão decisiva REAIS do motor de risco.
@@ -65,7 +65,7 @@ class ExpressoQuedaCapturaTest extends TestCase
 
     public function test_queda_por_gatilho_grava_tipo_gatilho_estruturado(): void
     {
-        // HU-145: 1 CNAE caindo por gatilho semi-expresso real → grava a queda
+        // HU-135: 1 CNAE caindo por gatilho semi-expresso real → grava a queda
         // com o TipoGatilho, a dimensão decisiva e o motivo do encaminhamento
         // (lidos de consulta_array.risco.encaminhamento). O EncaminhadoParaAnalise
         // é faketado: a pré-análise (10-08) re-resolve o resolver e não é o alvo

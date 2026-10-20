@@ -16,7 +16,7 @@ use Illuminate\Foundation\Queue\Queueable;
 use Throwable;
 
 /**
- * Executa a decisão do fluxo expresso FORA do request do protocolo (HU-076).
+ * Executa a decisão do fluxo expresso FORA do request do protocolo (HU-072).
  * Envelopa o FluxoExpressoService::decide (motor real, 09-05) num job de fila
  * com retry/timeout/backoff — a lógica de domínio, a idempotência (Cache::lock +
  * re-check) e a auditoria síncrona já vivem no serviço; aqui adicionamos

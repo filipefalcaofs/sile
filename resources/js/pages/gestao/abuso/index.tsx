@@ -282,7 +282,7 @@ const colunasEfetividade: ColumnDef<EfetividadeRegra>[] = [
 ];
 
 /**
- * Painel humano de alertas de abuso (página gestao/abuso/index, HU-149): consome
+ * Painel humano de alertas de abuso (página gestao/abuso/index, HU-138): consome
  * o backend de 12-09 — lista filtrável e paginada (server-driven), o indicador de
  * EFETIVIDADE (confirmados ÷ gerados, RN-005) e a resolução confirmar/descartar
  * com justificativa OBRIGATÓRIA. ANTI-FACHADA (CA-02): a resolução é revisão

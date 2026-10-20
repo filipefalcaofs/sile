@@ -9,7 +9,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 /**
- * UI dos mantenedores dos Quadros da LOUOS no console SEDUR (HU-015..018): a
+ * UI dos mantenedores dos Quadros da LOUOS no console SEDUR (HU-015..017): a
  * página React já existe em disco (05-07), então o componente é assertado contra
  * o contrato de props do LouosController (05-06). Complementa o LouosConsultaTest
  * (que valida rota/props/auditoria sem ->component()): aqui validamos o

@@ -7,7 +7,7 @@ use App\Services\Solicitacao\DocumentRequirementResolver;
 use Illuminate\Database\Seeder;
 
 /**
- * Requisitos documentais BASE da solicitação (HU-067) com CÓDIGOS ESTÁVEIS — são
+ * Requisitos documentais BASE da solicitação (HU-065) com CÓDIGOS ESTÁVEIS — são
  * os condicionais que o DocumentRequirementResolver (08-08) referencia por code:
  * foto da fachada (sempre obrigatória) e termo de concessão de uso (exigido em
  * área pública). O contrato de locação entra como documento comum OPCIONAL.

@@ -14,7 +14,7 @@ use Illuminate\Notifications\Notification;
 
 /**
  * Aviso ao ANALISTA responsável de que o requerente respondeu a pendência e a
- * análise foi reaberta (HU-091/092) — o retorno que a Fase 10 não fechava.
+ * análise foi reaberta (HU-087/088) — o retorno que a Fase 10 não fechava.
  * Notification de PROCESSO MULTICANAL: implementa {@see ProcessNotification}
  * (tipo PendenciaRespondida) com via() DINÂMICO — os canais são resolvidos pelo
  * NotificationDispatcher no disparo, congelados aqui e traduzidos para os drivers
@@ -109,7 +109,7 @@ class RespostaPendenciaNotification extends Notification implements ProcessNotif
     }
 
     /**
-     * Conteúdo do canal in-app (HU-091/096): título, resumo e link da gestão.
+     * Conteúdo do canal in-app (HU-087/092): título, resumo e link da gestão.
      *
      * @return array<string, mixed>
      */
@@ -126,7 +126,7 @@ class RespostaPendenciaNotification extends Notification implements ProcessNotif
     }
 
     /**
-     * Conteúdo do canal WhatsApp (HU-095): texto curto com link. O destino (to,
+     * Conteúdo do canal WhatsApp (HU-091): texto curto com link. O destino (to,
      * E.164) é injetado pelo WhatsAppChannel a partir do notifiable.
      */
     public function toWhatsApp(object $notifiable): WhatsAppMessage

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 /**
  * @extends Factory<StandardText>
  *
- * Default = texto-padrão ATIVO na versão 1 (HU-085). O state inativo() retira
+ * Default = texto-padrão ATIVO na versão 1 (HU-081). O state inativo() retira
  * da biblioteca sem excluir.
  */
 class StandardTextFactory extends Factory

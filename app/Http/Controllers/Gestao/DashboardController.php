@@ -16,7 +16,7 @@ use Inertia\Response;
 class DashboardController extends Controller
 {
     /**
-     * Home da gestão (HU-122): KPIs operacionais gated por consultar-relatorios.
+     * Home da gestão (HU-113): KPIs operacionais gated por consultar-relatorios.
      * A tela inicial de quem opera o dia a dia é a caixa de trabalho, não o
      * painel (relatório de usabilidade SEDUR 19/09/2026, item 03): analista cai
      * na Caixa de entrada; apoio (tramitação) cai na Caixa do setor.

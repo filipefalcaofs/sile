@@ -22,7 +22,7 @@ use Tests\Support\Geo\FakeSpatialRepository;
 use Tests\TestCase;
 
 /**
- * Elegibilidade e roteamento do motor de decisão expressa (HU-073): o
+ * Elegibilidade e roteamento do motor de decisão expressa (HU-069): o
  * FluxoExpressoService::decide reexecuta o resolver FRESCO sob Cache::lock e
  * re-check de status (idempotência), e roteia para análise técnica sem emitir
  * resultado quando a lei NÃO permite o deferimento/indeferimento automático:
@@ -130,7 +130,7 @@ class FluxoExpressoElegibilidadeTest extends TestCase
 
     public function test_cnae_em_analise_encaminha_semi_expresso_auditado_sem_evento(): void
     {
-        // HU-073 RN-008: CNAE de alto risco, sem veto locacional (zona
+        // HU-069 RN-008: CNAE de alto risco, sem veto locacional (zona
         // ausente = pendente), sai do expresso — motivo auditado, sem decisão.
         $this->fakeBairroSemZona();
         $this->classificarMunicipal('3333333', RiscoMunicipal::Alto);
@@ -159,7 +159,7 @@ class FluxoExpressoElegibilidadeTest extends TestCase
 
     public function test_critico_cnae_expresso_sem_zona_vai_para_analise_sem_decisao_nem_evento(): void
     {
-        // ANTI-FACHADA (HU-073 CA-03): o CNAE é elegível ao expresso (baixo
+        // ANTI-FACHADA (HU-069 CA-03): o CNAE é elegível ao expresso (baixo
         // risco), MAS sem a zona (Quadro 10 indisponível) o veredito consolidado
         // é pendente. O motor NÃO inventa deferimento/indeferimento: encaminha à
         // análise, sem criar ViabilityDecision e sem disparar ResultadoEmitido.

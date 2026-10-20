@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Pendência da análise (HU-083/084 — ciclo interno): o analista solicita
+ * Pendência da análise (HU-079/080 — ciclo interno): o analista solicita
  * informação/documento ao requerente. status (aberta/respondida/expirada),
  * due_at é o prazo (parâmetro analise.pendencia.prazo_resposta_dias) e response
  * guarda a resposta. Convite via Simplifica/Regin + multicanal → EP11.

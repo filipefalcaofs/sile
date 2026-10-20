@@ -3,7 +3,7 @@
 namespace App\Services\Whatsapp;
 
 /**
- * DTO imutável de uma mensagem de WhatsApp (HU-095). O conteúdo (body/meta) é
+ * DTO imutável de uma mensagem de WhatsApp (HU-091). O conteúdo (body/meta) é
  * montado pela Notification de processo (toWhatsApp); o destino (to, em E.164) é
  * resolvido pelo WhatsAppChannel a partir do notifiable
  * (User::routeNotificationForWhatsapp) — o canal é a autoridade do "para onde".

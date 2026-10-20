@@ -9,11 +9,11 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * Payload de leitura da ViabilityDecision para a retaguarda (HU-076/HU-078):
+ * Payload de leitura da ViabilityDecision para a retaguarda (HU-072/HU-074):
  * expõe o desfecho (+rótulo), o veredito consolidado (+rótulo), o número TVL
  * (só no deferimento — RN-007), a decisão por CNAE, as versões de regra da
  * época (RN-005), a fundamentação legal, o motivo (ex.: 'indeferido sem
- * atuação', HU-134) e um resumo honesto da solicitação. SOMENTE LEITURA — a
+ * atuação', HU-125) e um resumo honesto da solicitação. SOMENTE LEITURA — a
  * decisão é imutável (append-only, 09-02/09-05); este recurso nunca a altera.
  *
  * Como é consumido como prop do Inertia, o controller chama ->resolve() para

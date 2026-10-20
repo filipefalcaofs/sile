@@ -7,7 +7,7 @@ use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
- * Consulta de viabilidade por INSCRIÇÃO imobiliária (HU-055). Rota pública
+ * Consulta de viabilidade por INSCRIÇÃO imobiliária (HU-053). Rota pública
  * (cidadão anônimo): authorize true. A resolução do ponto depende da base de
  * lotes (pendente SEDUR — contrato PropertyRegistryLookup); enquanto
  * indisponível, o serviço degrada para a via CNAE com aviso. O `cnae` é exigido

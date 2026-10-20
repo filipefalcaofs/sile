@@ -6,7 +6,7 @@ use App\Events\SolicitacaoProtocolada;
 use App\Jobs\DecidirFluxoExpressoJob;
 
 /**
- * Gatilho principal da decisão do fluxo expresso (HU-073/074/075): pendura no
+ * Gatilho principal da decisão do fluxo expresso (HU-069/070/071): pendura no
  * PRIMEIRO evento de domínio (SolicitacaoProtocolada, Fase 8) e apenas DESPACHA
  * o DecidirFluxoExpressoJob — NÃO decide inline. Despachar (em vez de decidir
  * aqui) mantém o protocolo rápido e ganha a resiliência da fila (retry/backoff).

@@ -7,7 +7,7 @@ use App\Support\Settings;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Gera o número de protocolo {prefixo}-{AAAA}-{NNNNNN} (HU-068) de forma
+ * Gera o número de protocolo {prefixo}-{AAAA}-{NNNNNN} (HU-066) de forma
  * concorrência-segura: o contador por ano (protocol_sequences) é travado com
  * lockForUpdate dentro de uma transação, então incrementado — duas gerações
  * concorrentes serializam no Postgres real (no-op em SQLite; a unicidade lógica

@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Vínculo leve de atendimento presencial assistido (HU-150): o atendente
+     * Vínculo leve de atendimento presencial assistido (HU-139): o atendente
      * (attendant_user_id) opera "em nome de" o cidadão presente no balcão
      * (citizen_user_id) por uma janela curta parametrizável. NÃO é procuração
      * jurídica (não há outorga) — é atendimento de balcão; reusa apenas o

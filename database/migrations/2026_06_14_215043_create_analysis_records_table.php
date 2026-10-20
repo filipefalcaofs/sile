@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Ficha de análise versionada (HU-135/140) — o coração da análise humana e a
+     * Ficha de análise versionada (HU-126/130) — o coração da análise humana e a
      * fonte do parecer. Cada revisão é uma linha; a revisão FINALIZADA é imutável
      * (RN-003) e o diff entre revisões compara 2 linhas. A rev 1 nasce pré-
      * analisada pelo motor (engine_snapshot/per_cnae) ou vazia quando o motor

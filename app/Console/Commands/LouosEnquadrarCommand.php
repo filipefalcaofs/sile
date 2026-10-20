@@ -16,7 +16,7 @@ use Illuminate\Console\Command;
  * Enquadra um CNAE + área pelo motor de regras REAL da LOUOS
  * (LouosEnquadramentoService) sobre o seed oficial da planilha vigente e dos Quadros 10/11/11A,
  * imprimindo o parecer fundamentado — evidência de ponta a ponta da Fase 5
- * (HU-038 a HU-046), espelhando o padrão dos comandos auditados
+ * (HU-037 a HU-044), espelhando o padrão dos comandos auditados
  * (risco:classificar / cnae:importar / redesim:importar).
  *
  * Sem fachada: o comando apenas APLICA a decisão do motor sobre o dado
@@ -36,7 +36,7 @@ class LouosEnquadrarCommand extends Command
         {--restricao=* : Restrição territorial incidente como entrada explícita (ex.: ZEIS)}
         {--resposta=* : Pergunta da planilha no formato N=sim|nao (ex.: --resposta=11=sim)}';
 
-    protected $description = 'Enquadra um CNAE + área pelo motor real da LOUOS (HU-038 a HU-046) — parecer fundamentado de ponta a ponta';
+    protected $description = 'Enquadra um CNAE + área pelo motor real da LOUOS (HU-037 a HU-044) — parecer fundamentado de ponta a ponta';
 
     public function handle(LouosEnquadramentoService $service): int
     {

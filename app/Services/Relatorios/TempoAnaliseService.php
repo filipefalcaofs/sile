@@ -14,7 +14,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\LazyCollection;
 
 /**
- * Tempo POR ETAPA da timeline (HU-129) + os relatórios SAPS de tempo (RN-006),
+ * Tempo POR ETAPA da timeline (HU-120) + os relatórios SAPS de tempo (RN-006),
  * medidos em tempo ÚTIL via {@see BusinessDeadlineCalculator::businessDurationBetween}
  * (15-04 — desconta fins de semana e feriados ativos). É a correção da distorção
  * do legado, que reporta tempo de CALENDÁRIO e mistura etapas (19 dias onde foram
@@ -58,7 +58,7 @@ class TempoAnaliseService
     public function __construct(private readonly BusinessDeadlineCalculator $calculator) {}
 
     /**
-     * Tempo médio por etapa (HU-129) em MINUTOS ÚTEIS sobre os processos
+     * Tempo médio por etapa (HU-120) em MINUTOS ÚTEIS sobre os processos
      * protocolados no período. Varre as transições ordenadas por processo e
      * instante (cursor), pareia as consecutivas e soma a duração útil de cada
      * etapa por processo; a média/amostras é por processo que PASSOU pela etapa.

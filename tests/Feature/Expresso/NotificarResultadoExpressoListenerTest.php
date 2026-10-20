@@ -19,8 +19,8 @@ use Tests\TestCase;
 
 /**
  * NotificarResultadoExpresso — listener AUTO-DESCOBERTO do ResultadoEmitido
- * (HU-077). A partir do EP11 (11-06) o aviso percorre o NotificationDispatcher
- * (ganha in-app + histórico communications, HU-096) em vez do e-mail direto.
+ * (HU-073). A partir do EP11 (11-06) o aviso percorre o NotificationDispatcher
+ * (ganha in-app + histórico communications, HU-092) em vez do e-mail direto.
  * Registro ÚNICO por auto-descoberta — notifica EXATAMENTE 1× (lição Fase 8:
  * Event::listen duplicaria). O toggle de TIPO features.notificacao_resultado_expresso
  * off → NÃO notifica e AUDITA a degradação (nunca falha silenciosa); os CANAIS
@@ -67,7 +67,7 @@ class NotificarResultadoExpressoListenerTest extends TestCase
         );
 
         // Anti-fachada: o aviso percorre o NotificationDispatcher e ganha o ledger
-        // communications (in-app + histórico HU-096) — não mais email_logs. O mapa
+        // communications (in-app + histórico HU-092) — não mais email_logs. O mapa
         // default de 'resultado' = [email, in_app] → duas linhas na_fila.
         $this->assertDatabaseHas('communications', [
             'viability_request_id' => $request->id,

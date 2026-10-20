@@ -31,7 +31,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Início do processo formal (HU-061): o cidadão CRIA o rascunho da solicitação
+ * Início do processo formal (HU-059): o cidadão CRIA o rascunho da solicitação
  * (origem portal direto + tipo de serviço + empresa). O requerente é o usuário
  * EFETIVO (representado quando "em nome de"); o created_by é o ator real. A
  * reincidência por CNPJ gera ALERTA (RN-007), nunca bloqueio. Toggle
@@ -104,7 +104,7 @@ class SolicitacaoController extends Controller
                 ...SolicitacaoResumoResource::make($solicitacao)->resolve(),
                 // Só rascunho pode continuar a edição no wizard (policy update).
                 'editable' => $solicitacao->status === ViabilityRequestStatus::Rascunho,
-                // A ação de cancelar só aparece nos estados canceláveis (HU-070,
+                // A ação de cancelar só aparece nos estados canceláveis (HU-068,
                 // parâmetro solicitacao.cancelamento.estados_cancelaveis).
                 'cancelable' => in_array($solicitacao->status->value, $cancelableStates, true),
             ]);
@@ -128,7 +128,7 @@ class SolicitacaoController extends Controller
     }
 
     /**
-     * Estados em que a solicitação pode ser cancelada pelo requerente (HU-070):
+     * Estados em que a solicitação pode ser cancelada pelo requerente (HU-068):
      * parâmetro administrável (efeito sem deploy), mesmo contrato lido pelo
      * CancelarSolicitacaoService — default honesto rascunho + protocolada.
      *
@@ -182,7 +182,7 @@ class SolicitacaoController extends Controller
     }
 
     /**
-     * Wizard de um NOVO rascunho (HU-061): só a etapa de início (tipo de serviço
+     * Wizard de um NOVO rascunho (HU-059): só a etapa de início (tipo de serviço
      * + empresa do dono). Renderiza a página do wizard sem solicitação — o POST
      * em store cria o rascunho e o fluxo segue na edição (continuar preenchendo).
      */
@@ -206,7 +206,7 @@ class SolicitacaoController extends Controller
     }
 
     /**
-     * Wizard de um rascunho EXISTENTE (HU-062..067, 141): continua o
+     * Wizard de um rascunho EXISTENTE (HU-060..065, 141): continua o
      * preenchimento (imóvel, atividades, documentos, simulação, revisão). Só o
      * dono em rascunho (ViabilityRequestPolicy::update, CA-04). O território e o
      * alerta de área voltam por flash da etapa de imóvel (transientes); a
@@ -244,7 +244,7 @@ class SolicitacaoController extends Controller
             // identificado (degrada honesto sem zona) e alerta de área×polígono.
             'territorio' => $request->session()->get('territorio'),
             'areaAlert' => $request->session()->get('areaAlert'),
-            // Resumo da solicitação por IA (HU-116) para conferência pré-protocolo
+            // Resumo da solicitação por IA (HU-108) para conferência pré-protocolo
             // — prop DEFERIDA (carregada sob demanda pelo card na etapa de revisão,
             // fora do load inicial). Ao resolver, dispara o resumo de forma gated e
             // idempotente (toggle ia_resumo off ou sem provedor ⇒ no-op; dedup por
@@ -260,7 +260,7 @@ class SolicitacaoController extends Controller
     }
 
     /**
-     * Tipos de serviço ATIVOS (HU-061 RN-005) para o select de início.
+     * Tipos de serviço ATIVOS (HU-059 RN-005) para o select de início.
      *
      * @return array<int, array<string, mixed>>
      */
@@ -414,7 +414,7 @@ class SolicitacaoController extends Controller
     }
 
     /**
-     * Resumo da solicitação sugerido pela IA (HU-116) para o card de conferência
+     * Resumo da solicitação sugerido pela IA (HU-108) para o card de conferência
      * da etapa de revisão — APENAS LEITURA do ledger ai_suggestions, escopado a
      * esta solicitação e ao tipo resumo_solicitacao, mais recentes primeiro. Não
      * decide nada: é sinal de conferência revisável, jamais afirmação de desfecho.
@@ -454,7 +454,7 @@ class SolicitacaoController extends Controller
     }
 
     /**
-     * Limite parametrizável de CNAEs complementares (HU-065) — comunicado na UI.
+     * Limite parametrizável de CNAEs complementares (HU-063) — comunicado na UI.
      */
     private function cnaesComplementaresMax(): int
     {

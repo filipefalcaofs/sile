@@ -48,7 +48,7 @@ use Inertia\Response as InertiaResponse;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Camada HTTP dos relatórios (HU-122..131/145): controller FINO que liga os
+ * Camada HTTP dos relatórios (HU-113..122/135): controller FINO que liga os
  * serviços route-free (15-03/05/06/07) e o contrato de exportação (15-02/08) à
  * retaguarda. Cada endpoint serve a tela Inertia com dado REAL E, quando vem
  * ?formato=, delega ao {@see ReportExporter} a exportação transversal (CSV/XLSX/
@@ -88,7 +88,7 @@ class RelatorioController extends Controller
     ) {}
 
     /**
-     * Indicadores de viabilidade (HU-123..128). Com ?formato=, exporta o conjunto
+     * Indicadores de viabilidade (HU-114..119). Com ?formato=, exporta o conjunto
      * de solicitações filtrado (SolicitacoesReportSource); senão audita a consulta
      * e renderiza a tela com as séries/taxas reais.
      */
@@ -132,7 +132,7 @@ class RelatorioController extends Controller
     }
 
     /**
-     * Tempo por etapa (HU-129). A exportação é SEMPRE o detalhamento por etapa:
+     * Tempo por etapa (HU-120). A exportação é SEMPRE o detalhamento por etapa:
      * a lista de sedes de escritório virtual migrou para o endpoint do próprio
      * domínio ({@see escritorioVirtual()} com ?recorte=sedes) — um endpoint, uma
      * família de relatório.
@@ -159,7 +159,7 @@ class RelatorioController extends Controller
     }
 
     /**
-     * Produtividade por analista (HU-130). O modo nominal (nome do analista) só é
+     * Produtividade por analista (HU-121). O modo nominal (nome do analista) só é
      * liberado sob relatorios.produtividade.nominal; sem ela, o escopo cai no
      * próprio usuário e os dados saem anonimizados (RN-007). O mesmo gate define
      * o estado do ReportSource quando se exporta.
@@ -185,7 +185,7 @@ class RelatorioController extends Controller
     }
 
     /**
-     * Quedas do fluxo expresso (HU-145): taxa de resposta + série temporal +
+     * Quedas do fluxo expresso (HU-135): taxa de resposta + série temporal +
      * ranking de motivos. Com ?formato=, exporta as quedas filtradas.
      */
     public function quedas(RelatorioFiltersRequest $request): InertiaResponse|Response
@@ -412,7 +412,7 @@ class RelatorioController extends Controller
     }
 
     /**
-     * Atendimento em contingência (relatório gerencial — HU-148): quanto do
+     * Atendimento em contingência (relatório gerencial — HU-137): quanto do
      * volume entra pelo canal de operador e por quê, com a participação sobre o
      * total protocolado no período e o ranking de motivos. Com ?formato=,
      * exporta o MESMO recorte pelo contrato único (ContingenciaReportSource —
@@ -441,7 +441,7 @@ class RelatorioController extends Controller
     }
 
     /**
-     * Falhas de comunicação (consulta operacional — HU-096): notificações que
+     * Falhas de comunicação (consulta operacional — HU-092): notificações que
      * falharam ou foram bloqueadas, por processo, com a quebra por canal. SEM
      * dados do destinatário (LGPD). Com ?formato=, exporta o MESMO recorte pelo
      * contrato único (ComunicacoesFalhaReportSource — RN-005); senão audita a

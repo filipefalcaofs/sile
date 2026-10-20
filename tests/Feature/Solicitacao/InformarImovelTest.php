@@ -12,9 +12,9 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Informar o imóvel (HU-062) e a área utilizada (HU-063) do rascunho: grava o
- * polígono de 4 pontos (GeoJSON é a fonte), complemento (texto livre — HU-139
- * adiado), ponto de referência e indicadores; identifica o território reusando o
+ * Informar o imóvel (HU-060) e a área utilizada (HU-061) do rascunho: grava o
+ * polígono de 4 pontos (GeoJSON é a fonte), complemento (texto livre, sem cadastro
+ * de edifícios), ponto de referência e indicadores; identifica o território reusando o
  * TerritoryService da Fase 4 (degrada honesto sem zona — nunca inventa); valida
  * a área declarada contra a do polígono com tolerância parametrizável (alerta,
  * não bloqueia — RN-004); e zera a simulação anterior (markSimulationStale —

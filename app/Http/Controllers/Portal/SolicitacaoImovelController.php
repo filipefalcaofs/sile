@@ -15,8 +15,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
 /**
- * Instrução do imóvel (HU-062) e da área (HU-063) do rascunho. Grava o polígono
- * (GeoJSON é a FONTE), complemento (texto livre — HU-139 adiado), ponto de
+ * Instrução do imóvel (HU-060) e da área (HU-061) do rascunho. Grava o polígono
+ * (GeoJSON é a FONTE), complemento (texto livre, sem cadastro de edifícios), ponto de
  * referência e indicadores; identifica o território reusando o TerritoryService
  * da Fase 4 (degrada honesto sem zona — NUNCA inventa); deriva a geometry
  * driver-aware (PropertyGeometryWriter, só pgsql); valida a área declarada

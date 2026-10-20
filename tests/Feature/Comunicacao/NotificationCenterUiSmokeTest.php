@@ -19,10 +19,10 @@ use Tests\TestCase;
 /**
  * Smoke do contrato página↔props da UI da central in-app e do histórico (11-09):
  * garante que as páginas Inertia REAIS renderizam o componente correto com as
- * props que as telas React consomem — central de notificações (HU-090) nos dois
+ * props que as telas React consomem — central de notificações (HU-086) nos dois
  * ambientes com o badge real (shared prop notificacoes.nao_lidas), a central de
- * pendências do requerente derivada de "Minhas solicitações" (HU-091) e o
- * histórico unificado de comunicações por processo (HU-096) no portal e na
+ * pendências do requerente derivada de "Minhas solicitações" (HU-087) e o
+ * histórico unificado de comunicações por processo (HU-092) no portal e na
  * gestão. As asserções de comportamento (escopo, anti-IDOR, auditoria, LGPD)
  * já vivem em NotificationCenterTest/ComunicacaoHistoricoTest (11-08); aqui
  * validamos só o casamento entre as páginas do 11-09 e o backend.

@@ -8,7 +8,7 @@ use Illuminate\Notifications\Notification;
 use Tests\TestCase;
 
 /**
- * Smoke do canal `database` NATIVO de Notifications (HU-090): com a tabela
+ * Smoke do canal `database` NATIVO de Notifications (HU-086): com a tabela
  * `notifications` migrada, um User (já Notifiable) recebe uma notificação no
  * canal database, ela passa a contar como não-lida e markAsRead grava read_at.
  * Base real da central in-app — sem regra de negócio, só o mecanismo de ponta a

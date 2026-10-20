@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Texto-padrão do parecer (HU-085) — biblioteca administrável: trechos pré-
+ * Texto-padrão do parecer (HU-081) — biblioteca administrável: trechos pré-
  * aprovados que o analista insere ao redigir o parecer. category agrupa por
  * tema, active liga/desliga sem excluir e version evolui o texto mantendo o
  * histórico (dados versionados, não código).

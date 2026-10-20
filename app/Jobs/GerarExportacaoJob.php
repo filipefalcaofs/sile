@@ -20,7 +20,7 @@ use RuntimeException;
 use Throwable;
 
 /**
- * Exportação ASSÍNCRONA acima do limiar (HU-131 RN-006), espelhando o
+ * Exportação ASSÍNCRONA acima do limiar (HU-122 RN-006), espelhando o
  * DecidirFluxoExpressoJob (tries/timeout/backoff/fila de config, failed()
  * auditado). Carrega só dados serializáveis — a CLASSE do source + o BAG de
  * filtros + formato + id do usuário; reconstrói a definition no worker via
@@ -123,7 +123,7 @@ class GerarExportacaoJob implements ShouldQueue
 
     /**
      * Disco de exportação parametrizado por constante técnica (config) — NUNCA
-     * público: o arquivo pode conter PII (HU-131/LGPD), baixável só por URL
+     * público: o arquivo pode conter PII (HU-122/LGPD), baixável só por URL
      * assinada (15-09).
      */
     private function resolverDisco(): string

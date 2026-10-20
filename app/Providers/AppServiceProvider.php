@@ -79,15 +79,15 @@ class AppServiceProvider extends ServiceProvider
 
         // Geocodificação pública inicial (Nominatim/OSM). A Fase 13 troca este
         // binding por self-host ou pela base geográfica da SEDUR sem tocar
-        // controllers ou telas (HU-029).
+        // controllers ou telas (HU-028).
         $this->app->bind(Geocoder::class, NominatimGeocoder::class);
 
-        // SQL espacial real (PostGIS) atrás de contrato (HU-031 a HU-035): o
+        // SQL espacial real (PostGIS) atrás de contrato (HU-030 a HU-034): o
         // TerritoryService e o motor da Fase 5 dependem da interface, não do
         // SQL — os testes dos consumidores usam um fake em memória.
         $this->app->bind(SpatialRepository::class, PostgisSpatialRepository::class);
 
-        // Precedentes da análise técnica (HU-142) atrás de contrato, espelhando
+        // Precedentes da análise técnica (HU-132) atrás de contrato, espelhando
         // o SpatialRepository: o PrecedentService depende da interface, não do
         // SQL espacial (ST_Intersects sobre property_polygon). Binding
         // INCONDICIONAL → PostgisPrecedentRepository; os testes SQLite injetam um
@@ -95,7 +95,7 @@ class AppServiceProvider extends ServiceProvider
         // produção.
         $this->app->bind(PrecedentRepository::class, PostgisPrecedentRepository::class);
 
-        // Resolução por inscrição imobiliária (HU-055) atrás de contrato: BFF
+        // Resolução por inscrição imobiliária (HU-053) atrás de contrato: BFF
         // SEDUR/SEFAZ. Toggle features.cadastro_imobiliario desligado degrada
         // honesto (nunca inventa ponto).
         $this->app->bind(PropertyRegistryLookup::class, SedurSefazPropertyRegistryLookup::class);
@@ -113,8 +113,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->scoped(GeoServerWfsZonaClient::class);
         $this->app->scoped(GeoServerClassificacaoViariaClient::class);
 
-        // Fonte de feriados (HU-137) atrás de contrato: o BusinessDeadlineCalculator
-        // (HU-129) desconta os feriados ativos via este provider para medir
+        // Fonte de feriados (HU-128) atrás de contrato: o BusinessDeadlineCalculator
+        // (HU-120) desconta os feriados ativos via este provider para medir
         // duração em tempo útil. Singleton porque a lista é cacheada (TTL técnico).
         // Sem feriado municipal cadastrado, degrada honesto (hasOfficialCalendar
         // = false) — nunca inventa feriado. A lista oficial é pendência SEDUR.
@@ -127,7 +127,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(SefazViabilidadeGateway::class, UnavailableSefazViabilidadeGateway::class);
         $this->app->bind(BapRegistry::class, UnavailableBapRegistry::class);
 
-        // Canal de notificação por WhatsApp (HU-095) BLOQUEADO honesto: não há
+        // Canal de notificação por WhatsApp (HU-091) BLOQUEADO honesto: não há
         // provedor/credencial (API comercial) — o binding default LANÇA
         // WhatsAppUnavailableException (a transmissão não ocorre), nunca simula. O
         // toggle features.notificacao_whatsapp nasce OFF (11-02). A Fase 13 troca SÓ
@@ -135,12 +135,12 @@ class AppServiceProvider extends ServiceProvider
         // o WhatsAppChannel que o consome.
         $this->app->bind(WhatsAppGateway::class, UnavailableWhatsAppGateway::class);
 
-        // Detectores de abuso (HU-149) registrados por TAG ADITIVA: o
+        // Detectores de abuso (HU-138) registrados por TAG ADITIVA: o
         // AbuseDetectionService recebe iterable<AbuseDetector> resolvido por ela.
         // A 12-06 registrou os 2 de volume; a 12-08 ACRESCENTA os 3 estruturais à
         // MESMA tag sem tocar o serviço (passa a iterar 5). Todos determinísticos
         // sobre dado real (queries Eloquent, SEM IA). O EscritorioVirtualEncadeado
-        // fica para a 2ª onda (depende de marcação estruturada — HU-139 texto livre).
+        // fica para a 2ª onda (depende de marcação estruturada — o complemento é texto livre).
         $this->app->tag([
             VolumeCnpjDetector::class,
             VolumeContadorDetector::class,
@@ -167,13 +167,13 @@ class AppServiceProvider extends ServiceProvider
         // eventos do Laravel (cada um faz type-hint do evento no handle): a poda
         // de retenção (ModelsPruned → AuditModelsPruned, RN-002/SC#1), o envio de
         // notificação (NotificationSent → LogNotificationSent) e o PRIMEIRO evento
-        // de domínio (SolicitacaoProtocolada → RegistrarTrilhaProtocolo, HU-068,
+        // de domínio (SolicitacaoProtocolada → RegistrarTrilhaProtocolo, HU-066,
         // que grava o marco da timeline e a auditoria de alto nível). NÃO registrar
         // manualmente aqui: o Event::listen duplicaria o registro (auditoria 2×).
         // Fases futuras só ADICIONAM classes de listener ao mesmo evento
         // (notificação EP11, elegibilidade EP09, resposta Regin EP13).
 
-        // Canal de notificação por WhatsApp (HU-095): driver customizado resolvido
+        // Canal de notificação por WhatsApp (HU-091): driver customizado resolvido
         // pelo container (injeta WhatsAppGateway + AuditService). É o dono único da
         // linha communications do canal whatsapp — marca enviado/bloqueado e audita
         // o bloqueio quando o provedor está indisponível (Fase 13).
@@ -226,7 +226,7 @@ class AppServiceProvider extends ServiceProvider
 
         config(['auth.passwords.users.expire' => (int) Settings::get('security.password_reset_expire', 60)]);
 
-        // Driver Socialite do Login Único (HU-151). Credenciais e URL são
+        // Driver Socialite do Login Único (HU-140). Credenciais e URL são
         // lidas dos parâmetros administráveis A CADA resolução do driver —
         // trocar staging/produção ou rotacionar credencial não exige deploy.
         Socialite::extend('govbr', function ($app): GovBrProvider {

@@ -25,7 +25,7 @@ class CompanyPolicy
 
     /**
      * Ver a empresa: qualquer vínculo do usuário efetivo (ativo OU encerrado
-     * — o histórico do vínculo continua visível, HU-027/HU-028).
+     * — o histórico do vínculo continua visível, HU-026/HU-027).
      */
     public function view(User $user, Company $company): bool
     {
@@ -36,7 +36,7 @@ class CompanyPolicy
 
     /**
      * Atualizar dados da empresa: somente com vínculo ATIVO do usuário
-     * efetivo (HU-024 CA-04).
+     * efetivo (HU-023 CA-04).
      */
     public function update(User $user, Company $company): bool
     {
@@ -47,7 +47,7 @@ class CompanyPolicy
     }
 
     /**
-     * Gerir CNAEs (principal/secundários): exige vínculo ATIVO (HU-025/026).
+     * Gerir CNAEs (principal/secundários): exige vínculo ATIVO (HU-024/025).
      */
     public function manageCnaes(User $user, Company $company): bool
     {
@@ -59,7 +59,7 @@ class CompanyPolicy
 
     /**
      * Encerrar o próprio vínculo: exige vínculo ATIVO do usuário efetivo
-     * (HU-028).
+     * (HU-027).
      */
     public function endLink(User $user, Company $company): bool
     {

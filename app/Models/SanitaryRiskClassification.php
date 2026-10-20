@@ -12,8 +12,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Classificação de risco SANITÁRIO de uma subclasse CNAE (planilha VISA),
- * dimensão SEPARADA do risco municipal e em tabela própria (HU-019/HU-047/
- * HU-048). Ligada a uma versão de regra (rule_version_id) — dado versionado,
+ * dimensão SEPARADA do risco municipal e em tabela própria (HU-018/HU-045/
+ * HU-046). Ligada a uma versão de regra (rule_version_id) — dado versionado,
  * nunca código. cnae_code é FK lógica para Cnae.code (dígitos). A carga
  * oficial vem do RiscoSanitarioImportService (upsert sem model events —
  * auditoria é o log explícito do relatório no seeder); o CRUD manual dos

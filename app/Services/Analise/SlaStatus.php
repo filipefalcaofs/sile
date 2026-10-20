@@ -3,7 +3,7 @@
 namespace App\Services\Analise;
 
 /**
- * Semáforo do SLA da fila de análise (HU-144), calculado ON-THE-FLY pelo
+ * Semáforo do SLA da fila de análise (HU-134), calculado ON-THE-FLY pelo
  * AnalysisSlaService a partir do analysis_due_at materializado — NUNCA
  * persistido como cor. Verde = dentro do prazo e abaixo do limiar; Amarelo =
  * atingiu o limiar parametrizável (analise.sla.semaforo.amarelo_percentual);

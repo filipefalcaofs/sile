@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * Camada geográfica versionada (HU-036 RN-004). Cada (type, version) é uma
+ * Camada geográfica versionada (HU-035 RN-004). Cada (type, version) é uma
  * carga; valid_to nulo é a versão vigente. Auditoria automática via
  * HasAuditoria (RN-002 — a carga registra origem/responsável/versão).
  */

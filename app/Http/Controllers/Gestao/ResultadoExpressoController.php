@@ -24,7 +24,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Consulta do resultado do fluxo expresso na retaguarda (HU-076/HU-078): lista
+ * Consulta do resultado do fluxo expresso na retaguarda (HU-072/HU-074): lista
  * filtrável das solicitações DECIDIDAS (deferida/indeferida) e o detalhe
  * imutável da ViabilityDecision (veredito consolidado, decisão por CNAE,
  * versões de regra, fundamentação, número TVL e motivo). SOMENTE LEITURA — a
@@ -260,7 +260,7 @@ class ResultadoExpressoController extends Controller
         return Inertia::render('gestao/resultados-expresso/show', [
             'decisao' => (new ViabilityDecisionResource($decision))->resolve(),
             'transmissao' => $this->transmissao($viabilityRequest),
-            // Explicabilidade passo a passo (HU-099): projeção PURA do
+            // Explicabilidade passo a passo (HU-095): projeção PURA do
             // decision_trace gravado (RN-005), sem reexecutar o motor; legado
             // degrada honesto. Prop ADITIVA sob o mesmo gate consultar-solicitacoes.
             'explicacao' => (new DecisionExplanationResource($this->explanations->explain($decision)))->resolve(),
@@ -268,7 +268,7 @@ class ResultadoExpressoController extends Controller
     }
 
     /**
-     * Status honesto de cada canal de transmissão (HU-104/HU-110) lido da
+     * Status honesto de cada canal de transmissão (HU-100/HU-103) lido da
      * auditoria de integrações: o resultado mais recente por canal vira o
      * estado exibido — NUNCA "enviado" sem registro de sucesso real.
      *

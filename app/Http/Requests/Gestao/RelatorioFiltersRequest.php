@@ -7,7 +7,7 @@ use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
- * Filtros comuns das telas de relatório (HU-122..131): o vocabulário que os
+ * Filtros comuns das telas de relatório (HU-113..122): o vocabulário que os
  * indicadores route-free consomem (período/setor/bairro/CNAE/categoria/analista).
  * A autorização é o middleware permission:consultar-relatorios da rota — aqui só
  * a validação. {@see toReportFilters()} normaliza os filtros no BAG serializável

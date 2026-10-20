@@ -17,8 +17,8 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Manutenção dos setores da SEDUR (HU-138) — a "caixa de análise" da
- * distribuição (pré-requisito de 10-07/HU-144). Dado administrável (CRUD), não
+ * Manutenção dos setores da SEDUR (HU-129) — a "caixa de análise" da
+ * distribuição (pré-requisito de 10-07/HU-134). Dado administrável (CRUD), não
  * registry de código: o gestor/admin cria/edita o setor e vincula analistas
  * (N:N — um analista cobre vários setores, RN-005). RN-004: setor com processos
  * em aberto NÃO é excluído — só inativado (toggleActivation preserva histórico e

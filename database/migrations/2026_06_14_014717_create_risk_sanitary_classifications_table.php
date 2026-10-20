@@ -10,7 +10,7 @@ return new class extends Migration
      * Classificação de risco SANITÁRIO por subclasse CNAE (planilha VISA),
      * dimensão SEPARADA do risco municipal — tabela própria, ligada a uma
      * versão de regra (rule_versions, domínio risco_sanitario). Dado
-     * versionado, nunca código (HU-019/HU-047/HU-048). TABULAR (sem PostGIS):
+     * versionado, nunca código (HU-018/HU-045/HU-046). TABULAR (sem PostGIS):
      * roda em SQLite. cnae_code é FK lógica para Cnae.code (dígitos, mesma
      * normalização). unique(rule_version_id, cnae_code) garante uma
      * classificação por CNAE em cada versão e habilita o upsert idempotente do

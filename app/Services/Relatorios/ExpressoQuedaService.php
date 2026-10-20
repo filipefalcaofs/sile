@@ -15,8 +15,8 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Relatório de quedas do fluxo expresso (HU-145), fechando o ciclo de melhoria
- * contínua do expresso (medir → parametrizar HU-143 → medir) sobre DADO REAL: a
+ * Relatório de quedas do fluxo expresso (HU-135), fechando o ciclo de melhoria
+ * contínua do expresso (medir → parametrizar HU-133 → medir) sobre DADO REAL: a
  * taxa de resposta expressa, sua série temporal, o ranking de motivos da queda
  * (sobre a captura do 15-07) e o drill-down até os processos que caíram.
  *
@@ -45,7 +45,7 @@ class ExpressoQuedaService
     ];
 
     /**
-     * Taxa de resposta expressa no período (HU-145 RN-002): respondidas pelo
+     * Taxa de resposta expressa no período (HU-135 RN-002): respondidas pelo
      * expresso ÷ elegíveis. `taxa` é null sem base no período (honesto, jamais
      * 0% fabricado); `meta` vem de `relatorios.expresso.meta_taxa` (RN-004) e é
      * null quando não definida — NUNCA inventada.
@@ -66,7 +66,7 @@ class ExpressoQuedaService
     }
 
     /**
-     * Série temporal da taxa por dia dentro da janela (HU-145): para cada dia
+     * Série temporal da taxa por dia dentro da janela (HU-135): para cada dia
      * com entrada no expresso, respondidas ÷ elegíveis do dia. A janela é o
      * período do filtro ou, na ausência, os últimos `relatorios.expresso.janela_dias`
      * (parametrizável). Lista ordenada por dia; sem base no período → vazia.
@@ -118,7 +118,7 @@ class ExpressoQuedaService
     }
 
     /**
-     * Ranking dos motivos da queda por gatilho (HU-145): {@see ExpressoQueda}
+     * Ranking dos motivos da queda por gatilho (HU-135): {@see ExpressoQueda}
      * agrupada por `tipo_gatilho` com `count(*)` desc. O gatilho null (motor
      * degradado ou queda sem gatilho de contexto) é rotulado 'não classificado'
      * — honesto, jamais somado a um gatilho real (RN-001).
@@ -146,7 +146,7 @@ class ExpressoQuedaService
     }
 
     /**
-     * Drill-down dos processos que CAÍRAM ao analista (HU-145): reusa o filtro
+     * Drill-down dos processos que CAÍRAM ao analista (HU-135): reusa o filtro
      * completo do SAPS ({@see ProcessoQueryService::filtered}, RN-005) recortado
      * aos processos com queda registrada — o caminho até as divergências
      * analista×motor ({@see App\Models\AnalysisDivergence}) na ficha de cada um.

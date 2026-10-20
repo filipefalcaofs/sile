@@ -13,7 +13,7 @@ use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 /**
- * Ledger imutável `communications` (HU-096): fonte de verdade do histórico de
+ * Ledger imutável `communications` (HU-092): fonte de verdade do histórico de
  * comunicações POR PROCESSO. Prova os casts tipados (3 enums + meta array +
  * carimbos), as relações e os marcadores honestos que espelham o EmailLog —
  * cada um muda status + carimbo, NUNCA inventando "enviado". Inclui a guarda

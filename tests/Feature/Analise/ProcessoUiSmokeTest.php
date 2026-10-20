@@ -18,7 +18,7 @@ use Tests\TestCase;
 
 /**
  * Smoke do contrato página↔props da UI de retaguarda (10-16): garante que a
- * consulta (HU-082), a fila (HU-144) e o detalhe renderizam o componente Inertia
+ * consulta (HU-078), a fila (HU-134) e o detalhe renderizam o componente Inertia
  * correto com as props essenciais que as telas React consomem. As asserções de
  * comportamento (filtros, semáforo, segurança) já estão em 10-14
  * (ProcessoConsultaTest/ProcessoFilaTest); aqui validamos só o casamento entre as

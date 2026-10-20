@@ -21,7 +21,7 @@ use Tests\Support\Geo\FakeSpatialRepository;
 use Tests\TestCase;
 
 /**
- * Pré-análise acionada pelo encaminhamento (HU-140): o listener AUTO-DESCOBERTO
+ * Pré-análise acionada pelo encaminhamento (HU-130): o listener AUTO-DESCOBERTO
  * PreAnalisarProcesso reage ao evento EncaminhadoParaAnalise (type-hint no handle,
  * NUNCA Event::listen — lição das Fases 8/9) e dispara o PreAnaliseService, que
  * cria a analysis_records revisão 1.

@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Vínculo do usuário local com a conta GOV.BR (HU-151).
+ * Vínculo do usuário local com a conta GOV.BR (HU-140).
  *
  * Sem trait de auditoria automática: cada autenticação atualiza
  * last_authenticated_at e geraria ruído; a trilha fica nos registros

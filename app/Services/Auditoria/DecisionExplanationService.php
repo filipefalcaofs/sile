@@ -7,7 +7,7 @@ use App\Models\ViabilityDecision;
 use App\Services\Decisao\DecisionTextCatalog;
 
 /**
- * Explicabilidade passo a passo das decisões (HU-099 RN-004/RN-005) como
+ * Explicabilidade passo a passo das decisões (HU-095 RN-004/RN-005) como
  * PROJEÇÃO PURA: LÊ o decision_trace gravado na 12-02 (+ rules_versions +
  * fundamentacao) e devolve a visualização ordenada por CNAE (entrada → risco →
  * LOUOS enquadramento de uso / 10 / 11A → consolidação → desfecho), refletindo

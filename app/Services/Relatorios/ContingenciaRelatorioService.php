@@ -9,7 +9,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Relatório gerencial de atendimento em contingência (HU-148): responde "quanto
+ * Relatório gerencial de atendimento em contingência (HU-137): responde "quanto
  * do volume entra pelo canal de operador e por quê?" — indicador de GOVERNANÇA
  * enquanto o canal oficial (Regin) não volta: uma participação crescente sinaliza
  * que a integração segue indisponível. Recorte pelo protocolo no período; a

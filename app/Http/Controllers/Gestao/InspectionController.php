@@ -318,7 +318,7 @@ class InspectionController extends Controller
 
     /**
      * Anexa foto/documento à ficha: disk parametrizado (NUNCA público), sha256
-     * real do conteúdo e metadados — espelha os anexos da solicitação (HU-066).
+     * real do conteúdo e metadados — espelha os anexos da solicitação (HU-064).
      */
     public function storeAnexo(InspectionAttachmentRequest $request, ViabilityRequest $viabilityRequest): RedirectResponse
     {

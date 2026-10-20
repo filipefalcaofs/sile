@@ -9,7 +9,7 @@ use App\Services\Abuso\Contracts\AbuseDetector;
 use App\Services\Abuso\DetectionWindow;
 
 /**
- * HU-149 (estrutural): o MESMO polígono de imóvel declarado em ENDEREÇOS
+ * HU-138 (estrutural): o MESMO polígono de imóvel declarado em ENDEREÇOS
  * DISTINTOS na janela — sinal de geometria "reaproveitada" para forçar um local
  * conveniente. Determinístico sobre dado real, SEM IA: agrupa viability_requests
  * por uma CHAVE NORMALIZADA do geojson (hash do anel canonicalizado — roda em

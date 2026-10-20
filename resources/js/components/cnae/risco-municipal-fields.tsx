@@ -38,7 +38,7 @@ const SIM_NAO_OPTIONS = [
 
 /**
  * Seção "Classificação de risco" da ficha do CNAE: grau de risco municipal
- * (Decreto 41.758/2026) e as flags de RT/fator multiplicador (HU-047
+ * (Decreto 41.758/2026) e as flags de RT/fator multiplicador (HU-045
  * RN-010). Compartilhada entre criar e editar — os mesmos 5 campos.
  */
 export default function RiscoMunicipalFields({

@@ -13,7 +13,7 @@ use InvalidArgumentException;
 use Tests\TestCase;
 
 /**
- * Dimensão SANITÁRIA de risco (HU-019/HU-047/HU-048) a partir do dado oficial
+ * Dimensão SANITÁRIA de risco (HU-018/HU-045/HU-046) a partir do dado oficial
  * real (planilha unificada CNAE da Vigilância Sanitária). A VISA tem três
  * níveis próprios — Baixo, Médio e Alto — DISTINTOS dos níveis municipais
  * (baixo_a/baixo_b/alto): aqui existe "médio". fromVisa() mapeia os rótulos da

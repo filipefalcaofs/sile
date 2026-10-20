@@ -9,7 +9,7 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Gatilhos CNAE (semi-expresso) como TABELA parametrizada (HU-049/HU-051): o
+ * Gatilhos CNAE (semi-expresso) como TABELA parametrizada (HU-047/HU-049): o
  * seeder semeia os 3 gatilhos conhecidos, todos ativos por padrão e ativáveis
  * por interface. Cada gatilho acionado derruba o encaminhamento para análise
  * técnica com motivo auditável — dado, nunca hardcode.

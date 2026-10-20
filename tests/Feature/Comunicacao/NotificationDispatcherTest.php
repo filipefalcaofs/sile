@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Notification as NotificationFacade;
 use Tests\TestCase;
 
 /**
- * NotificationDispatcher (HU-090/094): o ponto único onde os toggles de feature
+ * NotificationDispatcher (HU-086/090): o ponto único onde os toggles de feature
  * e o mapa de canais (HU-014) viram envio real + ledger honesto. Resolve os
  * canais SÍNCRONO no disparo (notificacoes.mapa_canais ∩ features.notificacao_*),
  * cria as linhas `communications` (na_fila dos habilitados; desativado + auditoria

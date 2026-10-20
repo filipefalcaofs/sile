@@ -15,9 +15,9 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Backend do mapa territorial da gestão (HU-030/HU-036/HU-037). A página lista
+ * Backend do mapa territorial da gestão (HU-029/HU-035/HU-036). A página lista
  * as camadas vigentes com seus status (zona/lote explícitos como pendentes de
- * fonte — HU-036) e o limiar de sobreposição parametrizado; os endpoints
+ * fonte — HU-035) e o limiar de sobreposição parametrizado; os endpoints
  * identificar (TerritoryService) e validar-localizacao (LocationValidationService)
  * operam a lógica real e são auditados (RN-002). Tudo protegido por
  * consultar-territorio (gate no middleware permission:, PADRÃO CROSS-GUARD do
@@ -58,7 +58,7 @@ class TerritoryController extends Controller
     }
 
     /**
-     * Identifica zona/via/lote/bairro/restrições por ponto (HU-030/HU-036). A
+     * Identifica zona/via/lote/bairro/restrições por ponto (HU-029/HU-035). A
      * auditoria é feita dentro do TerritoryService (event identificacao); o
      * controller só repassa o resultado como JSON (contrato da UI 04-07).
      */
@@ -74,7 +74,7 @@ class TerritoryController extends Controller
 
     /**
      * Valida a localização por sobreposição do polígono informado com o lote
-     * oficial (HU-037 RN-004). Audita explicitamente o resultado e, quando há
+     * oficial (HU-036 RN-004). Audita explicitamente o resultado e, quando há
      * alerta de baixa sobreposição, registra-o para o analista (RN-004). Hoje o
      * lote é pendente SEDUR e o resultado comunica "indisponível" (sem fachada).
      */

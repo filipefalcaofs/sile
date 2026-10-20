@@ -16,7 +16,7 @@ use Illuminate\Support\Str;
 
 /**
  * Documento de INDEFERIMENTO fundamentado em PDF no backoffice — espelho do
- * TvlPdfService (HU-132): emitido sob demanda APÓS a decisão indeferida (fluxo
+ * TvlPdfService (HU-123): emitido sob demanda APÓS a decisão indeferida (fluxo
  * expresso OU análise humana), para arquivo, atendimento presencial e
  * auditoria. A fonte é a MESMA ViabilityDecision (fonte única da decisão e da
  * explicabilidade), somada ao parecer/motivos da ficha finalizada quando

@@ -36,7 +36,7 @@ use Illuminate\Database\Seeder;
  *     NotificarRespostaPendencia avisa o analista (in-app + ledger).
  *
  * Dados FICTÍCIOS, lógica REAL (entrega-funcional): as comunicações nascem do
- * fluxo de verdade, com o ledger honesto (HU-096) e o canal database nativo. O
+ * fluxo de verdade, com o ledger honesto (HU-092) e o canal database nativo. O
  * WhatsApp permanece OFF (degradação honesta — provedor real é Fase 13).
  *
  * Gate de ambiente: NUNCA em produção (igual aos demais seeders dev). Diferente
@@ -94,7 +94,7 @@ class ComunicacaoDevSeeder extends Seeder
      * dentro — auditada + timeline). Em dev pgsql com fila síncrona o gatilho do
      * expresso pode já ter encaminhado (sem zona → em_analise): nesse caso a
      * transição é pulada e o estado é respeitado. Depois coloca na caixa do setor
-     * e o analista ASSUME (HU-081), deixando o processo pronto para a pendência.
+     * e o analista ASSUME (HU-077), deixando o processo pronto para a pendência.
      *
      * @param  ComunicacaoDevContexto  $ctx
      */
@@ -123,7 +123,7 @@ class ComunicacaoDevSeeder extends Seeder
             return null;
         }
 
-        // Caixa do setor de triagem + atribuição ao analista (HU-080/081). O
+        // Caixa do setor de triagem + atribuição ao analista (HU-076/077). O
         // roteamento automático ao setor é pendência SEDUR; no dev a caixa é a de
         // triagem (igual ao AnaliseDevSeeder). forceFill: sector_id fora do fillable.
         if ($request->sector_id === null) {

@@ -3,7 +3,7 @@
 namespace App\Enums;
 
 /**
- * Veredito consolidado do parecer de viabilidade locacional da LOUOS (HU-044),
+ * Veredito consolidado do parecer de viabilidade locacional da LOUOS (HU-042),
  * produzido pelo motor a partir dos Quadros 7/10/11/11A. `Pendente` é a
  * degradação honesta quando uma dimensão necessária está indisponível (ex.:
  * zona pendente SEDUR para o Quadro 10) — o motor NUNCA decide permitido/não

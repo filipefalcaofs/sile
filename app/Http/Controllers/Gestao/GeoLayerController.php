@@ -16,7 +16,7 @@ use InvalidArgumentException;
 use JsonException;
 
 /**
- * Gestão das camadas geográficas versionadas pela interface (HU-036,
+ * Gestão das camadas geográficas versionadas pela interface (HU-035,
  * parametrização 3.1): o admin importa um GeoJSON oficial pela retaguarda —
  * o MESMO GeoJsonLayerImporter do `geo:importar` abre a nova versão vigente
  * (a anterior é fechada, nunca apagada) e audita o diff da carga (RN-002/005).

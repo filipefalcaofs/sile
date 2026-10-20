@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * Payload de leitura do setor (HU-138) para a retaguarda: nome, situação, os
+ * Payload de leitura do setor (HU-129) para a retaguarda: nome, situação, os
  * analistas vinculados (N:N — RN-005) e os contadores de analistas e de
  * processos. Insumo da caixa de distribuição (10-07) e das telas de console
  * (10-17).

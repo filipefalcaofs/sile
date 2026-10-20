@@ -11,7 +11,7 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Manutenção dos gatilhos semi-expresso (HU-049/HU-051, parametrização HU-014):
+ * Manutenção dos gatilhos semi-expresso (HU-047/HU-049, parametrização HU-014):
  * o administrador/gestor edita título/motivo e liga/desliga os gatilhos pela
  * retaguarda, atrás da permissão manter-gatilhos-risco. SEM criar/excluir —
  * o código é enum-bound (TipoGatilho) com comportamento no motor; uma linha

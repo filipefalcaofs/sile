@@ -10,7 +10,7 @@ use Inertia\Testing\AssertableInertia;
 use Tests\TestCase;
 
 /**
- * Página PÚBLICA da consulta de viabilidade (HU-054/055/056/057/058/059): agora
+ * Página PÚBLICA da consulta de viabilidade (HU-052/053/054/055/056/057): agora
  * que `portal/viabilidade/consulta.tsx` existe em disco (07-08), o teste asserta
  * o componente Inertia renderizado e o reflexo honesto do toggle
  * `features.consulta_viabilidade` na prop `consultaEnabled` — o que não era

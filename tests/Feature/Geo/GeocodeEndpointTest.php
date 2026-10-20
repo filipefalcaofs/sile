@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 /**
- * HU-029 — endpoint da gestão de geocodificação de endereço (CA-01..CA-04):
+ * HU-028 — endpoint da gestão de geocodificação de endereço (CA-01..CA-04):
  * auditado em toda saída, protegido por permissão consultar-territorio e
  * throttle, com degradação comunicada quando o toggle está desligado.
  *

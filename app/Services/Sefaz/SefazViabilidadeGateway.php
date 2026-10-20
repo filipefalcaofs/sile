@@ -8,7 +8,7 @@ use App\Models\ViabilityRequest;
 
 /**
  * Contrato de envio à SEFAZ municipal. Dois canais distintos, um provider só:
- * sendViabilidade transmite o DEFERIMENTO de uma viabilidade (HU-110, quem
+ * sendViabilidade transmite o DEFERIMENTO de uma viabilidade (HU-103, quem
  * chama — listener 09-09 — decide); sendEventoEscritorioVirtual comunica uma
  * mudança de condição cadastral de escritório virtual já deferida (RN-EV-09).
  * O provider concreto é substituível por binding — a Fase 13 liga a SEFAZ

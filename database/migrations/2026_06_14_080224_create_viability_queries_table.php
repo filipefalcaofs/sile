@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Histórico imutável de consultas prévias de viabilidade (HU-060). Cada
+     * Histórico imutável de consultas prévias de viabilidade (HU-058). Cada
      * linha é um SNAPSHOT da consulta: a entrada normalizada, o resultado
      * consolidado e as versões de TODAS as regras aplicadas (território/LOUOS/
      * risco) — auditável e reproduzível. Espelha a imutabilidade de access_logs

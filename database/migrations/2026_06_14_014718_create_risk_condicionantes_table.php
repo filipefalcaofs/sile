@@ -9,7 +9,7 @@ return new class extends Migration
     /**
      * Condicionante operacionalizada como PERGUNTA ao requerente cuja resposta
      * reclassifica o risco (mecanismo "DI" — ex.: produto não artesanal vira
-     * Alto Risco; HU-019/HU-048, RN-004/005/008). Ligada a uma versão de regra
+     * Alto Risco; HU-018/HU-046, RN-004/005/008). Ligada a uma versão de regra
      * (rule_versions); cnae_code é nullable porque a condicionante pode ser
      * geral (sem CNAE) ou específica de uma subclasse. regra_reclassificacao é
      * jsonb (shape variável do "DI") — vira json em SQLite. TABULAR: roda em

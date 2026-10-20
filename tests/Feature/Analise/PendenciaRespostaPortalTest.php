@@ -13,7 +13,7 @@ use Inertia\Testing\AssertableInertia;
 use Tests\TestCase;
 
 /**
- * Resposta da pendência pelo portal (HU-084 — "Minhas solicitações"): só o dono
+ * Resposta da pendência pelo portal (HU-080 — "Minhas solicitações"): só o dono
  * (ou representante, mecanismo da Fase 1) acessa e responde a própria pendência;
  * responder reabre a análise (em_pendencia→em_analise). Terceiro → 403 auditado
  * (CA-04). Pendência de outra solicitação → 404 (anti-IDOR). Já respondida →

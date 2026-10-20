@@ -10,9 +10,9 @@ use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 /**
- * Fundação de regras versionadas (HU-019/HU-020/HU-053): os enums de domínio
+ * Fundação de regras versionadas (HU-018/HU-019/HU-051): os enums de domínio
  * e de vigência espelham a disciplina do GeoLayer (case + label pt-BR) e
- * acrescentam o estado rascunho (sandbox HU-143) e a sensibilidade do domínio
+ * acrescentam o estado rascunho (sandbox HU-133) e a sensibilidade do domínio
  * (publicação por quatro olhos). Os scopes (vigente/naData/versao) reproduzem a
  * vigência por linhas (datas) — provados em SQLite, sem PostGIS.
  */

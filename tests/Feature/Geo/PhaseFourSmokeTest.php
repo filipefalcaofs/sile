@@ -10,7 +10,7 @@ use PHPUnit\Framework\Attributes\Group;
 use Tests\PostgisTestCase;
 
 /**
- * Smoke end-to-end da Fase 4 (HU-029 a HU-037) contra PostGIS REAL sobre o
+ * Smoke end-to-end da Fase 4 (HU-028 a HU-036) contra PostGIS REAL sobre o
  * snapshot oficial COMMITADO do GeoSalvador (database/data/geo/), SEM rede:
  * golden points conhecidos de Salvador → bairro oficial esperado via
  * TerritoryService::identify, com zona/lote comunicados como indisponíveis
@@ -48,7 +48,7 @@ class PhaseFourSmokeTest extends PostgisTestCase
         // fase (FALHA), nunca skip.
         $this->assertFileExists(
             database_path('data/geo/bairros.geojson'),
-            'Snapshot oficial de bairros (HU-034) ausente — bloqueio da fase, nunca skip.',
+            'Snapshot oficial de bairros (HU-033) ausente — bloqueio da fase, nunca skip.',
         );
     }
 
@@ -74,7 +74,7 @@ class PhaseFourSmokeTest extends PostgisTestCase
             $this->assertSame($bairro->version, $resultado['bairro']['versao_camada'], "{$marco}: versão da camada de bairro registrada (RN-004).");
 
             // Zona e lote: base pendente SEDUR — comunicados como indisponível,
-            // NUNCA inventados (HU-031/HU-033, sem fachada).
+            // NUNCA inventados (HU-030/HU-032, sem fachada).
             $this->assertSame('indisponivel', $resultado['zona']['status'], "{$marco}: zona indisponível (pendente SEDUR).");
             $this->assertSame('Base de zoneamento pendente SEDUR', $resultado['zona']['motivo']);
             $this->assertSame('indisponivel', $resultado['lote']['status'], "{$marco}: lote indisponível (pendente SEDUR).");

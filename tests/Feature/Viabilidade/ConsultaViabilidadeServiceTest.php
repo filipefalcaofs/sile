@@ -21,7 +21,7 @@ use Tests\Support\SeedsTratamentoPlanilha;
 use Tests\TestCase;
 
 /**
- * Orquestrador da consulta prévia de viabilidade (HU-054 a HU-059): o
+ * Orquestrador da consulta prévia de viabilidade (HU-052 a HU-057): o
  * ConsultaViabilidadeService COMPÕE os motores reais (Geocoder → TerritoryService
  * → LouosEnquadramentoService → RiscoClassificationService) e AUDITA — sem
  * recomputar o veredito. A degradação honesta "sem zona → pendente" é verdade
@@ -225,7 +225,7 @@ class ConsultaViabilidadeServiceTest extends TestCase
 
     public function test_consulta_por_cnae_roda_risco_real_e_quadro7_sem_territorio(): void
     {
-        // HU-056/CA-01: sem endereço/inscrição não há ponto — o risco e o Quadro
+        // HU-054/CA-01: sem endereço/inscrição não há ponto — o risco e o Quadro
         // 7 por área rodam REAIS; o veredito locacional fica pendente (sem zona).
         $result = $this->service()->consultarPorCnae(self::CNAE_MINIMERCADO, 120.0, null, [11 => true]);
 
@@ -351,7 +351,7 @@ class ConsultaViabilidadeServiceTest extends TestCase
 
     public function test_inscricao_indisponivel_degrada_para_cnae_com_aviso_e_nunca_inventa_ponto(): void
     {
-        // HU-055/CA-03: com o binding REAL (base de lotes pendente SEDUR), a
+        // HU-053/CA-03: com o binding REAL (base de lotes pendente SEDUR), a
         // resolução do ponto degrada para a via CNAE — NUNCA inventa coordenada.
         $result = $this->service()->consultarPorInscricao('123456789', self::CNAE_MINIMERCADO, 120.0, [11 => true]);
 

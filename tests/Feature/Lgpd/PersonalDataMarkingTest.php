@@ -10,7 +10,7 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Marcação honesta de personal_data=true (LGPD HU-102) nos call sites REAIS de
+ * Marcação honesta de personal_data=true (LGPD HU-098) nos call sites REAIS de
  * leitura/gestão de dado pessoal de terceiro: detalhe do processo de um cidadão,
  * histórico de acessos de OUTRA conta e gestão de usuários. Mudança ADITIVA — só
  * acrescenta o parâmetro à auditoria já existente, sem mudar evento/descrição; a

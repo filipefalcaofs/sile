@@ -18,7 +18,7 @@ use Illuminate\Database\Eloquent\Collection;
  *
  * Duas ausências deliberadas: vistoria ocorre DENTRO da análise, então não é
  * faixa paralela; e queda do expresso é evento instantâneo, não consumo de
- * tempo — está no relatório de quedas (HU-145), não aqui.
+ * tempo — está no relatório de quedas (HU-135), não aqui.
  */
 class GargalosService
 {

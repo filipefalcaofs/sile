@@ -3,7 +3,7 @@
 namespace App\Enums;
 
 /**
- * Domínio de uma regra versionada (HU-019/HU-020/HU-053). Cabeçalho genérico
+ * Domínio de uma regra versionada (HU-018/HU-019/HU-051). Cabeçalho genérico
  * de versão (rule_versions) é tipado por domínio; as tabelas tipadas por
  * domínio (risk_classifications, risk_condicionantes, dimensão sanitária)
  * referenciam a versão. isSensitive() classifica o domínio que exige
@@ -17,7 +17,7 @@ enum RuleDomain: string
     case Condicionante = 'condicionante';
 
     // Quadros da LOUOS (Lei 9.148/2016) como domínios de regra versionada
-    // (Fase 5, HU-046): reusam o cabeçalho genérico rule_versions da Fase 6 —
+    // (Fase 5, HU-044): reusam o cabeçalho genérico rule_versions da Fase 6 —
     // cada Quadro territorial tem sua tabela tipada.
     case LouosQuadro10 = 'louos_quadro10';
     case LouosQuadro11a = 'louos_quadro11a';

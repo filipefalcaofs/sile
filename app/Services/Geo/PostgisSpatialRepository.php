@@ -6,7 +6,7 @@ use App\Models\GeoLayer;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Implementação real do SQL espacial sobre PostGIS (HU-031 a HU-035). Todo
+ * Implementação real do SQL espacial sobre PostGIS (HU-030 a HU-034). Todo
  * acesso filtra por `geo_layer_id` (a carga já resolvida pela vigência) e usa
  * as funções nativas do PostGIS — sem cálculo geométrico em PHP (Don't
  * Hand-Roll). O ponto entra sempre como (longitude, latitude): ST_MakePoint

@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Setores da SEDUR (HU-138) — a "caixa" de distribuição da análise técnica.
+     * Setores da SEDUR (HU-129) — a "caixa" de distribuição da análise técnica.
      * Cada setor agrupa os analistas (pivot sector_user N:N) que recebem os
      * processos encaminhados. active permite inativar sem excluir (RN: setor com
      * pendência não some — só deixa de receber novas distribuições).

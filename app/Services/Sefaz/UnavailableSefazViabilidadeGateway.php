@@ -8,7 +8,7 @@ use App\Models\ViabilityRequest;
 
 /**
  * Provider INDISPONÍVEL do envio à SEFAZ municipal: o contrato e a homologação
- * estão PENDENTES (Fase 13, HU-110). Sem canal oficial, NUNCA fingimos o envio —
+ * estão PENDENTES (Fase 13, HU-103). Sem canal oficial, NUNCA fingimos o envio —
  * degradação honesta, jamais adaptador falso. Cobre os dois canais do contrato:
  * o listener que envia o deferimento (09-09) e a comunicação de eventos de
  * escritório virtual (RN-EV-09) capturam a exceção e registram a pendência

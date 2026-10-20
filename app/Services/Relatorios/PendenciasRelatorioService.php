@@ -10,7 +10,7 @@ use Illuminate\Support\Carbon;
 /**
  * Relatório operacional de pendências/exigências: responde "quantas exigências
  * abertas, quantas vencidas, qual o tempo médio de resposta do requerente e
- * quantas expiraram?" sobre as analysis_pendencies REAIS (HU-083/084). O
+ * quantas expiraram?" sobre as analysis_pendencies REAIS (HU-079/080). O
  * resumo agrega em SQL (nunca loop PHP sobre coleção carregada); o tempo médio
  * de resposta é em minutos CORRIDOS (o prazo é do cidadão, não da SEDUR) via
  * cursor — null sem amostras (honesto, nunca um tempo inventado). Route-free

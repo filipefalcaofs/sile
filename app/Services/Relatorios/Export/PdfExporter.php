@@ -7,7 +7,7 @@ use Barryvdh\DomPDF\PDF as DomPdf;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Driver PDF do contrato de exportação (HU-131) — dompdf sobre o Blade genérico
+ * Driver PDF do contrato de exportação (HU-122) — dompdf sobre o Blade genérico
  * `relatorios.relatorio`, espelhando o TvlPdfService. Layout Operacional (A4 paisagem) do Report Design System. O documento traz o rodapé
  * "Total de registros: N" + data/hora + filtros aplicados (CA-07/RN-010). O PDF
  * fica abaixo do limiar assíncrono, então carrega todas as linhas com ->get()

@@ -40,7 +40,7 @@ use Illuminate\Support\Facades\DB;
  *     evidência `analise:decidir <id> --finalizar`.
  *  2. DEFERIDO PELO ANALISTA (ficha finalizada → deferida + TVL) e, sobre ele,
  *     um encaminhamento à MALHA FINA (corrige o bug legado: atinge deferido).
- *  3. EM PENDÊNCIA (pendência aberta — ciclo HU-083/084 interno).
+ *  3. EM PENDÊNCIA (pendência aberta — ciclo HU-079/080 interno).
  *
  * ROTEAMENTO AO SETOR — pendência honesta: o FluxoExpressoService deixa o
  * sector_id NULO ao encaminhar (a regra de roteamento automático ao setor é
@@ -123,7 +123,7 @@ class AnaliseDevSeeder extends Seeder
      * Estágio 2 — DEFERIDO PELO ANALISTA + MALHA FINA: a ficha é finalizada e a
      * decisão humana DEFERE de verdade (ViabilityDecision flow 'analise_tecnica'
      * + TVL); em seguida o processo é encaminhado à malha fina (revisão sobre um
-     * deferido — RN-001 da HU-136).
+     * deferido — RN-001 da HU-127).
      *
      * @param  AnaliseDevContexto  $ctx
      */
@@ -165,7 +165,7 @@ class AnaliseDevSeeder extends Seeder
 
     /**
      * Estágio 3 — EM PENDÊNCIA: o analista abre uma pendência ao requerente,
-     * movendo o processo para em_pendencia (ciclo HU-083/084 interno).
+     * movendo o processo para em_pendencia (ciclo HU-079/080 interno).
      *
      * @param  AnaliseDevContexto  $ctx
      */

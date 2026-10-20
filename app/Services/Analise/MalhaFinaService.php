@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Throwable;
 
 /**
- * Malha fina (HU-136): encaminhamento humano de processo decidido pelo fluxo
+ * Malha fina (HU-127): encaminhamento humano de processo decidido pelo fluxo
  * expresso, para submetê-lo à análise humana. Liga a flag in_fine_mesh e grava
  * fine_mesh_referrals, SEM transicionar o status. Processo que já está no eixo
  * de análise humana não é elegível (RN-005). O motivo é OBRIGATÓRIO
@@ -56,7 +56,7 @@ class MalhaFinaService
     }
 
     /**
-     * Caminho de SISTEMA (aditivo, HU-149): encaminha um processo à malha fina SEM
+     * Caminho de SISTEMA (aditivo, HU-138): encaminha um processo à malha fina SEM
      * ator humano (referred_by_user_id = null) quando um detector de abuso supera o
      * limiar. Espelha registrar() — cria o fine_mesh_referrals, liga in_fine_mesh
      * via forceFill e audita por processo (marcador ator=sistema, RN-002), SEM

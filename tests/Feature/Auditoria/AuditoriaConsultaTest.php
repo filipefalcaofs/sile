@@ -12,14 +12,14 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Consulta unificada da trilha de auditoria (HU-100) e histórico de alterações
- * (HU-098) direto sobre a espinha activity_log, server-driven (espelha o
+ * Consulta unificada da trilha de auditoria (HU-096) e histórico de alterações
+ * (HU-094) direto sobre a espinha activity_log, server-driven (espelha o
  * ProcessoQueryService): filtros REAIS por período, usuário (causer), entidade
  * (subject), ação (log_name/event) e resultado, do mais recente ao mais antigo,
  * sem materializar nada. A fonte "alteracoes" recorta só os registros com diff
  * (attribute_changes) e a fonte "acessos" lista o histórico GLOBAL de
  * access_logs. O ActivityResource minimiza o payload (sem despejar properties
- * cruas) e expõe o diff para a HU-098.
+ * cruas) e expõe o diff para a HU-094.
  */
 class AuditoriaConsultaTest extends TestCase
 {

@@ -18,7 +18,7 @@ use Tests\TestCase;
 
 /**
  * Retrofit dos DOIS CSVs históricos (AuditoriaController e ProcessoController) ao
- * contrato único de exportação (HU-131/RN-009): os streamings `fputcsv` cruos
+ * contrato único de exportação (HU-122/RN-009): os streamings `fputcsv` cruos
  * passam a delegar ao {@see ReportExporter},
  * eliminando as cópias divergentes. Esta suíte é COMPLEMENTAR às redes
  * anti-regressão (AuditoriaExportTest 12-04 e ProcessoConsultaTest 10-14): prova

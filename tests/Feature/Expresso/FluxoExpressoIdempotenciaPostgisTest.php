@@ -27,7 +27,7 @@ use Tests\Support\Geo\FakeSpatialRepository;
 use Tests\Support\SeedsTratamentoPlanilha;
 
 /**
- * Idempotência da emissão da decisão sob Postgres REAL (HU-076): duas chamadas
+ * Idempotência da emissão da decisão sob Postgres REAL (HU-072): duas chamadas
  * de decide() para a MESMA solicitação produzem exatamente 1 ViabilityDecision,
  * 1 número TVL (sequência avança 1, sem buraco) e 1 ResultadoEmitido. A 1ª
  * chamada decide; a 2ª recai no re-check de status dentro do Cache::lock

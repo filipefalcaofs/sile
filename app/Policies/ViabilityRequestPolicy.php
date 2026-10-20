@@ -8,7 +8,7 @@ use App\Models\ViabilityRequest;
 use App\Support\Representation\CurrentRepresentation;
 
 /**
- * Autorização sobre a solicitação de viabilidade (HU-061 CA-04) integrada à
+ * Autorização sobre a solicitação de viabilidade (HU-059 CA-04) integrada à
  * representação "em nome de" (Fase 1, [01-07]) — espelha a CompanyPolicy
  * ([03-04]): toda checagem é sobre o usuário EFETIVO (o próprio, ou o
  * representado quando há representação ativa). A listagem "Minhas
@@ -53,7 +53,7 @@ class ViabilityRequestPolicy
     }
 
     /**
-     * Protocolar: dono E status rascunho (HU-068, fluxo do protocolo no 08-10).
+     * Protocolar: dono E status rascunho (HU-066, fluxo do protocolo no 08-10).
      */
     public function protocol(User $user, ViabilityRequest $request): bool
     {

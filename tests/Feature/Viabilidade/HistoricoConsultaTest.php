@@ -16,7 +16,7 @@ use Tests\Support\SeedsTratamentoPlanilha;
 use Tests\TestCase;
 
 /**
- * Histórico AUTENTICADO da consulta prévia de viabilidade (HU-060): a consulta
+ * Histórico AUTENTICADO da consulta prévia de viabilidade (HU-058): a consulta
  * grava um SNAPSHOT imutável em viability_queries SOMENTE quando o usuário está
  * autenticado (guard web). A consulta anônima segue auditada (RN-002, no
  * serviço), mas NÃO cria histórico pessoal; e nenhum caminho de erro vira
@@ -56,7 +56,7 @@ class HistoricoConsultaTest extends TestCase
 
     public function test_consulta_autenticada_grava_snapshot_no_historico(): void
     {
-        // HU-060/CA-01: autenticado (guard web), a consulta grava um snapshot
+        // HU-058/CA-01: autenticado (guard web), a consulta grava um snapshot
         // imutável da própria consulta — entrada, resultado e versões da época.
         $user = User::factory()->create();
 
@@ -129,7 +129,7 @@ class HistoricoConsultaTest extends TestCase
 
     public function test_historico_lista_so_as_consultas_do_dono(): void
     {
-        // HU-060/CA-04 (escopo): o usuário vê SOMENTE as próprias consultas
+        // HU-058/CA-04 (escopo): o usuário vê SOMENTE as próprias consultas
         // (forUser — precedente "Minhas empresas"); as de terceiro nunca aparecem.
         $userA = $this->portalUser();
         $userB = $this->portalUser();

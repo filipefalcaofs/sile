@@ -9,7 +9,7 @@ use PHPUnit\Framework\Attributes\Group;
 use Tests\PostgisTestCase;
 
 /**
- * Concorrência do número de produto TVL (HU-076) contra Postgres REAL: o
+ * Concorrência do número de produto TVL (HU-072) contra Postgres REAL: o
  * TvlNumberGenerator roda dentro de DB::transaction com
  * tvl_sequences->lockForUpdate() (FOR UPDATE emitido de verdade no pgsql,
  * no-op em SQLite). Duas gerações sequenciais sob o lock avançam a sequência

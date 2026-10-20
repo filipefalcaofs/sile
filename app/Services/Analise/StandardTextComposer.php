@@ -6,7 +6,7 @@ use App\Models\AnalysisRecord;
 use App\Models\StandardText;
 
 /**
- * Esqueleto legal da mala direta (HU-085) sobre os fatos do motor.
+ * Esqueleto legal da mala direta (HU-081) sobre os fatos do motor.
  * Nunca inventa quadro: só interpola o que a ficha já registrou.
  */
 class StandardTextComposer

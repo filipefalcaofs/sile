@@ -7,7 +7,7 @@ use RuntimeException;
 
 /**
  * Cancelamento bloqueado porque o estado atual da solicitação não está entre os
- * estados canceláveis parametrizáveis (HU-070 CA-03). Carrega o estado atual e a
+ * estados canceláveis parametrizáveis (HU-068 CA-03). Carrega o estado atual e a
  * lista de estados canceláveis vigente para o aviso ao requerente — comunicado,
  * nunca silencioso. O caller (CancelamentoSolicitacaoController) traduz em
  * flash.error; o status e a timeline permanecem intactos.

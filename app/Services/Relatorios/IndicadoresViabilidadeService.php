@@ -15,7 +15,7 @@ use Illuminate\Database\Query\JoinClause;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Indicadores de solicitações de viabilidade (HU-123 a HU-128) por AGREGAÇÃO
+ * Indicadores de solicitações de viabilidade (HU-114 a HU-119) por AGREGAÇÃO
  * SQL real sobre os dados das Fases 8–10, espelhando o estilo do
  * {@see ProcessoQueryService}: Builder + `when()` (o
  * filtro só entra quando informado) + `groupBy`/`selectRaw`/`DB::raw`, NUNCA
@@ -23,7 +23,7 @@ use Illuminate\Support\Facades\DB;
  *
  * Route-free e sem estado: recebe um {@see ReportFilters} e devolve arrays
  * prontos para a UI/export. Toda degradação é HONESTA (entrega funcional sem
- * fachada): a zona urbanística oficial está bloqueada na SEDUR, então a HU-124
+ * fachada): a zona urbanística oficial está bloqueada na SEDUR, então a HU-115
  * agrupa por bairro com rótulo explícito; o risco prefere o nível real do
  * Decreto 32.636/2020 e só então cai na categoria derivada ou em "não
  * classificado"; período sem dados devolve lista vazia, jamais um número
@@ -35,7 +35,7 @@ use Illuminate\Support\Facades\DB;
 class IndicadoresViabilidadeService
 {
     /**
-     * Solicitações protocoladas por dia no intervalo (HU-123). A data é truncada
+     * Solicitações protocoladas por dia no intervalo (HU-114). A data é truncada
      * em SQL com `date()` (portável SQLite/PostgreSQL — verificado) e agrupada
      * por dia. Sem dados no recorte → lista vazia (anti-fachada, CA-03).
      *
@@ -119,7 +119,7 @@ class IndicadoresViabilidadeService
     }
 
     /**
-     * Solicitações por zona urbanística — DEGRADADO para bairro (HU-124). A zona
+     * Solicitações por zona urbanística — DEGRADADO para bairro (HU-115). A zona
      * oficial (Quadro LOUOS/GIS) está bloqueada na SEDUR; em vez de inventar uma
      * zona, agrupa por bairro com rótulo de degradação honesto. Solicitações sem
      * bairro informado não viram bucket fantasma.
@@ -151,7 +151,7 @@ class IndicadoresViabilidadeService
     }
 
     /**
-     * Solicitações por CNAE (HU-125): join na tabela pivô + cnaes, contando
+     * Solicitações por CNAE (HU-116): join na tabela pivô + cnaes, contando
      * processos DISTINTOS por código de CNAE; top N ordenado desc. Agregação em
      * SQL (count distinct), nunca em coleção.
      *
@@ -178,7 +178,7 @@ class IndicadoresViabilidadeService
     }
 
     /**
-     * Solicitações por nível de risco (HU-126), PREFERINDO o nível REAL do
+     * Solicitações por nível de risco (HU-117), PREFERINDO o nível REAL do
      * Decreto 32.636/2020: join do CNAE principal com a classificação municipal
      * da versão VIGENTE. Sem classificação do CNAE, cai no FALLBACK da categoria
      * derivada (analysis_category consolidada na Fase 10); na ausência dela,
@@ -270,7 +270,7 @@ class IndicadoresViabilidadeService
     }
 
     /**
-     * Filtro por categoria de consulta DERIVADA (HU-082 RN-005), espelhando o
+     * Filtro por categoria de consulta DERIVADA (HU-078 RN-005), espelhando o
      * ProcessoQueryService. Colunas qualificadas para uso com ou sem join.
      *
      * @param  Builder<ViabilityRequest>  $query
@@ -288,7 +288,7 @@ class IndicadoresViabilidadeService
     }
 
     /**
-     * Taxa de DEFERIMENTO no período (HU-127): deferidas ÷ decididas, sobre as
+     * Taxa de DEFERIMENTO no período (HU-118): deferidas ÷ decididas, sobre as
      * decisões vinculantes (viability_decisions) com `decided_at` no intervalo.
      * `taxa` é null quando NÃO houve decisão no período — honesto, jamais 0%
      * fabricado (CA-03).
@@ -310,7 +310,7 @@ class IndicadoresViabilidadeService
     }
 
     /**
-     * Taxa de INDEFERIMENTO no período (HU-128): indeferidas ÷ decididas. Simétrica
+     * Taxa de INDEFERIMENTO no período (HU-119): indeferidas ÷ decididas. Simétrica
      * ao deferimento e medida sobre a MESMA base de decididas — NUNCA somam 100
      * artificialmente (em_analise/pendente não viram decisão). `taxa` null sem
      * decisões no período (CA-03).

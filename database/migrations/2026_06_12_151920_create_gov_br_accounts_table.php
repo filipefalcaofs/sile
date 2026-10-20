@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Vínculo 1:1 do usuário local com a conta GOV.BR (HU-151).
+     * Vínculo 1:1 do usuário local com a conta GOV.BR (HU-140).
      *
      * A identidade é resolvida pelo CPF (`sub` do id_token) contra users.cpf;
      * esta tabela guarda apenas os metadados do vínculo (nível de

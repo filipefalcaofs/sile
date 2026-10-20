@@ -8,7 +8,7 @@ return new class extends Migration
 {
     /**
      * Arquivos de exportação gerados pelo caminho ASSÍNCRONO do contrato de
-     * exportação (HU-131 / GerarExportacaoJob): cada arquivo grande gerado em
+     * exportação (HU-122 / GerarExportacaoJob): cada arquivo grande gerado em
      * segundo plano é uma linha baixável por URL assinada (rota em 15-09) e
      * podável por retenção (15-15). user_id é o dono (destinatário da notificação
      * de pronto); disk/path apontam o arquivo no Storage (disco parametrizado,

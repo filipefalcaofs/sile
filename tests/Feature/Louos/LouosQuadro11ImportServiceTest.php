@@ -14,7 +14,7 @@ use Tests\TestCase;
 
 /**
  * Importação do Quadro 11A da LOUOS (condições de instalação pela via —
- * HU-017/HU-018/HU-040/HU-041). O "Quadro 11" não existe na publicação
+ * HU-017/HU-039). O "Quadro 11" não existe na publicação
  * oficial da SEDUR — apenas 11A e 11B. Formato CSV: classe_via, grupo_uso,
  * condicoes (lista separada por ';'), base_legal. Tabular → roda em SQLite.
  */

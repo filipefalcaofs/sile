@@ -11,7 +11,7 @@ use App\Support\Audit\AuditService;
 use App\Support\Settings;
 
 /**
- * Roteador multicanal das comunicações de PROCESSO do EP11 (HU-090/094): o ponto
+ * Roteador multicanal das comunicações de PROCESSO do EP11 (HU-086/090): o ponto
  * ÚNICO onde os toggles de feature e o mapa de canais (HU-014) viram envio real +
  * ledger honesto, sem dupla verdade.
  *

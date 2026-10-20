@@ -18,8 +18,8 @@ use Tests\TestCase;
 
 /**
  * Contratos das integrações BLOQUEADAS do fluxo expresso (Track C da Wave 1): o
- * parecer ao integrador Regin/Junta (HU-104), o envio à SEFAZ municipal (HU-110)
- * e o vínculo BAP do processo (HU-134) vivem atrás de interface, com um provider
+ * parecer ao integrador Regin/Junta (HU-100), o envio à SEFAZ municipal (HU-103)
+ * e o vínculo BAP do processo (HU-125) vivem atrás de interface, com um provider
  * Unavailable que degrada HONESTO — Regin e SEFAZ LANÇAM exceção própria (a
  * transmissão não ocorreu); o BAP retorna null (não há vínculo, nada entra em
  * aguardando_bap hoje). A Fase 13 liga a base oficial trocando SÓ o binding no

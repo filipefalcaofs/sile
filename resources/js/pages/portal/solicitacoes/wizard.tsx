@@ -125,7 +125,7 @@ interface WizardProps {
     solicitacaoEnabled: boolean;
     territorio: TerritorioResumo | null;
     areaAlert: AreaAlert | null;
-    /** Resumo de conferência por IA (HU-116) — prop deferida (Inertia::optional). */
+    /** Resumo de conferência por IA (HU-108) — prop deferida (Inertia::optional). */
     sugestoesResumo?: SugestaoResumo[];
 }
 
@@ -156,7 +156,7 @@ function atividadesCompleto(draft: SolicitacaoDraft): boolean {
 }
 
 /**
- * Início de uma NOVA solicitação (HU-061): escolhe o tipo de serviço e a empresa
+ * Início de uma NOVA solicitação (HU-059): escolhe o tipo de serviço e a empresa
  * do dono e cria o rascunho (POST solicitacoes.store). O fluxo segue na edição.
  */
 function IniciarStep({

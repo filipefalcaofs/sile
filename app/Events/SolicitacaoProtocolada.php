@@ -7,7 +7,7 @@ use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
 use Illuminate\Foundation\Events\Dispatchable;
 
 /**
- * PRIMEIRO evento de domínio do Viabiliza: a solicitação foi protocolada (HU-068).
+ * PRIMEIRO evento de domínio do Viabiliza: a solicitação foi protocolada (HU-066).
  *
  * Disparado pelo ProtocolarSolicitacaoService APÓS o commit da transação de
  * protocolo — só protocolos efetivados geram efeitos. Implementa

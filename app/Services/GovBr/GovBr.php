@@ -5,7 +5,7 @@ namespace App\Services\GovBr;
 use App\Support\Settings;
 
 /**
- * Disponibilidade do login GOV.BR (HU-151 RN-006): exige o toggle ligado E
+ * Disponibilidade do login GOV.BR (HU-140 RN-006): exige o toggle ligado E
  * credenciais configuradas — sem credenciamento a feature permanece
  * desligada, com degradação comunicada (nunca falha silenciosa).
  */

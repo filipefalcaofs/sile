@@ -6,7 +6,7 @@ use DateTimeInterface;
 
 /**
  * Contrato que isola TODO o SQL espacial/agregado dos precedentes da análise
- * técnica (HU-142) — espelha o SpatialRepository da Fase 4. A implementação real
+ * técnica (HU-132) — espelha o SpatialRepository da Fase 4. A implementação real
  * é o PostgisPrecedentRepository (ST_Intersects sobre a geometry property_polygon
  * derivada na Fase 8, @group postgis); os consumidores (PrecedentService e, à
  * frente, o endpoint da ficha 10-09 e o smoke 10-18) dependem da interface e são

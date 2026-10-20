@@ -22,7 +22,7 @@ use Illuminate\Foundation\Events\Dispatchable;
  * transação, garantida mesmo se um listener falhar.
  *
  * É o seam que mantém o dispatcher (10-07) e o listener AUTO-DESCOBERTO da
- * pré-análise PreAnalisarProcesso (HU-140, 10-08 — roda o
+ * pré-análise PreAnalisarProcesso (HU-130, 10-08 — roda o
  * SolicitacaoViabilityResolver e cria a ficha pré-preenchida) em planos
  * PARALELOS. O listener faz type-hint deste evento no handle; NÃO registrar via
  * Event::listen (auto-descoberta — lição das Fases 8/9).

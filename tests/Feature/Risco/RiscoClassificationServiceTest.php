@@ -25,7 +25,7 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Motor de classificação de risco (HU-047 a HU-051), espelhando o
+ * Motor de classificação de risco (HU-045 a HU-049), espelhando o
  * TerritoryService: dado um CNAE, classifica as dimensões municipal (Decreto
  * 32.636/2020) e sanitária (VISA) como dimensões SEPARADAS, aplica a
  * reclassificação por condicionante-pergunta, resolve o encaminhamento pelo

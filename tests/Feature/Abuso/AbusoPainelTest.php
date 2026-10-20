@@ -14,7 +14,7 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Painel humano de alertas de abuso (HU-149) — revisão, NUNCA punição. O
+ * Painel humano de alertas de abuso (HU-138) — revisão, NUNCA punição. O
  * administrador (gerenciar-alertas-abuso) lista os abuse_alerts com filtros
  * (rule_key/severity/status/período), vê a EFETIVIDADE = confirmados ÷ gerados
  * (geral e por

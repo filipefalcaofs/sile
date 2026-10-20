@@ -55,7 +55,7 @@ class AnaliseSeedPostgisTest extends PostgisTestCase
         );
 
         // 2) DEFERIDO PELO ANALISTA: decisão humana real (flow analise_tecnica +
-        // TVL) e, sobre o deferido, um encaminhamento à malha fina (HU-136 RN-001).
+        // TVL) e, sobre o deferido, um encaminhamento à malha fina (HU-127 RN-001).
         $deferido = $this->processo($cidadao, AnaliseDevSeeder::MARK_DEFERIDO);
         $this->assertSame(ViabilityRequestStatus::Deferida, $deferido->status);
 
@@ -70,7 +70,7 @@ class AnaliseSeedPostgisTest extends PostgisTestCase
         $this->assertTrue($deferido->in_fine_mesh, 'O deferido deveria estar em malha fina.');
         $this->assertSame(1, $deferido->fineMeshReferrals()->whereNull('resolved_at')->count());
 
-        // 3) EM PENDÊNCIA: pendência aberta pelo analista (ciclo HU-083/084).
+        // 3) EM PENDÊNCIA: pendência aberta pelo analista (ciclo HU-079/080).
         $pendencia = $this->processo($cidadao, AnaliseDevSeeder::MARK_PENDENCIA);
         $this->assertSame(ViabilityRequestStatus::EmPendencia, $pendencia->status);
         $this->assertSame(

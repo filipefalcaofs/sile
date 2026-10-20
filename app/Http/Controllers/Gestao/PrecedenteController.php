@@ -10,7 +10,7 @@ use App\Support\Audit\AuditService;
 use Illuminate\Http\JsonResponse;
 
 /**
- * Endpoint de precedentes da ficha de análise (HU-142): serve o painel de apoio à
+ * Endpoint de precedentes da ficha de análise (HU-132): serve o painel de apoio à
  * decisão consumindo o PrecedentService (10-06) sobre a revisão vigente —
  * decisões anteriores no mesmo imóvel (CA-01) e estatística do CNAE na zona
  * (CA-02), com degradação honesta sem zona/histórico (CA-03) e sem dados pessoais

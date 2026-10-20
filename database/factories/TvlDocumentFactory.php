@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  * @extends Factory<TvlDocument>
  *
  * Default = documento TVL de uma decisão DEFERIDA (ViabilityDecisionFactory já é
- * deferida por padrão), no disco 'local', com verification_code único (HU-132).
+ * deferida por padrão), no disco 'local', com verification_code único (HU-123).
  */
 class TvlDocumentFactory extends Factory
 {

@@ -5,7 +5,7 @@ namespace App\Http\Requests\Gestao;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
- * Validação de localização por sobreposição (HU-037 RN-004): recebe o polígono
+ * Validação de localização por sobreposição (HU-036 RN-004): recebe o polígono
  * informado como GeoJSON Polygon. PADRÃO CROSS-GUARD do território (04-03) — o
  * gate é o middleware permission:consultar-territorio; authorize() retorna true
  * (ver IdentifyTerritoryRequest). A estrutura mínima do GeoJSON (type Polygon +

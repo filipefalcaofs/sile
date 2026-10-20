@@ -38,7 +38,7 @@ use Tests\TestCase;
  * FAKE (FakeSpatialRepository) para reproduzir os cenários sem PostGIS — espelha
  * os testes dos motores (ConsultaViabilidade*Test / Louos*Test).
  *
- * Elegibilidade ao expresso (HU-073) é por ENCAMINHAMENTO de risco (não pelo
+ * Elegibilidade ao expresso (HU-069) é por ENCAMINHAMENTO de risco (não pelo
  * veredito locacional): todos os CNAEs em 'expresso' → elegível; qualquer
  * 'analise' → inelegível. Sem zona oficial, o veredito locacional é "pendente"
  * (propagado) — nunca permitido/não permitido inventado.
@@ -195,7 +195,7 @@ class SolicitacaoViabilityResolverTest extends TestCase
 
     public function test_um_cnae_expresso_sem_zona_consolida_pendente_e_e_elegivel(): void
     {
-        // HU-073 RN-007/008: elegibilidade é por ENCAMINHAMENTO de risco — um CNAE
+        // HU-069 RN-007/008: elegibilidade é por ENCAMINHAMENTO de risco — um CNAE
         // de baixo risco encaminha ao expresso (elegível), MESMO com o veredito
         // locacional pendente (sem zona). Consolidado pendente, nunca inventado.
         $this->fakeBairroSemZona();
@@ -217,7 +217,7 @@ class SolicitacaoViabilityResolverTest extends TestCase
 
     public function test_cnae_de_risco_alto_encaminha_analise_e_nao_e_elegivel(): void
     {
-        // HU-073: CNAE de alto risco é encaminhado à análise técnica → o conjunto
+        // HU-069: CNAE de alto risco é encaminhado à análise técnica → o conjunto
         // é inelegível ao expresso (semi-expresso), independentemente do veredito.
         $this->fakeBairroSemZona();
         $this->classificarMunicipal('3333333', RiscoMunicipal::Alto);
@@ -230,7 +230,7 @@ class SolicitacaoViabilityResolverTest extends TestCase
 
     public function test_qualquer_cnae_em_analise_torna_o_conjunto_inelegivel(): void
     {
-        // HU-073 RN-008: basta UM CNAE em análise para derrubar a elegibilidade —
+        // HU-069 RN-008: basta UM CNAE em análise para derrubar a elegibilidade —
         // a elegibilidade exige TODOS em expresso.
         $this->fakeBairroSemZona();
         $this->classificarMunicipal('2222222', RiscoMunicipal::BaixoA);
@@ -243,7 +243,7 @@ class SolicitacaoViabilityResolverTest extends TestCase
 
     public function test_consolida_pior_caso_nao_permitido_entre_os_cnaes(): void
     {
-        // HU-074/075 RN-009: com zona oficial, um CNAE proibido (não permitido) e
+        // HU-070/071 RN-009: com zona oficial, um CNAE proibido (não permitido) e
         // outro permitido → o consolidado é o PIOR CASO (não permitido governa).
         $this->fakeBairroComZona('ZR-1');
         $this->seedTratamento('4712100', 'nR1', 'nR1-01');
@@ -256,7 +256,7 @@ class SolicitacaoViabilityResolverTest extends TestCase
 
     public function test_todos_permitido_consolida_permitido(): void
     {
-        // HU-074 RN-009: todos os CNAEs permitidos na zona → consolidado permitido.
+        // HU-070 RN-009: todos os CNAEs permitidos na zona → consolidado permitido.
         $this->fakeBairroComZona('ZR-1');
         $this->seedTratamento('4712100', 'nR1', 'nR1-01');
         $this->seedQuadro10('ZR-1', 'nR1', Quadro10Permissao::Permitido);

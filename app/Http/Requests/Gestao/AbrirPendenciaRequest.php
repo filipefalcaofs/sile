@@ -6,7 +6,7 @@ use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
- * Validação da abertura de pendência (HU-083): a descrição do que o requerente
+ * Validação da abertura de pendência (HU-079): a descrição do que o requerente
  * precisa complementar é obrigatória. A autorização é o middleware
  * permission:analisar-processos da rota; a precondição de estado (em_analise) é
  * regra de domínio do PendenciaService (CA-03), não validação de formulário.

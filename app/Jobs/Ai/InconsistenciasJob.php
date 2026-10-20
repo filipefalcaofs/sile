@@ -12,7 +12,7 @@ use Laravel\Ai\Files\File;
 use Laravel\Ai\Files\Image;
 
 /**
- * Execução da detecção de inconsistências (HU-115). Subclasse fina do
+ * Execução da detecção de inconsistências (HU-107). Subclasse fina do
  * RunAiAgentJob: carrega só IDs, monta o input MINIMIZADO com os dados
  * declarados do processo (endereço/área/CNAE — sem CPF/nome/razão social) e
  * anexa a foto da fachada do Storage quando houver. A saída SINALIZA divergências

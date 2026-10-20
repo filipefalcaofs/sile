@@ -7,7 +7,7 @@ use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Achado imutável de um detector (HU-149): a ocorrência suspeita que vira um
+ * Achado imutável de um detector (HU-138): a ocorrência suspeita que vira um
  * AbuseAlert. O fingerprint é a assinatura DETERMINÍSTICA e estável da ocorrência
  * (idempotência estrutural da 12-03 — 1 alerta aberto por regra/fingerprint).
  * Acima do limiar de severidade, o serviço encaminha o processo à malha fina —

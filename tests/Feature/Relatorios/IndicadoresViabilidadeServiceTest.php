@@ -19,8 +19,8 @@ use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 /**
- * Indicadores de solicitações (HU-123 período, HU-124 zona→bairro, HU-125 CNAE,
- * HU-126 risco) calculados por AGREGAÇÃO SQL real sobre os dados das Fases 8–10.
+ * Indicadores de solicitações (HU-114 período, HU-115 zona→bairro, HU-116 CNAE,
+ * HU-117 risco) calculados por AGREGAÇÃO SQL real sobre os dados das Fases 8–10.
  * Datasets factory com valores CRAVADOS provam contagens exatas; a degradação é
  * honesta (zona indisponível → bairro com rótulo; sem dados → lista vazia, nunca
  * número inventado — CA-03 anti-fachada).
@@ -49,7 +49,7 @@ class IndicadoresViabilidadeServiceTest extends TestCase
     }
 
     /**
-     * Decisão vinculante cravada (HU-127/128). Cada decisão nasce sobre a sua
+     * Decisão vinculante cravada (HU-118/119). Cada decisão nasce sobre a sua
      * própria solicitação protocolada para não colidir no protocolo/TVL únicos.
      */
     private function decisao(DecisionOutcome $outcome, string $decididaEm): void
@@ -116,7 +116,7 @@ class IndicadoresViabilidadeServiceTest extends TestCase
     #[Test]
     public function por_zona_degrada_para_bairro_com_rotulo_honesto(): void
     {
-        // HU-124: a zona urbanística oficial está bloqueada (SEDUR/GIS pendente).
+        // HU-115: a zona urbanística oficial está bloqueada (SEDUR/GIS pendente).
         // O indicador degrada para BAIRRO com rótulo explícito — nunca inventa zona.
         $this->protocolada(['address_neighborhood' => 'Pituba']);
         $this->protocolada(['address_neighborhood' => 'Pituba']);
@@ -153,7 +153,7 @@ class IndicadoresViabilidadeServiceTest extends TestCase
     #[Test]
     public function por_risco_usa_o_nivel_real_e_degrada_para_categoria_e_nao_classificado(): void
     {
-        // HU-126: preferir o risco MUNICIPAL real (Decreto 32.636/2020) pelo CNAE
+        // HU-117: preferir o risco MUNICIPAL real (Decreto 32.636/2020) pelo CNAE
         // principal; sem classificação, cair na categoria derivada da Fase 10; sem
         // ela, rotular 'nao_classificado'. A garantia anti-fachada essencial: o
         // nível só é 'real' quando vem da tabela OFICIAL — dado sem classificação
@@ -191,7 +191,7 @@ class IndicadoresViabilidadeServiceTest extends TestCase
     #[Test]
     public function taxa_de_deferimento_e_indeferimento_sao_razoes_reais_no_periodo(): void
     {
-        // HU-127/128: 3 deferidas + 1 indeferida decididas no período → 75.0% e
+        // HU-118/119: 3 deferidas + 1 indeferida decididas no período → 75.0% e
         // 25.0%. Cada uma é sua própria razão sobre as decididas (não somam 100
         // artificialmente — em_analise não vira decisão).
         $this->decisao(DecisionOutcome::Deferida, '2026-03-05');

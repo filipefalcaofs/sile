@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Anexos da solicitação (HU-066). Grava o disk DA ÉPOCA (parametrizável,
+     * Anexos da solicitação (HU-064). Grava o disk DA ÉPOCA (parametrizável,
      * nunca público), path, hash sha256 e metadados — substituível antes do
      * protocolo, imutável depois. requirement_id liga ao requisito atendido
      * (nullable: anexo avulso permitido). nullOnDelete preserva o anexo se o

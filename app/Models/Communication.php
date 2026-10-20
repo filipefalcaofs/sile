@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Linha do ledger imutável de comunicações de PROCESSO (HU-096). Espelha o
+ * Linha do ledger imutável de comunicações de PROCESSO (HU-092). Espelha o
  * EmailLog (que segue sendo a fonte das comunicações de CONTA — verificação de
  * e-mail/senha): cada marcador muda status + carimbo, NUNCA inventando
  * "enviado". É a fonte de verdade do histórico por processo E o controle de

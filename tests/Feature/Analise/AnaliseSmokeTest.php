@@ -33,15 +33,15 @@ use Tests\Support\SeedsTratamentoPlanilha;
 use Tests\TestCase;
 
 /**
- * Smoke end-to-end REAL do fluxo HUMANO da análise técnica (HU-079 a HU-089 +
- * HU-132/136/140): dirige a cadeia COMPLETA pelos serviços/eventos reais —
+ * Smoke end-to-end REAL do fluxo HUMANO da análise técnica (HU-075 a HU-085 +
+ * HU-123/127/130): dirige a cadeia COMPLETA pelos serviços/eventos reais —
  * FluxoExpressoService::decide encaminha à análise (semi-expresso/sem zona) → o
  * listener PreAnalisarProcesso cria a ficha rev 1 → DistribuicaoService distribui/
  * assume → AnalysisRecordService preenche/finaliza (gravando a divergência
  * analista×motor) → AnaliseTecnicaDecisionService DECIDE (ViabilityDecision flow
  * 'analise_tecnica' + TVL no deferimento) → ResultadoEmitido reusa os listeners
  * da Fase 9 (Regin/SEFAZ bloqueados honestos → Fase 13). Cobre ainda o ciclo de
- * pendência (HU-083/084), a malha fina sobre um deferido (HU-136) e a degradação
+ * pendência (HU-079/080), a malha fina sobre um deferido (HU-127) e a degradação
  * honesta (FA-01: sem motor, o humano decide assim mesmo).
  *
  * Os motores rodam em SQLite com FakeSpatialRepository + dados versionados via
@@ -85,7 +85,7 @@ class AnaliseSmokeTest extends TestCase
         $this->assertTrue($ficha->engine_available, 'Com zona, a ficha deveria vir pré-analisada.');
 
         // 2) DISTRIBUIR/ASSUMIR: o processo entra na caixa do setor e o analista
-        // assume (HU-080/081).
+        // assume (HU-076/077).
         [$sector, $analista] = $this->analistaNoSetor();
         $request->forceFill(['sector_id' => $sector->id])->save();
         app(DistribuicaoService::class)->assumir($request->fresh(), $analista);
@@ -125,7 +125,7 @@ class AnaliseSmokeTest extends TestCase
             'result' => 'deferida',
         ]);
 
-        // HU-104/110: Regin e SEFAZ ficam como pendência auditada (bloqueado →
+        // HU-100/103: Regin e SEFAZ ficam como pendência auditada (bloqueado →
         // Fase 13), NUNCA "enviado" fictício.
         $this->assertDatabaseHas('activity_log', [
             'log_name' => 'integracoes',
@@ -173,7 +173,7 @@ class AnaliseSmokeTest extends TestCase
         $finalizada = $service->finalizar($ficha->fresh(), $analista);
 
         // Divergência analista×motor gravada: o motor sugeriu deferida e o
-        // analista indeferiu com justificativa (HU-140 RN-002).
+        // analista indeferiu com justificativa (HU-130 RN-002).
         $this->assertDatabaseHas('analysis_divergences', [
             'analysis_record_id' => $finalizada->id,
             'cnae' => '4731800',
@@ -200,7 +200,7 @@ class AnaliseSmokeTest extends TestCase
 
     public function test_ciclo_de_pendencia_ida_e_volta(): void
     {
-        // HU-083/084 (parcial): o analista abre uma pendência (em_analise→
+        // HU-079/080 (parcial): o analista abre uma pendência (em_analise→
         // em_pendencia) e o requerente responde pelo portal (em_pendencia→
         // em_analise) — ciclo interno real.
         $request = $this->emAnaliseSemZona('2222222');
@@ -227,7 +227,7 @@ class AnaliseSmokeTest extends TestCase
 
     public function test_malha_fina_atinge_um_deferido_sem_mudar_o_status(): void
     {
-        // HU-136 RN-001: a malha fina é ORTOGONAL ao status — encaminhar um
+        // HU-127 RN-001: a malha fina é ORTOGONAL ao status — encaminhar um
         // DEFERIDO liga a flag e grava o referral SEM mudar o desfecho (corrige o
         // bug legado que recusava deferidos).
         $request = ViabilityRequest::factory()->protocoled()->create();

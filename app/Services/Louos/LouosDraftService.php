@@ -20,7 +20,7 @@ use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 
 /**
- * CRUD de linhas dos Quadros da LOUOS sobre um rascunho versionado (HU-046).
+ * CRUD de linhas dos Quadros da LOUOS sobre um rascunho versionado (HU-044).
  * A versão vigente nunca é tocada; toda edição ocorre no rascunho coexistente;
  * a publicação exige quatro olhos via RuleVersionService e audita o diff.
  */

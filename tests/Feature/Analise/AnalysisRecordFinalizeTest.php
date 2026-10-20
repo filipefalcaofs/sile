@@ -11,11 +11,11 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Finalização da ficha (HU-135 RN-003) e divergências (HU-140 RN-002): ao
+ * Finalização da ficha (HU-126 RN-003) e divergências (HU-130 RN-002): ao
  * finalizar, a revisão fica IMUTÁVEL (status finalizada + finalized_at) e cada
  * campo onde o valor FINAL diverge do SUGERIDO pelo motor materializa uma
  * analysis_divergences (cnae, field, suggested_value, final_value, justification)
- * — insumo do relatório HU-145. Reeditar/recalcular depois cria uma NOVA revisão
+ * — insumo do relatório HU-135. Reeditar/recalcular depois cria uma NOVA revisão
  * (rascunho) copiada da finalizada; a decisão (deferir/indeferir) NÃO acontece
  * aqui (é 10-10). Toda a ação é gated por analisar-processos e auditada (RN-002).
  */

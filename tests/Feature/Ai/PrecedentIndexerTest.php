@@ -16,9 +16,9 @@ use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
 /**
- * Infra de RAG (Fase 14, Onda 3) — indexação dos precedentes (HU-142) por
+ * Infra de RAG (Fase 14, Onda 3) — indexação dos precedentes (HU-132) por
  * embeddings, base da busca por similaridade que sustenta os assistentes
- * (HU-120/121).
+ * (HU-112).
  *
  * O que esta suíte prova (anti-fachada + LGPD):
  *  - o vetor é gerado a partir de um RESUMO ANONIMIZADO do precedente (sem nome
@@ -48,7 +48,7 @@ class PrecedentIndexerTest extends TestCase
     }
 
     /**
-     * Precedente real = solicitação DECIDIDA (HU-142). O requerente tem nome e o
+     * Precedente real = solicitação DECIDIDA (HU-132). O requerente tem nome e o
      * imóvel tem logradouro — ambos PII que NÃO podem vazar para o embedding.
      */
     private function precedenteDecidido(string $protocol = 'VIA-2026-000900', bool $deferida = true): ViabilityRequest

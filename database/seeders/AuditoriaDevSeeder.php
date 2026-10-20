@@ -39,16 +39,16 @@ use Illuminate\Support\Facades\Cache;
  * fabricadas. Tudo por requerentes/empresas DEDICADOS (jamais o cidadao@sile.dev),
  * para não perturbar as contagens já asseridas dos exemplos das fases anteriores.
  *
- *  1. PADRÃO DE ABUSO REAL (HU-149): semeia um volume atípico de solicitações do
+ *  1. PADRÃO DE ABUSO REAL (HU-138): semeia um volume atípico de solicitações do
  *     MESMO CNPJ (empresa dedicada), habilita features.deteccao_abuso SÓ durante
  *     o seed e roda o AbuseDetectionService REAL — que gera os abuse_alerts de
  *     verdade e, acima do limiar (severidade Alta), encaminha 1 processo à malha
  *     fina pelo CAMINHO DE SISTEMA. Ao final RESTAURA o toggle para OFF (a feature
  *     nasce desligada — degradação honesta; a SEDUR liga após calibrar os limiares).
- *  2. ACESSO A DADO PESSOAL REAL (HU-102): registra, pelo MESMO AuditService do
+ *  2. ACESSO A DADO PESSOAL REAL (HU-098): registra, pelo MESMO AuditService do
  *     ProcessoController@show (personal_data=true, gestor como causer), um acesso
  *     ao detalhe de um processo de terceiro — base de medição do painel LGPD.
- *  3. EXPLICABILIDADE NAVEGÁVEL (HU-099): leva um processo dedicado à decisão pela
+ *  3. EXPLICABILIDADE NAVEGÁVEL (HU-095): leva um processo dedicado à decisão pela
  *     ANÁLISE TÉCNICA a partir da ficha (territorial-agnóstica, roda em SQLite) —
  *     a ViabilityDecision nasce com decision_trace passo a passo; e semeia uma
  *     decisão LEGADA via factory SEM decision_trace (sub-passo "não registrado").
@@ -137,7 +137,7 @@ class AuditoriaDevSeeder extends Seeder
     }
 
     /**
-     * Explicabilidade navegável (HU-099): um processo dedicado é DECIDIDO pela
+     * Explicabilidade navegável (HU-095): um processo dedicado é DECIDIDO pela
      * análise técnica (decision_trace real) e uma decisão LEGADA nasce sem trace.
      *
      * @param  AuditoriaDevContexto  $ctx
@@ -200,7 +200,7 @@ class AuditoriaDevSeeder extends Seeder
     }
 
     /**
-     * Decisão LEGADA (HU-099 — sub-passo "não registrado"): uma decisão antiga
+     * Decisão LEGADA (HU-095 — sub-passo "não registrado"): uma decisão antiga
      * gravada SEM decision_trace (a coluna é aditiva), para exercitar a marca
      * "não registrado nesta decisão" na explicabilidade. Idempotente pelo marcador.
      *
@@ -237,7 +237,7 @@ class AuditoriaDevSeeder extends Seeder
         $request->cnaes()->attach($ctx['cnae']->id, ['is_primary' => true]);
 
         // Decisão sem decision_trace (null): o factory não preenche a coluna
-        // aditiva — é exatamente a decisão legada que a HU-099 marca como
+        // aditiva — é exatamente a decisão legada que a HU-095 marca como
         // "não registrado nesta decisão".
         ViabilityDecision::factory()->indeferida()->create([
             'viability_request_id' => $request->id,
@@ -246,7 +246,7 @@ class AuditoriaDevSeeder extends Seeder
     }
 
     /**
-     * Padrão de abuso DEDICADO (HU-149): VOLUME_ABUSO solicitações do MESMO CNPJ
+     * Padrão de abuso DEDICADO (HU-138): VOLUME_ABUSO solicitações do MESMO CNPJ
      * (empresa dedicada) por um requerente próprio — volume atípico que o
      * VolumeCnpjDetector flagra em severidade Alta. Mesmo endereço/polígono em
      * todas (1 endereço distinto) para NÃO disparar o detector de polígono; sem
@@ -321,7 +321,7 @@ class AuditoriaDevSeeder extends Seeder
     }
 
     /**
-     * Registra um acesso a DADO PESSOAL pelo fluxo REAL (HU-102): o mesmo call
+     * Registra um acesso a DADO PESSOAL pelo fluxo REAL (HU-098): o mesmo call
      * site do ProcessoController@show (log_name 'analise', event 'consulta-processo',
      * personal_data=true), com um gestor como causer — alimenta a métrica do
      * painel LGPD. Idempotente: registra o acesso dedicado uma única vez.

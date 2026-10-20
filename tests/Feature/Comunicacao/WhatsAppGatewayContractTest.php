@@ -9,7 +9,7 @@ use App\Services\Whatsapp\WhatsAppUnavailableException;
 use Tests\TestCase;
 
 /**
- * Contrato do canal WhatsApp (HU-095) — degradação HONESTA (entrega-funcional):
+ * Contrato do canal WhatsApp (HU-091) — degradação HONESTA (entrega-funcional):
  * o provedor real (API comercial) é pendência da Fase 13, então o binding default
  * do WhatsAppGateway é o UnavailableWhatsAppGateway, que LANÇA
  * WhatsAppUnavailableException. A transmissão NÃO ocorre e NUNCA é simulada —

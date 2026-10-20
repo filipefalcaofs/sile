@@ -8,8 +8,8 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Embeddings dos precedentes (HU-142) — infra de RAG da Onda 3 (Fase 14) que
-     * sustenta a busca por similaridade dos assistentes (HU-120/121). Um vetor por
+     * Embeddings dos precedentes (HU-132) — infra de RAG da Onda 3 (Fase 14) que
+     * sustenta a busca por similaridade dos assistentes (HU-112). Um vetor por
      * precedente (solicitação decidida), gerado do RESUMO ANONIMIZADO (sem PII).
      *
      * DRIVER-AWARE (espelha geo_features/viability_requests): a coluna `embedding`
@@ -24,7 +24,7 @@ return new class extends Migration
     {
         Schema::create('ai_precedent_embeddings', function (Blueprint $table) {
             $table->id();
-            // Precedente = solicitação decidida (HU-142). 1:1 (unique) — uma
+            // Precedente = solicitação decidida (HU-132). 1:1 (unique) — uma
             // representação vetorial canônica por precedente; some com ele.
             $table->foreignId('viability_request_id')->constrained()->cascadeOnDelete();
             // Idempotência: sha256 do resumo anonimizado; inalterado ⇒ não reembedda.

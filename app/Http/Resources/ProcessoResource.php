@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * Payload de leitura do processo para a consulta (HU-082) e a fila (HU-144) da
+ * Payload de leitura do processo para a consulta (HU-078) e a fila (HU-134) da
  * retaguarda. Expõe os TRÊS identificadores do processo (RN-007 — número do
  * processo SEDUR, protocolo BAP e número do produto TVL), a empresa, o imóvel, o
  * status, a categoria DERIVADA (RN-005), o analista/setor responsáveis e o SLA
@@ -56,7 +56,7 @@ class ProcessoResource extends JsonResource
             'cnaes_detalhe' => $this->cnaesDetalhe(),
             'imovel' => $this->enderecoResumo(),
             // Endereço completo (com complemento e CEP) para o detalhe do
-            // processo (HU-082) — o requisito da SEDUR é sempre mostrar o
+            // processo (HU-078) — o requisito da SEDUR é sempre mostrar o
             // endereço completo do imóvel, incluindo o complemento.
             'endereco_completo' => $this->enderecoCompleto(),
             'inscricao' => $this->property_registration,
@@ -123,7 +123,7 @@ class ProcessoResource extends JsonResource
     }
 
     /**
-     * Semáforo do SLA + tempo restante calculados ON-THE-FLY (HU-144). Null
+     * Semáforo do SLA + tempo restante calculados ON-THE-FLY (HU-134). Null
      * quando o processo ainda não tem prazo/etapa materializados (sem fila).
      *
      * @return array{status: string, status_label: string, restante: string}|null

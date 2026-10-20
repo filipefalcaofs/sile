@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Fonte do histórico de acessos DE UM USUÁRIO (HU-010) para o contrato único de
- * exportação (HU-131/RN-009): o {@see AccessHistoryController}
+ * exportação (HU-122/RN-009): o {@see AccessHistoryController}
  * ganha um branch ?formato= delegando ao {@see ReportExporter}
  * sem rota nova (a rota acessos.show já existe, gated por
  * consultar-acessos-de-qualquer-conta). O usuário-alvo viaja no BAG (`user`),
@@ -24,7 +24,7 @@ use Illuminate\Database\Eloquent\Builder;
  * RN-005: reproduz EXATAMENTE a query do controller (acessos com user_id do alvo
  * OU e-mail do alvo — inclui falhas/bloqueios pré-login sem user_id), na mesma
  * ordem (mais recentes primeiro). Colunas espelham a listagem da tela
- * (evento/ip/canal/data-hora). personalData=true (IP é dado pessoal — LGPD HU-102).
+ * (evento/ip/canal/data-hora). personalData=true (IP é dado pessoal — LGPD HU-098).
  */
 final class AcessosUsuarioReportSource implements ReportSource
 {

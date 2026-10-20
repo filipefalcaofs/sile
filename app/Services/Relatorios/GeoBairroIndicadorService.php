@@ -183,7 +183,7 @@ class GeoBairroIndicadorService
     }
 
     /**
-     * Filtro por categoria de consulta derivada (HU-082 RN-005), espelhando o
+     * Filtro por categoria de consulta derivada (HU-078 RN-005), espelhando o
      * {@see IndicadoresViabilidadeService::aplicarCategoria()}.
      *
      * @param  Builder<ViabilityRequest>  $query

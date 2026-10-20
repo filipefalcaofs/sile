@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 /**
- * Endpoint de abertura de pendência pelo analista (HU-083): o controller FINO
+ * Endpoint de abertura de pendência pelo analista (HU-079): o controller FINO
  * orquestra o PendenciaService::abrir (10-11) — a transição em_analise→
  * em_pendencia, a auditoria e o e-mail ao requerente já vivem no serviço. Gated
  * por analisar-processos (403 auditado — CA-04); descrição é obrigatória (422 de

@@ -14,7 +14,7 @@ use Laravel\Ai\Contracts\Agent;
 use Laravel\Ai\Files\File;
 
 /**
- * Execução da sugestão de minuta de parecer (HU-118) — Failure Mode #1. Subclasse
+ * Execução da sugestão de minuta de parecer (HU-110) — Failure Mode #1. Subclasse
  * fina do RunAiAgentJob: carrega só o ID do processo e monta o input de TEXTO
  * (capability 'text', sem anexos) com a FUNDAMENTAÇÃO REAL do motor (resultado
  * consolidado, enquadramento por CNAE e versões dos quadros da LOUOS aplicados),

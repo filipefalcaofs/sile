@@ -19,8 +19,8 @@ use Illuminate\Support\Facades\Schema;
  * a migration de carga já sincroniza; o seeder re-sincroniza de forma
  * idempotente. O analista, o gestor e o apoio de DEV (analista@sile.dev /
  * gestor@sile.dev / apoio@sile.dev, senha `password`) são criados SÓ em
- * dev/teste — dados fictícios para tornar a caixa, a distribuição (HU-080),
- * a assunção (HU-081) e a ficha (HU-135) navegáveis. Nunca executar em
+ * dev/teste — dados fictícios para tornar a caixa, a distribuição (HU-076),
+ * a assunção (HU-077) e a ficha (HU-126) navegáveis. Nunca executar em
  * produção com estas credenciais.
  *
  * A caixa de triagem do motor aponta para o Setor de Triagem e Distribuição
@@ -60,7 +60,7 @@ class SectorSeeder extends Seeder
         $gestor = $this->seedGestaoUser('gestor@sile.dev', 'Gestor Viabiliza', '48795515006', 'Coordenador');
         $apoio = $this->seedGestaoUser('apoio@sile.dev', 'Apoio Viabiliza', '71602913013', 'apoio');
 
-        // Vincula os três ao setor (HU-138 RN-005): o apoio/gestor distribuem e
+        // Vincula os três ao setor (HU-129 RN-005): o apoio/gestor distribuem e
         // o analista assume os processos da caixa.
         $sector->analysts()->syncWithoutDetaching([$analista->id, $gestor->id, $apoio->id]);
 

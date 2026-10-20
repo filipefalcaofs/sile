@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * Empresa (HU-023). CNPJ armazenado normalizado (14 chars uppercase, sem
+ * Empresa (HU-022). CNPJ armazenado normalizado (14 chars uppercase, sem
  * máscara); a exibição usa o accessor formatted_cnpj. Auditoria automática
  * via HasAuditoria (RN-002). Relações com CNAEs (principal/secundários) e
  * vínculos de usuário (ativos/encerrados).

@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
 /**
- * Indeferimento por prazo BAP (HU-134) — "indeferido sem atuação". É o motor
+ * Indeferimento por prazo BAP (HU-125) — "indeferido sem atuação". É o motor
  * real da rotina dormente: quando uma solicitação fica parada em aguardando_bap
  * além do prazo de atuação na Junta, o processo é INDEFERIDO de verdade,
  * reusando o caminho de emissão do fluxo expresso (09-05): decisão imutável +

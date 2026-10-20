@@ -10,7 +10,7 @@ use App\Support\Settings;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Cancelamento da solicitação de viabilidade (HU-070): o requerente interrompe
+ * Cancelamento da solicitação de viabilidade (HU-068): o requerente interrompe
  * um processo indevido ou duplicado enquanto NÃO decidido.
  *
  * Os estados em que o cancelamento é permitido são PARAMETRIZÁVEIS

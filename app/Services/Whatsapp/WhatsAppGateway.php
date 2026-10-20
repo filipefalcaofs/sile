@@ -3,7 +3,7 @@
 namespace App\Services\Whatsapp;
 
 /**
- * Contrato de saída do canal WhatsApp (HU-095). O provider concreto é
+ * Contrato de saída do canal WhatsApp (HU-091). O provider concreto é
  * substituível por binding — a Fase 13 liga o adaptador HTTP real (API comercial,
  * credenciais de integrations.whatsapp.*) sem tocar nenhum call site (mesmo padrão
  * de ReginParecerNotifier/SefazViabilidadeGateway).

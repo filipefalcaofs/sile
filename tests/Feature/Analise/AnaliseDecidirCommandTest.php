@@ -66,7 +66,7 @@ class AnaliseDecidirCommandTest extends TestCase
 
     public function test_finaliza_e_defere_imprimindo_status_e_tvl(): void
     {
-        // HU-086: --finalizar finaliza a ficha (rascunho) e DEFERE — imprime
+        // HU-082: --finalizar finaliza a ficha (rascunho) e DEFERE — imprime
         // DEFERIDA + o número TVL gerado. Decisão real (flow analise_tecnica).
         Event::fake([ResultadoEmitido::class]);
 

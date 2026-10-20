@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Divergência analista×motor (HU-140 → insumo do relatório HU-145): quando o
+ * Divergência analista×motor (HU-130 → insumo do relatório HU-135): quando o
  * analista diverge do valor sugerido pelo motor num campo da ficha, registra a
  * diferença (suggested_value × final_value) com a justificativa.
  */

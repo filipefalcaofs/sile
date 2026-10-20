@@ -17,7 +17,7 @@ import KpiCard from '@/components/ui/kpi-card';
 import GestaoLayout from '@/layouts/gestao-layout';
 
 /**
- * Linha de produtividade por analista (HU-130). No modo ANÔNIMO (default
+ * Linha de produtividade por analista (HU-121). No modo ANÔNIMO (default
  * conservador) chega só `analista_rotulo` (ordinal estável, sem PII); no modo
  * NOMINAL (liberado por permissão no backend) chega `analista_id` + `nome`.
  */

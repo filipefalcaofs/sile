@@ -15,7 +15,7 @@ use Illuminate\Notifications\Notification;
 
 /**
  * Aviso ao requerente de que a análise técnica abriu uma pendência na sua
- * solicitação (HU-090). A partir do EP11 é uma Notification de PROCESSO
+ * solicitação (HU-086). A partir do EP11 é uma Notification de PROCESSO
  * MULTICANAL: implementa {@see ProcessNotification} (tipo PendenciaAberta) e tem
  * via() DINÂMICO — os canais são resolvidos pelo NotificationDispatcher no
  * disparo, congelados aqui ({@see $frozenChannels}) e traduzidos para os drivers
@@ -127,7 +127,7 @@ class PendenciaSolicitadaNotification extends Notification implements ProcessNot
     }
 
     /**
-     * Conteúdo do canal in-app (HU-090/096): título, resumo e link do portal.
+     * Conteúdo do canal in-app (HU-086/092): título, resumo e link do portal.
      *
      * @return array<string, mixed>
      */
@@ -144,7 +144,7 @@ class PendenciaSolicitadaNotification extends Notification implements ProcessNot
     }
 
     /**
-     * Conteúdo do canal WhatsApp (HU-095): texto curto com link. O destino (to,
+     * Conteúdo do canal WhatsApp (HU-091): texto curto com link. O destino (to,
      * E.164) é injetado pelo WhatsAppChannel a partir do notifiable.
      */
     public function toWhatsApp(object $notifiable): WhatsAppMessage

@@ -11,8 +11,8 @@ use App\Services\Relatorios\ReportFilters;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
- * Fonte da CONSULTA DE PROCESSOS (HU-082) para o export transversal
- * (HU-131/RN-009): consolida o CSV simples que vivia no
+ * Fonte da CONSULTA DE PROCESSOS (HU-078) para o export transversal
+ * (HU-122/RN-009): consolida o CSV simples que vivia no
  * ProcessoController::exportarCsv no contrato único, PRESERVANDO exatamente as
  * colunas, a ordem e o nome de arquivo históricos (rede anti-regressão 10-14). O
  * conjunto exportado é EXATAMENTE o filtrado da consulta (RN-005), reusando

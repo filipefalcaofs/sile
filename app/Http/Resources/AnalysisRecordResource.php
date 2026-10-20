@@ -13,13 +13,13 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * Payload de leitura da ficha de análise (HU-135) para a retaguarda: a revisão
+ * Payload de leitura da ficha de análise (HU-126) para a retaguarda: a revisão
  * vigente, seu status (+rótulo) e a flag `editavel` (false na finalizada — RN-003),
  * o per_cnae com a escolha do analista (status_escolhido), as condicionantes,
  * as vagas, o parecer e `finalized_at`. A sugestão do motor (status_sugerido)
  * NÃO sai no payload — o sistema não sugere decisão ao analista (relatório
  * SEDUR 21/09/2026, item 02); ela permanece gravada só para a divergência
- * auditada (HU-140 RN-002).
+ * auditada (HU-130 RN-002).
  * Expõe também a disponibilidade do motor (FA-01 — modo manual). SOMENTE LEITURA;
  * a escrita acontece pelo autosave/finalizar (AnalysisRecordService).
  *
@@ -90,7 +90,7 @@ class AnalysisRecordResource extends JsonResource
             }
 
             // Valor TLL do exercício corrente, resolvido da tabela de valores
-            // (HU-071) pelo código TLL da planilha. Null = pendente (nunca
+            // (HU-145) pelo código TLL da planilha. Null = pendente (nunca
             // inventado) — a ficha mostra a pendência.
             $item['valor_tll'] = $this->valorTll(
                 $item['codigo_tll'] ?? null,
@@ -132,7 +132,7 @@ class AnalysisRecordResource extends JsonResource
     }
 
     /**
-     * Valor da TLL do exercício corrente para o código TLL da planilha (HU-071).
+     * Valor da TLL do exercício corrente para o código TLL da planilha (HU-145).
      * Null quando não parametrizado — degradação honesta, nunca valor inventado.
      */
     private function valorTll(mixed $codigoTll, ?string $especificacao = null): ?string

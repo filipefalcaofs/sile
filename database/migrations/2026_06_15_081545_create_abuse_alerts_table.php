@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Ledger de alertas de abuso/fraude (HU-149) — NUNCA punição: o detector
+     * Ledger de alertas de abuso/fraude (HU-138) — NUNCA punição: o detector
      * registra aqui e (acima do limiar) encaminha à malha fina. A idempotência
      * é estrutural: índice ÚNICO PARCIAL (rule_key, fingerprint) restrito aos
      * alertas em status 'aberto', para o scheduler reprocessar a mesma janela

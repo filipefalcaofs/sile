@@ -14,7 +14,7 @@ use Illuminate\Http\JsonResponse;
 use Throwable;
 
 /**
- * HU-029 — geocodificação de endereço (endereço → coordenada) para posicionar o
+ * HU-028 — geocodificação de endereço (endereço → coordenada) para posicionar o
  * imóvel no mapa do território. Toda saída (sucesso, não localizado,
  * indisponibilidade e bloqueio por toggle) é auditada (RN-002); com
  * features.geocoding desligado nenhum request HTTP sai (degradação comunicada —

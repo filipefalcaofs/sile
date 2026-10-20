@@ -25,7 +25,7 @@ use Symfony\Component\HttpFoundation\Response;
  * SUBTOTAL), DICIONÁRIO (uma linha por coluna) e PARÂMETROS (filtros e
  * metadados da geração).
  *
- * Driver XLSX do contrato de exportação (HU-131) — openspout v4 por STREAMING de
+ * Driver XLSX do contrato de exportação (HU-122) — openspout v4 por STREAMING de
  * baixa memória: itera o Builder filtrado da tela com ->cursor() (RN-005, nunca
  * all() em memória) e escreve linha a linha.
  *

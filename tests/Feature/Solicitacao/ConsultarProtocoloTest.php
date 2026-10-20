@@ -17,9 +17,9 @@ use Inertia\Testing\AssertableInertia;
 use Tests\TestCase;
 
 /**
- * Consultar protocolo (HU-069) — consulta AUTENTICADA do dono com timeline e
+ * Consultar protocolo (HU-067) — consulta AUTENTICADA do dono com timeline e
  * status em linguagem simples (publicLabel), prazo estimado com ressalva honesta
- * (a medição real é HU-129/Fase 15) e auditoria RN-002. A timeline vem das
+ * (a medição real é HU-120/Fase 15) e auditoria RN-002. A timeline vem das
  * viability_request_transitions REAIS (anti-fachada — nada inventado).
  */
 class ConsultarProtocoloTest extends TestCase

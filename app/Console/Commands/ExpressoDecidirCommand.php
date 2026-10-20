@@ -30,7 +30,7 @@ class ExpressoDecidirCommand extends Command
     protected $signature = 'expresso:decidir
         {solicitacao : ID da solicitação protocolada a decidir}';
 
-    protected $description = 'Roda o motor de decisão do fluxo expresso (HU-073 a HU-078) e imprime a evidência real (status/desfecho/viabilidade)';
+    protected $description = 'Roda o motor de decisão do fluxo expresso (HU-069 a HU-074) e imprime a evidência real (status/desfecho/viabilidade)';
 
     public function handle(FluxoExpressoService $service): int
     {

@@ -7,14 +7,14 @@ use App\Services\Risco\TipoImovel;
 use Carbon\CarbonInterface;
 
 /**
- * Entrada imutável do motor de enquadramento da LOUOS (HU-038 a HU-045),
+ * Entrada imutável do motor de enquadramento da LOUOS (HU-037 a HU-043),
  * espelhando RiscoInput: reúne tudo que o motor precisa para aplicar os Quadros
  * 10/11A e o ramo da planilha — a área utilizada, o CNAE principal e os secundários, o
  * território (de onde vêm zona e via — Fase 4, hoje indisponível/pendente
- * SEDUR) e as vagas declaradas pelo requerente (HU-042).
+ * SEDUR) e as vagas declaradas pelo requerente (HU-040).
  *
  * `data` reproduz a decisão por época (null = versão vigente). `versoesOverride`
- * é o modo sandbox (HU-143): resolve um domínio por uma versão específica
+ * é o modo sandbox (HU-133): resolve um domínio por uma versão específica
  * (rascunho) sem afetar a vigente — chave = value de RuleDomain, valor = número
  * da versão.
  */
@@ -22,9 +22,9 @@ final readonly class EnquadramentoInput
 {
     /**
      * @param  list<string>  $cnaesSecundarios  CNAEs secundários (dígitos).
-     * @param  array<string, mixed>  $vagasDeclaradas  Vagas/carga/descarga declaradas pelo requerente (HU-042).
+     * @param  array<string, mixed>  $vagasDeclaradas  Vagas/carga/descarga declaradas pelo requerente (HU-040).
      * @param  array<int, bool|int|list<int>>  $respostas  Número da pergunta da planilha → sim/não.
-     * @param  array<string, string>  $versoesOverride  Mapa domínio (RuleDomain->value) → versão específica (sandbox HU-143).
+     * @param  array<string, string>  $versoesOverride  Mapa domínio (RuleDomain->value) → versão específica (sandbox HU-133).
      */
     public function __construct(
         public float $area,

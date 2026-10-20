@@ -15,7 +15,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Resposta da pendência pelo portal (HU-084 — "Minhas solicitações"). Escopo do
+ * Resposta da pendência pelo portal (HU-080 — "Minhas solicitações"). Escopo do
  * dono/representado reusando a ViabilityRequestPolicy::view (mecanismo "em nome
  * de" da Fase 1): só o requerente acessa/responde a própria pendência — terceiro
  * recebe 403 auditado no ponto único (bootstrap/app.php). O vínculo da pendência

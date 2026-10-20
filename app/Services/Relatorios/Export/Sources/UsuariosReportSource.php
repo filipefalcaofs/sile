@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Fonte da listagem de usuários (HU-012) para o contrato único de exportação
- * (HU-131/RN-009): o index do {@see UserManagementController}
+ * (HU-122/RN-009): o index do {@see UserManagementController}
  * ganha um branch ?formato= delegando ao {@see ReportExporter}
  * sem rota nova. O conjunto exportado é EXATAMENTE o filtrado da tela (RN-005) —
  * aba (equipe SEDUR × portal), busca por nome/e-mail (case-insensitive) e ordem,
@@ -23,7 +23,7 @@ use Illuminate\Database\Eloquent\Builder;
  * (`pii`), decisão que o controller toma a partir de uma permissão de PII. O gate
  * viaja no BAG (não no construtor): a fonte é reconstrutível só pelo bag
  * (INVARIANTE do {@see ReportSource}), então o caminho assíncrono honra o MESMO
- * gate. personalData=true (HU-101).
+ * gate. personalData=true (HU-097).
  */
 final class UsuariosReportSource implements ReportSource
 {

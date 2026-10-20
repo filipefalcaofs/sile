@@ -20,7 +20,7 @@ use App\Support\Settings;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
- * Motor de enquadramento da LOUOS (HU-038 a HU-046), espelhando o
+ * Motor de enquadramento da LOUOS (HU-037 a HU-044), espelhando o
  * RiscoClassificationService/TerritoryService: dado um CNAE e uma área, resolve
  * a versão da regra de cada Quadro (vigente / na data / versão específica para
  * o sandbox) e devolve o EnquadramentoResult com cada Quadro como uma dimensão
@@ -28,10 +28,10 @@ use Illuminate\Database\Eloquent\Builder;
  *
  * O motor entrega o enquadramento pelo ramo da planilha vigente, as dimensões
  * territoriais (Quadro 10 por zona; Quadro 11A pela via) e a CONSOLIDAÇÃO
- * final (HU-044): combina as dimensões num parecer único — permitido /
+ * final (HU-042): combina as dimensões num parecer único — permitido /
  * permitido_com_condicoes / nao_permitido / pendente — com fundamentação legal
- * real (HU-045), condicionantes de vagas parametrizadas (HU-042) e restrições
- * especiais via camada ZEIS do território (HU-043).
+ * real (HU-043), condicionantes de vagas parametrizadas (HU-040) e restrições
+ * especiais via camada ZEIS do território (HU-041).
  *
  * Sem fachada: sem zona (Quadro 10 indisponível) ou sem ramo resolvido o
  * consolidado é SEMPRE `pendente` — o motor jamais declara
@@ -49,7 +49,7 @@ class LouosEnquadramentoService
     /**
      * Enquadra a atividade pela LOUOS. Use a versão vigente por padrão, a
      * vigente em `$input->data` para reproduzir uma decisão por época, ou um
-     * `$input->versoesOverride` para o sandbox (HU-143).
+     * `$input->versoesOverride` para o sandbox (HU-133).
      */
     public function enquadrar(EnquadramentoInput $input): EnquadramentoResult
     {
@@ -125,7 +125,7 @@ class LouosEnquadramentoService
 
     /**
      * Resolução de versão em 3 modos (espelha RiscoClassificationService): um
-     * override de versão por domínio (sandbox HU-143) tem precedência; senão a
+     * override de versão por domínio (sandbox HU-133) tem precedência; senão a
      * vigente na data informada (reprodução por época); senão a vigente.
      */
     private function resolveVersion(RuleDomain $domain, EnquadramentoInput $input): ?RuleVersion
@@ -144,7 +144,7 @@ class LouosEnquadramentoService
     }
 
     /**
-     * Consolida o veredito (HU-044) combinando as dimensões dos Quadros, com a
+     * Consolida o veredito (HU-042) combinando as dimensões dos Quadros, com a
      * precedência anti-fachada (o que não pode ser decidido vira `pendente`):
      *
      * 1. Enquadramento não identificado → `pendente` (sem grupo de uso não há o que
@@ -289,7 +289,7 @@ class LouosEnquadramentoService
     }
 
     /**
-     * Fundamentação legal real da decisão (HU-045), espelhando
+     * Fundamentação legal real da decisão (HU-043), espelhando
      * RiscoClassificationService::buildFundamentacao: cita a Lei nº 9.148/2016
      * (LOUOS) e os quadros EFETIVAMENTE aplicados (com a base_legal da regra
      * quando presente). Honesto: só inclui o quadro quando a dimensão foi
@@ -345,11 +345,11 @@ class LouosEnquadramentoService
     }
 
     /**
-     * Coleta as condicionantes que alimentam a ficha do parecer (HU-135) e podem
+     * Coleta as condicionantes que alimentam a ficha do parecer (HU-126) e podem
      * rebaixar o veredito para permitido_com_condicoes: a condicionante
      * urbanística do Quadro 10 (permitido_condicionado), as condições de
-     * instalação pela via (Quadro 11A), as vagas parametrizadas (HU-042) e as
-     * restrições especiais incidentes — ZEIS (HU-043). Nenhuma bloqueia sozinha.
+     * instalação pela via (Quadro 11A), as vagas parametrizadas (HU-040) e as
+     * restrições especiais incidentes — ZEIS (HU-041). Nenhuma bloqueia sozinha.
      *
      * @param  array<string, mixed>  $enquadramento
      * @param  array<string, mixed>  $quadro10
@@ -428,7 +428,7 @@ class LouosEnquadramentoService
     }
 
     /**
-     * Condicionante de VAGAS (HU-042) — dado parametrizado, sem hardcode: lê a
+     * Condicionante de VAGAS (HU-040) — dado parametrizado, sem hardcode: lê a
      * exigência por grupo de uso de `louos.vagas.exigencia_por_grupo` (HU-014) e
      * a compara com as vagas declaradas pelo requerente.
      *
@@ -436,7 +436,7 @@ class LouosEnquadramentoService
      *   (conforme null): degradação honesta, alimenta a ficha e NÃO rebaixa.
      * - Com exigência → conforme = declarado >= exigido em cada item; Não Conforme
      *   vira condicionante incidente (permitido_com_condicoes), insumo da análise
-     *   (HU-135), NUNCA nao_permitido.
+     *   (HU-126), NUNCA nao_permitido.
      *
      * @param  array<string, mixed>  $enquadramento
      * @return array<string, mixed>|null
@@ -498,7 +498,7 @@ class LouosEnquadramentoService
     }
 
     /**
-     * Condicionantes de RESTRIÇÕES ESPECIAIS (HU-043): lê a camada de restrições
+     * Condicionantes de RESTRIÇÕES ESPECIAIS (HU-041): lê a camada de restrições
      * ambientais do território (Fase 4 — ex.: ZEIS). Cada item incidente vira uma
      * condicionante que rebaixa para permitido_com_condicoes — não decide sozinha
      * (o roteamento à análise é do motor de risco, Fase 6). Território
@@ -617,7 +617,7 @@ class LouosEnquadramentoService
 
     /**
      * Verdadeiro quando há condicionante INCIDENTE — a que rebaixa o veredito
-     * para permitido_com_condicoes. Vagas conforme/não parametrizada (HU-042) é
+     * para permitido_com_condicoes. Vagas conforme/não parametrizada (HU-040) é
      * informativa e NÃO rebaixa; só vagas NÃO CONFORME incide. As demais
      * (zona condicionada, via, restrição ZEIS) sempre incidem.
      *
@@ -635,7 +635,7 @@ class LouosEnquadramentoService
             }
 
             // Condicionante da planilha de tratamento é informativa na ficha
-            // (HU-135) e NÃO rebaixa o veredito sozinha — quem rebaixa é a
+            // (HU-126) e NÃO rebaixa o veredito sozinha — quem rebaixa é a
             // condicionante urbanística do Quadro 10, a condição de via (11A),
             // a vaga não conforme ou a restrição especial (ZEIS).
             if (($condicionante['tipo'] ?? null) === 'planilha') {
@@ -649,7 +649,7 @@ class LouosEnquadramentoService
     }
 
     /**
-     * Dimensão QUADRO 10 (HU-039): permissão da atividade na zona. O motor
+     * Dimensão QUADRO 10 (HU-038): permissão da atividade na zona. O motor
      * RECEBE a zona do território (Fase 4) — não a consulta. Espelha a
      * degradação do TerritoryService::isBlocked, mas sobre o dado recebido:
      *
@@ -1109,7 +1109,7 @@ class LouosEnquadramentoService
     }
 
     /**
-     * Dimensões QUADRO 11 e 11A (HU-040/HU-041): condições de instalação pela
+     * Dimensões QUADRO 11 e 11A (HU-039): condições de instalação pela
      * via, compartilhando a lógica (o `$domain` distingue o quadro). Escopo
      * honesto: a geometria viária existe (Fase 4), mas o ATRIBUTO de
      * classificação viária LOUOS pende SEDUR.

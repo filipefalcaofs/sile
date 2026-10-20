@@ -14,7 +14,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Decisão técnica do analista (HU-086/087/088/089) — deferir/indeferir/encerrar.
+ * Decisão técnica do analista (HU-082/083/084/085) — deferir/indeferir/encerrar.
  * Controller FINO: resolve a ficha vigente (currentAnalysisRecord) e delega ao
  * AnaliseTecnicaDecisionService::decide (10-10), onde vivem a regra RN-004, a
  * transição (encerramento), a auditoria síncrona e o disparo de ResultadoEmitido.

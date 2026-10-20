@@ -8,7 +8,7 @@ use App\Models\TllValor;
 use App\Support\Settings;
 
 /**
- * Cálculo do valor do DAM da TLL (HU-071 RN-004): o valor é a atividade de
+ * Cálculo do valor do DAM da TLL (HU-145): o valor é a atividade de
  * maior valor correlacionado à TLL, acrescido da taxa de serviço, aplicando o
  * fator multiplicador (parâmetro `tll.fator_multiplicador`, HU-014) quando o
  * CNAE o exigir. Sem valor parametrizado para o exercício, degrada para

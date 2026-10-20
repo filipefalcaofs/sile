@@ -110,7 +110,7 @@ function NotificationCard({
 }
 
 /**
- * Central de notificações in-app (HU-090): lista server-driven do canal database
+ * Central de notificações in-app (HU-086): lista server-driven do canal database
  * nativo do usuário, separando não-lidas e lidas, com marcação de uma e de todas
  * via os endpoints reais do 11-08 (Inertia POST → back recarrega lista e badge).
  * Estado vazio honesto; nada é simulado.

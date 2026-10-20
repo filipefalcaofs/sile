@@ -19,7 +19,7 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Detectores ESTRUTURAIS de abuso (HU-149, 12-08) sobre dado REAL — SEM IA.
+ * Detectores ESTRUTURAIS de abuso (HU-138, 12-08) sobre dado REAL — SEM IA.
  * Espelham a forma dos detectores de volume (12-06): cada Strategy varre a janela
  * parametrizável e emite um AbuseFinding SÓ acima do critério determinístico, com
  * fingerprint ESTÁVEL (idempotência da 12-03) e evidence honesta. A janela é

@@ -8,7 +8,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * Payload de leitura de uma linha do ledger communications para o histórico
- * unificado (HU-096): canal (+rótulo), tipo (+rótulo), status HONESTO (+rótulo),
+ * unificado (HU-092): canal (+rótulo), tipo (+rótulo), status HONESTO (+rótulo),
  * título/resumo, destinatário e carimbos de cada etapa. SOMENTE LEITURA — o
  * ledger é imutável (11-01).
  *

@@ -22,7 +22,7 @@ use App\Enums\CommunicationType;
  *    CommunicationChannel para o canal nativo do Laravel (Email => 'mail',
  *    InApp => 'database', Whatsapp => canal customizado — Wave 2).
  * 3. Os métodos viabilityRequestId() e communicationType() identificam a linha
- *    do ledger que cada envio confirma/marca (idempotência + histórico HU-096).
+ *    do ledger que cada envio confirma/marca (idempotência + histórico HU-092).
  *
  * As Notifications de processo passam a implementar esta interface em 11-05/06
  * (junto da migração dos testes). NÃO é implementada aqui.

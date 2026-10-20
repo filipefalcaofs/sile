@@ -6,7 +6,7 @@ use App\Models\StandardText;
 use Illuminate\Database\Seeder;
 
 /**
- * Biblioteca de textos-padrão do parecer (HU-085) — trechos pré-aprovados que o
+ * Biblioteca de textos-padrão do parecer (HU-081) — trechos pré-aprovados que o
  * analista insere ao redigir o parecer, agrupados por categoria. São EXEMPLOS de
  * fundamentação (dados versionados, não código): a SEDUR mantém/substitui pela
  * interface sem deploy, evoluindo a versão e preservando o histórico.

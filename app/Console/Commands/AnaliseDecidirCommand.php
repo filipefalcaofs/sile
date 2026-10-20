@@ -17,7 +17,7 @@ use Illuminate\Console\Command;
  * Conclui o processo a partir da ficha do analista pelo serviço REAL
  * (AnaliseTecnicaDecisionService::decide) e imprime a EVIDÊNCIA de ponta a ponta:
  * status final, desfecho (deferida/indeferida), número TVL no deferimento e a
- * fundamentação/parecer. Contraparte humana do expresso:decidir (HU-085 a HU-089)
+ * fundamentação/parecer. Contraparte humana do expresso:decidir (HU-081 a HU-085)
  * — útil para evidência/reprocesso manual.
  *
  * A decisão grava ViabilityDecision flow 'analise_tecnica' com decided_by =
@@ -32,7 +32,7 @@ class AnaliseDecidirCommand extends Command
         {solicitacao : ID da solicitação em análise a concluir}
         {--finalizar : Finaliza a ficha em rascunho antes de decidir}';
 
-    protected $description = 'Conclui o processo a partir da ficha do analista (HU-085 a HU-089) e imprime a evidência real (status/desfecho/viabilidade)';
+    protected $description = 'Conclui o processo a partir da ficha do analista (HU-081 a HU-085) e imprime a evidência real (status/desfecho/viabilidade)';
 
     public function handle(AnaliseTecnicaDecisionService $decisionService, AnalysisRecordService $records): int
     {

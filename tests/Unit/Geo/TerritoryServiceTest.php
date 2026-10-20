@@ -17,7 +17,7 @@ use Tests\Support\Geo\FakeSpatialRepository;
 use Tests\TestCase;
 
 /**
- * Identificação territorial por ponto (HU-031 a HU-035) provada SEM PostGIS,
+ * Identificação territorial por ponto (HU-030 a HU-034) provada SEM PostGIS,
  * com o fake do repositório espacial: bairro/via/restrições identificados a
  * partir da camada vigente; zona/lote com base pendente retornam indisponível
  * (degradação comunicada) SEM disparar consulta espacial — sem fachada; a

@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Geometria de uma camada (HU-036). A coluna `geometry` é PostGIS bruto: NÃO é
+ * Geometria de uma camada (HU-035). A coluna `geometry` é PostGIS bruto: NÃO é
  * fillable nem castada — é gravada via DB::raw/ST_* e lida com ST_AsGeoJSON
  * quando necessário. Só geo_layer_id e properties são mass-assignable.
  */

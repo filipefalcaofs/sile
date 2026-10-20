@@ -11,7 +11,7 @@ use App\Services\CompanyCnaeService;
 use Illuminate\Http\RedirectResponse;
 
 /**
- * Vínculo de CNAEs da empresa (HU-025/HU-026). TODA escrita do pivot é
+ * Vínculo de CNAEs da empresa (HU-024/HU-025). TODA escrita do pivot é
  * delegada ao CompanyCnaeService (transação + auditoria antes/depois) —
  * sync direto aqui é anti-pattern ([03-RESEARCH]).
  */
@@ -20,7 +20,7 @@ class CompanyCnaeController extends Controller
     public function __construct(private CompanyCnaeService $service) {}
 
     /**
-     * Define/troca o CNAE principal (HU-025).
+     * Define/troca o CNAE principal (HU-024).
      */
     public function updatePrimary(UpdatePrimaryCnaeRequest $request, Company $company): RedirectResponse
     {
@@ -30,7 +30,7 @@ class CompanyCnaeController extends Controller
     }
 
     /**
-     * Sincroniza o conjunto exato de CNAEs secundários (HU-026).
+     * Sincroniza o conjunto exato de CNAEs secundários (HU-025).
      */
     public function updateSecondaries(UpdateSecondaryCnaesRequest $request, Company $company): RedirectResponse
     {

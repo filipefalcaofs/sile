@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Event;
 use Tests\TestCase;
 
 /**
- * Decisão técnica HUMANA (HU-086/087/088/089, RN-004) a partir da ficha
+ * Decisão técnica HUMANA (HU-082/083/084/085, RN-004) a partir da ficha
  * FINALIZADA: o AnaliseTecnicaDecisionService defere quando TODAS as CNAEs estão
  * deferidas na ficha e indefere quando QUALQUER uma está indeferida — gravando na
  * MESMA viability_decisions da Fase 9 com flow 'analise_tecnica' e
@@ -24,7 +24,7 @@ use Tests\TestCase;
  * Diferente do FluxoExpressoService, o humano PODE deferir o caso PENDENTE (sem
  * zona oficial) com fundamentação própria da ficha — é exatamente o caso que a
  * lei manda o humano decidir. Rascunho NÃO decide (CA-03 bloqueio). A decisão é
- * o encerramento (HU-089): transição em_analise→deferida|indeferida (final).
+ * o encerramento (HU-085): transição em_analise→deferida|indeferida (final).
  */
 class AnaliseTecnicaDecisionTest extends TestCase
 {
@@ -62,9 +62,9 @@ class AnaliseTecnicaDecisionTest extends TestCase
 
     public function test_defere_quando_todas_as_cnaes_estao_deferidas_na_ficha(): void
     {
-        // HU-086 RN-004: todas as atividades deferidas na ficha → DEFERE. Cria a
+        // HU-082 RN-004: todas as atividades deferidas na ficha → DEFERE. Cria a
         // ViabilityDecision (flow analise_tecnica, decided_by analista) com número
-        // TVL, transiciona para deferida (encerramento HU-089) e dispara
+        // TVL, transiciona para deferida (encerramento HU-085) e dispara
         // ResultadoEmitido após o commit.
         Event::fake([ResultadoEmitido::class]);
 
@@ -97,7 +97,7 @@ class AnaliseTecnicaDecisionTest extends TestCase
 
     public function test_indefere_quando_alguma_cnae_esta_indeferida_na_ficha(): void
     {
-        // HU-087 RN-004: basta uma atividade indeferida na ficha → INDEFERE o
+        // HU-083 RN-004: basta uma atividade indeferida na ficha → INDEFERE o
         // processo inteiro, sem número TVL.
         Event::fake([ResultadoEmitido::class]);
 
@@ -314,7 +314,7 @@ class AnaliseTecnicaDecisionTest extends TestCase
 
     public function test_recusa_decidir_quando_a_ficha_ainda_esta_em_rascunho(): void
     {
-        // HU-086 CA-03: ficha em rascunho não decide — bloqueio por inconsistência.
+        // HU-082 CA-03: ficha em rascunho não decide — bloqueio por inconsistência.
         Event::fake([ResultadoEmitido::class]);
 
         $ficha = $this->fichaFinalizada(

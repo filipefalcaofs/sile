@@ -8,7 +8,7 @@ use App\Services\Comunicacao\NotificationDispatcher;
 use App\Support\Audit\AuditService;
 
 /**
- * Efeito colateral DESACOPLADO do PendenciaRespondida (HU-091/092): avisa o
+ * Efeito colateral DESACOPLADO do PendenciaRespondida (HU-087/088): avisa o
  * ANALISTA responsável (assigned_user_id) de que o requerente respondeu a
  * pendência e a análise reabriu — pelo NotificationDispatcher (multicanal). É o
  * retorno que a Fase 10 não fechava.

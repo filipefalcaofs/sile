@@ -16,7 +16,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Painel humano de alertas de abuso (HU-149) na retaguarda — revisão, NUNCA
+ * Painel humano de alertas de abuso (HU-138) na retaguarda — revisão, NUNCA
  * punição. Lista filtrável e paginada dos abuse_alerts (server-driven, espelha o
  * ResultadoExpressoController), o indicador de EFETIVIDADE (confirmados ÷ gerados,
  * geral e por regra, sobre os alertas reais — RN-005) para calibrar regras, e as

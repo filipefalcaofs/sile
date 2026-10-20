@@ -10,7 +10,7 @@ use JsonException;
 
 /**
  * Importa um GeoJSON oficial (FeatureCollection) para uma camada versionada
- * (HU-036). Idempotente por (type, version) via GeoJsonLayerImporter; audita o
+ * (HU-035). Idempotente por (type, version) via GeoJsonLayerImporter; audita o
  * diff da carga. Caminho operacional de reimportação — a carga de dev é feita
  * pelo GeoLayerSeeder a partir dos snapshots em database/data/geo/.
  */
@@ -18,7 +18,7 @@ class ImportGeoLayerCommand extends Command
 {
     protected $signature = 'geo:importar {type : Tipo da camada (bairro, zona, via, lote, restricao)} {arquivo : Caminho do GeoJSON (FeatureCollection em SRID 4326)} {--versao= : Versão da camada (ex.: geosalvador-2024)} {--source= : Origem/URL da carga}';
 
-    protected $description = 'Importa um GeoJSON oficial para uma camada geográfica versionada (HU-036), idempotente e auditado';
+    protected $description = 'Importa um GeoJSON oficial para uma camada geográfica versionada (HU-035), idempotente e auditado';
 
     public function handle(GeoJsonLayerImporter $importer): int
     {

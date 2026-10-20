@@ -6,7 +6,7 @@ use InvalidArgumentException;
 
 /**
  * Nível de risco municipal de uma atividade econômica conforme o Decreto
- * nº 41.758/2026 (HU-020/HU-047 — decreto vigente declarado pela SEDUR no
+ * nº 41.758/2026 (HU-019/HU-045 — decreto vigente declarado pela SEDUR no
  * relatório de 21/09/2026). O Decreto tem EXATAMENTE três níveis internos —
  * baixo_a / baixo_b / alto — e fromDecreto() é a única porta de entrada a
  * partir do rótulo oficial ('BAIXO A' / 'BAIXO B' / 'ALTO'), rejeitando

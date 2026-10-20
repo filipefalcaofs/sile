@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 
 /**
- * Produtividade por analista (HU-130) sobre DADO REAL, em modo CONSERVADOR por
+ * Produtividade por analista (HU-121) sobre DADO REAL, em modo CONSERVADOR por
  * sensibilidade RH/LGPD. A contagem é agregação SQL real (nunca loop PHP):
  * decisões de análise técnica por {@see ViabilityDecision::$decided_by_user_id}
  * (`flow='analise_tecnica'`) e processos atribuídos por

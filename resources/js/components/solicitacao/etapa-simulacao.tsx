@@ -38,7 +38,7 @@ const RESULTADO_COLOR: Record<string, 'success' | 'warning' | 'error' | 'info'> 
 };
 
 /**
- * Etapa de simulação (HU-141): aciona a simulação real (POST solicitacoes.simular
+ * Etapa de simulação (HU-131): aciona a simulação real (POST solicitacoes.simular
  * — reusa o motor da Fase 7 por CNAE) e exibe a tendência consolidada e o
  * resultado por CNAE com o componente ResultadoViabilidade (Fase 7). É
  * ORIENTATIVA: nunca bloqueia o protocolo. Pendente sem zona aparece COM motivo

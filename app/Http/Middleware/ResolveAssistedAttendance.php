@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Espelha o ResolveRepresentation (HU-008/009) para o atendimento presencial
- * assistido (HU-150): revalida o atendimento da sessão em TODA request do
+ * assistido (HU-139): revalida o atendimento da sessão em TODA request do
  * console de atendimento (pertence ao atendente, ativo, não expirado) e popula
  * o MESMO Context/CurrentRepresentation que a procuração — alimentando a
  * auditoria "em nome de" (RecordActivityAction) e a ViabilityRequestPolicy sem

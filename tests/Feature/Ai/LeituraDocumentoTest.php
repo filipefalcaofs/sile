@@ -17,7 +17,7 @@ use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
 /**
- * HU-112 (OCR) + HU-114 (ilegibilidade): leitura por visão de um documento da
+ * HU-104 (OCR) + HU-106 (ilegibilidade): leitura por visão de um documento da
  * solicitação como SUGESTÃO revisável (nunca verdade). Prova: documento legível
  * vira sugestão ocr com texto/confiança/fonte; ilegibilidade (legivel=false) ou
  * confiança abaixo do limiar escala para humano; toggle features.ia_ocr OFF ⇒
@@ -110,7 +110,7 @@ class LeituraDocumentoTest extends TestCase
         $doc = $this->documento();
 
         // legivel=false com confiança alta: a ilegibilidade — não a confiança —
-        // é quem força a revisão humana (HU-114), sem tratar a leitura como verdade.
+        // é quem força a revisão humana (HU-106), sem tratar a leitura como verdade.
         LeituraDocumentoAgent::fake([[
             'texto' => '',
             'legivel' => false,

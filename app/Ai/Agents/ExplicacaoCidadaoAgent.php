@@ -10,10 +10,10 @@ use Laravel\Ai\Promptable;
 use Stringable;
 
 /**
- * Agente de EXPLICAÇÃO AO CIDADÃO (HU-119): TRADUZ a decisão técnica de
+ * Agente de EXPLICAÇÃO AO CIDADÃO (HU-111): TRADUZ a decisão técnica de
  * viabilidade locacional (deferida/indeferida, com o veredito consolidado e a
  * fundamentação por CNAE) para LINGUAGEM CIDADÃ clara e acessível. É a versão
- * leiga da explicabilidade da HU-099: FIEL à decisão e à fundamentação
+ * leiga da explicabilidade da HU-095: FIEL à decisão e à fundamentação
  * registradas (ViabilityDecision), sem reabrir o mérito. NUNCA promete o que a
  * lei não garante nem inventa direito/prazo. A mecânica anti-fachada (gate,
  * dedup, guardrails, persistência, auditoria) vive no RunAiAgentJob; o fake por

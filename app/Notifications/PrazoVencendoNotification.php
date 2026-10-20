@@ -13,7 +13,7 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 /**
- * Aviso ANTECIPADO de prazo próximo do vencimento (HU-093) — para o analista
+ * Aviso ANTECIPADO de prazo próximo do vencimento (HU-089) — para o analista
  * (prazo de análise, analysis_due_at) ou para o requerente (prazo de pendência,
  * analysis_pendencies.due_at). É uma comunicação de PROCESSO: implementa
  * ProcessNotification para percorrer o NotificationDispatcher (multicanal +
@@ -21,7 +21,7 @@ use Illuminate\Notifications\Notification;
  * padrão do EP11, sem reresolver toggles no worker).
  *
  * SÓ avisa: não transiciona o processo nem grava timeline (a fonte de prazo é
- * ÚNICA — analysis_due_at — para não brigar com a HU-129). O conteúdo (assunto/
+ * ÚNICA — analysis_due_at — para não brigar com a HU-120). O conteúdo (assunto/
  * detalhe/url) é montado pelo comando; o destino do WhatsApp é resolvido pelo
  * WhatsAppChannel a partir do notifiable.
  */

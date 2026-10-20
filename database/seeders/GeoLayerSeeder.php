@@ -11,8 +11,8 @@ use Illuminate\Support\Facades\DB;
 use JsonException;
 
 /**
- * Carga de desenvolvimento das camadas geográficas (HU-034/HU-035/HU-032 +
- * HU-036). Driver-aware: em PostgreSQL carrega os snapshots commitados em
+ * Carga de desenvolvimento das camadas geográficas (HU-033/HU-034/HU-031 +
+ * HU-035). Driver-aware: em PostgreSQL carrega os snapshots commitados em
  * database/data/geo/ (bairro e restrição, GeoSalvador); em SQLite (suíte) só
  * registra as camadas pendentes (PostGIS não existe — a carga real é
  * exercida pelos testes @group postgis).
@@ -93,7 +93,7 @@ class GeoLayerSeeder extends Seeder
 
     /**
      * Camadas sem fonte pública (zona/lote): registradas e comunicadas, sem
-     * features — nunca simuladas (HU-031/HU-033).
+     * features — nunca simuladas (HU-030/HU-032).
      */
     private function seedPendingBlockedLayers(): void
     {

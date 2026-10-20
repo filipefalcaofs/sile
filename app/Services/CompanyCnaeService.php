@@ -8,7 +8,7 @@ use App\Support\Audit\AuditService;
 use Illuminate\Support\Facades\DB;
 
 /**
- * ÚNICO ponto de escrita do pivot company_cnae (HU-025/HU-026): garante a
+ * ÚNICO ponto de escrita do pivot company_cnae (HU-024/HU-025): garante a
  * invariante "exatamente um principal" na aplicação (precedente [01-07]) e
  * registra auditoria explícita com antes/depois — relações não entram no
  * diff do HasAuditoria, e a trilha alimenta o motor de regras (Fases 5/6).

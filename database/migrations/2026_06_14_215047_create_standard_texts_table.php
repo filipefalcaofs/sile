@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Biblioteca de textos-padrão do parecer (HU-085) — administrável: o analista
+     * Biblioteca de textos-padrão do parecer (HU-081) — administrável: o analista
      * insere trechos pré-aprovados ao redigir o parecer. category agrupa por tema
      * (índice), active liga/desliga sem excluir e version permite evoluir o texto
      * mantendo o histórico (dados versionados, não código).

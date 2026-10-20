@@ -3,7 +3,7 @@
 namespace App\Services\Geo;
 
 /**
- * Resultado imutável da validação de localização por sobreposição (HU-037
+ * Resultado imutável da validação de localização por sobreposição (HU-036
  * RN-004). Contrato snake_case do JSON consumido pela UI (04-07).
  *
  * - `status` ∈ {validado, alerta_sobreposicao, indisponivel}.

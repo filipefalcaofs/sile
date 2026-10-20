@@ -16,7 +16,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Encaminhamento à malha fina (HU-136) — single e lote. Controller FINO: valida a
+ * Encaminhamento à malha fina (HU-127) — single e lote. Controller FINO: valida a
  * estrutura (EncaminharMalhaFinaRequest) e delega ao MalhaFinaService::encaminharLote
  * (10-12); single é um lote de um. O serviço liga in_fine_mesh + grava
  * fine_mesh_referrals e audita por processo SEM transicionar o status (ortogonal —

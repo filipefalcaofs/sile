@@ -8,7 +8,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 /**
- * Validação do CRUD da tabela de valores TLL por exercício (HU-071/HU-014).
+ * Validação do CRUD da tabela de valores TLL por exercício (HU-145/HU-014).
  * Serve store e update: a chave (código TLL, exercício, especificação) é única e, no update, o
  * unique ignora o próprio registro. A autorização é o middleware
  * permission:manter-parametros da rota.

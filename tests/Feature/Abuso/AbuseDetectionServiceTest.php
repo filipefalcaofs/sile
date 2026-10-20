@@ -22,7 +22,7 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Motor de detecção de abuso (HU-149). NUNCA pune (RN-001/CA-02): gera ALERTA
+ * Motor de detecção de abuso (HU-138). NUNCA pune (RN-001/CA-02): gera ALERTA
  * idempotente e, acima do limiar `abuso.severidade_malha_fina`, encaminha à malha
  * fina pelo caminho de SISTEMA — SEM transicionar o status do processo. NO-OP
  * honesto quando o toggle features.deteccao_abuso está OFF (default). Auditado.
@@ -204,7 +204,7 @@ class AbuseDetectionServiceTest extends TestCase
 
     public function test_encaminhar_sistema_cria_referral_de_sistema_e_audita_sem_mudar_status(): void
     {
-        // Caminho ADITIVO de sistema (HU-149): referred_by_user_id null = sistema;
+        // Caminho ADITIVO de sistema (HU-138): referred_by_user_id null = sistema;
         // funciona em qualquer status (RN-001), inclusive deferida, sem transicionar.
         $request = $this->processo(ViabilityRequestStatus::Deferida);
 

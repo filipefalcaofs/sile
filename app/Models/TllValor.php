@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Valor da TLL (Taxa de Licença de Localização) por código e exercício (HU-071,
+ * Valor da TLL (Taxa de Licença de Localização) por código e exercício (HU-145,
  * HU-014) — dado versionado/auditado (RN-002 via HasAuditoria). O código TLL
  * liga ao enquadramento da planilha vigente; o valor monetário, a taxa de
  * serviço e o mapeamento SEFAZ alimentam o cálculo do DAM (RN-004) e o bloco

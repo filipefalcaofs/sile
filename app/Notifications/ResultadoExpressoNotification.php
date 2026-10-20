@@ -13,10 +13,10 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 /**
- * Aviso de ciência do resultado do fluxo expresso (HU-077). A partir do EP11
+ * Aviso de ciência do resultado do fluxo expresso (HU-073). A partir do EP11
  * (11-06) é uma ProcessNotification multicanal: percorre o NotificationDispatcher
- * (HU-090/094), que resolve os canais (notificacoes.mapa_canais ∩ toggles), cria
- * o ledger `communications` (in-app + histórico HU-096) e CONGELA os canais aqui
+ * (HU-086/090), que resolve os canais (notificacoes.mapa_canais ∩ toggles), cria
+ * o ledger `communications` (in-app + histórico HU-092) e CONGELA os canais aqui
  * via {@see freezeChannels()}. No envio enfileirado o via() LÊ {@see channels()}
  * (sem reresolver toggles) e traduz cada CommunicationChannel para o driver
  * nativo; o RegistrarEnvioComunicacao (11-04) fecha o ledger (na_fila →
@@ -134,7 +134,7 @@ class ResultadoExpressoNotification extends Notification implements ProcessNotif
 
     /**
      * Conteúdo da notificação in-app (canal database): o desfecho e o link de
-     * acompanhamento no portal — base da central de notificações (HU-096).
+     * acompanhamento no portal — base da central de notificações (HU-092).
      *
      * @return array<string, mixed>
      */

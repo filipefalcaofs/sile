@@ -7,7 +7,7 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 
 /**
- * Dado de PARTIDA dos feriados (HU-137), substituível pela lista oficial da
+ * Dado de PARTIDA dos feriados (HU-128), substituível pela lista oficial da
  * SEDUR. Semeia APENAS os feriados NACIONAIS de data fixa (inquestionáveis,
  * dado público) marcados como recorrentes anuais. NUNCA semeia feriado
  * MUNICIPAL de Salvador (2 de Julho, padroeiras etc.) nem feriados móveis

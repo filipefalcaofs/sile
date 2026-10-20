@@ -42,7 +42,7 @@ class GeoLayerFactory extends Factory
 
     /**
      * Camada bloqueada por ausência de fonte pública (zona/lote): registrada
-     * e comunicada, sem features — nunca simulada (HU-031/HU-033).
+     * e comunicada, sem features — nunca simulada (HU-030/HU-032).
      */
     public function pendenteFonte(): static
     {

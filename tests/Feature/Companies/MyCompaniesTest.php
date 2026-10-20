@@ -14,7 +14,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 /**
- * HU-027 — consultar empresas vinculadas. A partir do 03-07 a página React
+ * HU-026 — consultar empresas vinculadas. A partir do 03-07 a página React
  * portal/empresas/index existe em disco, então o teste principal verifica o
  * ->component(); as demais asserções continuam sobre as props (contrato da
  * DataTable).
@@ -184,7 +184,7 @@ class MyCompaniesTest extends TestCase
 
     public function test_consulta_propria_nao_exige_log_adicional(): void
     {
-        // HU-027 CA-02: GET é consulta às PRÓPRIAS empresas — não há ação de
+        // HU-026 CA-02: GET é consulta às PRÓPRIAS empresas — não há ação de
         // negócio a auditar além do padrão. Asserção apenas de resposta + props.
         $user = $this->portalUser();
         $this->companyFor($user);

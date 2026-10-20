@@ -27,7 +27,7 @@ class ParameterController extends Controller
      */
     public function index(Request $request): Response|HttpResponse
     {
-        // HU-131/RN-009: com ?formato=, exporta o catálogo pelo contrato único —
+        // HU-122/RN-009: com ?formato=, exporta o catálogo pelo contrato único —
         // sem rota nova. O catálogo não tem filtros de listagem; RN-009 garante
         // que o valor sensível nunca sai em claro (mascarado no ReportSource).
         if (in_array($request->string('formato')->lower()->toString(), ['csv', 'xlsx', 'pdf'], true)) {

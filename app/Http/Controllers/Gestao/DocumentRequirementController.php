@@ -17,7 +17,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * CRUD dos requisitos documentais (modelo "Requisito" do SIGVISA — HU-067) e do
+ * CRUD dos requisitos documentais (modelo "Requisito" do SIGVISA — HU-065) e do
  * vínculo N:N com CNAEs: a obrigatoriedade documental por CNAE vira DADO
  * administrável (HU-014), consumido pelo resolver da validação documental
  * (08-08). Atrás da permissão manter-requisitos-documentais (gate na rota); o

@@ -20,7 +20,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Tests\TestCase;
 
 /**
- * Atendimento presencial assistido (HU-150): o atendente autorizado opera o
+ * Atendimento presencial assistido (HU-139): o atendente autorizado opera o
  * sistema "em nome de" o cidadão presente no balcão (inclusão digital),
  * REUSANDO o mecanismo de representação da Fase 1 — modelo leve
  * AssistedAttendance + middleware análogo populando o MESMO

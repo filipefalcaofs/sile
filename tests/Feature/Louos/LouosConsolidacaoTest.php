@@ -19,8 +19,8 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Consolidação final do parecer LOUOS (HU-044) + fundamentação legal (HU-045) +
- * condicionantes de vagas (HU-042) + restrições especiais ZEIS (HU-043). O motor
+ * Consolidação final do parecer LOUOS (HU-042) + fundamentação legal (HU-043) +
+ * condicionantes de vagas (HU-040) + restrições especiais ZEIS (HU-041). O motor
  * combina as dimensões dos Quadros 7/10/11/11A num veredito único e fundamentado.
  *
  * Anti-fachada (regra central): sem zona (Quadro 10 indisponível) ou sem
@@ -228,7 +228,7 @@ class LouosConsolidacaoTest extends TestCase
     public function test_condicionantes_da_planilha_sao_informativas_e_nao_rebaixam_o_veredito(): void
     {
         // As condicionantes da planilha de tratamento (ex.: 4712-1/00 traz
-        // [1,3,6,7,10]) alimentam a ficha do parecer (HU-135), mas NÃO rebaixam
+        // [1,3,6,7,10]) alimentam a ficha do parecer (HU-126), mas NÃO rebaixam
         // o veredito sozinhas — quem rebaixa é condicionante urbanística do
         // Quadro 10, condição de via (11A), vaga não conforme ou ZEIS.
         $this->seedTratamento();
@@ -299,7 +299,7 @@ class LouosConsolidacaoTest extends TestCase
 
     public function test_fundamentacao_cita_louos_e_quadros_aplicados(): void
     {
-        // HU-045: o caso permitido cita a Lei 9.148/2016 e os quadros efetivamente
+        // HU-043: o caso permitido cita a Lei 9.148/2016 e os quadros efetivamente
         // aplicados (Quadro 7 e Quadro 10), com as versões registradas em versoes().
         $this->seedTratamento();
         $this->seedQuadro10('ZR-1', 'nR1', Quadro10Permissao::Permitido);
@@ -350,7 +350,7 @@ class LouosConsolidacaoTest extends TestCase
 
     public function test_vagas_nao_parametrizadas_geram_condicionante_informativa_sem_bloquear(): void
     {
-        // HU-042 (degradação honesta): sem exigência de vagas parametrizada para o
+        // HU-040 (degradação honesta): sem exigência de vagas parametrizada para o
         // grupo, o motor gera uma condicionante INFORMATIVA (conforme null) que
         // alimenta a ficha — mas NÃO rebaixa o veredito (não bloqueia).
         $this->seedTratamento();
@@ -369,9 +369,9 @@ class LouosConsolidacaoTest extends TestCase
 
     public function test_vagas_nao_conformes_geram_permitido_com_condicoes(): void
     {
-        // HU-042: com exigência parametrizada acima do declarado, o imóvel é Não
+        // HU-040: com exigência parametrizada acima do declarado, o imóvel é Não
         // Conforme quanto a vagas → permitido_com_condicoes (insumo da análise,
-        // HU-135). Não conforme NÃO vira nao_permitido.
+        // HU-126). Não conforme NÃO vira nao_permitido.
         $this->seedTratamento();
         $this->seedQuadro10('ZR-1', 'nR1', Quadro10Permissao::Permitido);
         $this->parametrizarVagas(['nR1' => ['vagas' => 5]]);
@@ -392,7 +392,7 @@ class LouosConsolidacaoTest extends TestCase
 
     public function test_restricao_zeis_incidente_gera_permitido_com_condicoes(): void
     {
-        // HU-043: restrição territorial incidente (ZEIS, camada ambiental da Fase
+        // HU-041: restrição territorial incidente (ZEIS, camada ambiental da Fase
         // 4) entra como condicionante e rebaixa para permitido_com_condicoes — sem
         // decidir sozinha (o roteamento à análise é do motor de risco, Fase 6).
         $this->seedTratamento();
@@ -474,7 +474,7 @@ class LouosConsolidacaoTest extends TestCase
 
     public function test_vagas_parametrizadas_sem_deploy(): void
     {
-        // HU-042/HU-014: a mesma entrada muda de veredito ao gravar o parâmetro
+        // HU-040/HU-014: a mesma entrada muda de veredito ao gravar o parâmetro
         // louos.vagas.exigencia_por_grupo — efeito sem deploy (cache invalidado na
         // gravação do Parameter).
         $this->seedTratamento();
@@ -497,7 +497,7 @@ class LouosConsolidacaoTest extends TestCase
     }
 
     /**
-     * Grava o parâmetro de exigência de vagas por grupo (HU-042/HU-014). O hook
+     * Grava o parâmetro de exigência de vagas por grupo (HU-040/HU-014). O hook
      * Parameter::saved invalida o cache da chave — efeito sem deploy.
      *
      * @param  array<string, mixed>  $exigencia
@@ -511,7 +511,7 @@ class LouosConsolidacaoTest extends TestCase
             'value' => json_encode($exigencia),
             'default_value' => '{}',
             'validation_rules' => ['required', 'json'],
-            'description' => 'Exigência de vagas por grupo de uso (HU-042).',
+            'description' => 'Exigência de vagas por grupo de uso (HU-040).',
         ]);
     }
 

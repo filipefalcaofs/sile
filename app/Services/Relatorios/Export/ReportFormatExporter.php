@@ -5,7 +5,7 @@ namespace App\Services\Relatorios\Export;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Driver de UM formato de exportação (HU-131 RN-009). CSV e PDF nascem em 15-02;
+ * Driver de UM formato de exportação (HU-122 RN-009). CSV e PDF nascem em 15-02;
  * XLSX (openspout) entra em 15-08. Cada driver sabe streamar ao navegador
  * (síncrono, abaixo do limiar) e gravar num caminho de filesystem (assíncrono,
  * pelo GerarExportacaoJob para download assinado posterior).

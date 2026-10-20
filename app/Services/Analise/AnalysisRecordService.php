@@ -13,9 +13,9 @@ use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Ficha de análise (HU-135) — o coração da análise humana. Orquestra a abertura
+ * Ficha de análise (HU-126) — o coração da análise humana. Orquestra a abertura
  * da revisão vigente, o autosave do rascunho (RN-008), a finalização imutável
- * (RN-003) com o registro das divergências analista×motor (HU-140 RN-002) e a
+ * (RN-003) com o registro das divergências analista×motor (HU-130 RN-002) e a
  * criação de uma nova revisão para reedição/recálculo após a finalização.
  *
  * A revisão é versionada e append-only: a finalizada NUNCA é alterada — recalcular
@@ -147,8 +147,8 @@ class AnalysisRecordService
     }
 
     /**
-     * Finaliza a revisão (HU-135 RN-003): torna-a IMUTÁVEL (status finalizada +
-     * finalized_at) e materializa as divergências analista×motor (HU-140 RN-002)
+     * Finaliza a revisão (HU-126 RN-003): torna-a IMUTÁVEL (status finalizada +
+     * finalized_at) e materializa as divergências analista×motor (HU-130 RN-002)
      * numa transação com a auditoria síncrona (RN-002). Finalizar uma revisão já
      * finalizada lança AnalysisRecordImutavelException (422 no caller). NÃO decide
      * o processo — a decisão é 10-10, a partir da ficha finalizada.
@@ -241,7 +241,7 @@ class AnalysisRecordService
     }
 
     /**
-     * Materializa as divergências (HU-140 RN-002): para cada CNAE onde o status
+     * Materializa as divergências (HU-130 RN-002): para cada CNAE onde o status
      * ESCOLHIDO pelo analista diverge do SUGERIDO pelo motor, grava uma
      * analysis_divergences (com a justificativa, quando informada). Concordâncias e
      * itens sem sugestão do motor (FA-01) NÃO geram divergência — anti-fachada.

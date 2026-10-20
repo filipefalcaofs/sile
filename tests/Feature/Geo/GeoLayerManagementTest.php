@@ -13,7 +13,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 /**
- * Gestão de camadas geográficas pela interface (HU-036, parametrização 3.1) —
+ * Gestão de camadas geográficas pela interface (HU-035, parametrização 3.1) —
  * parte SQLite: permissão (manter-territorio), validação do upload e a guarda
  * de driver honesta (anti-fachada): o importador é PostGIS-only (ST_*), então
  * fora do pgsql o store recusa com flash.error e NÃO cria nada — nunca finge

@@ -18,7 +18,7 @@ use Illuminate\Support\Str;
 
 /**
  * Emissão do TVL (Termo de Viabilidade de Localização) em PDF no backoffice
- * (HU-132). O documento deixou de ir ao cidadão (canal oficial é Regin/SEFAZ) e
+ * (HU-123). O documento deixou de ir ao cidadão (canal oficial é Regin/SEFAZ) e
  * virou relatório administrativo interno emitível sob demanda APÓS o deferimento
  * (fluxo expresso OU análise humana).
  *

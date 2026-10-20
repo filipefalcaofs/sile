@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Vínculo N:N analista↔setor (HU-138 RN-005) — administrável pelo gestor. O
+     * Vínculo N:N analista↔setor (HU-129 RN-005) — administrável pelo gestor. O
      * unique(sector_id,user_id) impede duplicar o mesmo analista num setor. Em
      * cascade nos dois lados: remover o setor ou o usuário desfaz o vínculo (o
      * histórico das atribuições vive na auditoria/viability_requests, não aqui).

@@ -22,7 +22,7 @@ use Tests\Feature\Relatorios\Stubs\ProcessoBairroSource;
 use Tests\TestCase;
 
 /**
- * Driver XLSX do contrato de exportação (HU-131): openspout v4 por streaming de
+ * Driver XLSX do contrato de exportação (HU-122): openspout v4 por streaming de
  * baixa memória (Builder->cursor(), nunca all()). O arquivo gerado é legível ao
  * reabrir com o Reader do openspout e reflete EXATAMENTE o conjunto filtrado
  * (RN-005) — a linha fora do filtro não entra na planilha.

@@ -23,7 +23,7 @@ use Tests\Support\SeedsTratamentoPlanilha;
 use Tests\TestCase;
 
 /**
- * Sandbox de simulação de impacto de parametrização da LOUOS (HU-143). O gestor
+ * Sandbox de simulação de impacto de parametrização da LOUOS (HU-133). O gestor
  * simula uma versão RASCUNHO de um Quadro contra cenários reais — derivados dos
  * CNAEs da versão vigente do Quadro 7 com a zona fixa do Quadro 10 — reexecutando
  * o MOTOR REAL (LouosEnquadramentoService) por versão específica e contando as
@@ -309,7 +309,7 @@ class LouosSandboxTest extends TestCase
 
     public function test_publicar_exige_quatro_olhos(): void
     {
-        // RN-005 (HU-046/HU-053): autor = publicador é bloqueado (flash.error) e
+        // RN-005 (HU-044/HU-051): autor = publicador é bloqueado (flash.error) e
         // o rascunho segue rascunho; publicador distinto promove a nova vigente.
         $autor = $this->administrador();
         $publicador = $this->administrador();

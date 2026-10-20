@@ -22,13 +22,13 @@ import GestaoLayout from '@/layouts/gestao-layout';
 import { rotulo, type VocabularioCatalog } from '@/lib/vocabulario';
 import type { SharedProps } from '@/types';
 
-/** Solicitações protocoladas por dia (HU-123). */
+/** Solicitações protocoladas por dia (HU-114). */
 interface SeriePonto {
     dia: string;
     total: number;
 }
 
-/** Recorte por bairro (HU-124): a zona urbanística oficial está bloqueada. */
+/** Recorte por bairro (HU-115): a zona urbanística oficial está bloqueada. */
 interface PorZona {
     degradacao: string;
     rotulo: string;
@@ -40,7 +40,7 @@ interface PorCnaeItem {
     total: number;
 }
 
-/** Nível de risco com a `fonte` (real do Decreto, derivada ou indefinida) — HU-126. */
+/** Nível de risco com a `fonte` (real do Decreto, derivada ou indefinida) — HU-117. */
 interface PorRiscoItem {
     nivel: string;
     fonte: string;
@@ -510,7 +510,7 @@ function FiltroCampo({ label, children }: { label: string; children: ReactNode }
 }
 
 /**
- * Legenda da fonte do nível de risco (HU-126): deixa explícito quando o nível é
+ * Legenda da fonte do nível de risco (HU-117): deixa explícito quando o nível é
  * o REAL do Decreto, derivado da categoria ou indefinido — transparência, sem
  * passar dado derivado por oficial.
  */

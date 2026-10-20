@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 /**
- * Detecção de duplicidade/reincidência por CNPJ (HU-061 RN-007): o detector
+ * Detecção de duplicidade/reincidência por CNPJ (HU-059 RN-007): o detector
  * APONTA o processo anterior da mesma empresa para gerar alerta + link; NUNCA
  * bloqueia (direito de petição). A janela de recência é uma constante de
  * config (definição é pendência SEDUR — default honesto). Resolução por

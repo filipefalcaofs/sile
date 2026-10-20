@@ -12,7 +12,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 /**
- * Registro de solicitação em CONTINGÊNCIA na retaguarda (HU-148). A permissão é
+ * Registro de solicitação em CONTINGÊNCIA na retaguarda (HU-137). A permissão é
  * o middleware permission:registrar-contingencia (CA-04); aqui validamos o MESMO
  * conjunto de dados do formulário oficial. O beneficiário (cidadão) é informado
  * por CPF e a empresa por CNPJ — ambos precisam existir no sistema (o protocolo

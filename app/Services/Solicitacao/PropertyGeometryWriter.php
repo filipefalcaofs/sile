@@ -6,7 +6,7 @@ use App\Models\ViabilityRequest;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Geometria do imóvel da solicitação (HU-062/HU-063), driver-aware — espelha o
+ * Geometria do imóvel da solicitação (HU-060/HU-061), driver-aware — espelha o
  * GeoJsonLayerImporter da Fase 4.
  *
  * A FONTE de verdade portável é o `property_polygon_geojson` (jsonb), gravado

@@ -17,7 +17,7 @@ use DateTimeInterface;
 use Illuminate\Console\Command;
 
 /**
- * HU-147: escalonamento por SLA. Varre os processos em_analise e lê o semáforo da
+ * HU-136: escalonamento por SLA. Varre os processos em_analise e lê o semáforo da
  * FONTE ÚNICA de prazo (analysis_due_at + analysis_stage_started_at) pelo
  * AnalysisSlaService — a MESMA origem da fila/badge da Fase 10, sem recalcular
  * prazo à parte (CA-02, RN-002):
@@ -28,7 +28,7 @@ use Illuminate\Console\Command;
  *
  * O que fazer por faixa vem de notificacoes.escalonamento.tratamento (default só
  * notificar). SÓ notifica — NUNCA decide/transiciona (RN-003); a fonte de prazo é
- * única para não brigar com a HU-129 (sem dupla contagem). Idempotente pelo ledger
+ * única para não brigar com a HU-120 (sem dupla contagem). Idempotente pelo ledger
  * communications (RN-004). Agendado com withoutOverlapping/onOneServer.
  *
  * Pendência SEDUR: o destinatário "gestor DO SETOR" não existe no schema; o
@@ -39,7 +39,7 @@ class EscalonarSlaCommand extends Command
 {
     protected $signature = 'notificacoes:escalonar-sla';
 
-    protected $description = 'HU-147: escala por SLA (amarelo→analista, vencido→gestor) sobre a fonte única analysis_due_at, de forma idempotente';
+    protected $description = 'HU-136: escala por SLA (amarelo→analista, vencido→gestor) sobre a fonte única analysis_due_at, de forma idempotente';
 
     public function handle(NotificationDispatcher $dispatcher, AnalysisSlaService $sla, DestinatariosEscalonamento $destinatariosEscalonamento): int
     {

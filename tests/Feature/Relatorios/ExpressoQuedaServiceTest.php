@@ -18,7 +18,7 @@ use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 /**
- * Relatório de quedas do expresso (HU-145): taxa de resposta expressa
+ * Relatório de quedas do expresso (HU-135): taxa de resposta expressa
  * (respondidas pelo expresso ÷ elegíveis), meta parametrizável (RN-004), série
  * temporal e ranking de motivos — tudo por AGREGAÇÃO SQL real sobre os dados das
  * Fases 9/10 e a captura do 15-07. Datasets cravados provam contagens exatas; a
@@ -88,7 +88,7 @@ class ExpressoQuedaServiceTest extends TestCase
     #[Test]
     public function taxa_resposta_expressa_e_a_razao_real_respondidas_sobre_elegiveis(): void
     {
-        // HU-145 RN-002: 6 respondidas pelo expresso ÷ 8 elegíveis (6 deferidas +
+        // HU-135 RN-002: 6 respondidas pelo expresso ÷ 8 elegíveis (6 deferidas +
         // 2 caídas à análise) = 75.0%. A meta nasce null (não definida, RN-004).
         for ($i = 0; $i < 6; $i++) {
             $this->respondidaExpressa();
@@ -145,7 +145,7 @@ class ExpressoQuedaServiceTest extends TestCase
     #[Test]
     public function ranking_motivos_agrupa_por_tipo_gatilho_e_rotula_null_como_nao_classificado(): void
     {
-        // HU-145: ranking dos motivos da queda por gatilho (desc). tipo_gatilho
+        // HU-135: ranking dos motivos da queda por gatilho (desc). tipo_gatilho
         // null (motor degradado / sem gatilho) é rotulado 'não classificado' —
         // honesto, nunca somado a um gatilho real.
         $req = $this->protocolada();
@@ -179,7 +179,7 @@ class ExpressoQuedaServiceTest extends TestCase
     #[Test]
     public function serie_temporal_da_taxa_por_dia_dentro_da_janela(): void
     {
-        // HU-145: taxa de resposta expressa por dia (respondidas ÷ elegíveis do
+        // HU-135: taxa de resposta expressa por dia (respondidas ÷ elegíveis do
         // dia), dentro da janela parametrizável, ordenada por dia.
         Carbon::setTestNow('2026-06-10 12:00:00');
 
@@ -203,7 +203,7 @@ class ExpressoQuedaServiceTest extends TestCase
     #[Test]
     public function drill_down_recorta_processos_que_cairam_reusando_o_filtered(): void
     {
-        // HU-145: o drill-down parte do conjunto de processos que CAÍRAM (têm
+        // HU-135: o drill-down parte do conjunto de processos que CAÍRAM (têm
         // queda registrada), reusando o filtro completo do SAPS (ProcessoQueryService).
         $caido = $this->protocolada();
         ExpressoQueda::factory()->create(['viability_request_id' => $caido->id]);
@@ -218,7 +218,7 @@ class ExpressoQuedaServiceTest extends TestCase
     #[Test]
     public function report_source_exporta_as_quedas_filtradas_com_colunas_corretas(): void
     {
-        // HU-131 RN-005: o ExpressoQuedaReportSource exporta exatamente as quedas
+        // HU-122 RN-005: o ExpressoQuedaReportSource exporta exatamente as quedas
         // do conjunto filtrado, sem PII direta (personalData=false).
         $req = $this->protocolada();
         ExpressoQueda::factory()->create([

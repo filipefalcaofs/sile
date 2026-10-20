@@ -19,7 +19,7 @@ use Tests\TestCase;
  * Evidência anti-fachada central: o veredito locacional é PROPAGADO do
  * consolidado do motor LOUOS (`enquadramento->resultado()`/`->consolidado`),
  * nunca decidido pelo orquestrador — a degradação "sem zona → pendente" é
- * verdade única do motor (HU-044), aqui apenas espelhada. toArray() é o contrato
+ * verdade única do motor (HU-042), aqui apenas espelhada. toArray() é o contrato
  * snake_case do endpoint JSON e do snapshot do histórico; versoes() agrega as
  * versões de TODAS as regras (território + LOUOS + risco — RN-002/RN-004).
  */

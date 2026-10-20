@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  * @extends Factory<ExportFile>
  *
  * Default = exportação CSV concluída de um usuário, no disco 'local', com
- * contagem de linhas e bag de filtros plausíveis (HU-131).
+ * contagem de linhas e bag de filtros plausíveis (HU-122).
  */
 class ExportFileFactory extends Factory
 {

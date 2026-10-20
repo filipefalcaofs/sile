@@ -11,7 +11,7 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Busca global da retaguarda (HU-082 RN-009 — atalho Cmd/Ctrl+K): um endpoint
+ * Busca global da retaguarda (HU-078 RN-009 — atalho Cmd/Ctrl+K): um endpoint
  * LEVE que casa o termo contra número do processo, BAP, produto TVL, CNPJ e nome
  * (empresa/requerente) com whereLike caseSensitive:false e devolve poucos
  * resultados em JSON ({id, protocolo, empresa, link}) para levar direto ao

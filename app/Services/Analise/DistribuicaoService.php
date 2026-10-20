@@ -12,12 +12,12 @@ use App\Support\Audit\AuditService;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Caixa do setor (HU-080/081): distribuição (gestor) e assunção (analista) dos
+ * Caixa do setor (HU-076/077): distribuição (gestor) e assunção (analista) dos
  * processos em análise. O processo cai na caixa do setor (sector_id) e é
  * atribuído a um analista do setor SEM sair da caixa (RN-004 — modelo SAPS que
  * cobre férias/ausências: qualquer analista do setor mantém visibilidade e pode
  * assumir). Quem distribui em qualquer setor (o apoio) entrega a qualquer
- * analista, e o processo passa para o setor do analista. A atribuição recalcula o SLA para a etapa de análise (HU-144, fonte
+ * analista, e o processo passa para o setor do analista. A atribuição recalcula o SLA para a etapa de análise (HU-134, fonte
  * única AnalysisSlaService) e audita por processo de forma SÍNCRONA (RN-006 —
  * não depende de evento, lição das Fases 8/9). O lote (RN-007) itera item a
  * item, auditando cada um e isolando falhas.
@@ -97,7 +97,7 @@ class DistribuicaoService
     }
 
     /**
-     * O próprio analista do setor pega um processo da caixa para si (HU-081 —
+     * O próprio analista do setor pega um processo da caixa para si (HU-077 —
      * registra responsabilidade técnica). Mesmo efeito da distribuição, com o
      * analista como ator e o evento de auditoria 'assumir'.
      */
@@ -342,7 +342,7 @@ class DistribuicaoService
 
     /**
      * Garante que o processo está numa caixa de setor e que o analista pertence a
-     * esse setor (RN-004 — atribuição dentro da caixa; HU-081 — só analista
+     * esse setor (RN-004 — atribuição dentro da caixa; HU-077 — só analista
      * vinculado assume/é distribuído). Não muta nada; só valida.
      */
     private function garantirVinculoDeSetor(ViabilityRequest $request, User $analista): void

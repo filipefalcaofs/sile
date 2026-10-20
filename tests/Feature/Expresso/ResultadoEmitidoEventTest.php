@@ -11,13 +11,13 @@ use Illuminate\Support\Facades\Event;
 use Tests\TestCase;
 
 /**
- * ResultadoEmitido — o SEGUNDO evento de domínio do Viabiliza (HU-076): a decisão do
+ * ResultadoEmitido — o SEGUNDO evento de domínio do Viabiliza (HU-072): a decisão do
  * fluxo expresso foi emitida. Espelha SolicitacaoProtocolada: é after-commit
  * (ShouldDispatchAfterCommit, só efetiva efeitos após o commit da transação da
  * decisão) e carrega a solicitação + a decisão imutável. Os efeitos (notificar
- * HU-077, comunicar Regin HU-104, enviar SEFAZ HU-110) são listeners
+ * HU-073, comunicar Regin HU-100, enviar SEFAZ HU-103) são listeners
  * AUTO-DESCOBERTOS plugados na Wave 4 — aqui só o evento. A auditoria
- * autoritativa da decisão (HU-078) é SÍNCRONA na transação e NÃO depende deste
+ * autoritativa da decisão (HU-074) é SÍNCRONA na transação e NÃO depende deste
  * evento.
  */
 class ResultadoEmitidoEventTest extends TestCase

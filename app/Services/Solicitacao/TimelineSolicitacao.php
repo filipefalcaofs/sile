@@ -8,14 +8,14 @@ use App\Models\ViabilityRequestTransition;
 use App\Support\Settings;
 
 /**
- * Timeline simplificada da solicitação (HU-069 RN-004/006) montada a partir das
+ * Timeline simplificada da solicitação (HU-067 RN-004/006) montada a partir das
  * viability_request_transitions REAIS — a fonte de verdade do andamento
  * (anti-fachada: nada é inventado). No modo PÚBLICO (link assinado, LGPD) cada
  * etapa expõe SÓ a data + o rótulo amigável (publicLabel); o motivo interno, o
  * ator e o rótulo técnico ficam exclusivamente no modo autenticado, junto das
  * pendências do requerente. O prazo estimado é parametrizado
  * (solicitacao.prazo_estimado_dias) COM ressalva honesta — a medição real por
- * etapa é da HU-129/Fase 15.
+ * etapa é da HU-120/Fase 15.
  */
 class TimelineSolicitacao
 {
@@ -111,7 +111,7 @@ class TimelineSolicitacao
 
     /**
      * Prazo estimado parametrizado (RN-005) COM ressalva honesta — a medição real
-     * por etapa (HU-129) ainda não existe (Fase 15). Estados terminais não têm
+     * por etapa (HU-120) ainda não existe (Fase 15). Estados terminais não têm
      * prazo em curso a estimar.
      *
      * @return array{dias: int, ressalva: string}|null

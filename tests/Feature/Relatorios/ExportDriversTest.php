@@ -13,7 +13,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 use Tests\TestCase;
 
 /**
- * Drivers síncronos do contrato de exportação (HU-131): o CSV preserva a
+ * Drivers síncronos do contrato de exportação (HU-122): o CSV preserva a
  * integridade tabular (cabeçalho + linhas, sem total no corpo — RN-010) e o PDF
  * é renderizado DE VERDADE pelo dompdf (começa com '%PDF') sobre o Blade
  * genérico, que traz o rodapé "Total de registros: N" + data/hora + filtros

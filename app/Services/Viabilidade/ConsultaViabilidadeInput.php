@@ -5,14 +5,14 @@ namespace App\Services\Viabilidade;
 use App\Services\Risco\TipoImovel;
 
 /**
- * Entrada imutável da consulta prévia de viabilidade (HU-054 a HU-056),
+ * Entrada imutável da consulta prévia de viabilidade (HU-052 a HU-054),
  * espelhando o estilo de EnquadramentoInput/RiscoInput (readonly + named
  * constructors). Há exatamente 3 formas honestas de consultar e cada uma carrega
  * o `tipo` explícito, para que o serviço (07-05) saiba como resolver o ponto:
  *
- * - endereço (HU-054): geocodifica → território → motores (fluxo completo);
- * - CNAE (HU-056): risco real + (com `area`) enquadramento da planilha, sem território;
- * - inscrição (HU-055): resolução do ponto BLOQUEADA pendente SEDUR (contrato
+ * - endereço (HU-052): geocodifica → território → motores (fluxo completo);
+ * - CNAE (HU-054): risco real + (com `area`) enquadramento da planilha, sem território;
+ * - inscrição (HU-053): resolução do ponto BLOQUEADA pendente SEDUR (contrato
  *   PropertyRegistryLookup) — degrada com aviso, NUNCA inventa o ponto.
  *
  * `cnae` é sempre exigido (a viabilidade é sempre de uma atividade). `area` é o
@@ -32,7 +32,7 @@ final readonly class ConsultaViabilidadeInput
 
     /**
      * @param  array<int, bool|int|list<int>>  $respostas
-     * @param  array<string, float>  $vagas  Vagas/carga/descarga declaradas (HU-042).
+     * @param  array<string, float>  $vagas  Vagas/carga/descarga declaradas (HU-040).
      */
     public function __construct(
         public string $tipo,
@@ -47,7 +47,7 @@ final readonly class ConsultaViabilidadeInput
     ) {}
 
     /**
-     * Consulta por endereço (HU-054): o serviço geocodifica o endereço, resolve o
+     * Consulta por endereço (HU-052): o serviço geocodifica o endereço, resolve o
      * território e orquestra os motores. `area` alimenta o enquadramento da planilha.
      */
     /**
@@ -69,7 +69,7 @@ final readonly class ConsultaViabilidadeInput
     }
 
     /**
-     * Consulta por CNAE (HU-056): risco real e, quando há `area`, enquadramento
+     * Consulta por CNAE (HU-054): risco real e, quando há `area`, enquadramento
      * da planilha — sem território (sem ponto, sem zona/via). O veredito locacional fica pendente.
      */
     /**
@@ -90,7 +90,7 @@ final readonly class ConsultaViabilidadeInput
     }
 
     /**
-     * Consulta por inscrição imobiliária (HU-055): a resolução do ponto depende da
+     * Consulta por inscrição imobiliária (HU-053): a resolução do ponto depende da
      * base de lotes/Cadastro (pendente SEDUR — contrato PropertyRegistryLookup).
      * Enquanto indisponível, degrada com aviso e sugere o endereço.
      */
@@ -113,7 +113,7 @@ final readonly class ConsultaViabilidadeInput
     }
 
     /**
-     * Consulta a partir de um PONTO já conhecido (HU-141): a solicitação de
+     * Consulta a partir de um PONTO já conhecido (HU-131): a solicitação de
      * viabilidade já tem o ponto (centroide do polígono do imóvel), então a
      * simulação pré-protocolo NÃO geocodifica de novo — roda a pipeline completa
      * (território → motores) a partir do ponto. `area` alimenta o enquadramento da planilha.

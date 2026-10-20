@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 /**
- * CRUD administrável de feriados (HU-137): o administrador mantém o calendário de
+ * CRUD administrável de feriados (HU-128): o administrador mantém o calendário de
  * feriados (criar/editar/ativar-inativar) pela retaguarda, atrás da permissão
  * manter-parametros (reuso — como setores/textos-padrão; sem permissão nova). A
  * data é única (não há feriado duplicado); inativar preserva o histórico (sem
@@ -164,7 +164,7 @@ class HolidayControllerTest extends TestCase
             'event' => 'updated',
         ]);
 
-        // Não existe rota destrutiva de feriado (HU-137 — preserva histórico).
+        // Não existe rota destrutiva de feriado (HU-128 — preserva histórico).
         $this->assertFalse(Route::has('gestao.feriados.destroy'));
     }
 }

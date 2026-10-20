@@ -5,7 +5,7 @@ namespace App\Http\Requests\Portal;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
- * Validação da resposta à pendência pelo portal (HU-084). A autorização (dono/
+ * Validação da resposta à pendência pelo portal (HU-080). A autorização (dono/
  * representante) e o vínculo da pendência com a solicitação (anti-IDOR) ficam no
  * controller; aqui só a resposta obrigatória, que vira a complementação gravada
  * em analysis_pendencies.response.

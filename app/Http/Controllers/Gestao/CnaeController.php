@@ -50,7 +50,7 @@ class CnaeController extends Controller
      */
     public function index(Request $request): Response|HttpResponse
     {
-        // HU-131/RN-009: com ?formato=, exporta o conjunto filtrado da tela pelo
+        // HU-122/RN-009: com ?formato=, exporta o conjunto filtrado da tela pelo
         // contrato único — sem rota nova, sem reimplementar export.
         if (in_array($request->string('formato')->lower()->toString(), ['csv', 'xlsx', 'pdf'], true)) {
             return app(ReportExporter::class)->export(

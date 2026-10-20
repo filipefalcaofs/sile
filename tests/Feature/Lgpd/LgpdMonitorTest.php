@@ -12,7 +12,7 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Monitoramento de conformidade LGPD (HU-102): o painel agrega TRÊS fontes
+ * Monitoramento de conformidade LGPD (HU-098): o painel agrega TRÊS fontes
  * REAIS — consentimentos (LegalTerm::current('lgpd') × LegalTermAcceptance),
  * retenção (retencao.access_logs.dias + último pruning lido da trilha; decisões
  * ficam FORA do pruning) e acessos a dado pessoal (activity_log.personal_data).

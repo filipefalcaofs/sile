@@ -14,7 +14,7 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Fila de trabalho do analista (HU-144): a caixa de entrada lista só os processos
+ * Fila de trabalho do analista (HU-134): a caixa de entrada lista só os processos
  * atribuídos ao usuário, ordenados por prazo restante (analysis_due_at), com
  * semáforo de SLA on-the-fly (AnalysisSlaService, 10-05) e contadores por status.
  * O parâmetro modo=setor é ignorado — a caixa do setor é a tela própria. O gestor

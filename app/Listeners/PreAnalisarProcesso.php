@@ -6,7 +6,7 @@ use App\Events\EncaminhadoParaAnalise;
 use App\Services\Analise\PreAnaliseService;
 
 /**
- * Gatilho da pré-análise pelo motor (HU-140): pendura no evento de domínio
+ * Gatilho da pré-análise pelo motor (HU-130): pendura no evento de domínio
  * EncaminhadoParaAnalise (Fase 9/10-03) e delega ao PreAnaliseService, que roda
  * o SolicitacaoViabilityResolver FRESCO e cria a analysis_records revisão 1
  * pré-preenchida (ou em modo manual na degradação FA-01).

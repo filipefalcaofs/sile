@@ -115,7 +115,7 @@ class SolicitacaoSchemaTest extends TestCase
         $this->assertSame('Rascunho', ViabilityRequestStatus::Rascunho->label());
         $this->assertSame('Protocolada', ViabilityRequestStatus::Protocolada->label());
 
-        // publicLabel() fala ao cidadão em linguagem simples (HU-069 RN-004) —
+        // publicLabel() fala ao cidadão em linguagem simples (HU-067 RN-004) —
         // diferente do label técnico.
         $this->assertNotSame(
             ViabilityRequestStatus::Protocolada->label(),

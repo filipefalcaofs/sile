@@ -39,7 +39,7 @@ class ViabilityQueryFactory extends Factory
     }
 
     /**
-     * Consulta anônima (HU-060): sem dono, com a origem (IP) registrada — o
+     * Consulta anônima (HU-058): sem dono, com a origem (IP) registrada — o
      * schema aceita null; gravar só quando autenticado é regra do controller.
      */
     public function anonima(): static

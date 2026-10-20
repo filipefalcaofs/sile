@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Relógio do BAP (HU-134) — DORMENTE: bap_due_at marca o vencimento do prazo
+     * Relógio do BAP (HU-125) — DORMENTE: bap_due_at marca o vencimento do prazo
      * de atuação na Junta e bap_linked_at a vinculação efetiva. Nada entra em
      * aguardando_bap até o Regin (Fase 13) alimentar estas colunas; até lá a
      * rotina expresso:indeferir-sem-bap varre zero. Migration ADITIVA — só

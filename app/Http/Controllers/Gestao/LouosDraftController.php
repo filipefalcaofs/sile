@@ -24,7 +24,7 @@ use Inertia\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
- * Endpoints HTTP do rascunho editável dos Quadros da LOUOS (HU-046).
+ * Endpoints HTTP do rascunho editável dos Quadros da LOUOS (HU-044).
  * A vigente nunca é alterada diretamente; toda edição ocorre no rascunho
  * coexistente e a publicação exige quatro olhos via LouosDraftService.
  */

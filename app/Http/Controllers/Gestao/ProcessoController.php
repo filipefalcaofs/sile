@@ -38,11 +38,11 @@ use Inertia\Response;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 /**
- * Consulta de processos (HU-082) e fila do analista (HU-144) na retaguarda,
+ * Consulta de processos (HU-078) e fila do analista (HU-134) na retaguarda,
  * server-driven (espelha o ResultadoExpressoController/CaixaSetorController). O
  * index aplica os filtros completos do SAPS + analista + categoria via
  * ProcessoQueryService, pagina no servidor e, com ?formato= (csv/xlsx/pdf),
- * delega ao contrato único de exportação (HU-131/RN-009): o {@see ReportExporter}
+ * delega ao contrato único de exportação (HU-122/RN-009): o {@see ReportExporter}
  * exporta o conjunto filtrado (RN-005) via {@see ProcessosReportSource},
  * preservando as colunas/arquivo do CSV histórico e auditando (RN-008). O detalhe
  * (show) carrega dados/decisão/ficha/timeline como props (mini-mapa/abas
@@ -63,8 +63,8 @@ class ProcessoController extends Controller
     ) {}
 
     /**
-     * Consulta filtrável e paginada (HU-082). Com ?formato= (csv/xlsx/pdf),
-     * delega ao contrato único de exportação (HU-131/RN-009) o conjunto filtrado
+     * Consulta filtrável e paginada (HU-078). Com ?formato= (csv/xlsx/pdf),
+     * delega ao contrato único de exportação (HU-122/RN-009) o conjunto filtrado
      * via {@see ProcessosReportSource} — o ReportExporter audita (RN-008) e
      * escolhe o caminho síncrono/assíncrono. A consulta é auditada (CA-02).
      */
@@ -127,7 +127,7 @@ class ProcessoController extends Controller
     }
 
     /**
-     * Caixa de entrada do analista (HU-144): só os processos atribuídos ao
+     * Caixa de entrada do analista (HU-134): só os processos atribuídos ao
      * usuário, ordenados por prazo (analysis_due_at) com semáforo on-the-fly e
      * contadores por status. A caixa do setor é outra tela. O parâmetro modo é
      * ignorado para um atalho antigo não reabrir a fila do setor aqui. O gestor
@@ -178,7 +178,7 @@ class ProcessoController extends Controller
     }
 
     /**
-     * Detalhe do processo (HU-082 RN-006/007): dados, decisão, ficha vigente e
+     * Detalhe do processo (HU-078 RN-006/007): dados, decisão, ficha vigente e
      * timeline como props para a UI (mini-mapa/abas em 10-16). A consulta é
      * auditada. 404 honesto via route model binding (processo inexistente).
      */
@@ -224,7 +224,7 @@ class ProcessoController extends Controller
 
         // personalData: leitura do detalhe do processo de um cidadão expõe dados
         // da empresa/requerente — acesso a dado pessoal de terceiro, medido pelo
-        // painel LGPD (HU-102). Marcação ADITIVA, sem mudar a auditoria existente.
+        // painel LGPD (HU-098). Marcação ADITIVA, sem mudar a auditoria existente.
         $this->audit->log(
             logName: 'analise',
             event: 'consulta-processo',
@@ -251,7 +251,7 @@ class ProcessoController extends Controller
                 'encaminhado_em' => $despacho->created_at?->toIso8601String(),
             ],
             'parecer' => ParecerDecisao::de($viabilityRequest->decision),
-            // Explicabilidade passo a passo (HU-099): projeção PURA do
+            // Explicabilidade passo a passo (HU-095): projeção PURA do
             // decision_trace gravado (RN-005), só quando há decisão — sem
             // desfecho não há explicação inventada. Prop ADITIVA sob o gate
             // consultar-solicitacoes já vigente.

@@ -150,7 +150,7 @@ function PublicShell({ children }: { children: ReactNode }) {
 }
 
 /**
- * Consulta prévia de viabilidade PÚBLICA (HU-054/055/056): 3 entradas honestas
+ * Consulta prévia de viabilidade PÚBLICA (HU-052/053/054): 3 entradas honestas
  * (endereço, CNAE ou inscrição), mapa Leaflet reusado da Fase 4 para o ponto e o
  * resultado real dos motores via os endpoints /portal/viabilidade/* (useHttp —
  * nada simulado no front). O veredito locacional é honesto: pendente com motivo

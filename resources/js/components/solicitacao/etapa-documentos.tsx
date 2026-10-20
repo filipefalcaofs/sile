@@ -66,7 +66,7 @@ function formatSize(bytes: number | null): string {
 }
 
 /**
- * Etapa de documentos (HU-066/067): anexa arquivos (POST solicitacoes.documentos)
+ * Etapa de documentos (HU-064/065): anexa arquivos (POST solicitacoes.documentos)
  * e mostra os requisitos obrigatórios — os FALTANTES aparecem como AVISO honesto
  * (nunca silencioso); o bloqueio do protocolo é na revisão. O download é
  * autenticado (08-08). Tipos e tamanho aceitos são comunicados (HU-014).

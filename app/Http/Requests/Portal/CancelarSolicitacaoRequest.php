@@ -5,7 +5,7 @@ namespace App\Http\Requests\Portal;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
- * Validação do cancelamento (HU-070). A autorização fina (dono + não decidido) é
+ * Validação do cancelamento (HU-068). A autorização fina (dono + não decidido) é
  * feita no controller via Gate::authorize('cancel', ...). Aqui só o motivo
  * obrigatório do cancelamento — registrado na trilha (reason da transição) para
  * auditoria do porquê.

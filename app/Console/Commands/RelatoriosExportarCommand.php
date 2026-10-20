@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Storage;
 use InvalidArgumentException;
 
 /**
- * Comando de EVIDÊNCIA do contrato de exportação (HU-131 / 15-15): a partir do
+ * Comando de EVIDÊNCIA do contrato de exportação (HU-122 / 15-15): a partir do
  * conjunto filtrado de uma fonte, grava UM arquivo REAL de cada formato
  * (CSV/XLSX/PDF) num caminho de evidência e imprime o caminho + a contagem de
  * linhas. Prova a lógica de export de ponta a ponta (entrega-funcional,
@@ -34,7 +34,7 @@ class RelatoriosExportarCommand extends Command
         {source=solicitacoes : Fonte do relatório (solicitacoes, quedas-expresso)}
         {--formato= : Formato único (csv|xlsx|pdf); vazio gera os três}';
 
-    protected $description = 'Gera um arquivo real de cada formato (CSV/XLSX/PDF) de um relatório — evidência end-to-end do export (HU-131)';
+    protected $description = 'Gera um arquivo real de cada formato (CSV/XLSX/PDF) de um relatório — evidência end-to-end do export (HU-122)';
 
     /**
      * Fontes reconstrutíveis só a partir do bag (sem estado de construtor) — as

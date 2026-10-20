@@ -10,7 +10,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Consulta operacional de falhas de comunicação (HU-096): responde "quais
+ * Consulta operacional de falhas de comunicação (HU-092): responde "quais
  * notificações falharam ou foram bloqueadas, de quais processos?" sobre o
  * ledger REAL de communications — a pendência operacional fica visível ao
  * gestor (nunca falha silenciosa). Recorte por período (created_at) e canal;

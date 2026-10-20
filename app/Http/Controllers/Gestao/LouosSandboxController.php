@@ -17,7 +17,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Sandbox de simulação de parametrização da LOUOS no console SEDUR (HU-143). O
+ * Sandbox de simulação de parametrização da LOUOS no console SEDUR (HU-133). O
  * gestor seleciona um rascunho de Quadro, simula o impacto contra cenários reais
  * reexecutando o MOTOR REAL (LouosSandboxSimulationService) — sem efeito colateral
  * (RN-001) — e só então publica o rascunho como nova versão por quatro olhos

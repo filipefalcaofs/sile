@@ -67,7 +67,7 @@ class AnalysisRecordFactory extends Factory
     }
 
     /**
-     * Ficha finalizada (HU-135 RN-003) — imutável: parecer preenchido e
+     * Ficha finalizada (HU-126 RN-003) — imutável: parecer preenchido e
      * finalized_at marcado, com um analista responsável.
      */
     public function finalizada(): static
@@ -81,7 +81,7 @@ class AnalysisRecordFactory extends Factory
     }
 
     /**
-     * Motor indisponível (HU-140 FA-01) — ficha NASCE vazia + engine_available
+     * Motor indisponível (HU-130 FA-01) — ficha NASCE vazia + engine_available
      * false; o analista preenche manualmente (degradação honesta, sem fachada).
      */
     public function semMotor(): static

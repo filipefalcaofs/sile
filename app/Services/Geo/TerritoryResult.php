@@ -3,7 +3,7 @@
 namespace App\Services\Geo;
 
 /**
- * Resultado imutável da identificação territorial por ponto (HU-031 a HU-035).
+ * Resultado imutável da identificação territorial por ponto (HU-030 a HU-034).
  * Cada dimensão é um array de shape estável (contrato do endpoint JSON 04-06 e
  * da UI 04-07):
  *

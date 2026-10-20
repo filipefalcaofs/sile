@@ -15,7 +15,7 @@ use PHPUnit\Framework\Attributes\Group;
 use Tests\PostgisTestCase;
 
 /**
- * Número de protocolo único sob concorrência REAL contra Postgres (HU-068): o
+ * Número de protocolo único sob concorrência REAL contra Postgres (HU-066): o
  * ProtocolarSolicitacaoService protocola dentro de DB::transaction usando o
  * ProtocolNumberGenerator com protocol_sequences->lockForUpdate() (FOR UPDATE
  * emitido de verdade no pgsql, no-op em SQLite). Duas protocolizações sob o

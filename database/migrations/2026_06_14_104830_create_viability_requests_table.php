@@ -12,7 +12,7 @@ return new class extends Migration
      * embutido 1:1 (como companies). protocol_number é unique nullable (só após
      * protocolar); status/origin governados pela máquina de estados e pela
      * origem auditada. requester_user_id é o beneficiário; created_by_user_id é
-     * o ator real ("em nome de" — HU-150). A simulação (HU-141) é orientativa e
+     * o ator real ("em nome de" — HU-139). A simulação (HU-131) é orientativa e
      * fica em snapshot, sem reprocessar no protocolo.
      *
      * Polígono driver-aware (espelha geo_features + GeoJsonLayerImporter da

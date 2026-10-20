@@ -8,7 +8,7 @@ use App\Services\Realty\LocalizacaoInscricaoService;
 use App\Support\Audit\AuditService;
 
 /**
- * HU-037 RN-005: o polígono desenhado e o ponto da inscrição no Cadastro
+ * HU-036 RN-005: o polígono desenhado e o ponto da inscrição no Cadastro
  * Imobiliário precisam cair na mesma zona. Com o polígono do endereçamento
  * SEDUR, o desenho também precisa cair na mesma zona dele, pela maior porção. Zona diferente bloqueia a decisão
  * automática. Sem ponto ou sem zona identificada, a verificação não bloqueia
@@ -139,7 +139,7 @@ class LocalizacaoDivergenciaService
         $this->audit->log(
             logName: 'geo',
             event: 'localizacao-divergencia',
-            description: "Verificação de localização (HU-037 RN-005) na solicitação #{$request->id}: {$resultado}",
+            description: "Verificação de localização (HU-036 RN-005) na solicitação #{$request->id}: {$resultado}",
             properties: [
                 'viability_request_id' => $request->id,
                 'resultado' => $resultado,

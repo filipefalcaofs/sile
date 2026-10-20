@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Transição de estado registrada pela ViabilityRequestStateMachine — fonte da
- * timeline (HU-069). public_label é o rótulo amigável ao cidadão (RN-004).
+ * timeline (HU-067). public_label é o rótulo amigável ao cidadão (RN-004).
  */
 #[Fillable(['from_status', 'to_status', 'reason', 'public_label', 'actor_user_id'])]
 class ViabilityRequestTransition extends Model

@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Vínculo usuário-empresa com ciclo de vida (HU-023/HU-028). Encerramento
+ * Vínculo usuário-empresa com ciclo de vida (HU-022/HU-027). Encerramento
  * via ended_at/ended_reason (nunca delete físico — histórico preservado).
  * Auditoria automática via HasAuditoria.
  */

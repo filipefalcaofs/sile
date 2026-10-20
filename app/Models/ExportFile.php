@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * Arquivo de exportação gerado pelo GerarExportacaoJob (HU-131): o produto do
+ * Arquivo de exportação gerado pelo GerarExportacaoJob (HU-122): o produto do
  * caminho ASSÍNCRONO, baixável por URL temporária assinada (rota nasce em 15-09)
  * e podado por retenção no scheduler (15-15). disk/path apontam o arquivo no
  * Storage (disco parametrizado, NUNCA público — LGPD); row_count é a contagem
@@ -78,7 +78,7 @@ class ExportFile extends Model
 
     /**
      * Remove o arquivo do Storage ANTES de apagar o registro (anti-órfão): a
-     * retenção limpa banco E disco. O disco pode ser remoto (HU-131/LGPD,
+     * retenção limpa banco E disco. O disco pode ser remoto (HU-122/LGPD,
      * nunca público); Storage::disk resolve o driver parametrizado.
      */
     protected function pruning(): void

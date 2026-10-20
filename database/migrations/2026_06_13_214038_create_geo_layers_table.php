@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Camadas geográficas versionadas (HU-036 RN-004). Carga de nova versão
+     * Camadas geográficas versionadas (HU-035 RN-004). Carga de nova versão
      * NÃO apaga a anterior: a consulta operacional usa a vigente (valid_to
      * nulo) e a reprodução usa a versão da data da decisão. Carga idempotente
      * por (type, version). Camadas sem fonte pública (zona/lote) ficam com

@@ -16,7 +16,7 @@ use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\InvalidStateException;
 
 /**
- * HU-151 — autenticação via Login Único GOV.BR no portal do cidadão.
+ * HU-140 — autenticação via Login Único GOV.BR no portal do cidadão.
  *
  * Com o toggle desligado ou credenciais ausentes as rotas degradam com aviso
  * (RN-006 — nunca falha silenciosa). Sucesso e bloqueios ficam auditados

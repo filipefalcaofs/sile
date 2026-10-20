@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Cabeçalho genérico de uma regra como dado versionado (HU-019/HU-020/HU-053),
+ * Cabeçalho genérico de uma regra como dado versionado (HU-018/HU-019/HU-051),
  * espelhando GeoLayer: cada (domain, version) é uma versão; valid_to nulo +
  * status vigente é a versão em uso. O rascunho coexiste com a vigente (também
  * com valid_to nulo) — por isso scopeVigente filtra status, diferença de

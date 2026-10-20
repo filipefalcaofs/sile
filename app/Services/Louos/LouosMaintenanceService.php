@@ -8,8 +8,8 @@ use App\Services\Rules\RuleVersionService;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Manutenção dos Quadros da LOUOS pelos mantenedores da SEDUR (HU-015..018 /
- * HU-046): atualizar um Quadro NÃO sobrescreve a vigente — publica uma NOVA
+ * Manutenção dos Quadros da LOUOS pelos mantenedores da SEDUR (HU-015..017 /
+ * HU-044): atualizar um Quadro NÃO sobrescreve a vigente — publica uma NOVA
  * versão por quatro olhos, herdando o dado da versão vigente e aplicando as
  * alterações enviadas. A anterior é preservada como histórico (fechada pelo
  * RuleVersionService), nunca apagada. Espelha o RiscoMaintenanceService (Fase 6)

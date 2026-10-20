@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Event;
 use Tests\TestCase;
 
 /**
- * Auditoria SÍNCRONA da decisão técnica HUMANA (HU-078, RN-002/RN-005): a trilha
+ * Auditoria SÍNCRONA da decisão técnica HUMANA (HU-074, RN-002/RN-005): a trilha
  * autoritativa é gravada DENTRO da transação da decisão e NÃO depende do evento
  * ResultadoEmitido (lição das Fases 8/9 — o evento só carrega efeitos colaterais
  * desacoplados). Mesmo com o evento fakeado (listeners de notificação/Regin/SEFAZ
@@ -55,7 +55,7 @@ class AnaliseTecnicaAuditoriaTest extends TestCase
         // Fakeando ResultadoEmitido, seus LISTENERS (notificação/Regin/SEFAZ) não
         // rodam. A auditoria da decisão, porém, é gravada na própria transação
         // (não por listener) — então continua presente: prova de que a auditoria
-        // autoritativa NÃO depende do evento (HU-078, lição da Fase 8).
+        // autoritativa NÃO depende do evento (HU-074, lição da Fase 8).
         Event::fake([ResultadoEmitido::class]);
         $ficha = $this->fichaFinalizadaDeferivel();
         $analista = User::factory()->create();
@@ -69,7 +69,7 @@ class AnaliseTecnicaAuditoriaTest extends TestCase
             ->latest('id')
             ->first();
 
-        $this->assertNotNull($activity, 'A auditoria da decisão deve ser gravada mesmo com o evento fakeado (HU-078).');
+        $this->assertNotNull($activity, 'A auditoria da decisão deve ser gravada mesmo com o evento fakeado (HU-074).');
         $this->assertNotNull($activity->rules_version);
         $this->assertNotSame('', $activity->rules_version);
         $this->assertSame($ficha->viability_request_id, $activity->properties['viability_request_id']);

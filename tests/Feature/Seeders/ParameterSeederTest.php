@@ -621,7 +621,7 @@ class ParameterSeederTest extends TestCase
         $this->assertSame('json', $tratamento->type);
         $this->assertSame(['required', 'json'], $tratamento->validation_rules);
         $this->assertNull($tratamento->value);
-        // Default só NOTIFICA (sem decisão automática — HU-147).
+        // Default só NOTIFICA (sem decisão automática — HU-136).
         $this->assertSame(
             ['amarelo' => 'notificar_analista', 'vencido' => 'notificar_gestor'],
             $tratamento->typedValue(),
@@ -639,7 +639,7 @@ class ParameterSeederTest extends TestCase
     {
         $this->seed(ParameterSeeder::class);
 
-        // Toggle da detecção de abuso (HU-149): nasce DESLIGADO (nunca pune).
+        // Toggle da detecção de abuso (HU-138): nasce DESLIGADO (nunca pune).
         $toggle = Parameter::query()->where('key', 'features.deteccao_abuso')->first();
         $this->assertNotNull($toggle);
         $this->assertSame('features', $toggle->group);

@@ -11,8 +11,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Fonte do histórico de acessos para o contrato único de exportação
- * (HU-131/RN-009) — consolida o streaming CSV que vivia em
- * AuditoriaController::exportarAcessos. Fonte SECUNDÁRIA da trilha (HU-100):
+ * (HU-122/RN-009) — consolida o streaming CSV que vivia em
+ * AuditoriaController::exportarAcessos. Fonte SECUNDÁRIA da trilha (HU-096):
  * access_logs globais (login/logout/falha/bloqueio) filtrados por
  * período/usuário/evento via {@see AuditTrailQueryService::acessos()} a partir
  * do bag — conjunto exportado EXATAMENTE o filtrado (RN-005), no síncrono e no
@@ -21,7 +21,7 @@ use Illuminate\Database\Eloquent\Builder;
  * Classe SEPARADA do {@see AtividadesReportSource} para o caminho assíncrono
  * reconstruir a fonte certa via `app($sourceClass)` (INVARIANTE do
  * {@see ReportSource}). Colunas e mapeamento preservados fielmente do controller;
- * personalData=true (HU-101 — e-mail/usuário expostos). Guarda de volume técnica
+ * personalData=true (HU-097 — e-mail/usuário expostos). Guarda de volume técnica
  * (viabiliza.auditoria.export.max_linhas) aplicada no builder.
  */
 final class AcessosReportSource implements ReportSource

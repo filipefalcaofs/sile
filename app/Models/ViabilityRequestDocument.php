@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Anexo da solicitação (HU-066). Grava o disk DA ÉPOCA (nunca público), path,
+ * Anexo da solicitação (HU-064). Grava o disk DA ÉPOCA (nunca público), path,
  * hash sha256 e metadados — substituível antes do protocolo, imutável depois.
  */
 #[Fillable(['requirement_id', 'disk', 'path', 'original_name', 'mime_type', 'size', 'sha256', 'uploaded_by_user_id'])]

@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * Setor da SEDUR (HU-138) — a caixa de distribuição da análise técnica. Agrupa
+ * Setor da SEDUR (HU-129) — a caixa de distribuição da análise técnica. Agrupa
  * os analistas (N:N via sector_user) que recebem os processos encaminhados.
  * code é o CEIN_NUMERO institucional (catálogo oficial); active permite
  * inativar sem excluir (setor com pendência não some, só deixa de receber
@@ -33,7 +33,7 @@ class Sector extends Model
     }
 
     /**
-     * Analistas vinculados ao setor (HU-138 RN-005).
+     * Analistas vinculados ao setor (HU-129 RN-005).
      *
      * @return BelongsToMany<User, $this>
      */

@@ -14,8 +14,8 @@ use Tests\TestCase;
 
 /**
  * Comando de evidência da infra de RAG (Onda 3) — indexa os precedentes
- * existentes (HU-142) por embeddings, base da busca por similaridade dos
- * assistentes (HU-120/121). Idempotente (não reembedda o inalterado) e honesto:
+ * existentes (HU-132) por embeddings, base da busca por similaridade dos
+ * assistentes (HU-112). Idempotente (não reembedda o inalterado) e honesto:
  * sem provedor de embeddings ativo, NÃO chama nada e avisa a indisponibilidade.
  */
 #[Group('ia')]

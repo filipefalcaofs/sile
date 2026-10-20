@@ -15,7 +15,7 @@ use PHPUnit\Framework\Attributes\Group;
 use Tests\PostgisTestCase;
 
 /**
- * SQL espacial/agregado REAL dos precedentes (HU-142) provado contra PostGIS — a
+ * SQL espacial/agregado REAL dos precedentes (HU-132) provado contra PostGIS — a
  * implementação por trás do PrecedentRepository (os consumidores rodam com fake
  * em SQLite). Espelha o InformarImovelPostgisTest / FluxoExpressoIdempotenciaPostgisTest.
  *

@@ -10,7 +10,7 @@ use App\Services\Abuso\Contracts\AbuseDetector;
 use App\Services\Abuso\DetectionWindow;
 
 /**
- * HU-149 (estrutural): a MESMA inscrição imobiliária com ATIVIDADES distintas
+ * HU-138 (estrutural): a MESMA inscrição imobiliária com ATIVIDADES distintas
  * simultâneas na janela — sinal de uso incompatível/sobreposto do mesmo imóvel.
  * Determinístico sobre dado real, SEM IA: agrupa viability_requests não
  * canceladas por `property_registration` e emite um finding quando a inscrição

@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Condições de instalação pela via — Quadro 11A da LOUOS
- * (HU-018/HU-041), ligadas a uma versão de regra (rule_version_id) do domínio
+ * (HU-017/HU-039), ligadas a uma versão de regra (rule_version_id) do domínio
  * louos_quadro11a. classe_via é a classificação viária da LOUOS (atributo
  * pendente confirmação SEDUR); condicoes é o conjunto livre de exigências
  * pela via. Auditoria via HasAuditoria.

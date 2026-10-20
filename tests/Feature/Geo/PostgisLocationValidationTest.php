@@ -10,7 +10,7 @@ use PHPUnit\Framework\Attributes\Group;
 use Tests\PostgisTestCase;
 
 /**
- * Sobreposição polígono × lote (HU-037 RN-004) provada contra PostGIS REAL: com
+ * Sobreposição polígono × lote (HU-036 RN-004) provada contra PostGIS REAL: com
  * uma camada de lote VIGENTE de fixture, o serviço calcula a maior sobreposição
  * com ST_Area(ST_Intersection)/ST_Area e decide pelo limiar. Prova, sem fachada,
  * que a infraestrutura de validação funciona de verdade — pronta para "ligar"

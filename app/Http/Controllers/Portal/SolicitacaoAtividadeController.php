@@ -13,13 +13,13 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
 /**
- * Atividade principal (HU-064) e CNAEs complementares (HU-065) da solicitação.
+ * Atividade principal (HU-062) e CNAEs complementares (HU-063) da solicitação.
  *
  * A escrita do pivot viability_request_cnaes é transacional e espelha o
  * CompanyCnaeService da Fase 3: um único sync com o conjunto EXATO (principal
  * is_primary=true + complementares is_primary=false) garante "exatamente um
  * principal" e a unicidade (request, cnae) na aplicação. Mudar a lista de
- * CNAEs invalida a simulação orientativa anterior (HU-063 RN-005) e é auditado
+ * CNAEs invalida a simulação orientativa anterior (HU-061 RN-005) e é auditado
  * explicitamente (RN-002), coexistindo com o updated automático do HasAuditoria.
  */
 class SolicitacaoAtividadeController extends Controller

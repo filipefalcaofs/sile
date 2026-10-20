@@ -12,7 +12,7 @@ use App\Support\Audit\AuditService;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Sandbox de simulação de impacto de parametrização da LOUOS (HU-143). Reexecuta
+ * Sandbox de simulação de impacto de parametrização da LOUOS (HU-133). Reexecuta
  * o MOTOR REAL (LouosEnquadramentoService) com uma versão RASCUNHO de um Quadro
  * (modo "versão específica" via versoesOverride — 05-03) sobre cenários derivados
  * do catálogo CNAE vigente e da zona fixa do Quadro 10, e compara o veredito
@@ -67,7 +67,7 @@ class LouosSandboxSimulationService
             'divergencias' => $impacto['divergencias'],
         ];
 
-        // Registro informativo da simulação (HU-143 fluxo 5) — NÃO é decisão:
+        // Registro informativo da simulação (HU-133 fluxo 5) — NÃO é decisão:
         // sem rulesVersion de publicação (RN-001). A publicação é auditada à parte.
         $this->audit->log(
             logName: 'louos',

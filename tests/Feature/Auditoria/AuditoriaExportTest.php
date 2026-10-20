@@ -17,7 +17,7 @@ use Tests\TestCase;
  * volume técnica (config) e também é auditado. Meta-auditoria CA-02/RN-002: quem
  * consultou/exportou a trilha de quem fica registrado (personal_data), e o 403
  * sem consultar-auditoria é auditado no ponto único. Export pleno XLSX/PDF fica
- * bloqueado honesto (HU-131/Fase 15).
+ * bloqueado honesto (HU-122/Fase 15).
  */
 class AuditoriaExportTest extends TestCase
 {

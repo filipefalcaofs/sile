@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 /**
- * CRUD de setores da SEDUR (HU-138): o administrador mantém a "caixa de"
+ * CRUD de setores da SEDUR (HU-129): o administrador mantém a "caixa de"
  * análise" (criar/editar nome+situação) e o vínculo analista↔setor N:N pela
  * retaguarda, atrás da permissão manter-setores. Sem ela a ação é bloqueada e
  * auditada (CA-04). O setor com processos em aberto NÃO é excluído — só
@@ -43,7 +43,7 @@ class SectorCrudTest extends TestCase
 
     public function test_lista_exige_permissao_manter_setores(): void
     {
-        // Analista acessa a gestão mas NÃO tem manter-setores (HU-138 CA-04).
+        // Analista acessa a gestão mas NÃO tem manter-setores (HU-129 CA-04).
         $this->actingAs($this->analista(), 'gestao')
             ->get('/gestao/setores')
             ->assertForbidden();
@@ -260,7 +260,7 @@ class SectorCrudTest extends TestCase
             'subject_id' => $sector->id,
         ]);
 
-        // Não existe rota destrutiva de setor (HU-138 RN-004).
+        // Não existe rota destrutiva de setor (HU-129 RN-004).
         $this->assertFalse(Route::has('gestao.setores.destroy'));
     }
 

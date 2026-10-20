@@ -5,7 +5,7 @@ namespace App\Enums;
 /**
  * Estado da solicitação de viabilidade (EP08). label() é o rótulo técnico da
  * retaguarda; publicLabel() fala ao cidadão em linguagem simples na consulta de
- * protocolo (HU-069 RN-004).
+ * protocolo (HU-067 RN-004).
  *
  * ATIVOS nesta fase: Rascunho, Protocolada, Cancelada — as únicas transições da
  * ViabilityRequestStateMachine. Os demais são GANCHOS das fases seguintes

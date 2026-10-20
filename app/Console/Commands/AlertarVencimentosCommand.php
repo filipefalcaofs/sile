@@ -17,7 +17,7 @@ use DateTimeInterface;
 use Illuminate\Console\Command;
 
 /**
- * HU-093: alerta ANTECIPADO de prazos próximos do vencimento. Varre, dentro da
+ * HU-089: alerta ANTECIPADO de prazos próximos do vencimento. Varre, dentro da
  * antecedência parametrizável (notificacoes.vencimento.antecedencia_dias):
  *
  * - processos em_analise cujo analysis_due_at (FONTE ÚNICA da Fase 10) ainda não
@@ -25,8 +25,8 @@ use Illuminate\Console\Command;
  * - pendências abertas cujo due_at cai na janela → alerta o REQUERENTE.
  *
  * SÓ notifica (sem transição/timeline) — a fonte de prazo é única para não brigar
- * com a HU-129 (sem dupla contagem). As notificações percorrem o
- * NotificationDispatcher (multicanal + ledger). Vencido é tratamento da HU-147
+ * com a HU-120 (sem dupla contagem). As notificações percorrem o
+ * NotificationDispatcher (multicanal + ledger). Vencido é tratamento da HU-136
  * (notificacoes:escalonar-sla), não daqui.
  *
  * IDEMPOTÊNCIA (RN-004) SEM schema novo: antes de alertar checa o ledger
@@ -38,7 +38,7 @@ class AlertarVencimentosCommand extends Command
 {
     protected $signature = 'notificacoes:alertar-vencimentos';
 
-    protected $description = 'HU-093: alerta o analista (prazo de análise) e o requerente (prazo de pendência) sobre vencimentos próximos, de forma idempotente';
+    protected $description = 'HU-089: alerta o analista (prazo de análise) e o requerente (prazo de pendência) sobre vencimentos próximos, de forma idempotente';
 
     public function handle(NotificationDispatcher $dispatcher): int
     {
@@ -75,7 +75,7 @@ class AlertarVencimentosCommand extends Command
             ->where('status', ViabilityRequestStatus::EmAnalise)
             ->whereNotNull('assigned_user_id')
             ->whereNotNull('analysis_due_at')
-            ->where('analysis_due_at', '>', $agora)   // ainda não venceu (vencido → HU-147)
+            ->where('analysis_due_at', '>', $agora)   // ainda não venceu (vencido → HU-136)
             ->where('analysis_due_at', '<=', $limite) // dentro da antecedência
             ->with('assignedTo')
             ->orderBy('id')

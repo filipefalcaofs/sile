@@ -12,7 +12,7 @@ use Spatie\Permission\Models\Role;
 
 /**
  * Fonte da listagem de perfis (HU-013) para o contrato único de exportação
- * (HU-131/RN-009): o index do {@see RoleController}
+ * (HU-122/RN-009): o index do {@see RoleController}
  * ganha um branch ?formato= delegando ao {@see ReportExporter}
  * sem rota nova. A busca por nome da tela entra no bag e recorta o mesmo
  * conjunto (RN-005), ordenado por nome, com os totais de permissões e de

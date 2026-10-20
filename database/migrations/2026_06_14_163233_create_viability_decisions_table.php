@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Registro IMUTÁVEL da decisão do fluxo expresso (HU-076/078), 1:1 com a
+     * Registro IMUTÁVEL da decisão do fluxo expresso (HU-072/074), 1:1 com a
      * solicitação (unique viability_request_id) — append-only: o
      * FluxoExpressoService (09-05) grava uma única vez dentro da transação da
      * decisão e nunca atualiza por negócio. É a fonte do PDF/TVL (Fase 10) e da
@@ -46,7 +46,7 @@ return new class extends Migration
             $table->jsonb('rules_versions');
             $table->jsonb('fundamentacao');
 
-            // Motivo (ex.: 'indeferido sem atuação' na HU-134).
+            // Motivo (ex.: 'indeferido sem atuação' na HU-125).
             $table->text('reason')->nullable();
 
             // null = decisão do sistema (fluxo automático).

@@ -10,10 +10,10 @@ use Illuminate\Support\Facades\DB;
 use Laravel\Ai\Embeddings;
 
 /**
- * Indexador de precedentes (HU-142) — infra de RAG da Onda 3 (Fase 14). Gera o
+ * Indexador de precedentes (HU-132) — infra de RAG da Onda 3 (Fase 14). Gera o
  * embedding do RESUMO ANONIMIZADO de cada precedente (solicitação decidida) e
  * persiste o vetor para a busca por similaridade (PrecedentVectorSearch) que
- * sustenta o assistente do analista (HU-121).
+ * sustenta o assistente do analista (HU-112).
  *
  * Anti-fachada + LGPD:
  *  - SÓ roda com um provedor de embeddings ATIVO (AiFeatureGate). Sem provedor,

@@ -13,10 +13,10 @@ use App\Support\Audit\AuditService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 
 /**
- * Efeito desacoplado do fluxo expresso (HU-110): envia os dados de viabilidade à
+ * Efeito desacoplado do fluxo expresso (HU-103): envia os dados de viabilidade à
  * SEFAZ municipal. Pendura no SEGUNDO evento de domínio (ResultadoEmitido) e age
  * SÓ no DEFERIMENTO — o canal oficial ao município só faz sentido quando a
- * atividade é deferida. O INDEFERIMENTO não é enviado (HU-134 RN-003): é ignorado
+ * atividade é deferida. O INDEFERIMENTO não é enviado (HU-125 RN-003): é ignorado
  * de forma auditável, sem tocar o gateway.
  *
  * A transmissão está BLOQUEADA (sem contrato/homologação): o binding padrão é o
@@ -43,7 +43,7 @@ class EnviarViabilidadeSefaz implements ShouldQueue
         $request = $event->request;
         $decision = $event->decision;
 
-        // HU-134 RN-003: o indeferimento NÃO vai à SEFAZ. Ignora de forma
+        // HU-125 RN-003: o indeferimento NÃO vai à SEFAZ. Ignora de forma
         // auditável, sem acionar o gateway.
         if (! $decision->isDeferida()) {
             $this->audit->log(
@@ -101,7 +101,7 @@ class EnviarViabilidadeSefaz implements ShouldQueue
     }
 
     /**
-     * Taxa da TLL calculada (HU-071 RN-004) a partir do per_cnae da decisão
+     * Taxa da TLL calculada (HU-145) a partir do per_cnae da decisão
      * (codigo_tll da planilha + exige_fator_multiplicador do CNAE) — sem
      * recomputar o motor. Null quando não há valor parametrizado para o
      * exercício (degradação honesta, nunca valor inventado).

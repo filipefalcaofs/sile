@@ -30,7 +30,7 @@ class CompanyController extends Controller
     private const PER_PAGE_OPTIONS = [10, 15, 25, 50];
 
     /**
-     * "Minhas empresas" (HU-027): lista server-driven SOMENTE das empresas
+     * "Minhas empresas" (HU-026): lista server-driven SOMENTE das empresas
      * com vínculo (ativo ou encerrado) do usuário efetivo — em representação,
      * as empresas do representado. Eager loading anti-N+1 do CNAE principal e
      * do vínculo do usuário; busca por razão social/fantasia (case-insensitive)
@@ -111,7 +111,7 @@ class CompanyController extends Controller
     }
 
     /**
-     * Página dedicada de cadastro (HU-023). O botão "Buscar CNPJ" só aparece
+     * Página dedicada de cadastro (HU-022). O botão "Buscar CNPJ" só aparece
      * habilitado quando o toggle features.cnpj_lookup está ligado ([03-02]).
      */
     public function create(): Response
@@ -151,7 +151,7 @@ class CompanyController extends Controller
     }
 
     /**
-     * Detalhe da empresa (HU-024/HU-027): props completas para a página de
+     * Detalhe da empresa (HU-023/HU-026): props completas para a página de
      * detalhe (03-08). Autorização via policy view — aceita vínculo ativo OU
      * encerrado (histórico visível); o 403 do não vinculado é auditado
      * globalmente (CA-04). Eager loading anti-N+1 dos CNAEs (com pivot) e dos
@@ -231,7 +231,7 @@ class CompanyController extends Controller
     }
 
     /**
-     * Atualiza dados complementares (HU-024). CNPJ é imutável: o
+     * Atualiza dados complementares (HU-023). CNPJ é imutável: o
      * UpdateCompanyRequest não o inclui nas regras, então validated() nunca o
      * contém. Autorização via policy update (vínculo ATIVO); a auditoria
      * updated com attribute_changes é automática (HasAuditoria, CA-02).

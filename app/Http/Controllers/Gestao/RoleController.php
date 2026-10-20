@@ -38,7 +38,7 @@ class RoleController extends Controller
     {
         $search = $request->string('search')->trim()->toString();
 
-        // HU-131/RN-009: com ?formato=, exporta o conjunto filtrado pelo
+        // HU-122/RN-009: com ?formato=, exporta o conjunto filtrado pelo
         // contrato único — sem rota nova. A busca da tela entra no bag (RN-005).
         if (in_array($request->string('formato')->lower()->toString(), ['csv', 'xlsx', 'pdf'], true)) {
             return app(ReportExporter::class)->export(

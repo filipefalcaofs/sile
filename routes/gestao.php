@@ -129,7 +129,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::put('senha', [ContaPasswordController::class, 'update'])->name('senha.update');
         });
 
-        // Central de notificações in-app (HU-090) — canal database nativo do
+        // Central de notificações in-app (HU-086) — canal database nativo do
         // próprio servidor (escopo do dono). SEM permissão nova: a central é do
         // usuário autenticado, não da retaguarda. Mesmo controller do portal; o
         // badge de não-lidas é shared prop (HandleInertiaRequests).
@@ -141,11 +141,11 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             ->middleware('permission:consultar-acessos-de-qualquer-conta')
             ->name('acessos.show');
 
-        // Trilha de auditoria (HU-098/100/101): consulta unificada server-driven
+        // Trilha de auditoria (HU-094/096/097): consulta unificada server-driven
         // sobre activity_log (índices de 12-01) com filtros por período/usuário/
         // entidade/ação/resultado e fonte (atividade/alterações/acessos),
         // paginação no servidor e export CSV do conjunto filtrado (export pleno
-        // XLSX/PDF → HU-131/Fase 15, bloqueado honesto). Gated por
+        // XLSX/PDF → HU-122/Fase 15, bloqueado honesto). Gated por
         // consultar-auditoria (gestor/admin — 12-03); a própria consulta e o
         // export são auditados (meta-auditoria CA-02, personal_data) e o 403 é
         // auditado no ponto único (bootstrap/app.php). A rota estática `export`
@@ -160,7 +160,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::get('/', [AuditoriaController::class, 'index'])->name('index');
         });
 
-        // Monitoramento de conformidade LGPD (HU-102): painel que AGREGA fontes
+        // Monitoramento de conformidade LGPD (HU-098): painel que AGREGA fontes
         // REAIS — consentimentos (LegalTerm × LegalTermAcceptance), retenção
         // (retencao.access_logs.dias + último pruning da trilha; decisões FORA
         // do pruning por compliance) e acessos a dado pessoal
@@ -173,7 +173,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::get('/', [LgpdMonitorController::class, 'index'])->name('index');
         });
 
-        // Painel de alertas de abuso (HU-149): a superfície HUMANA de revisão dos
+        // Painel de alertas de abuso (HU-138): a superfície HUMANA de revisão dos
         // alertas gerados pelos detectores (12-06/12-08) — lista filtrável
         // (rule_key/severity/status/período) + indicador de EFETIVIDADE
         // (confirmados ÷ gerados, geral e por regra — RN-005, para calibrar
@@ -204,9 +204,9 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::post('{predictiveAnomaly}/descartar', [AuditoriaPreditivaController::class, 'descartar'])->name('descartar');
         });
 
-        // Relatórios e indicadores (HU-122..131/145): cada tela é servida com dado
+        // Relatórios e indicadores (HU-113..122/135): cada tela é servida com dado
         // REAL dos serviços route-free (15-03/05/06/07) e exporta pelo contrato
-        // único via ?formato= (CSV/XLSX/PDF — HU-131/RN-004/009), delegando ao
+        // único via ?formato= (CSV/XLSX/PDF — HU-122/RN-004/009), delegando ao
         // ReportExporter (que audita — RN-008). A produtividade nominal só sai sob
         // relatorios.produtividade.nominal (gate no controller — RN-007); sem ela o
         // default conservador anonimiza e restringe ao próprio analista. Tudo gated
@@ -265,11 +265,11 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             // respondidas/expiradas + tempo médio de resposta do requerente.
             // Export pelo contrato único (?formato=).
             Route::get('pendencias', [RelatorioController::class, 'pendencias'])->name('pendencias');
-            // Atendimento em contingência (relatório gerencial — HU-148): volume
+            // Atendimento em contingência (relatório gerencial — HU-137): volume
             // e motivos do canal de operador vs total protocolado. Export pelo
             // contrato único (?formato=).
             Route::get('contingencia', [RelatorioController::class, 'contingencia'])->name('contingencia');
-            // Falhas de comunicação (consulta operacional — HU-096): não
+            // Falhas de comunicação (consulta operacional — HU-092): não
             // entregues (falha/bloqueio) por processo, SEM destinatário (LGPD).
             // Export pelo contrato único (?formato=).
             Route::get('comunicacoes-falhas', [RelatorioController::class, 'comunicacoesFalhas'])->name('comunicacoes-falhas');
@@ -340,7 +340,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::put('config-apis/{aba}', [ApiIntegracaoController::class, 'update'])->name('config-apis.update');
         });
 
-        // Território (HU-029+): consulta territorial, geocodificação e validação
+        // Território (HU-028+): consulta territorial, geocodificação e validação
         // de localização atrás de permissão própria. O gate é este middleware
         // permission: (a permissão vive no guard web e resolve para o usuário do
         // guard gestao). A geocodificação tem throttle parametrizado próprio.
@@ -360,7 +360,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::put('{geoServerLayer}/ativacao', [GeoServerLayerController::class, 'toggleActivation'])->name('ativacao.update');
         });
 
-        // Camadas geográficas versionadas (HU-036, parametrização 3.1): importação
+        // Camadas geográficas versionadas (HU-035, parametrização 3.1): importação
         // de GeoJSON oficial pela interface — o mesmo GeoJsonLayerImporter do
         // geo:importar, com guarda de driver honesta (PostGIS-only, nunca finge).
         Route::middleware('permission:manter-territorio')->prefix('territorio/camadas')->name('territorio.camadas.')->group(function () {
@@ -368,7 +368,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::post('/', [GeoLayerController::class, 'store'])->name('store');
         });
 
-        // Quadros da LOUOS (HU-015..018/HU-046): a consulta da versão vigente dos
+        // Quadros da LOUOS (HU-015..017/HU-044): a consulta da versão vigente dos
         // 4 Quadros (analista/gestor/admin) é separada da publicação versionada
         // (admin). Gate cross-guard via permission: (PADRÃO 04-03/06). Publicar
         // gera NOVA versão por quatro olhos, nunca edição destrutiva da vigente.
@@ -390,7 +390,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::put('territoriais/versoes/{versao}/ativar', [TerritorialRuleController::class, 'activate'])->name('territoriais.ativar');
             Route::delete('territoriais/rascunho/{versao}', [TerritorialRuleController::class, 'destroyDraft'])->name('territoriais.descartar');
 
-            // CRUD do rascunho editável dos Quadros da LOUOS (HU-046): abrir/retomar,
+            // CRUD do rascunho editável dos Quadros da LOUOS (HU-044): abrir/retomar,
             // inserir/alterar/excluir linha, importar CSV, publicar por quatro olhos,
             // descartar e download do modelo CSV por Quadro.
             Route::get('manual', [LouosDraftController::class, 'manual'])->name('manual');
@@ -404,7 +404,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::delete('rascunho', [LouosDraftController::class, 'discard'])->name('rascunho.descartar');
             Route::get('modelo-csv', [LouosDraftController::class, 'modeloCsv'])->name('modelo-csv');
 
-            // Sandbox de parametrização (HU-143): simular o impacto de um rascunho
+            // Sandbox de parametrização (HU-133): simular o impacto de um rascunho
             // contra cenários reais antes de publicar por quatro olhos. Simular e
             // publicar são manutenção (manter-louos). GET e POST compartilham o
             // caminho `simulacao` (um refresh recai na consulta sem o relatório).
@@ -448,7 +448,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::put('{versao}/publicar', [EscritorioVirtualAnexosController::class, 'publicar'])->name('publicar');
         });
 
-        // Requisitos documentais (HU-067): cadastro administrável do modelo
+        // Requisitos documentais (HU-065): cadastro administrável do modelo
         // "Requisito" (SIGVISA) e do vínculo N:N com CNAEs — a obrigatoriedade
         // documental por CNAE é DADO administrável (HU-014), consumido pelo
         // resolver da validação documental (08-08). Gate único manter-...; a
@@ -462,7 +462,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::put('{requirement}/cnaes', [DocumentRequirementController::class, 'syncCnaes'])->name('cnaes');
         });
 
-        // Tipos de serviço da solicitação (HU-061 RN-005): dado administrável
+        // Tipos de serviço da solicitação (HU-059 RN-005): dado administrável
         // (CRUD) atrás de permissão própria — a listagem e o CRUD ficam sob
         // manter-tipos-servico (sem consulta separada). A desativação preserva
         // o histórico (toggle), nunca exclui o registro referenciado.
@@ -490,7 +490,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::put('{propertyType}/ativacao', [PropertyTypeController::class, 'toggleActivation'])->name('ativacao.update');
         });
 
-        // Gatilhos semi-expresso (HU-049/HU-051): dado administrável. Sem
+        // Gatilhos semi-expresso (HU-047/HU-049): dado administrável. Sem
         // create/destroy — o código é enum-bound e tem comportamento no motor;
         // desligar um gatilho muda o roteamento (ação sensível, auditada).
         Route::middleware('permission:manter-gatilhos-risco')->prefix('gatilhos-risco')->name('gatilhos-risco.')->group(function () {
@@ -527,8 +527,8 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::put('{aiConfiguration}/ativacao', [AiConfigurationController::class, 'toggleActivation'])->name('ativacao.update');
         });
 
-        // Setores da SEDUR (HU-138): a "caixa de análise" da distribuição
-        // (pré-requisito de 10-07/HU-144). CRUD administrável atrás de
+        // Setores da SEDUR (HU-129): a "caixa de análise" da distribuição
+        // (pré-requisito de 10-07/HU-134). CRUD administrável atrás de
         // manter-setores; o vínculo analista↔setor é N:N (RN-005 — um analista
         // cobre vários setores). NÃO há destroy: o setor não é excluído — só
         // inativado (RN-004; o toggle preserva histórico e vínculo). Telas em 10-17.
@@ -540,7 +540,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::put('{sector}/analistas', [SectorController::class, 'syncAnalysts'])->name('analistas.update');
         });
 
-        // Biblioteca de textos-padrão do parecer (HU-085): trechos versionados
+        // Biblioteca de textos-padrão do parecer (HU-081): trechos versionados
         // pré-aprovados, administráveis atrás de manter-parametros (reuso da
         // permissão de admin de configuração — sem 6ª permissão; a leitura da
         // lista ativa pelo parecer fica sob analisar-processos em 10-09.
@@ -584,8 +584,8 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::delete('{legalTerm}', [LegalTermController::class, 'destroy'])->name('destroy');
         });
 
-        // Calendário de feriados (HU-137): dado administrável que o
-        // BusinessDeadlineCalculator desconta no cálculo de dias úteis (HU-129). O
+        // Calendário de feriados (HU-128): dado administrável que o
+        // BusinessDeadlineCalculator desconta no cálculo de dias úteis (HU-120). O
         // CRUD reusa manter-parametros (como setores/textos-padrão — sem permissão
         // nova; decisão registrada no SUMMARY). A data é única; NÃO há destroy —
         // inativar (ativacao) preserva o histórico/auditoria (RN-004). Toda
@@ -599,7 +599,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::put('{holiday}/ativacao', [HolidayController::class, 'toggleActivation'])->name('ativacao.update');
         });
 
-        // Tabela de valores TLL por exercício (HU-071/HU-014): dado versionado
+        // Tabela de valores TLL por exercício (HU-145/HU-014): dado versionado
         // que o TllCalculoService usa no cálculo do DAM (RN-004) e que alimenta
         // o bloco `taxas` enviado à SEFAZ. O CRUD reusa manter-parametros (como
         // feriados — sem permissão nova). A chave (código TLL, exercício) é
@@ -617,7 +617,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::put('{tllValor}/ativacao', [TllValorController::class, 'toggleActivation'])->name('ativacao.update');
         });
 
-        // Registro em contingência (HU-148): canal de operador na retaguarda e o
+        // Registro em contingência (HU-137): canal de operador na retaguarda e o
         // caminho REAL de operação enquanto o contrato Regin não chega (Fase 13).
         // Protocola pelo MESMO motor do canal normal (ProtocolarSolicitacaoService),
         // sem atalho decisório — muda só a origem (`contingencia`, auditada) e o
@@ -638,7 +638,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::post('/', [ContingenciaController::class, 'store'])->name('store');
         });
 
-        // Resultado do fluxo expresso (HU-076/HU-078): consulta da decisão
+        // Resultado do fluxo expresso (HU-072/HU-074): consulta da decisão
         // automática (deferida/indeferida) na retaguarda — lista filtrável e
         // detalhe imutável da ViabilityDecision. REUSO da permissão
         // consultar-solicitacoes: a decisão é parte da solicitação, então NÃO se
@@ -662,10 +662,10 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::post('enviar', [EnviarParaAnaliseController::class, 'enviar'])->name('enviar');
         });
 
-        // Consulta de processos (HU-082) e fila do analista (HU-144) na
+        // Consulta de processos (HU-078) e fila do analista (HU-134) na
         // retaguarda: busca com os filtros completos do SAPS + analista +
         // categoria, paginação server-side (índices de 10-02/10-14), CSV simples
-        // do conjunto filtrado (export pleno → HU-131/Fase 15), busca global
+        // do conjunto filtrado (export pleno → HU-122/Fase 15), busca global
         // (Cmd+K) e fila priorizada por SLA (meus/setor). REUSO da permissão
         // consultar-solicitacoes (decisão de 10-01 — a consulta é parte da
         // solicitação; sem permissão nova). Somente leitura; auditada (RN-002); o
@@ -677,7 +677,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::get('fila', [ProcessoController::class, 'fila'])->name('fila');
             Route::get('busca', ProcessoBuscaController::class)->name('busca');
 
-            // Histórico unificado de comunicações do processo (HU-096): fonte
+            // Histórico unificado de comunicações do processo (HU-092): fonte
             // ÚNICA (ledger communications, todos os canais/tipos), REUSO da
             // permissão consultar-solicitacoes (a comunicação é parte da
             // solicitação — sem permissão nova). A gestão VÊ o error_message do
@@ -688,7 +688,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::get('{viabilityRequest}', [ProcessoController::class, 'show'])->name('show');
         });
 
-        // Caixa do setor (HU-080/081): a fila da distribuição da análise técnica.
+        // Caixa do setor (HU-076/077): a fila da distribuição da análise técnica.
         // Veem a caixa quem ANALISA (analisar-processos) e quem TRAMITA
         // (distribuir-processos — gestor e apoio). O analista ASSUME os
         // processos em_analise do(s) seu(s) setor(es); o gestor/apoio DISTRIBUI
@@ -731,7 +731,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             ->name('vistorias.consulta.imprimir');
 
         // Caixa de Malha Fina: a fila do revisor — processos com in_fine_mesh
-        // (o encaminhamento continua ortogonal ao status, HU-136). A consulta
+        // (o encaminhamento continua ortogonal ao status, HU-127). A consulta
         // (GET) lista com os filtros das caixas e audita; a conclusão (POST)
         // exige o resultado da análise (deferido, indeferido, desativado,
         // cassado ou revogado) e só então baixa os encaminhamentos. Gated por
@@ -741,12 +741,12 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::post('{viabilityRequest}/concluir', [MalhaFinaController::class, 'concluir'])->middleware('permission:concluir-analise')->name('concluir');
         });
 
-        // Ficha de análise técnica (HU-135/140/142): a superfície da análise
+        // Ficha de análise técnica (HU-126/130/132): a superfície da análise
         // humana. Abre a revisão vigente (pré-analisada em 10-08), faz autosave do
         // rascunho (RN-008), finaliza tornando a revisão IMUTÁVEL (RN-003) e
-        // materializando as divergências analista×motor (HU-140), cria uma nova
+        // materializando as divergências analista×motor (HU-130), cria uma nova
         // revisão para reedição/recálculo e compara duas revisões (diff — RN-007).
-        // O painel de precedentes (HU-142) consome o PrecedentService (10-06).
+        // O painel de precedentes (HU-132) consome o PrecedentService (10-06).
         // Tudo gated por analisar-processos e auditado (RN-002); o 403 é auditado
         // no ponto único (bootstrap/app.php). A decisão (deferir/indeferir) NÃO
         // está aqui — é 10-10, a partir da ficha finalizada. ÚNICO editor de rotas
@@ -769,7 +769,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::post('ficha/finalizar', [AnalysisRecordController::class, 'finalizar'])->name('ficha.finalizar');
             Route::post('ficha/concluir-processo', [AnalysisRecordController::class, 'concluirProcesso'])->middleware('permission:concluir-analise')->name('ficha.concluir-processo');
             Route::post('ficha/nova-revisao', [AnalysisRecordController::class, 'novaRevisao'])->name('ficha.nova-revisao');
-            // Sugestão de minuta de parecer por IA (HU-118) — apoio, nunca decisão.
+            // Sugestão de minuta de parecer por IA (HU-110) — apoio, nunca decisão.
             Route::post('ficha/sugerir-parecer', [AnalysisRecordController::class, 'sugerirParecer'])->name('ficha.sugerir-parecer');
             Route::post('ficha/sugerir-justificativa', [AnalysisRecordController::class, 'sugerirJustificativa'])->name('ficha.sugerir-justificativa');
             Route::post('ficha/gerar-resumo', [AnalysisRecordController::class, 'gerarResumo'])->name('ficha.gerar-resumo');
@@ -809,7 +809,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::delete('anexos/{attachment}', [InspectionController::class, 'destroyAnexo'])->name('anexos.destroy');
         });
 
-        // Ações do analista sobre o processo (Wave 7 — HU-083/086/087/088/089/
+        // Ações do analista sobre o processo (Wave 7 — HU-079/082/083/084/085/
         // 132/136): os endpoints HTTP FINOS que expõem os serviços já testados das
         // Waves 5/6 — decidir/encerrar (AnaliseTecnicaDecisionService), abrir
         // pendência (PendenciaService), encaminhar à malha fina single+lote
@@ -818,7 +818,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
         // telas (10-16/10-17) acionam. Cada endpoint é gated pela permissão da
         // ação (403 auditado no ponto único — CA-04). O download do TVL é por URL
         // TEMPORÁRIA ASSINADA (signed) servindo o disco NÃO público por streaming
-        // (HU-132 CA-02 — nunca URL pública, nunca ao cidadão). ÚNICO editor de
+        // (HU-123 CA-02 — nunca URL pública, nunca ao cidadão). ÚNICO editor de
         // routes/gestao.php na Wave 7 (10-16/10-17 só páginas).
         Route::prefix('processos')->name('processos.')->group(function () {
             // Decidir (deferir/indeferir/encerrar) e abrir pendência — sob a
@@ -839,7 +839,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             });
 
             // TVL: emitir (decisão deferida) + download por URL TEMPORÁRIA ASSINADA
-            // (signed) servindo o disco NÃO público por streaming (HU-132 CA-02). As
+            // (signed) servindo o disco NÃO público por streaming (HU-123 CA-02). As
             // rotas estáticas (malha-fina, tvl/...) convivem com o wildcard
             // {viabilityRequest} por método/estrutura distintos.
             Route::middleware('permission:emitir-tvl')->group(function () {
@@ -860,7 +860,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             });
         });
 
-        // Atendimento presencial assistido (HU-150): canal de operador de balcão.
+        // Atendimento presencial assistido (HU-139): canal de operador de balcão.
         // O atendente opera "em nome de" o cidadão presente, REUSANDO o mecanismo
         // de representação da Fase 1 — o middleware ResolveAssistedAttendance
         // (aplicado por classe, como o ResolveRepresentation do portal) popula o

@@ -10,7 +10,7 @@ use App\Support\Audit\AuditService;
 use Illuminate\Database\Seeder;
 
 /**
- * Carga oficial da classificação de risco SANITÁRIO (HU-019/HU-047/HU-048):
+ * Carga oficial da classificação de risco SANITÁRIO (HU-018/HU-045/HU-046):
  * publica uma versão vigente do domínio risco_sanitario (planilha unificada
  * CNAE da VISA), delega o import real ao service e registra o relatório
  * (contadores + distribuição por nível + avisos) na trilha de auditoria com a

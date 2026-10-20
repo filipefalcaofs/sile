@@ -13,7 +13,7 @@ use Tests\Support\Analise\FakePrecedentRepository;
 use Tests\TestCase;
 
 /**
- * Precedentes na ficha de análise (HU-142): o PrecedentService monta o painel
+ * Precedentes na ficha de análise (HU-132): o PrecedentService monta o painel
  * de apoio à decisão — decisões anteriores no mesmo imóvel (CA-01) e estatística
  * do CNAE na zona (CA-02) — aplicando os parâmetros (janela/itens, RN-003),
  * minimizando dados pessoais (LGPD, RN-004: nunca CPF) e degradando honesto

@@ -10,7 +10,7 @@ class UpdatePrimaryCnaeRequest extends FormRequest
 {
     /**
      * Gerir CNAEs exige vínculo ATIVO do usuário efetivo (policy
-     * manageCnaes, HU-025 CA-04). O 403 é auditado globalmente.
+     * manageCnaes, HU-024 CA-04). O 403 é auditado globalmente.
      */
     public function authorize(): bool
     {
@@ -19,7 +19,7 @@ class UpdatePrimaryCnaeRequest extends FormRequest
 
     /**
      * Seleção manual aceita SOMENTE CNAEs ativos da tabela oficial
-     * (HU-025 CA-03) — regra distinta do import REDESIM, que aceita
+     * (HU-024 CA-03) — regra distinta do import REDESIM, que aceita
      * inativos com aviso ([03-03]).
      *
      * @return array<string, array<int, ValidationRule|string>>

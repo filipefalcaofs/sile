@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Tipo de serviço da solicitação (HU-061 RN-005) — dado administrável (CRUD
+ * Tipo de serviço da solicitação (HU-059 RN-005) — dado administrável (CRUD
  * admin). flow_hint é uma pista textual de roteamento; active liga/desliga o
  * tipo na seleção do requerente. Auditoria automática via HasAuditoria
  * (RN-002): created/updated dos campos fillable.

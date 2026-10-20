@@ -8,7 +8,7 @@ use App\Models\ViabilityRequest;
 use App\Support\Settings;
 
 /**
- * Detecção de duplicidade/reincidência por CNPJ (HU-061 RN-007). Aponta o
+ * Detecção de duplicidade/reincidência por CNPJ (HU-059 RN-007). Aponta o
  * processo anterior mais recente da MESMA empresa (recente OU ativo) para que
  * o requerente receba um ALERTA com link ao processo — NUNCA bloqueia a nova
  * solicitação (direito de petição).
@@ -60,7 +60,7 @@ class DuplicateRequestDetector
     }
 
     /**
-     * Duplicidade por REFERÊNCIA EXTERNA (BAP/Regin) — HU-148 RN-004: o mesmo
+     * Duplicidade por REFERÊNCIA EXTERNA (BAP/Regin) — HU-137 RN-004: o mesmo
      * identificador externo mapeia para UM único processo, logo a vinculação
      * posterior não pode duplicar. Diferente da reincidência por CNPJ (alerta,
      * direito de petição), aqui o vínculo repetido é bloqueado pelo chamador.

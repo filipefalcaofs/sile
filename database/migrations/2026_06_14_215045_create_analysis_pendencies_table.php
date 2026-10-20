@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Pendências da análise (HU-083/084 — ciclo interno) — o analista solicita
+     * Pendências da análise (HU-079/080 — ciclo interno) — o analista solicita
      * informação/documento ao requerente; status (aberta/respondida/expirada,
      * índice para a fila), due_at é o prazo (parâmetro analise.pendencia.
      * prazo_resposta_dias) e response guarda a resposta. O convite via

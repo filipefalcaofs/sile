@@ -16,7 +16,7 @@ class ViabilityDecisionFactory extends Factory
      * Default = deferimento expresso do sistema (decided_by_user_id null), com
      * número TVL e os jsonb plausíveis (veredito por CNAE, versões de regras e
      * fundamentação legal). Os states cobrem o indeferimento e o indeferimento
-     * por prazo BAP vencido (HU-134).
+     * por prazo BAP vencido (HU-125).
      *
      * @return array<string, mixed>
      */
@@ -87,7 +87,7 @@ class ViabilityDecisionFactory extends Factory
     }
 
     /**
-     * Indeferimento por prazo BAP vencido sem atuação na Junta (HU-134 dormente).
+     * Indeferimento por prazo BAP vencido sem atuação na Junta (HU-125 dormente).
      */
     public function semAtuacaoBap(): static
     {

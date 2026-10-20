@@ -15,9 +15,9 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Efeito desacoplado HU-110: o listener AUTO-DESCOBERTO EnviarViabilidadeSefaz
+ * Efeito desacoplado HU-103: o listener AUTO-DESCOBERTO EnviarViabilidadeSefaz
  * consome o ResultadoEmitido e SÓ envia a viabilidade à SEFAZ municipal quando a
- * decisão é DEFERIDA. O indeferimento NÃO é enviado (HU-134 RN-003) — ignorado
+ * decisão é DEFERIDA. O indeferimento NÃO é enviado (HU-125 RN-003) — ignorado
  * de forma auditável. Como o contrato está BLOQUEADO (Fase 13), o gateway padrão
  * (UnavailableSefazViabilidadeGateway) LANÇA SefazUnavailableException; o listener
  * CAPTURA e AUDITA a pendência (result 'bloqueado') — NUNCA finge o envio
@@ -51,7 +51,7 @@ class EnviarViabilidadeSefazListenerTest extends TestCase
 
     /**
      * Solicitação protocolada + decisão INDEFERIDA — o caminho que NÃO envia à
-     * SEFAZ (HU-134 RN-003).
+     * SEFAZ (HU-125 RN-003).
      *
      * @return array{0: ViabilityRequest, 1: ViabilityDecision}
      */
@@ -123,7 +123,7 @@ class EnviarViabilidadeSefazListenerTest extends TestCase
 
     public function test_indeferimento_nao_aciona_a_sefaz_e_audita_ignorado(): void
     {
-        // HU-134 RN-003: o indeferimento NÃO vai à SEFAZ. O listener nem toca o
+        // HU-125 RN-003: o indeferimento NÃO vai à SEFAZ. O listener nem toca o
         // gateway (zero chamadas) e registra que o envio não se aplica
         // ('ignorado') — toda saída deixa trilha (RN-002), sem fingir envio.
         $gateway = $this->spy(SefazViabilidadeGateway::class);
@@ -139,7 +139,7 @@ class EnviarViabilidadeSefazListenerTest extends TestCase
 
     public function test_deferimento_registra_a_taxa_tll_calculada_na_auditoria(): void
     {
-        // HU-071/HU-110: ao deferir, o listener calcula a taxa da TLL (RN-004)
+        // HU-145/HU-103: ao deferir, o listener calcula a taxa da TLL
         // a partir do per_cnae da decisão (codigo_tll da planilha) e a registra
         // na auditoria — o valor fica pronto para o envio quando a SEFAZ
         // liberar o endpoint (Fase 13). A transmissão segue bloqueada.

@@ -15,7 +15,7 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Malha fina (HU-136): encaminhamento humano provocado de QUALQUER processo para
+ * Malha fina (HU-127): encaminhamento humano provocado de QUALQUER processo para
  * revisão. É ORTOGONAL ao status — liga a flag in_fine_mesh e grava um
  * fine_mesh_referrals (motivo obrigatório, RN-002), SEM transicionar o status
  * (não chama a StateMachine). Funciona em qualquer status, inclusive deferida

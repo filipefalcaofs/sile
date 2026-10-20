@@ -10,18 +10,18 @@ use App\Services\Louos\EnquadramentoResult;
 use App\Services\Risco\RiscoResult;
 
 /**
- * Resultado imutável da consulta prévia de viabilidade (HU-054 a HU-059),
+ * Resultado imutável da consulta prévia de viabilidade (HU-052 a HU-057),
  * espelhando RiscoResult/EnquadramentoResult/TerritoryResult. É o SNAPSHOT que o
  * serviço (07-05) preenche, o endpoint (07-06) serializa e o histórico (07-03/07)
  * persiste.
  *
  * O Result AGREGA os sub-resultados reais dos motores (geocode, território,
  * enquadramento LOUOS e risco) — não recria nem recomputa nenhum deles. As
- * "simulações" das HUs são VIEWS deste mesmo objeto: enquadramento (HU-057),
- * risco (HU-058) e restrições do território (HU-059).
+ * "simulações" das HUs são VIEWS deste mesmo objeto: enquadramento (HU-055),
+ * risco (HU-056) e restrições do território (HU-057).
  *
  * REGRA ANTI-FACHADA: o veredito locacional é PROPAGADO do consolidado do motor
- * LOUOS (HU-044) — a degradação "sem zona → pendente" é verdade única do motor;
+ * LOUOS (HU-042) — a degradação "sem zona → pendente" é verdade única do motor;
  * o orquestrador NUNCA decide nem recomputa o veredito.
  */
 final readonly class ConsultaViabilidadeResult
@@ -59,7 +59,7 @@ final readonly class ConsultaViabilidadeResult
 
     /**
      * Veredito locacional PROPAGADO do consolidado do motor LOUOS — não decidido
-     * aqui. A degradação "sem zona → pendente" já vem do motor (HU-044); o
+     * aqui. A degradação "sem zona → pendente" já vem do motor (HU-042); o
      * orquestrador apenas espelha `resultado`/`label`/`motivo`.
      *
      * @return array<string, ?string>
@@ -117,8 +117,8 @@ final readonly class ConsultaViabilidadeResult
 
     /**
      * Contrato snake_case do endpoint JSON (07-06) e do snapshot do histórico
-     * (07-03/07), com as seções enquadramento (HU-057), risco (HU-058) e
-     * restrições (HU-059). Sub-resultados ausentes degradam para null sem inventar.
+     * (07-03/07), com as seções enquadramento (HU-055), risco (HU-056) e
+     * restrições (HU-057). Sub-resultados ausentes degradam para null sem inventar.
      *
      * @return array<string, mixed>
      */

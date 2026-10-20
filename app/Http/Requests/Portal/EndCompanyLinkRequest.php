@@ -13,7 +13,7 @@ class EndCompanyLinkRequest extends FormRequest
 {
     /**
      * Encerrar o próprio vínculo exige vínculo ATIVO do usuário efetivo
-     * (policy endLink, HU-028). O 403 é auditado globalmente (CA-04).
+     * (policy endLink, HU-027). O 403 é auditado globalmente (CA-04).
      */
     public function authorize(): bool
     {
@@ -31,7 +31,7 @@ class EndCompanyLinkRequest extends FormRequest
     }
 
     /**
-     * Proteção do último responsável ativo (HU-028 CA-03, precedente
+     * Proteção do último responsável ativo (HU-027 CA-03, precedente
      * anti-lockout [02-05]): a empresa nunca fica sem NENHUM responsável
      * ativo. A regra conta APENAS o papel responsável — um procurador único
      * pode encerrar se houver responsável ativo.

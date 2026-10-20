@@ -10,14 +10,14 @@ use Laravel\Ai\Contracts\Agent;
 use Laravel\Ai\Files\File;
 
 /**
- * Execução do resumo da solicitação para o cidadão (HU-116), pré-protocolo.
+ * Execução do resumo da solicitação para o cidadão (HU-108), pré-protocolo.
  * Subclasse fina do RunAiAgentJob: carrega só o ID e monta o input de TEXTO
  * (capability 'text', sem anexos) com os dados DECLARADOS da solicitação —
  * empresa (razão social/CNPJ do próprio requerente), atividades (CNAE) e imóvel
  * (endereço/área), sem CPF nem dado sensível desnecessário. A saída RESUME para
  * a conferência do cidadão — nunca decide nem antecipa o desfecho da viabilidade
  * (AI-SPEC Failure Mode #1). Toggle COMPARTILHADO com o resumo do processo
- * (HU-117) sob features.ia_resumo; function()/auditoria seguem por HU.
+ * (HU-109) sob features.ia_resumo; function()/auditoria seguem por HU.
  * Guardrails/persistência/auditoria vivem na base.
  */
 class ResumoSolicitacaoJob extends RunAiAgentJob
@@ -41,7 +41,7 @@ class ResumoSolicitacaoJob extends RunAiAgentJob
 
     /**
      * Toggle COMPARTILHADO da síntese (HU-014): o resumo da solicitação no portal
-     * (HU-116) e o resumo do processo na ficha (HU-117) vivem ambos sob
+     * (HU-108) e o resumo do processo na ficha (HU-109) vivem ambos sob
      * features.ia_resumo. A function()/event de auditoria seguem específicas por
      * HU ('resumo_solicitacao'); só o portão é compartilhado.
      */

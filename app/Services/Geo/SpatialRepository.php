@@ -6,8 +6,8 @@ use App\Models\GeoLayer;
 
 /**
  * Contrato que isola TODO o SQL espacial PostGIS da identificação territorial
- * (HU-031 a HU-035). Cada método recebe a `GeoLayer` JÁ RESOLVIDA (versão
- * vigente ou da data da decisão — HU-036 RN-004), de modo que a vigência fica
+ * (HU-030 a HU-034). Cada método recebe a `GeoLayer` JÁ RESOLVIDA (versão
+ * vigente ou da data da decisão — HU-035 RN-004), de modo que a vigência fica
  * a cargo do `TerritoryService` e o repositório só consulta a carga indicada.
  *
  * O ponto é sempre passado na ordem (longitude, latitude) — ST_MakePoint usa

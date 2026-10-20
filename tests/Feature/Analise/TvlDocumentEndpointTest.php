@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
 
 /**
- * Endpoints do TVL (HU-132): o controller FINO emite o TVL de uma decisão
+ * Endpoints do TVL (HU-123): o controller FINO emite o TVL de uma decisão
  * DEFERIDA via TvlPdfService::generate (10-13) e oferece o download por URL
  * TEMPORÁRIA ASSINADA servindo o disco NÃO público por streaming — nunca URL
  * pública, nunca ao cidadão (CA-02). Gated por emitir-tvl (403 auditado — CA-04);
@@ -131,7 +131,7 @@ class TvlDocumentEndpointTest extends TestCase
 
     public function test_download_com_url_assinada_valida_faz_streaming(): void
     {
-        // HU-132: o download é por URL temporária assinada servindo o arquivo do
+        // HU-123: o download é por URL temporária assinada servindo o arquivo do
         // disco NÃO público por streaming (o conteúdo é o PDF real).
         $processo = $this->processoDeferido();
         $analista = $this->analista();

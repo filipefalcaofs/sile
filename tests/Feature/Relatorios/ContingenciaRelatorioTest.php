@@ -15,7 +15,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 /**
- * Relatório gerencial de atendimento em contingência (HU-148): responde "quanto
+ * Relatório gerencial de atendimento em contingência (HU-137): responde "quanto
  * do volume entra pelo canal de operador e por quê?" — indicador de governança
  * enquanto o canal oficial (Regin) não volta. Recorte por protocolo no período;
  * a participação é null sem base (honesto, nunca 0% fabricado) e o motivo null

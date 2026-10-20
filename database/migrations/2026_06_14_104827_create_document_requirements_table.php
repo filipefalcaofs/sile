@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Requisitos documentais (modelo "Requisito" do SIGVISA — HU-067). A
+     * Requisitos documentais (modelo "Requisito" do SIGVISA — HU-065). A
      * obrigatoriedade por CNAE vem do pivot cnae_document_requirement; required
      * marca o obrigatório-base (ex.: foto da fachada). validation_instructions
      * é gancho para a validação por IA (EP14), inerte até lá.

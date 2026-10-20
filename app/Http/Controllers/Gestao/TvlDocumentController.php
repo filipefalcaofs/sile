@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\URL;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
- * TVL em PDF no backoffice (HU-132). Controller FINO: emite o documento de uma
+ * TVL em PDF no backoffice (HU-123). Controller FINO: emite o documento de uma
  * decisão DEFERIDA via TvlPdfService::generate (10-13) — a regra (FA-01), o
  * disco não público e a auditoria vivem no serviço — e devolve o link de
  * download. O download é por URL TEMPORÁRIA ASSINADA (middleware signed, TTL
@@ -79,7 +79,7 @@ class TvlDocumentController extends Controller
     }
 
     /**
-     * Link de download por URL temporária assinada (HU-132): TTL parametrizável
+     * Link de download por URL temporária assinada (HU-123): TTL parametrizável
      * (analise.tvl.download.ttl_minutos), efeito sem deploy. A assinatura + o gate
      * emitir-tvl + o disco não público garantem que o TVL não vaza por URL pública.
      */

@@ -3,7 +3,7 @@
 namespace App\Enums;
 
 /**
- * Situação de vigência de uma camada (HU-036 RN-004). pendente_fonte marca a
+ * Situação de vigência de uma camada (HU-035 RN-004). pendente_fonte marca a
  * camada cuja fonte pública ainda não existe (zona/lote): registrada e
  * comunicada, sem features — nunca simulada.
  */

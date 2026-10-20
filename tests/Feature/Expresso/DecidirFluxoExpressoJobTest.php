@@ -29,7 +29,7 @@ use Tests\Support\SeedsTratamentoPlanilha;
 use Tests\TestCase;
 
 /**
- * DecidirFluxoExpressoJob (HU-076 FA-03) — envelopa o FluxoExpressoService::decide
+ * DecidirFluxoExpressoJob (HU-072 FA-03) — envelopa o FluxoExpressoService::decide
  * (motor real, 09-05) num job de fila com retry/timeout/backoff parametrizados
  * (config/viabiliza.php). A decisão roda FORA do request do protocolo (resiliência):
  *
@@ -192,7 +192,7 @@ class DecidirFluxoExpressoJobTest extends TestCase
 
     public function test_failed_audita_a_falha_sem_silenciar(): void
     {
-        // RN-002 (HU-076 FA-03): job que esgota as tentativas NÃO falha em
+        // RN-002 (HU-072 FA-03): job que esgota as tentativas NÃO falha em
         // silêncio — registra auditoria 'expresso' result 'falha' com o id e o erro.
         $request = $this->protocoladaComCnaes(['2222222']);
 

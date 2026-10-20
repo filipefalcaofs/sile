@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Pivot N:N entre CNAE e requisito documental (HU-067): quais requisitos
+     * Pivot N:N entre CNAE e requisito documental (HU-065): quais requisitos
      * são obrigatórios para cada atividade. unique(cnae, requisito) impede
      * duplicidade; carga oficial da SEDUR ainda pendente (tabela nasce vazia).
      */

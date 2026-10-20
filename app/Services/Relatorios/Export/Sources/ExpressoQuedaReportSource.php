@@ -10,7 +10,7 @@ use App\Services\Relatorios\ReportFilters;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
- * Fonte de exportação das quedas do fluxo expresso (HU-145/HU-131): exporta o
+ * Fonte de exportação das quedas do fluxo expresso (HU-135/HU-122): exporta o
  * conjunto FILTRADO de {@see ExpressoQueda} (join na solicitação para o
  * protocolo), na MESMA semântica do {@see App\Services\Relatorios\ExpressoQuedaService}.
  *

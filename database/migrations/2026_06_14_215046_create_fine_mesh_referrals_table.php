@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Encaminhamentos à malha fina (HU-136) — ORTOGONAL ao status (liga a flag
+     * Encaminhamentos à malha fina (HU-127) — ORTOGONAL ao status (liga a flag
      * in_fine_mesh em viability_requests): é uma tabela (repetível, em lote), não
      * um estado. reason é obrigatório; created_at marca o encaminhamento e
      * resolved_at a baixa (null = em malha fina). Pode atingir até processo

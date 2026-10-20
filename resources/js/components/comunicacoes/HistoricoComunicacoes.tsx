@@ -57,7 +57,7 @@ function dataRelevante(comunicacao: Comunicacao): string | null {
 }
 
 /**
- * Histórico unificado de comunicações de um processo (HU-096): linha do tempo
+ * Histórico unificado de comunicações de um processo (HU-092): linha do tempo
  * sobre o ledger `communications` (fonte ÚNICA, todos os canais e tipos) com
  * canal, tipo, status HONESTO, título/resumo, destinatário e data. Estado vazio
  * honesto; o error_message (diagnóstico interno) só chega no payload da gestão.

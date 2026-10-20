@@ -19,13 +19,13 @@ use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
 /**
- * HU-116 (resumo da solicitação para o cidadão, pré-protocolo): a IA sintetiza os
+ * HU-108 (resumo da solicitação para o cidadão, pré-protocolo): a IA sintetiza os
  * dados DECLARADOS (empresa/atividades/imóvel) num resumo de CONFERÊNCIA — sempre
  * SUGESTÃO revisável, jamais decisão e NUNCA afirmando o desfecho ("vai ser
  * deferido"). Prova: resumo com fonte vira sugestão sugerida; resumo sem fonte
  * escala para humano; toggle features.ia_resumo OFF ⇒ NÃO chama o provedor e NÃO
  * cria sugestão (degradação honesta). Toggle COMPARTILHADO com o resumo do
- * processo (HU-117), function/auditoria específicas por HU. A função GERA TEXTO
+ * processo (HU-109), function/auditoria específicas por HU. A função GERA TEXTO
  * (capability text, sem anexos). Fake por agente — sem rede, sem custo.
  */
 #[Group('ia')]

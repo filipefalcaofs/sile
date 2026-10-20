@@ -38,7 +38,7 @@ class UserManagementController extends Controller
      */
     public function index(Request $request): Response|HttpResponse
     {
-        // HU-131/RN-009: com ?formato=, exporta o conjunto filtrado (aba + busca)
+        // HU-122/RN-009: com ?formato=, exporta o conjunto filtrado (aba + busca)
         // pelo contrato único — sem rota nova. RN-007: o CPF sai mascarado; o gate
         // de PII NÃO é setado (não há permissão de PII no projeto — pendência DPO),
         // então o número completo nunca é emitido.
@@ -159,7 +159,7 @@ class UserManagementController extends Controller
      * por decisão do 02-03 — gravação só por forceFill em fluxo autorizado.
      * Auditoria explícita: HasAuditoria não cobre atributos fora do fillable.
      * personalData: gestão da conta de um terceiro = acesso a dado pessoal
-     * (LGPD HU-102), medido no painel. Marcação ADITIVA à auditoria existente.
+     * (LGPD HU-098), medido no painel. Marcação ADITIVA à auditoria existente.
      */
     public function toggleActivation(ToggleUserActivationRequest $request, User $user): RedirectResponse
     {
@@ -193,7 +193,7 @@ class UserManagementController extends Controller
     /**
      * Vincula um papel ao usuário (um papel por conta — modelo da Fase 1),
      * com auditoria de papel anterior/novo (HU-012 CA-02). personalData:
-     * gestão da conta de um terceiro = acesso a dado pessoal (LGPD HU-102),
+     * gestão da conta de um terceiro = acesso a dado pessoal (LGPD HU-098),
      * medido no painel. Marcação ADITIVA à auditoria existente.
      */
     public function updateRole(UpdateUserRoleRequest $request, User $user): RedirectResponse

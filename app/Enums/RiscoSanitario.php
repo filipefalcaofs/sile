@@ -7,7 +7,7 @@ use InvalidArgumentException;
 /**
  * Nível de risco SANITÁRIO de uma atividade econômica conforme a planilha
  * unificada da Vigilância Sanitária (VISA), dimensão SEPARADA do risco
- * municipal do Decreto nº 32.636/2020 (HU-019/HU-047/HU-048). A VISA tem três
+ * municipal do Decreto nº 32.636/2020 (HU-018/HU-045/HU-046). A VISA tem três
  * níveis próprios — Baixo, Médio e Alto — distintos dos níveis municipais
  * (baixo_a/baixo_b/alto): aqui existe "médio". fromVisa() é a única porta de
  * entrada a partir do rótulo oficial e rejeita qualquer nível desconhecido,

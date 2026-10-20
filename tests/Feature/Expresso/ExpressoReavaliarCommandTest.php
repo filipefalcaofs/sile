@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Bus;
 use Tests\TestCase;
 
 /**
- * Rede de SEGURANÇA do fluxo expresso (HU-134 RN-004 / robustez): o comando
+ * Rede de SEGURANÇA do fluxo expresso (HU-125 RN-004 / robustez): o comando
  * expresso:reavaliar varre as solicitações PROTOCOLADAS que ficaram SEM decisão
  * (órfãs — o gatilho do protocolo falhou/se perdeu) e redespacha o
  * DecidirFluxoExpressoJob (o mesmo caminho real do gatilho; não decide inline).

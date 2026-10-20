@@ -6,13 +6,13 @@ use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
- * Validação do imóvel (HU-062) e da área utilizada (HU-063) do rascunho. A
+ * Validação do imóvel (HU-060) e da área utilizada (HU-061) do rascunho. A
  * autorização fina (dono + status rascunho) é feita no controller via
  * Gate::authorize('update', $solicitacao) — aqui só a forma dos dados.
  *
  * O polígono é GeoJSON Polygon com anel exterior de pelo menos 4 pontos (4
- * vértices fechando no primeiro). O complemento é TEXTO LIVRE (HU-139 adiado);
- * o ponto de referência é obrigatório (RN do HU-062). A área pública (indicador)
+ * vértices fechando no primeiro). O complemento é TEXTO LIVRE (sem cadastro de edifícios);
+ * o ponto de referência é obrigatório (RN do HU-060). A área pública (indicador)
  * exige concessão de uso — a regra documental fica no 08-08; aqui só o flag.
  */
 class UpdateSolicitacaoImovelRequest extends FormRequest

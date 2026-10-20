@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 /**
- * Contrato Geocoder + provider real Nominatim (HU-029): tudo provado com
+ * Contrato Geocoder + provider real Nominatim (HU-028): tudo provado com
  * Http::fake (a chamada real ao Nominatim é evidência do fechamento — 04-08).
  * Espelha o padrão de BrasilApiCnpjLookup (contrato + cache só de sucesso +
  * retry/timeout/backoff parametrizados). Sem RefreshDatabase: Settings::get

@@ -5,7 +5,7 @@ namespace App\Services\Solicitacao;
 use RuntimeException;
 
 /**
- * Protocolo bloqueado por dados mínimos ausentes (HU-068 FA-01): empresa,
+ * Protocolo bloqueado por dados mínimos ausentes (HU-066 FA-01): empresa,
  * imóvel/polígono, área utilizada ou atividade principal (CNAE). Carrega os
  * campos pendentes para o aviso ao requerente — comunicado, nunca silencioso.
  * Lançada ANTES de gerar o número (nenhum protocolo é consumido).

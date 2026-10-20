@@ -194,7 +194,7 @@ class ConfiabilidadeConsultaTest extends TestCase
             'value' => json_encode(['nR1' => ['vagas' => 5]]),
             'default_value' => '{}',
             'validation_rules' => ['required', 'json'],
-            'description' => 'Exigência de vagas por grupo de uso (HU-042).',
+            'description' => 'Exigência de vagas por grupo de uso (HU-040).',
         ]);
 
         $result = $this->service()->consultarPorEndereco('Praça da Sé', self::CNAE_MINIMERCADO, 120.0, [11 => true]);

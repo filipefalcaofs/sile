@@ -28,7 +28,7 @@ use Tests\Support\SeedsTratamentoPlanilha;
 use Tests\TestCase;
 
 /**
- * Pré-análise pelo motor (HU-140): ao encaminhar à análise, o PreAnaliseService
+ * Pré-análise pelo motor (HU-130): ao encaminhar à análise, o PreAnaliseService
  * roda o SolicitacaoViabilityResolver FRESCO (mesmo motor da Fase 9 — sem lógica
  * de decisão paralela, RN-001) e cria a analysis_records revisão 1 (rascunho)
  * pré-preenchida: engine_snapshot INTEGRAL (a zona fica aninhada em
@@ -151,7 +151,7 @@ class PreAnaliseServiceTest extends TestCase
 
     public function test_cria_revisao_1_pre_preenchida_pelo_motor_real(): void
     {
-        // HU-140 CA-01: com zona oficial e CNAE permitido, a pré-análise cria a
+        // HU-130 CA-01: com zona oficial e CNAE permitido, a pré-análise cria a
         // revisão 1 (rascunho) com engine_available=true, engine_snapshot integral
         // (zona ANINHADA em por_cnae.consulta.territorio.zona, nunca top-level),
         // engine_rules_versions e per_cnae com o status sugerido (deferida).
@@ -184,11 +184,11 @@ class PreAnaliseServiceTest extends TestCase
         // per_cnae guarda a tendência do motor; a decisão NÃO nasce pré-marcada
         // (relatório SEDUR 21/09, item 02): status_escolhido é null até o analista
         // escolher. status_sugerido permanece gravado só para a divergência
-        // auditada (HU-140 RN-002) — nunca é exposto na ficha.
+        // auditada (HU-130 RN-002) — nunca é exposto na ficha.
         // Regra SEDUR 22/09/2026 (retificação): permitido nos Quadros 10 e 11-A,
         // a atividade já nasce pré-marcada Deferida — o analista confirma ou
         // altera. status_sugerido permanece gravado só para a divergência
-        // auditada (HU-140 RN-002) — nunca é exposto na ficha.
+        // auditada (HU-130 RN-002) — nunca é exposto na ficha.
         $this->assertCount(1, $record->per_cnae);
         $this->assertSame('4712100', $record->per_cnae[0]['cnae']);
         $this->assertSame('permitido', $record->per_cnae[0]['tendencia']);
@@ -242,7 +242,7 @@ class PreAnaliseServiceTest extends TestCase
 
     public function test_idempotente_nao_cria_duas_revisoes_1(): void
     {
-        // HU-140 RN-004: reprocessar o mesmo encaminhamento NÃO cria nova revisão
+        // HU-130 RN-004: reprocessar o mesmo encaminhamento NÃO cria nova revisão
         // — recalcular é ação explícita (10-09), nunca automática.
         $this->fakeBairroComZona('ZR-1');
         $this->classificarMunicipal('4712100', RiscoMunicipal::BaixoA);
@@ -262,7 +262,7 @@ class PreAnaliseServiceTest extends TestCase
 
     public function test_fa01_motor_indisponivel_degrada_em_modo_manual(): void
     {
-        // HU-140 CA-03/FA-01: exceção do motor → revisão 1 em modo manual
+        // HU-130 CA-03/FA-01: exceção do motor → revisão 1 em modo manual
         // (engine_available=false, ficha vazia), NUNCA falha silenciosa nem
         // sugestão inventada; o evento é auditado como degradado (RN-005).
         $this->mock(SolicitacaoViabilityResolver::class, function ($mock): void {
@@ -651,7 +651,7 @@ class PreAnaliseServiceTest extends TestCase
         // ficha não carrega status_sugerido, mas PRÉ-MARCA Deferida em toda
         // atividade permitida nos Quadros 10 e 11-A — o analista confirma ou
         // altera. O parecer segue em branco. A sugestão gravada no banco
-        // continua disponível só para a divergência auditada (HU-140 RN-002).
+        // continua disponível só para a divergência auditada (HU-130 RN-002).
         $this->fakeBairroComZona('ZR-1');
         $this->classificarMunicipal('4712100', RiscoMunicipal::BaixoA);
         $this->seedTratamento('4712100', 'nR1', 'nR1-01');

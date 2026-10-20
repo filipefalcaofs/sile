@@ -3,7 +3,7 @@
 namespace App\Enums;
 
 /**
- * Tipo de camada geográfica (HU-036). isBlockedSource() marca as camadas sem
+ * Tipo de camada geográfica (HU-035). isBlockedSource() marca as camadas sem
  * fonte vetorial pública confirmada na pesquisa (zona LOUOS e lote cadastral):
  * é classificação do DADO (alimenta seeder e aviso na UI), não decisão de
  * negócio hardcoded — modeladas como pendente_fonte, nunca polígono inventado.

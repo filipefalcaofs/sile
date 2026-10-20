@@ -10,7 +10,7 @@ use Tests\TestCase;
  * Fundação de dados do fluxo expresso (EP09): a tabela IMUTÁVEL
  * viability_decisions (1:1 com a solicitação), o contador tvl_sequences
  * (espelha protocol_sequences) e as colunas dormentes do relógio do BAP
- * (HU-134) em viability_requests. Portável (json, sem geometria) — roda em
+ * (HU-125) em viability_requests. Portável (json, sem geometria) — roda em
  * SQLite. A unicidade 1:1 e do TVL é provada no ViabilityDecisionTest.
  */
 class ExpressoSchemaTest extends TestCase

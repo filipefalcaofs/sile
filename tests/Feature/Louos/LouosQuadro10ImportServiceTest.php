@@ -12,7 +12,7 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Carga do Quadro 10 da LOUOS (permissão por zona — HU-016/HU-039) como dado
+ * Carga do Quadro 10 da LOUOS (permissão por zona — HU-016/HU-038) como dado
  * MODELADO derivado da Lei nº 9.148/2016 (carga oficial pendente SEDUR). O
  * import valida a permissão contra o enum Quadro10Permissao e rejeita valor
  * desconhecido SEM inserir — teste-âncora que espelha a não-sobreposição do

@@ -10,7 +10,7 @@ use App\Support\Settings;
 use Carbon\CarbonInterface;
 
 /**
- * Identificação territorial por ponto (HU-031 a HU-035): dado lat/lng, devolve
+ * Identificação territorial por ponto (HU-030 a HU-034): dado lat/lng, devolve
  * bairro (ST_Contains), via mais próxima (ST_DWithin/ST_Distance) e restrições
  * incidentes (ST_Intersects) a partir das camadas REAIS carregadas; e devolve
  * zona/lote como indisponível quando a base é `pendente_fonte` — degradação

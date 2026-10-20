@@ -14,7 +14,7 @@ use PHPUnit\Framework\Attributes\Group;
 use Tests\PostgisTestCase;
 
 /**
- * Caminho feliz REAL da importação de camadas pela interface (HU-036,
+ * Caminho feliz REAL da importação de camadas pela interface (HU-035,
  * parametrização 3.1): upload de um FeatureCollection GeoJSON de amostra real
  * do GeoSalvador (3 bairros) via HTTP → nova versão vigente criada pelo
  * GeoJsonLayerImporter (PostGIS de verdade), anterior fechada (nunca apagada),

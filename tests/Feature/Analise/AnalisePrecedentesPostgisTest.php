@@ -15,7 +15,7 @@ use PHPUnit\Framework\Attributes\Group;
 use Tests\PostgisTestCase;
 
 /**
- * Painel de precedentes da ficha (HU-142) provado de ponta a ponta contra PostGIS:
+ * Painel de precedentes da ficha (HU-132) provado de ponta a ponta contra PostGIS:
  * o PrecedentService::forRecord orquestra sobre o PostgisPrecedentRepository (a
  * implementação real por trás do contrato; os consumidores rodam com fake em
  * SQLite). Aqui a busca espacial (ST_Intersects sobre a geometry derivada

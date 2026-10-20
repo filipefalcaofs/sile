@@ -10,7 +10,7 @@ use Laravel\Ai\Promptable;
 use Stringable;
 
 /**
- * Agente de RESUMO DO PROCESSO para o analista (HU-117): sintetiza a pré-análise
+ * Agente de RESUMO DO PROCESSO para o analista (HU-109): sintetiza a pré-análise
  * do motor (engine_snapshot/per_cnae), as inconsistências sinalizadas (Onda 1),
  * as pendências e os dados locacionais num resumo FIEL do que já existe no
  * processo. Apenas resume — não valida, não decide e JAMAIS afirma o desfecho

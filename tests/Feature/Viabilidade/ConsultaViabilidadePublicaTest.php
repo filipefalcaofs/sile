@@ -27,7 +27,7 @@ use Tests\Support\SeedsTratamentoPlanilha;
 use Tests\TestCase;
 
 /**
- * Consulta prévia de viabilidade PÚBLICA (HU-054/055/056): a página e os 3
+ * Consulta prévia de viabilidade PÚBLICA (HU-052/053/054): a página e os 3
  * endpoints JSON (endereço/CNAE/inscrição) sob /portal/viabilidade são acessíveis
  * ao cidadão ANÔNIMO, com throttle parametrizado (07-01) e auditoria RN-002. O
  * controller só orquestra via ConsultaViabilidadeService (07-05) e comunica a
@@ -121,7 +121,7 @@ class ConsultaViabilidadePublicaTest extends TestCase
 
     public function test_consulta_por_endereco_anonima_retorna_resultado_e_e_auditada(): void
     {
-        // HU-054/CA-01/CA-02: o cidadão anônimo consulta por endereço e recebe o
+        // HU-052/CA-01/CA-02: o cidadão anônimo consulta por endereço e recebe o
         // resultado real dos motores; a consulta é auditada (RN-002) com causer
         // null (anônima), origem registrada pela RecordActivityAction.
         $this->fakeGeocoder();
@@ -286,7 +286,7 @@ class ConsultaViabilidadePublicaTest extends TestCase
 
     public function test_consulta_por_cnae_anonima_roda_risco_e_quadro7(): void
     {
-        // HU-056: consulta por CNAE (sem endereço/inscrição) roda o risco real e o
+        // HU-054: consulta por CNAE (sem endereço/inscrição) roda o risco real e o
         // Enquadramento da planilha por CNAE × perguntas × área, SEM território —
         // o veredito fica pendente (sem local) e a consulta avisa que não avalia o local.
         $this->postJson('/portal/viabilidade/cnae', [
@@ -321,7 +321,7 @@ class ConsultaViabilidadePublicaTest extends TestCase
 
     public function test_consulta_por_inscricao_degrada_com_aviso_e_nunca_inventa_ponto(): void
     {
-        // HU-055/CA-03: com o binding REAL (base de lotes pendente SEDUR), a
+        // HU-053/CA-03: com o binding REAL (base de lotes pendente SEDUR), a
         // resolução do ponto degrada para a via CNAE — o serviço captura a
         // indisponibilidade e devolve 200 com o resultado degradado + aviso. O
         // controller NÃO trata essa exceção (a consulta "funcionou", só não
@@ -437,7 +437,7 @@ class ConsultaViabilidadePublicaTest extends TestCase
             'value' => json_encode($exigencia),
             'default_value' => '{}',
             'validation_rules' => ['required', 'json'],
-            'description' => 'Exigência de vagas por grupo de uso (HU-042).',
+            'description' => 'Exigência de vagas por grupo de uso (HU-040).',
         ]);
     }
 

@@ -14,7 +14,7 @@ use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 /**
- * Fonte das solicitações para o export transversal (HU-131/RN-005): o
+ * Fonte das solicitações para o export transversal (HU-122/RN-005): o
  * SolicitacoesReportSource transforma o conjunto FILTRADO da consulta de
  * processos no ReportDefinition, reusando ProcessoQueryService::filtered via
  * ReportFilters::toProcessoFiltros — sem reimplementar o filtro. O bag carrega o

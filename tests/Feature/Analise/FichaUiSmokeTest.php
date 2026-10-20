@@ -22,7 +22,7 @@ use Tests\Support\SeedsTratamentoPlanilha;
 use Tests\TestCase;
 
 /**
- * Smoke do contrato página↔props da ficha de análise (HU-135): com
+ * Smoke do contrato página↔props da ficha de análise (HU-126): com
  * analisar-processos, a rota gestao.processos.ficha.show renderiza o componente
  * Inertia gestao/ficha-analise/show com as props essenciais que a tela consome
  * (ficha com revisão/per_cnae, textos-padrão ativos, debounce do autosave,

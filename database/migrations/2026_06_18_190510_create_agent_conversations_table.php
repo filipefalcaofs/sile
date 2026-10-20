@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Schema;
 use Laravel\Ai\Migrations\AiMigration;
 
 /**
- * Conversas dos assistentes de IA (HU-120 cidadão / HU-121 analista) — Onda 3 da
+ * Conversas dos assistentes de IA (assistente do analista, HU-112) — Onda 3 da
  * Fase 14. Equivale à migration publicada pelo laravel/ai (RemembersConversations
  * + DatabaseConversationStore): o pacote a registra por publishesMigrations SEM
  * tag (não há `--tag=ai-migrations` no v0.8.1), então a materializamos aqui com o

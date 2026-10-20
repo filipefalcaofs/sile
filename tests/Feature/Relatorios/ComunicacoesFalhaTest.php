@@ -18,7 +18,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 /**
- * Consulta operacional de falhas de comunicação (HU-096): responde "quais
+ * Consulta operacional de falhas de comunicação (HU-092): responde "quais
  * notificações falharam ou foram bloqueadas, de quais processos?" sobre o
  * ledger REAL de communications — o gestor vê a pendência operacional (nunca
  * uma falha silenciosa). Recorte por período (created_at) e canal; SEM dados

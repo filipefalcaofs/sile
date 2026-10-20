@@ -14,7 +14,7 @@ use App\Services\Geo\ZonaProcessoService;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Protocolo da solicitação de viabilidade (HU-068) — o coração da fase.
+ * Protocolo da solicitação de viabilidade (HU-066) — o coração da fase.
  *
  * Em UMA transação: gera o número único (ProtocolNumberGenerator com
  * protocol_sequences->lockForUpdate(), unique como defesa final), grava
@@ -24,9 +24,9 @@ use Illuminate\Support\Facades\DB;
  * Antes da transação (para NÃO consumir número quando bloqueado):
  *  - dados mínimos presentes (empresa, imóvel/polígono, área, CNAE principal);
  *  - documentos obrigatórios atendidos — DocumentRequirementResolver::missing()
- *    vazio; senão BLOQUEIA com aviso (HU-067).
+ *    vazio; senão BLOQUEIA com aviso (HU-065).
  *
- * A simulação (HU-141) é orientativa e NÃO bloqueia: quando a tendência é de
+ * A simulação (HU-131) é orientativa e NÃO bloqueia: quando a tendência é de
  * indeferimento e o requerente opta por prosseguir mesmo assim, registra a
  * ciência (applicant_proceeded_despite) — direito de petição (RN-002). O
  * snapshot já persistido (08-09) é CONGELADO, nunca reprocessado (RN-003).
@@ -131,7 +131,7 @@ class ProtocolarSolicitacaoService
     }
 
     /**
-     * Dados mínimos da solicitação (HU-068 FA-01) — bloqueia com a lista dos
+     * Dados mínimos da solicitação (HU-066 FA-01) — bloqueia com a lista dos
      * campos pendentes antes de gerar qualquer número.
      */
     private function guardMinimumData(ViabilityRequest $request): void
@@ -160,7 +160,7 @@ class ProtocolarSolicitacaoService
     }
 
     /**
-     * Documentos obrigatórios (HU-067): missing() vazio para prosseguir, senão
+     * Documentos obrigatórios (HU-065): missing() vazio para prosseguir, senão
      * bloqueia com a lista dos requisitos pendentes (aviso, nunca silencioso).
      */
     private function guardRequiredDocuments(ViabilityRequest $request): void

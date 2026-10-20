@@ -7,7 +7,7 @@ use App\Models\ViabilityRequest;
 use Illuminate\Database\Eloquent\Collection;
 
 /**
- * Resolução dos documentos obrigatórios da solicitação (HU-067).
+ * Resolução dos documentos obrigatórios da solicitação (HU-065).
  *
  * Os obrigatórios são a UNIÃO de duas fontes:
  *  1. requisitos por-CNAE: document_requirements (required + ativos) vinculados,

@@ -9,10 +9,10 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * Payload de leitura de um registro da trilha de auditoria para a consulta
- * unificada (HU-100) e o histórico de alterações (HU-098). Expõe a RN-002
+ * unificada (HU-096) e o histórico de alterações (HU-094). Expõe a RN-002
  * (quem/quando/origem/ação/resultado/versão de regras), o causer (null =
  * sistema), o "em nome de" (representação), o subject (tipo legível + id) e o
- * `attribute_changes` (diff p/ HU-098). Por minimização (LGPD) NÃO devolve as
+ * `attribute_changes` (diff p/ HU-094). Por minimização (LGPD) NÃO devolve as
  * `properties` cruas — o diff já é o recorte estruturado e seguro da mudança.
  *
  * Consumido como prop do Inertia (->resolve()), sem o wrapper "data". A tela
@@ -41,7 +41,7 @@ class ActivityResource extends JsonResource
             'ip_address' => $this->ip_address,
             'channel' => $this->channel,
             'personal_data' => (bool) $this->personal_data,
-            // Diff estruturado da mudança (HU-098): ['attributes' => ..., 'old' => ...].
+            // Diff estruturado da mudança (HU-094): ['attributes' => ..., 'old' => ...].
             'attribute_changes' => $this->attribute_changes?->toArray(),
         ];
     }

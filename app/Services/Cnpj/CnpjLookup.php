@@ -5,7 +5,7 @@ namespace App\Services\Cnpj;
 /**
  * Contrato de consulta de dados cadastrais de CNPJ na base aberta da Receita
  * Federal. O provider concreto é administrável por parâmetro (URL) e
- * substituível por binding — a Fase 13 (HU-105) troca a implementação pelo
+ * substituível por binding — a Fase 13 (integração com a Receita) troca a implementação pelo
  * convênio oficial RFB sem tocar nenhum call site.
  */
 interface CnpjLookup

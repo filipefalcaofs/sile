@@ -14,7 +14,7 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Retrofit do export transversal (HU-131/RN-009) nas listagens das Fases 1–2:
+ * Retrofit do export transversal (HU-122/RN-009) nas listagens das Fases 1–2:
  * cada index ganha o branch ?formato= delegando ao contrato único
  * (ReportExporter), sem rota nova. Prova RN-005 (o arquivo reflete EXATAMENTE a
  * listagem filtrada), RN-007 (usuários: cpf_masked por default) e os três

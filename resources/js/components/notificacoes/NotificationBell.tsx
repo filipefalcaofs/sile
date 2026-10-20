@@ -8,7 +8,7 @@ interface NotificationBellProps {
 }
 
 /**
- * Sininho do cabeçalho (HU-090): lê a contagem REAL de não-lidas do shared prop
+ * Sininho do cabeçalho (HU-086): lê a contagem REAL de não-lidas do shared prop
  * `notificacoes.nao_lidas` (HandleInertiaRequests) e leva à central do ambiente
  * atual. Sem contagem fictícia — quando não há não-lidas, mostra só o ícone.
  */

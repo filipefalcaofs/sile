@@ -23,7 +23,7 @@ use Tests\Support\SeedsTratamentoPlanilha;
 use Tests\TestCase;
 
 /**
- * Auditoria SÍNCRONA da decisão expressa (HU-078, RN-005): a trilha
+ * Auditoria SÍNCRONA da decisão expressa (HU-074, RN-005): a trilha
  * autoritativa é gravada DENTRO da transação da decisão e NÃO depende do evento
  * ResultadoEmitido (lição da Fase 8 — o evento só carrega efeitos colaterais
  * desacoplados). Mesmo com o evento fakeado, o log de auditoria 'expresso'/
@@ -107,7 +107,7 @@ class FluxoExpressoAuditoriaTest extends TestCase
         // Fakeando ResultadoEmitido, seus LISTENERS (notificação/Regin/SEFAZ) não
         // rodam. A auditoria da decisão, porém, é gravada na própria transação
         // (não por listener) — então continua presente. É a prova de que a
-        // auditoria autoritativa NÃO depende do evento (HU-078, lição da Fase 8).
+        // auditoria autoritativa NÃO depende do evento (HU-074, lição da Fase 8).
         Event::fake([ResultadoEmitido::class]);
         $request = $this->protocoladaDeferivel();
 
@@ -120,7 +120,7 @@ class FluxoExpressoAuditoriaTest extends TestCase
             ->latest('id')
             ->first();
 
-        $this->assertNotNull($activity, 'A auditoria da decisão deve ser gravada mesmo com o evento fakeado (HU-078).');
+        $this->assertNotNull($activity, 'A auditoria da decisão deve ser gravada mesmo com o evento fakeado (HU-074).');
         $this->assertNotNull($activity->rules_version);
         $this->assertNotSame('', $activity->rules_version);
         $this->assertSame($request->id, $activity->properties['viability_request_id']);

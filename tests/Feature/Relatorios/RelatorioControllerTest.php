@@ -14,7 +14,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 /**
- * Camada HTTP dos relatórios (HU-122..131/145): cada tela é servida com dado
+ * Camada HTTP dos relatórios (HU-113..122/135): cada tela é servida com dado
  * REAL dos serviços route-free (15-03/05/06/07), gated por consultar-relatorios e
  * com a consulta auditada (RN-002). Qualquer relatório exporta pelo contrato
  * único via ?formato= delegando ao ReportExporter (RN-004/009); a produtividade
@@ -77,7 +77,7 @@ class RelatorioControllerTest extends TestCase
 
     /**
      * Decisão de análise técnica cravada para um analista (flow analise_tecnica,
-     * decided_by = analista) — fonte da produtividade (HU-130).
+     * decided_by = analista) — fonte da produtividade (HU-121).
      */
     private function decisaoTecnica(User $analista, DecisionOutcome $outcome = DecisionOutcome::Deferida): void
     {

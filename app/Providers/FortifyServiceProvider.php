@@ -177,8 +177,8 @@ class FortifyServiceProvider extends ServiceProvider
             );
         });
 
-        // Throttle da consulta pública de CNPJ (HU-021) — limite administrável
-        // sem deploy; estabelece o padrão de throttle parametrizado para HU-069/EP07.
+        // Throttle da consulta pública de CNPJ (HU-020) — limite administrável
+        // sem deploy; estabelece o padrão de throttle parametrizado para HU-067/EP07.
         RateLimiter::for('cnpj-lookup', function (Request $request) {
             return Limit::perMinute(
                 (int) config('viabiliza.seguranca.throttle.cnpj_lookup.por_minuto', 30),
@@ -197,7 +197,7 @@ class FortifyServiceProvider extends ServiceProvider
             )->by($request->user()?->id ?: $request->ip());
         });
 
-        // Throttle da geocodificação (HU-029) — Nominatim recomenda ~1 req/s;
+        // Throttle da geocodificação (HU-028) — Nominatim recomenda ~1 req/s;
         // o limite por minuto é administrável sem deploy (espelha cnpj-lookup).
         RateLimiter::for('geocoding', function (Request $request) {
             return Limit::perMinute(
@@ -214,7 +214,7 @@ class FortifyServiceProvider extends ServiceProvider
             )->by($request->user()?->id ?: $request->ip());
         });
 
-        // Throttle da consulta PÚBLICA de protocolo por link assinado (HU-069) —
+        // Throttle da consulta PÚBLICA de protocolo por link assinado (HU-067) —
         // limite administrável sem deploy; espelha consulta-viabilidade (EP07).
         RateLimiter::for('consulta-protocolo', function (Request $request) {
             return Limit::perMinute(
@@ -232,7 +232,7 @@ class FortifyServiceProvider extends ServiceProvider
             )->by($request->user()?->id ?: $request->ip());
         });
 
-        // Throttle do webhook municipal /api_integracao/recebe (HU-103 RN-010).
+        // Throttle do webhook municipal /api_integracao/recebe (HU-099 RN-010).
         RateLimiter::for('regin-recebe', function (Request $request) {
             return Limit::perMinute(
                 (int) config('viabiliza.seguranca.throttle.regin_recebe.por_minuto', 60),

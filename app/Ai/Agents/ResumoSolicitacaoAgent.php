@@ -10,7 +10,7 @@ use Laravel\Ai\Promptable;
 use Stringable;
 
 /**
- * Agente de RESUMO DA SOLICITAÇÃO para o cidadão (HU-116), pré-protocolo:
+ * Agente de RESUMO DA SOLICITAÇÃO para o cidadão (HU-108), pré-protocolo:
  * sintetiza os dados DECLARADOS (empresa, atividades/CNAEs e imóvel) num resumo
  * de CONFERÊNCIA, para o requerente revisar o que informou antes de protocolar.
  * Apenas resume — não valida, não decide e JAMAIS afirma o desfecho ("vai ser

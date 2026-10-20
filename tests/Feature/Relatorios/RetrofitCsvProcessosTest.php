@@ -10,8 +10,8 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Retrofit do CSV da consulta de processos (HU-082) para o contrato único de
- * exportação (HU-131/RN-009): o ProcessoController::index passa a delegar ao
+ * Retrofit do CSV da consulta de processos (HU-078) para o contrato único de
+ * exportação (HU-122/RN-009): o ProcessoController::index passa a delegar ao
  * ReportExporter via ProcessosReportSource. A rede anti-regressão
  * (ProcessoConsultaTest, 10-14) garante o conjunto filtrado e a meta-auditoria;
  * este teste prova a PRESERVAÇÃO das 9 colunas históricas do SAPS e o GANHO

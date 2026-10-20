@@ -13,11 +13,11 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Versionamento de regras como dados (HU-019/HU-020/HU-053), espelhando
+ * Versionamento de regras como dados (HU-018/HU-019/HU-051), espelhando
  * GeoLayerService::openVersion: a publicação de uma nova versão NÃO apaga a
  * anterior (a vigente é fechada — status substituída, valid_to preenchido) e a
  * nova nasce vigente. Diferente do GeoLayer, o rascunho coexiste com a vigente
- * (base do sandbox HU-143) e a publicação exige quatro olhos em domínios
+ * (base do sandbox HU-133) e a publicação exige quatro olhos em domínios
  * sensíveis (publicador distinto do autor). Toda publicação é auditada com a
  * versão de regras (RN-002).
  */
@@ -28,7 +28,7 @@ class RuleVersionService
     /**
      * Abre um rascunho de versão para um domínio. Idempotente por
      * (domain, version): se já existir, devolve sem duplicar. NÃO mexe na
-     * vigente — o rascunho coexiste com ela (base do sandbox HU-143).
+     * vigente — o rascunho coexiste com ela (base do sandbox HU-133).
      */
     public function openDraft(
         RuleDomain $domain,

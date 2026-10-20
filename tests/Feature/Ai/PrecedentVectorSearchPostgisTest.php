@@ -13,8 +13,8 @@ use PHPUnit\Framework\Attributes\Group;
 use Tests\PostgisTestCase;
 
 /**
- * Busca por similaridade REAL dos precedentes (HU-142) sobre pgvector — o ranking
- * por distância cosine (`<=>`) que sustenta o assistente do analista (HU-121). É
+ * Busca por similaridade REAL dos precedentes (HU-132) sobre pgvector — o ranking
+ * por distância cosine (`<=>`) que sustenta o assistente do analista (HU-112). É
  * a prova de que a infra de RAG é DIY de verdade (o SimilaritySearch do laravel/ai
  * v0.8.1 não existe): vetores conhecidos inseridos no pgvector, embedding da
  * consulta alinhado a um deles, e a busca retorna esse precedente em primeiro.

@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 /**
- * CRUD administrável da tabela de valores TLL por exercício (HU-071/HU-014):
+ * CRUD administrável da tabela de valores TLL por exercício (HU-145/HU-014):
  * o administrador mantém os valores (criar/editar/ativar-inativar) pela
  * retaguarda, atrás da permissão manter-parametros (reuso — como feriados). A
  * chave (código TLL, exercício) é única; inativar preserva o histórico (sem

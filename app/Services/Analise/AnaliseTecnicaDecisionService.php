@@ -24,7 +24,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Decisão técnica HUMANA (HU-085 a HU-089) — a contraparte do FluxoExpressoService
+ * Decisão técnica HUMANA (HU-081 a HU-085) — a contraparte do FluxoExpressoService
  * para os casos que a lei manda o humano decidir. `decide()` conclui o processo a
  * partir da FICHA FINALIZADA do analista (NÃO do resolver puro): defere quando
  * TODAS as CNAEs estão deferidas na ficha e indefere quando QUALQUER uma está
@@ -39,8 +39,8 @@ use Illuminate\Support\Facades\DB;
  *
  * A transação espelha FluxoExpressoService::emitir: cria a ViabilityDecision
  * (per_cnae/rules_versions/fundamentação DA FICHA; número TVL só no deferimento),
- * transiciona em_analise→deferida|indeferida (= encerramento HU-089) e AUDITA
- * SÍNCRONO (HU-078) — tudo antes do commit. O ResultadoEmitido é disparado SÓ
+ * transiciona em_analise→deferida|indeferida (= encerramento HU-085) e AUDITA
+ * SÍNCRONO (HU-074) — tudo antes do commit. O ResultadoEmitido é disparado SÓ
  * após o commit (os 3 listeners da Fase 9 reusam; Regin/SEFAZ seguem bloqueados
  * honestos → Fase 13). A auditoria autoritativa NÃO depende do evento.
  */
@@ -153,8 +153,8 @@ class AnaliseTecnicaDecisionService
             throw $e;
         }
 
-        // APÓS o commit: só a decisão efetivada gera efeitos (notificação HU-077;
-        // Regin HU-104 / SEFAZ HU-110 bloqueados → Fase 13). A auditoria já está
+        // APÓS o commit: só a decisão efetivada gera efeitos (notificação HU-073;
+        // Regin HU-100 / SEFAZ HU-103 bloqueados → Fase 13). A auditoria já está
         // gravada na transação, independente do evento.
         ResultadoEmitido::dispatch($request, $decision);
 
@@ -197,8 +197,8 @@ class AnaliseTecnicaDecisionService
     /**
      * Grava a decisão dentro da transação: ViabilityDecision (flow analise_tecnica,
      * decided_by analista, número TVL só no deferimento) → transição
-     * em_analise→deferida|indeferida (encerramento HU-089) → auditoria SÍNCRONA
-     * (HU-078). Tudo antes do commit.
+     * em_analise→deferida|indeferida (encerramento HU-085) → auditoria SÍNCRONA
+     * (HU-074). Tudo antes do commit.
      *
      * @param  list<array<string, mixed>>  $perCnae
      */
@@ -448,7 +448,7 @@ class AnaliseTecnicaDecisionService
     }
 
     /**
-     * decision_trace ADITIVO da decisão HUMANA (HU-099 RN-004/RN-005): nasce da
+     * decision_trace ADITIVO da decisão HUMANA (HU-095 RN-004/RN-005): nasce da
      * FICHA (não recomputa o motor). Por CNAE, reaproveita os passos do motor do
      * engine_snapshot (quando a ficha foi pré-analisada) e acrescenta a decisão do
      * analista; no caso pendente sem motor (FA-01), registra a entrada + a decisão
@@ -524,7 +524,7 @@ class AnaliseTecnicaDecisionService
 
     /**
      * Por-CNAE resumido para a auditoria (código + sugerido × escolhido) —
-     * explicabilidade compacta da decisão humana (HU-078).
+     * explicabilidade compacta da decisão humana (HU-074).
      *
      * @param  list<array<string, mixed>>  $perCnae
      * @return list<array<string, mixed>>

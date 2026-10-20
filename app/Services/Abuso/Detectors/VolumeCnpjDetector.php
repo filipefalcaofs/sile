@@ -11,7 +11,7 @@ use App\Services\Abuso\DetectionWindow;
 use App\Support\Settings;
 
 /**
- * HU-149: volume atípico de solicitações pelo MESMO CNPJ na janela. Determinístico
+ * HU-138: volume atípico de solicitações pelo MESMO CNPJ na janela. Determinístico
  * sobre dado real — agrupa viability_requests por company_id no período, SEM IA.
  * Emite um finding por empresa cujo total criado na janela supera
  * `abuso.volume_cnpj.limite` (HU-014, default 5). fingerprint estável por

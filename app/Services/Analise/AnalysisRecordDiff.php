@@ -5,7 +5,7 @@ namespace App\Services\Analise;
 use App\Models\AnalysisRecord;
 
 /**
- * Diff entre duas revisões da ficha de análise (HU-135 RN-007): compara campos
+ * Diff entre duas revisões da ficha de análise (HU-126 RN-007): compara campos
  * de topo (parecer, condicionantes, vagas) e o per_cnae por CNAE (status sugerido
  * × escolhido, condicionantes, justificativa) e devolve SÓ o que mudou, na forma
  * {campo: {de, para}} — campos iguais não aparecem. Função pura e testável: não

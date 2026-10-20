@@ -12,7 +12,7 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Diff entre revisões da ficha (HU-135 RN-007): comparar duas revisões e mostrar
+ * Diff entre revisões da ficha (HU-126 RN-007): comparar duas revisões e mostrar
  * só o que MUDOU (status por CNAE, parecer, condicionantes), nunca os campos
  * iguais. O AnalysisRecordDiff::between é puro e testável; o endpoint serve o
  * painel da ficha (10-17), gated por analisar-processos e auditado (RN-002).

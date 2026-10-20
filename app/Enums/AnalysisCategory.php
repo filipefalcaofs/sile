@@ -3,11 +3,11 @@
 namespace App\Enums;
 
 /**
- * Categoria de análise da solicitação (HU-082). Expresso = caminho elegível ao
+ * Categoria de análise da solicitação (HU-078). Expresso = caminho elegível ao
  * fluxo automático que caiu para análise humana (ex.: sem zona); SemiExpresso =
  * gatilho de risco/CNAE que exige análise (RN-008). A categoria de CONSULTA
  * completa combina este enum + a flag in_fine_mesh + is_virtual_office — é
- * derivada na HU-082, não persistida aqui.
+ * derivada na HU-078, não persistida aqui.
  */
 enum AnalysisCategory: string
 {

@@ -8,7 +8,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 /**
- * Validação do anexo da solicitação (HU-066). A autorização fina (dono +
+ * Validação do anexo da solicitação (HU-064). A autorização fina (dono +
  * rascunho) é feita no controller via Gate::authorize('update', ...) — aqui só
  * a forma do arquivo. Os tipos aceitos (mimetypes) e o tamanho máximo são
  * PARAMETRIZADOS (HU-014) e lidos DINAMICAMENTE do catálogo (banco→cache→config),

@@ -10,7 +10,7 @@ use Illuminate\Support\Str;
 use Tests\TestCase;
 
 /**
- * Central in-app (HU-090): o usuário — portal (guard web) e gestão (guard
+ * Central in-app (HU-086): o usuário — portal (guard web) e gestão (guard
  * gestao), o MESMO User notifiable — lista suas notificações do canal database
  * nativo (lidas + não-lidas, paginadas), marca uma e marca todas como lidas.
  *

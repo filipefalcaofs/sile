@@ -1,5 +1,5 @@
 /**
- * Acesso via Login Único GOV.BR (HU-151), com a identidade do guia oficial
+ * Acesso via Login Único GOV.BR (HU-140), com a identidade do guia oficial
  * (azul institucional, marca "gov.br" em peso forte). Navegação de página
  * inteira (não XHR): o destino é o redirect OAuth para o provedor.
  *

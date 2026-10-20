@@ -10,7 +10,7 @@ use App\Support\Representation\CurrentRepresentation;
 use Illuminate\Http\RedirectResponse;
 
 /**
- * Encerramento do PRÓPRIO vínculo do usuário com a empresa (HU-028). Nunca
+ * Encerramento do PRÓPRIO vínculo do usuário com a empresa (HU-027). Nunca
  * delete físico: o vínculo recebe ended_at/ended_reason e o histórico é
  * preservado. A proteção do último responsável ativo está no FormRequest
  * (after, [02-05]). O 403 do não vinculado é auditado globalmente (CA-04).

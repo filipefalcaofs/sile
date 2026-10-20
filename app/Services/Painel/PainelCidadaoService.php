@@ -74,8 +74,8 @@ class PainelCidadaoService
     }
 
     /**
-     * Itens que dependem de ação do efetivo: pendências ABERTAS (HU-090/091) e
-     * rascunhos a protocolar (HU-061/068).
+     * Itens que dependem de ação do efetivo: pendências ABERTAS (HU-086/087) e
+     * rascunhos a protocolar (HU-059/066).
      *
      * @return array{pendencias: list<array<string, mixed>>, rascunhos: list<array<string, mixed>>}
      */

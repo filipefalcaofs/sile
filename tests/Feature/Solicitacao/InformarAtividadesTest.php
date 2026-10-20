@@ -11,12 +11,12 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Informar a atividade principal (HU-064) e os CNAEs complementares (HU-065)
+ * Informar a atividade principal (HU-062) e os CNAEs complementares (HU-063)
  * do rascunho da solicitação: define exatamente um CNAE principal (is_primary)
  * e os complementares (até o limite parametrizável, default 99) a partir da
  * tabela oficial, só CNAEs ativos, garantindo unicidade (request, cnae) —
  * espelhando o pivot company_cnae da Fase 3. Mudar a lista invalida a simulação
- * anterior (HU-063 RN-005) e é auditado (RN-002); só o dono em rascunho edita.
+ * anterior (HU-061 RN-005) e é auditado (RN-002); só o dono em rascunho edita.
  */
 class InformarAtividadesTest extends TestCase
 {
@@ -98,7 +98,7 @@ class InformarAtividadesTest extends TestCase
         $principal = Cnae::factory()->create();
         $tresComplementares = Cnae::factory()->count(3)->create()->pluck('id')->all();
 
-        // Limite administrável reduzido para 2 (HU-014/HU-065).
+        // Limite administrável reduzido para 2 (HU-014/HU-063).
         $parameter = Parameter::factory()->create([
             'key' => 'solicitacao.cnaes_complementares.max',
             'group' => 'solicitacao',

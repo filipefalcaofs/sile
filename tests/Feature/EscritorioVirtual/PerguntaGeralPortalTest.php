@@ -12,7 +12,7 @@ use Tests\TestCase;
 
 /**
  * Pergunta geral "deseja ser abrigado de escritório virtual?"
- * (wants_virtual_office_tenant), no mesmo passo do imóvel (HU-062) do
+ * (wants_virtual_office_tenant), no mesmo passo do imóvel (HU-060) do
  * rascunho — reusa a estrutura de SedePerguntaPortalTest.
  */
 class PerguntaGeralPortalTest extends TestCase

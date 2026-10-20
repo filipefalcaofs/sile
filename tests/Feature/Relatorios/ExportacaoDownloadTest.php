@@ -11,10 +11,10 @@ use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
 
 /**
- * Download das exportações assíncronas (HU-131): o arquivo gerado pelo
+ * Download das exportações assíncronas (HU-122): o arquivo gerado pelo
  * GerarExportacaoJob (15-02) é baixado por URL TEMPORÁRIA ASSINADA (middleware
  * signed) servindo o disco NÃO público por streaming — nunca URL pública (LGPD),
- * espelhando o TvlDocumentController (HU-132). É o alvo do link da Notification
+ * espelhando o TvlDocumentController (HU-123). É o alvo do link da Notification
  * ExportacaoPronta. Gated por consultar-relatorios; o download é auditado
  * (RN-008). Sem assinatura → 403; arquivo podado por retenção (15-15) → 404
  * honesto (sem fabricar).

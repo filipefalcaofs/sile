@@ -13,7 +13,7 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 /**
- * Escalonamento por SLA (HU-147): alerta o analista (faixa amarela) ou escala ao
+ * Escalonamento por SLA (HU-136): alerta o analista (faixa amarela) ou escala ao
  * gestor (faixa vermelha/vencido) sobre um processo parado além do limiar da
  * etapa. O semáforo é lido da FONTE ÚNICA (analysis_due_at via AnalysisSlaService)
  * pelo comando — esta Notification só transporta o conteúdo já decidido.
@@ -21,7 +21,7 @@ use Illuminate\Notifications\Notification;
  * É comunicação de PROCESSO: implementa ProcessNotification para percorrer o
  * NotificationDispatcher (multicanal + ledger). SÓ notifica — não transiciona o
  * processo nem grava timeline (sem decisão automática; o tratamento é só
- * notificação por default, HU-147 RN-003).
+ * notificação por default, HU-136 RN-003).
  */
 class ProcessoEscalonadoNotification extends Notification implements ProcessNotification, ShouldQueue
 {

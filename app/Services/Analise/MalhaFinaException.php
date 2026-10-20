@@ -5,7 +5,7 @@ namespace App\Services\Analise;
 use RuntimeException;
 
 /**
- * Encaminhamento à malha fina inválido (HU-136 RN-002): o motivo é obrigatório.
+ * Encaminhamento à malha fina inválido (HU-127 RN-002): o motivo é obrigatório.
  * Nada é gravado (nem o fine_mesh_referrals nem a flag in_fine_mesh) e o caller
  * traduz a exceção em 422 — não encaminha silenciosamente sem justificativa.
  */

@@ -26,7 +26,7 @@ use Tests\Support\SeedsTratamentoPlanilha;
 use Tests\TestCase;
 
 /**
- * Smoke end-to-end REAL do fluxo expresso AUTOMÁTICO (HU-073 a HU-078 + HU-104/110):
+ * Smoke end-to-end REAL do fluxo expresso AUTOMÁTICO (HU-069 a HU-074 + HU-100/103):
  * dirige a CADEIA COMPLETA pelos serviços/eventos reais — protocolar
  * (ProtocolarSolicitacaoService) → evento SolicitacaoProtocolada → listener
  * AvaliarFluxoExpresso → DecidirFluxoExpressoJob → FluxoExpressoService::decide →
@@ -74,17 +74,17 @@ class ExpressoSmokeTest extends TestCase
         $this->assertNotNull($decision->tvl_product_number);
         $this->assertStringStartsWith('TVL-', (string) $decision->tvl_product_number);
 
-        // Auditoria SÍNCRONA autoritativa da decisão (HU-078).
+        // Auditoria SÍNCRONA autoritativa da decisão (HU-074).
         $this->assertDatabaseHas('activity_log', [
             'log_name' => 'expresso',
             'event' => 'decisao',
             'result' => 'deferida',
         ]);
 
-        // HU-077: notificação do resultado enviada ao requerente (sem anexo TVL).
+        // HU-073: notificação do resultado enviada ao requerente (sem anexo TVL).
         Notification::assertSentTo($requerente, ResultadoExpressoNotification::class);
 
-        // HU-104/110: Regin e SEFAZ ficam como pendência auditada (bloqueado —
+        // HU-100/103: Regin e SEFAZ ficam como pendência auditada (bloqueado —
         // Fase 13), NUNCA "enviado" fictício.
         $this->assertDatabaseHas('activity_log', [
             'log_name' => 'integracoes',
@@ -123,7 +123,7 @@ class ExpressoSmokeTest extends TestCase
 
     public function test_protocolo_com_zona_proibida_indefere_e_sefaz_ignora(): void
     {
-        // HU-075 / RN-003: a zona PROÍBE o grupo → INDEFERE (sem TVL). O Regin
+        // HU-071 / RN-003: a zona PROÍBE o grupo → INDEFERE (sem TVL). O Regin
         // também é comunicado (parecer nos dois casos), mas a SEFAZ IGNORA o
         // indeferimento de forma auditável (não envia).
         Notification::fake();

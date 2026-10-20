@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 /**
- * Versionamento de camadas (HU-036 RN-004/RN-005): a abertura de versão fecha
+ * Versionamento de camadas (HU-035 RN-004/RN-005): a abertura de versão fecha
  * a vigente anterior sem apagá-la e o diff é contabilizado. Lógica de linhas
  * (datas + contagem), provada em SQLite — sem PostGIS.
  */

@@ -14,7 +14,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 /**
- * Criar o RASCUNHO da solicitação de viabilidade (HU-061): origem portal
+ * Criar o RASCUNHO da solicitação de viabilidade (HU-059): origem portal
  * direto + tipo de serviço (08-03) + empresa do requerente (Fase 3). O
  * requerente é o usuário EFETIVO (representado quando "em nome de") e o
  * created_by é o ator real. Detecção de reincidência por CNPJ ALERTA sem

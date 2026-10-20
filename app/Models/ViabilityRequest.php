@@ -35,7 +35,7 @@ use Illuminate\Support\Collection;
  * As colunas da análise técnica (EP10 — sector_id, assigned_user_id,
  * assigned_at, analysis_category, in_fine_mesh, analysis_stage,
  * analysis_stage_started_at, analysis_due_at) também ficam FORA do fillable:
- * são escritas pelos serviços de distribuição (HU-080/081) e de SLA (HU-144),
+ * são escritas pelos serviços de distribuição (HU-076/077) e de SLA (HU-134),
  * nunca pelo cidadão. O território materializado (zona_codigo, zona_fonte,
  * bairro_oficial, cod_log, property_point_lat/lng, property_location_source,
  * address_polygon_geojson, semap_use_category, semap_construction_standard)
@@ -237,7 +237,7 @@ class ViabilityRequest extends Model
     }
 
     /**
-     * Invalida a simulação orientativa (HU-063 RN-005): mudança de área, CNAE
+     * Invalida a simulação orientativa (HU-061 RN-005): mudança de área, CNAE
      * ou imóvel zera o snapshot — o consumidor (08-06/08-07) chama este método
      * para forçar nova simulação. Escrita única aqui evita conflito entre os
      * planos paralelos da fase.
@@ -327,7 +327,7 @@ class ViabilityRequest extends Model
     }
 
     /**
-     * Tipo de serviço (HU-061 RN-005).
+     * Tipo de serviço (HU-059 RN-005).
      *
      * @return BelongsTo<ViabilityServiceType, $this>
      */
@@ -370,7 +370,7 @@ class ViabilityRequest extends Model
     }
 
     /**
-     * Ator real que criou a solicitação ("em nome de" — HU-150).
+     * Ator real que criou a solicitação ("em nome de" — HU-139).
      *
      * @return BelongsTo<User, $this>
      */
@@ -389,7 +389,7 @@ class ViabilityRequest extends Model
 
     /**
      * Atendimento presencial que originou a solicitação, quando aberta no balcão
-     * "em nome de" o cidadão (HU-150 RN-005 — dimensão balcão dos relatórios).
+     * "em nome de" o cidadão (HU-139 RN-005 — dimensão balcão dos relatórios).
      *
      * @return BelongsTo<AssistedAttendance, $this>
      */
@@ -446,7 +446,7 @@ class ViabilityRequest extends Model
     }
 
     /**
-     * Anexos (HU-066).
+     * Anexos (HU-064).
      *
      * @return HasMany<ViabilityRequestDocument, $this>
      */
@@ -476,7 +476,7 @@ class ViabilityRequest extends Model
     }
 
     /**
-     * Transições de estado — fonte da timeline (HU-069), mais recente primeiro.
+     * Transições de estado — fonte da timeline (HU-067), mais recente primeiro.
      *
      * @return HasMany<ViabilityRequestTransition, $this>
      */
@@ -497,7 +497,7 @@ class ViabilityRequest extends Model
 
     /**
      * Decisão do fluxo expresso (EP09) — 1:1 imutável, existe só após
-     * deferir/indeferir. bap_due_at/bap_linked_at (HU-134) ficam fora do
+     * deferir/indeferir. bap_due_at/bap_linked_at (HU-125) ficam fora do
      * fillable (como protocol_number/status): são gravados via forceFill pela
      * rotina do BAP quando o Regin entrar (Fase 13).
      *
@@ -509,7 +509,7 @@ class ViabilityRequest extends Model
     }
 
     /**
-     * Setor (caixa) que recebeu o processo na distribuição (HU-080). sector_id
+     * Setor (caixa) que recebeu o processo na distribuição (HU-076). sector_id
      * fica fora do fillable — gravado pelo serviço de distribuição.
      *
      * @return BelongsTo<Sector, $this>
@@ -520,7 +520,7 @@ class ViabilityRequest extends Model
     }
 
     /**
-     * Analista que assumiu o processo (HU-081). assigned_user_id fica fora do
+     * Analista que assumiu o processo (HU-077). assigned_user_id fica fora do
      * fillable — gravado ao assumir.
      *
      * @return BelongsTo<User, $this>
@@ -542,7 +542,7 @@ class ViabilityRequest extends Model
     }
 
     /**
-     * Fichas de análise versionadas (HU-135/140) — uma linha por revisão.
+     * Fichas de análise versionadas (HU-126/130) — uma linha por revisão.
      *
      * @return HasMany<AnalysisRecord, $this>
      */
@@ -607,7 +607,7 @@ class ViabilityRequest extends Model
     }
 
     /**
-     * Pendências abertas/respondidas/expiradas do processo (HU-083/084).
+     * Pendências abertas/respondidas/expiradas do processo (HU-079/080).
      *
      * @return HasMany<AnalysisPendency, $this>
      */
@@ -617,7 +617,7 @@ class ViabilityRequest extends Model
     }
 
     /**
-     * Encaminhamentos à malha fina (HU-136) — ortogonais ao status, repetíveis.
+     * Encaminhamentos à malha fina (HU-127) — ortogonais ao status, repetíveis.
      *
      * @return HasMany<FineMeshReferral, $this>
      */

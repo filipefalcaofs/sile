@@ -26,7 +26,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Consulta prévia de viabilidade PÚBLICA (HU-054/055/056): a página e os 3
+ * Consulta prévia de viabilidade PÚBLICA (HU-052/053/054): a página e os 3
  * endpoints JSON (endereço/CNAE/inscrição) são acessíveis ao cidadão ANÔNIMO,
  * com throttle parametrizado (07-01) e auditoria RN-002. O controller só
  * orquestra via ConsultaViabilidadeService (07-05) — a auditoria de sucesso é
@@ -61,7 +61,7 @@ class ConsultaViabilidadeController extends Controller
     }
 
     /**
-     * Consulta por ENDEREÇO (HU-054): geocodifica → território → motores. Traduz
+     * Consulta por ENDEREÇO (HU-052): geocodifica → território → motores. Traduz
      * as exceções do geocoder em mensagens honestas — nunca resultado falso.
      */
     public function endereco(ConsultaViabilidadeEnderecoRequest $request): JsonResponse
@@ -97,7 +97,7 @@ class ConsultaViabilidadeController extends Controller
     }
 
     /**
-     * Consulta por CNAE (HU-056): risco real + enquadramento da planilha por área, SEM território.
+     * Consulta por CNAE (HU-054): risco real + enquadramento da planilha por área, SEM território.
      * Não há geocodificação — sem AddressNotFoundException/GeocoderException a
      * tratar; o veredito locacional fica pendente e o serviço já avisa que a
      * consulta não avalia o local.
@@ -119,7 +119,7 @@ class ConsultaViabilidadeController extends Controller
     }
 
     /**
-     * Consulta por INSCRIÇÃO imobiliária (HU-055): o serviço resolve o ponto pelo
+     * Consulta por INSCRIÇÃO imobiliária (HU-053): o serviço resolve o ponto pelo
      * contrato (pipeline completa) OU degrada para a via CNAE com aviso quando a
      * base de lotes está indisponível (pendente SEDUR). A degradação é comunicada
      * via `avisos` no resultado (200) — não é erro HTTP: a consulta funcionou, só
@@ -144,7 +144,7 @@ class ConsultaViabilidadeController extends Controller
     }
 
     /**
-     * Histórico pessoal (HU-060): grava o SNAPSHOT imutável da consulta SOMENTE
+     * Histórico pessoal (HU-058): grava o SNAPSHOT imutável da consulta SOMENTE
      * quando o usuário está autenticado (guard web). A consulta anônima segue
      * auditada (RN-002, no serviço), mas NÃO cria histórico pessoal. Chamado
      * apenas no caminho de SUCESSO e nunca para consulta incompleta (faltou dado,

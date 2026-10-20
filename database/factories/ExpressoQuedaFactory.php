@@ -15,7 +15,7 @@ class ExpressoQuedaFactory extends Factory
 {
     /**
      * Default = queda por CNAE com gatilho semi-expresso REAL (ZEIS especial) e
-     * dimensão decisiva municipal — o caso classificado por gatilho da HU-145.
+     * dimensão decisiva municipal — o caso classificado por gatilho da HU-135.
      *
      * @return array<string, mixed>
      */

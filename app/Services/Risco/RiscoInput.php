@@ -5,7 +5,7 @@ namespace App\Services\Risco;
 use Carbon\CarbonInterface;
 
 /**
- * Entrada imutável da classificação de risco (HU-047 a HU-051), espelhando o
+ * Entrada imutável da classificação de risco (HU-045 a HU-049), espelhando o
  * padrão de DTO readonly de TerritoryResult. Reúne tudo que o motor (06-05)
  * precisa para decidir: o CNAE, os gatilhos já ativos no contexto (ex.:
  * zeis_especial vindo do território da Fase 4) e, opcionalmente, a data para

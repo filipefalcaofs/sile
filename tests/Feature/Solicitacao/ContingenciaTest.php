@@ -17,7 +17,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 /**
- * Registrar solicitação em CONTINGÊNCIA (HU-148) — o canal de operador na
+ * Registrar solicitação em CONTINGÊNCIA (HU-137) — o canal de operador na
  * retaguarda e o caminho REAL de operação enquanto o contrato Regin não chega
  * (Fase 13). O operador autorizado (permissão registrar-contingencia) preenche
  * o MESMO conjunto de dados do formulário oficial e o sistema protocola pelo
@@ -264,7 +264,7 @@ class ContingenciaTest extends TestCase
     public function test_mesmo_motor_bloqueio_documental_se_aplica(): void
     {
         // RN-002: a contingência usa o MESMO motor (ProtocolarSolicitacaoService),
-        // sem atalho — o bloqueio documental (HU-067) também se aplica. Sem o
+        // sem atalho — o bloqueio documental (HU-065) também se aplica. Sem o
         // documento obrigatório, nada é protocolado e nada fica meio-criado.
         $operador = $this->operador();
         $beneficiario = $this->beneficiario();

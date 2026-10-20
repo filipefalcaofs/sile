@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * Shape de apresentação da explicabilidade passo a passo da decisão (HU-099):
+ * Shape de apresentação da explicabilidade passo a passo da decisão (HU-095):
  * envolve o array projetado pelo DecisionExplanationService (NUNCA a decisão
  * crua) e o normaliza para a UI da retaguarda (12-10). Expõe `por_cnae` (lista
  * de passos ordenados, cada um com a flag `registrado`), `fundamentacao`,

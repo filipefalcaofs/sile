@@ -17,7 +17,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 /**
- * Explicabilidade passo a passo das decisões (HU-099 RN-004/RN-005) como
+ * Explicabilidade passo a passo das decisões (HU-095 RN-004/RN-005) como
  * PROJEÇÃO PURA: o DecisionExplanationService LÊ o decision_trace gravado na
  * 12-02 (+ rules_versions + fundamentacao) e devolve a visualização ordenada,
  * sem NUNCA chamar o motor (spy=0). Decisão legada (decision_trace null) degrada

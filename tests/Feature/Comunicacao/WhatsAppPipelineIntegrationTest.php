@@ -17,7 +17,7 @@ use Illuminate\Notifications\Events\NotificationSent;
 use Tests\TestCase;
 
 /**
- * Teste de INTEGRAÇÃO da PIPELINE COMPLETA do WhatsApp (HU-095, anti-fachada) —
+ * Teste de INTEGRAÇÃO da PIPELINE COMPLETA do WhatsApp (HU-091, anti-fachada) —
  * fecha o gap do caminho ON + provedor indisponível (pré-Fase 13).
  *
  * Diferente dos testes de unidade do canal/dispatcher (que usam Notification::fake
@@ -58,7 +58,7 @@ class WhatsAppPipelineIntegrationTest extends TestCase
             'value' => '1',
             'default_value' => '0',
             'validation_rules' => ['required', 'boolean'],
-            'description' => 'Toggle do canal de notificação por WhatsApp (HU-095).',
+            'description' => 'Toggle do canal de notificação por WhatsApp (HU-091).',
         ]);
     }
 

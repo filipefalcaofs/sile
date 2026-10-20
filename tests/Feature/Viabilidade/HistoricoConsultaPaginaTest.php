@@ -10,7 +10,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 /**
- * Página AUTENTICADA do histórico de viabilidade (HU-060, UI 07-09): agora que a
+ * Página AUTENTICADA do histórico de viabilidade (HU-058, UI 07-09): agora que a
  * página existe (resources/js/pages/portal/viabilidade/historico.tsx), o teste
  * reativa a asserção do componente Inertia que o 07-07 deixou pendente. Reforça
  * o contrato server-side da tela: o componente renderizado, o escopo do dono
@@ -37,7 +37,7 @@ class HistoricoConsultaPaginaTest extends TestCase
 
     public function test_pagina_do_historico_renderiza_consultas_do_dono(): void
     {
-        // HU-060: a página renderiza o componente Inertia do histórico com APENAS
+        // HU-058: a página renderiza o componente Inertia do histórico com APENAS
         // as consultas do próprio usuário (escopo do dono — as de terceiro nunca
         // aparecem).
         $dono = $this->portalUser();

@@ -48,7 +48,7 @@ class AiFeatureGate
     /**
      * A infra de RAG (Onda 3) está disponível quando há um provedor de embeddings
      * ATIVO. Diferente de available(): a indexação/busca por similaridade é
-     * INFRAESTRUTURA dos assistentes (HU-120/121), não uma função togglável por si
+     * INFRAESTRUTURA dos assistentes (HU-112), não uma função togglável por si
      * — o toggle de feature é checado na camada do assistente que a consome. Sem
      * provedor de embeddings, indexar/buscar fica indisponível (não chama, não
      * simula).

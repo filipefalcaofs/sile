@@ -10,7 +10,7 @@ use App\Services\Relatorios\TempoAnaliseService;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
- * Fonte de exportação do DETALHAMENTO de tempo por processo (HU-129/HU-131): cada
+ * Fonte de exportação do DETALHAMENTO de tempo por processo (HU-120/HU-122): cada
  * linha é um processo protocolado no período com os minutos ÚTEIS de cada etapa
  * (preenchimento/espera/análise/pendência) + total, na MESMA semântica do
  * {@see TempoAnaliseService} (desconto de fim de semana/feriado via

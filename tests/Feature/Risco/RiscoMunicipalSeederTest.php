@@ -11,7 +11,7 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Carga oficial da classificação de risco municipal (HU-020/HU-047): o seeder
+ * Carga oficial da classificação de risco municipal (HU-019/HU-045): o seeder
  * publica uma versão vigente do domínio risco_municipal referenciando o
  * Decreto nº 41.758/2026 (relatório SEDUR 21/09 — decreto vigente) e importa
  * a tabela oficial entregue pela SEDUR (767/328/236 = 1.331), auditando com a

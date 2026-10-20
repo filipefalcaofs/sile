@@ -9,10 +9,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Registro ESTRUTURADO da queda ao analista por CNAE (HU-145), gravado pelo
+ * Registro ESTRUTURADO da queda ao analista por CNAE (HU-135), gravado pelo
  * {@see App\Services\Expresso\FluxoExpressoService::encaminharAnalise} no momento
  * do encaminhamento à análise técnica. É o dado REAL que fecha o ciclo de
- * melhoria contínua do expresso (medir → parametrizar HU-143 → medir): sem ele,
+ * melhoria contínua do expresso (medir → parametrizar HU-133 → medir): sem ele,
  * o relatório de quedas seria fachada.
  *
  * tipo_gatilho/dimensao espelham o gatilho semi-expresso e a dimensão decisiva

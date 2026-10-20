@@ -12,7 +12,7 @@ class UpdateSecondaryCnaesRequest extends FormRequest
 {
     /**
      * Gerir CNAEs exige vínculo ATIVO do usuário efetivo (policy
-     * manageCnaes, HU-026 CA-04). O 403 é auditado globalmente.
+     * manageCnaes, HU-025 CA-04). O 403 é auditado globalmente.
      */
     public function authorize(): bool
     {
@@ -22,7 +22,7 @@ class UpdateSecondaryCnaesRequest extends FormRequest
     /**
      * Conjunto exato de secundários: 'present' permite a remoção total
      * (array vazio); cada item deve ser CNAE ATIVO e sem duplicatas
-     * (HU-026 CA-01/CA-03).
+     * (HU-025 CA-01/CA-03).
      *
      * @return array<string, array<int, ValidationRule|string>>
      */
@@ -47,7 +47,7 @@ class UpdateSecondaryCnaesRequest extends FormRequest
 
     /**
      * O conjunto de secundários nunca contém o principal atual da empresa
-     * (HU-026 CA-03): a troca de principal é uma intenção distinta e tem
+     * (HU-025 CA-03): a troca de principal é uma intenção distinta e tem
      * endpoint próprio.
      *
      * @return array<int, callable(Validator): void>

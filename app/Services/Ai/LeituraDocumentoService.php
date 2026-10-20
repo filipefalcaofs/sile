@@ -6,7 +6,7 @@ use App\Jobs\Ai\LeituraDocumentoJob;
 use App\Models\ViabilityRequestDocument;
 
 /**
- * Camada de serviço da leitura documental por IA (HU-112 + HU-114). Decide, com
+ * Camada de serviço da leitura documental por IA (HU-104 + HU-106). Decide, com
  * degradação honesta, SE a função roda: sem o toggle features.ia_ocr ligado E um
  * provedor de visão ativo, NÃO despacha o job, NÃO chama o provedor e NÃO simula
  * resultado (anti-fachada). O RunAiAgentJob ainda re-checa o portão no handle,

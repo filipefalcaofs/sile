@@ -11,7 +11,7 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Cálculo do valor do DAM da TLL (HU-071 RN-004): o valor é a atividade de
+ * Cálculo do valor do DAM da TLL (HU-145): o valor é a atividade de
  * maior valor correlacionado à TLL, acrescido da taxa de serviço, aplicando o
  * fator multiplicador quando o CNAE exigir. Sem valor parametrizado para o
  * exercício, o cálculo degrada para pendente (null) — nunca valor inventado.

@@ -9,7 +9,7 @@ use PHPUnit\Framework\Attributes\Group;
 use Tests\PostgisTestCase;
 
 /**
- * Smoke do stack PostGIS de ponta a ponta (HU-036): prova que ST_Contains e
+ * Smoke do stack PostGIS de ponta a ponta (HU-035): prova que ST_Contains e
  * ST_Area executam SQL espacial REAL sobre um polígono inserido. Com o
  * container de dev de pé este teste DEVE reportar PASSOU (não skipped) — o
  * guard do PostgisTestCase impede passe-em-silêncio.

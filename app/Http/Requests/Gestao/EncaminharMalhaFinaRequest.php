@@ -7,7 +7,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 /**
- * Validação do encaminhamento à malha fina (HU-136) — single e LOTE (RN-004): um
+ * Validação do encaminhamento à malha fina (HU-127) — single e LOTE (RN-004): um
  * ou mais processos recebem o MESMO motivo. A autorização é o middleware
  * permission:encaminhar-malha-fina da rota. NÃO há restrição de status (RN-001 —
  * a malha fina é ortogonal ao status, atinge inclusive deferida); aqui valida-se

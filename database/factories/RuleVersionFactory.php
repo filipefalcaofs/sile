@@ -33,7 +33,7 @@ class RuleVersionFactory extends Factory
 
     /**
      * Rascunho: coexiste com a vigente, sem vigência nem publicação (base do
-     * sandbox HU-143).
+     * sandbox HU-133).
      */
     public function rascunho(): static
     {

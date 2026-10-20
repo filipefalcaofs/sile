@@ -204,7 +204,7 @@ class DatabaseSeederTest extends TestCase
     {
         $this->seed();
 
-        // Catálogo de tipos de serviço (HU-061) — seed MÍNIMO com códigos
+        // Catálogo de tipos de serviço (HU-059) — seed MÍNIMO com códigos
         // estáveis; a lista oficial é pendência SEDUR (substituível sem deploy).
         $this->assertSame(4, ViabilityServiceType::query()->count());
         $this->assertTrue(
@@ -214,7 +214,7 @@ class DatabaseSeederTest extends TestCase
                 ->exists()
         );
 
-        // Requisitos documentais BASE (HU-067) referenciados pelo resolver por
+        // Requisitos documentais BASE (HU-065) referenciados pelo resolver por
         // code: fachada (sempre) e concessão (área pública). A obrigatoriedade
         // POR CNAE entra VAZIA — planilha oficial pendente SEDUR (honesto).
         $this->assertTrue(
@@ -302,7 +302,7 @@ class DatabaseSeederTest extends TestCase
         // O EP12 (AuditoriaDevSeeder) acrescenta 2 decisões SQLite-safe pela
         // ANÁLISE TÉCNICA (territorial-agnóstica, em requerentes/empresas
         // dedicados): uma decidida com decision_trace e uma legada sem trace —
-        // tornando a explicabilidade (HU-099) navegável no dev mesmo em SQLite.
+        // tornando a explicabilidade (HU-095) navegável no dev mesmo em SQLite.
         $this->assertSame(2, ViabilityDecision::query()->count());
 
         // Driver-aware: a camada de zona fictícia (geometria) não é carregada em
@@ -360,7 +360,7 @@ class DatabaseSeederTest extends TestCase
         $this->assertNotNull($triagem);
         $this->assertSame((string) $setor->id, $triagem->value);
 
-        // Biblioteca de textos-padrão do parecer (HU-085): exemplos por categoria
+        // Biblioteca de textos-padrão do parecer (HU-081): exemplos por categoria
         // (deferimento/indeferimento/condicionante/pendência), ativos e na versão
         // inicial — substituíveis pela SEDUR sem deploy (dados versionados).
         foreach (['deferimento', 'indeferimento', 'condicionante', 'pendencia'] as $categoria) {

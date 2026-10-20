@@ -13,8 +13,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Construção da query da consulta de processos (HU-082) e da fila do analista
- * (HU-144). Centraliza os filtros completos do SAPS (grupo de status, status,
+ * Construção da query da consulta de processos (HU-078) e da fila do analista
+ * (HU-134). Centraliza os filtros completos do SAPS (grupo de status, status,
  * número do processo, BAP, produto TVL, serviço, setor, datas, inscrição, nome,
  * CNPJ, CEP, logradouro, bairro) MAIS o filtro por analista responsável e por
  * categoria DERIVADA (Expresso/Semi-Expresso a partir de analysis_category;
@@ -26,7 +26,7 @@ use Illuminate\Support\Facades\DB;
 class ProcessoQueryService
 {
     /**
-     * Categorias de consulta (HU-082 RN-005) — NÃO persistidas: derivam de
+     * Categorias de consulta (HU-078 RN-005) — NÃO persistidas: derivam de
      * analysis_category (expresso/semi_expresso) + as flags in_fine_mesh (malha
      * fina) e is_virtual_office (sede de escritório). value => rótulo pt-BR.
      */
@@ -59,14 +59,14 @@ class ProcessoQueryService
         'cancelado' => ['cancelada'],
     ];
 
-    /** Status que compõem a fila de trabalho do analista (HU-144). */
+    /** Status que compõem a fila de trabalho do analista (HU-134). */
     private const STATUS_FILA = [
         ViabilityRequestStatus::EmAnalise->value,
         ViabilityRequestStatus::EmPendencia->value,
     ];
 
     /**
-     * Monta o Builder filtrado da consulta (HU-082), ordenado do mais recente
+     * Monta o Builder filtrado da consulta (HU-078), ordenado do mais recente
      * para o mais antigo. Cada filtro só entra quando informado.
      *
      * @param  array<string, mixed>  $filtros
@@ -148,7 +148,7 @@ class ProcessoQueryService
     }
 
     /**
-     * Monta o Builder da caixa de entrada do analista (HU-144), ordenado por
+     * Monta o Builder da caixa de entrada do analista (HU-134), ordenado por
      * prazo (analysis_due_at — coluna indexada de 10-02) ascendente. Só os
      * processos atribuídos ao usuário, nos status de trabalho (em análise / em
      * pendência).
@@ -266,9 +266,9 @@ class ProcessoQueryService
     }
 
     /**
-     * Visão agregada do setor para o gestor (HU-144 CA-03): carga por analista
+     * Visão agregada do setor para o gestor (HU-134 CA-03): carga por analista
      * (quantos processos de trabalho cada um carrega) e total de processos em
-     * vermelho (prazo estourado) nos setores do gestor. Ponte com a HU-130/147.
+     * vermelho (prazo estourado) nos setores do gestor. Ponte com a HU-121/136.
      *
      * @return array{carga: list<array{analista_id: int, analista: string, total: int}>, vermelhos: int}
      */
@@ -330,7 +330,7 @@ class ProcessoQueryService
     }
 
     /**
-     * Categorias derivadas de um processo (HU-082 RN-005), reutilizada pelo
+     * Categorias derivadas de um processo (HU-078 RN-005), reutilizada pelo
      * ProcessoResource. Um processo pode ter mais de uma (ex.: malha fina E
      * expresso) — a malha fina e a sede são ortogonais à categoria do motor.
      *

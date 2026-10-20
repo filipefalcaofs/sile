@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import Badge from '@/components/ui/badge';
 import { formatarMetros, metrosComUnidade } from '@/lib/metros';
 
-/** Semáforo do SLA da fila (HU-144) — espelha o enum SlaStatus do backend. */
+/** Semáforo do SLA da fila (HU-134) — espelha o enum SlaStatus do backend. */
 export interface ProcessoSla {
     status: string;
     status_label: string;
@@ -189,7 +189,7 @@ export function rotuloSemSla(fluxo: string | null | undefined): string {
 }
 
 /**
- * Badge do semáforo de SLA (HU-144). Exibe o rótulo do estado e o tempo
+ * Badge do semáforo de SLA (HU-134). Exibe o rótulo do estado e o tempo
  * restante calculado on-the-fly no backend. Sem prazo materializado, mostra um
  * traço (honesto — o processo ainda não entrou na fila com prazo).
  */

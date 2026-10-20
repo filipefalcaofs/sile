@@ -15,7 +15,7 @@ use Tests\Support\Geo\FakeSpatialRepository;
 use Tests\TestCase;
 
 /**
- * Backend do mapa territorial da gestão (HU-030/HU-036/HU-037): a página lista
+ * Backend do mapa territorial da gestão (HU-029/HU-035/HU-036): a página lista
  * as camadas com seus status (zona/lote explícitos como pendentes) e o limiar
  * de sobreposição; os endpoints identificar e validar-localizacao operam a
  * lógica real e são auditados; tudo protegido pela permissão consultar-territorio
@@ -104,7 +104,7 @@ class TerritoryPageTest extends TestCase
                 ->has('camadas')
                 ->where('sobreposicaoMinima', 50)
                 ->has('geocodingEnabled')
-                // Zona e lote comunicados como pendentes de fonte (HU-036).
+                // Zona e lote comunicados como pendentes de fonte (HU-035).
                 ->where('camadas', fn (Collection $camadas) => $camadas->firstWhere('type', 'zona')['status'] === 'pendente_fonte'
                     && $camadas->firstWhere('type', 'lote')['status'] === 'pendente_fonte')
             );

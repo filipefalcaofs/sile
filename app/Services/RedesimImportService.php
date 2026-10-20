@@ -12,14 +12,14 @@ use Illuminate\Support\Facades\Validator;
 use RuntimeException;
 
 /**
- * Import de dados empresariais no formato REDESIM (HU-022) — lógica REAL
+ * Import de dados empresariais no formato REDESIM (HU-021) — lógica REAL
  * atrás de contrato.
  *
  * ⚠️ A ESTRUTURA DO PAYLOAD É REFERÊNCIA, A VALIDAR COM A SEDUR (integrador
  * estadual REGIN/JUCEB). O manual nacional REDESIM (WS01/WS02/...) não é
  * público; os campos aqui derivam da Resolução CGSIM 61/2020 e da consulta
  * prévia de viabilidade. O TRANSPORTE real (webservice/fila do integrador)
- * é a HU-103 (Fase 13), que ajusta o parsing SEM retrabalho de domínio —
+ * é a HU-099 (Fase 13), que ajusta o parsing SEM retrabalho de domínio —
  * upsert por CNPJ, validação por item, sincronização de CNAEs e auditoria
  * já estão consolidados aqui.
  *

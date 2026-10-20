@@ -13,7 +13,7 @@ use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 /**
- * Registro IMUTÁVEL da decisão expressa (HU-076/078): 1:1 com a solicitação,
+ * Registro IMUTÁVEL da decisão expressa (HU-072/074): 1:1 com a solicitação,
  * casts jsonb→array para per_cnae/rules_versions/fundamentacao (RN-005/009),
  * número TVL único preenchido SÓ no deferimento (RN-007) e decided_by_user_id
  * null = decisão do sistema. A concorrência do TVL é provada no @group postgis.
@@ -67,7 +67,7 @@ class ViabilityDecisionTest extends TestCase
 
     public function test_resource_entrega_fundamentacao_como_lista_mesmo_com_shape_legado(): void
     {
-        // Defesa anti-quebra de SSR (HU-076 retaguarda): mesmo que um registro
+        // Defesa anti-quebra de SSR (HU-072 retaguarda): mesmo que um registro
         // tenha fundamentacao em shape associativo (legado/edge), o Resource
         // entrega uma LISTA (array_values) — a tela de detalhe itera sem derrubar
         // a página inteira.

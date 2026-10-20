@@ -10,7 +10,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Manutenção dos gatilhos semi-expresso (HU-049/HU-051, parametrização
+ * Manutenção dos gatilhos semi-expresso (HU-047/HU-049, parametrização
  * HU-014): dado administrável, não registry de código. SEM create/destroy —
  * o `codigo` é enum-bound (TipoGatilho) e cada caso tem comportamento no
  * motor (RiscoClassificationService::applyGatilhos); uma linha criada pela

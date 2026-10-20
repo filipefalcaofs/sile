@@ -11,7 +11,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Versionamento de camadas geográficas com vigência (HU-036 RN-004) e diff
+ * Versionamento de camadas geográficas com vigência (HU-035 RN-004) e diff
  * auditado (RN-005). A carga de uma nova versão NÃO apaga a anterior: a
  * vigente é fechada (status substituída, valid_to preenchido) e a nova nasce
  * vigente — a consulta operacional usa a vigente, a reprodução usa a versão da
@@ -74,7 +74,7 @@ class GeoLayerService
     }
 
     /**
-     * Diff de carga (HU-036 RN-005).
+     * Diff de carga (HU-035 RN-005).
      *
      * DECISÃO DOCUMENTADA: sem chave estável por feature na fonte (o GeoJSON do
      * GeoSalvador não traz identificador persistente confiável de feição), a

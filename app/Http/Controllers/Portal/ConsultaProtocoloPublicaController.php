@@ -10,7 +10,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Consulta PÚBLICA do protocolo por link assinado (HU-069) — SEM login. A rota
+ * Consulta PÚBLICA do protocolo por link assinado (HU-067) — SEM login. A rota
  * usa o middleware `signed` (TTL parametrizável, gerado no controller autenticado)
  * + `throttle:consulta-protocolo`. Mostra SÓ o número de protocolo, o status
  * amigável (publicLabel), a timeline pública e o prazo estimado com ressalva —

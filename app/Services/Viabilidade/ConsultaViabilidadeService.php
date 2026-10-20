@@ -20,19 +20,19 @@ use App\Services\Risco\TipoImovel;
 use App\Support\Audit\AuditService;
 
 /**
- * Orquestrador da consulta prévia de viabilidade (HU-054 a HU-059): COMPÕE os
+ * Orquestrador da consulta prévia de viabilidade (HU-052 a HU-057): COMPÕE os
  * motores reais (Geocoder → TerritoryService → LouosEnquadramentoService →
  * RiscoClassificationService) num ConsultaViabilidadeResult e AUDITA (RN-002) —
  * sem nenhuma lógica de decisão própria.
  *
  * REGRA ANTI-FACHADA: o serviço só PASSA ADIANTE as saídas dos motores. O
- * veredito locacional é PROPAGADO do consolidado do motor LOUOS (HU-044) — a
+ * veredito locacional é PROPAGADO do consolidado do motor LOUOS (HU-042) — a
  * degradação honesta "sem zona → pendente" é verdade única do motor; o
  * orquestrador NUNCA recomputa nem inventa permitido/não permitido. Endereço não
  * localizado propaga a exceção do geocoder (o controller a traduz) e a inscrição
  * indisponível degrada para a via CNAE — JAMAIS inventa um ponto.
  *
- * Há três entradas honestas (HU-054/055/056): endereço (pipeline completo),
+ * Há três entradas honestas (HU-052/053/054): endereço (pipeline completo),
  * CNAE (risco + enquadramento da planilha por área, sem território) e inscrição imobiliária (via
  * contrato PropertyRegistryLookup — resolve quando a base oficial existir,
  * degrada com aviso enquanto pendente SEDUR).
@@ -51,7 +51,7 @@ class ConsultaViabilidadeService
     ) {}
 
     /**
-     * Consulta por ENDEREÇO (HU-054): geocodifica (real), identifica o
+     * Consulta por ENDEREÇO (HU-052): geocodifica (real), identifica o
      * território e orquestra os motores — pipeline de ponta a ponta.
      *
      * NÃO captura AddressNotFoundException/GeocoderException: deixa propagar para
@@ -76,7 +76,7 @@ class ConsultaViabilidadeService
     }
 
     /**
-     * Consulta por CNAE (HU-056): risco real e, quando há área, enquadramento
+     * Consulta por CNAE (HU-054): risco real e, quando há área, enquadramento
      * da planilha — SEM território (sem ponto, sem zona/via). O veredito locacional fica pendente
      * (o motor degrada sozinho) e a consulta avisa que não avalia o local.
      */
@@ -92,7 +92,7 @@ class ConsultaViabilidadeService
     }
 
     /**
-     * Consulta por INSCRIÇÃO imobiliária (HU-055) via contrato PropertyRegistryLookup:
+     * Consulta por INSCRIÇÃO imobiliária (HU-053) via contrato PropertyRegistryLookup:
      * com a base de lotes disponível, resolve o ponto e roda a pipeline completa
      * (igual ao endereço, mas sem geocode); indisponível (pendente SEDUR), degrada
      * para a análise por CNAE + área com aviso — JAMAIS inventa um ponto.
@@ -132,7 +132,7 @@ class ConsultaViabilidadeService
     }
 
     /**
-     * Consulta a partir de um PONTO já conhecido + CNAE (HU-141): ponto de
+     * Consulta a partir de um PONTO já conhecido + CNAE (HU-131): ponto de
      * entrada PÚBLICO reutilizado pela simulação pré-protocolo (08-09), que já
      * tem o ponto (centroide do polígono da solicitação) e NÃO deve geocodificar
      * de novo. Roda a MESMA pipeline central (território → motores) e PROPAGA o
@@ -176,7 +176,7 @@ class ConsultaViabilidadeService
 
     /**
      * Análise por CNAE + área SEM território, reutilizada pela via CNAE pura
-     * (HU-056) e pela inscrição degradada (HU-055, quando a base de lotes está
+     * (HU-054) e pela inscrição degradada (HU-053, quando a base de lotes está
      * indisponível): enquadra com território NULL (Quadro 10 indisponível →
      * consolidado pendente; o enquadramento da planilha por área roda) e classifica o risco real.
      * Os avisos comunicam a degradação específica de cada caminho.

@@ -15,9 +15,9 @@ use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 /**
- * Comunicação do parecer ao Regin/Junta (HU-104): o listener AUTO-DESCOBERTO
+ * Comunicação do parecer ao Regin/Junta (HU-100): o listener AUTO-DESCOBERTO
  * ComunicarResultadoRegin pendura no SEGUNDO evento de domínio (ResultadoEmitido)
- * e tenta comunicar o parecer — deferido OU indeferido (HU-076 RN-008: o parecer
+ * e tenta comunicar o parecer — deferido OU indeferido (HU-072 RN-008: o parecer
  * vai ao Regin nos dois casos) — ao integrador, via o contrato ReginParecerNotifier.
  *
  * ANTI-FACHADA (entrega-funcional): o binding atual é o UnavailableReginParecerNotifier,
@@ -165,7 +165,7 @@ class ComunicarResultadoReginListenerTest extends TestCase
 
     public function test_parecer_indeferido_tambem_e_comunicado_ao_regin(): void
     {
-        // HU-076 RN-008: o parecer vai ao Regin nos DOIS casos (deferido e indeferido).
+        // HU-072 RN-008: o parecer vai ao Regin nos DOIS casos (deferido e indeferido).
         [$request, $decision] = $this->requestComDecisao(indeferida: true);
 
         $fake = $this->fakeNotifierRegistrador();

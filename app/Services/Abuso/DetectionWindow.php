@@ -5,7 +5,7 @@ namespace App\Services\Abuso;
 use Carbon\CarbonImmutable;
 
 /**
- * Janela de análise (HU-149) — intervalo imutável [start, end] derivado de
+ * Janela de análise (HU-138) — intervalo imutável [start, end] derivado de
  * `abuso.janela_dias` (HU-014). Os detectores recebem a MESMA janela no ciclo,
  * garantindo que "fora da janela não conta" para o limiar (anti-fachada).
  */

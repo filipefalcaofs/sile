@@ -436,7 +436,7 @@ export default function HolidaysIndex({ holidays, filters, perPageOptions }: Hol
 }
 
 /**
- * Ressalva honesta (HU-137): a lista oficial de feriados municipais de Salvador
+ * Ressalva honesta (HU-128): a lista oficial de feriados municipais de Salvador
  * é pendência da SEDUR. Até a carga oficial, o cálculo de dias úteis desconta
  * apenas os feriados cadastrados aqui — nenhum feriado é inventado.
  */

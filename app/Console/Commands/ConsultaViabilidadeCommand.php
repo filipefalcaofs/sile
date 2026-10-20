@@ -19,7 +19,7 @@ use Illuminate\Console\Command;
  * Consulta a viabilidade prévia de uma atividade pelo ORQUESTRADOR REAL
  * (ConsultaViabilidadeService) sobre o seed oficial — compõe os motores
  * (Geocoder → TerritoryService → LOUOS → Risco) e imprime o parecer
- * fundamentado de ponta a ponta. É a evidência da Fase 7 (HU-054 a HU-060),
+ * fundamentado de ponta a ponta. É a evidência da Fase 7 (HU-052 a HU-058),
  * espelhando louos:enquadrar / risco:classificar.
  *
  * Três entradas honestas: por CNAE (risco + enquadramento de uso por área, sem local), por
@@ -39,7 +39,7 @@ class ConsultaViabilidadeCommand extends Command
         {--inscricao= : Consulta por inscrição imobiliária (resolução pendente SEDUR — degrada)}
         {--area= : Área ocupada em m² (enquadramento de uso)}';
 
-    protected $description = 'Consulta a viabilidade prévia pelo orquestrador real (HU-054 a HU-060) — parecer fundamentado de ponta a ponta';
+    protected $description = 'Consulta a viabilidade prévia pelo orquestrador real (HU-052 a HU-058) — parecer fundamentado de ponta a ponta';
 
     public function handle(ConsultaViabilidadeService $service): int
     {

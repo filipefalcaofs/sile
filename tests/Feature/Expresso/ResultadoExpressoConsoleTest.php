@@ -13,7 +13,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 /**
- * Retaguarda do resultado do fluxo expresso (HU-076/HU-078): a SEDUR consulta as
+ * Retaguarda do resultado do fluxo expresso (HU-072/HU-074): a SEDUR consulta as
  * decisões automáticas (deferida/indeferida) em lista filtrável e no detalhe
  * imutável da ViabilityDecision. Acesso por reuso de consultar-solicitacoes (a
  * decisão é parte da solicitação — sem permissão nova). SOMENTE LEITURA: não há

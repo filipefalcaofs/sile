@@ -14,7 +14,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Abertura e cancelamento de convite (ex-pendência) pelo analista (HU-083 +
+ * Abertura e cancelamento de convite (ex-pendência) pelo analista (HU-079 +
  * relatório SEDUR 2026-07-09). Controller FINO: valida e delega ao
  * PendenciaService, que transiciona o estado, audita (RN-002) e notifica.
  * Gated por analisar-processos (403 auditado — CA-04); operação inválida no

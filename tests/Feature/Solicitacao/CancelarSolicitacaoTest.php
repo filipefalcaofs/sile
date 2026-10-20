@@ -12,7 +12,7 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Cancelar a solicitação (HU-070): o dono interrompe um processo indevido ou
+ * Cancelar a solicitação (HU-068): o dono interrompe um processo indevido ou
  * duplicado enquanto NÃO decidido — de rascunho e de protocolada (antes da
  * decisão) — via ViabilityRequestStateMachine (transição auditada + marco na
  * timeline). Os estados canceláveis são PARAMETRIZÁVEIS

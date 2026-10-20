@@ -12,7 +12,7 @@ use Tests\TestCase;
 
 /**
  * Captura da pergunta "será sede de escritório virtual?" (wants_virtual_office_hq)
- * no mesmo passo do imóvel (HU-062) do rascunho — reusa a estrutura de
+ * no mesmo passo do imóvel (HU-060) do rascunho — reusa a estrutura de
  * tests/Feature/Solicitacao/InformarImovelTest.php.
  */
 class SedePerguntaPortalTest extends TestCase

@@ -12,7 +12,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Manutenção dos tipos de serviço da solicitação (HU-061 RN-005) no console
+ * Manutenção dos tipos de serviço da solicitação (HU-059 RN-005) no console
  * SEDUR — dado administrável (CRUD), não registry de código. O tipo determina
  * fluxo, documentos e relatórios; a lista oficial é carga da SEDUR (seed
  * mínimo no fechamento da fase) e o cadastro recebe-a sem deploy. Listagem

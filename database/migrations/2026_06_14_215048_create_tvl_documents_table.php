@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Documentos TVL emitidos (HU-132) — cada emissão/reimpressão do PDF da TVL é
+     * Documentos TVL emitidos (HU-123) — cada emissão/reimpressão do PDF da TVL é
      * uma linha auditada vinculada à decisão (viability_decisions, reuso da
      * Fase 9, fonte do parecer). disk/path apontam o arquivo no Storage (disco
      * parametrizado, NUNCA público); verification_code é o código de validação

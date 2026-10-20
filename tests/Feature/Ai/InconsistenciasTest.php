@@ -18,11 +18,11 @@ use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
 /**
- * HU-115 (detecção de inconsistências): a IA confronta os dados DECLARADOS no
+ * HU-107 (detecção de inconsistências): a IA confronta os dados DECLARADOS no
  * processo (endereço/área/CNAE) com o que a FOTO da fachada e os documentos
  * mostram, e devolve cada divergência com a fonte — sempre como SUGESTÃO que
  * SINALIZA, nunca decisão nem punição automática (RN-004). COMPLEMENTA, não
- * substitui, as validações determinísticas (HU-063/037/105 — RN-005). Prova:
+ * substitui, as validações determinísticas (HU-061/036 — RN-005). Prova:
  * detecta inconsistências com fonte (status sugerida); inconsistência sem fonte
  * escala para humano; toggle features.ia_inconsistencias OFF ⇒ NÃO chama o
  * provedor e NÃO cria sugestão (degradação honesta). Fake por agente — sem

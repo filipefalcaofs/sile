@@ -7,7 +7,7 @@ use App\Models\ViabilityRequest;
 
 /**
  * Contrato de comunicação do parecer (deferimento/indeferimento) ao integrador
- * Regin/Junta Comercial (HU-104). O provider concreto é substituível por binding
+ * Regin/Junta Comercial (HU-100). O provider concreto é substituível por binding
  * — a Fase 13 liga o integrador conveniado sem tocar nenhum call site (mesmo
  * padrão de PropertyRegistryLookup/CnpjLookup/Geocoder).
  */

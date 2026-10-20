@@ -12,7 +12,7 @@ use Illuminate\Database\Seeder;
 
 /**
  * Carga do Quadro 11A da LOUOS (condições de instalação pela via —
- * HU-017/HU-018/HU-040/HU-041): publica UMA versão vigente (domínio
+ * HU-017/HU-039): publica UMA versão vigente (domínio
  * louos_quadro11a) a partir da matriz oficial. O "Quadro 11" não existe na
  * publicação da SEDUR — apenas 11A e 11B. O atributo viário do território
  * segue pendente; o motor degrada sem a classe de via, nunca inventa condição.

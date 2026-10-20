@@ -3,7 +3,7 @@
 namespace App\Enums;
 
 /**
- * Severidade de um alerta de abuso/fraude (HU-149). Tem ordenação (peso) para
+ * Severidade de um alerta de abuso/fraude (HU-138). Tem ordenação (peso) para
  * comparar com o parâmetro `abuso.severidade_malha_fina`: alertas com severidade
  * >= o limiar configurado são encaminhados à malha fina (nunca punidos — RN-001).
  */

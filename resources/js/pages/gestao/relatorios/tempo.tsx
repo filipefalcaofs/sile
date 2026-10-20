@@ -16,7 +16,7 @@ import EmptyState from '@/components/ui/empty-state';
 import KpiCard from '@/components/ui/kpi-card';
 import GestaoLayout from '@/layouts/gestao-layout';
 
-/** Tempo médio de uma etapa da timeline (HU-129): minutos ÚTEIS e amostras. */
+/** Tempo médio de uma etapa da timeline (HU-120): minutos ÚTEIS e amostras. */
 interface EtapaTempo {
     etapa: string;
     media_minutos: number | null;

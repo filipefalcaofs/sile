@@ -22,7 +22,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Atendimento presencial assistido (HU-150): o atendente autorizado opera o
+ * Atendimento presencial assistido (HU-139): o atendente autorizado opera o
  * console "em nome de" o cidadão presente no balcão (inclusão digital),
  * REUSANDO o mecanismo de representação da Fase 1. O middleware
  * ResolveAssistedAttendance popula o MESMO CurrentRepresentation/Context, então
@@ -114,7 +114,7 @@ class AssistedAttendanceController extends Controller
     }
 
     /**
-     * Abre a solicitação direta (HU-061/renovação) EM NOME DO cidadão atendido,
+     * Abre a solicitação direta (HU-059/renovação) EM NOME DO cidadão atendido,
      * reusando o domínio: requester = cidadão (usuário efetivo via
      * CurrentRepresentation), created_by = atendente, origem portal + vínculo de
      * atendimento (dimensão balcão, RN-005). Sem atendimento ativo (expirado),

@@ -12,7 +12,7 @@ use SplFileObject;
 /**
  * Import real da classificação de risco SANITÁRIO (planilha unificada CNAE da
  * Vigilância Sanitária) a partir do CSV oficial versionado em
- * database/data/risco/ (HU-019/HU-047/HU-048), espelhando
+ * database/data/risco/ (HU-018/HU-045/HU-046), espelhando
  * RiscoMunicipalImportService. A dimensão sanitária é SEPARADA da municipal
  * (tabela própria) e a classificação fica ligada a uma versão de regra
  * (rule_version_id) — dado versionado, nunca código.

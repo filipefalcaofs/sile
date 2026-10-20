@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Índices de DESEMPENHO da consulta de processos (HU-082 RN-008 — resposta da
+     * Índices de DESEMPENHO da consulta de processos (HU-078 RN-008 — resposta da
      * engenharia à reclamação central do legado "sistema muito lento"). Migration
      * ADITIVA: apenas adiciona índices nas colunas filtradas que ainda NÃO os
      * têm.

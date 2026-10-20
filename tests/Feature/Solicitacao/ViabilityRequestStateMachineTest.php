@@ -13,7 +13,7 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Máquina de estados da solicitação (HU-068/070): mapa explícito SÓ das
+ * Máquina de estados da solicitação (HU-066/068): mapa explícito SÓ das
  * transições ativas (rascunho→protocolada/cancelada; protocolada→cancelada).
  * Transição inválida lança exceção (CA-03) sem mudar o estado nem gravar
  * timeline; toda transição válida grava viability_request_transitions e audita
@@ -165,7 +165,7 @@ class ViabilityRequestStateMachineTest extends TestCase
     }
 
     /**
-     * aguardando_bap (HU-134) é a antessala da decisão final pós-Junta: pode
+     * aguardando_bap (HU-125) é a antessala da decisão final pós-Junta: pode
      * deferir, indeferir (prazo BAP vencido) ou cair em análise.
      */
     public function test_aguardando_bap_transiciona_para_decisao_e_analise(): void
@@ -238,8 +238,8 @@ class ViabilityRequestStateMachineTest extends TestCase
 
     /**
      * EP10 ADICIONA as saídas da análise humana a partir de em_analise (sem
-     * tocar a Fase 8/9): o analista abre pendência (HU-083/084) ou decide
-     * (HU-086/087). Cada transição grava timeline + auditoria (RN-002).
+     * tocar a Fase 8/9): o analista abre pendência (HU-079/080) ou decide
+     * (HU-082/083). Cada transição grava timeline + auditoria (RN-002).
      */
     public function test_em_analise_transiciona_para_pendencia_e_decisao(): void
     {
@@ -286,7 +286,7 @@ class ViabilityRequestStateMachineTest extends TestCase
     }
 
     /**
-     * Ciclo de pendência (HU-083/084): respondida/saneada a pendência, o
+     * Ciclo de pendência (HU-079/080): respondida/saneada a pendência, o
      * processo VOLTA para a análise — só de em_analise se pode decidir.
      */
     public function test_em_pendencia_volta_para_em_analise(): void
@@ -305,7 +305,7 @@ class ViabilityRequestStateMachineTest extends TestCase
     }
 
     /**
-     * Anti-regressão da análise humana: a decisão é FINAL (HU-089 encerramento).
+     * Anti-regressão da análise humana: a decisão é FINAL (HU-085 encerramento).
      * A pendência (convite) volta a em_analise na resposta OU é INDEFERIDA na
      * expiração do prazo (Fase 2a — relatório SEDUR 2026-07-09); porém deferir
      * a partir de em_pendencia segue inválido (defere só a partir de em_analise).
@@ -361,7 +361,7 @@ class ViabilityRequestStateMachineTest extends TestCase
             $this->machine()->transition($request, ViabilityRequestStatus::EmAnalise);
             $this->fail('Esperava InvalidStatusTransitionException para deferida→em_analise (decisão é final).');
         } catch (InvalidStatusTransitionException) {
-            // Encerramento HU-089: estado inalterado e nenhuma transição gravada.
+            // Encerramento HU-085: estado inalterado e nenhuma transição gravada.
         }
 
         $this->assertSame(ViabilityRequestStatus::Deferida, $request->fresh()->status);

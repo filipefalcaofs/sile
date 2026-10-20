@@ -23,7 +23,7 @@ class GeoLayerSeederPostgisTest extends PostgisTestCase
         // Requisito rígido: o snapshot de bairros DEVE existir (sem fachada).
         $this->assertFileExists(
             database_path('data/geo/bairros.geojson'),
-            'Snapshot de bairros (requisito rígido HU-034) ausente — bloqueio da fase, nunca skip.',
+            'Snapshot de bairros (requisito rígido HU-033) ausente — bloqueio da fase, nunca skip.',
         );
 
         $this->seed(GeoLayerSeeder::class);

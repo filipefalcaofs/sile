@@ -10,7 +10,7 @@ use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Validação de localização por sobreposição com o lote oficial (HU-037 RN-004):
+ * Validação de localização por sobreposição com o lote oficial (HU-036 RN-004):
  * compara o polígono informado ao lote da inscrição imobiliária com
  * `ST_Area(ST_Intersection(informado, lote)) / ST_Area(informado)` (SQL real,
  * sem cálculo geométrico em PHP) e alerta quando a sobreposição fica abaixo do

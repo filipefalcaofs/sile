@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 /**
  * @extends Factory<AnalysisPendency>
  *
- * Default = pendência ABERTA com prazo de 15 dias (HU-083/084 — ciclo interno).
+ * Default = pendência ABERTA com prazo de 15 dias (HU-079/080 — ciclo interno).
  * Os states cobrem a resposta dentro do prazo e a expiração sem resposta.
  */
 class AnalysisPendencyFactory extends Factory

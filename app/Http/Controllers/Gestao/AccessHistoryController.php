@@ -25,7 +25,7 @@ class AccessHistoryController extends Controller
      */
     public function __invoke(Request $request, User $user): Response|HttpResponse
     {
-        // HU-131/RN-009: com ?formato=, exporta o histórico do usuário-alvo pelo
+        // HU-122/RN-009: com ?formato=, exporta o histórico do usuário-alvo pelo
         // contrato único — sem rota nova (o `user` viaja no bag). O ReportExporter
         // audita a exportação (RN-008, personal_data), então o branch retorna antes
         // da auditoria da consulta interativa abaixo.
@@ -39,7 +39,7 @@ class AccessHistoryController extends Controller
         }
 
         // personalData: consultar o histórico de acessos de OUTRA conta é leitura
-        // de dado pessoal de terceiro — medido pelo painel LGPD (HU-102).
+        // de dado pessoal de terceiro — medido pelo painel LGPD (HU-098).
         // Marcação ADITIVA, sem mudar a auditoria existente.
         app(AuditService::class)->log(
             'acessos',

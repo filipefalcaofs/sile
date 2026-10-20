@@ -6,7 +6,7 @@ use App\Services\Analise\ProcessoQueryService;
 use Illuminate\Support\Carbon;
 
 /**
- * Entrada do contrato de exportação (HU-131): um BAG SERIALIZÁVEL com o
+ * Entrada do contrato de exportação (HU-122): um BAG SERIALIZÁVEL com o
  * vocabulário COMPLETO de filtros das telas — não só os campos do indicador.
  *
  * O round-trip {@see fromArray()}/{@see toArray()} é a garantia do RN-005 no
@@ -26,7 +26,7 @@ final readonly class ReportFilters
 {
     /**
      * Chaves do filtro completo do SAPS aceitas pelo ProcessoQueryService::filtered
-     * (HU-082) — base do retrofit da consulta de processos (RN-005). O mapa do bag
+     * (HU-078) — base do retrofit da consulta de processos (RN-005). O mapa do bag
      * já casa 1:1 com elas, então toProcessoFiltros só recorta.
      *
      * @var list<string>
@@ -161,7 +161,7 @@ final readonly class ReportFilters
     }
 
     /**
-     * Categoria derivada (HU-082 RN-005) validada contra o whitelist do
+     * Categoria derivada (HU-078 RN-005) validada contra o whitelist do
      * ProcessoQueryService — valor fora dele degrada para null (sem inventar).
      */
     public function categoria(): ?string

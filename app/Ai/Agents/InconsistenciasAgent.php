@@ -10,11 +10,11 @@ use Laravel\Ai\Promptable;
 use Stringable;
 
 /**
- * Agente de DETECÇÃO DE INCONSISTÊNCIAS (HU-115): confronta os dados DECLARADOS
+ * Agente de DETECÇÃO DE INCONSISTÊNCIAS (HU-107): confronta os dados DECLARADOS
  * no processo (endereço/área/CNAE) com o que a foto da fachada e os documentos
  * efetivamente mostram, e devolve cada divergência com a fonte. Apenas SINALIZA
  * — não valida, não decide, não pune (RN-004); COMPLEMENTA as validações
- * determinísticas (HU-063/037/105), nunca as substitui (RN-005). A mecânica
+ * determinísticas (HU-061/036), nunca as substitui (RN-005). A mecânica
  * anti-fachada (gate, dedup, guardrails, persistência, auditoria) vive no
  * RunAiAgentJob; o fake por agente cobre os testes sem rede/custo.
  */

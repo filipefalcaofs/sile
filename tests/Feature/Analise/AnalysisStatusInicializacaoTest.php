@@ -20,7 +20,7 @@ use Tests\TestCase;
 
 /**
  * Task 5: ao encaminhar a solicitação à análise técnica (mesmo ponto do
- * forceFill que materializa analysis_stage=distribuicao, HU-144), o eixo
+ * forceFill que materializa analysis_stage=distribuicao, HU-134), o eixo
  * operacional (analysis_status) deve nascer em para_distribuir. Setup
  * espelha EncaminhamentoAnaliseTest — bairro identificado e ZONA
  * indisponível (Quadro 10 pendente SEDUR), o que rotina o expresso para a
@@ -90,7 +90,7 @@ class AnalysisStatusInicializacaoTest extends TestCase
         $fresh = $request->fresh();
 
         // Prova que o encaminhamento passou pelo mesmo forceFill que materializa
-        // o SLA da etapa de distribuição (Fase 9/HU-144).
+        // o SLA da etapa de distribuição (Fase 9/HU-134).
         $this->assertSame(AnalysisStage::Distribuicao, $fresh->analysis_stage);
 
         // Invariante da Task 5: o eixo operacional nasce em para_distribuir.

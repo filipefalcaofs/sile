@@ -8,7 +8,7 @@ return new class extends Migration
 {
     /**
      * Tabela de valores da TLL (Taxa de Licença de Localização) por exercício —
-     * dado versionado/auditado e administrável (HU-014/HU-071). O código TLL
+     * dado versionado/auditado e administrável (HU-014/HU-145). O código TLL
      * (1.01, 2.02) liga ao enquadramento da planilha vigente; o valor monetário
      * e o mapeamento SEFAZ (código da taxa, código do serviço) alimentam o
      * cálculo do DAM (RN-004) e o bloco `taxas` enviado à SEFAZ. Um valor por

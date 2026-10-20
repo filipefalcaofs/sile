@@ -11,7 +11,7 @@ use App\Support\Audit\AuditService;
 use Illuminate\Database\Seeder;
 
 /**
- * Carga do Quadro 10 da LOUOS (permissão por zona — HU-016/HU-039): publica uma
+ * Carga do Quadro 10 da LOUOS (permissão por zona — HU-016/HU-038): publica uma
  * versão vigente do domínio louos_quadro10 com a matriz oficial da Lei nº
  * 9.148/2016 (1.323 células em 21 zonas). Delega o import ao service e audita
  * o relatório (RN-002). Sem a zona do território o motor degrada para pendente

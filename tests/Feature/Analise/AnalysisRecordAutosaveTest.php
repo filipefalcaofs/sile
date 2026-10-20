@@ -12,10 +12,10 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Ficha de análise — abertura e autosave (HU-135 RN-008): a ficha abre a partir
+ * Ficha de análise — abertura e autosave (HU-126 RN-008): a ficha abre a partir
  * da revisão vigente (pré-analisada em 10-08) e o analista salva o rascunho por
  * PATCH (status escolhido por CNAE, condicionantes, vagas e parecer), com a
- * biblioteca de textos-padrão ativos disponível para o parecer (HU-085 RN-004).
+ * biblioteca de textos-padrão ativos disponível para o parecer (HU-081 RN-004).
  * Toda a superfície é gated por analisar-processos (403 auditado no ponto único)
  * e a revisão FINALIZADA é imutável (RN-003): autosave numa revisão finalizada é
  * recusado (422), nunca edita silenciosamente.

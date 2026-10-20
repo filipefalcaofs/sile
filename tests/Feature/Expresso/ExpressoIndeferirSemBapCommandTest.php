@@ -11,7 +11,7 @@ use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 /**
- * Rotina DORMENTE expresso:indeferir-sem-bap (HU-134): varre aguardando_bap com
+ * Rotina DORMENTE expresso:indeferir-sem-bap (HU-125): varre aguardando_bap com
  * prazo vencido e indefere "sem atuação". Em produção é NO-OP — nada entra em
  * aguardando_bap até o Regin alimentar bap_due_at (Fase 13). O motor é real e
  * testado AGORA com seed; sem fachada (zero indeferimento sem BAP de verdade).
@@ -60,7 +60,7 @@ class ExpressoIndeferirSemBapCommandTest extends TestCase
     public function test_indeferimento_comunica_regin_e_ignora_sefaz(): void
     {
         // Sem Event::fake: os listeners reais da Wave 4 rodam no ResultadoEmitido.
-        // HU-134 RN-003: comunica ao Regin (bloqueado, Fase 13) e a SEFAZ ignora
+        // HU-125 RN-003: comunica ao Regin (bloqueado, Fase 13) e a SEFAZ ignora
         // o indeferimento — toda saída deixa trilha, sem simular envio.
         ViabilityRequest::factory()->awaitingBap()->create();
 

@@ -28,9 +28,9 @@ export interface MapImovelProps {
     lat: number;
     lng: number;
     zoom?: number;
-    /** Permite arrastar/clicar para ajustar a localização (HU-037). */
+    /** Permite arrastar/clicar para ajustar a localização (HU-036). */
     draggable?: boolean;
-    /** Camadas a sobrepor como overlay GeoJSON (HU-036) — reutilizável nas Fases 7/8. */
+    /** Camadas a sobrepor como overlay GeoJSON (HU-035) — reutilizável nas Fases 7/8. */
     camadas?: MapLayer[];
     /** Disparado ao arrastar o marcador ou clicar no mapa, com a nova coordenada. */
     onMove?: (latlng: { lat: number; lng: number }) => void;
@@ -98,8 +98,8 @@ function InvalidateOnResize() {
 }
 
 /**
- * Mapa Leaflet reutilizável do imóvel (HU-030): tiles OSM, marcador arrastável
- * (ajuste HU-037), overlay de camadas GeoJSON (HU-036) e popup. Construído para
+ * Mapa Leaflet reutilizável do imóvel (HU-029): tiles OSM, marcador arrastável
+ * (ajuste HU-036), overlay de camadas GeoJSON (HU-035) e popup. Construído para
  * reuso nas Fases 7 e 8. Deve ser montado apenas no cliente (ver `MapaSection`),
  * pois o Leaflet acessa `window` na importação (Pitfall 9 — SSR do Inertia v3).
  */

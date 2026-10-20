@@ -13,7 +13,7 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Notificação de ciência do resultado do fluxo expresso (HU-077). A partir do
+ * Notificação de ciência do resultado do fluxo expresso (HU-073). A partir do
  * EP11 (11-06) ela é uma ProcessNotification multicanal: percorre o
  * NotificationDispatcher (ganha in-app + histórico em communications) — o via()
  * lê os canais CONGELADOS no disparo (fallback ['mail'] fora do dispatcher) e o
@@ -113,7 +113,7 @@ class ResultadoExpressoNotificationTest extends TestCase
 
     public function test_to_database_traz_o_desfecho_e_o_link_de_acompanhamento(): void
     {
-        // In-app (HU-096): a central exibe o desfecho e leva o cidadão ao portal
+        // In-app (HU-092): a central exibe o desfecho e leva o cidadão ao portal
         // para acompanhar a solicitação.
         $payload = (new ResultadoExpressoNotification('VIA-2026-000777', DecisionOutcome::Indeferida, 777))
             ->toDatabase($this->notifiable());

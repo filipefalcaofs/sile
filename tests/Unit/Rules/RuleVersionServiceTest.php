@@ -15,8 +15,8 @@ use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 /**
- * Versionamento de regras (HU-019/HU-020/HU-053), espelhando GeoLayerService:
- * o rascunho coexiste com a vigente (base do sandbox HU-143) e a publicação
+ * Versionamento de regras (HU-018/HU-019/HU-051), espelhando GeoLayerService:
+ * o rascunho coexiste com a vigente (base do sandbox HU-133) e a publicação
  * fecha a vigente anterior sem apagá-la, aplica quatro olhos em domínio
  * sensível e audita com a versão de regras (RN-002). Lógica de linhas (datas +
  * status), provada em SQLite — sem PostGIS.

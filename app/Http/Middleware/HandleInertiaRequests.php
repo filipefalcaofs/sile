@@ -53,10 +53,10 @@ class HandleInertiaRequests extends Middleware
             // Closure: avaliada na serialização da resposta, depois de o
             // ResolveRepresentation (middleware de rota) resolver o estado.
             'actingFor' => fn () => app(CurrentRepresentation::class)->grantor()?->only('id', 'name'),
-            // Banner do atendimento presencial assistido (HU-150): preenchido
+            // Banner do atendimento presencial assistido (HU-139): preenchido
             // pelo ResolveAssistedAttendance nas rotas do atendimento (console).
             'attendingFor' => fn () => app(CurrentRepresentation::class)->attendance()?->citizen?->only('id', 'name'),
-            // Badge do sininho (central in-app, HU-090): contagem REAL de
+            // Badge do sininho (central in-app, HU-086): contagem REAL de
             // notificações não-lidas do canal database nativo do usuário
             // autenticado. Closure: avaliada na serialização (count barato) e
             // só com usuário logado — guest/visita pública resolve para 0.

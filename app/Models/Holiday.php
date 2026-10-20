@@ -12,8 +12,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 
 /**
- * Feriado cadastrado (HU-137) — dado versionado/auditado (RN-002 via
- * HasAuditoria). O BusinessDeadlineCalculator (HU-129) desconta os feriados
+ * Feriado cadastrado (HU-128) — dado versionado/auditado (RN-002 via
+ * HasAuditoria). O BusinessDeadlineCalculator (HU-120) desconta os feriados
  * ATIVOS ao medir duração em tempo útil. recurring_annually marca os feriados
  * fixos que valem todo ano (o provider compara mês/dia); active permite
  * inativar sem excluir. A lista municipal oficial de Salvador é pendência SEDUR
@@ -49,7 +49,7 @@ class Holiday extends Model
 
     /**
      * Apenas os feriados ativos — o que o cálculo de dias úteis efetivamente
-     * desconta (HU-129/HU-137).
+     * desconta (HU-120/HU-128).
      *
      * @param  Builder<Holiday>  $query
      * @return Builder<Holiday>

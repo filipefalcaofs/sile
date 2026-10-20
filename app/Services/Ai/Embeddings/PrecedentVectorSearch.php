@@ -8,8 +8,8 @@ use Illuminate\Support\Facades\DB;
 use Laravel\Ai\Embeddings;
 
 /**
- * Busca por similaridade DIY dos precedentes (HU-142) — infra de RAG da Onda 3
- * (Fase 14) que sustenta o assistente do analista (HU-121). Implementação PRÓPRIA
+ * Busca por similaridade DIY dos precedentes (HU-132) — infra de RAG da Onda 3
+ * (Fase 14) que sustenta o assistente do analista (HU-112). Implementação PRÓPRIA
  * porque o SimilaritySearch/whereVectorSimilarTo do laravel/ai v0.8.1 não existe.
  *
  * No PostgreSQL: gera o embedding da consulta e ordena os precedentes pela

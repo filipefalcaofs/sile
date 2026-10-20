@@ -11,7 +11,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 
 /**
- * Cancelar a solicitação (HU-070): só o dono enquanto não decidido
+ * Cancelar a solicitação (HU-068): só o dono enquanto não decidido
  * (ViabilityRequestPolicy::cancel, CA-04). Delega ao CancelarSolicitacaoService
  * (transição auditada + timeline, com estados canceláveis parametrizáveis) e
  * traduz o bloqueio de estado em flash.error — aviso comunicado, nunca

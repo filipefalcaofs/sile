@@ -5,7 +5,7 @@ namespace App\Services\Louos;
 use App\Enums\ResultadoViabilidade;
 
 /**
- * Resultado imutável do enquadramento da LOUOS (HU-038 a HU-046), espelhando
+ * Resultado imutável do enquadramento da LOUOS (HU-037 a HU-044), espelhando
  * RiscoResult/TerritoryResult: o ramo da planilha e cada Quadro territorial
  * são dimensões de shape estável (contrato do motor, da UI e do EP07+) e o
  * consolidado carrega o veredito fundamentado.

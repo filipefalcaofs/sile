@@ -11,8 +11,8 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * CRUD administrável do calendário de feriados (HU-137) — dado versionado que o
- * BusinessDeadlineCalculator desconta ao medir duração em tempo útil (HU-129). O
+ * CRUD administrável do calendário de feriados (HU-128) — dado versionado que o
+ * BusinessDeadlineCalculator desconta ao medir duração em tempo útil (HU-120). O
  * administrador cria/edita/ativa-inativa o feriado pela retaguarda; a data é
  * única (sem feriado duplicado) e a inativação preserva o histórico (RN-004 —
  * não há destroy). Listagem server-driven espelhando o SectorController; a
@@ -78,7 +78,7 @@ class HolidayController extends Controller
 
     /**
      * Liga/desliga o feriado. NUNCA exclui (RN-004): inativar preserva o
-     * histórico e tira o feriado do cálculo de dias úteis (HU-129) sem perder o
+     * histórico e tira o feriado do cálculo de dias úteis (HU-120) sem perder o
      * registro auditado.
      */
     public function toggleActivation(Holiday $holiday): RedirectResponse

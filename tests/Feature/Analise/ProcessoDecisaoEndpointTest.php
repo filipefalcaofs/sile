@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Event;
 use Tests\TestCase;
 
 /**
- * Endpoint de decisão técnica (HU-086/087/088/089): o controller FINO conclui o
+ * Endpoint de decisão técnica (HU-082/083/084/085): o controller FINO conclui o
  * processo a partir da ficha FINALIZADA, orquestrando o AnaliseTecnicaDecisionService
  * (10-10) — toda a regra (RN-004) e a auditoria já vivem no serviço. Gated por
  * analisar-processos (403 auditado no ponto único — CA-04); ficha em rascunho é
@@ -88,7 +88,7 @@ class ProcessoDecisaoEndpointTest extends TestCase
 
     public function test_decide_defere_quando_a_ficha_finalizada_tem_todas_deferidas(): void
     {
-        // HU-086 RN-004: todas as CNAEs deferidas na ficha → DEFERE. Cria a
+        // HU-082 RN-004: todas as CNAEs deferidas na ficha → DEFERE. Cria a
         // ViabilityDecision (flow analise_tecnica, decided_by analista) com número
         // TVL, encerra (em_analise→deferida) e dispara ResultadoEmitido.
         Event::fake([ResultadoEmitido::class]);
@@ -117,7 +117,7 @@ class ProcessoDecisaoEndpointTest extends TestCase
 
     public function test_decide_indefere_quando_a_ficha_tem_cnae_indeferida(): void
     {
-        // HU-087 RN-004: basta uma CNAE indeferida → INDEFERE o processo, sem TVL.
+        // HU-083 RN-004: basta uma CNAE indeferida → INDEFERE o processo, sem TVL.
         Event::fake([ResultadoEmitido::class]);
 
         $processo = $this->processoComFicha([
@@ -139,7 +139,7 @@ class ProcessoDecisaoEndpointTest extends TestCase
 
     public function test_recusa_decidir_quando_a_ficha_esta_em_rascunho_com_erro_inline(): void
     {
-        // HU-086 CA-03 + relatório SEDUR 21/09 (item 07): ficha em rascunho não
+        // HU-082 CA-03 + relatório SEDUR 21/09 (item 07): ficha em rascunho não
         // decide — o erro volta INLINE (error bag da sessão), nunca a tela "Oops
         // / 422"; nada gravado, status preservado.
         Event::fake([ResultadoEmitido::class]);

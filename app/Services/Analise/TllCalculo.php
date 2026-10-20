@@ -3,7 +3,7 @@
 namespace App\Services\Analise;
 
 /**
- * Resultado do cálculo do valor do DAM da TLL (HU-071 RN-004) — o valor final
+ * Resultado do cálculo do valor do DAM da TLL (HU-145) — o valor final
  * e o detalhamento (qual código TLL de maior valor, a taxa de serviço e se o
  * fator multiplicador foi aplicado), para auditoria e para o bloco `taxas` da
  * SEFAZ.

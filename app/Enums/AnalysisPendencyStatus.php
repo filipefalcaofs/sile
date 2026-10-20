@@ -3,7 +3,7 @@
 namespace App\Enums;
 
 /**
- * Estado da pendência da análise (HU-083/084). Aberta = aguardando resposta do
+ * Estado da pendência da análise (HU-079/080). Aberta = aguardando resposta do
  * requerente dentro do prazo (due_at); Respondida = resposta recebida; Expirada
  * = prazo vencido sem resposta (a rotina de SLA marca e segue o trâmite).
  */

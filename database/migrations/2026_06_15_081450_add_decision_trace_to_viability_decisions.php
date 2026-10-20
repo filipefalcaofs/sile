@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Coluna ADITIVA decision_trace (HU-099 RN-004/RN-005): o snapshot passo a
+     * Coluna ADITIVA decision_trace (HU-095 RN-004/RN-005): o snapshot passo a
      * passo da decisão (entrada → risco → LOUOS Quadro 7/10/11/11A →
      * consolidação → desfecho, por CNAE) que hoje vive no consulta_array mas é
      * DESCARTADO. Gravada UMA única vez na criação da decisão (imutável por

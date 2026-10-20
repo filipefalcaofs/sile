@@ -8,7 +8,7 @@ use App\Support\Audit\AuditService;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Simulação pré-protocolo da viabilidade (HU-141): DELEGA ao
+ * Simulação pré-protocolo da viabilidade (HU-131): DELEGA ao
  * SolicitacaoViabilityResolver (09-04) a iteração dos CNAEs (principal +
  * complementares), a chamada ao motor (Fase 7) PELO PONTO da própria solicitação
  * (centroide do polígono — sem geocodificar de novo), a propagação do veredito

@@ -15,7 +15,7 @@ use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 /**
- * Histórico unificado de comunicações por processo (HU-096): a fonte de verdade
+ * Histórico unificado de comunicações por processo (HU-092): a fonte de verdade
  * ÚNICA é o ledger `communications` (NÃO junta EmailLog/notifications de forma
  * frágil) — todos os canais (email/in_app/whatsapp) e tipos (pendência aberta/
  * respondida/expirada, prazo vencendo, escalonamento SLA, resultado), com

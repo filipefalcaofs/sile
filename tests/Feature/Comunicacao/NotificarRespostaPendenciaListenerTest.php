@@ -22,7 +22,7 @@ use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 /**
- * NotificarRespostaPendencia (HU-091/092): fecha o ciclo que a Fase 10 não
+ * NotificarRespostaPendencia (HU-087/088): fecha o ciclo que a Fase 10 não
  * fechava — quando o requerente responde a pendência (em_pendencia→em_analise),
  * o ANALISTA responsável (assigned_user_id) é notificado de que a análise
  * reabriu, pelo NotificationDispatcher (multicanal).

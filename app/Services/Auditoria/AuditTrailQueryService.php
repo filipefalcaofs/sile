@@ -8,8 +8,8 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
- * Construção da query da consulta unificada da trilha de auditoria (HU-100) e
- * do histórico de alterações (HU-098) direto sobre a espinha activity_log
+ * Construção da query da consulta unificada da trilha de auditoria (HU-096) e
+ * do histórico de alterações (HU-094) direto sobre a espinha activity_log
  * (decisão do CONTEXT: activity_log JÁ É a trilha — consultar server-driven,
  * sem materializar nem denormalizar). Espelha o ProcessoQueryService: filtros
  * por when() (só entram quando informados), whereLike caseSensitive:false
@@ -17,14 +17,14 @@ use Illuminate\Database\Eloquent\Builder;
  * causer/actingFor/subject para evitar N+1. A paginação e o CSV ficam no
  * controller; aqui só se monta o Builder reutilizável.
  *
- * `acessos()` é a fonte SECUNDÁRIA (HU-100): o histórico GLOBAL de access_logs
+ * `acessos()` é a fonte SECUNDÁRIA (HU-096): o histórico GLOBAL de access_logs
  * (login/logout/falha/bloqueio), unido na aplicação (não por UNION SQL) — por
  * isso devolve um Builder próprio de AccessLog.
  */
 class AuditTrailQueryService
 {
     /**
-     * Builder filtrado da trilha (HU-100), do mais recente ao mais antigo. Cada
+     * Builder filtrado da trilha (HU-096), do mais recente ao mais antigo. Cada
      * filtro só entra quando informado: período (created_at), usuário (causer
      * por id ou nome), entidade (subject_type/subject_id), ação (log_name/event)
      * e resultado (result).
@@ -49,7 +49,7 @@ class AuditTrailQueryService
     }
 
     /**
-     * Variante "só alterações" (HU-098): os MESMOS filtros, recortando apenas os
+     * Variante "só alterações" (HU-094): os MESMOS filtros, recortando apenas os
      * registros com diff de dados (attribute_changes preenchido — gravado por
      * HasAuditoria nos eventos de mudança).
      *
@@ -62,7 +62,7 @@ class AuditTrailQueryService
     }
 
     /**
-     * Fonte secundária (HU-100): histórico GLOBAL de access_logs
+     * Fonte secundária (HU-096): histórico GLOBAL de access_logs
      * (login/logout/falha/bloqueio) — não por usuário (≠ AccessHistoryController),
      * com os filtros aplicáveis (período/usuário/evento), do mais recente ao mais
      * antigo. O merge com a trilha acontece na aplicação (UI/controller).

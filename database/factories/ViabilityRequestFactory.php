@@ -80,7 +80,7 @@ class ViabilityRequestFactory extends Factory
     }
 
     /**
-     * Solicitação parada em aguardando_bap (HU-134) — a antessala do
+     * Solicitação parada em aguardando_bap (HU-125) — a antessala do
      * indeferimento por prazo. bap_due_at já VENCIDO por padrão (now-72h) para os
      * testes da rotina; passe $dueAt para um vencimento específico (ex.: futuro,
      * dentro do prazo). bap_linked_at fica null — nada vincula o BAP hoje
@@ -110,7 +110,7 @@ class ViabilityRequestFactory extends Factory
     }
 
     /**
-     * Origem contingência (HU-148) — o canal de operador real hoje.
+     * Origem contingência (HU-137) — o canal de operador real hoje.
      */
     public function contingency(): static
     {

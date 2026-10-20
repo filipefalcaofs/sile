@@ -3,7 +3,7 @@
 namespace App\Enums;
 
 /**
- * Destino do encaminhamento de uma viabilidade locacional (HU-049/HU-050): o
+ * Destino do encaminhamento de uma viabilidade locacional (HU-047/HU-048): o
  * fluxo expresso (deferimento/indeferimento sem análise humana, quando a lei
  * permite) ou a análise técnica. NÃO existe "semi-expresso" como fluxo —
  * semi-expresso é a CATEGORIA de um gatilho (TipoGatilho) que derruba o

@@ -10,14 +10,14 @@ use DateTimeInterface;
 use Illuminate\Support\Carbon;
 
 /**
- * SLA da fila de análise técnica (HU-144). Centraliza o cálculo do prazo-limite
+ * SLA da fila de análise técnica (HU-134). Centraliza o cálculo do prazo-limite
  * absoluto por etapa (analysis_due_at — base da ordenação da fila, coluna
  * indexada de 10-02) e do semáforo + tempo restante.
  *
  * O prazo é MATERIALIZADO por quem transiciona (10-07 grava o dueAtFor no
  * analysis_due_at); a fila (10-14) e o badge (10-16) consomem o statusFor, que
  * calcula a cor ON-THE-FLY a cada leitura — nunca há cor persistida. Reusar o
- * BusinessDeadlineCalculator mantém o seam de HU-137 pronto: quando a contagem
+ * BusinessDeadlineCalculator mantém o seam de HU-128 pronto: quando a contagem
  * passar a pular fins de semana/feriados, a regra muda SÓ no calculator, sem
  * tocar este serviço nem seus call sites.
  *
@@ -28,7 +28,7 @@ class AnalysisSlaService
 {
     /**
      * Conversão dias→horas: o prazo é parametrizado em DIAS (decisão de negócio)
-     * e o calculator conta em horas-calendário. HU-137 (dias úteis) entra no
+     * e o calculator conta em horas-calendário. HU-128 (dias úteis) entra no
      * calculator sem alterar esta conversão.
      */
     private const HORAS_POR_DIA = 24;
@@ -66,7 +66,7 @@ class AnalysisSlaService
 
     /**
      * Prazo-limite absoluto da etapa a partir de uma origem (default: agora),
-     * reusando o BusinessDeadlineCalculator (seam HU-137). Não muta $from.
+     * reusando o BusinessDeadlineCalculator (seam HU-128). Não muta $from.
      */
     public function dueAtFor(AnalysisStage $stage, ?DateTimeInterface $from = null): Carbon
     {

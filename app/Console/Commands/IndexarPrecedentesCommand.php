@@ -10,8 +10,8 @@ use Illuminate\Database\Eloquent\Collection;
 
 /**
  * Evidência/operação da infra de RAG (Fase 14, Onda 3): indexa por embeddings os
- * precedentes (HU-142 — solicitações DECIDIDAS) existentes, alimentando a busca
- * por similaridade que sustenta os assistentes (HU-120/121).
+ * precedentes (HU-132 — solicitações DECIDIDAS) existentes, alimentando a busca
+ * por similaridade que sustenta os assistentes (HU-112).
  *
  * Anti-fachada (mesmo portão do PrecedentIndexer): SEM provedor de embeddings
  * ATIVO é no-op HONESTO — não chama o provedor, não indexa e avisa que está
@@ -23,7 +23,7 @@ class IndexarPrecedentesCommand extends Command
 {
     protected $signature = 'ai:indexar-precedentes';
 
-    protected $description = 'Indexa por embeddings os precedentes decididos (HU-142) para a busca por similaridade dos assistentes; idempotente e no-op honesto sem provedor';
+    protected $description = 'Indexa por embeddings os precedentes decididos (HU-132) para a busca por similaridade dos assistentes; idempotente e no-op honesto sem provedor';
 
     public function handle(AiFeatureGate $gate, PrecedentIndexer $indexer): int
     {
@@ -39,7 +39,7 @@ class IndexarPrecedentesCommand extends Command
         $indexados = 0;
         $reaproveitados = 0;
 
-        // Precedente = solicitação DECIDIDA (HU-142). chunkById pagina por id —
+        // Precedente = solicitação DECIDIDA (HU-132). chunkById pagina por id —
         // ordenação estável e memória limitada mesmo com muitos precedentes.
         ViabilityRequest::query()
             ->has('decision')

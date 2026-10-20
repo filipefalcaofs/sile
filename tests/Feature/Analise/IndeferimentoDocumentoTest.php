@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
 
 /**
- * Documento de indeferimento fundamentado (espelho do TVL — HU-132): emitido
+ * Documento de indeferimento fundamentado (espelho do TVL — HU-123): emitido
  * no backoffice sob demanda APÓS a decisão INDEFERIDA, com a fundamentação da
  * ViabilityDecision + parecer da ficha. Mesmas garantias do TVL: PDF real no
  * disco NÃO público, linha auditada por emissão, download por URL temporária

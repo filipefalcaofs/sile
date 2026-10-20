@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Cadastro empresarial (HU-023). CNPJ normalizado em string(14) SEMPRE —
+     * Cadastro empresarial (HU-022). CNPJ normalizado em string(14) SEMPRE —
      * o CNPJ alfanumérico (IN RFB 2.229/2024) entra em produção em julho/2026;
      * tipo numérico quebraria letras e perderia zeros à esquerda. Endereço como
      * texto achatado nesta fase (geocodificação é Fase 4). source registra a

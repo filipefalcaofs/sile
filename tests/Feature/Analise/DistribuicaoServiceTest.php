@@ -17,10 +17,10 @@ use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 /**
- * Caixa do setor (HU-080/081): a distribuição (gestor) e a assunção (analista)
+ * Caixa do setor (HU-076/077): a distribuição (gestor) e a assunção (analista)
  * dos processos em análise. O processo é atribuído a um analista do setor SEM
  * sair da caixa (RN-004 — sector_id intacto, status em_analise), recalculando o
- * SLA para a etapa de análise (HU-144) e auditando por processo de forma
+ * SLA para a etapa de análise (HU-134) e auditando por processo de forma
  * SÍNCRONA (RN-006 — não depende de evento). Só analista VINCULADO ao setor pode
  * ser distribuído/assumir; o lote (RN-007) audita item a item e isola falhas.
  */
@@ -62,7 +62,7 @@ class DistribuicaoServiceTest extends TestCase
 
     public function test_distribuir_atribui_analista_vinculado_e_recalcula_o_sla_sem_sair_da_caixa(): void
     {
-        // HU-080 RN-004 + HU-144: atribui o analista, recalcula o prazo para a
+        // HU-076 RN-004 + HU-134: atribui o analista, recalcula o prazo para a
         // etapa de análise (≈ +10 dias) e NÃO altera sector_id nem o status.
         Carbon::setTestNow('2026-03-10 09:00:00');
 
@@ -204,7 +204,7 @@ class DistribuicaoServiceTest extends TestCase
 
     public function test_analista_nao_vinculado_ao_setor_nao_e_distribuido(): void
     {
-        // RN-004/HU-081: só analista vinculado ao setor recebe o processo.
+        // RN-004/HU-077: só analista vinculado ao setor recebe o processo.
         $sector = Sector::factory()->create();
         $request = $this->processoNaCaixa($sector);
         $forasteiro = User::factory()->create();
@@ -270,7 +270,7 @@ class DistribuicaoServiceTest extends TestCase
 
     public function test_assumir_pelo_analista_do_setor_atribui_a_si_e_audita(): void
     {
-        // HU-081: o analista vinculado pega o processo da caixa para si.
+        // HU-077: o analista vinculado pega o processo da caixa para si.
         $sector = Sector::factory()->create();
         $analista = $this->analistaDoSetor($sector);
         $request = $this->processoNaCaixa($sector);
@@ -308,7 +308,7 @@ class DistribuicaoServiceTest extends TestCase
 
     public function test_assumir_por_analista_fora_do_setor_e_bloqueado(): void
     {
-        // HU-081: quem não está no setor não pode assumir o processo.
+        // HU-077: quem não está no setor não pode assumir o processo.
         $sector = Sector::factory()->create();
         $request = $this->processoNaCaixa($sector);
         $forasteiro = User::factory()->create();

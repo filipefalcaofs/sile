@@ -6,7 +6,7 @@ use DateTimeInterface;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Implementação real dos precedentes (HU-142) sobre PostGIS — espelha o
+ * Implementação real dos precedentes (HU-132) sobre PostGIS — espelha o
  * PostgisSpatialRepository: SQL nativo, sem cálculo geométrico em PHP. Reusa a
  * geometry derivada `property_polygon` (Polygon, 4326) gravada na Fase 8
  * (PropertyGeometryWriter). O GeoJSON atual entra em SRID 4326 explícito

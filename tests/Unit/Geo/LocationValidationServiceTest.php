@@ -10,7 +10,7 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Validação de localização por sobreposição (HU-037 RN-004) provada SEM PostGIS:
+ * Validação de localização por sobreposição (HU-036 RN-004) provada SEM PostGIS:
  * com a base de lotes pendente (estado real atual) a validação comunica
  * "indisponível — base de lotes pendente SEDUR" sem fabricar lote (sem fachada);
  * o limiar é lido do parâmetro administrável geo.validacao.sobreposicao_minima

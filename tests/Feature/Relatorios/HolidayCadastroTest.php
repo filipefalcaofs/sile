@@ -9,7 +9,7 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Cadastro de feriados (HU-137): dado versionado/auditado e substituível. O
+ * Cadastro de feriados (HU-128): dado versionado/auditado e substituível. O
  * seeder semeia APENAS os feriados nacionais fixos inquestionáveis como dado de
  * partida — a lista municipal oficial de Salvador é pendência SEDUR (degradação
  * honesta). Nenhum feriado municipal é inventado.

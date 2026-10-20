@@ -14,7 +14,7 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Carga oficial da classificação de risco SANITÁRIO (HU-019/HU-047/HU-048): o
+ * Carga oficial da classificação de risco SANITÁRIO (HU-018/HU-045/HU-046): o
  * seeder publica uma versão vigente do domínio risco_sanitario e importa a
  * planilha unificada CNAE da VISA (285 → 261), auditando com a versão de
  * regras. A dimensão sanitária é SEPARADA da municipal — comprovado por teste

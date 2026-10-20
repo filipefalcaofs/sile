@@ -10,7 +10,7 @@ use App\Services\Abuso\Contracts\AbuseDetector;
 use App\Services\Abuso\DetectionWindow;
 
 /**
- * HU-149 (estrutural): requerente cujas respostas de condicionante SEMPRE evitam
+ * HU-138 (estrutural): requerente cujas respostas de condicionante SEMPRE evitam
  * a análise — a "resposta certa" estatisticamente improvável de quem aprendeu a
  * burlar o expresso. Determinístico sobre dado real, SEM IA: lê o snapshot da
  * simulação (`simulation_snapshot.por_cnae[].consulta.risco.sanitario.

@@ -10,7 +10,7 @@ use Laravel\Ai\Promptable;
 use Stringable;
 
 /**
- * Agente de CLASSIFICAÇÃO documental (HU-113): sugere a categoria do documento
+ * Agente de CLASSIFICAÇÃO documental (HU-105): sugere a categoria do documento
  * anexado e, quando a exigência esperada é informada, sinaliza se o documento
  * corresponde a ela. Confronto é sempre ALERTA revisável — nunca rejeita o
  * protocolo (RN-005). A mecânica anti-fachada vive no RunAiAgentJob; o fake por
@@ -23,7 +23,7 @@ class ClassificacaoDocumentoAgent implements Agent, HasStructuredOutput
     public const PROMPT_VERSION = 'classificacao-v1';
 
     /**
-     * Categorias derivadas do catálogo DocumentRequirement (HU-067):
+     * Categorias derivadas do catálogo DocumentRequirement (HU-065):
      * foto-fachada, termo-concessao e contrato-locacao, mais "outro" para o que
      * não se enquadra. A planilha oficial da SEDUR pode expandir a carga — a
      * lógica não muda.

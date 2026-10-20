@@ -16,7 +16,7 @@ use Tests\TestCase;
 
 /**
  * Manutenção versionada dos Quadros da LOUOS pelos mantenedores da SEDUR
- * (HU-015..018/HU-046): publicar uma nova versão NÃO sobrescreve a vigente —
+ * (HU-015..017/HU-044): publicar uma nova versão NÃO sobrescreve a vigente —
  * copia o dado da versão vigente, aplica as alterações e publica por quatro
  * olhos (RuleVersionService reusado da Fase 6, sem recriar infra). A anterior é
  * preservada como histórico (fechada com valid_to), nunca apagada — disciplina

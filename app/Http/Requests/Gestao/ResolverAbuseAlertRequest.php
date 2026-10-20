@@ -6,7 +6,7 @@ use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
- * Validação da resolução de um alerta de abuso (HU-149 RN-003): confirmar e
+ * Validação da resolução de um alerta de abuso (HU-138 RN-003): confirmar e
  * descartar exigem justificativa OBRIGATÓRIA, espelhando o motivo obrigatório da
  * malha fina — só espaços em branco também é vazio (normalizado no
  * prepareForValidation antes do required). A autorização é o middleware

@@ -20,11 +20,11 @@ use Inertia\Response;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 /**
- * Consulta e exportação da trilha de auditoria (HU-098/100/101) na retaguarda,
+ * Consulta e exportação da trilha de auditoria (HU-094/096/097) na retaguarda,
  * server-driven sobre a espinha activity_log (espelha o ProcessoController). O
  * index roteia a fonte (atividade/alteracoes/acessos), pagina no servidor e
  * AUDITA a própria consulta; com ?formato= delega ao contrato único de
- * exportação (HU-131/RN-009): {@see ReportExporter} aplica os MESMOS filtros
+ * exportação (HU-122/RN-009): {@see ReportExporter} aplica os MESMOS filtros
  * (RN-005/RN-007), audita (meta-auditoria personal_data, CA-02) e escolhe o
  * caminho síncrono/assíncrono. As fontes {@see AtividadesReportSource}/
  * {@see AcessosReportSource} preservam colunas, nome de arquivo e a guarda de
@@ -50,8 +50,8 @@ class AuditoriaController extends Controller
     ) {}
 
     /**
-     * Consulta filtrável e paginada da trilha (HU-098/100). Com ?formato=
-     * (csv/xlsx/pdf), delega ao export (HU-101/131). A consulta é auditada —
+     * Consulta filtrável e paginada da trilha (HU-094/096). Com ?formato=
+     * (csv/xlsx/pdf), delega ao export (HU-097/122). A consulta é auditada —
      * meta-auditoria CA-02.
      */
     public function index(Request $request): Response|HttpResponse
@@ -84,7 +84,7 @@ class AuditoriaController extends Controller
     }
 
     /**
-     * Exportação do conjunto filtrado (HU-101/131), respeitando a fonte e os
+     * Exportação do conjunto filtrado (HU-097/122), respeitando a fonte e os
      * MESMOS filtros do index. Delega ao contrato único (RN-009): o
      * {@see ReportExporter} audita (meta-auditoria personal_data, CA-02), valida
      * o formato e escolhe o caminho síncrono/assíncrono — preservando colunas,

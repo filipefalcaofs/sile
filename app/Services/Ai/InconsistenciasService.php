@@ -7,14 +7,14 @@ use App\Models\ViabilityRequest;
 use App\Models\ViabilityRequestDocument;
 
 /**
- * Camada de serviço da detecção de inconsistências por IA (HU-115). Degradação
+ * Camada de serviço da detecção de inconsistências por IA (HU-107). Degradação
  * honesta: sem o toggle features.ia_inconsistencias ligado E um provedor de
  * visão ativo, NÃO despacha o job, NÃO chama o provedor e NÃO simula (anti-fachada).
  *
  * O resultado SINALIZA divergências documento × declaração para a ficha de
- * análise e, como sinal, para a malha fina/HU-149 — nunca decide nem aciona
+ * análise e, como sinal, para a malha fina/HU-138 — nunca decide nem aciona
  * punição automática (RN-004). COMPLEMENTA as validações determinísticas
- * (área×polígono HU-063, polígono×lote HU-037, Receita HU-105); a parte geo/
+ * (área×polígono HU-061, polígono×lote HU-036); a parte geo/
  * Receita permanece bloqueada (SEDUR/Fase 13) e degrada honesto na própria ficha,
  * sem ser simulada aqui (RN-005).
  */
@@ -45,7 +45,7 @@ class InconsistenciasService
 
     /**
      * Localiza a foto da fachada entre os anexos: a primeira imagem, priorizando
-     * o documento com a exigência "foto-fachada" (HU-067). Devolve null quando o
+     * o documento com a exigência "foto-fachada" (HU-065). Devolve null quando o
      * processo não tem imagem anexada — sem inventar material (anti-fachada).
      */
     private function fotoFachada(ViabilityRequest $processo): ?ViabilityRequestDocument

@@ -10,9 +10,9 @@ use App\Support\Audit\AuditService;
 use App\Support\Settings;
 
 /**
- * Efeito colateral DESACOPLADO do ResultadoEmitido (HU-077): notifica o
+ * Efeito colateral DESACOPLADO do ResultadoEmitido (HU-073): notifica o
  * requerente do desfecho do fluxo expresso. A partir do EP11 (11-06) o aviso
- * percorre o NotificationDispatcher (HU-090/094) — ganha in-app + histórico
+ * percorre o NotificationDispatcher (HU-086/090) — ganha in-app + histórico
  * (communications) além do e-mail, unificando as notificações de processo num só
  * roteador. O e-mail segue SEM anexo de TVL (o canal oficial de entrega é o
  * Regin/SEFAZ) e NÃO vai a usuário da retaguarda (equipe SEDUR), que recebe só
@@ -20,7 +20,7 @@ use App\Support\Settings;
  *
  * Registro ÚNICO por AUTO-DESCOBERTA (type-hint do evento no handle); NÃO
  * registrar via Event::listen — duplicaria a notificação e a auditoria (lição
- * Fase 8). A decisão e a auditoria autoritativa (HU-078) já ocorreram SÍNCRONAS
+ * Fase 8). A decisão e a auditoria autoritativa (HU-074) já ocorreram SÍNCRONAS
  * na transação (09-05) e NÃO dependem deste listener; ele só pluga o aviso ao
  * cidadão. Mantém-se SÍNCRONO — quem enfileira é a notificação (ShouldQueue),
  * espelhando o padrão da casa (RegistrarTrilhaProtocolo/VerifyEmailQueued).

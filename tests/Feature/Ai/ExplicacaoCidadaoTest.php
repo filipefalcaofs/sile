@@ -18,9 +18,9 @@ use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
 /**
- * HU-119 (explicar o resultado ao cidadão) — acessível: a IA TRADUZ a decisão
+ * HU-111 (explicar o resultado ao cidadão) — acessível: a IA TRADUZ a decisão
  * técnica (deferida/indeferida) para linguagem cidadã clara, FIEL à decisão e à
- * fundamentação registradas (HU-099/ViabilityDecision), NUNCA prometendo o que a
+ * fundamentação registradas (HU-095/ViabilityDecision), NUNCA prometendo o que a
  * lei não garante. Prova: explicação com fonte quando há decisão vira sugestão
  * sugerida; SEM decisão registrada a função NÃO despacha (não explica o que não
  * existe); toggle features.ia_explicacao OFF ⇒ NÃO chama o provedor. A função

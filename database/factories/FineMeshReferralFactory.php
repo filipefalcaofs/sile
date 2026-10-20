@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 /**
  * @extends Factory<FineMeshReferral>
  *
- * Default = encaminhamento à malha fina EM ABERTO (resolved_at null, HU-136).
+ * Default = encaminhamento à malha fina EM ABERTO (resolved_at null, HU-127).
  * reason é sempre obrigatório. O state resolvido() dá baixa.
  */
 class FineMeshReferralFactory extends Factory

@@ -18,7 +18,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Consulta AUTENTICADA do protocolo (HU-069): o dono/representado acompanha o
+ * Consulta AUTENTICADA do protocolo (HU-067): o dono/representado acompanha o
  * andamento com a timeline em linguagem simples (publicLabel), o prazo estimado
  * com ressalva honesta e os dados do processo. Gera também o link PÚBLICO
  * assinado de acompanhamento (TTL parametrizável, Task 3). Toda consulta é
@@ -60,8 +60,8 @@ class ConsultaProtocoloController extends Controller
             'temDecisao' => $solicitacao->decision()->exists(),
             // Parecer oficial do próprio pedido: resultado, motivo e fundamentação.
             'parecer' => ParecerDecisao::de($solicitacao->decision()->first()),
-            // Explicação da decisão em linguagem cidadã (HU-119) — versão leiga da
-            // explicabilidade da HU-099. Prop DEFERIDA (carregada sob demanda pelo
+            // Explicação da decisão em linguagem cidadã (HU-111) — versão leiga da
+            // explicabilidade da HU-095. Prop DEFERIDA (carregada sob demanda pelo
             // card quando há decisão). Ao resolver, dispara a explicação de forma
             // gated/idempotente e SÓ quando há ViabilityDecision (sem decisão ⇒
             // no-op; dedup por entrada evita reprocessar) e então LÊ o ledger.
@@ -75,7 +75,7 @@ class ConsultaProtocoloController extends Controller
     }
 
     /**
-     * Link PÚBLICO assinado de acompanhamento (HU-069): TTL parametrizável
+     * Link PÚBLICO assinado de acompanhamento (HU-067): TTL parametrizável
      * (solicitacao.consulta_publica.assinatura_ttl_dias), efeito sem deploy. Só
      * faz sentido para solicitações já protocoladas (têm número rastreável); em
      * rascunho ainda não há protocolo a compartilhar.
@@ -137,7 +137,7 @@ class ConsultaProtocoloController extends Controller
     }
 
     /**
-     * Explicação da decisão em linguagem cidadã sugerida pela IA (HU-119) para o
+     * Explicação da decisão em linguagem cidadã sugerida pela IA (HU-111) para o
      * card de explicação — APENAS LEITURA do ledger ai_suggestions, escopado a
      * esta solicitação e ao tipo explicacao, mais recentes primeiro. Não decide
      * nada: é a versão leiga e revisável da explicabilidade, fiel à decisão.

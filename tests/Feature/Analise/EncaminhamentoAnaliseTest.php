@@ -29,7 +29,7 @@ use Tests\Support\SeedsTratamentoPlanilha;
 use Tests\TestCase;
 
 /**
- * Encaminhamento à análise técnica (HU-079): ao rotear uma solicitação para
+ * Encaminhamento à análise técnica (HU-075): ao rotear uma solicitação para
  * em_analise, o FluxoExpressoService::encaminharAnalise — além da transição e da
  * auditoria SÍNCRONA já existentes (Fase 9) — MATERIALIZA o SLA da fila
  * (analysis_due_at, etapa distribuição, via AnalysisSlaService) e DISPARA o
@@ -156,7 +156,7 @@ class EncaminhamentoAnaliseTest extends TestCase
 
     public function test_encaminhamento_materializa_o_sla_na_etapa_de_distribuicao(): void
     {
-        // HU-079 + HU-144: ao encaminhar, o prazo da etapa de distribuição é
+        // HU-075 + HU-134: ao encaminhar, o prazo da etapa de distribuição é
         // materializado (analysis_due_at ≈ agora + 2 dias) e a etapa/início ficam
         // registrados — base da fila (10-14) e do badge (10-16).
         Carbon::setTestNow('2026-03-10 09:00:00');
@@ -179,7 +179,7 @@ class EncaminhamentoAnaliseTest extends TestCase
         );
         // Sem setor de triagem parametrizado (analise.setor_triagem_id), o
         // processo fica sem caixa — a atribuição manual segue valendo. O
-        // analista só é fixado depois, na distribuição/assunção (HU-080/081).
+        // analista só é fixado depois, na distribuição/assunção (HU-076/077).
         $this->assertNull($fresh->sector_id);
         $this->assertNull($fresh->assigned_user_id);
 
@@ -244,7 +244,7 @@ class EncaminhamentoAnaliseTest extends TestCase
 
     public function test_encaminhamento_dispara_evento_e_mantem_auditoria_sincrona(): void
     {
-        // HU-079/140: o EncaminhadoParaAnalise é o gatilho (after-commit) da
+        // HU-075/130: o EncaminhadoParaAnalise é o gatilho (after-commit) da
         // pré-análise (10-08). A auditoria síncrona 'expresso'/'decisao' (result
         // 'analise') é gravada na própria transação e NÃO depende do evento.
         Event::fake([EncaminhadoParaAnalise::class]);

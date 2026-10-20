@@ -17,7 +17,7 @@ use Illuminate\Notifications\Notification;
 use Tests\TestCase;
 
 /**
- * Canal customizado de WhatsApp (HU-095) — DONO ÚNICO da linha communications do
+ * Canal customizado de WhatsApp (HU-091) — DONO ÚNICO da linha communications do
  * canal whatsapp. Espelha ComunicarResultadoRegin: ao enviar com o gateway
  * indisponível (binding default), CAPTURA WhatsAppUnavailableException, marca o
  * Communication como BLOQUEADO + AUDITA — JAMAIS "enviado", e NÃO relança (degrada

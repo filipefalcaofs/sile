@@ -6,7 +6,7 @@ use App\Models\ViabilityServiceType;
 use Illuminate\Database\Seeder;
 
 /**
- * Catálogo MÍNIMO de tipos de serviço da solicitação de viabilidade (HU-061
+ * Catálogo MÍNIMO de tipos de serviço da solicitação de viabilidade (HU-059
  * RN-005). São os tipos conhecidos hoje, com códigos ESTÁVEIS — a lista oficial
  * completa é pendência SEDUR e substitui/estende este seed SEM deploy (pelo CRUD
  * administrável do 08-03). Catálogo administrável, NÃO regra de negócio: nada

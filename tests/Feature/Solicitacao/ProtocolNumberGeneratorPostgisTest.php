@@ -9,7 +9,7 @@ use PHPUnit\Framework\Attributes\Group;
 use Tests\PostgisTestCase;
 
 /**
- * Concorrência do número de protocolo (HU-068) contra Postgres REAL: o
+ * Concorrência do número de protocolo (HU-066) contra Postgres REAL: o
  * ProtocolNumberGenerator roda dentro de DB::transaction com
  * protocol_sequences->lockForUpdate() (FOR UPDATE emitido de verdade no pgsql,
  * no-op em SQLite). Duas gerações sequenciais sob o lock avançam a sequência

@@ -65,7 +65,7 @@ interface ResultadoExpressoShowProps {
         regin: CanalTransmissao;
         sefaz: CanalTransmissao;
     };
-    /** Explicabilidade passo a passo (HU-099), projeção pura do decision_trace. */
+    /** Explicabilidade passo a passo (HU-095), projeção pura do decision_trace. */
     explicacao?: DecisionExplanationData | null;
 }
 
@@ -351,7 +351,7 @@ export default function ResultadoExpressoShow({ decisao, transmissao, explicacao
                     </Card>
                 </div>
 
-                {/* Explicabilidade passo a passo (HU-099) — só quando há projeção */}
+                {/* Explicabilidade passo a passo (HU-095) — só quando há projeção */}
                 {explicacao && (
                     <Card>
                         <CardHeader

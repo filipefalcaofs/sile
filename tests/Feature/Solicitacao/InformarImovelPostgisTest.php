@@ -9,12 +9,12 @@ use PHPUnit\Framework\Attributes\Group;
 use Tests\PostgisTestCase;
 
 /**
- * Derivação driver-aware da geometria do imóvel (HU-062) provada contra PostGIS
+ * Derivação driver-aware da geometria do imóvel (HU-060) provada contra PostGIS
  * REAL: a fonte de verdade é o `property_polygon_geojson` (jsonb, portável); a
  * coluna geometry derivada `property_polygon` é gravada SÓ no pgsql via
  * ST_MakeValid(ST_SetSRID(ST_GeomFromGeoJSON(?),4326)) — idêntico ao
  * GeoJsonLayerImporter da Fase 4. A área do polígono é calculada com ST_Area
- * real (m², ::geography), base da validação área×polígono (HU-063 RN-004).
+ * real (m², ::geography), base da validação área×polígono (HU-061 RN-004).
  */
 #[Group('postgis')]
 class InformarImovelPostgisTest extends PostgisTestCase

@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * Ficha de análise versionada (HU-135/140) — o coração da análise humana e a
+ * Ficha de análise versionada (HU-126/130) — o coração da análise humana e a
  * fonte do parecer. Cada revisão é uma linha (unique viability_request_id+
  * revision); a revisão FINALIZADA é IMUTÁVEL (RN-003): nova mudança gera nova
  * revisão, nunca atualiza a finalizada. A rev 1 nasce pré-analisada pelo motor
@@ -88,7 +88,7 @@ class AnalysisRecord extends Model
     }
 
     /**
-     * Divergências analista×motor registradas na finalização (HU-140 → HU-145).
+     * Divergências analista×motor registradas na finalização (HU-130 → HU-135).
      *
      * @return HasMany<AnalysisDivergence, $this>
      */

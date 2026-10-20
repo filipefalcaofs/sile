@@ -9,7 +9,7 @@ use App\Models\User;
 use App\Support\Settings;
 
 /**
- * Agrega as TRÊS fontes REAIS do monitoramento LGPD (HU-102), sempre em
+ * Agrega as TRÊS fontes REAIS do monitoramento LGPD (HU-098), sempre em
  * MÉTRICAS minimizadas (nunca PII crua): consentimentos da versão vigente do
  * termo, retenção (dias parametrizados + último pruning lido da trilha, com as
  * decisões FORA do pruning por compliance) e acessos a dado pessoal medidos

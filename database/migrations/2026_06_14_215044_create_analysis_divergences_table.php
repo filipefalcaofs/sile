@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Divergências analista×motor (HU-140 → insumo do relatório HU-145) — quando
+     * Divergências analista×motor (HU-130 → insumo do relatório HU-135) — quando
      * o analista DIVERGE do valor sugerido pelo motor na ficha, a diferença é
      * registrada em linha dedicada (append na finalização) com a justificativa.
      * Tabela própria (não jsonb na ficha) porque o relatório cruza divergências

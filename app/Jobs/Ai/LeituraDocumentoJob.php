@@ -11,7 +11,7 @@ use Laravel\Ai\Files\File;
 use Laravel\Ai\Files\Image;
 
 /**
- * Execução da leitura por visão (HU-112 OCR + HU-114 ilegibilidade) de um
+ * Execução da leitura por visão (HU-104 OCR + HU-106 ilegibilidade) de um
  * documento da solicitação. Subclasse fina do RunAiAgentJob: carrega só IDs e
  * monta o anexo (imagem ou PDF) a partir do Storage da época. A ilegibilidade
  * força a revisão humana (shouldEscalate) — a leitura nunca vira verdade.
@@ -103,7 +103,7 @@ class LeituraDocumentoJob extends RunAiAgentJob
     }
 
     /**
-     * HU-114: documento marcado como ilegível força a revisão humana mesmo com
+     * HU-106: documento marcado como ilegível força a revisão humana mesmo com
      * confiança alta — a leitura nunca é aceita às cegas como verdade.
      *
      * @param  array<string, mixed>  $output

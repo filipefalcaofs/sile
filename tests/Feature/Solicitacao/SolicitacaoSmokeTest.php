@@ -29,7 +29,7 @@ use Tests\Support\SeedsTratamentoPlanilha;
 use Tests\TestCase;
 
 /**
- * Smoke end-to-end da Fase 8 pelo PORTAL (HU-061 a HU-070 + HU-141): exercita a
+ * Smoke end-to-end da Fase 8 pelo PORTAL (HU-059 a HU-068 + HU-131): exercita a
  * jornada inteira do cidadão pelos ENDPOINTS e SERVIÇOS REAIS — criar rascunho →
  * instruir imóvel/área → instruir atividades → anexar documento → simular →
  * protocolar → consultar → cancelar — asserindo o estado a cada passo. É a

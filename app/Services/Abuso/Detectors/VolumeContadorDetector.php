@@ -11,8 +11,8 @@ use App\Services\Abuso\DetectionWindow;
 use App\Support\Settings;
 
 /**
- * HU-149: volume atípico de solicitações criadas pelo MESMO ator (created_by — o
- * "contador"/representante que abre "em nome de", HU-150) na janela. Determinístico
+ * HU-138: volume atípico de solicitações criadas pelo MESMO ator (created_by — o
+ * "contador"/representante que abre "em nome de", HU-139) na janela. Determinístico
  * sobre dado real — agrupa viability_requests por created_by_user_id no período,
  * SEM IA. Emite um finding por criador cujo total na janela supera
  * `abuso.volume_contador.limite` (HU-014, default 20). fingerprint estável por

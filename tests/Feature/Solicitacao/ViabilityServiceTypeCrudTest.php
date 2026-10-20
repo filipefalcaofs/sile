@@ -10,7 +10,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 /**
- * CRUD dos tipos de serviço da solicitação (HU-061 RN-005): o administrador/
+ * CRUD dos tipos de serviço da solicitação (HU-059 RN-005): o administrador/
  * gestor mantém os tipos de serviço — dado administrável (tabela + CRUD), não
  * registry de código — pela retaguarda, atrás da permissão manter-tipos-servico.
  * Sem ela a ação é bloqueada e auditada (CA-04). O code é único e imutável na

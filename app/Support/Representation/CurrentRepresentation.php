@@ -10,7 +10,7 @@ use App\Models\User;
  * Estado da representação "em nome de" na request corrente (HU-008/009).
  * Registrado como scoped: resolvido pelo ResolveRepresentation (procuração,
  * portal) ou pelo ResolveAssistedAttendance (atendimento presencial, console —
- * HU-150) a cada request e consumido por controllers, policies e pelo share do
+ * HU-139) a cada request e consumido por controllers, policies e pelo share do
  * Inertia. Os dois mecanismos populam o MESMO estado: grantor() devolve o
  * usuário efetivo (representado/atendido) independentemente da origem.
  */
@@ -32,7 +32,7 @@ class CurrentRepresentation
     }
 
     /**
-     * Define o atendimento presencial ativo (HU-150). O cidadão atendido passa
+     * Define o atendimento presencial ativo (HU-139). O cidadão atendido passa
      * a ser o usuário efetivo, espelhando o outorgante da procuração.
      */
     public function setAttendance(AssistedAttendance $attendance): void

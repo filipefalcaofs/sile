@@ -5,7 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Migration ADITIVA sobre a espinha activity_log (Fase 12, HU-100/HU-102).
+ * Migration ADITIVA sobre a espinha activity_log (Fase 12, HU-096/HU-098).
  *
  * Não recria nem altera colunas existentes: apenas adiciona a coluna
  * personal_data (marca de acesso a dado pessoal — LGPD) e os índices que a

@@ -12,11 +12,11 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 
 /**
- * Protocolar a solicitação (HU-068): só o dono em rascunho (ViabilityRequestPolicy
+ * Protocolar a solicitação (HU-066): só o dono em rascunho (ViabilityRequestPolicy
  * ::protocol, CA-04). Delega ao ProtocolarSolicitacaoService (número único +
  * transição auditada + evento de domínio após o commit) e traduz os bloqueios de
  * domínio (documento obrigatório faltante, dados mínimos ausentes) em flash.error
- * — aviso comunicado, nunca silencioso (HU-067). O toggle
+ * — aviso comunicado, nunca silencioso (HU-065). O toggle
  * features.solicitacao_viabilidade degrada de forma comunicada quando off.
  */
 class ProtocoloController extends Controller

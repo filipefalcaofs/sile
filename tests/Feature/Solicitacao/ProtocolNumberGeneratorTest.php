@@ -8,7 +8,7 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Gerador do número de protocolo (HU-068) provado em SQLite: formato
+ * Gerador do número de protocolo (HU-066) provado em SQLite: formato
  * parametrizável {prefixo}-{AAAA}-{NNNNNN}, sequência reiniciada por ano e
  * unicidade lógica. A concorrência real sob lockForUpdate (no-op em SQLite) é
  * exercitada no ProtocolNumberGeneratorPostgisTest.

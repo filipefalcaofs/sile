@@ -10,9 +10,9 @@ use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 /**
- * Camada geográfica versionada (HU-036 RN-004): a lógica de vigência é pura
+ * Camada geográfica versionada (HU-035 RN-004): a lógica de vigência é pura
  * (datas), provada em SQLite — sem PostGIS. Camadas sem fonte pública
- * (zona/lote) são classificadas como bloqueadas (HU-031/HU-033).
+ * (zona/lote) são classificadas como bloqueadas (HU-030/HU-032).
  */
 class GeoLayerTest extends TestCase
 {

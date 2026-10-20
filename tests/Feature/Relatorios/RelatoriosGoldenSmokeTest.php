@@ -16,7 +16,7 @@ use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 /**
- * Golden/smoke do comando de EVIDÊNCIA do export (HU-131 / 15-15):
+ * Golden/smoke do comando de EVIDÊNCIA do export (HU-122 / 15-15):
  * `relatorios:exportar` grava UM arquivo REAL de cada formato (CSV/XLSX/PDF) a
  * partir do dado semeado, provando a lógica de export ponta a ponta (entrega-
  * funcional, sem fachada). A prova é dupla: o arquivo é legível no formato real

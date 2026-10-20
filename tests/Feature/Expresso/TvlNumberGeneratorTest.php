@@ -9,7 +9,7 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Gerador do número de produto TVL (HU-076 RN-007) provado em SQLite: formato
+ * Gerador do número de produto TVL (HU-072 RN-007) provado em SQLite: formato
  * {prefixo}-{N} com DEFAULT INLINE (sem depender do seeder 09-01), sequência
  * única a partir de 3000000, sem reinício anual, e unicidade lógica.
  * A concorrência real sob lockForUpdate (no-op em SQLite) é exercitada no

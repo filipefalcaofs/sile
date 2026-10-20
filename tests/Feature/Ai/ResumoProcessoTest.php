@@ -20,7 +20,7 @@ use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
 /**
- * HU-117 (resumo do processo para o analista): a IA sintetiza a pré-análise do
+ * HU-109 (resumo do processo para o analista): a IA sintetiza a pré-análise do
  * motor (per_cnae/engine_snapshot), as inconsistências (Onda 1) e os dados
  * locacionais declarados num resumo FIEL — sempre SUGESTÃO revisável, jamais
  * decisão nem afirmação de desfecho (AI-SPEC Failure Mode #1). Prova: resumo com

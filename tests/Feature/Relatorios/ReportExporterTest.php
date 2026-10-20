@@ -18,7 +18,7 @@ use Tests\Feature\Relatorios\Stubs\ProcessoBairroSource;
 use Tests\TestCase;
 
 /**
- * Orquestrador do contrato de exportação (HU-131): abaixo do limiar exporta
+ * Orquestrador do contrato de exportação (HU-122): abaixo do limiar exporta
  * SÍNCRONO (streaming) e acima dispara o GerarExportacaoJob carregando o BAG
  * completo (RN-005/RN-006). Toda exportação é auditada (RN-008). A guarda
  * SyncOnly força o síncrono para sources com estado de construtor (nunca vão ao

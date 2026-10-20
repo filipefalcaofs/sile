@@ -12,7 +12,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Histórico autenticado da consulta prévia de viabilidade (HU-060): lista
+ * Histórico autenticado da consulta prévia de viabilidade (HU-058): lista
  * server-driven, paginada e ordenada da mais recente, das consultas do PRÓPRIO
  * usuário (escopo forUser — precedente "Minhas empresas"). A consulta a dado do
  * próprio usuário é auditada (RN-002, precedente do histórico de acessos). Cada

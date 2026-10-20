@@ -136,7 +136,7 @@ function TerritorioItem({ rotulo, dimensao }: { rotulo: string; dimensao?: Dimen
 }
 
 /**
- * Etapa de imóvel + área (HU-062/063): reusa o mapa Leaflet da Fase 4
+ * Etapa de imóvel + área (HU-060/061): reusa o mapa Leaflet da Fase 4
  * (MapaSection/MapImovel) para posicionar o imóvel e demarcar o polígono de 4
  * pontos (derivado da área declarada). Envia ao PUT solicitacoes.imovel (08-06),
  * que identifica o território (degrada honesto sem zona) e alerta a divergência

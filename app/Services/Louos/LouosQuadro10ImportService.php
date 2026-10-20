@@ -9,7 +9,7 @@ use RuntimeException;
 use SplFileObject;
 
 /**
- * Import do Quadro 10 da LOUOS (permissão por zona — HU-016/HU-039) a partir do
+ * Import do Quadro 10 da LOUOS (permissão por zona — HU-016/HU-038) a partir do
  * CSV versionado em database/data/louos/, espelhando RiscoMunicipalImportService.
  * As permissões ficam ligadas a uma versão de regra (rule_version_id, domínio
  * louos_quadro10) — dado versionado.

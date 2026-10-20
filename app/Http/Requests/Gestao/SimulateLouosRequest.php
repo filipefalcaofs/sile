@@ -9,7 +9,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 /**
- * Simulação e publicação de um rascunho de Quadro da LOUOS pelo sandbox (HU-143).
+ * Simulação e publicação de um rascunho de Quadro da LOUOS pelo sandbox (HU-133).
  * A autorização é o middleware permission:manter-louos da rota (simular/publicar
  * é manutenção). A versão rascunho deve EXISTIR como `rascunho` do domínio do
  * Quadro escolhido — só rascunhos são simuláveis/publicáveis; a regra dos quatro

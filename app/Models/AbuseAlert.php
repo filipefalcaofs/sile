@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
- * Alerta de abuso/fraude (HU-149) — ledger dos achados dos detectores
+ * Alerta de abuso/fraude (HU-138) — ledger dos achados dos detectores
  * determinísticos. NUNCA é punição: o alerta é insumo humano (gestor confirma/
  * descarta) e, acima do limiar, gera encaminhamento à malha fina (ortogonal ao
  * status). A própria criação/baixa é auditável (HasAuditoria/RN-002).

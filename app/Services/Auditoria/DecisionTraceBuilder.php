@@ -3,7 +3,7 @@
 namespace App\Services\Auditoria;
 
 /**
- * Montador PURO e determinístico do decision_trace (HU-099 RN-004/RN-005): a
+ * Montador PURO e determinístico do decision_trace (HU-095 RN-004/RN-005): a
  * partir do consulta_array JÁ produzido pelos motores (ConsultaViabilidadeResult
  * ::toArray) e/ou da ficha de análise, assembla o snapshot passo a passo da
  * decisão por CNAE, na ORDEM canônica:

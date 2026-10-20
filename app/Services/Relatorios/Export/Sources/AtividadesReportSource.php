@@ -12,9 +12,9 @@ use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Fonte da trilha de atividades/alterações para o contrato único de exportação
- * (HU-131/RN-009) — consolida o streaming CSV que vivia em
+ * (HU-122/RN-009) — consolida o streaming CSV que vivia em
  * AuditoriaController::exportarAtividades. Reusa o AuditTrailQueryService
- * (HU-098/100) a partir do bag de filtros (as 9 chaves da consulta da trilha +
+ * (HU-094/096) a partir do bag de filtros (as 9 chaves da consulta da trilha +
  * a `fonte`, que escolhe a trilha completa ou só as alterações), então o
  * conjunto exportado é EXATAMENTE o filtrado (RN-005), no síncrono e no
  * assíncrono (o bag faz round-trip pelo Job — RN-005 no async, sem dump integral
@@ -22,7 +22,7 @@ use Illuminate\Database\Eloquent\Builder;
  *
  * Reconstrutível só a partir do bag (INVARIANTE do {@see ReportSource}): o
  * construtor injeta apenas o serviço de query, sem estado de filtro. As colunas,
- * o mapeamento (via {@see ActivityResource}) e a marca personalData=true (HU-101)
+ * o mapeamento (via {@see ActivityResource}) e a marca personalData=true (HU-097)
  * são preservados fielmente do controller. A guarda de volume técnica
  * (viabiliza.auditoria.export.max_linhas) é aplicada no builder.
  */
@@ -70,7 +70,7 @@ final class AtividadesReportSource implements ReportSource
             personalData: true,
             arquivoBase: 'auditoria',
             // Guarda de volume técnica (viabiliza.auditoria.export.max_linhas) honrada
-            // por TODO driver (HU-101): o teto do streaming histórico é preservado
+            // por TODO driver (HU-097): o teto do streaming histórico é preservado
             // sem materializar a trilha inteira; o count() real decide o limiar.
             maxRows: $maxLinhas,
         );

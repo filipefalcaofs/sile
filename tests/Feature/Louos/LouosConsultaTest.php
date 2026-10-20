@@ -13,7 +13,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 /**
- * Mantenedores dos Quadros da LOUOS no console SEDUR (backend — HU-015..018):
+ * Mantenedores dos Quadros da LOUOS no console SEDUR (backend — HU-015..017):
  * a consulta da versão vigente dos 4 Quadros (analista/gestor/admin) é separada
  * da publicação versionada por quatro olhos (admin). Gate cross-guard via
  * permission: (PADRÃO 04-03/06). Publicar gera NOVA versão e preserva a anterior,

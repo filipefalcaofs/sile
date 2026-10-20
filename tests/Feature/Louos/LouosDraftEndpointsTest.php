@@ -16,7 +16,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 /**
- * Endpoints HTTP do rascunho editável dos Quadros da LOUOS (HU-046):
+ * Endpoints HTTP do rascunho editável dos Quadros da LOUOS (HU-044):
  * controle de acesso por permissão, ciclo abrir/editar/importar/publicar/descartar,
  * modelo CSV por Quadro e remoção do Quadro 11 da consulta.
  */

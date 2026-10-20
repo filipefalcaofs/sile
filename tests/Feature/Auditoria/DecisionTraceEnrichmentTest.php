@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\Event;
 use Tests\TestCase;
 
 /**
- * Enriquecimento ADITIVO do decision_trace (HU-099 RN-004/RN-005): os DOIS
+ * Enriquecimento ADITIVO do decision_trace (HU-095 RN-004/RN-005): os DOIS
  * pontos de escrita da decisão passam a persistir o snapshot passo a passo
  * (entrada → risco → LOUOS Quadro 7/10/11/11A → consolidação → desfecho, por
  * CNAE) a partir do que o motor JÁ produziu em memória — sem recomputar e sem

@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * Payload de leitura de um alerta de abuso (HU-149) para o painel de revisão
+ * Payload de leitura de um alerta de abuso (HU-138) para o painel de revisão
  * humana (gestao/abuso/index). Expõe a regra disparada, a severidade e o status
  * (value + label), a janela analisada, as evidências (já minimizadas pelos
  * detectores), o processo vinculado (protocolo + id p/ o link), se foi

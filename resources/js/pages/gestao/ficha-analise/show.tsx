@@ -282,7 +282,7 @@ interface FichaAnaliseShowProps {
     escritorioVirtual: EscritorioVirtual;
     textosPadrao: TextoPadrao[];
     autosaveDebounceMs: number;
-    /** Sugestões de IA (HU-115) — prop deferida, carregada sob demanda pelo card. */
+    /** Sugestões de IA (HU-107) — prop deferida, carregada sob demanda pelo card. */
     sugestoesIa?: SugestaoIa[];
     /** Disponibilidade honesta do copiloto (resumo + minuta). Sempre no load inicial. */
     iaFicha: IaFicha;
@@ -306,9 +306,9 @@ const STATUS_OPCOES: { value: StatusFicha; label: string }[] = [
     { value: 'indeferida', label: 'Indeferida' },
 ];
 
-/** A minuta (HU-118) roda em fila (assíncrona): após solicitar, sondamos a prop
+/** A minuta (HU-110) roda em fila (assíncrona): após solicitar, sondamos a prop
  *  deferida sugestoesIa por uma janela limitada até a sugestão ser processada.
- *  O resumo (HU-117) roda no mesmo request — sem polling. */
+ *  O resumo (HU-109) roda no mesmo request — sem polling. */
 const MINUTA_POLL_INTERVAL_MS = 3000;
 const MINUTA_POLL_MAX = 8;
 
@@ -723,7 +723,7 @@ export default function FichaAnaliseShow({
     const { auth } = usePage<SharedProps>().props;
     // Encaminhar à vistoria é ação do analista (handoff ao setor de vistoria).
     const podeEncaminharVistoria = auth.permissions.includes('analisar-processos');
-    // Malha fina é caixa à parte para alterar o processo (HU-136) — permissão própria.
+    // Malha fina é caixa à parte para alterar o processo (HU-127) — permissão própria.
     const podeMalhaFina = auth.permissions.includes('encaminhar-malha-fina');
     const podeEmitirTvl = auth.permissions.includes('emitir-tvl');
     const classeAcaoFantasma =
@@ -788,7 +788,7 @@ export default function FichaAnaliseShow({
     const precedentes = useHttp<Record<string, never>, PrecedentesResponse>({});
     const diff = useHttp<{ de: number; para: number }, DiffResponse>({ de: 0, para: 0 });
 
-    // Sugestão de minuta de parecer por IA (HU-118) — apoio, nunca decisão. O job
+    // Sugestão de minuta de parecer por IA (HU-110) — apoio, nunca decisão. O job
     // roda em fila; aqui sondamos a sugestão até ela aparecer (UX assíncrona).
     const minuta = useHttp<Record<string, never>, { despachou?: boolean; status?: string }>({});
     const [minutaStatus, setMinutaStatus] = useState<'idle' | 'solicitando' | 'aguardando' | 'pronta' | 'indisponivel'>('idle');
@@ -2395,7 +2395,7 @@ export default function FichaAnaliseShow({
                                 )}
 
                                 <p className="mt-2 text-theme-xs text-gray-400 dark:text-gray-500">
-                                    A minuta da IA é apenas sugestão (HU-118): você a revisa, edita e valida. A IA não decide o
+                                    A minuta da IA é apenas sugestão (HU-110): você a revisa, edita e valida. A IA não decide o
                                     desfecho nem finaliza a ficha (RN-001/RN-003).
                                 </p>
                             </CardContent>
@@ -3000,7 +3000,7 @@ function destinoIndisponibilidadeIa(motivo: string | null): { href: string; rotu
 }
 
 /**
- * Card "Resumo do processo" (HU-117): apresenta a síntese gerada pela IA
+ * Card "Resumo do processo" (HU-109): apresenta a síntese gerada pela IA
  * (resumo + pontos-chave + fonte) no TOPO da ficha, sempre marcada como
  * "sugestão — revise". APENAS LEITURA — apoia a leitura do analista, não decide
  * nem antecipa o desfecho (AI-SPEC Failure Mode #1). Lê do mesmo ledger
@@ -3351,7 +3351,7 @@ function rotuloCampo(campo: string): string {
 }
 
 /**
- * Card "Alertas de IA" (HU-115): lista as inconsistências detectadas
+ * Card "Alertas de IA" (HU-107): lista as inconsistências detectadas
  * (campo/declarado/documento/severidade/fonte) sempre marcadas como
  * "sugestão — revise". SINALIZA para a revisão humana — não decide nem penaliza
  * (RN-004) — e COMPLEMENTA as validações determinísticas, sem substituí-las
@@ -3451,7 +3451,7 @@ function AlertasIaCard({ sugestoes }: { sugestoes: SugestaoIa[] }) {
 
                 <p className="mt-4 text-theme-xs text-gray-400 dark:text-gray-500">
                     Sinais para revisão humana — não decidem nem penalizam (RN-004). As validações de lote (GIS) e
-                    Receita seguem pendentes SEDUR (HU-037/105) e não são supridas por estes alertas.
+                    Receita seguem pendentes SEDUR (HU-036) e não são supridas por estes alertas.
                 </p>
             </CardContent>
         </Card>
@@ -3526,7 +3526,7 @@ function AbrigadosPanel({
     );
 }
 
-/** Painel de precedentes (HU-142): processos do imóvel + estatística do CNAE na zona. */
+/** Painel de precedentes (HU-132): processos do imóvel + estatística do CNAE na zona. */
 function PrecedentesPanel({
     carregando,
     erro,
@@ -3538,7 +3538,7 @@ function PrecedentesPanel({
 }) {
     return (
         <Card>
-            <CardHeader title="Precedentes" description="Histórico do imóvel e estatística do CNAE na zona (HU-142)." />
+            <CardHeader title="Precedentes" description="Histórico do imóvel e estatística do CNAE na zona (HU-132)." />
             <CardContent>
                 {carregando && (
                     <div className="space-y-2">
@@ -3713,7 +3713,7 @@ function formatarDiffValor(valor: unknown): string {
     return String(valor);
 }
 
-/** Modal de seleção de trechos da biblioteca de textos-padrão (HU-085). */
+/** Modal de seleção de trechos da biblioteca de textos-padrão (HU-081). */
 function TextosPadraoPicker({
     textos,
     onSelect,

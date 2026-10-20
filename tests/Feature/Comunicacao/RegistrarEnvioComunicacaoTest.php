@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Event;
 use Tests\TestCase;
 
 /**
- * RegistrarEnvioComunicacao (HU-096): listener AUTO-DESCOBERTO que fecha o ciclo
+ * RegistrarEnvioComunicacao (HU-092): listener AUTO-DESCOBERTO que fecha o ciclo
  * do ledger communications — na_fila → enviado (NotificationSent) / falhou
  * (NotificationFailed). Espelha o LogNotificationSent (marca por evento de
  * notificação) e resolve a linha exata pelo MAPA {driver→communicationId}

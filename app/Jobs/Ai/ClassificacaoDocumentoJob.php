@@ -11,7 +11,7 @@ use Laravel\Ai\Files\File;
 use Laravel\Ai\Files\Image;
 
 /**
- * Execução da classificação documental (HU-113). Subclasse fina do RunAiAgentJob:
+ * Execução da classificação documental (HU-105). Subclasse fina do RunAiAgentJob:
  * carrega só IDs, monta o anexo (imagem ou PDF) do Storage e, quando o documento
  * tem uma exigência esperada (DocumentRequirement), leva-a ao prompt para o
  * confronto categoria × exigência — que é sempre um ALERTA na sugestão, nunca um

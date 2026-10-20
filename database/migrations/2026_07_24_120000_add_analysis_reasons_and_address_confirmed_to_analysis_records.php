@@ -5,7 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Paridade com o legado SAPS (HU-135, spec 2026-07-24): "Motivo de Análise"
+ * Paridade com o legado SAPS (HU-126, spec 2026-07-24): "Motivo de Análise"
  * (lista de texto livre do analista) e "Endereço correto?" (confirmação do
  * analista, sem HU formal — interpretação de baixo risco registrada na spec).
  */

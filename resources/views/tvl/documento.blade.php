@@ -35,7 +35,7 @@
     </div>
 
     <p class="nota-interna">
-        Documento administrativo interno (HU-132): emitido na retaguarda para arquivo,
+        Documento administrativo interno (HU-123): emitido na retaguarda para arquivo,
         atendimento presencial e auditoria. Não substitui o parecer oficial (Regin/Junta)
         nem os dados transmitidos à SEFAZ, e não é enviado automaticamente ao requerente.
     </p>

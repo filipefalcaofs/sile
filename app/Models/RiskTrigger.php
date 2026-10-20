@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Gatilho de risco parametrizado (categoria semi-expresso) que derruba o
- * encaminhamento para análise técnica com motivo auditável (HU-049/HU-051).
+ * encaminhamento para análise técnica com motivo auditável (HU-047/HU-049).
  * É DADO, não código: o admin liga/desliga via `ativo` (HU-014) e o CRUD dos
  * mantenedores (06-06) é auditado por HasAuditoria. O motor (06-05) consome
  * apenas os gatilhos vigentes via scope ativos().

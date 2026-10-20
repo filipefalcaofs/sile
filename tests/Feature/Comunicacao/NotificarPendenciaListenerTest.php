@@ -19,9 +19,9 @@ use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 /**
- * NotificarPendencia (HU-090): listener AUTO-DESCOBERTO do PendenciaSolicitada
+ * NotificarPendencia (HU-086): listener AUTO-DESCOBERTO do PendenciaSolicitada
  * que generaliza o aviso de pendência para MULTICANAL via o NotificationDispatcher
- * (11-04) — o requerente passa a receber e-mail + in-app + histórico (HU-096),
+ * (11-04) — o requerente passa a receber e-mail + in-app + histórico (HU-092),
  * em vez do e-mail direto da Fase 10.
  *
  * Registro ÚNICO por auto-descoberta (type-hint do evento no handle; NUNCA
@@ -56,7 +56,7 @@ class NotificarPendenciaListenerTest extends TestCase
         Notification::assertSentToTimes($requester, PendenciaSolicitadaNotification::class, 1);
 
         // Multicanal pelo mapa default (pendencia_aberta = [email, in_app]): o
-        // ledger nasce na_fila por canal habilitado (HU-096).
+        // ledger nasce na_fila por canal habilitado (HU-092).
         $this->assertDatabaseHas('communications', [
             'viability_request_id' => $request->id,
             'recipient_user_id' => $requester->id,
@@ -128,7 +128,7 @@ class NotificarPendenciaListenerTest extends TestCase
 
         event(new PendenciaSolicitada($request, $pendency));
 
-        // HU-095: whatsapp degrada para 'desativado' — nunca um "enviado" fictício.
+        // HU-091: whatsapp degrada para 'desativado' — nunca um "enviado" fictício.
         $this->assertDatabaseHas('communications', [
             'viability_request_id' => $request->id,
             'channel' => CommunicationChannel::Whatsapp->value,

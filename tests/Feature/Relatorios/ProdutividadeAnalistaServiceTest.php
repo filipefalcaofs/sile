@@ -15,7 +15,7 @@ use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 /**
- * Produtividade por analista (HU-130) sobre DADO REAL, em modo conservador por
+ * Produtividade por analista (HU-121) sobre DADO REAL, em modo conservador por
  * sensibilidade RH/LGPD: a contagem é agregação SQL real das decisões de análise
  * técnica (viability_decisions.flow='analise_tecnica' por decided_by_user_id) e
  * dos processos atribuídos (viability_requests.assigned_user_id). O default é

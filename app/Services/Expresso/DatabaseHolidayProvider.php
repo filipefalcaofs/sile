@@ -8,7 +8,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 
 /**
- * Fonte de feriados respaldada na tabela holidays (HU-137), com cache de leitura
+ * Fonte de feriados respaldada na tabela holidays (HU-128), com cache de leitura
  * (TTL técnico de config). Carrega os feriados ATIVOS uma vez e responde
  * isHoliday por mês/dia (recorrentes anuais) e por data exata (específicos).
  *
@@ -23,8 +23,7 @@ class DatabaseHolidayProvider implements HolidayProvider
 {
     /**
      * Chave única do cache do calendário carregado. A invalidação se dá pelo TTL
-     * (efeito sem deploy, limitado ao cache — padrão HU-014); o CRUD futuro de
-     * feriados deve esquecê-la na gravação para efeito imediato.
+     * e pelo model Holiday, que a esquece a cada gravação/exclusão.
      */
     public const CACHE_KEY = 'viabiliza.expresso.holidays';
 
@@ -54,8 +53,8 @@ class DatabaseHolidayProvider implements HolidayProvider
 
         return Cache::remember(self::CACHE_KEY, $ttl, function (): array {
             $recurring = [];
-            $official = false;
             $specific = [];
+            $official = false;
 
             foreach (Holiday::query()->active()->get() as $holiday) {
                 $date = Carbon::instance($holiday->date);
@@ -63,11 +62,11 @@ class DatabaseHolidayProvider implements HolidayProvider
                 if ($holiday->recurring_annually) {
                     $recurring[] = $date->format('m-d');
                 } else {
+                    $specific[] = $date->format('Y-m-d');
 
                     // Da API, só o municipal caracteriza o calendário de Salvador;
                     // nacional/estadual sincronizado não tira a ressalva.
                     $official = $official || $holiday->source !== 'api' || $holiday->type === 'municipal';
-                    $specific[] = $date->format('Y-m-d');
                 }
             }
 

@@ -16,7 +16,7 @@ use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
 /**
- * HU-113 (classificação documental): a IA sugere a categoria do documento e
+ * HU-105 (classificação documental): a IA sugere a categoria do documento e
  * confronta com a exigência esperada — sempre como SUGESTÃO com ALERTA, nunca
  * bloqueando o protocolo (RN-005, complementa e não substitui o humano). Prova:
  * classifica com categoria/confiança/fonte; categoria incompatível vira alerta

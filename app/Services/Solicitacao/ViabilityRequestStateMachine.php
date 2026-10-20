@@ -9,7 +9,7 @@ use App\Models\ViabilityRequestTransition;
 use App\Support\Audit\AuditService;
 
 /**
- * Máquina de estados da solicitação de viabilidade (HU-068 protocolar, HU-070
+ * Máquina de estados da solicitação de viabilidade (HU-066 protocolar, HU-068
  * cancelar). O mapa é EXPLÍCITO e cobre só as transições ativas desta fase;
  * transição inválida lança InvalidStatusTransitionException (CA-03). Cada
  * transição válida grava a timeline (viability_request_transitions) e audita
@@ -24,11 +24,11 @@ class ViabilityRequestStateMachine
 {
     /**
      * Transições ativas, por valor de estado. O EP09 (fluxo expresso) ADICIONOU
-     * as saídas de decisão de protocolada e a antessala aguardando_bap (HU-134);
+     * as saídas de decisão de protocolada e a antessala aguardando_bap (HU-125);
      * o EP10 (análise técnica) ADICIONA as saídas da análise humana — em_analise
-     * abre pendência (HU-083/084) ou decide (HU-086/087) e em_pendencia retorna à
+     * abre pendência (HU-079/080) ou decide (HU-082/083) e em_pendencia retorna à
      * análise — sem tocar nas entradas das Fases 8/9. A decisão (deferida/
-     * indeferida) é FINAL: não há saída (= encerramento HU-089).
+     * indeferida) é FINAL: não há saída (= encerramento HU-085).
      *
      * Fase 2a (relatório SEDUR 2026-07-09): quando o convite (pendência) expira
      * sem resposta no prazo de 48h úteis, o processo é INDEFERIDO automaticamente

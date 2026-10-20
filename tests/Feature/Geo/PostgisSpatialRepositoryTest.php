@@ -11,7 +11,7 @@ use PHPUnit\Framework\Attributes\Group;
 use Tests\PostgisTestCase;
 
 /**
- * SQL espacial REAL (HU-031/HU-032/HU-034/HU-035) provado contra PostGIS: o
+ * SQL espacial REAL (HU-030/HU-031/HU-033/HU-034) provado contra PostGIS: o
  * repositório identifica o bairro que contém o ponto (ST_Contains), a via mais
  * próxima em metros (ST_DWithin/ST_Distance com ::geography — Pitfall 4) e as
  * restrições incidentes (ST_Intersects), sobre dado real do GeoSalvador e

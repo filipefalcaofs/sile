@@ -13,7 +13,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Manutenção da biblioteca de textos-padrão do parecer (HU-085) — trechos pré-
+ * Manutenção da biblioteca de textos-padrão do parecer (HU-081) — trechos pré-
  * aprovados que o analista insere ao redigir a fundamentação. Dado versionado
  * (não código): editar o CONTEÚDO incrementa a versão (RN-005, rastreabilidade);
  * editar só metadados (categoria/situação) preserva a versão. Inativar não

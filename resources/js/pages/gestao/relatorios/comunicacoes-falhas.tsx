@@ -21,7 +21,7 @@ import Pagination, { type PaginationLink } from '@/components/ui/pagination';
 import GestaoLayout from '@/layouts/gestao-layout';
 
 /**
- * Falhas de comunicação (consulta operacional — HU-096): notificações que
+ * Falhas de comunicação (consulta operacional — HU-092): notificações que
  * falharam ou foram bloqueadas, por processo. SEM dados do destinatário (LGPD
  * — o cidadão não aparece). Campos anuláveis degradam para travessão — nunca
  * um dado inventado.

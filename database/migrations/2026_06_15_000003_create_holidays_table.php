@@ -7,9 +7,9 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Cadastro de feriados (HU-137) — dado versionado/auditado e substituível.
+     * Cadastro de feriados (HU-128) — dado versionado/auditado e substituível.
      * É o seam central de dias úteis: o BusinessDeadlineCalculator desconta os
-     * feriados ATIVOS daqui ao medir duração em tempo útil (HU-129). A lista
+     * feriados ATIVOS daqui ao medir duração em tempo útil (HU-120). A lista
      * municipal oficial de Salvador é pendência SEDUR (degradação honesta): sem
      * feriado municipal cadastrado, só fins de semana são descontados e o
      * relatório exibe a ressalva (hasOfficialCalendar=false). NUNCA se inventa

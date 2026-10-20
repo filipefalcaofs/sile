@@ -12,7 +12,7 @@ use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\URL;
 
 /**
- * Aviso de "exportação pronta" (HU-131). É uma Notification STANDALONE (canais
+ * Aviso de "exportação pronta" (HU-122). É uma Notification STANDALONE (canais
  * `database` + `mail`) — NÃO usa o NotificationDispatcher, que é process-bound
  * (exige um viabilityRequestId): uma exportação não é um processo. Surge na
  * central de notificações (canal database) e por e-mail, com o link de download

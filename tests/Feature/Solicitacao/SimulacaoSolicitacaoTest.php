@@ -19,7 +19,7 @@ use Tests\Support\SeedsTratamentoPlanilha;
 use Tests\TestCase;
 
 /**
- * Simulação pré-protocolo (HU-141): o SimulacaoSolicitacaoService itera os CNAEs
+ * Simulação pré-protocolo (HU-131): o SimulacaoSolicitacaoService itera os CNAEs
  * da solicitação e chama o ConsultaViabilidadeService (Fase 7) PELO PONTO da
  * própria solicitação (centroide do polígono — sem geocodificar de novo),
  * PROPAGANDO o veredito do motor LOUOS (sem decisão paralela, RN-001). Persiste

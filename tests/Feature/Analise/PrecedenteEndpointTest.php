@@ -12,7 +12,7 @@ use Tests\Support\Analise\FakePrecedentRepository;
 use Tests\TestCase;
 
 /**
- * Endpoint de precedentes da ficha (HU-142): o painel de apoio à decisão consome
+ * Endpoint de precedentes da ficha (HU-132): o painel de apoio à decisão consome
  * o PrecedentService (10-06) — decisões anteriores no mesmo imóvel (sem CPF, LGPD
  * RN-004) e estatística do CNAE na zona (degradação honesta sem zona). Gated por
  * analisar-processos (403 auditado) e a consulta é auditada (RN-002).

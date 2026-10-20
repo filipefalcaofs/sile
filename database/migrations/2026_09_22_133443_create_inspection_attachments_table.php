@@ -8,7 +8,7 @@ return new class extends Migration
 {
     /**
      * Anexos da ficha de vistoria (fotos/documentos de campo). Espelha o
-     * padrão dos anexos da solicitação (HU-066): disk da época (parametrizado,
+     * padrão dos anexos da solicitação (HU-064): disk da época (parametrizado,
      * nunca público), path, sha256 e metadados; acesso por streaming
      * autenticado (LGPD).
      */

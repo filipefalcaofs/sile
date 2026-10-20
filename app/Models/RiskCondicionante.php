@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /**
  * Condicionante de risco operacionalizada como PERGUNTA ao requerente: a
  * resposta reclassifica o risco (mecanismo "DI" do decreto/VISA;
- * HU-019/HU-048, RN-004/005/008). Ligada a uma versão de regra
+ * HU-018/HU-046, RN-004/005/008). Ligada a uma versão de regra
  * (rule_version_id) — dado versionado, nunca código.
  *
  * O contrato de `regra_reclassificacao` (jsonb, cast 'array') é:

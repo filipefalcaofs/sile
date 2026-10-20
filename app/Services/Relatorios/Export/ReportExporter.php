@@ -10,7 +10,7 @@ use InvalidArgumentException;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Orquestrador do contrato único de exportação (HU-131 — coração da fase). Recebe
+ * Orquestrador do contrato único de exportação (HU-122 — coração da fase). Recebe
  * um {@see ReportSource} + {@see ReportFilters} + formato e decide o caminho:
  *
  * - Abaixo do limiar (relatorios.export.assincrono_limiar_linhas): exporta
@@ -31,7 +31,7 @@ class ReportExporter
     /**
      * Formatos com driver disponível. CSV/PDF nascem em 15-02; XLSX (openspout,
      * streaming de baixa memória) entra em 15-08 — os três formatos do contrato
-     * único (HU-131) ficam habilitados.
+     * único (HU-122) ficam habilitados.
      *
      * @var list<string>
      */

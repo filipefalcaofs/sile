@@ -15,7 +15,7 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Detectores determinísticos de abuso (HU-149) sobre dado REAL — SEM IA. Cada
+ * Detectores determinísticos de abuso (HU-138) sobre dado REAL — SEM IA. Cada
  * detector é uma Strategy (key + detect(Janela)) que varre solicitações reais na
  * janela parametrizável e emite um AbuseFinding SÓ acima do limiar, com
  * fingerprint ESTÁVEL (idempotência da 12-03) e evidence determinística. A janela
@@ -129,7 +129,7 @@ class AbuseDetectorsTest extends TestCase
     public function test_volume_contador_emite_finding_acima_do_limiar_por_criador(): void
     {
         // Limite reduzido a 3 (efeito sem deploy): 4 solicitações criadas pelo MESMO
-        // ator (created_by — o "contador"/representante, HU-150) > 3 → alerta.
+        // ator (created_by — o "contador"/representante, HU-139) > 3 → alerta.
         $this->definirLimite('abuso.volume_contador.limite', 3);
 
         $contador = User::factory()->create();

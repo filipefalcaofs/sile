@@ -14,7 +14,7 @@ interface ResultadoBusca {
 }
 
 /**
- * Busca global da retaguarda (HU-082 RN-009): atalho Cmd/Ctrl+K e gatilho
+ * Busca global da retaguarda (HU-078 RN-009): atalho Cmd/Ctrl+K e gatilho
  * no cabeçalho. Destinos rápidos vêm de `destinosComando()` (mesmo
  * catálogo da sidebar). A busca de processos exige `consultar-solicitacoes`.
  */

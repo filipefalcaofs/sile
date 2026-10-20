@@ -47,10 +47,10 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Ficha de análise (HU-135) — superfície da análise humana na retaguarda. Abre a
+ * Ficha de análise (HU-126) — superfície da análise humana na retaguarda. Abre a
  * revisão vigente (pré-analisada em 10-08), faz o autosave do rascunho (RN-008),
  * finaliza tornando a revisão imutável (RN-003) e materializando as divergências
- * (HU-140), cria uma nova revisão para reedição/recálculo e compara duas revisões
+ * (HU-130), cria uma nova revisão para reedição/recálculo e compara duas revisões
  * (diff — RN-007). Toda a superfície é gated por analisar-processos (403 auditado
  * no ponto único) e auditada (RN-002). A decisão (deferir/indeferir) NÃO está aqui
  * — é 10-10, a partir da ficha finalizada. A página é construída em 10-17.
@@ -73,7 +73,7 @@ class AnalysisRecordController extends Controller
 
     /**
      * Abre a ficha na revisão vigente, com a biblioteca de textos-padrão ativos
-     * para o picker do parecer (HU-085 RN-004) e o debounce do autosave (config).
+     * para o picker do parecer (HU-081 RN-004) e o debounce do autosave (config).
      */
     public function show(Request $request, ViabilityRequest $viabilityRequest): Response
     {
@@ -150,7 +150,7 @@ class AnalysisRecordController extends Controller
             // A ficha de vistoria só é oferecida a quem pode consultá-la (VistoriaAcesso).
             'podeConsultarVistoria' => $request->user() !== null && app(VistoriaAcesso::class)->podeConsultar($viabilityRequest, $request->user()),
             'podeEncaminharChefia' => $this->podeEncaminharChefia($viabilityRequest, $request->user()),
-            // Sugestões de IA (HU-115 alertas + HU-117 resumo do processo) — prop
+            // Sugestões de IA (HU-107 alertas + HU-109 resumo do processo) — prop
             // DEFERIDA (carregada sob demanda pelo card, fora do load inicial).
             // Ao resolver, gera o resumo no mesmo request (gated; já existente ⇒
             // no-op) e então LÊ o ledger. APENAS LEITURA do AnalysisRecord
@@ -250,7 +250,7 @@ class AnalysisRecordController extends Controller
 
     /**
      * Finaliza a revisão vigente (RN-003): torna-a imutável e grava as divergências
-     * analista×motor (HU-140). Finalizar uma revisão já finalizada recusa com 422.
+     * analista×motor (HU-130). Finalizar uma revisão já finalizada recusa com 422.
      */
     public function finalizar(Request $request, ViabilityRequest $viabilityRequest): JsonResponse
     {
@@ -324,7 +324,7 @@ class AnalysisRecordController extends Controller
     }
 
     /**
-     * Solicita à IA uma SUGESTÃO de minuta de parecer (HU-118) — Failure Mode #1:
+     * Solicita à IA uma SUGESTÃO de minuta de parecer (HU-110) — Failure Mode #1:
      * apoio, NUNCA decisão. Delega ao SugestaoParecerService, que degrada
      * honestamente sem o toggle features.ia_parecer, sem provedor de texto ou sem
      * a pré-análise do motor (engine_snapshot). A minuta nasce no ledger
@@ -419,7 +419,7 @@ class AnalysisRecordController extends Controller
     }
 
     /**
-     * Solicita o resumo do processo (HU-117) de forma explícita — o card da
+     * Solicita o resumo do processo (HU-109) de forma explícita — o card da
      * ficha também dispara ao entrar em tela; este endpoint serve o botão
      * "Gerar resumo" e a retentativa quando a fila ainda não devolveu.
      */
@@ -486,7 +486,7 @@ class AnalysisRecordController extends Controller
     }
 
     /**
-     * Localização REAL do imóvel para o mini-mapa permanente da ficha (HU-142):
+     * Localização REAL do imóvel para o mini-mapa permanente da ficha (HU-132):
      * o polígono cadastrado (GeoJSON, fonte única `property_polygon_geojson`) e o
      * endereço formatado. Honesto por construção — devolve `null` em cada campo
      * sem dado, nunca coordenada inventada. Bairro vem da inscrição (Cadastro
@@ -720,7 +720,7 @@ class AnalysisRecordController extends Controller
     }
 
     /**
-     * Valor TLL do exercício vigente para o código (HU-071) — null quando o
+     * Valor TLL do exercício vigente para o código (HU-145) — null quando o
      * exercício não tem tabela publicada ou o código não tem valor ativo.
      */
     private function valorTllVigente(?string $codigoTll, ?string $especificacao, int $exercicio, bool $exercicioVigente): ?string
@@ -909,7 +909,7 @@ class AnalysisRecordController extends Controller
     }
 
     /**
-     * Sugestões de IA do processo (HU-115) para o card "Alertas de IA" — APENAS
+     * Sugestões de IA do processo (HU-107) para o card "Alertas de IA" — APENAS
      * LEITURA do ledger ai_suggestions, mais recentes primeiro. Cada item carrega
      * o tipo/estado rotulados e a saída estruturada (no caso de inconsistências:
      * campo/declarado/documento/severidade/fonte). Não decide nada: a ficha trata
@@ -940,7 +940,7 @@ class AnalysisRecordController extends Controller
     }
 
     /**
-     * Trechos pré-aprovados ativos da biblioteca de textos-padrão (HU-085) para o
+     * Trechos pré-aprovados ativos da biblioteca de textos-padrão (HU-081) para o
      * picker do parecer — leitura gated por analisar-processos (a rota já gate).
      *
      * @return list<array<string, mixed>>

@@ -8,7 +8,7 @@ use Illuminate\Database\Seeder;
 
 /**
  * Catálogo dos gatilhos de risco conhecidos (categoria semi-expresso) — os 3
- * do CONTEXT da Fase 6 (HU-049/HU-051). Upsert por `codigo` APENAS dos
+ * do CONTEXT da Fase 6 (HU-047/HU-049). Upsert por `codigo` APENAS dos
  * metadados (titulo/motivo/categoria): `ativo` NUNCA entra no array de update,
  * espelhando o ParameterSeeder/RolesAndPermissionsSeeder — re-seed em deploy
  * preserva o liga/desliga administrado (HU-014). Na criação, `ativo` usa o

@@ -10,7 +10,7 @@ use Laravel\Ai\Promptable;
 use Stringable;
 
 /**
- * Agente de SUGESTÃO DE MINUTA DE PARECER (HU-118) — Failure Mode #1 do AI-SPEC.
+ * Agente de SUGESTÃO DE MINUTA DE PARECER (HU-110) — Failure Mode #1 do AI-SPEC.
  * Redige uma minuta de APOIO ao analista a partir da pré-análise REAL do motor
  * (engine_snapshot/per_cnae/versões da LOUOS), apresentada SEMPRE como sugestão
  * revisável. NÃO decide o desfecho, NÃO conclui pela viabilidade e NUNCA inventa

@@ -7,7 +7,7 @@ use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
- * Consulta de viabilidade por CNAE (HU-056). Rota pública (cidadão anônimo):
+ * Consulta de viabilidade por CNAE (HU-054). Rota pública (cidadão anônimo):
  * authorize true. Roda o risco real e o enquadramento da planilha por área, SEM território — o
  * `cnae` é exigido (formato livre normalizado para dígitos pelo serviço) e a
  * `area` (m²) alimenta o ramo vigente.

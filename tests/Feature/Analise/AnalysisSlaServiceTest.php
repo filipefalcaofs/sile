@@ -12,9 +12,9 @@ use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 /**
- * Fundação do SLA da fila de análise (HU-144): o AnalysisSlaService materializa
+ * Fundação do SLA da fila de análise (HU-134): o AnalysisSlaService materializa
  * o prazo-limite ABSOLUTO por etapa (analysis_due_at) REUSANDO o
- * BusinessDeadlineCalculator (Fase 9 — o seam de HU-137/feriados troca SÓ lá) e
+ * BusinessDeadlineCalculator (Fase 9 — o seam de HU-128/feriados troca SÓ lá) e
  * os parâmetros administráveis analise.sla.<etapa>_dias, com DEFAULT INLINE
  * (sem depender do seeder 10-01). O semáforo (verde/amarelo/vermelho) e o tempo
  * restante são calculados ON-THE-FLY — nada de cor persistida.

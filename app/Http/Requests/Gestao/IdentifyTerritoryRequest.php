@@ -5,7 +5,7 @@ namespace App\Http\Requests\Gestao;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
- * Identificação territorial por ponto (HU-030/HU-036). PADRÃO CROSS-GUARD do
+ * Identificação territorial por ponto (HU-029/HU-035). PADRÃO CROSS-GUARD do
  * território (04-03): o gate é o middleware permission:consultar-territorio da
  * rota — a permissão vive no guard web (User::$guard_name fixo) e é resolvida
  * de forma guard-agnóstica mesmo com o usuário no guard gestao. NÃO usar

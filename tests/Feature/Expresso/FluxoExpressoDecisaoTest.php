@@ -28,7 +28,7 @@ use Tests\Support\SeedsTratamentoPlanilha;
 use Tests\TestCase;
 
 /**
- * Decisão automática do fluxo expresso (HU-074/075/076, RN-009): com a zona
+ * Decisão automática do fluxo expresso (HU-070/071/072, RN-009): com a zona
  * oficial disponível e todos os CNAEs encaminhados ao expresso, o
  * FluxoExpressoService DEFERE (todos permitido/permitido_com_condicoes) gerando
  * o número TVL, ou INDEFERE (algum nao_permitido) sem TVL — sempre criando a
@@ -141,7 +141,7 @@ class FluxoExpressoDecisaoTest extends TestCase
 
     public function test_todos_permitido_defere_com_tvl_e_dispara_evento(): void
     {
-        // HU-074 / RN-009: CNAE expresso permitido na zona → DEFERE. Cria a
+        // HU-070 / RN-009: CNAE expresso permitido na zona → DEFERE. Cria a
         // ViabilityDecision (outcome deferida) com número TVL, transiciona para
         // deferida e dispara ResultadoEmitido após o commit.
         Event::fake([ResultadoEmitido::class]);
@@ -188,7 +188,7 @@ class FluxoExpressoDecisaoTest extends TestCase
 
     public function test_um_cnae_nao_permitido_indefere_sem_tvl(): void
     {
-        // HU-075 / RN-009: dois CNAEs expressos, um proibido na zona → o pior
+        // HU-071 / RN-009: dois CNAEs expressos, um proibido na zona → o pior
         // caso governa: INDEFERE o processo inteiro, sem número TVL.
         Event::fake([ResultadoEmitido::class]);
         $this->fakeBairroComZona('ZR-1');
@@ -417,7 +417,7 @@ class FluxoExpressoDecisaoTest extends TestCase
 
     public function test_permitido_com_condicoes_defere(): void
     {
-        // HU-074 / RN-006/009: permitido condicionado na zona → permitido_com_
+        // HU-070 / RN-006/009: permitido condicionado na zona → permitido_com_
         // condicoes → DEFERE (com condicionantes na fundamentação), com TVL.
         Event::fake([ResultadoEmitido::class]);
         $this->fakeBairroComZona('ZR-1');

@@ -9,7 +9,7 @@ use App\Support\Settings;
 use Illuminate\Support\Carbon;
 
 /**
- * Monta o painel de precedentes da ficha de análise (HU-142): decisões
+ * Monta o painel de precedentes da ficha de análise (HU-132): decisões
  * anteriores no mesmo imóvel (CA-01) e estatística do CNAE na zona (CA-02),
  * aplicando os parâmetros administráveis (RN-003), minimizando dados pessoais
  * (LGPD, RN-004) e degradando honesto quando não há zona ou histórico (CA-03).

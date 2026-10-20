@@ -11,7 +11,7 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Autorização da solicitação de viabilidade (HU-061 CA-04) integrada à
+ * Autorização da solicitação de viabilidade (HU-059 CA-04) integrada à
  * representação "em nome de" (Fase 1, [01-07]): só o dono/representado opera a
  * própria solicitação; edição/protocolo só em rascunho; cancelamento enquanto
  * não decidido. Espelha o padrão da CompanyPolicy ([03-04]).

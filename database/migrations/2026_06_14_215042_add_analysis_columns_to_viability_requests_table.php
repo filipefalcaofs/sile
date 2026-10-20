@@ -10,15 +10,15 @@ return new class extends Migration
      * Colunas da análise técnica (EP10) em viability_requests — migration ADITIVA
      * (só adiciona, não toca nas existentes; alterar coluna exigiria repetir
      * todos os atributos). Ficam FORA do fillable do model (como protocoled_at/
-     * bap_*): são escritas por serviços dedicados (distribuição HU-080/081, SLA
-     * HU-144), nunca pelo cidadão.
+     * bap_*): são escritas por serviços dedicados (distribuição HU-076/077, SLA
+     * HU-134), nunca pelo cidadão.
      *
      * - sector_id/assigned_user_id: a caixa e o analista responsável (índices p/
-     *   a fila e a consulta HU-082). assigned_at = quando assumiu.
+     *   a fila e a consulta HU-078). assigned_at = quando assumiu.
      * - analysis_category (expresso/semi_expresso): categoria de consulta (índice).
-     * - in_fine_mesh: flag de malha fina ORTOGONAL ao status (HU-136 — índice).
+     * - in_fine_mesh: flag de malha fina ORTOGONAL ao status (HU-127 — índice).
      * - analysis_stage/_started_at: etapa atual do SLA (distribuicao/analise).
-     * - analysis_due_at: vencimento do SLA (índice — base da fila ordenada HU-144).
+     * - analysis_due_at: vencimento do SLA (índice — base da fila ordenada HU-134).
      */
     public function up(): void
     {

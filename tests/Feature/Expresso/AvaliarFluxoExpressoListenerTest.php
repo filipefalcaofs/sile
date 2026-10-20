@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Bus;
 use Tests\TestCase;
 
 /**
- * Gatilho do fluxo expresso (HU-073/074/075): o listener AUTO-DESCOBERTO
+ * Gatilho do fluxo expresso (HU-069/070/071): o listener AUTO-DESCOBERTO
  * AvaliarFluxoExpresso pendura no PRIMEIRO evento de domínio (SolicitacaoProtocolada,
  * Fase 8) e apenas DESPACHA o DecidirFluxoExpressoJob — não decide inline, para
  * manter o protocolo rápido e ganhar a resiliência da fila.
@@ -49,7 +49,7 @@ class AvaliarFluxoExpressoListenerTest extends TestCase
 
     public function test_protocolo_despacha_exatamente_um_job_de_decisao_com_o_id(): void
     {
-        // HU-073/074/075: protocolar uma solicitação aciona a decisão. O listener
+        // HU-069/070/071: protocolar uma solicitação aciona a decisão. O listener
         // auto-descoberto despacha 1 (e só 1) DecidirFluxoExpressoJob carregando o
         // id da solicitação — a CONTAGEM trava a não-duplicação (auto-descoberta vs
         // Event::listen).

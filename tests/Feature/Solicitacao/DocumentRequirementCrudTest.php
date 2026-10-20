@@ -13,7 +13,7 @@ use Tests\TestCase;
 
 /**
  * CRUD administrável dos requisitos documentais (modelo "Requisito" do SIGVISA
- * — HU-067) e do vínculo N:N com CNAEs: a obrigatoriedade documental por CNAE é
+ * — HU-065) e do vínculo N:N com CNAEs: a obrigatoriedade documental por CNAE é
  * DADO administrável (HU-014), não código. Tudo atrás da permissão
  * manter-requisitos-documentais (CA-04), com auditoria (RN-002) e desativação
  * que preserva histórico. A tabela por-CNAE nasce vazia (carga oficial pendente

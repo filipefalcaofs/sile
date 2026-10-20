@@ -10,7 +10,7 @@ class UpdateCompanyRequest extends FormRequest
 {
     /**
      * A autorização efetiva é a policy update no controller (Gate::authorize),
-     * que exige vínculo ATIVO do usuário efetivo (HU-024 CA-04).
+     * que exige vínculo ATIVO do usuário efetivo (HU-023 CA-04).
      */
     public function authorize(): bool
     {
@@ -19,7 +19,7 @@ class UpdateCompanyRequest extends FormRequest
 
     /**
      * Normaliza telefone e CEP para só dígitos, espelhando o StoreCompanyRequest.
-     * O CNPJ NÃO é normalizado nem validado: é imutável (HU-024), então o valor
+     * O CNPJ NÃO é normalizado nem validado: é imutável (HU-023), então o valor
      * enviado simplesmente não entra em validated() (padrão CPF [01-08]).
      */
     protected function prepareForValidation(): void

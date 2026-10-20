@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Pivot CNAEs da empresa (HU-025/HU-026). cnae_id com restrictOnDelete:
+     * Pivot CNAEs da empresa (HU-024/HU-025). cnae_id com restrictOnDelete:
      * o banco impede excluir um CNAE vinculado a empresas (defesa da pendência
      * herdada da Fase 2). A invariante "exatamente um principal por empresa"
      * é garantida NA APLICAÇÃO pelo CompanyCnaeService em transação (precedente

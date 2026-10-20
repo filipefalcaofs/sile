@@ -9,7 +9,7 @@ use SplFileObject;
 
 /**
  * Importação do Quadro 11A da LOUOS (condições de instalação pela via —
- * HU-017/HU-018/HU-040/HU-041) a partir de um CSV versionado em
+ * HU-017/HU-039) a partir de um CSV versionado em
  * database/data/louos/. O "Quadro 11" não existe na publicação oficial da
  * SEDUR — apenas 11A e 11B. Formato esperado: classe_via,grupo_uso,condicoes,
  * base_legal; o campo `condicoes` é uma lista de itens separados por ';',

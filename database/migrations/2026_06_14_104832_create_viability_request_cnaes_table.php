@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * CNAEs da solicitação (HU-064/065), espelhando company_cnae: is_primary
+     * CNAEs da solicitação (HU-062/063), espelhando company_cnae: is_primary
      * marca a atividade principal; o limite de 99 complementares é validado na
      * aplicação. unique(request, cnae) impede duplicidade; restrictOnDelete no
      * CNAE protege a integridade (CNAE vinculado não some sob a solicitação).

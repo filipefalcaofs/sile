@@ -8,7 +8,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 /**
- * Validação do CRUD de setores (HU-138). Serve store e update: no update o
+ * Validação do CRUD de setores (HU-129). Serve store e update: no update o
  * unique do nome ignora o próprio registro (reenviar o mesmo nome é válido).
  */
 class SectorRequest extends FormRequest

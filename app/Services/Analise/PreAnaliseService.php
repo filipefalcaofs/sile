@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\DB;
 use Throwable;
 
 /**
- * Pré-análise pelo motor (HU-140) — a maior alavanca de produtividade do projeto:
+ * Pré-análise pelo motor (HU-130) — a maior alavanca de produtividade do projeto:
  * ao encaminhar um processo à análise humana, REEXECUTA o
  * SolicitacaoViabilityResolver FRESCO (o MESMO motor real da Fase 9 — sem lógica
  * de decisão paralela, RN-001) e cria a `analysis_records` revisão 1 (rascunho)
@@ -24,12 +24,12 @@ use Throwable;
  * `por_cnae[i].consulta.territorio.zona`, conforme o PrecedentService lê),
  * `engine_rules_versions` e `per_cnae` com a tendência por CNAE. A sugestão do
  * motor (status_sugerido) fica GRAVADA só para a divergência auditada
- * (HU-140 RN-002) — nunca é exposta na ficha nem pré-marca a decisão:
+ * (HU-130 RN-002) — nunca é exposta na ficha nem pré-marca a decisão:
  * `status_escolhido` nasce null e o parecer nasce em branco (relatório SEDUR
  * 21/09/2026, itens 02 e 04 — a decisão e o parecer são do analista).
  * Condicionantes, vagas e justificativa fundamentada por atividade seguem
  * pré-preenchidas. Mesmo quando o processo NÃO é expresso, a ficha chega
- * completa para confirmar ou alterar — não para preencher do zero (HU-140 CA-01).
+ * completa para confirmar ou alterar — não para preencher do zero (HU-130 CA-01).
  *
  * Idempotente (RN-004): se a revisão 1 já existe, é no-op (retorna a existente) —
  * reabrir/reprocessar não reexecuta; recalcular é ação explícita (nova revisão,
@@ -315,7 +315,7 @@ class PreAnaliseService
     }
 
     /**
-     * Condicionantes do motor já marcadas na ficha (HU-140 CA-01).
+     * Condicionantes do motor já marcadas na ficha (HU-130 CA-01).
      *
      * @return list<string>
      */
@@ -333,7 +333,7 @@ class PreAnaliseService
     }
 
     /**
-     * Vagas calculadas pelo motor (HU-042) — o analista confirma ou altera.
+     * Vagas calculadas pelo motor (HU-040) — o analista confirma ou altera.
      *
      * @return array{vagas_requeridas: int|null, vagas_exigidas: int|null, vistoria: bool}|array{}
      */

@@ -176,7 +176,7 @@ function quadradoAoRedor(lat: number, lng: number, delta = 0.0003): PoligonoGeoJ
 }
 
 /**
- * Registro de solicitação em CONTINGÊNCIA no console SEDUR (HU-148). O operador
+ * Registro de solicitação em CONTINGÊNCIA no console SEDUR (HU-137). O operador
  * autorizado preenche o MESMO conjunto de dados do formulário oficial; o sistema
  * protocola pelo MESMO motor do canal normal — muda só a origem (`contingencia`,
  * auditada) e o ator. O processo nasce com origem "contingência" (aviso visível).

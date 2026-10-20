@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
- * Anexos da solicitação (HU-066). Upload via Storage com disk PARAMETRIZADO
+ * Anexos da solicitação (HU-064). Upload via Storage com disk PARAMETRIZADO
  * (storage.documentos.disk — NUNCA público), gravando disk/path/sha256 REAL e
  * metadados; download por STREAMING só do dono autenticado (LGPD — nunca URL
  * pública); substituição/remoção só enquanto a solicitação é rascunho. Tudo

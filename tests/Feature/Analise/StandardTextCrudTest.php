@@ -9,7 +9,7 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
- * CRUD da biblioteca de textos-padrão do parecer (HU-085): o administrador
+ * CRUD da biblioteca de textos-padrão do parecer (HU-081): o administrador
  * mantém os trechos pré-aprovados (criar/editar por categoria, ativar/inativar)
  * pela retaguarda, atrás da permissão manter-parametros (decisão registrada:
  * reuso da permissão de admin de configuração — sem 6ª permissão; a leitura da
@@ -42,7 +42,7 @@ class StandardTextCrudTest extends TestCase
 
     public function test_lista_exige_permissao_manter_parametros(): void
     {
-        // Analista acessa a gestão mas NÃO tem manter-parametros (HU-085 CA-04).
+        // Analista acessa a gestão mas NÃO tem manter-parametros (HU-081 CA-04).
         $this->actingAs($this->analista(), 'gestao')
             ->get('/gestao/textos-padrao')
             ->assertForbidden();

@@ -10,7 +10,7 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Validação documental (HU-067): o resolver calcula os requisitos obrigatórios
+ * Validação documental (HU-065): o resolver calcula os requisitos obrigatórios
  * da solicitação como a UNIÃO dos document_requirements (required, ativos)
  * vinculados aos CNAEs da solicitação com os condicionais BASE — foto da
  * fachada SEMPRE; termo de concessão de uso SE a área é pública. missing() é a

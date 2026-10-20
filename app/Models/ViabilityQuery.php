@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Histórico imutável de consultas prévias de viabilidade (HU-060). Cada
+ * Histórico imutável de consultas prévias de viabilidade (HU-058). Cada
  * registro é um SNAPSHOT da consulta — entrada, resultado consolidado e versões
  * das regras da época — nunca editado. Não usa HasAuditoria: o snapshot já É o
  * registro auditável. user_id nullable (consulta anônima não grava histórico

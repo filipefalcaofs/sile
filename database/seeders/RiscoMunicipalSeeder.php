@@ -10,7 +10,7 @@ use App\Support\Audit\AuditService;
 use Illuminate\Database\Seeder;
 
 /**
- * Carga oficial da classificação de risco MUNICIPAL (HU-020/HU-047): publica
+ * Carga oficial da classificação de risco MUNICIPAL (HU-019/HU-045): publica
  * uma versão vigente do domínio risco_municipal referenciando o Decreto nº
  * 41.758/2026 (decreto vigente declarado pela SEDUR — relatório 21/09/2026),
  * delega o import real ao service e registra o relatório (contadores +

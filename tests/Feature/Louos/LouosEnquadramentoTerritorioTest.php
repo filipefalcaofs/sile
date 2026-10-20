@@ -17,7 +17,7 @@ use Tests\Support\SeedsTratamentoPlanilha;
 use Tests\TestCase;
 
 /**
- * Motor de enquadramento da LOUOS (HU-039/HU-040/HU-041) — dimensões
+ * Motor de enquadramento da LOUOS (HU-038/HU-039) — dimensões
  * territoriais: Quadro 10 (permissão por zona) e Quadros 11/11A (condições pela
  * via). O motor RECEBE o território (TerritoryResult da Fase 4), não o consulta.
  *

@@ -16,7 +16,7 @@ use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 /**
- * Tempo POR ETAPA da timeline (HU-129) e os relatórios SAPS de tempo medidos em
+ * Tempo POR ETAPA da timeline (HU-120) e os relatórios SAPS de tempo medidos em
  * tempo ÚTIL — descontando fins de semana/feriados via
  * BusinessDeadlineCalculator::businessDurationBetween (15-04). É a correção da
  * distorção do legado, que reporta tempo de CALENDÁRIO e mistura etapas: aqui
@@ -103,7 +103,7 @@ class TempoAnaliseServiceTest extends TestCase
         $this->assertSame(2, $etapas['analise']['amostras']);
 
         // Pendência [Qua 17:00 → Seg 09:00]: 3840 min ÚTEIS (desconta sáb+dom),
-        // NÃO 6720 de calendário — a prova anti-distorção da HU-129.
+        // NÃO 6720 de calendário — a prova anti-distorção da HU-120.
         $this->assertSame(3840, $etapas['pendencia']['media_minutos']);
         $this->assertSame(1, $etapas['pendencia']['amostras']);
     }

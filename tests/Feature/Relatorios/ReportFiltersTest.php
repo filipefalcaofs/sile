@@ -8,7 +8,7 @@ use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 /**
- * Contrato de entrada da exportação (HU-131): o ReportFilters é um BAG
+ * Contrato de entrada da exportação (HU-122): o ReportFilters é um BAG
  * serializável que carrega o vocabulário COMPLETO de filtros das telas (não só
  * os campos do indicador). O round-trip toArray/fromArray é a garantia do
  * RN-005 no assíncrono — o GerarExportacaoJob reconstrói EXATAMENTE o conjunto

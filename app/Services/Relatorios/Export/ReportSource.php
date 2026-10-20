@@ -5,7 +5,7 @@ namespace App\Services\Relatorios\Export;
 use App\Services\Relatorios\ReportFilters;
 
 /**
- * Fonte de um relatório (HU-131): constrói a {@see ReportDefinition} a partir de
+ * Fonte de um relatório (HU-122): constrói a {@see ReportDefinition} a partir de
  * um {@see ReportFilters}. Qualquer tela ganha export CSV/XLSX/PDF do conjunto
  * filtrado apenas adicionando um ReportSource + branch `?formato=` no controller,
  * sem reimplementar a exportação (RN-009).

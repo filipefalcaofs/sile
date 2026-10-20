@@ -12,7 +12,7 @@ use PHPUnit\Framework\Attributes\Group;
 use Tests\PostgisTestCase;
 
 /**
- * Carga de GeoJSON oficial em geo_features (HU-036) provada contra PostGIS
+ * Carga de GeoJSON oficial em geo_features (HU-035) provada contra PostGIS
  * real com dado de amostra REAL do GeoSalvador (3 bairros): geometria válida,
  * idempotência por (type, version), preservação de versões anteriores e diff
  * auditado.

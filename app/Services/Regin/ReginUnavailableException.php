@@ -5,7 +5,7 @@ namespace App\Services\Regin;
 use RuntimeException;
 
 /**
- * Indisponibilidade do integrador Regin/Junta Comercial (HU-104): o contrato e a
+ * Indisponibilidade do integrador Regin/Junta Comercial (HU-100): o contrato e a
  * homologação estão PENDENTES (Fase 13). O provider real degrada honestamente —
  * NUNCA simula a transmissão do parecer. O listener que comunica o resultado
  * (09-08) captura esta exceção e AUDITA a pendência de integração, jamais um

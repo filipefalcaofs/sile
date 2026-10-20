@@ -6,7 +6,7 @@ use App\Services\Analise\PrecedentRepository;
 use DateTimeInterface;
 
 /**
- * Fake em memória do contrato dos precedentes (HU-142) — HELPER DE TESTE, não
+ * Fake em memória do contrato dos precedentes (HU-132) — HELPER DE TESTE, não
  * código de produção (igual ao Tests\Support\Geo\FakeSpatialRepository). Permite
  * registrar as respostas (`setPropertyPrecedents`/`setCnaeZoneStats`) para
  * unit-testar o PrecedentService (e, à frente, o endpoint 10-09 e o smoke 10-18)

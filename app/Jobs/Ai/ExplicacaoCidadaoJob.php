@@ -11,11 +11,11 @@ use Laravel\Ai\Contracts\Agent;
 use Laravel\Ai\Files\File;
 
 /**
- * Execução da explicação ao cidadão (HU-119). Subclasse fina do RunAiAgentJob:
+ * Execução da explicação ao cidadão (HU-111). Subclasse fina do RunAiAgentJob:
  * carrega só o ID e monta o input de TEXTO (capability 'text', sem anexos) a
  * partir da decisão REGISTRADA (ViabilityDecision): desfecho, resultado
  * consolidado, fundamentação legal e veredito por CNAE — a mesma fonte da
- * explicabilidade da HU-099, sem recomputar o motor. A saída TRADUZ a decisão
+ * explicabilidade da HU-095, sem recomputar o motor. A saída TRADUZ a decisão
  * para linguagem cidadã — nunca a contraria, nunca promete além do que a lei
  * garante (AI-SPEC Failure Mode #1). A camada de serviço já garante que só roda
  * quando há decisão; aqui o material é lido, nunca fabricado. Guardrails/
@@ -127,7 +127,7 @@ class ExplicacaoCidadaoJob extends RunAiAgentJob
      * Decisão registrada minimizada reutilizada pelo inputRef (idempotência) e
      * pelo promptText (entrada ao provedor). Lê o que a ViabilityDecision gravou
      * (desfecho, resultado consolidado, fundamentação e veredito por CNAE) — a
-     * fonte da explicabilidade da HU-099, jamais recomputada nem inventada.
+     * fonte da explicabilidade da HU-095, jamais recomputada nem inventada.
      *
      * @return array{desfecho: string, resultado: string|null, fundamentacao: list<string>, cnaes: list<array{codigo: string, tendencia: string|null, fundamentacao: list<string>}>}
      */

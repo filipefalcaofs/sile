@@ -5,8 +5,8 @@ namespace App\Services\Expresso;
 use DateTimeInterface;
 
 /**
- * Contrato da fonte de feriados (HU-137), consumido pelo BusinessDeadlineCalculator
- * para descontar dias não-úteis na duração em tempo útil (HU-129). Atrás de
+ * Contrato da fonte de feriados (HU-128), consumido pelo BusinessDeadlineCalculator
+ * para descontar dias não-úteis na duração em tempo útil (HU-120). Atrás de
  * interface para centralizar o seam: hoje a fonte é o banco (DatabaseHolidayProvider,
  * cacheado); a regra/origem pode trocar sem tocar o calculator nem seus call sites.
  *

@@ -17,7 +17,7 @@ use InvalidArgumentException;
 use Tests\TestCase;
 
 /**
- * Indeferimento por prazo BAP (HU-134) — o motor REAL da rotina dormente: uma
+ * Indeferimento por prazo BAP (HU-125) — o motor REAL da rotina dormente: uma
  * solicitação parada em aguardando_bap além do prazo é indeferida de verdade
  * (decisão imutável + transição + auditoria + evento), reusando o caminho de
  * emissão do fluxo expresso. NÃO vai à SEFAZ (RN-003) — só comunica ao Regin
@@ -75,7 +75,7 @@ class IndeferirSemBapTest extends TestCase
         $calculator = new BusinessDeadlineCalculator;
         $from = Carbon::parse('2026-06-14 10:00:00');
 
-        // Seam HU-137: hoje horas-calendário (addHours); dias úteis depois.
+        // Seam HU-128: hoje horas-calendário (addHours); dias úteis depois.
         $this->assertSame(
             $from->copy()->addHours(48)->toIso8601String(),
             $calculator->dueAt($from, 48)->toIso8601String(),

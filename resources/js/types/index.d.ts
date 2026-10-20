@@ -9,7 +9,7 @@ export interface SharedProps extends PageProps {
     };
     actingFor: { id: number; name: string } | null;
     attendingFor: { id: number; name: string } | null;
-    /** Badge do sininho (HU-090): contagem real de não-lidas do usuário autenticado. */
+    /** Badge do sininho (HU-086): contagem real de não-lidas do usuário autenticado. */
     notificacoes: { nao_lidas: number };
     flash: {
         status?: string;

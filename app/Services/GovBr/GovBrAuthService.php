@@ -13,7 +13,7 @@ use Illuminate\Support\Str;
 use Laravel\Socialite\Two\User as SocialiteUser;
 
 /**
- * Resolve o usuário local a partir da conta GOV.BR autenticada (HU-151).
+ * Resolve o usuário local a partir da conta GOV.BR autenticada (HU-140).
  *
  * Identidade exclusivamente pelo CPF (`sub` do id_token — RN-003): CPF
  * encontrado vincula e autentica; CPF inexistente cria conta real de cidadão.

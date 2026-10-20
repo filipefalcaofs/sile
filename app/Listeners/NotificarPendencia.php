@@ -8,9 +8,9 @@ use App\Services\Comunicacao\NotificationDispatcher;
 use App\Support\Audit\AuditService;
 
 /**
- * Efeito colateral DESACOPLADO do PendenciaSolicitada (HU-090): notifica o
+ * Efeito colateral DESACOPLADO do PendenciaSolicitada (HU-086): notifica o
  * requerente, de forma MULTICANAL, de que a análise técnica abriu uma pendência
- * — e-mail + in-app + histórico (HU-096), pelo NotificationDispatcher (11-04).
+ * — e-mail + in-app + histórico (HU-092), pelo NotificationDispatcher (11-04).
  *
  * Generaliza o e-mail direto da Fase 10: o PendenciaService::abrir NÃO notifica
  * mais (anti-duplicação) — este listener é o ÚNICO ponto de aviso. Registro

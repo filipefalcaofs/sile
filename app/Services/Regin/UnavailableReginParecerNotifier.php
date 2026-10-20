@@ -7,7 +7,7 @@ use App\Models\ViabilityRequest;
 
 /**
  * Provider INDISPONÍVEL do parecer Regin/Junta: o contrato e a homologação do
- * integrador estão PENDENTES (Fase 13, HU-104). Sem canal oficial, NUNCA
+ * integrador estão PENDENTES (Fase 13, HU-100). Sem canal oficial, NUNCA
  * fingimos que o parecer foi transmitido — degradação honesta, jamais adaptador
  * falso. Quem chama (listener 09-08) captura a exceção e audita a pendência de
  * integração (nunca registra sucesso fictício). A Fase 13 troca SÓ este binding.

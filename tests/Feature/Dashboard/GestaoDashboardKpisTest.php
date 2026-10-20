@@ -9,7 +9,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 /**
- * Home da gestão (HU-122): só `kpis.operacao`, gated por consultar-relatorios.
+ * Home da gestão (HU-113): só `kpis.operacao`, gated por consultar-relatorios.
  * Contagens de cadastro (CNAEs, usuários, perfis, acessos) saíram da home.
  */
 class GestaoDashboardKpisTest extends TestCase

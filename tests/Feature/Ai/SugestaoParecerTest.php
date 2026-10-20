@@ -21,7 +21,7 @@ use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
 /**
- * HU-118 (sugerir minuta de parecer) — Failure Mode #1 do AI-SPEC: a IA é APOIO,
+ * HU-110 (sugerir minuta de parecer) — Failure Mode #1 do AI-SPEC: a IA é APOIO,
  * NUNCA decisão. A minuta nasce sempre como SUGESTÃO revisável; a fundamentação
  * vem do motor REAL (engine_snapshot/LOUOS), nunca de artigo/quadro inventado.
  * Prova: minuta fundamentada no motor vira sugestão e a função NÃO grava parecer

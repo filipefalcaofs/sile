@@ -74,7 +74,7 @@ function CnaeLine({ cnae, action }: { cnae: CnaeOption; action?: React.ReactNode
 }
 
 /**
- * Etapa de atividades (HU-064/065): define o CNAE principal e os complementares
+ * Etapa de atividades (HU-062/063): define o CNAE principal e os complementares
  * (até o limite parametrizável) reusando o picker da Fase 3 (só CNAEs ativos da
  * tabela oficial). Envia ao PUT solicitacoes.atividades (08-07), que grava o
  * pivot e invalida a simulação anterior (RN-005).

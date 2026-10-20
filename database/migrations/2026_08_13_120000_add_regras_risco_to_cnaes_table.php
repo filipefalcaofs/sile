@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Flags de regra por CNAE (HU-047 RN-010, tela única): mesmas colunas do
+     * Flags de regra por CNAE (HU-045 RN-010, tela única): mesmas colunas do
      * projeto de referência (sls-sms) — exigência de responsável técnico
      * (sempre ou só em alto risco) e fator multiplicador (com ou sem
      * detalhamento). Ficam direto em `cnaes` porque não são dado versionado

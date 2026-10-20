@@ -110,7 +110,7 @@ abstract class RunAiAgentJob implements ShouldQueue
         $cost = $costs->estimate($model, $promptTokens, $completionTokens);
 
         // 6. Guardrails (AI-SPEC §6): fonte obrigatória + limiar de confiança +
-        //    escalonamento específico da função (ex.: ilegibilidade na HU-114).
+        //    escalonamento específico da função (ex.: ilegibilidade na HU-106).
         $confidence = is_string($output['confianca'] ?? null) ? $output['confianca'] : null;
         $status = $this->shouldEscalate($output)
             ? AiSuggestionStatus::EscaladaHumano
@@ -169,7 +169,7 @@ abstract class RunAiAgentJob implements ShouldQueue
     /**
      * Hook de escalonamento específico da função: além de fonte/confiança, a
      * subclasse pode forçar a revisão humana a partir da própria saída
-     * estruturada (ex.: HU-114 — documento ilegível). Padrão: nada a acrescentar.
+     * estruturada (ex.: HU-106 — documento ilegível). Padrão: nada a acrescentar.
      *
      * @param  array<string, mixed>  $output
      */
@@ -182,7 +182,7 @@ abstract class RunAiAgentJob implements ShouldQueue
      * Nome do TOGGLE da função no portão (HU-014). Por padrão coincide com a
      * function(); uma subclasse pode sobrescrever para COMPARTILHAR um toggle
      * entre funções afins sem perder a identidade de auditoria/dedup — ex.: o
-     * resumo da solicitação (HU-116) e o do processo (HU-117) vivem ambos sob
+     * resumo da solicitação (HU-108) e o do processo (HU-109) vivem ambos sob
      * features.ia_resumo, enquanto function()/event de auditoria seguem por HU.
      */
     protected function featureName(): string

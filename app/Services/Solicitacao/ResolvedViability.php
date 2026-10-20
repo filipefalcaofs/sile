@@ -84,7 +84,7 @@ final readonly class ResolvedViability
     }
 
     /**
-     * Elegibilidade ao fluxo expresso (HU-073): elegível somente se TODOS os
+     * Elegibilidade ao fluxo expresso (HU-069): elegível somente se TODOS os
      * CNAEs forem encaminhados ao expresso pelo motor de risco — qualquer
      * 'analise' (alto/gatilho/não classificado) torna o conjunto inelegível
      * (semi-expresso). Sem CNAEs não há nada a decidir → inelegível.

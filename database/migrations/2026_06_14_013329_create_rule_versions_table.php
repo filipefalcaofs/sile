@@ -7,10 +7,10 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Cabeçalho genérico de regras como dados versionados (HU-019/HU-020/HU-053),
+     * Cabeçalho genérico de regras como dados versionados (HU-018/HU-019/HU-051),
      * espelhando geo_layers: a publicação de uma nova versão NÃO apaga a anterior
      * (a vigente é fechada — status substituída, valid_to preenchido). Acrescenta
-     * o estado rascunho (sandbox HU-143) e a autoria/publicação para a publicação
+     * o estado rascunho (sandbox HU-133) e a autoria/publicação para a publicação
      * por quatro olhos. TABULAR — sem PostGIS, roda em SQLite. Idempotente por
      * (domain, version). As tabelas tipadas por domínio (planos 06-02/06-03)
      * referenciam esta versão.

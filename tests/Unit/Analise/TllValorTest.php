@@ -10,7 +10,7 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Model da tabela de valores TLL por exercício (HU-071/HU-014): dado
+ * Model da tabela de valores TLL por exercício (HU-145/HU-014): dado
  * versionado/auditado, um valor por código por exercício (unique), inativação
  * sem exclusão.
  */

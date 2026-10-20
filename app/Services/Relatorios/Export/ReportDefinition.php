@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 
 /**
- * DTO do que exportar (HU-131): carrega o MESMO Builder filtrado da tela (RN-005,
+ * DTO do que exportar (HU-122): carrega o MESMO Builder filtrado da tela (RN-005,
  * zero filtro duplicado) mais os metadados de apresentação e auditoria. O builder
  * e o mapRow são Closures — NUNCA são serializados; no caminho assíncrono o
  * GerarExportacaoJob reconstrói a definition a partir do `sourceClass` + bag de

@@ -84,11 +84,11 @@ interface ProtocoloProps {
     solicitacao: Solicitacao;
     timeline: Timeline;
     publicLink: string | null;
-    /** Há decisão registrada? Governa a exibição do card de explicação (HU-119). */
+    /** Há decisão registrada? Governa a exibição do card de explicação (HU-111). */
     temDecisao: boolean;
     /** Parecer oficial: resultado, motivo e fundamentação legal. */
     parecer: ParecerDecisao | null;
-    /** Explicação da decisão em linguagem cidadã (HU-119) — prop deferida. */
+    /** Explicação da decisão em linguagem cidadã (HU-111) — prop deferida. */
     explicacaoIa?: ExplicacaoIa[];
 }
 
@@ -257,9 +257,9 @@ function ExplicacaoSkeleton() {
 }
 
 /**
- * Card "Entenda a decisão" (HU-119): apresenta a explicação da decisão em
+ * Card "Entenda a decisão" (HU-111): apresenta a explicação da decisão em
  * LINGUAGEM CIDADÃ gerada pela IA, sempre marcada como "sugestão — revise". É a
- * versão leiga da explicabilidade (HU-099), FIEL à decisão registrada — não
+ * versão leiga da explicabilidade (HU-095), FIEL à decisão registrada — não
  * decide, não reabre o mérito e não promete nada além do que a decisão garante.
  * Indisponível (toggle off/sem provedor/ainda processando) ⇒ não renderiza nada
  * (degradação honesta, sem fachada).
@@ -420,7 +420,7 @@ export default function Protocolo({
 
                 {parecer && <ParecerCard parecer={parecer} />}
 
-                {/* Explicação da decisão em linguagem cidadã (HU-119): só aparece
+                {/* Explicação da decisão em linguagem cidadã (HU-111): só aparece
                     quando há decisão registrada; carregada sob demanda (deferida)
                     quando a seção entra em tela. Sempre "sugestão — revise" e fiel à
                     decisão; indisponível (toggle off/sem provedor) ⇒ não renderiza

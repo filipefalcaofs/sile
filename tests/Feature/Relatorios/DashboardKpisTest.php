@@ -18,7 +18,7 @@ use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 /**
- * KPIs operacionais da home (HU-122): `kpis.operacao` condicionado a
+ * KPIs operacionais da home (HU-113): `kpis.operacao` condicionado a
  * `consultar-relatorios`. Os números vêm dos serviços route-free sobre dado
  * real da janela. A variação de protocolos só existe quando o período anterior
  * de mesmo tamanho tem base (senão null — anti-fachada CA-03); o bloco não
@@ -53,11 +53,11 @@ class DashboardKpisTest extends TestCase
         $gestor = User::factory()->gestor()->withAcceptedLgpdTerm()->create();
         $analista = User::factory()->analista()->create();
 
-        // Volume (HU-123): 2 protocoladas dentro da janela.
+        // Volume (HU-114): 2 protocoladas dentro da janela.
         $this->protocolada(self::DENTRO_DA_JANELA.' 09:00:00');
         $this->protocolada(self::DENTRO_DA_JANELA.' 09:00:00');
 
-        // Timeline para o tempo médio de análise (HU-129): protocolada na janela;
+        // Timeline para o tempo médio de análise (HU-120): protocolada na janela;
         // análise das 14h às 16h da MESMA quarta = 120 minutos úteis. A transição
         // protocolada→em_analise também é 1 elegível do expresso.
         $tempo = $this->protocolada(self::DENTRO_DA_JANELA.' 10:00:00', [
@@ -66,14 +66,14 @@ class DashboardKpisTest extends TestCase
         $this->transicao($tempo, ViabilityRequestStatus::Protocolada, ViabilityRequestStatus::EmAnalise, self::DENTRO_DA_JANELA.' 14:00:00');
         $this->transicao($tempo, ViabilityRequestStatus::EmAnalise, ViabilityRequestStatus::Deferida, self::DENTRO_DA_JANELA.' 16:00:00');
 
-        // Taxas de deferimento/indeferimento (HU-127/128): 4 decisões na janela —
+        // Taxas de deferimento/indeferimento (HU-118/119): 4 decisões na janela —
         // 3 deferidas (2 expressas + 1 técnica) + 1 indeferida → 75% / 25%.
         $this->decisaoExpressa(DecisionOutcome::Deferida, self::DENTRO_DA_JANELA.' 11:00:00');
         $this->decisaoExpressa(DecisionOutcome::Deferida, self::DENTRO_DA_JANELA.' 11:00:00');
         $this->decisaoTecnica(DecisionOutcome::Deferida, $analista->id, self::DENTRO_DA_JANELA.' 11:00:00');
         $this->decisaoTecnica(DecisionOutcome::Indeferida, $analista->id, self::DENTRO_DA_JANELA.' 11:00:00');
 
-        // Taxa de resposta expressa (HU-145): 2 respondidas ÷ 4 elegíveis = 50%.
+        // Taxa de resposta expressa (HU-135): 2 respondidas ÷ 4 elegíveis = 50%.
         // 1 elegível veio da timeline acima; +3 transições protocolada→deferida.
         $this->transicaoElegivel(self::DENTRO_DA_JANELA.' 12:00:00');
         $this->transicaoElegivel(self::DENTRO_DA_JANELA.' 12:00:00');

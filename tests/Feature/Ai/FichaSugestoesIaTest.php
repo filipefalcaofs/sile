@@ -19,7 +19,7 @@ use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
 /**
- * HU-115 (integração read-only na ficha de análise — Fase 10): a ficha expõe as
+ * HU-107 (integração read-only na ficha de análise — Fase 10): a ficha expõe as
  * sugestões de IA do processo na prop deferida `sugestoesIa` (Inertia::optional),
  * carregada sob demanda. APENAS LEITURA — não toca o AnalysisRecord (ficha
  * finalizada é imutável, RN-003). Prova: o partial reload resolve as

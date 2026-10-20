@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Fonte do catálogo de parâmetros (HU-014) para o contrato único de exportação
- * (HU-131/RN-009): o index do {@see ParameterController}
+ * (HU-122/RN-009): o index do {@see ParameterController}
  * ganha um branch ?formato= delegando ao {@see ReportExporter}
  * sem rota nova. O catálogo não tem filtros de listagem, então o conjunto
  * exportado é o catálogo inteiro ordenado por grupo/chave (RN-005 — mesma ordem

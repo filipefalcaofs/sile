@@ -8,7 +8,7 @@ use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
 use Illuminate\Foundation\Events\Dispatchable;
 
 /**
- * Evento de domínio do ciclo de pendência (HU-091/092): o requerente respondeu a
+ * Evento de domínio do ciclo de pendência (HU-087/088): o requerente respondeu a
  * pendência pelo portal e o processo voltou de em_pendencia para em_analise
  * (análise reaberta). Carrega a solicitação e a pendência (analysis_pendencies)
  * respondida.

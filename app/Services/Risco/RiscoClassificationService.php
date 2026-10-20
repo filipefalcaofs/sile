@@ -19,7 +19,7 @@ use App\Support\Settings;
 use Carbon\CarbonInterface;
 
 /**
- * Motor de classificação de risco (HU-047 a HU-051), espelhando o
+ * Motor de classificação de risco (HU-045 a HU-049), espelhando o
  * TerritoryService: dado um CNAE, resolve as versões vigentes (ou da época) das
  * dimensões municipal (Decreto 32.636/2020) e sanitária (VISA) como dimensões
  * SEPARADAS, aplica a reclassificação por condicionante-pergunta, resolve o
@@ -173,7 +173,7 @@ class RiscoClassificationService
     }
 
     /**
-     * Encaminhamento (HU-048/HU-049/HU-050): dimensão decisiva e mapa
+     * Encaminhamento (HU-046/HU-047/HU-048): dimensão decisiva e mapa
      * risk_level→fluxo vêm de parâmetros (HU-014, sem hardcode). Nível decisivo
      * ausente no mapa ou dimensão não classificada degrada para 'analise'
      * (FA-02 seguro). Qualquer gatilho ativo acionado pelo contexto derruba o
@@ -288,7 +288,7 @@ class RiscoClassificationService
     }
 
     /**
-     * Gatilhos semi-expresso (HU-049/HU-051) acionados pelo contexto: cruza os
+     * Gatilhos semi-expresso (HU-047/HU-049) acionados pelo contexto: cruza os
      * gatilhos ATIVOS (dado parametrizado) com os códigos recebidos no input
      * (ex.: zeis_especial vindo do território da Fase 4 — wiring no EP07). Cada
      * gatilho acionado carrega o motivo auditável. O motor APLICA a regra sobre

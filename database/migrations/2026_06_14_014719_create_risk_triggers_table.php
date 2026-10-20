@@ -8,7 +8,7 @@ return new class extends Migration
 {
     /**
      * Gatilhos de risco (categoria semi-expresso) como TABELA parametrizada
-     * (HU-049/HU-051): cada gatilho acionado derruba o encaminhamento para
+     * (HU-047/HU-049): cada gatilho acionado derruba o encaminhamento para
      * análise técnica com `motivo` auditável. `ativo` é o estado administrável
      * (liga/desliga por interface, default true); `categoria` distingue a
      * natureza do gatilho. TABULAR (sem PostGIS): roda em SQLite. unique(codigo)

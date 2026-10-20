@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
- * Requisito documental (modelo "Requisito" do SIGVISA — HU-067). required marca
+ * Requisito documental (modelo "Requisito" do SIGVISA — HU-065). required marca
  * o obrigatório-base; a obrigatoriedade por atividade vem do pivot com CNAE.
  * validation_instructions é gancho para a validação por IA (EP14), inerte aqui.
  * Auditoria automática via HasAuditoria (RN-002); o vínculo com CNAEs é auditado
@@ -36,7 +36,7 @@ class DocumentRequirement extends Model
     }
 
     /**
-     * CNAEs que exigem este requisito (HU-067).
+     * CNAEs que exigem este requisito (HU-065).
      *
      * @return BelongsToMany<Cnae, $this>
      */

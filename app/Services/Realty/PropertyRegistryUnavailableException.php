@@ -6,7 +6,7 @@ use Exception;
 
 /**
  * Indisponibilidade da resolução por inscrição imobiliária: a base de lotes /
- * Cadastro Multifinalitário está PENDENTE da SEDUR (HU-033/HU-106). O provider
+ * Cadastro Multifinalitário está PENDENTE da SEDUR (HU-032/HU-101). O provider
  * real degrada honestamente — NUNCA inventa um ponto. A Fase 13 troca o binding
  * pelo provider conveniado (Cadastro/SEFAZ).
  */

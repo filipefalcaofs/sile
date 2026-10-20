@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Quadros 11 e 11A da LOUOS (HU-017/HU-018/HU-040/HU-041): condições de
+     * Quadros 11 e 11A da LOUOS (HU-017/HU-039): condições de
      * instalação pela via. Uma única tabela serve aos dois domínios
      * (louos_quadro11 e louos_quadro11a) — o domínio da versão (rule_version_id)
      * distingue 11 de 11A, evitando duplicar o esquema. Ligada a rule_versions

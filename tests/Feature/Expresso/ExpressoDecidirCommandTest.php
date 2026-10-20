@@ -41,7 +41,7 @@ class ExpressoDecidirCommandTest extends TestCase
 
     public function test_deferimento_imprime_status_final_e_numero_tvl(): void
     {
-        // HU-076 RN-007: defere → imprime DEFERIDA + o número TVL gerado.
+        // HU-072 RN-007: defere → imprime DEFERIDA + o número TVL gerado.
         Event::fake([ResultadoEmitido::class]);
         $request = $this->setupDeferivel();
 
@@ -57,7 +57,7 @@ class ExpressoDecidirCommandTest extends TestCase
 
     public function test_indeferimento_imprime_status_sem_tvl(): void
     {
-        // HU-075: indefere (zona proíbe o grupo) → imprime INDEFERIDA, sem TVL.
+        // HU-071: indefere (zona proíbe o grupo) → imprime INDEFERIDA, sem TVL.
         Event::fake([ResultadoEmitido::class]);
         $this->fakeBairroComZona('ZR-1');
         $this->classificarMunicipal('4712100', RiscoMunicipal::BaixoA);

@@ -5,9 +5,9 @@ namespace App\Http\Requests\Portal;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
- * Validação do protocolo (HU-068). A autorização fina (dono + rascunho) é feita
+ * Validação do protocolo (HU-066). A autorização fina (dono + rascunho) é feita
  * no controller via Gate::authorize('protocol', ...). Aqui só a ciência opcional
- * "prosseguir mesmo assim" (HU-141 RN-002), quando a simulação tende ao
+ * "prosseguir mesmo assim" (HU-131 RN-002), quando a simulação tende ao
  * indeferimento.
  */
 class ProtocolarSolicitacaoRequest extends FormRequest

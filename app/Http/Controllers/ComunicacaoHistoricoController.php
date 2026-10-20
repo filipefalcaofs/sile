@@ -12,7 +12,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Histórico unificado de comunicações por processo (HU-096). A fonte de verdade
+ * Histórico unificado de comunicações por processo (HU-092). A fonte de verdade
  * é ÚNICA — o ledger `communications` (11-01) — em vez de unir EmailLog
  * (genérico de conta, sem viability_request_id) e notifications (morph por
  * usuário) de forma frágil. Lista TODOS os canais (email/in_app/whatsapp) e

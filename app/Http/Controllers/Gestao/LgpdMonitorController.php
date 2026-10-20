@@ -9,7 +9,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Painel de monitoramento de conformidade LGPD (HU-102) na retaguarda: agrega,
+ * Painel de monitoramento de conformidade LGPD (HU-098) na retaguarda: agrega,
  * via LgpdMonitorService, consentimentos da versão vigente, retenção (dias +
  * último pruning; decisões fora do pruning) e acessos a dado pessoal
  * (personal_data). MINIMIZADO — só métricas, nunca PII crua. Gated por

@@ -117,7 +117,7 @@ class RelatoriosDevSeeder extends Seeder
             ]);
         }
 
-        // Quedas do fluxo expresso (HU-145): classificadas por gatilho e degradadas
+        // Quedas do fluxo expresso (HU-135): classificadas por gatilho e degradadas
         // (nível-processo, sem gatilho — RN-001, queda honesta nunca inventada).
         ExpressoQueda::factory()->count(3)->create();
         ExpressoQueda::factory()->nivelProcesso()->count(2)->create();

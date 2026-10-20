@@ -24,7 +24,7 @@ use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
 
 /**
- * HU-147 (notificacoes:escalonar-sla): escalonamento por SLA sobre a FONTE ÚNICA
+ * HU-136 (notificacoes:escalonar-sla): escalonamento por SLA sobre a FONTE ÚNICA
  * de prazo (analysis_due_at + analysis_stage_started_at) lida pelo
  * AnalysisSlaService — a MESMA origem da fila e do badge da Fase 10, sem fonte
  * paralela (CA-02). SlaStatus::Amarelo alerta o analista responsável;

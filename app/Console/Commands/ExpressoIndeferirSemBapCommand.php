@@ -10,7 +10,7 @@ use App\Support\Settings;
 use Illuminate\Console\Command;
 
 /**
- * HU-134 (DORMENTE): indefere "sem atuação" as solicitações paradas em
+ * HU-125 (DORMENTE): indefere "sem atuação" as solicitações paradas em
  * aguardando_bap cujo prazo de atuação na Junta (expresso.bap.prazo_horas,
  * parametrizável) venceu — calculado pelo seam BusinessDeadlineCalculator.
  *
@@ -29,7 +29,7 @@ class ExpressoIndeferirSemBapCommand extends Command
 {
     protected $signature = 'expresso:indeferir-sem-bap';
 
-    protected $description = 'HU-134 (dormente): indefere as solicitações em aguardando_bap com prazo de atuação na Junta vencido (sem atuação)';
+    protected $description = 'HU-125 (dormente): indefere as solicitações em aguardando_bap com prazo de atuação na Junta vencido (sem atuação)';
 
     public function handle(
         BusinessDeadlineCalculator $calculator,

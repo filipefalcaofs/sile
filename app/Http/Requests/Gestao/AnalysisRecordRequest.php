@@ -8,7 +8,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 /**
- * Validação do payload do autosave da ficha (HU-135 RN-008). O autosave é
+ * Validação do payload do autosave da ficha (HU-126 RN-008). O autosave é
  * PARCIAL — só os campos presentes são validados/persistidos (`sometimes`). A
  * autorização é o middleware permission:analisar-processos da rota; a
  * imutabilidade da revisão finalizada (RN-003) é regra do AnalysisRecordService.

@@ -14,7 +14,7 @@ use Inertia\Testing\AssertableInertia;
 use Tests\TestCase;
 
 /**
- * Consulta PÚBLICA do protocolo por link assinado (HU-069) — SEM login. A rota
+ * Consulta PÚBLICA do protocolo por link assinado (HU-067) — SEM login. A rota
  * usa middleware signed (TTL parametrizável) + throttle:consulta-protocolo. Abre
  * com o link válido, bloqueia link inválido/expirado (403), NUNCA expõe dados
  * sensíveis (CPF/CNPJ completo/endereço detalhado) nem anexos (LGPD) e é auditada

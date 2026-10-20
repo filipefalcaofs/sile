@@ -19,9 +19,9 @@ use Illuminate\Support\Facades\Notification as NotificationFacade;
 use Tests\TestCase;
 
 /**
- * HU-093 (notificacoes:alertar-vencimentos): alerta ANTECIPADO de prazo próximo
+ * HU-089 (notificacoes:alertar-vencimentos): alerta ANTECIPADO de prazo próximo
  * do vencimento, idempotente e SÓ notificando (sem transição/timeline → sem
- * dupla contagem com a HU-129). Varre os processos em_analise cujo analysis_due_at
+ * dupla contagem com a HU-120). Varre os processos em_analise cujo analysis_due_at
  * (FONTE ÚNICA, AnalysisSlaService/Fase 10) cai dentro da antecedência
  * parametrizável (notificacoes.vencimento.antecedencia_dias) e alerta o analista
  * responsável; e as pendências abertas cujo due_at cai na antecedência e alerta o
@@ -89,7 +89,7 @@ class AlertarVencimentosCommandTest extends TestCase
             fn (PrazoVencendoNotification $notification): bool => $notification->channels() === [CommunicationChannel::InApp],
         );
 
-        // SÓ notifica: o status do processo não muda (anti-dupla-contagem HU-129).
+        // SÓ notifica: o status do processo não muda (anti-dupla-contagem HU-120).
         $this->assertSame(ViabilityRequestStatus::EmAnalise, $processo->refresh()->status);
     }
 

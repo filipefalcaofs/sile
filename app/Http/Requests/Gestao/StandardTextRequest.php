@@ -6,7 +6,7 @@ use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
- * Validação do CRUD da biblioteca de textos-padrão (HU-085). Serve store e
+ * Validação do CRUD da biblioteca de textos-padrão (HU-081). Serve store e
  * update; o versionamento por mudança de conteúdo (RN-005) é decidido no
  * controller, não aqui.
  */

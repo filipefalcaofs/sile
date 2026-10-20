@@ -10,7 +10,7 @@ use Illuminate\Validation\Rule;
 use Throwable;
 
 /**
- * Validação do CRUD de feriados (HU-137). Serve store e update: a data é única
+ * Validação do CRUD de feriados (HU-128). Serve store e update: a data é única
  * (não há feriado duplicado) e, no update, o unique ignora o próprio registro.
  * A autorização é o middleware permission:manter-parametros da rota.
  *

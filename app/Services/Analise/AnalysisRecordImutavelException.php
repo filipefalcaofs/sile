@@ -6,7 +6,7 @@ use App\Models\AnalysisRecord;
 use RuntimeException;
 
 /**
- * Tentativa de editar/finalizar uma revisão FINALIZADA da ficha (HU-135 RN-003):
+ * Tentativa de editar/finalizar uma revisão FINALIZADA da ficha (HU-126 RN-003):
  * a revisão finalizada é imutável — qualquer ajuste posterior nasce numa NOVA
  * revisão. O caller traduz esta exceção em 422 (não edita silenciosamente).
  */

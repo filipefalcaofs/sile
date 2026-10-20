@@ -13,7 +13,7 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\JsonResponse;
 
 /**
- * HU-021 — consulta dos dados cadastrais por CNPJ para pré-preenchimento do
+ * HU-020 — consulta dos dados cadastrais por CNPJ para pré-preenchimento do
  * cadastro de empresa, na base cadastral da SEDUR (ws-contato). Toda saída (sucesso, não encontrado, indisponibilidade
  * e bloqueio por toggle) é auditada (CA-02); com features.cnpj_lookup desligado
  * nenhum request HTTP sai (degradação comunicada, cadastro manual segue).

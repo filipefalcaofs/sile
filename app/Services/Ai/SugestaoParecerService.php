@@ -6,7 +6,7 @@ use App\Jobs\Ai\SugestaoParecerJob;
 use App\Models\ViabilityRequest;
 
 /**
- * Camada de serviço da sugestão de minuta de parecer por IA (HU-118) — Failure
+ * Camada de serviço da sugestão de minuta de parecer por IA (HU-110) — Failure
  * Mode #1. Degradação honesta dupla: (1) sem o toggle features.ia_parecer ligado
  * E um provedor de TEXTO ativo; ou (2) sem a pré-análise do motor (engine_snapshot)
  * na ficha — em qualquer dos casos NÃO despacha o job, NÃO chama o provedor e NÃO

@@ -28,7 +28,7 @@ use Inertia\Response;
 
 /**
  * Canal de operador — registro de solicitação em CONTINGÊNCIA na retaguarda
- * (HU-148). O operador autorizado preenche o MESMO conjunto de dados do
+ * (HU-137). O operador autorizado preenche o MESMO conjunto de dados do
  * formulário oficial e o sistema PROTOCOLA pelo MESMO motor do canal normal
  * (ProtocolarSolicitacaoService, 08-10) — nunca um atalho decisório (RN-002):
  * muda só a origem (`contingencia`, auditada — RN-003) e o ator (operador, em
@@ -36,7 +36,7 @@ use Inertia\Response;
  *
  * Contingência é o caminho REAL de operação enquanto o contrato Regin não chega
  * (Fase 13): zero adaptador simulado. A referência externa (BAP/Regin informado
- * pelo requerente) é gravada para vinculação posterior (HU-133) e não pode
+ * pelo requerente) é gravada para vinculação posterior (HU-124) e não pode
  * duplicar processo (RN-004 — reusa o DuplicateRequestDetector). Reincidência
  * por CNPJ vira ALERTA não-bloqueante (direito de petição, como no portal).
  */

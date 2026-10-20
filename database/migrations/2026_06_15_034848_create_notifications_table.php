@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Tabela padrão do canal `database` NATIVO de Notifications (HU-090) — base
+     * Tabela padrão do canal `database` NATIVO de Notifications (HU-086) — base
      * da central in-app. Cada notificação enfileira uma linha morph por usuário
      * (notifiable) com `data` (payload) e `read_at` (lida/não-lida via
      * unreadNotifications/markAsRead). Estrutura padrão do Laravel — o histórico

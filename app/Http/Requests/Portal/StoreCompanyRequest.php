@@ -12,7 +12,7 @@ class StoreCompanyRequest extends FormRequest
 {
     /**
      * A rota já está protegida por auth + verified + lgpd.accepted; quem
-     * cadastra vira responsável (HU-023).
+     * cadastra vira responsável (HU-022).
      */
     public function authorize(): bool
     {
@@ -22,7 +22,7 @@ class StoreCompanyRequest extends FormRequest
     /**
      * Normaliza antes de validar: CNPJ sem máscara/uppercase (cobre o
      * alfanumérico de julho/2026); telefone e CEP só dígitos. A normalização
-     * do CNPJ é o que garante o unique correto ([HU-021] anti-pattern).
+     * do CNPJ é o que garante o unique correto ([HU-020] anti-pattern).
      */
     protected function prepareForValidation(): void
     {

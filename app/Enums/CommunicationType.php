@@ -6,8 +6,8 @@ namespace App\Enums;
  * Tipo de comunicação de PROCESSO que vira uma linha do ledger communications.
  * Cobre TODOS os tipos das Waves 3/5 do EP11 para que nenhum plano posterior
  * precise editar este enum: o ciclo de pendência (aberta/respondida/expirada),
- * os alertas de prazo (HU-093) e escalonamento por SLA (HU-147) e o resultado
- * do fluxo expresso (HU-077).
+ * os alertas de prazo (HU-089) e escalonamento por SLA (HU-136) e o resultado
+ * do fluxo expresso (HU-073).
  */
 enum CommunicationType: string
 {

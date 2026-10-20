@@ -11,7 +11,7 @@ use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 /**
- * Retenção dos arquivos de exportação (HU-131 / 15-15), espelhando o pruning de
+ * Retenção dos arquivos de exportação (HU-122 / 15-15), espelhando o pruning de
  * access_logs da Fase 3.1: os ExportFiles além da janela parametrizada
  * (relatorios.export.retencao_dias) são podados por rotina agendada idempotente,
  * removendo o REGISTRO e o ARQUIVO no Storage (sem órfão — disco não cresce sem

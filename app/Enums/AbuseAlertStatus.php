@@ -3,7 +3,7 @@
 namespace App\Enums;
 
 /**
- * Estado de um alerta de abuso/fraude (HU-149). Aberto = recém-detectado,
+ * Estado de um alerta de abuso/fraude (HU-138). Aberto = recém-detectado,
  * aguardando triagem humana; Confirmado/Descartado = baixa dada por um gestor
  * com justificativa. Só o estado Aberto participa do índice único parcial que
  * garante a idempotência da detecção (1 alerta aberto por regra/fingerprint).

@@ -21,13 +21,13 @@ use RuntimeException;
 use Tests\TestCase;
 
 /**
- * Protocolar a solicitação (HU-068) — o coração da fase. Dentro de UMA
+ * Protocolar a solicitação (HU-066) — o coração da fase. Dentro de UMA
  * transação: valida os documentos obrigatórios (BLOQUEIA com aviso se faltar —
- * HU-067), gera o número único (ProtocolNumberGenerator com lock + unique),
+ * HU-065), gera o número único (ProtocolNumberGenerator com lock + unique),
  * transiciona rascunho→protocolada (ViabilityRequestStateMachine: timeline +
  * auditoria RN-002) e congela o snapshot da simulação (RN-003). A simulação NÃO
  * bloqueia: com tendência de indeferimento e ciência do requerente, registra
- * applicant_proceeded_despite (HU-141 RN-002, direito de petição). Após o commit
+ * applicant_proceeded_despite (HU-131 RN-002, direito de petição). Após o commit
  * dispara SolicitacaoProtocolada — o PRIMEIRO evento de domínio do sistema; a
  * auditoria do protocolo NÃO depende do evento (a transição síncrona garante a
  * trilha mesmo se um listener falhar).
@@ -107,7 +107,7 @@ class ProtocolarSolicitacaoTest extends TestCase
 
     public function test_bloqueia_sem_documento_obrigatorio(): void
     {
-        // HU-067: faltando um documento obrigatório (requisito vinculado ao CNAE,
+        // HU-065: faltando um documento obrigatório (requisito vinculado ao CNAE,
         // sem anexo) → DocumentacaoIncompletaException com a lista (aviso, nunca
         // silencioso); status continua rascunho e NENHUM número é consumido.
         $user = $this->portalUser();
@@ -156,7 +156,7 @@ class ProtocolarSolicitacaoTest extends TestCase
 
     public function test_simulacao_nao_bloqueia_e_registra_ciencia(): void
     {
-        // HU-141 RN-002: tendência de indeferimento + ciência (proceedDespite) →
+        // HU-131 RN-002: tendência de indeferimento + ciência (proceedDespite) →
         // protocola mesmo assim e registra applicant_proceeded_despite; o snapshot
         // persistido é CONGELADO (RN-003), nunca reprocessado.
         $user = $this->portalUser();
@@ -350,7 +350,7 @@ class ProtocolarSolicitacaoTest extends TestCase
 
     public function test_controller_traduz_bloqueio_documental(): void
     {
-        // HU-067: protocolar sem o documento obrigatório → redirect com flash.error
+        // HU-065: protocolar sem o documento obrigatório → redirect com flash.error
         // citando o requisito faltante (aviso, nunca silencioso); nada é protocolado.
         $user = $this->portalUser();
         $solicitacao = $this->completeDraft($user);

@@ -10,8 +10,8 @@ use Laravel\Ai\Promptable;
 use Stringable;
 
 /**
- * Agente de LEITURA por visão de um documento da solicitação (HU-112 OCR +
- * HU-114 ilegibilidade). Apenas percebe e transcreve — não valida, não decide.
+ * Agente de LEITURA por visão de um documento da solicitação (HU-104 OCR +
+ * HU-106 ilegibilidade). Apenas percebe e transcreve — não valida, não decide.
  * A saída estruturada é sempre uma SUGESTÃO revisável (AI-SPEC Failure Mode #1);
  * a mecânica anti-fachada (gate, dedup, guardrails, persistência, auditoria) vive
  * no RunAiAgentJob. Fake por agente nos testes (sem rede/custo).

@@ -17,7 +17,7 @@ import EmptyState from '@/components/ui/empty-state';
 import KpiCard from '@/components/ui/kpi-card';
 import GestaoLayout from '@/layouts/gestao-layout';
 
-/** Taxa de resposta expressa (HU-145): respondidas ÷ elegíveis + meta (RN-004). */
+/** Taxa de resposta expressa (HU-135): respondidas ÷ elegíveis + meta (RN-004). */
 interface TaxaQuedas {
     respondidas: number;
     elegiveis: number;
@@ -199,7 +199,7 @@ export default function QuedasExpresso({ taxa, serie, ranking, filtros }: Quedas
     }, [form]);
 
     // Drill-down: leva à consulta de processos do MESMO recorte. As divergências
-    // analista×motor (HU-140) ficam na ficha de cada processo.
+    // analista×motor (HU-130) ficam na ficha de cada processo.
     const drillDownHref = useMemo(() => {
         const query = new URLSearchParams();
 

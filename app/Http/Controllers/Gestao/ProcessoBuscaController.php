@@ -8,12 +8,12 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
- * Busca global da retaguarda (HU-082 RN-009 — atalho Cmd/Ctrl+K). Endpoint LEVE:
+ * Busca global da retaguarda (HU-078 RN-009 — atalho Cmd/Ctrl+K). Endpoint LEVE:
  * casa o termo contra os identificadores e dados-chave do processo (número do
  * processo, BAP, produto TVL, CNPJ e nome da empresa/requerente) com whereLike
  * caseSensitive:false (case-insensitive em PostgreSQL e SQLite) e devolve poucos
  * resultados em JSON para levar direto ao processo, sem passar pela tela de
- * filtros (HU-082 index). Gated por consultar-solicitacoes (reuso). Consulta
+ * filtros (HU-078 index). Gated por consultar-solicitacoes (reuso). Consulta
  * leve: NÃO audita por padrão (preferência por não poluir a trilha — o acesso ao
  * processo é auditado no show); o 403 é auditado no ponto único.
  */

@@ -11,7 +11,7 @@ use SplFileObject;
 
 /**
  * Import real da classificação de risco MUNICIPAL (Decreto nº 32.636/2020) a
- * partir do CSV oficial versionado em database/data/risco/ (HU-020/HU-047),
+ * partir do CSV oficial versionado em database/data/risco/ (HU-019/HU-045),
  * espelhando CnaeImportService. A classificação fica ligada a uma versão de
  * regra (rule_version_id) — dado versionado, nunca código.
  *

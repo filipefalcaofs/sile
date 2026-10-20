@@ -19,7 +19,7 @@ import Pagination, { type PaginationLink } from '@/components/ui/pagination';
 import GestaoLayout from '@/layouts/gestao-layout';
 
 /**
- * Atendimento em contingência (relatório gerencial — HU-148): quanto do volume
+ * Atendimento em contingência (relatório gerencial — HU-137): quanto do volume
  * entra pelo canal de operador e por quê. A participação é null sem base no
  * período (a tela mostra travessão — nunca 0% fabricado). Campos anuláveis
  * degradam para travessão.

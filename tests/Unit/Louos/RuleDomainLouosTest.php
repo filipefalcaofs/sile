@@ -11,8 +11,8 @@ use Tests\TestCase;
  * Contrato dos domínios LOUOS e dos enums de resultado da fundação do motor
  * (05-01). Os Quadros 7, 10 e 11A entram como domínios de regra
  * versionada SENSÍVEIS (publicação quatro olhos) sem tocar os domínios de risco
- * da Fase 6. ResultadoViabilidade é o veredito consolidado do parecer (HU-044)
- * e Quadro10Permissao é o dado de permissão da atividade na zona (HU-039).
+ * da Fase 6. ResultadoViabilidade é o veredito consolidado do parecer (HU-042)
+ * e Quadro10Permissao é o dado de permissão da atividade na zona (HU-038).
  */
 class RuleDomainLouosTest extends TestCase
 {

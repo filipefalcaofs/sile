@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Histórico de transições de estado (FONTE da timeline HU-069 e ganchos
+     * Histórico de transições de estado (FONTE da timeline HU-067 e ganchos
      * EP09/EP10). Cada transição da ViabilityRequestStateMachine grava uma
      * linha (from/to/reason/public_label/actor) — a timeline ordena por
      * created_at. public_label é o rótulo amigável ao cidadão (RN-004).

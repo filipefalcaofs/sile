@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Captura ESTRUTURADA do motivo/gatilho da queda ao analista (HU-145): cada
+     * Captura ESTRUTURADA do motivo/gatilho da queda ao analista (HU-135): cada
      * CNAE que o motor encaminha à análise técnica vira uma linha gravada por
      * {@see FluxoExpressoService::encaminharAnalise} no
      * momento da queda. tipo_gatilho/dimensao guardam o gatilho semi-expresso e
@@ -32,7 +32,7 @@ return new class extends Migration
             $table->text('motivo');
             $table->timestamps();
 
-            // Ranking de motivos e série temporal da queda (HU-145): agrega por
+            // Ranking de motivos e série temporal da queda (HU-135): agrega por
             // gatilho ao longo do tempo.
             $table->index(['tipo_gatilho', 'created_at']);
         });

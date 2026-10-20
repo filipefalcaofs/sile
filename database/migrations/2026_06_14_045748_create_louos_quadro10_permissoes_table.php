@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Quadro 10 da LOUOS (HU-016/HU-039): permissão da atividade na zona
+     * Quadro 10 da LOUOS (HU-016/HU-038): permissão da atividade na zona
      * (permitido | permitido_condicionado | proibido). Ligada a uma versão de
      * regra (rule_versions, domínio louos_quadro10) reusada da Fase 6 — dado
      * versionado. TABULAR (sem PostGIS): roda em SQLite. grupo_uso casa com o

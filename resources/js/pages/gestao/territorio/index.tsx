@@ -170,7 +170,7 @@ function DimensaoItem({ rotulo, dimensao }: { rotulo: string; dimensao: Dimensao
 }
 
 /**
- * Consulta territorial (HU-030/HU-036/HU-037) no console SEDUR: geocodifica um
+ * Consulta territorial (HU-029/HU-035/HU-036) no console SEDUR: geocodifica um
  * endereço, posiciona o imóvel no mapa Leaflet (marcador arrastável), identifica
  * bairro/via/restrições reais, comunica zona/lote como pendentes SEDUR (sem valor
  * falso) e valida a sobreposição com o lote pelo limiar parametrizado. Consome os

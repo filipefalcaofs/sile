@@ -168,7 +168,7 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Destino do canal WhatsApp (HU-095): o telefone do usuário em E.164. É o
+     * Destino do canal WhatsApp (HU-091): o telefone do usuário em E.164. É o
      * "para onde" lido pelo WhatsAppChannel; sem telefone, o canal degrada honesto
      * (não envia). O provedor real entra na Fase 13 (troca só o binding do gateway).
      */
@@ -194,7 +194,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * Setores (caixas de análise) aos quais o analista está vinculado
-     * (HU-138 RN-005 — vínculo N:N administrável pelo gestor).
+     * (HU-129 RN-005 — vínculo N:N administrável pelo gestor).
      *
      * @return BelongsToMany<Sector, $this>
      */

@@ -19,7 +19,7 @@ use Spatie\Activitylog\Models\Activity;
 use Tests\TestCase;
 
 /**
- * Ciclo de vida do rascunho editável dos Quadros da LOUOS (HU-046):
+ * Ciclo de vida do rascunho editável dos Quadros da LOUOS (HU-044):
  * a vigente nunca é tocada; edições acontecem no rascunho; publicação
  * exige quatro olhos; descarte preserva a vigente intacta.
  */

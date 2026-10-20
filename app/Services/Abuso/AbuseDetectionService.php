@@ -12,7 +12,7 @@ use App\Support\Audit\AuditService;
 use App\Support\Settings;
 
 /**
- * Motor de detecção de abuso (HU-149). Orquestra os detectores da tag
+ * Motor de detecção de abuso (HU-138). Orquestra os detectores da tag
  * 'abuse.detectors' sobre a janela `abuso.janela_dias`, faz UPSERT IDEMPOTENTE em
  * abuse_alerts (não duplica alerta aberto com o mesmo rule_key+fingerprint) e,
  * acima de `abuso.severidade_malha_fina`, encaminha o processo à malha fina pelo

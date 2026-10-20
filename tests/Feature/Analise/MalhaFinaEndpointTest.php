@@ -12,7 +12,7 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Endpoint de encaminhamento à malha fina (HU-136): o controller FINO orquestra
+ * Endpoint de encaminhamento à malha fina (HU-127): o controller FINO orquestra
  * o MalhaFinaService::encaminharLote (10-12) — single é um lote de um. O
  * encaminhamento é ORTOGONAL ao status (RN-001): funciona em qualquer situação,
  * inclusive deferida, ligando in_fine_mesh + gravando fine_mesh_referrals SEM

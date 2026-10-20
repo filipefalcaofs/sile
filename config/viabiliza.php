@@ -120,7 +120,7 @@ return [
     'retencao' => [
         'access_logs' => ['dias' => 365],
     ],
-    // Constante TÉCNICA da exportação da trilha (HU-101): teto de linhas por
+    // Constante TÉCNICA da exportação da trilha (HU-097): teto de linhas por
     // arquivo CSV para a guarda de volume do streaming — NÃO materializa
     // exportações gigantes. Fora do catálogo HU-014 (precedente [02-02]): é
     // resiliência/volume, não valor de negócio; ajustável sem deploy se preciso.
@@ -160,7 +160,7 @@ return [
         'area_poligono' => ['tolerancia_percentual' => 10],
         'prazo_estimado_dias' => 30,
         'atendimento' => ['expiracao_minutos' => 30],
-        // Estados em que o requerente pode cancelar a solicitação (HU-070).
+        // Estados em que o requerente pode cancelar a solicitação (HU-068).
         // Default honesto enquanto não decidido (rascunho + protocolada); a
         // definição fina é pendência SEDUR. typedValue() do parâmetro json
         // também devolve array, então o serviço sempre recebe array.
@@ -256,11 +256,11 @@ return [
     ],
     // Espelha os parâmetros HU-014 da TLL (tll.*). Settings::get lê
     // config("viabiliza.tll.*") no fallback (banco indisponível). O fator
-    // multiplicador do DAM (HU-071 RN-004) nasce administrável no
+    // multiplicador do DAM (HU-145) nasce administrável no
     // ParameterSeeder; aqui é só o espelho.
     'tll' => [
         // Fator multiplicador aplicado ao valor do DAM quando o CNAE tem
-        // exige_fator_multiplicador (HU-071 RN-004). 1.0 = neutro.
+        // exige_fator_multiplicador (HU-145). 1.0 = neutro.
         'fator_multiplicador' => 1.0,
     ],
     // Espelha os parâmetros HU-014 notificacoes.* da comunicação multicanal
@@ -427,7 +427,7 @@ return [
             // São Paulo baixa cerca de 16 MB por competência.
             'timeout' => 180,
         ],
-        // WhatsApp (HU-095): base_url/token são parametrizáveis (catálogo
+        // WhatsApp (HU-091): base_url/token são parametrizáveis (catálogo
         // HU-014; token sensível/criptografado). As constantes TÉCNICAS
         // (timeout/tries/backoff) ficam SÓ aqui — precedente [02-02] —, pois são
         // cadência/resiliência do adaptador real (Fase 13), não valor de
@@ -481,7 +481,7 @@ return [
             'pdf' => ['paper' => 'a4', 'orientation' => 'portrait'],
         ],
         'expresso' => ['janela_dias' => 30],
-        // Janela (dias) dos KPIs do painel executivo (HU-122). Constante TÉCNICA
+        // Janela (dias) dos KPIs do painel executivo (HU-113). Constante TÉCNICA
         // fora do catálogo HU-014 (precedente [02-02]): recorte de leitura do
         // dashboard, ajustável sem deploy; não é valor de negócio do licenciamento.
         'dashboard' => ['janela_dias' => 30],

@@ -5,7 +5,7 @@ namespace Tests\Feature\Geo;
 use Tests\TestCase;
 
 /**
- * Validação de entrada do comando geo:importar (HU-036). As rejeições
+ * Validação de entrada do comando geo:importar (HU-035). As rejeições
  * acontecem ANTES de qualquer carga espacial, então rodam em SQLite (sem
  * PostGIS) — a carga real é provada em ImportGeoLayerTest (@group postgis).
  */

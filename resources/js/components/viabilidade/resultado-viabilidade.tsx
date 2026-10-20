@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { rotulo } from '@/lib/vocabulario';
 import type { SharedProps } from '@/types';
 
-/** Veredito locacional propagado do motor LOUOS (HU-044). */
+/** Veredito locacional propagado do motor LOUOS (HU-042). */
 export type VereditoResultado = 'permitido' | 'permitido_com_condicoes' | 'nao_permitido' | 'pendente';
 
 /** Status de uma dimensão territorial (Fase 4). */
@@ -268,7 +268,7 @@ function BlocoConfiabilidade({ confiabilidade }: { confiabilidade: Confiabilidad
 }
 
 /**
- * Renderiza o resultado REAL da consulta de viabilidade (HU-057/058/059) sem
+ * Renderiza o resultado REAL da consulta de viabilidade (HU-055/056/057) sem
  * fachada: o veredito locacional vem propagado do motor LOUOS — quando
  * `pendente`, sempre exibe o motivo (ex.: zona pendente SEDUR) e NUNCA mostra
  * Permitido/Não permitido sem zona. Reutilizável pelo histórico (07-09).

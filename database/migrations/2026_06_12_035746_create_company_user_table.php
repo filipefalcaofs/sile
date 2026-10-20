@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Vínculo usuário-empresa (HU-023/HU-028). Modelo Eloquent próprio com
+     * Vínculo usuário-empresa (HU-022/HU-027). Modelo Eloquent próprio com
      * ciclo de vida: started_at/ended_at (encerramento nunca apaga — histórico
      * preservado). role é o papel NO CONTEXTO da empresa (responsavel|procurador),
      * não papel spatie.

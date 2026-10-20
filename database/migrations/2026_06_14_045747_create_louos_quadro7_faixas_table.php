@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Quadro 7 da LOUOS (HU-015/HU-038): enquadramento por faixa de área —
+     * Quadro 7 da LOUOS (HU-015/HU-037): enquadramento por faixa de área —
      * modelo "Enquadramento TVL" do SAPS (CNAE → faixa de área → grupo/subgrupo
      * de uso). Ligada a uma versão de regra (rule_versions, domínio
      * louos_quadro7) reusada da Fase 6 — dado versionado, nunca código. TABULAR

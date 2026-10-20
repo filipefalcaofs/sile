@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Classificação de risco MUNICIPAL por subclasse CNAE (HU-020/HU-047),
+     * Classificação de risco MUNICIPAL por subclasse CNAE (HU-019/HU-045),
      * ligada a uma versão de regra (rule_versions, domínio risco_municipal) —
      * dado versionado, nunca código. TABULAR (sem PostGIS): roda em SQLite.
      * cnae_code é FK lógica para Cnae.code (dígitos, mesma normalização). As

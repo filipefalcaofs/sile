@@ -11,7 +11,7 @@ use App\Services\Relatorios\ReportFilters;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
- * Fonte das SOLICITAÇÕES de viabilidade para o export transversal (HU-131): o
+ * Fonte das SOLICITAÇÕES de viabilidade para o export transversal (HU-122): o
  * conjunto exportado é EXATAMENTE o filtrado da consulta de processos (RN-005),
  * tanto no síncrono quanto no assíncrono. Reusa
  * {@see ProcessoQueryService::filtered()} a partir de

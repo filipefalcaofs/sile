@@ -7,7 +7,7 @@ use Illuminate\Notifications\Events\NotificationFailed;
 use Illuminate\Notifications\Events\NotificationSent;
 
 /**
- * Fecha o ciclo do ledger communications (HU-096): marca a linha enviado
+ * Fecha o ciclo do ledger communications (HU-092): marca a linha enviado
  * (NotificationSent) ou falhou (NotificationFailed) resolvendo-a pelo MAPA
  * {driver→communicationId} que o NotificationDispatcher (11-04) congela na
  * Notification — espelha o emailLogId único do LogNotificationSent + gate por

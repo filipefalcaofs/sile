@@ -32,7 +32,7 @@ use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Middleware\ResolveRepresentation;
 use Illuminate\Support\Facades\Route;
 
-// Login Único GOV.BR (HU-151) — rotas públicas de guest, fora do Fortify.
+// Login Único GOV.BR (HU-140) — rotas públicas de guest, fora do Fortify.
 Route::middleware('guest')
     ->prefix('portal')
     ->name('portal.')
@@ -59,7 +59,7 @@ Route::middleware('portal.servicos')->prefix('portal')->name('portal.')->group(f
     });
 });
 
-// Consulta PÚBLICA do protocolo por link assinado (HU-069) — SEM login. Fora de
+// Consulta PÚBLICA do protocolo por link assinado (HU-067) — SEM login. Fora de
 // auth: o acesso é exclusivamente pelo link assinado (middleware signed, TTL
 // parametrizável gerado no controller autenticado) + throttle parametrizado;
 // mostra status simples + timeline + prazo estimado, NUNCA dados sensíveis nem
@@ -109,7 +109,7 @@ Route::middleware(['auth:web', 'verified'])
 
             Route::middleware('portal.servicos')->group(function () {
                 // Histórico autenticado das consultas de viabilidade do próprio
-                // usuário (HU-060) — rota literal, sem conflito com a pública
+                // usuário (HU-058) — rota literal, sem conflito com a pública
                 // viabilidade.index (07-06). Escopo do dono no controller (forUser).
                 Route::get('viabilidade/historico', HistoricoConsultaController::class)->name('viabilidade.historico');
 
@@ -132,14 +132,14 @@ Route::middleware(['auth:web', 'verified'])
                 Route::put('empresas/{company}', [CompanyController::class, 'update'])->name('empresas.update');
                 Route::delete('empresas/{company}/vinculo', [CompanyLinkController::class, 'destroy'])->name('empresas.vinculo.destroy');
 
-                // CNAEs da empresa (HU-025/HU-026) — escrita só via service (03-06).
+                // CNAEs da empresa (HU-024/HU-025) — escrita só via service (03-06).
                 Route::put('empresas/{company}/cnae-principal', [CompanyCnaeController::class, 'updatePrimary'])->name('empresas.cnae-principal');
                 Route::put('empresas/{company}/cnaes-secundarios', [CompanyCnaeController::class, 'updateSecondaries'])->name('empresas.cnaes-secundarios');
 
                 // Busca da tabela oficial para os selects de CNAE (só ativos).
                 Route::get('cnaes', CnaeSearchController::class)->name('cnaes.search');
 
-                // Solicitações de viabilidade (HU-061) — rotas literais; as rotas
+                // Solicitações de viabilidade (HU-059) — rotas literais; as rotas
                 // com {solicitacao} entram em 08-06/08-11. O store degrada de forma
                 // comunicada com o toggle features.solicitacao_viabilidade off.
                 Route::get('renovacao', [RenovacaoController::class, 'index'])->middleware('portal.solicitacao')
@@ -155,7 +155,7 @@ Route::middleware(['auth:web', 'verified'])
                 Route::post('solicitacoes', [SolicitacaoController::class, 'store'])->middleware('portal.solicitacao')
                     ->name('solicitacoes.store');
 
-                // Wizard multi-etapas (HU-061..067, 141) — rotas GET que RENDERIZAM o
+                // Wizard multi-etapas (HU-059..065, 141) — rotas GET que RENDERIZAM o
                 // wizard. 'nova' é LITERAL e precisa vir ANTES de solicitacoes/{solicitacao}
                 // (08-11 show) para não ser capturada como id. 'editar' continua um
                 // rascunho existente (policy update, dono + rascunho). São DISTINTAS da
@@ -165,7 +165,7 @@ Route::middleware(['auth:web', 'verified'])
                 Route::get('solicitacoes/{solicitacao}/editar', [SolicitacaoController::class, 'edit'])->middleware('portal.solicitacao')
                     ->name('solicitacoes.edit');
 
-                // Consulta AUTENTICADA do protocolo (HU-069) — rota com {solicitacao}
+                // Consulta AUTENTICADA do protocolo (HU-067) — rota com {solicitacao}
                 // DEPOIS das literais. Dono/representado (policy view) acompanha a
                 // timeline em linguagem simples + prazo estimado com ressalva e gera o
                 // link público assinado de acompanhamento. Auditada (RN-002).
@@ -176,20 +176,20 @@ Route::middleware(['auth:web', 'verified'])
                 // solicitação protocolada; cada emissão é auditada (RN-002).
                 Route::get('solicitacoes/{solicitacao}/comprovante', [ComprovanteProtocoloController::class, 'show'])->name('solicitacoes.comprovante');
 
-                // Atividades da solicitação (HU-064/HU-065) — rota com {solicitacao}
+                // Atividades da solicitação (HU-062/HU-063) — rota com {solicitacao}
                 // DEPOIS das literais. Define o CNAE principal + complementares
                 // (até o limite parametrizável) só do dono em rascunho (policy).
                 Route::put('solicitacoes/{solicitacao}/atividades', [SolicitacaoAtividadeController::class, 'update'])->middleware('portal.solicitacao')
                     ->name('solicitacoes.atividades');
 
-                // Imóvel + área da solicitação (HU-062/HU-063) — rota com
+                // Imóvel + área da solicitação (HU-060/HU-061) — rota com
                 // {solicitacao} DEPOIS das literais. Grava o polígono (fonte GeoJSON),
                 // identifica o território (Fase 4) e valida área×polígono; só do dono
                 // em rascunho (policy update).
                 Route::put('solicitacoes/{solicitacao}/imovel', [SolicitacaoImovelController::class, 'update'])->middleware('portal.solicitacao')
                     ->name('solicitacoes.imovel');
 
-                // Documentos da solicitação (HU-066) — rotas com {solicitacao} DEPOIS
+                // Documentos da solicitação (HU-064) — rotas com {solicitacao} DEPOIS
                 // das literais. Upload via Storage (disk parametrizado, nunca público)
                 // com sha256; download por STREAMING só do dono autenticado (LGPD);
                 // substituição/remoção só em rascunho. {documento} é validado contra a
@@ -200,7 +200,7 @@ Route::middleware(['auth:web', 'verified'])
                 Route::delete('solicitacoes/{solicitacao}/documentos/{documento}', [SolicitacaoDocumentoController::class, 'destroy'])->middleware('portal.solicitacao')
                     ->name('solicitacoes.documentos.destroy');
 
-                // Simulação pré-protocolo (HU-141) — rota com {solicitacao} DEPOIS
+                // Simulação pré-protocolo (HU-131) — rota com {solicitacao} DEPOIS
                 // das literais. Reusa o ConsultaViabilidadeService da Fase 7 por
                 // CNAE/ponto, propaga o veredito do motor LOUOS e persiste o snapshot;
                 // ORIENTATIVA, NÃO bloqueia o protocolo. Só do dono em rascunho
@@ -208,7 +208,7 @@ Route::middleware(['auth:web', 'verified'])
                 Route::post('solicitacoes/{solicitacao}/simular', [SolicitacaoSimulacaoController::class, 'store'])->middleware('portal.solicitacao')
                     ->name('solicitacoes.simular');
 
-                // Protocolar a solicitação (HU-068) — rota com {solicitacao} DEPOIS
+                // Protocolar a solicitação (HU-066) — rota com {solicitacao} DEPOIS
                 // das literais. Valida documentos obrigatórios (bloqueia com aviso se
                 // faltar), gera o número único (lock + unique), transiciona
                 // rascunho→protocolada (timeline + auditoria) e dispara o primeiro
@@ -217,7 +217,7 @@ Route::middleware(['auth:web', 'verified'])
                 Route::post('solicitacoes/{solicitacao}/protocolar', [ProtocoloController::class, 'store'])->middleware('portal.solicitacao')
                     ->name('solicitacoes.protocolar');
 
-                // Cancelar a solicitação (HU-070) — rota com {solicitacao} DEPOIS das
+                // Cancelar a solicitação (HU-068) — rota com {solicitacao} DEPOIS das
                 // literais. Só o dono enquanto não decidida (policy cancel); o
                 // CancelarSolicitacaoService transiciona para cancelada (timeline +
                 // auditoria) com os estados canceláveis parametrizáveis
@@ -225,17 +225,18 @@ Route::middleware(['auth:web', 'verified'])
                 // com aviso e audita.
                 Route::delete('solicitacoes/{solicitacao}', [CancelamentoSolicitacaoController::class, 'destroy'])->name('solicitacoes.cancelar');
 
-                // Pendências da análise técnica (HU-083/084) — resposta do requerente
+                // Pendências da análise técnica (HU-079/080) — resposta do requerente
                 // pelo portal. Rotas com {solicitacao} DEPOIS das literais (padrão
                 // 08-11). Escopo do dono/representado (ViabilityRequestPolicy::view)
                 // no controller; a pendência {pendency} é validada contra a solicitação
                 // (anti-IDOR). Responder reabre a análise (em_pendencia→em_analise) via
-                // PendenciaService; o convite via Simplifica/Regin e os canais plenos
-                // ficam para o EP11 (este é o ciclo interno REAL: portal + e-mail).
+                // PendenciaService. O aviso sai multicanal pelo listener NotificarPendencia
+                // (e-mail, in-app e WhatsApp conforme os toggles); o convite não é
+                // enviado de volta ao Regin/Simplifica.
                 Route::get('solicitacoes/{solicitacao}/pendencias', [PendenciaRespostaController::class, 'show'])->name('solicitacoes.pendencias');
                 Route::post('solicitacoes/{solicitacao}/pendencias/{pendency}/responder', [PendenciaRespostaController::class, 'responder'])->name('solicitacoes.pendencias.responder');
 
-                // Histórico unificado de comunicações do processo (HU-096) — rota com
+                // Histórico unificado de comunicações do processo (HU-092) — rota com
                 // {solicitacao} DEPOIS das literais. Fonte ÚNICA: o ledger
                 // communications (todos os canais/tipos), gated pela policy view
                 // (dono/representado). LGPD: o portal NÃO expõe o error_message
@@ -243,7 +244,7 @@ Route::middleware(['auth:web', 'verified'])
                 Route::get('solicitacoes/{solicitacao}/comunicacoes', [ComunicacaoHistoricoController::class, 'portal'])->name('solicitacoes.comunicacoes');
             });
 
-            // Central de notificações in-app (HU-090) — canal database nativo do
+            // Central de notificações in-app (HU-086) — canal database nativo do
             // próprio usuário (escopo do dono). Listar + marcar uma + marcar
             // todas; o badge de não-lidas é shared prop (HandleInertiaRequests).
             Route::get('notificacoes', [NotificationCenterController::class, 'index'])->name('notificacoes.index');

@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 /**
- * O histórico de consultas (HU-060) é uma tabela imutável e TABULAR (json, sem
+ * O histórico de consultas (HU-058) é uma tabela imutável e TABULAR (json, sem
  * PostGIS) que roda em SQLite. Trava o snapshot com casts array (input/result/
  * rules_versions), o escopo por dono (forUser — precedente "Minhas empresas") e
  * a imutabilidade (só created_at, sem updated_at).

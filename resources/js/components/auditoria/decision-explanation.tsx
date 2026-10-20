@@ -34,7 +34,7 @@ interface BlocoCnae {
 
 type RulesVersions = Record<string, string | null | Record<string, string | null>>;
 
-/** Shape projetado pela DecisionExplanationResource (HU-099), consumido na UI. */
+/** Shape projetado pela DecisionExplanationResource (HU-095), consumido na UI. */
 export interface DecisionExplanationData {
     legado: boolean;
     desfecho: Desfecho | null;
@@ -99,7 +99,7 @@ function flattenRegras(rules: RulesVersions): { label: string; value: string }[]
 }
 
 /**
- * Explicabilidade passo a passo de uma decisão de viabilidade (HU-099).
+ * Explicabilidade passo a passo de uma decisão de viabilidade (HU-095).
  * Renderiza a projeção PURA do decision_trace por CNAE na ordem canônica
  * (entrada → risco → enquadramento → Quadro 10/11A → consolidação → desfecho),
  * marcando honestamente os passos do legado não registrados — nunca inventa.

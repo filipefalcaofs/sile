@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Geometrias de uma camada (HU-036). Coluna geometry(Geometry,4326)
+     * Geometrias de uma camada (HU-035). Coluna geometry(Geometry,4326)
      * GENÉRICA — aceita Polygon, MultiPolygon e LineString (bairro/zona/lote
      * são polígonos; via é LineString), SRID 4326 fixo (Pitfall 2/7). A
      * geometria é gravada via DB::raw/ST_* (nunca mass-assign).

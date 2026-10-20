@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 /**
- * Anexar documentos à solicitação (HU-066): upload via Storage com disk
+ * Anexar documentos à solicitação (HU-064): upload via Storage com disk
  * PARAMETRIZADO (storage.documentos.disk, nunca público), MIME e tamanho
  * validados por parâmetro (HU-014), gravando disk/path/sha256/original_name e
  * auditando (RN-002). O download é por STREAMING e só do dono autenticado

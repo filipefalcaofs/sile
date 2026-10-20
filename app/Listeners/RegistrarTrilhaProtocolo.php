@@ -7,7 +7,7 @@ use App\Events\SolicitacaoProtocolada;
 use App\Support\Audit\AuditService;
 
 /**
- * Listener síncrono do primeiro evento de domínio (HU-068/HU-069): garante o
+ * Listener síncrono do primeiro evento de domínio (HU-066/HU-067): garante o
  * marco amigável da timeline para o cidadão e grava uma auditoria de alto nível
  * do protocolo. Idempotente — NÃO duplica o marco: a transição síncrona da
  * ViabilityRequestStateMachine já o registrou com o public_label; aqui só

@@ -33,7 +33,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Hub "Motor de regras" do console SEDUR (HU-015..018 / HU-046 + pacote
+ * Hub "Motor de regras" do console SEDUR (HU-015..017 / HU-044 + pacote
  * normativo 2026-08-28): uma tela, três abas — Quadros LOUOS (10 e 11A),
  * Enquadramento (planilha de tratamento vigente) e Regras territoriais
  * (RT-01 a RT-05). A consulta lista a versão vigente de cada domínio; a
@@ -365,7 +365,7 @@ class LouosController extends Controller
     }
 
     /**
-     * Publicar um Quadro gera uma NOVA versão (HU-046): a regra dos quatro olhos
+     * Publicar um Quadro gera uma NOVA versão (HU-044): a regra dos quatro olhos
      * exige autor distinto do publicador (usuário autenticado). Autor igual ao
      * publicador em domínio sensível é bloqueado e comunicado (flash.error) —
      * degradação controlada, nunca silenciosa.

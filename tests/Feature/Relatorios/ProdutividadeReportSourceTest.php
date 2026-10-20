@@ -15,7 +15,7 @@ use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 /**
- * Exportação da produtividade por analista (HU-130/HU-131) com a MESMA
+ * Exportação da produtividade por analista (HU-121/HU-122) com a MESMA
  * minimização do serviço: anônima por default (rótulo ordinal, sem identidade),
  * nominal só sob a flag/permissão (RN-007), escopo do próprio analista. O source
  * implementa {@see SyncOnlyReportSource} porque carrega ESTADO de construtor

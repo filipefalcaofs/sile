@@ -10,9 +10,9 @@ use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
- * Download das exportações assíncronas (HU-131). Controller FINO: o arquivo
+ * Download das exportações assíncronas (HU-122). Controller FINO: o arquivo
  * gerado pelo GerarExportacaoJob (15-02) é servido por streaming do disco NÃO
- * público — espelhando o TvlDocumentController (HU-132). Só se chega aqui com a
+ * público — espelhando o TvlDocumentController (HU-123). Só se chega aqui com a
  * assinatura válida (middleware signed) e a permissão consultar-relatorios da
  * rota; o disco nunca é exposto por URL pública (LGPD/RN-007). O acesso é
  * auditado (RN-008). Arquivo podado por retenção (15-15) → 404 honesto, sem

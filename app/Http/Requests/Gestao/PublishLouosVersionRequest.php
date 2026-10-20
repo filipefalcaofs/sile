@@ -8,7 +8,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 /**
- * Publicação versionada de um Quadro da LOUOS (HU-015..018/HU-046). A
+ * Publicação versionada de um Quadro da LOUOS (HU-015..017/HU-044). A
  * autorização é o middleware permission:manter-louos da rota; a regra dos
  * quatro olhos (autor distinto do publicador) é verificada no controller para
  * comunicar o bloqueio de forma controlada (flash.error), não como erro de

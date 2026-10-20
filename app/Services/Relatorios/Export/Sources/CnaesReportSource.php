@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Fonte da listagem de CNAEs (HU-011) para o contrato único de exportação
- * (HU-131/RN-009): o index do {@see CnaeController}
+ * (HU-122/RN-009): o index do {@see CnaeController}
  * ganha um branch ?formato= delegando ao {@see ReportExporter}
  * sem rota nova. O conjunto exportado é EXATAMENTE o filtrado da tela (RN-005) —
  * busca (código por prefixo de dígitos OU denominação, case-insensitive),

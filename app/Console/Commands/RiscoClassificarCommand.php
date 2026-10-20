@@ -13,7 +13,7 @@ use Illuminate\Console\Command;
 /**
  * Classifica um CNAE pelo motor de risco REAL (RiscoClassificationService)
  * sobre o seed oficial, imprimindo o resultado fundamentado — evidência de
- * ponta a ponta da Fase 6 (HU-047 a HU-053), espelhando o padrão dos comandos
+ * ponta a ponta da Fase 6 (HU-045 a HU-051), espelhando o padrão dos comandos
  * auditados (cnae:importar / redesim:importar).
  *
  * Sem fachada: o comando apenas APLICA a decisão do motor sobre o dado
@@ -26,7 +26,7 @@ class RiscoClassificarCommand extends Command
         {cnae : CNAE de subclasse em dígitos ou formatado (ex.: 0111-3/01)}
         {--gatilho=* : Código de gatilho ativo no contexto (ex.: zeis_especial)}';
 
-    protected $description = 'Classifica um CNAE pelo motor de risco real sobre o seed oficial (HU-047 a HU-053) — evidência fundamentada de ponta a ponta';
+    protected $description = 'Classifica um CNAE pelo motor de risco real sobre o seed oficial (HU-045 a HU-051) — evidência fundamentada de ponta a ponta';
 
     public function handle(RiscoClassificationService $service): int
     {

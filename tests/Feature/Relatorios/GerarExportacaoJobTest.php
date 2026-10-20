@@ -16,7 +16,7 @@ use Tests\Feature\Relatorios\Stubs\ProcessoBairroSource;
 use Tests\TestCase;
 
 /**
- * Job de exportação assíncrona (HU-131 RN-006): reconstrói a definition SÓ a
+ * Job de exportação assíncrona (HU-122 RN-006): reconstrói a definition SÓ a
  * partir de sourceClass + bag (ReportFilters::fromArray), grava o arquivo REAL no
  * disco não-público, registra o ExportFile (row_count real) e notifica o dono com
  * ExportacaoPronta. RN-005 no assíncrono: o arquivo reflete o MESMO conjunto

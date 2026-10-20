@@ -5,7 +5,7 @@ namespace App\Services\GovBr;
 use RuntimeException;
 
 /**
- * Falha na autenticação via Login Único GOV.BR (HU-151).
+ * Falha na autenticação via Login Único GOV.BR (HU-140).
  *
  * `$userMessage` é a mensagem segura exibida ao cidadão; a mensagem da
  * exception carrega o detalhe técnico para log/auditoria, nunca para a UI.

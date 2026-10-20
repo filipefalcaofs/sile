@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Tipos de serviço da solicitação (HU-061 RN-005) — dado administrável
+     * Tipos de serviço da solicitação (HU-059 RN-005) — dado administrável
      * (CRUD admin), não parâmetro do registry. flow_hint é uma pista textual
      * de roteamento; active liga/desliga o tipo na seleção.
      */

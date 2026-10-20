@@ -9,7 +9,7 @@ use App\Models\ViabilityRequest;
 use Throwable;
 
 /**
- * Camada de serviço do resumo do processo por IA (HU-117). Degradação honesta:
+ * Camada de serviço do resumo do processo por IA (HU-109). Degradação honesta:
  * sem o toggle features.ia_resumo ligado E um provedor de TEXTO ativo, NÃO
  * chama o provedor e NÃO simula (anti-fachada). A ficha precisa do resultado
  * no mesmo request (prop deferida + botão "Gerar resumo"): dispatch assíncrono

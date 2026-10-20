@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Embedding de um precedente (HU-142) — infra de RAG da Onda 3 (Fase 14). 1:1 com
+ * Embedding de um precedente (HU-132) — infra de RAG da Onda 3 (Fase 14). 1:1 com
  * a solicitação decidida; o vetor representa o RESUMO ANONIMIZADO (sem PII).
  *
  * A coluna `embedding` é driver-aware (vector(N) no pgsql, json no SQLite) e fica

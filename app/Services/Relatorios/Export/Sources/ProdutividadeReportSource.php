@@ -13,7 +13,7 @@ use App\Services\Relatorios\ReportFilters;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
- * Fonte de exportação da produtividade por analista (HU-130/HU-131): reproduz a
+ * Fonte de exportação da produtividade por analista (HU-121/HU-122): reproduz a
  * MESMA agregação SQL de {@see ProdutividadeAnalistaService::decisoesAgregadas()}
  * em forma de Builder, com a MESMA minimização — anônima por default (rótulo
  * ordinal `Analista #N`, sem identidade), nominal só sob a flag/permissão

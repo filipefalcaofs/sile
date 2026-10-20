@@ -32,7 +32,7 @@ interface UsuarioResumo {
     nome: string | null;
 }
 
-/** Diff estruturado da mudança (HU-098), exposto pelo ActivityResource. */
+/** Diff estruturado da mudança (HU-094), exposto pelo ActivityResource. */
 interface AttributeChanges {
     attributes?: Record<string, unknown> | null;
     old?: Record<string, unknown> | null;
@@ -623,7 +623,7 @@ function EntidadeCell({ subject }: { subject: AtividadeRow['subject'] }) {
     );
 }
 
-/** Diff estruturado da alteração (HU-098): campo: antigo → novo. */
+/** Diff estruturado da alteração (HU-094): campo: antigo → novo. */
 function DiffCell({ changes }: { changes: AttributeChanges | null }) {
     if (!changes || typeof changes !== 'object') {
         return <span className="text-gray-400 dark:text-gray-500">—</span>;

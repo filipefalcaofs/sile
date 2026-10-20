@@ -7,7 +7,7 @@ use App\Support\Settings;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Gera o número de produto TVL {prefixo}-{N} (HU-076 RN-007), com N sequencial
+ * Gera o número de produto TVL {prefixo}-{N} (HU-072 RN-007), com N sequencial
  * único e SEM reinício anual, a partir de viabiliza.expresso.tvl.inicio (3000000). O
  * N é o mesmo número que segue à SEFAZ (ViabilityDecision::numeroSefaz), então
  * não pode repetir entre anos. O contador (tvl_sequences, linha CONTADOR_UNICO)

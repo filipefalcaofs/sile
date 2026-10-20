@@ -16,7 +16,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 /**
- * Instrução das atividades da solicitação (HU-064/HU-065): a atividade
+ * Instrução das atividades da solicitação (HU-062/HU-063): a atividade
  * principal e os CNAEs complementares vêm da tabela oficial e SÓ aceitam
  * CNAEs ativos (mesma regra da seleção manual da Fase 3, [03-06]). O limite
  * de complementares é administrável (HU-014) e lido dinamicamente do catálogo

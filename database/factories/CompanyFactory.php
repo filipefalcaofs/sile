@@ -39,7 +39,7 @@ class CompanyFactory extends Factory
     }
 
     /**
-     * Empresa importada da REDESIM (HU-022).
+     * Empresa importada da REDESIM (HU-021).
      */
     public function fromRedesim(): static
     {

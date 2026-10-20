@@ -55,7 +55,7 @@ interface EtapaRevisaoProps {
     solicitacao: RevisaoSolicitacao;
     requisitosFaltantes: RequisitoFaltante[];
     simulation: SimulacaoData | null;
-    /** Resumo de conferência por IA (HU-116) — prop deferida, sob demanda. */
+    /** Resumo de conferência por IA (HU-108) — prop deferida, sob demanda. */
     sugestoesResumo?: SugestaoResumo[];
 }
 
@@ -69,9 +69,9 @@ function InfoRow({ label, value }: { label: string; value: ReactNode }) {
 }
 
 /**
- * Etapa de revisão e protocolo (HU-068/141): mostra o resumo, BLOQUEIA o
+ * Etapa de revisão e protocolo (HU-066/131): mostra o resumo, BLOQUEIA o
  * protocolo com a lista quando faltar documento obrigatório (aviso, nunca
- * silencioso — HU-067) e, quando a simulação tende a indeferimento, exige a
+ * silencioso — HU-065) e, quando a simulação tende a indeferimento, exige a
  * CIÊNCIA do requerente (proceed_despite) sem impedir o protocolo (direito de
  * petição). Protocolar chama POST solicitacoes.protocolar (08-10).
  */
@@ -159,7 +159,7 @@ export default function EtapaRevisao({ solicitacao, requisitosFaltantes, simulat
                 </CardContent>
             </Card>
 
-            {/* Resumo de conferência por IA (HU-116): prop deferida, carregada sob
+            {/* Resumo de conferência por IA (HU-108): prop deferida, carregada sob
                 demanda quando a etapa de revisão entra em tela. Sempre "sugestão —
                 confira", nunca afirma desfecho. Indisponível (toggle off/sem
                 provedor) ⇒ não renderiza nada (degradação honesta, sem fachada). */}
@@ -231,7 +231,7 @@ function ResumoConferenciaSkeleton() {
 }
 
 /**
- * Card "Resumo da solicitação" gerado pela IA (HU-116) para CONFERÊNCIA antes do
+ * Card "Resumo da solicitação" gerado pela IA (HU-108) para CONFERÊNCIA antes do
  * protocolo: apresenta a síntese dos dados declarados (resumo + fonte), sempre
  * marcada como "sugestão — confira". APENAS LEITURA — apoia o cidadão a revisar o
  * que informou, não analisa, não decide e NUNCA antecipa o desfecho. Sem resumo

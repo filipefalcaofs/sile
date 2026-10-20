@@ -48,7 +48,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Motor de decisão do fluxo expresso (HU-073 a HU-078) — o CORE VALUE do Viabiliza.
+ * Motor de decisão do fluxo expresso (HU-069 a HU-074) — o CORE VALUE do Viabiliza.
  *
  * `decide()` é AUTORITATIVO: sob Cache::lock por solicitação + re-check de
  * status (idempotência), REEXECUTA o SolicitacaoViabilityResolver FRESCO —
@@ -62,13 +62,13 @@ use Illuminate\Support\Facades\DB;
  *    enquadramento (nada de novo a avaliar) — exceção justificada ao
  *    anti-fachada, testada antes da resolução;
  *  - inelegível (algum CNAE encaminhado à análise pelo motor de risco) →
- *    em_analise (semi-expresso, HU-073/RN-008);
+ *    em_analise (semi-expresso, HU-069/RN-008);
  *  - veredito consolidado pendente (sem a zona oficial — Quadro 10 indisponível)
  *    → em_analise SEM criar decisão e SEM evento (anti-fachada: o motor NÃO
  *    defere/indefere sem o dado real; liga sozinho quando a base entrar);
  *  - nao_permitido → INDEFERE; permitido(_com_condicoes) → DEFERE (RN-009),
  *    criando a ViabilityDecision imutável + número TVL (só no deferimento),
- *    transicionando pela StateMachine e auditando SÍNCRONO (HU-078) — tudo numa
+ *    transicionando pela StateMachine e auditando SÍNCRONO (HU-074) — tudo numa
  *    transação; o ResultadoEmitido é disparado SÓ após o commit.
  *
  * A auditoria autoritativa da decisão é síncrona e NÃO depende do evento (lição
@@ -344,7 +344,7 @@ class FluxoExpressoService
             );
         }
 
-        // HU-037 RN-005: polígono desenhado em zona diferente da zona da
+        // HU-036 RN-005: polígono desenhado em zona diferente da zona da
         // inscrição. Depois do indeferimento territorial (a RT-01 não depende
         // do polígono) e antes das poligonais, que também encaminham.
         $divergencia = $this->localizacaoDivergencia->avaliar($request);
@@ -449,20 +449,20 @@ class FluxoExpressoService
     }
 
     /**
-     * Encaminha a solicitação à análise técnica (HU-073/HU-079): transição
+     * Encaminha a solicitação à análise técnica (HU-069/HU-075): transição
      * protocolada→em_analise (timeline + auditoria de transição), MATERIALIZAÇÃO
-     * do SLA da fila (HU-144 — analysis_due_at na etapa de distribuição, via
+     * do SLA da fila (HU-134 — analysis_due_at na etapa de distribuição, via
      * AnalysisSlaService) e auditoria SÍNCRONA da decisão (resultado 'analise',
      * com o motivo e — quando houve resolução — o por-CNAE e as versões de
      * regra), tudo numa transação. NÃO cria ViabilityDecision e NÃO dispara
      * ResultadoEmitido.
      *
      * APÓS o commit, dispara EncaminhadoParaAnalise (gatilho da pré-análise
-     * HU-140, 10-08 — listener AUTO-DESCOBERTO): só encaminhamentos efetivados
+     * HU-130, 10-08 — listener AUTO-DESCOBERTO): só encaminhamentos efetivados
      * geram efeitos. A auditoria autoritativa já está gravada na transação e NÃO
      * depende do evento (lição das Fases 8/9). O processo cai na caixa do setor
      * de triagem parametrizado (analise.setor_triagem_id — elo motor → caixa);
-     * o ANALISTA fica nulo — a distribuição (HU-080/081) é uma ação humana
+     * o ANALISTA fica nulo — a distribuição (HU-076/077) é uma ação humana
      * posterior na caixa do setor (apoio/gestor distribui, analista assume).
      */
     /**
@@ -550,7 +550,7 @@ class FluxoExpressoService
         ?TipoGatilho $gatilho = null,
     ): DecisionResult {
         // Reavaliação de processo em análise que ninguém assumiu: a queda passa
-        // a ser o motivo atual do motor, não o da passada anterior (HU-145).
+        // a ser o motivo atual do motor, não o da passada anterior (HU-135).
         if ($request->status === ViabilityRequestStatus::EmAnalise) {
             DB::transaction(function () use ($request, $reason, $resolved, $territorial, $gatilho): void {
                 // Processo encaminhado quando não havia setor de triagem ainda
@@ -584,7 +584,7 @@ class FluxoExpressoService
                 publicLabel: ViabilityRequestStatus::EmAnalise->publicLabel(),
             );
 
-            // HU-144: o prazo da fila nasce no encaminhamento (etapa distribuição).
+            // HU-134: o prazo da fila nasce no encaminhamento (etapa distribuição).
             // Colunas fora do fillable → forceFill (escrita controlada pelo serviço).
             $startedAt = now();
             $request->forceFill([
@@ -647,7 +647,7 @@ class FluxoExpressoService
     }
 
     /**
-     * Captura ESTRUTURADA da queda ao analista (HU-145), gravada na MESMA
+     * Captura ESTRUTURADA da queda ao analista (HU-135), gravada na MESMA
      * transação do encaminhamento (ADITIVA — não altera a decisão/transição/
      * auditoria das Fases 9/10). Fecha o ciclo de melhoria do expresso medindo
      * sobre dado real: para cada CNAE que o motor encaminhou à análise, persiste
@@ -1106,11 +1106,11 @@ class FluxoExpressoService
     }
 
     /**
-     * Emite a decisão vinculante (HU-074/075/076, RN-009): nao_permitido →
+     * Emite a decisão vinculante (HU-070/071/072, RN-009): nao_permitido →
      * INDEFERE; permitido(_com_condicoes) → DEFERE. Numa transação cria a
      * ViabilityDecision imutável (per_cnae/rules_versions/fundamentação), gera o
      * número TVL só no deferimento, transiciona pela StateMachine (timeline +
-     * auditoria) e AUDITA SÍNCRONO a decisão (HU-078) — tudo antes do commit. O
+     * auditoria) e AUDITA SÍNCRONO a decisão (HU-074) — tudo antes do commit. O
      * ResultadoEmitido é disparado APÓS o commit.
      *
      * Robustez idempotente: se uma corrida rara escapar do Cache::lock (ex.:
@@ -1222,14 +1222,14 @@ class FluxoExpressoService
             'tendencia_label' => $item['tendencia_label'],
             'fluxo' => $item['fluxo'],
             // Código TLL da planilha (ramo resolvido) — insumo do cálculo do DAM
-            // (HU-071 RN-004) no envio à SEFAZ, sem recomputar o motor.
+            // (HU-145) no envio à SEFAZ, sem recomputar o motor.
             'codigo_tll' => $item['consulta']->risco->encaminhamento['tll'] ?? null,
             'fundamentacao' => $item['consulta']->fundamentacao(),
         ], $resolved->por_cnae);
     }
 
     /**
-     * decision_trace ADITIVO da decisão expressa (HU-099 RN-004/RN-005): o
+     * decision_trace ADITIVO da decisão expressa (HU-095 RN-004/RN-005): o
      * snapshot passo a passo por CNAE, montado pelo DecisionTraceBuilder a partir
      * do consulta_array JÁ em memória ($resolved) — sem recomputar o motor e sem
      * mudar o veredito. É a fonte que a explicabilidade (12-05) projeta.

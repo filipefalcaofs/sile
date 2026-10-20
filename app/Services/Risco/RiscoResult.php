@@ -5,7 +5,7 @@ namespace App\Services\Risco;
 use App\Enums\Fluxo;
 
 /**
- * Resultado imutável da classificação de risco (HU-047 a HU-051), espelhando
+ * Resultado imutável da classificação de risco (HU-045 a HU-049), espelhando
  * TerritoryResult: cada dimensão é um array de shape estável (contrato do
  * motor 06-05, da UI 06-08 e do EP07+). As dimensões municipal e sanitária são
  * SEPARADAS (RN-009) e o encaminhamento é a decisão de roteamento auditada.

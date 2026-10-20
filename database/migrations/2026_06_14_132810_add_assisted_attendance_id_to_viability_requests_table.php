@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Dimensão "balcão" para relatórios (HU-150 RN-005): a solicitação aberta
+     * Dimensão "balcão" para relatórios (HU-139 RN-005): a solicitação aberta
      * durante um atendimento presencial carrega o vínculo de atendimento. A
      * origem permanece `portal` (é um fluxo direto do portal operado "em nome
      * de"); o que distingue o balcão é a presença do assisted_attendance_id.

@@ -11,7 +11,7 @@ use InvalidArgumentException;
 use Tests\TestCase;
 
 /**
- * Dimensão municipal de risco (HU-020/HU-047) a partir do dado oficial real
+ * Dimensão municipal de risco (HU-019/HU-045) a partir do dado oficial real
  * (Decreto nº 32.636/2020). O Decreto só tem três níveis — NÃO existe "médio"
  * (regra firme do analista-negocio). fromDecreto() mapeia os rótulos do CSV e
  * rejeita qualquer nível desconhecido (nunca inventa classificação). O import

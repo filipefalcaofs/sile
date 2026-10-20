@@ -317,15 +317,15 @@ class RolesAndPermissionsSeederTest extends TestCase
             );
         }
 
-        // Consultar a trilha (HU-097..101) e gerenciar alertas de abuso
-        // (HU-149): só o administrador — o grupo Auditoria sai do menu do
+        // Consultar a trilha (HU-093..097) e gerenciar alertas de abuso
+        // (HU-138): só o administrador — o grupo Auditoria sai do menu do
         // gestor (relatório de usabilidade SEDUR 19/09, item 06).
         $this->assertTrue(Role::findByName('administrador', 'web')->hasPermissionTo('consultar-auditoria'));
         $this->assertTrue(Role::findByName('administrador', 'web')->hasPermissionTo('gerenciar-alertas-abuso'));
         $this->assertFalse(Role::findByName('Coordenador', 'web')->hasPermissionTo('consultar-auditoria'));
         $this->assertFalse(Role::findByName('Coordenador', 'web')->hasPermissionTo('gerenciar-alertas-abuso'));
 
-        // Painel LGPD (HU-102; DPO/admin): só o administrador.
+        // Painel LGPD (HU-098; DPO/admin): só o administrador.
         $this->assertTrue(Role::findByName('administrador', 'web')->hasPermissionTo('monitorar-lgpd'));
         $this->assertFalse(Role::findByName('Coordenador', 'web')->hasPermissionTo('monitorar-lgpd'));
 
@@ -356,7 +356,7 @@ class RolesAndPermissionsSeederTest extends TestCase
             );
         }
 
-        // Consultar relatórios e ver a produtividade nominal (HU-130): gestor e
+        // Consultar relatórios e ver a produtividade nominal (HU-121): gestor e
         // administrador. A exportação NÃO tem permissão própria — herda a leitura
         // da tela (RN-007).
         foreach (['Coordenador', 'administrador'] as $role) {

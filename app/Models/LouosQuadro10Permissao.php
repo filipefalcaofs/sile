@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Permissão da atividade na zona segundo o Quadro 10 da LOUOS (HU-016/HU-039),
+ * Permissão da atividade na zona segundo o Quadro 10 da LOUOS (HU-016/HU-038),
  * ligada a uma versão de regra (rule_version_id, domínio louos_quadro10) — dado
  * versionado. grupo_uso casa com o grupo do enquadramento da planilha; condicionante_ref remete
  * à condicionante urbanística quando a permissão é condicionada. Auditoria do

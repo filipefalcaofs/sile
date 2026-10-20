@@ -9,16 +9,16 @@ use JsonException;
 
 /**
  * Importa dados empresariais no formato REDESIM a partir de um arquivo JSON
- * (HU-022). Útil para homologação manual com payloads de exemplo da SEDUR.
+ * (HU-021). Útil para homologação manual com payloads de exemplo da SEDUR.
  *
  * O TRANSPORTE real do integrador (webservice/fila REGIN/JUCEB) é a Fase 13
- * (HU-103) — aqui o serviço é exercitado de verdade contra arquivos.
+ * (HU-099) — aqui o serviço é exercitado de verdade contra arquivos.
  */
 class ImportRedesimCommand extends Command
 {
     protected $signature = 'redesim:importar {arquivo : Caminho do arquivo JSON no formato REDESIM} {--queue : Processa em fila (job com retry/timeout) em vez de síncrono}';
 
-    protected $description = 'Importa dados empresariais no formato REDESIM (HU-022) — transporte real do integrador é a Fase 13';
+    protected $description = 'Importa dados empresariais no formato REDESIM (HU-021) — transporte real do integrador é a Fase 13';
 
     public function handle(RedesimImportService $service): int
     {

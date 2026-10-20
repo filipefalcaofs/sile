@@ -9,7 +9,7 @@ use Illuminate\Notifications\DatabaseNotification;
 
 /**
  * Payload de leitura de uma notificação do canal database nativo (central
- * in-app, HU-090). Expõe o id (uuid), o tipo, o `data` gravado pelo
+ * in-app, HU-086). Expõe o id (uuid), o tipo, o `data` gravado pelo
  * toDatabase() das Notifications de processo (title/summary/url; os payloads
  * legados titulo/mensagem/message são normalizados para title/summary), o read_at e o
  * created_at, mais um booleano `lida` de conveniência para a UI (11-09).

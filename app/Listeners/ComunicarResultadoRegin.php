@@ -10,8 +10,8 @@ use App\Support\Audit\AuditService;
 use Throwable;
 
 /**
- * Efeito desacoplado do SEGUNDO evento de domínio (HU-104): comunica o parecer da
- * viabilidade — deferimento OU indeferimento (HU-076 RN-008: o parecer vai ao
+ * Efeito desacoplado do SEGUNDO evento de domínio (HU-100): comunica o parecer da
+ * viabilidade — deferimento OU indeferimento (HU-072 RN-008: o parecer vai ao
  * Regin/Junta nos DOIS casos) — ao integrador, via o contrato ReginParecerNotifier.
  *
  * BLOQUEADO HONESTO (Fase 13): o binding atual é o UnavailableReginParecerNotifier,
@@ -25,7 +25,7 @@ use Throwable;
  * O envio sai na hora, sem passar pela fila (o parecer não espera os jobs lentos
  * de GeoServer): no request do analista roda logo DEPOIS da resposta, para não
  * segurar a tela; em console (job, comando, teste) roda direto. A decisão já foi
- * gravada e auditada SÍNCRONA (HU-078). Nenhuma falha é relançada — a integração
+ * gravada e auditada SÍNCRONA (HU-074). Nenhuma falha é relançada — a integração
  * indisponível jamais quebra o efeito do resultado; o registro 'bloqueado' é a
  * pendência que o regin:reenviar-pareceres agendado retoma.
  *

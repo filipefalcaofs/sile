@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 
 /**
  * Busca server-side da tabela oficial de CNAEs para os selects do portal
- * (HU-025/HU-026): retorna SOMENTE ativos — a seleção manual nunca oferece
+ * (HU-024/HU-025): retorna SOMENTE ativos — a seleção manual nunca oferece
  * CNAE inativo. Padrão de busca do CnaeController [02-04]: branch de
  * dígitos só quando o termo contém dígitos; whereLike sem case.
  */

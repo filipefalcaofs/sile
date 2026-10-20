@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Documento TVL emitido (HU-132) — cada emissão/reimpressão do PDF da TVL é uma
+ * Documento TVL emitido (HU-123) — cada emissão/reimpressão do PDF da TVL é uma
  * linha auditada, vinculada à decisão (viability_decisions, reuso da Fase 9 —
  * fonte do parecer). disk/path apontam o arquivo no Storage (disco
  * parametrizado, NUNCA público); verification_code é o código de validação

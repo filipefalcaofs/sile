@@ -13,7 +13,7 @@ use App\Support\Audit\AuditService;
 use Illuminate\Notifications\Notification;
 
 /**
- * Canal customizado de WhatsApp (HU-095) — DONO ÚNICO da linha communications do
+ * Canal customizado de WhatsApp (HU-091) — DONO ÚNICO da linha communications do
  * canal whatsapp: ninguém mais marca enviado/bloqueado nessa linha. Espelha
  * ComunicarResultadoRegin (o efeito de integração que audita o bloqueio):
  *

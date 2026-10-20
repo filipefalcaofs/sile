@@ -15,10 +15,10 @@ use Illuminate\Console\Command;
  * Protocola uma solicitação de viabilidade instruída pelo SERVIÇO REAL
  * (ProtocolarSolicitacaoService) e imprime a evidência de ponta a ponta: número
  * de protocolo gerado, transição rascunho→protocolada e a tendência da simulação
- * (se houver). É a evidência da Fase 8 (HU-068), espelhando viabilidade:consultar
+ * (se houver). É a evidência da Fase 8 (HU-066), espelhando viabilidade:consultar
  * / louos:enquadrar — útil para homologação manual.
  *
- * Sem fachada: documento obrigatório faltante (HU-067) ou dados mínimos ausentes
+ * Sem fachada: documento obrigatório faltante (HU-065) ou dados mínimos ausentes
  * (FA-01) BLOQUEIAM com aviso e exit 1, sem consumir número; solicitação fora de
  * rascunho é transição inválida (exit 1). O sucesso sai com exit 0. O ator é o
  * created_by da solicitação (ou o requerente, na falta dele).
@@ -29,7 +29,7 @@ class SolicitacaoProtocolarCommand extends Command
         {solicitacao : ID da solicitação instruída a protocolar}
         {--proceed-despite : Registra a ciência e protocola mesmo com tendência de indeferimento}';
 
-    protected $description = 'Protocola uma solicitação instruída pelo serviço real (HU-068) — evidência do número e da transição';
+    protected $description = 'Protocola uma solicitação instruída pelo serviço real (HU-066) — evidência do número e da transição';
 
     public function handle(ProtocolarSolicitacaoService $service): int
     {

@@ -12,7 +12,7 @@ use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 /**
- * Duração em tempo útil entre dois instantes (HU-129) — a operação NOVA que o
+ * Duração em tempo útil entre dois instantes (HU-120) — a operação NOVA que o
  * dueAt forward (horas-calendário, SLA/BAP das Fases 9/10) NÃO faz. Desconta
  * integralmente fins de semana e feriados ATIVOS, sem NUNCA inventar feriado:
  * sem calendário oficial, só os fins de semana caem (degradação honesta).

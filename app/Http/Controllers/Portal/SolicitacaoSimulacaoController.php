@@ -9,7 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 
 /**
- * Simulação pré-protocolo da viabilidade (HU-141): executa os motores reais da
+ * Simulação pré-protocolo da viabilidade (HU-131): executa os motores reais da
  * Fase 7 com os dados já informados (imóvel/área/atividades), por CNAE,
  * propagando o veredito do motor LOUOS. O resultado é ORIENTATIVO — não muda o
  * status nem bloqueia o protocolo (RN-002, direito de petição). Só o dono em

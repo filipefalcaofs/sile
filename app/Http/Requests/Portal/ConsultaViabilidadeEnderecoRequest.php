@@ -7,7 +7,7 @@ use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
- * Consulta de viabilidade por ENDEREÇO (HU-054). Rota pública (cidadão anônimo):
+ * Consulta de viabilidade por ENDEREÇO (HU-052). Rota pública (cidadão anônimo):
  * authorize true. O `cnae` é sempre exigido (a viabilidade é de uma atividade);
  * o formato livre é normalizado para dígitos pelo serviço. `area` (m²) alimenta
  * o enquadramento da planilha vigente.
