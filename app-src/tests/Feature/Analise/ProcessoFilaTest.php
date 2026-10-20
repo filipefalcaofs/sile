@@ -4,6 +4,7 @@ namespace Tests\Feature\Analise;
 
 use App\Enums\AnalysisStage;
 use App\Enums\ViabilityRequestStatus;
+use App\Models\AnalysisRecord;
 use App\Models\Sector;
 use App\Models\User;
 use App\Models\ViabilityRequest;
@@ -177,10 +178,13 @@ class ProcessoFilaTest extends TestCase
 
         // Sem dono: fica na caixa do setor, fora da caixa de entrada.
         $this->processo(['sector_id' => $setor->id, 'assigned_user_id' => null, 'analysis_due_at' => now()->addDays(5)]);
-        // Em análise: em_analise atribuído.
-        $this->processo(['sector_id' => $setor->id, 'assigned_user_id' => $analista->id, 'analysis_due_at' => now()->addDays(5)]);
-        // Em pendência (atribuído, mas conta como pendência — buckets por status
-        // não se sobrepõem: não entra em "em análise").
+        // Atribuído, com ficha aberta pelo analista: conta em "Em análise".
+        $comFicha = $this->processo(['sector_id' => $setor->id, 'assigned_user_id' => $analista->id, 'analysis_due_at' => now()->addDays(5)]);
+        AnalysisRecord::factory()->create(['viability_request_id' => $comFicha->id, 'analyst_user_id' => $analista->id]);
+        // Atribuído, só com a pré-análise do motor (sem analista): não conta em "Em análise".
+        $soMotor = $this->processo(['sector_id' => $setor->id, 'assigned_user_id' => $analista->id, 'analysis_due_at' => now()->addDays(5)]);
+        AnalysisRecord::factory()->create(['viability_request_id' => $soMotor->id, 'analyst_user_id' => null]);
+        // Em convite (atribuído): está na caixa e conta como pendência.
         $this->processo(['sector_id' => $setor->id, 'assigned_user_id' => $analista->id, 'analysis_due_at' => now()->addDays(5)])
             ->forceFill(['status' => ViabilityRequestStatus::EmPendencia])->save();
         // Vencendo hoje (em_analise atribuído, prazo hoje).
@@ -188,8 +192,9 @@ class ProcessoFilaTest extends TestCase
 
         $contadores = $this->filaProps($analista, 'setor')['contadores'];
 
-        $this->assertSame(0, $contadores['aguardando_analise']);
-        $this->assertSame(2, $contadores['em_analise']);
+        // Aguardando análise = tudo o que está na caixa; Em análise = os que já têm ficha aberta.
+        $this->assertSame(4, $contadores['aguardando_analise']);
+        $this->assertSame(1, $contadores['em_analise']);
         $this->assertSame(1, $contadores['em_pendencia']);
         $this->assertSame(1, $contadores['vencendo_hoje']);
     }
@@ -271,7 +276,7 @@ class ProcessoFilaTest extends TestCase
         $props = $this->filaProps($analista, 'meus', 'bap=KPI-1');
 
         $this->assertCount(1, $props['processos']['data']);
-        $this->assertSame(2, $props['contadores']['em_analise']);
+        $this->assertSame(2, $props['contadores']['aguardando_analise']);
     }
 
     public function test_consulta_fila_com_filtro_e_auditada(): void
