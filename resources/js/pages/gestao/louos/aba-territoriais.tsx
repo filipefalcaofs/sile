@@ -1,5 +1,6 @@
 import { router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
+import Select from '@/components/form/select';
 import Badge from '@/components/ui/badge';
 import Button from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -288,19 +289,19 @@ function EditarRegraModal({
                     <label className={labelClass} htmlFor="rt-texto">
                         Texto decisório vinculado
                     </label>
-                    <select
+                    <Select
                         id="rt-texto"
-                        className={inputClass}
                         value={form.decision_text_id}
-                        onChange={(event) => setCampo('decision_text_id', event.target.value)}
-                    >
-                        <option value="">Nenhum</option>
-                        {territoriais.textos.map((texto) => (
-                            <option key={texto.id} value={texto.id}>
-                                {texto.description?.trim() || 'Texto decisório'}
-                            </option>
-                        ))}
-                    </select>
+                        onChange={(valor) => setCampo('decision_text_id', valor)}
+                        placeholder="Nenhum"
+                        options={[
+                            { value: '', label: 'Nenhum' },
+                            ...territoriais.textos.map((texto) => ({
+                                value: String(texto.id),
+                                label: texto.description?.trim() || 'Texto decisório',
+                            })),
+                        ]}
+                    />
                 </div>
             </div>
 

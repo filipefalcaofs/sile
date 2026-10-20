@@ -266,18 +266,20 @@ export default function CentralDistribuicao({
                                     />
                                 </div>
                             )}
-                            <label className="flex items-center gap-2 text-theme-sm text-gray-500 dark:text-gray-400">
-                                {modo === 'varios' ? 'Quem recebe os mais urgentes primeiro' : 'Ordenar'}
-                                <select
+                            <div className="flex items-center gap-2 text-theme-sm text-gray-500 dark:text-gray-400">
+                                <span>{modo === 'varios' ? 'Quem recebe os mais urgentes primeiro' : 'Ordenar'}</span>
+                                <Select
+                                    ariaLabel="Ordenar"
+                                    className="w-56"
                                     value={ordenacao}
-                                    onChange={(e) => setOrdenacao(e.target.value as Ordenacao)}
-                                    className="h-11 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 scheme-light dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:scheme-dark"
-                                >
-                                    <option value="menor">Menor carga primeiro</option>
-                                    <option value="maior">Maior carga primeiro</option>
-                                    <option value="nome">Ordem alfabética</option>
-                                </select>
-                            </label>
+                                    onChange={(valor) => setOrdenacao(valor as Ordenacao)}
+                                    options={[
+                                        { value: 'menor', label: 'Menor carga primeiro' },
+                                        { value: 'maior', label: 'Maior carga primeiro' },
+                                        { value: 'nome', label: 'Ordem alfabética' },
+                                    ]}
+                                />
+                            </div>
                         </div>
 
                         {modo === 'varios' && (

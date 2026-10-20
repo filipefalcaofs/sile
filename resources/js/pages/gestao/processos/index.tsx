@@ -613,34 +613,26 @@ export default function ConsultaProcessos({
                         <span>{resumo}</span>
                     </div>
                     <div className="flex flex-wrap items-center gap-3">
-                        <label className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                            Ordenar
-                            <select
+                        <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                            <span>Ordenar</span>
+                            <Select
+                                ariaLabel="Ordenar"
+                                className="w-56"
                                 value={ordem}
-                                onChange={(evento) => trocarOrdem(evento.target.value)}
-                                className="h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-700 scheme-light dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:scheme-dark"
-                            >
-                                {ORDEM_OPTIONS.map((opcao) => (
-                                    <option key={opcao.value} value={opcao.value}>
-                                        {opcao.label}
-                                    </option>
-                                ))}
-                            </select>
-                        </label>
-                        <label className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                            Exibir
-                            <select
-                                value={perPage}
-                                onChange={(evento) => trocarPerPage(Number(evento.target.value))}
-                                className="h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-700 scheme-light dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:scheme-dark"
-                            >
-                                {perPageOptions.map((opcao) => (
-                                    <option key={opcao} value={opcao}>
-                                        {opcao}
-                                    </option>
-                                ))}
-                            </select>
-                        </label>
+                                onChange={trocarOrdem}
+                                options={ORDEM_OPTIONS}
+                            />
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                            <span>Exibir</span>
+                            <Select
+                                ariaLabel="Itens por página"
+                                className="w-24"
+                                value={String(perPage)}
+                                onChange={(valor) => trocarPerPage(Number(valor))}
+                                options={perPageOptions.map((opcao) => ({ value: String(opcao), label: String(opcao) }))}
+                            />
+                        </div>
                     </div>
                 </div>
 

@@ -2616,17 +2616,17 @@ export default function FichaAnaliseShow({
                                     />
                                     Condicionantes da viabilidade provisória atendidos
                                 </label>
-                                <label className="flex flex-col gap-1 text-sm">
-                                    Tipo liberado
-                                    <select
-                                        className="min-h-11 rounded-lg border border-gray-300 bg-white px-3 text-gray-800 scheme-light dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:scheme-dark"
+                                <div className="flex flex-col gap-1 text-sm">
+                                    <span>Tipo liberado</span>
+                                    <Select
                                         value={tvlKind}
-                                        onChange={(event) => setTvlKind(event.target.value as 'provisoria' | 'definitiva')}
-                                    >
-                                        <option value="provisoria">Provisória</option>
-                                        <option value="definitiva">Definitiva</option>
-                                    </select>
-                                </label>
+                                        onChange={(valor) => setTvlKind(valor as 'provisoria' | 'definitiva')}
+                                        options={[
+                                            { value: 'provisoria', label: 'Provisória' },
+                                            { value: 'definitiva', label: 'Definitiva' },
+                                        ]}
+                                    />
+                                </div>
                                 <label className="flex flex-col gap-1 text-sm">
                                     Nova data de validade
                                     <IsoDateInput
@@ -2797,21 +2797,13 @@ export default function FichaAnaliseShow({
                         <Label htmlFor="setor-vistoria" className="mb-1.5" required>
                             Setor de vistoria
                         </Label>
-                        <select
+                        <Select
                             id="setor-vistoria"
-                            className="h-11 w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:ring-3 focus:ring-brand-500/20 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:scheme-dark dark:focus:border-brand-800"
                             value={setorVistoria}
-                            onChange={(e) => setSetorVistoria(e.target.value)}
-                        >
-                            <option value="" disabled className="text-gray-700 dark:bg-gray-900 dark:text-gray-400">
-                                Selecione o setor de vistoria
-                            </option>
-                            {setores.map((setor) => (
-                                <option key={setor.id} value={setor.id} className="text-gray-700 dark:bg-gray-900 dark:text-gray-200">
-                                    {setor.name}
-                                </option>
-                            ))}
-                        </select>
+                            onChange={setSetorVistoria}
+                            placeholder="Selecione o setor de vistoria"
+                            options={setores.map((setor) => ({ value: String(setor.id), label: setor.name }))}
+                        />
                     </div>
                     {erroEncaminhar && (
                         <p className="mt-4 text-sm font-medium text-error-600 dark:text-error-500" role="alert">
@@ -2869,21 +2861,16 @@ export default function FichaAnaliseShow({
                         <Label htmlFor="setor-malha-fina" className="mb-1.5">
                             Setor de tramitação
                         </Label>
-                        <select
+                        <Select
                             id="setor-malha-fina"
-                            className="h-11 w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:ring-3 focus:ring-brand-500/20 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:scheme-dark dark:focus:border-brand-800"
                             value={setorMalhaFina}
-                            onChange={(e) => setSetorMalhaFina(e.target.value)}
-                        >
-                            <option value="" className="text-gray-700 dark:bg-gray-900 dark:text-gray-400">
-                                Manter o setor atual
-                            </option>
-                            {setores.map((setor) => (
-                                <option key={setor.id} value={setor.id} className="text-gray-700 dark:bg-gray-900 dark:text-gray-200">
-                                    {setor.name}
-                                </option>
-                            ))}
-                        </select>
+                            onChange={setSetorMalhaFina}
+                            placeholder="Manter o setor atual"
+                            options={[
+                                { value: '', label: 'Manter o setor atual' },
+                                ...setores.map((setor) => ({ value: String(setor.id), label: setor.name })),
+                            ]}
+                        />
                     </div>
                     {erroMalhaFina && (
                         <p className="mt-4 text-sm font-medium text-error-600 dark:text-error-500" role="alert">
