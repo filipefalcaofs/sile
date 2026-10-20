@@ -17,7 +17,7 @@ use App\Models\ViabilityRequest;
  * fechada de eventos: consulta de tela, autosave automático da ficha e demais
  * registros técnicos não entram. Os eventos das fichas são gravados com a
  * própria ficha como sujeito. Cada item tem o mesmo formato da linha do tempo
- * de status.
+ * de status; o evento da ficha de análise traz o link para abri-la.
  *
  * Uma ação, uma linha: o espelho da situação de análise e o registro de
  * pendência/convite gravados junto com uma mudança de situação do processo
@@ -115,7 +115,7 @@ class TramitacaoProcessoService
                 continue;
             }
 
-            $item = $this->deAtividade($a, $usuarios);
+            $item = $this->deAtividade($a, $usuarios, $processo);
 
             if ($item !== null) {
                 $itens[] = $item;
@@ -147,7 +147,7 @@ class TramitacaoProcessoService
      * @param  array<int, User>  $usuarios
      * @return array<string, mixed>|null
      */
-    private function deAtividade(Activity $a, array $usuarios): ?array
+    private function deAtividade(Activity $a, array $usuarios, ViabilityRequest $processo): ?array
     {
         $resultado = $a->result;
 
@@ -183,7 +183,8 @@ class TramitacaoProcessoService
             return null;
         }
 
-        $detalhe = in_array($a->event, self::FICHA_ANALISE, true) && isset($a->properties['revision'])
+        $daFicha = in_array($a->event, self::FICHA_ANALISE, true) && isset($a->properties['revision']);
+        $detalhe = $daFicha
             ? 'Revisão '.$a->properties['revision'].' da ficha.'
             : (string) $a->description;
         $atribuido = in_array($a->event, self::ATRIBUICAO, true) && isset($a->properties['assigned_user_id'])
@@ -200,13 +201,14 @@ class TramitacaoProcessoService
             detalhe: $detalhe !== '' ? $detalhe : null,
             em: $a->created_at?->toIso8601String(),
             ator: $this->nomeDoAtor($usuarios, $a->properties['ator_id'] ?? $a->causer_id),
+            link: $daFicha ? route('gestao.processos.ficha.show', $processo, false) : null,
         );
     }
 
     /**
      * @return array<string, mixed>
      */
-    private function item(string $tipo, string $titulo, ?string $detalhe, ?string $em, ?string $ator, ?string $de = null, ?string $resultado = null): array
+    private function item(string $tipo, string $titulo, ?string $detalhe, ?string $em, ?string $ator, ?string $de = null, ?string $resultado = null, ?string $link = null): array
     {
         return [
             'tipo' => $tipo,
@@ -220,6 +222,7 @@ class TramitacaoProcessoService
             'atribuido' => null,
             'distribuidor' => null,
             'resultado' => $resultado,
+            'link' => $link,
         ];
     }
 

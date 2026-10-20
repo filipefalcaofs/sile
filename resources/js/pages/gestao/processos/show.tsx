@@ -43,6 +43,7 @@ interface TimelineItem {
     ator?: string | null;
     atribuido?: string | null;
     distribuidor?: string | null;
+    link?: string | null;
 }
 
 interface SetorEncaminhamento {
@@ -72,7 +73,7 @@ interface ShowProps {
     divergencia_endereco?: { declarado: string; sefaz: string } | null;
     /** Texto que o parecer leva à JUCEB; null sem decisão ou fora do REGIN. */
     justificativaRegin?: JustificativaRegin | null;
-    /** Explicabilidade passo a passo (HU-099); null quando não há decisão. */
+    /** Explicabilidade passo a passo (HU-095); null quando não há decisão. */
     explicacao?: DecisionExplanationData | null;
     /** Próximas transições manuais oferecidas ao analista (Tarefa 10). */
     analysisStatusProximas: { value: string; label: string }[];
@@ -690,7 +691,16 @@ export default function Show({
                                                         </p>
                                                         {evento.reason && (
                                                             <p className="mt-1 text-theme-sm text-gray-600 dark:text-gray-300">
-                                                                {evento.reason}
+                                                                {evento.link && podeAbrirFicha ? (
+                                                                    <Link
+                                                                        href={evento.link}
+                                                                        className="text-brand-500 underline underline-offset-2 hover:text-brand-600 dark:text-brand-400"
+                                                                    >
+                                                                        {evento.reason}
+                                                                    </Link>
+                                                                ) : (
+                                                                    evento.reason
+                                                                )}
                                                             </p>
                                                         )}
                                                     </li>

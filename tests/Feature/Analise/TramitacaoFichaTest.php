@@ -71,6 +71,7 @@ class TramitacaoFichaTest extends TestCase
         $this->assertSame('analise', $salvas[0]['tipo']);
         $this->assertSame('Suzana Carvalho dos Reis', $salvas[0]['ator']);
         $this->assertSame('Revisão 1 da ficha.', $salvas[0]['reason']);
+        $this->assertSame("/gestao/processos/{$ficha->viability_request_id}/ficha", $salvas[0]['link']);
     }
 
     public function test_autosave_automatico_nao_entra_na_tramitacao(): void
@@ -101,6 +102,7 @@ class TramitacaoFichaTest extends TestCase
         $this->assertCount(1, $finalizadas);
         $this->assertSame('Lisa Sousa', $finalizadas[0]['ator']);
         $this->assertSame('Revisão 1 da ficha.', $finalizadas[0]['reason']);
+        $this->assertSame("/gestao/processos/{$ficha->viability_request_id}/ficha", $finalizadas[0]['link']);
     }
 
     public function test_ficha_de_outro_processo_nao_aparece(): void
