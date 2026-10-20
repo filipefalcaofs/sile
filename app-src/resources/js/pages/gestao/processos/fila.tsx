@@ -7,7 +7,6 @@ import PageHeader from '@/components/app/page-header';
 import {
     CategoriaBadges,
     type ProcessoItem,
-    SemaforoBadge,
 } from '@/components/analise/processo-ui';
 import { AlertIcon, ArrowRightIcon, CheckCircleIcon, FileIcon, InfoIcon, ListIcon } from '@/components/icons';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -222,12 +221,6 @@ export default function Fila({
             cell: (item) => <CnaesDoProcesso cnaes={item.cnaes_detalhe ?? []} />,
         },
         {
-            id: 'etapa',
-            header: 'Etapa',
-            cellClassName: 'whitespace-nowrap',
-            cell: (item) => item.analysis_stage_label ?? '—',
-        },
-        {
             id: 'analise',
             header: 'Análise',
             cellClassName: 'max-w-64 align-top whitespace-normal',
@@ -254,16 +247,6 @@ export default function Fila({
                 </span>
             ),
         },
-        ...(visao === 'analise'
-            ? [
-                  {
-                      id: 'semaforo',
-                      header: 'SLA',
-                      cellClassName: 'whitespace-nowrap',
-                      cell: (item: ProcessoItem) => <SemaforoBadge sla={item.sla} />,
-                  } satisfies ColumnDef<ProcessoItem>,
-              ]
-            : []),
         {
             id: 'actions',
             header: 'Ações',
