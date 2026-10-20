@@ -7,6 +7,8 @@ use Database\Factories\ServicoNomenclaturaFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
@@ -48,13 +50,24 @@ class ServicoNomenclatura extends Model
     }
 
     /**
-     * Linha do evento; cria com De = Para e oculta quando o evento é novo.
+     * Linha do evento; cria com De = Para e oculta quando o evento é novo. Se
+     * outro recebimento criou a mesma linha ao mesmo tempo, devolve a dele em
+     * vez de falhar o protocolo (savepoint para não abortar a transação aberta).
      */
     public static function garantir(string $nome): self
     {
         $nome = trim($nome);
-        $existente = self::query()->where('chave', self::chaveDe($nome))->first();
+        $chave = self::chaveDe($nome);
+        $existente = self::query()->where('chave', $chave)->first();
 
-        return $existente ?? self::create(['de' => $nome, 'para' => $nome, 'exibir' => false]);
+        if ($existente !== null) {
+            return $existente;
+        }
+
+        try {
+            return DB::transaction(fn (): self => self::create(['de' => $nome, 'para' => $nome, 'exibir' => false]));
+        } catch (UniqueConstraintViolationException) {
+            return self::query()->where('chave', $chave)->firstOrFail();
+        }
     }
 }
