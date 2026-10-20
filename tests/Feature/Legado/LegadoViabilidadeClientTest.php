@@ -311,4 +311,48 @@ class LegadoViabilidadeClientTest extends TestCase
 
         Http::assertNothingSent();
     }
+
+    /**
+     * @return array<string, array{string}>
+     */
+    public static function formasDeConfigurarABase(): array
+    {
+        return [
+            'sem /v1' => ['https://legado.test'],
+            'sem /v1 e barra final' => ['https://legado.test/'],
+            'com /v1' => ['https://legado.test/v1'],
+            'com /v1 e barra final' => ['https://legado.test/v1/'],
+        ];
+    }
+
+    #[DataProvider('formasDeConfigurarABase')]
+    public function test_a_base_funciona_com_ou_sem_v1(string $base): void
+    {
+        config(['viabiliza.integrations.legado_api.base_url' => $base]);
+
+        Http::fake([
+            'https://legado.test/v1/provisorias*' => Http::response(['data' => []]),
+            'https://legado.test/v1/tvls/*' => Http::response(['data' => $this->detalhe(55)]),
+            'https://legado.test/v1/processos*' => Http::response(['data' => [['numero' => '1/2024', 'numeros_tvl' => [55]]]]),
+            '*' => Http::response(['mensagem' => 'rota inesperada'], 404),
+        ]);
+
+        $this->cliente()->provisoriasPorCnpj('12345678000195');
+        $this->assertNotNull($this->cliente()->tvlPorNumero(55));
+        $this->assertCount(1, $this->cliente()->tvlsDoProcesso('1/2024'));
+
+        $urls = [];
+        Http::assertSent(function (Request $r) use (&$urls): bool {
+            $urls[] = $r->url();
+
+            return true;
+        });
+
+        $this->assertSame([
+            'https://legado.test/v1/provisorias?cnpj=12345678000195',
+            'https://legado.test/v1/tvls/55',
+            'https://legado.test/v1/processos?numero_processo=1%2F2024',
+            'https://legado.test/v1/tvls/55',
+        ], $urls);
+    }
 }

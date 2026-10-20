@@ -96,7 +96,8 @@ class LegadoViabilidadeClient
             throw new LegadoIndisponivelException('API legada de viabilidade não configurada.');
         }
 
-        $url = rtrim($baseUrl, '/').$caminho;
+        $base = rtrim($baseUrl, '/');
+        $url = (str_ends_with($base, '/v1') ? $base : $base.'/v1').$caminho;
         $ultima = null;
 
         for ($tentativa = 1; $tentativa <= self::TENTATIVAS; $tentativa++) {

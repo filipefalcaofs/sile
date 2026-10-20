@@ -336,6 +336,7 @@ return [
             'timeout' => 8,
         ],
         'legado_api' => [
+            // A base aceita com ou sem o sufixo /v1.
             'base_url' => env('LEGADO_API_URL', ''),
             'token' => env('LEGADO_API_TOKEN', ''),
             'timeout' => 8,
