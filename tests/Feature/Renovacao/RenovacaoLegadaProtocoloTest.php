@@ -451,6 +451,35 @@ class RenovacaoLegadaProtocoloTest extends TestCase
         $this->assertSame(0, ViabilityRequest::query()->count());
     }
 
+    public function test_resolucao_do_endereco_acontece_antes_do_lock_com_cadastro_fora_do_ar(): void
+    {
+        $this->assertFalhaDoCadastroAntesDoLock('indisponivel', ResolvedorEnderecoImovel::M_INDISPONIVEL);
+    }
+
+    public function test_resolucao_do_endereco_acontece_antes_do_lock_com_inscricao_nao_encontrada(): void
+    {
+        $this->assertFalhaDoCadastroAntesDoLock('nao_encontrada', ResolvedorEnderecoImovel::M_NAO_ENCONTRADA);
+    }
+
+    private function assertFalhaDoCadastroAntesDoLock(string $falha, string $mensagem): void
+    {
+        $empresa = Company::factory()->create(['cnpj' => self::CNPJ]);
+        $this->cadastroImobiliario(falha: $falha);
+        $lock = Cache::lock('renovacao-legada:1234567', 3600);
+        $this->assertTrue($lock->get());
+
+        try {
+            $this->servico()->protocolarLegada($this->detalhe(['inscricao_imobiliaria' => '0123456789']), $empresa, User::factory()->create(), ['phone' => '71999990000'], [$this->declaracao->id]);
+            $this->fail('Esperava DomainException.');
+        } catch (DomainException $exception) {
+            $this->assertSame($mensagem, $exception->getMessage());
+        } finally {
+            $lock->release();
+        }
+
+        $this->assertSame(0, ViabilityRequest::query()->count());
+    }
+
     public function test_store_ignora_dados_postados_alem_de_contato_e_declaracoes(): void
     {
         [$cidadao, $empresa] = $this->cidadaoComEmpresa();

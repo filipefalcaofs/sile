@@ -159,7 +159,7 @@ class RenovacaoProtocoloService
      */
     private function enderecoDoProcessoLegado(TvlLegadaDetalhe $tvl): array
     {
-        if (preg_replace('/\D+/', '', (string) $tvl->inscricaoImobiliaria) === '') {
+        if (! $this->enderecoImovel->temInscricao($tvl->inscricaoImobiliaria)) {
             return $tvl->endereco;
         }
 

@@ -185,6 +185,15 @@ class ResolvedorEnderecoImovelTest extends TestCase
         });
     }
 
+    public function test_tem_inscricao_so_com_digitos(): void
+    {
+        $this->assertFalse($this->resolvedor()->temInscricao(null));
+        $this->assertFalse($this->resolvedor()->temInscricao(''));
+        $this->assertFalse($this->resolvedor()->temInscricao('  '));
+        $this->assertFalse($this->resolvedor()->temInscricao('--'));
+        $this->assertTrue($this->resolvedor()->temInscricao('051.480-81'));
+    }
+
     public function test_mesma_inscricao_consulta_o_cadastro_uma_so_vez(): void
     {
         $this->fakeCadastro($this->campos('Rua A', '1'));

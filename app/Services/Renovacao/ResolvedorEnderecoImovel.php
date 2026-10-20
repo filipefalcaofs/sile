@@ -26,6 +26,11 @@ class ResolvedorEnderecoImovel
 
     public function __construct(private readonly PropertyRegistryLookup $cadastro) {}
 
+    public function temInscricao(?string $inscricao): bool
+    {
+        return preg_replace('/\D+/', '', (string) $inscricao) !== '';
+    }
+
     /**
      * @throws EnderecoImovelNaoEncontradoException
      * @throws EnderecoImovelIndisponivelException

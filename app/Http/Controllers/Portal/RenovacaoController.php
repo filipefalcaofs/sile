@@ -358,7 +358,7 @@ class RenovacaoController extends Controller
      */
     private function enderecoLegadoTexto(TvlLegadaDetalhe $tvl): string
     {
-        if (preg_replace('/\D+/', '', (string) $tvl->inscricaoImobiliaria) !== '') {
+        if ($this->enderecoImovel->temInscricao($tvl->inscricaoImobiliaria)) {
             return $this->enderecoImovel->resolver($tvl->inscricaoImobiliaria)->texto();
         }
 
