@@ -20,6 +20,7 @@ use Tests\TestCase;
 
 class ProvisoriasLegadasServiceTest extends TestCase
 {
+    use FakeCadastroImobiliario;
     use LazilyRefreshDatabase;
 
     private const CNPJ = '11222333000181';
@@ -36,6 +37,7 @@ class ProvisoriasLegadasServiceTest extends TestCase
 
         Cnae::factory()->create(['code' => self::CODIGO_CNAE]);
         $this->cadastroRespondendo(self::RAZAO);
+        $this->cadastroImobiliario('RUA DA ENGOMADEIRA, 508 — SALA 2', '508', '41200-000');
     }
 
     public function test_numero_da_tvl_e_numero_do_processo_chegam_a_mesma_tvl(): void
@@ -232,6 +234,39 @@ class ProvisoriasLegadasServiceTest extends TestCase
         );
     }
 
+    public function test_cadastro_imobiliario_fora_do_ar_marca_indisponivel_e_nao_descarta_a_tvl(): void
+    {
+        Log::spy();
+        $this->cadastroImobiliario(falha: 'indisponivel');
+        $this->mockClient(function (MockInterface $client): void {
+            $client->shouldReceive('provisoriasPorCnpj')->with(self::CNPJ)->andReturn([$this->resumo(1111111)]);
+            $client->shouldReceive('tvlPorNumero')->with(1111111)->andReturn($this->detalhe(1111111, titular: null));
+        });
+
+        $lista = $this->service()->paraEmpresas(collect([$this->empresa()]));
+        $busca = $this->service()->buscarPorNumero($this->empresa(), '1111111');
+
+        $this->assertSame(['itens' => [], 'indisponivel' => true], $lista);
+        $this->assertSame(['itens' => [], 'indisponivel' => true], $busca);
+        Log::shouldHaveReceived('warning')->twice()->withArgs(
+            fn (string $mensagem, array $contexto): bool => ! str_contains($mensagem.json_encode($contexto), self::CNPJ),
+        );
+    }
+
+    public function test_tvl_sem_cnpj_gravado_e_imovel_de_outro_endereco_e_descartada(): void
+    {
+        $this->cadastroImobiliario('AV SETE DE SETEMBRO, 10', '10', '40060-001');
+        $this->mockClient(function (MockInterface $client): void {
+            $client->shouldReceive('tvlPorNumero')->with(1234567)
+                ->andReturn($this->detalhe(1234567, titular: null));
+        });
+
+        $this->assertSame(
+            ['itens' => [], 'indisponivel' => false],
+            $this->service()->buscarPorNumero($this->empresa(), '1234567'),
+        );
+    }
+
     public function test_consulta_cadastral_e_feita_uma_vez_por_item_sem_cnpj_gravado(): void
     {
         $chamadas = new \ArrayObject;
@@ -339,6 +374,7 @@ class ProvisoriasLegadasServiceTest extends TestCase
             'renovada_depois' => $renovadaDepois,
             'titular' => ['documento' => $titular],
             'razao_social' => self::RAZAO,
+            'inscricao_imobiliaria' => '0514808100',
             'endereco' => ['logradouro' => 'RUA DA ENGOMADEIRA', 'numero' => '508', 'bairro' => '', 'cep' => '41200000'],
             'atividades' => [['codigo' => self::CODIGO_CNAE, 'descricao' => 'Padaria']],
         ];

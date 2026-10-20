@@ -13,8 +13,10 @@ use App\Services\Cnpj\CnpjLookup;
 use App\Services\Cnpj\CnpjLookupException;
 use App\Services\Cnpj\CnpjNotFoundException;
 use App\Services\Legado\TvlLegadaDetalhe;
+use App\Services\Renovacao\ConferenciaTitularidade;
 use App\Services\Renovacao\RenovacaoElegibilidade;
 use App\Services\Renovacao\RenovacaoLegadaElegibilidadeService;
+use App\Services\Renovacao\ResolvedorEnderecoImovel;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -22,6 +24,7 @@ use Tests\TestCase;
 
 class RenovacaoLegadaElegibilidadeTest extends TestCase
 {
+    use FakeCadastroImobiliario;
     use LazilyRefreshDatabase;
 
     private const CNPJ = '11222333000181';
@@ -30,12 +33,15 @@ class RenovacaoLegadaElegibilidadeTest extends TestCase
 
     private const CODIGO_CNAE = '4721102';
 
+    private const INSCRICAO = '0514808100';
+
     protected function setUp(): void
     {
         parent::setUp();
 
         Cnae::factory()->create(['code' => self::CODIGO_CNAE]);
         $this->cadastroRespondendo($this->dadosCadastrais());
+        $this->imovelDaEmpresa();
     }
 
     public function test_bloqueia_quando_titular_gravado_e_de_outra_empresa(): void
@@ -109,6 +115,129 @@ class RenovacaoLegadaElegibilidadeTest extends TestCase
 
             $this->assertNegado('Não foi possível conferir o CNPJ agora. Tente novamente em instantes.', $resultado);
         }
+    }
+
+    public function test_tvl_sem_inscricao_bloqueia_com_m_sem_inscricao_sem_consultar_o_cadastro(): void
+    {
+        $chamadas = $this->cadastroImobiliario('RUA DA ENGOMADEIRA, 508', '508', '41200-000');
+
+        $resultado = $this->avaliar($this->tvl(titularDocumento: null, inscricao: null));
+
+        $this->assertNegado(ResolvedorEnderecoImovel::M_SEM_INSCRICAO, $resultado);
+        $this->assertCount(0, $chamadas);
+    }
+
+    public function test_inscricao_nao_encontrada_bloqueia_com_m_nao_encontrada(): void
+    {
+        $this->cadastroImobiliario(falha: 'nao_encontrada');
+
+        $resultado = $this->avaliar($this->tvl(titularDocumento: null));
+
+        $this->assertNegado(ResolvedorEnderecoImovel::M_NAO_ENCONTRADA, $resultado);
+    }
+
+    public function test_cadastro_sem_dados_de_endereco_bloqueia_como_nao_encontrada(): void
+    {
+        $this->cadastroImobiliario(semCadastro: true);
+
+        $resultado = $this->avaliar($this->tvl(titularDocumento: null));
+
+        $this->assertNegado(ResolvedorEnderecoImovel::M_NAO_ENCONTRADA, $resultado);
+    }
+
+    public function test_endereco_do_imovel_diferente_do_cnpj_bloqueia_com_m_diverge(): void
+    {
+        $this->cadastroImobiliario('AV SETE DE SETEMBRO, 10', '10', '40060-001');
+
+        $resultado = $this->avaliar($this->tvl(titularDocumento: null));
+
+        $this->assertNegado(ConferenciaTitularidade::M_DIVERGE, $resultado);
+    }
+
+    public function test_endereco_gravado_na_tvl_nao_vale_quando_o_imovel_e_outro(): void
+    {
+        $this->cadastroImobiliario('AV SETE DE SETEMBRO, 10', '10', '40060-001');
+
+        $resultado = $this->avaliar($this->tvl(
+            titularDocumento: null,
+            endereco: ['logradouro' => 'RUA DA ENGOMADEIRA', 'numero' => '508', 'bairro' => null, 'cep' => '41200000'],
+        ));
+
+        $this->assertNegado(ConferenciaTitularidade::M_DIVERGE, $resultado);
+    }
+
+    public function test_imovel_confere_por_logradouro_e_numero_quando_o_cep_difere(): void
+    {
+        $this->cadastroImobiliario('RUA DA ENGOMADEIRA, 508 — SALA 2', '508', '40000-000');
+
+        $resultado = $this->avaliar($this->tvl(titularDocumento: null));
+
+        $this->assertTrue($resultado->elegivel);
+    }
+
+    public function test_imovel_sem_cep_utilizavel_e_sem_numero_nao_casa_com_ninguem(): void
+    {
+        $this->cadastroImobiliario('RUA DA ENGOMADEIRA', 'S/N', '00000-000');
+
+        $resultado = $this->avaliar($this->tvl(titularDocumento: null));
+
+        $this->assertNegado(ConferenciaTitularidade::M_DIVERGE, $resultado);
+    }
+
+    public function test_cadastro_fora_do_ar_e_consulta_indisponivel(): void
+    {
+        $this->cadastroImobiliario(falha: 'indisponivel');
+        $tvl = $this->tvl(titularDocumento: null);
+        $empresa = $this->empresa();
+
+        $titularidade = app(RenovacaoLegadaElegibilidadeService::class)->titularidade($tvl, $empresa);
+        $resultado = $this->avaliar($tvl);
+
+        $this->assertTrue($titularidade->consultaIndisponivel);
+        $this->assertFalse($titularidade->titular);
+        $this->assertSame(ResolvedorEnderecoImovel::M_INDISPONIVEL, $titularidade->motivo);
+        $this->assertNegado(ResolvedorEnderecoImovel::M_INDISPONIVEL, $resultado);
+    }
+
+    public function test_razao_diferente_nao_consulta_o_cadastro_imobiliario(): void
+    {
+        $chamadas = $this->cadastroImobiliario('RUA DA ENGOMADEIRA, 508', '508', '41200-000');
+        $this->cadastroRespondendo($this->dadosCadastrais(razao: 'OUTRA EMPRESA LTDA'));
+
+        $resultado = $this->avaliar($this->tvl(titularDocumento: null));
+
+        $this->assertNegado('A razão social deste CNPJ não confere com a da viabilidade anterior.', $resultado);
+        $this->assertCount(0, $chamadas);
+    }
+
+    public function test_inscricao_com_mascara_chega_ao_cadastro_so_com_digitos(): void
+    {
+        $chamadas = $this->cadastroImobiliario('RUA DA ENGOMADEIRA, 508', '508', '41200-000');
+
+        $resultado = $this->avaliar($this->tvl(titularDocumento: null, inscricao: '051.480-81'));
+
+        $this->assertTrue($resultado->elegivel);
+        $this->assertSame(['05148081'], $chamadas->getArrayCopy());
+    }
+
+    public function test_cnpj_gravado_igual_nao_consulta_o_cadastro_imobiliario(): void
+    {
+        $chamadas = $this->cadastroImobiliario(falha: 'indisponivel');
+
+        $resultado = $this->avaliar($this->tvl(titularDocumento: self::CNPJ, inscricao: null));
+
+        $this->assertTrue($resultado->elegivel);
+        $this->assertCount(0, $chamadas);
+    }
+
+    public function test_cnpj_gravado_de_outra_empresa_nao_consulta_o_cadastro_imobiliario(): void
+    {
+        $chamadas = $this->cadastroImobiliario('RUA DA ENGOMADEIRA, 508', '508', '41200-000');
+
+        $resultado = $this->avaliar($this->tvl(titularDocumento: '99888777000166'));
+
+        $this->assertNegado('Esta viabilidade pertence a outra empresa.', $resultado);
+        $this->assertCount(0, $chamadas);
     }
 
     public function test_bloqueia_quando_nao_e_provisoria(): void
@@ -272,10 +401,18 @@ class RenovacaoLegadaElegibilidadeTest extends TestCase
 
     private function avaliar(TvlLegadaDetalhe $tvl): RenovacaoElegibilidade
     {
-        $empresa = Company::query()->where('cnpj', self::CNPJ)->first()
-            ?? Company::factory()->create(['cnpj' => self::CNPJ]);
+        return app(RenovacaoLegadaElegibilidadeService::class)->avaliar($tvl, $this->empresa());
+    }
 
-        return app(RenovacaoLegadaElegibilidadeService::class)->avaliar($tvl, $empresa);
+    private function empresa(): Company
+    {
+        return Company::query()->where('cnpj', self::CNPJ)->first()
+            ?? Company::factory()->create(['cnpj' => self::CNPJ]);
+    }
+
+    private function imovelDaEmpresa(): void
+    {
+        $this->cadastroImobiliario('RUA DA ENGOMADEIRA, 508 — SALA 2', '508', '41200-000');
     }
 
     private function definirPermiteVencida(string $valor): void
@@ -343,6 +480,7 @@ class RenovacaoLegadaElegibilidadeTest extends TestCase
 
     /**
      * @param  list<array{codigo: string, descricao: string}>|null  $atividades
+     * @param  array{logradouro: ?string, numero: ?string, bairro: ?string, cep: ?string}|null  $endereco
      */
     private function tvl(
         ?string $titularDocumento = self::CNPJ,
@@ -351,6 +489,8 @@ class RenovacaoLegadaElegibilidadeTest extends TestCase
         ?array $atividades = null,
         bool $renovadaDepois = false,
         ?string $situacao = 'vigente',
+        ?string $inscricao = self::INSCRICAO,
+        ?array $endereco = null,
     ): TvlLegadaDetalhe {
         return new TvlLegadaDetalhe(
             numero: 4321,
@@ -367,8 +507,8 @@ class RenovacaoLegadaElegibilidadeTest extends TestCase
             titularTipo: null,
             titularOrigem: null,
             razaoSocial: self::RAZAO,
-            inscricaoImobiliaria: null,
-            endereco: ['logradouro' => 'RUA DA ENGOMADEIRA', 'numero' => '508', 'bairro' => null, 'cep' => '41200000'],
+            inscricaoImobiliaria: $inscricao,
+            endereco: $endereco ?? ['logradouro' => 'AV QUALQUER', 'numero' => '1', 'bairro' => null, 'cep' => '40000000'],
             processoNumero: null,
             complemento: null,
             zona: null,

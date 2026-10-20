@@ -15,14 +15,15 @@ use App\Support\Settings;
 /**
  * Diz se uma TVL do sistema legado pode ser renovada pela empresa informada.
  * A primeira regra que falha devolve o motivo; sem CNPJ gravado no legado, a
- * titularidade é conferida pelo cadastro do CNPJ e, se a consulta falhar, o
- * pedido é bloqueado.
+ * titularidade é conferida pelo cadastro do CNPJ e pelo endereço do imóvel da
+ * inscrição imobiliária da TVL e, se alguma consulta falhar, o pedido é bloqueado.
  */
 class RenovacaoLegadaElegibilidadeService
 {
     public function __construct(
         private readonly CnpjLookup $cnpjLookup,
         private readonly ConferenciaTitularidade $conferenciaTitularidade,
+        private readonly ResolvedorEnderecoImovel $resolvedorEnderecoImovel,
     ) {}
 
     public function avaliar(TvlLegadaDetalhe $tvl, Company $empresa): RenovacaoElegibilidade
@@ -67,7 +68,15 @@ class RenovacaoLegadaElegibilidadeService
             return ResultadoTitularidade::consultaIndisponivel('Não foi possível conferir o CNPJ agora. Tente novamente em instantes.');
         }
 
-        $conferencia = $this->conferenciaTitularidade->conferir($tvl, $dados);
+        try {
+            $conferencia = $this->conferenciaTitularidade->conferir(
+                $tvl,
+                $dados,
+                fn (): EnderecoDoImovel => $this->resolvedorEnderecoImovel->resolver($tvl->inscricaoImobiliaria),
+            );
+        } catch (EnderecoImovelIndisponivelException) {
+            return ResultadoTitularidade::consultaIndisponivel(ResolvedorEnderecoImovel::M_INDISPONIVEL);
+        }
 
         return $conferencia->confere
             ? ResultadoTitularidade::titular()

@@ -9,13 +9,16 @@ use Illuminate\Support\Str;
 /**
  * Confere se o CNPJ informado é o titular de uma TVL legada sem CNPJ gravado.
  *
- * Exige razão social igual (normalizada, sem fuzzy) e endereço igual: mesmo CEP,
- * ou mesmo logradouro e número. A inscrição imobiliária da TVL não consta do
- * cadastro do CNPJ, então não participa daqui; quem a tiver de outra fonte
- * decide fora desta classe.
+ * Exige razão social igual (normalizada, sem fuzzy) e que o endereço do CNPJ seja
+ * o do imóvel da TVL, vindo do cadastro imobiliário e não do endereço gravado no
+ * legado: mesmo CEP, ou mesmo logradouro e número. O cadastro só é consultado
+ * depois de a razão social conferir. CEP que não tenha oito dígitos ou seja só
+ * zeros, e número sem dígito diferente de zero, contam como ausentes.
  */
 class ConferenciaTitularidade
 {
+    public const M_DIVERGE = 'O endereço deste CNPJ não confere com o do imóvel da viabilidade anterior. Procure a SEDUR.';
+
     private const SUFIXOS_SOCIETARIOS = [
         ['s', 'a'],
         ['ltda'],
@@ -38,7 +41,12 @@ class ConferenciaTitularidade
         'rodovia' => 'rodovia', 'rod' => 'rodovia',
     ];
 
-    public function conferir(TvlLegadaDetalhe $tvl, CnpjData $empresa): ConferenciaResultado
+    /**
+     * @param  callable(): EnderecoDoImovel  $enderecoDoImovel
+     *
+     * @throws EnderecoImovelIndisponivelException
+     */
+    public function conferir(TvlLegadaDetalhe $tvl, CnpjData $empresa, callable $enderecoDoImovel): ConferenciaResultado
     {
         $razaoLegada = self::normalizarRazao($tvl->razaoSocial ?? '');
 
@@ -56,11 +64,14 @@ class ConferenciaTitularidade
             );
         }
 
-        if (! $this->enderecoConfere($tvl, $empresa)) {
-            return new ConferenciaResultado(
-                false,
-                'O endereço deste CNPJ não confere com o da viabilidade anterior.',
-            );
+        try {
+            $imovel = $enderecoDoImovel();
+        } catch (EnderecoImovelNaoEncontradoException $e) {
+            return new ConferenciaResultado(false, $e->getMessage());
+        }
+
+        if (! $this->enderecoConfere($imovel, $empresa)) {
+            return new ConferenciaResultado(false, self::M_DIVERGE);
         }
 
         return new ConferenciaResultado(true);
@@ -85,22 +96,35 @@ class ConferenciaTitularidade
         return implode(' ', $tokens);
     }
 
-    private function enderecoConfere(TvlLegadaDetalhe $tvl, CnpjData $empresa): bool
+    private function enderecoConfere(EnderecoDoImovel $imovel, CnpjData $empresa): bool
     {
-        $cepLegado = $this->digitos($tvl->endereco['cep'] ?? null);
-        $cepEmpresa = $this->digitos($empresa->zipCode);
+        $cepImovel = $this->cepUtilizavel($imovel->cep);
 
-        if ($cepLegado !== '' && $cepLegado === $cepEmpresa) {
+        if ($cepImovel !== '' && $cepImovel === $this->cepUtilizavel($empresa->zipCode)) {
             return true;
         }
 
-        $logradouroLegado = $this->normalizarLogradouro($tvl->endereco['logradouro'] ?? null);
-        $numeroLegado = $this->digitos($tvl->endereco['numero'] ?? null);
+        $logradouroImovel = $this->normalizarLogradouro($imovel->logradouro);
+        $numeroImovel = $this->numeroUtilizavel($imovel->numero);
 
-        return $logradouroLegado !== ''
-            && $numeroLegado !== ''
-            && $logradouroLegado === $this->normalizarLogradouro($empresa->street)
-            && $numeroLegado === $this->digitos($empresa->number);
+        return $logradouroImovel !== ''
+            && $numeroImovel !== ''
+            && $logradouroImovel === $this->normalizarLogradouro($empresa->street)
+            && $numeroImovel === $this->numeroUtilizavel($empresa->number);
+    }
+
+    private function cepUtilizavel(?string $cep): string
+    {
+        $digitos = $this->digitos($cep);
+
+        return strlen($digitos) === 8 && trim($digitos, '0') !== '' ? $digitos : '';
+    }
+
+    private function numeroUtilizavel(?string $numero): string
+    {
+        $digitos = $this->digitos($numero);
+
+        return trim($digitos, '0') !== '' ? $digitos : '';
     }
 
     private function normalizarLogradouro(?string $logradouro): string
