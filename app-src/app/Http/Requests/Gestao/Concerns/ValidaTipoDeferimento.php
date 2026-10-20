@@ -21,11 +21,17 @@ trait ValidaTipoDeferimento
     {
         return [
             'tipo' => [
-                Rule::requiredIf(fn (): bool => $this->input('resultado') === 'deferido' && ! $this->ehRenovacao()),
+                Rule::requiredIf(fn (): bool => $this->pedeTipo()),
                 'nullable',
                 Rule::enum(TvlKind::class),
             ],
-            'validade_meses' => ['nullable', 'required_if:tipo,provisoria,pre_operacional', 'integer', Rule::in([6, 12, 24])],
+            'validade_meses' => [
+                Rule::requiredIf(fn (): bool => $this->pedeTipo()
+                    && in_array($this->input('tipo'), [TvlKind::Provisoria->value, TvlKind::PreOperacional->value], true)),
+                'nullable',
+                'integer',
+                Rule::in([6, 12, 24]),
+            ],
         ];
     }
 
@@ -36,7 +42,7 @@ trait ValidaTipoDeferimento
     {
         return [
             'tipo.required' => 'Escolha o tipo do deferimento.',
-            'validade_meses.required_if' => 'Escolha a data da validade.',
+            'validade_meses.required' => 'Escolha a data da validade.',
             'validade_meses.in' => 'Escolha a validade entre 6 meses, 1 ano e 2 anos.',
         ];
     }
@@ -51,6 +57,14 @@ trait ValidaTipoDeferimento
         }
 
         return ValidadeDeferimento::de($this->validated('tipo'), $this->validated('validade_meses'));
+    }
+
+    /**
+     * Tipo e validade só valem no deferimento fora da renovação.
+     */
+    private function pedeTipo(): bool
+    {
+        return $this->input('resultado') === 'deferido' && ! $this->ehRenovacao();
     }
 
     private function ehRenovacao(): bool
