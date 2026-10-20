@@ -12,7 +12,7 @@ import {
     type AreaEmbarqueExigida,
     type AreaEmbarqueRequerente,
 } from '@/pages/gestao/ficha-analise/area-embarque';
-import { sinteseDaFicha, type EstadoLeitura } from '@/pages/gestao/ficha-analise/sintese';
+import { desfechoDaAnalise, type DesfechoAnalise } from '@/pages/gestao/ficha-analise/sintese';
 import PageHeader from '@/components/app/page-header';
 import CamadasImovelLista, { type CamadasImovel } from '@/components/geo/camadas-imovel';
 import { centroDaGeometria, ESTILO_ENDERECAMENTO } from '@/components/geo/geometria';
@@ -23,7 +23,7 @@ import IsoDateInput from '@/components/form/iso-date-input';
 import Label from '@/components/form/label';
 import OptionSelect from '@/components/form/option-select';
 import Select from '@/components/form/select';
-import { AlertIcon, ArrowRightIcon, CheckCircleIcon, ChevronDownIcon, CloseIcon, InfoIcon, MapPinIcon, TrashIcon } from '@/components/icons';
+import { AlertIcon, ArrowRightIcon, CheckCircleIcon, ChevronDownIcon, MapPinIcon, TrashIcon } from '@/components/icons';
 import Badge from '@/components/ui/badge';
 import Button from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -779,19 +779,7 @@ export default function FichaAnaliseShow({
     const [sedeEscritorioVirtual, setSedeEscritorioVirtual] = useState<boolean>(() => ficha.is_virtual_office_hq ?? false);
     const [novaCondicao, setNovaCondicao] = useState('');
     const analysisReasons = ficha.analysis_reasons ?? [];
-    const sintese = useMemo(
-        () =>
-            sinteseDaFicha({
-                statusProcesso: processo.status,
-                rotuloProcesso: processo.status_label,
-                motorDisponivel: ficha.engine_available,
-                motivosAnalise: analysisReasons,
-                atividades: perCnae,
-                zona: localizacao?.zona ?? null,
-                via: localizacao?.via ?? null,
-            }),
-        [analysisReasons, ficha.engine_available, localizacao?.via, localizacao?.zona, perCnae, processo.status, processo.status_label],
-    );
+    const desfecho = desfechoDaAnalise(processo.status);
     const [addressConfirmed, setAddressConfirmed] = useState<boolean | null>(() => ficha.address_confirmed ?? null);
     const [saveState, setSaveState] = useState<'idle' | 'salvando' | 'salvo' | 'erro'>('idle');
 
@@ -1624,7 +1612,7 @@ export default function FichaAnaliseShow({
                     onAplicarMinuta={aplicarMinutaAoParecer}
                 />
 
-                <SinteseLeitura sintese={sintese} />
+                {desfecho && <DesfechoAnaliseCard desfecho={desfecho} />}
 
                 {/* Topo no padrão legado SAPS (design 2026-07-22): Localização + Cadastro
                     Imobiliário à esquerda, Polígono à direita, e a faixa Dados
@@ -2901,66 +2889,23 @@ export default function FichaAnaliseShow({
     );
 }
 
-/** Skeleton da prop deferida de sugestões de IA (resumo HU-117 + alertas HU-115) enquanto carrega sob demanda. */
-function marcaLeitura(estado: EstadoLeitura): { Icone: typeof CheckCircleIcon; classe: string } {
-    if (estado === 'permitido') {
-        return { Icone: CheckCircleIcon, classe: 'text-success-500' };
-    }
-
-    if (estado === 'nao_permitido') {
-        return { Icone: CloseIcon, classe: 'text-error-500' };
-    }
-
-    if (estado === 'impedimento' || estado === 'condicionado') {
-        return { Icone: AlertIcon, classe: 'text-warning-500' };
-    }
-
-    return { Icone: InfoIcon, classe: 'text-gray-400' };
-}
-
-function SinteseLeitura({ sintese }: { sintese: ReturnType<typeof sinteseDaFicha> }) {
+function DesfechoAnaliseCard({ desfecho }: { desfecho: DesfechoAnalise }) {
     return (
         <Card>
             <CardContent>
                 <p
                     className={`text-2xl font-semibold tracking-tight ${
-                        sintese.tom === 'deferida'
-                            ? 'text-success-600 dark:text-success-500'
-                            : sintese.tom === 'indeferida'
-                              ? 'text-error-600 dark:text-error-500'
-                              : 'text-gray-800 dark:text-white/90'
+                        desfecho.tom === 'deferida' ? 'text-success-600 dark:text-success-500' : 'text-error-600 dark:text-error-500'
                     }`}
                 >
-                    {sintese.titulo}
+                    {desfecho.titulo}
                 </p>
-
-                {sintese.linhas.length > 0 && (
-                    <ul className="mt-4 space-y-2" aria-label="Por que o processo está neste estado">
-                        {sintese.linhas.map((linha) => {
-                            const marca = marcaLeitura(linha.estado);
-
-                            return (
-                                <li key={linha.id} className="flex items-start gap-2 text-theme-sm text-gray-800 dark:text-white/90">
-                                    <marca.Icone className={`mt-0.5 size-4 shrink-0 fill-current ${marca.classe}`} />
-                                    <span>{linha.texto}</span>
-                                </li>
-                            );
-                        })}
-                    </ul>
-                )}
-
-                <button
-                    type="button"
-                    className="mt-4 text-theme-sm text-brand-500 underline-offset-2 hover:underline"
-                    onClick={() => document.getElementById('parecer-editor')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
-                >
-                    Ver o parecer completo
-                </button>
             </CardContent>
         </Card>
     );
 }
 
+/** Skeleton da prop deferida de sugestões de IA (resumo HU-109 + alertas HU-107) enquanto carrega sob demanda. */
 function SugestoesIaSkeleton() {
     return (
         <div className="space-y-6">
