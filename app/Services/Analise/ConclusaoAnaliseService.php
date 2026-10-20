@@ -47,7 +47,7 @@ class ConclusaoAnaliseService
         private TvlNumberGenerator $tvl,
     ) {}
 
-    public function concluir(ViabilityRequest $request, User $ator, ConclusionOutcome $resultado, ?string $parecer = null, bool $exigirFichaSalva = false, bool $confirmarDivergencia = false): void
+    public function concluir(ViabilityRequest $request, User $ator, ConclusionOutcome $resultado, ?string $parecer = null, bool $exigirFichaSalva = false, bool $confirmarDivergencia = false, ?ValidadeDeferimento $validade = null): void
     {
         $parecer = $this->parecer($parecer);
         $motivo = $this->motivo($resultado, $parecer);
@@ -60,14 +60,19 @@ class ConclusaoAnaliseService
             $this->exigirFichaSalva($request);
         }
 
+        // Renovação tem tipo e validade próprios, no diálogo "Decidir processo".
+        $validade = $request->isRenewal() ? null : $validade;
+
         if ($request->status !== $resultado->status()) {
             if ($this->jaFinalizado($request->status) && ! $this->encerramentoDeDeferido($request->status, $resultado)) {
-                $this->revisarConclusao($request, $ator, $resultado, $parecer);
+                $this->revisarConclusao($request, $ator, $resultado, $parecer, $validade);
             } elseif ($resultado->encerraDeferimento()) {
                 $this->aplicarEncerramento($request, $ator, $resultado, $parecer);
             } else {
-                $this->concluirPelaFicha($request, $ator, $resultado, $parecer, $confirmarDivergencia);
+                $this->concluirPelaFicha($request, $ator, $resultado, $parecer, $confirmarDivergencia, $validade);
             }
+        } elseif ($resultado === ConclusionOutcome::Deferido && $validade !== null) {
+            $this->atualizarValidade($request, $ator, $validade);
         }
 
         $this->fecharEixo($request->fresh() ?? $request, $ator, $motivo);
@@ -129,9 +134,9 @@ class ConclusaoAnaliseService
      * o resultado por qualquer outro. A decisão existente é reescrita (uma
      * por processo) e a troca fica na linha do tempo e na auditoria.
      */
-    private function revisarConclusao(ViabilityRequest $request, User $ator, ConclusionOutcome $resultado, ?string $parecer): void
+    private function revisarConclusao(ViabilityRequest $request, User $ator, ConclusionOutcome $resultado, ?string $parecer, ?ValidadeDeferimento $validade = null): void
     {
-        DB::transaction(function () use ($request, $ator, $resultado, $parecer): void {
+        DB::transaction(function () use ($request, $ator, $resultado, $parecer, $validade): void {
             $anterior = $request->status;
             $destino = $resultado->status();
             $decisao = $request->decision()->first();
@@ -148,6 +153,8 @@ class ConclusaoAnaliseService
                 'reason' => $parecer ?? $decisao?->reason,
                 'decided_by_user_id' => $ator->id,
                 'decided_at' => now(),
+                'tvl_kind' => $resultado === ConclusionOutcome::Deferido ? $validade?->tipo : null,
+                'tvl_valid_until' => $resultado === ConclusionOutcome::Deferido ? $validade?->validoAte(now())?->toDateString() : null,
             ];
 
             if ($decisao === null) {
@@ -194,7 +201,7 @@ class ConclusaoAnaliseService
         });
     }
 
-    private function concluirPelaFicha(ViabilityRequest $request, User $ator, ConclusionOutcome $resultado, ?string $parecer, bool $confirmarDivergencia = false): void
+    private function concluirPelaFicha(ViabilityRequest $request, User $ator, ConclusionOutcome $resultado, ?string $parecer, bool $confirmarDivergencia = false, ?ValidadeDeferimento $validade = null): void
     {
         $record = $request->currentAnalysisRecord()->first();
 
@@ -207,7 +214,55 @@ class ConclusaoAnaliseService
             $record = $this->fichas->finalizar($record, $ator);
         }
 
-        $this->decisao->decide($record, $ator, $resultado->decisionOutcome(), $parecer, confirmarDivergencia: $confirmarDivergencia);
+        $deferido = $resultado === ConclusionOutcome::Deferido;
+
+        $this->decisao->decide(
+            $record,
+            $ator,
+            $resultado->decisionOutcome(),
+            $parecer,
+            tvlKind: $deferido ? $validade?->tipo : null,
+            tvlValidUntil: $deferido ? $validade?->validoAte(now())?->toDateString() : null,
+            confirmarDivergencia: $confirmarDivergencia,
+        );
+    }
+
+    /**
+     * Processo já deferido concluído de novo como Deferido (ex.: malha fina
+     * sobre o expresso): só o tipo e a validade mudam, na decisão existente,
+     * sem novo TVL. A troca fica na auditoria.
+     */
+    private function atualizarValidade(ViabilityRequest $request, User $ator, ValidadeDeferimento $validade): void
+    {
+        $decisao = $request->decision()->first();
+
+        if ($decisao === null) {
+            return;
+        }
+
+        $anteriorTipo = $decisao->tvl_kind?->value;
+        $anteriorValidoAte = $decisao->tvl_valid_until?->toDateString();
+        $validoAte = $validade->validoAte(now())?->toDateString();
+
+        $decisao->update([
+            'tvl_kind' => $validade->tipo,
+            'tvl_valid_until' => $validoAte,
+        ]);
+
+        $this->audit->log(
+            logName: 'analise',
+            event: 'validade-deferimento',
+            description: "Tipo e validade da viabilidade atualizados no processo #{$request->id}",
+            properties: [
+                'viability_request_id' => $request->id,
+                'tipo' => $validade->tipo->value,
+                'valido_ate' => $validoAte,
+                'anterior_tipo' => $anteriorTipo,
+                'anterior_valido_ate' => $anteriorValidoAte,
+                'decided_by' => $ator->id,
+            ],
+            subject: $request,
+        );
     }
 
     /**

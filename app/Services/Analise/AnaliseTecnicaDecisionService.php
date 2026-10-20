@@ -226,8 +226,8 @@ class AnaliseTecnicaDecisionService
             'tvl_product_number' => $outcome === DecisionOutcome::Deferida && ! $request->isRenewal()
                 ? $this->tvl->generate()
                 : null,
-            'tvl_kind' => $request->isRenewal() && $outcome === DecisionOutcome::Deferida ? $tvlKind : null,
-            'tvl_valid_until' => $request->isRenewal() && $outcome === DecisionOutcome::Deferida ? $tvlValidUntil : null,
+            'tvl_kind' => $outcome === DecisionOutcome::Deferida ? $tvlKind : null,
+            'tvl_valid_until' => $outcome === DecisionOutcome::Deferida ? $tvlValidUntil : null,
             'per_cnae' => $perCnae,
             'rules_versions' => $record->engine_rules_versions ?? [],
             'fundamentacao' => $fundamentacao,
