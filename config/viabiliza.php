@@ -134,6 +134,16 @@ return [
         // Carga com menos que esta fração das edificações ativas da fonte é
         // tratada como parcial e não aposenta as ausentes.
         'aposentadoria_fracao_minima' => 0.5,
+        // O agendador verifica toda madrugada e só importa a fonte sem carga
+        // concluída ou ignorada nestes dias: carga morta num redeploy volta
+        // na noite seguinte.
+        'agendamento' => [
+            'overture_dias' => 25,
+            'microsoft_dias' => 85,
+        ],
+        // Carga em andamento há mais que isto foi interrompida (pod trocado,
+        // terminal fechado) e é encerrada como falha na carga seguinte.
+        'orfa_horas' => 6,
         // Retângulo de Salvador com as ilhas [oeste, sul, leste, norte]: corte
         // grosso dos downloads; o recorte fino é pelo limite oficial.
         'bbox' => [-38.70, -13.02, -38.29, -12.73],

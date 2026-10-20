@@ -39,9 +39,18 @@ RUN set -eux; \
       'max_file_uploads = 50' \
       > "$conf_dir/99-app.ini"
 
+# CLI da Overture para a importação agendada das edificações
+# (scripts/overture-salvador.sh). A base tem python3 sem pip: venv próprio.
+RUN set -eux; \
+    python3 -m venv /opt/overture; \
+    /opt/overture/bin/pip install --no-cache-dir overturemaps==1.0.2; \
+    chmod -R a+rX /opt/overture; \
+    /opt/overture/bin/overturemaps --help >/dev/null
+
 USER 1001
 
 ENV COMPOSER_INSTALLER=file:///opt/composer-cache/installer-shim.php
+ENV PATH="/opt/overture/bin:${PATH}"
 
 RUN /usr/libexec/s2i/assemble
 RUN mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \

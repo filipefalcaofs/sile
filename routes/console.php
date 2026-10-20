@@ -1,6 +1,8 @@
 <?php
 
+use App\Enums\FonteEdificacao;
 use App\Models\AccessLog;
+use App\Models\BuildingFootprintImport;
 use App\Models\ExportFile;
 use App\Support\Settings;
 use Illuminate\Foundation\Inspiring;
@@ -49,16 +51,20 @@ Schedule::command('processos:reprocessar-etapas')
 
 // Bases de edificações complementares (polígono do lote quando a Prefeitura
 // não acha o lote). Só rodam com o interruptor ligado no painel de integrações.
+// Verificação diária: importa só a fonte sem carga concluída ou ignorada no
+// intervalo, então carga morta num redeploy volta na noite seguinte.
 // Overture: extrai a release mais recente e importa (idempotente por checksum).
 Schedule::exec('bash scripts/overture-salvador.sh auto-$(date +%F) storage/app/overture/salvador.geojsonseq && php artisan geo:edificacoes:importar-overture storage/app/overture/salvador.geojsonseq --release=auto-$(date +%F)')
-    ->monthlyOn(25, '03:00')
-    ->when(fn (): bool => Settings::enabled('edificacoes_importacao_agendada'))
+    ->dailyAt('03:00')
+    ->when(fn (): bool => Settings::enabled('edificacoes_importacao_agendada')
+        && ! BuildingFootprintImport::emDia(FonteEdificacao::Overture, (int) config('viabiliza.edificacoes.agendamento.overture_dias', 25)))
     ->withoutOverlapping()
     ->onOneServer();
 
 Schedule::command('geo:edificacoes:importar-microsoft')
-    ->quarterlyOn(15, '03:30')
-    ->when(fn (): bool => Settings::enabled('edificacoes_importacao_agendada'))
+    ->dailyAt('03:30')
+    ->when(fn (): bool => Settings::enabled('edificacoes_importacao_agendada')
+        && ! BuildingFootprintImport::emDia(FonteEdificacao::Microsoft, (int) config('viabiliza.edificacoes.agendamento.microsoft_dias', 85)))
     ->withoutOverlapping()
     ->onOneServer();
 
