@@ -76,6 +76,25 @@ class RenovacaoLegadaPortalTest extends TestCase
             );
     }
 
+    public function test_index_traz_as_empresas_vinculadas_para_a_consulta_por_numero(): void
+    {
+        $cidadao = $this->portalUser();
+        $empresa = $this->empresaDe($cidadao);
+        $this->mockClient(function (MockInterface $client): void {
+            $client->shouldReceive('provisoriasPorCnpj')->andReturn([]);
+        });
+
+        $this->actingAs($cidadao)
+            ->get('/portal/renovacao')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('empresas', 1)
+                ->where('empresas.0.id', $empresa->id)
+                ->where('empresas.0.nome', $empresa->legal_name)
+                ->where('empresas.0.cnpj', $empresa->formatted_cnpj)
+            );
+    }
+
     public function test_index_com_api_legada_fora_do_ar_mantem_a_lista_do_viabiliza(): void
     {
         config([

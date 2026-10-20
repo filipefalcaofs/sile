@@ -76,14 +76,18 @@ class RenovacaoController extends Controller
             })
             ->values();
 
-        $legado = $this->legado->paraEmpresas(
-            Company::query()->whereIn('id', $ids)->orderBy('id')->get(),
-        );
+        $empresas = Company::query()->whereIn('id', $ids)->orderBy('id')->get();
+        $legado = $this->legado->paraEmpresas($empresas);
 
         return Inertia::render('portal/renovacao/index', [
             'tvls' => $tvls,
             'legado' => $legado['itens'],
             'legado_indisponivel' => $legado['indisponivel'],
+            'empresas' => $empresas->map(fn (Company $empresa): array => [
+                'id' => $empresa->id,
+                'nome' => $empresa->legal_name,
+                'cnpj' => $empresa->formatted_cnpj,
+            ])->values(),
         ]);
     }
 
