@@ -4,8 +4,8 @@ namespace App\Services\Relatorios;
 
 use App\Enums\AnalysisCategory;
 use App\Models\ViabilityRequest;
-use App\Services\Benchmark\BenchmarkRankingService;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 
 /**
  * Payload da Sala de Controle.
@@ -21,11 +21,10 @@ class SalaDeControleService
         private readonly TempoViabilidadeService $tempoViabilidade,
         private readonly GargalosService $gargalos,
         private readonly DistanciaBenchmarkService $distancia,
-        private readonly BenchmarkRankingService $ranking,
     ) {}
 
     /**
-     * @return array{tempo: array<string, mixed>, operacao: array<string, mixed>, distancia: array<string, mixed>, evolucao: list<array<string, mixed>>, gargalos: list<array<string, mixed>>}
+     * @return array{tempo: array<string, mixed>, operacao: array<string, mixed>, distancia: array<string, mixed>, evolucao: array<string, mixed>, gargalos: list<array<string, mixed>>}
      */
     public function montar(ReportFilters $f): array
     {
@@ -33,7 +32,7 @@ class SalaDeControleService
             'tempo' => $this->tempoViabilidade->porPeriodo($f),
             'operacao' => $this->operacao($f),
             'distancia' => $this->distancia->calcular($f),
-            'evolucao' => $this->ranking->serieSalvador(),
+            'evolucao' => $this->distancia->evolucaoMensal(Carbon::now()),
             'gargalos' => $this->gargalos->porPeriodo($f),
         ];
     }

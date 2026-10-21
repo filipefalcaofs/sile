@@ -78,6 +78,9 @@ class SalaDeControleServiceTest extends TestCase
         $this->assertArrayHasKey('operacao', $painel);
         $this->assertArrayHasKey('distancia', $painel);
         $this->assertArrayHasKey('evolucao', $painel);
+        $this->assertArrayHasKey('anterior', $painel['evolucao']);
+        $this->assertArrayHasKey('atual', $painel['evolucao']);
+        $this->assertArrayHasKey('redesim_atual', $painel['evolucao']);
         $this->assertArrayHasKey('gargalos', $painel);
     }
 
@@ -116,7 +119,8 @@ class SalaDeControleServiceTest extends TestCase
         $this->assertNotEmpty($painel['gargalos']);
         $this->assertNull($painel['distancia']['referencia']);
         $this->assertNotNull($painel['distancia']['motivo']);
-        $this->assertSame([], $painel['evolucao']);
+        $this->assertNull($painel['evolucao']['anterior']['media']);
+        $this->assertNull($painel['evolucao']['redesim_atual']['media']);
     }
 
     public function test_periodo_sem_processos_devolve_blocos_vazios_com_motivo(): void

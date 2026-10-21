@@ -2,6 +2,7 @@ import { Head, router } from '@inertiajs/react';
 import { useCallback, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import DicasTempoCard, { type PainelDicasTempo } from '@/components/app/dicas-tempo-card';
+import EvolucaoSalvador, { type Evolucao, rotuloCompetencia } from '@/components/app/evolucao-salvador';
 import PageHeader from '@/components/app/page-header';
 import IsoDateInput from '@/components/form/iso-date-input';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -39,13 +40,6 @@ interface Distancia {
     ressalva: string;
 }
 
-interface PontoEvolucao {
-    ano: number;
-    mes: number;
-    media: number | null;
-    n: number;
-}
-
 interface Gargalo {
     faixa: string;
     rotulo: string;
@@ -57,7 +51,7 @@ interface SalaProps {
     tempo: Tempo;
     operacao: Operacao;
     distancia: Distancia;
-    evolucao: PontoEvolucao[];
+    evolucao: Evolucao;
     gargalos: Gargalo[];
     filtros: { data_de?: string; data_ate?: string };
     dicas: PainelDicasTempo;
@@ -76,20 +70,6 @@ function formatarHoras(horas: number | null): string {
     }
 
     return `${decimalFormat.format(horas)} h`;
-}
-
-function rotuloCompetencia(ano: number, mes: number): string {
-    return `${String(mes).padStart(2, '0')}/${ano}`;
-}
-
-function evolucaoChartOption(evolucao: PontoEvolucao[]): EChartsOption {
-    return {
-        tooltip: { trigger: 'axis' },
-        grid: { left: 16, right: 24, top: 24, bottom: 16, containLabel: true },
-        xAxis: { type: 'category', data: evolucao.map((p) => rotuloCompetencia(p.ano, p.mes)) },
-        yAxis: { type: 'value', name: 'horas úteis' },
-        series: [{ type: 'line', name: 'Tempo de viabilidade', smooth: true, data: evolucao.map((p) => p.media) }],
-    };
 }
 
 function gargalosChartOption(gargalos: Gargalo[]): EChartsOption {
@@ -187,17 +167,10 @@ export default function SalaDeControle({ tempo, operacao, distancia, evolucao, g
                     <Card>
                         <CardHeader
                             title="Evolução de Salvador"
-                            description="Tempo de viabilidade medido pela REDESIM, uma competência por ponto. Salvador contra ela mesma, com metodologia constante."
+                            description="REDESIM do mês anterior, VIABILIZA do mês corrente em tempo real e REDESIM do mês corrente quando for importada. Independe do período escolhido acima."
                         />
                         <CardContent>
-                            {evolucao.length > 0 ? (
-                                <Chart option={evolucaoChartOption(evolucao)} className="h-64 w-full" />
-                            ) : (
-                                <EmptyState
-                                    title="Sem série importada"
-                                    description="A evolução aparece conforme as competências do benchmark vão sendo importadas."
-                                />
-                            )}
+                            <EvolucaoSalvador evolucao={evolucao} />
                         </CardContent>
                     </Card>
 
