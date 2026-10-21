@@ -20,6 +20,7 @@ enum AiSuggestionType: string
     case Justificativa = 'justificativa';
     case Explicacao = 'explicacao';
     case Assistente = 'assistente';
+    case DicasTempo = 'dicas_tempo';
 
     public function label(): string
     {
@@ -34,6 +35,7 @@ enum AiSuggestionType: string
             self::Justificativa => 'Justificativa da atividade',
             self::Explicacao => 'Explicação ao cidadão',
             self::Assistente => 'Assistente conversacional',
+            self::DicasTempo => 'Dicas para reduzir o tempo de viabilidade',
         };
     }
 }

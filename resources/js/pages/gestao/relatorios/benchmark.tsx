@@ -1,5 +1,6 @@
 import { Head } from '@inertiajs/react';
 import type { ReactNode } from 'react';
+import DicasTempoCard, { type PainelDicasTempo } from '@/components/app/dicas-tempo-card';
 import PageHeader from '@/components/app/page-header';
 import { AlertIcon } from '@/components/icons';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -61,6 +62,7 @@ interface BenchmarkProps {
     posicao: Posicao;
     capitais: LinhaCapital[];
     evolucao: Evolucao;
+    dicas: PainelDicasTempo;
 }
 
 const numberFormat = new Intl.NumberFormat('pt-BR');
@@ -168,7 +170,7 @@ const colunasCapitais: ColumnDef<LinhaCapital>[] = [
     },
     {
         id: 'p90',
-        header: 'P90',
+        header: '9 em 10 saem em até',
         align: 'end',
         cellClassName: 'whitespace-nowrap tabular-nums text-gray-600 dark:text-gray-300',
         cell: (linha) => formatarHoras(linha.p90),
@@ -182,7 +184,7 @@ const colunasCapitais: ColumnDef<LinhaCapital>[] = [
     },
 ];
 
-export default function Benchmark({ competencia, posicao, capitais, evolucao }: BenchmarkProps) {
+export default function Benchmark({ competencia, posicao, capitais, evolucao, dicas }: BenchmarkProps) {
     const salvador = capitais.find((linha) => linha.e_salvador) ?? null;
 
     return (
@@ -268,6 +270,8 @@ export default function Benchmark({ competencia, posicao, capitais, evolucao }: 
                         <EvolucaoSalvador evolucao={evolucao} />
                     </CardContent>
                 </Card>
+
+                <DicasTempoCard dicas={dicas} />
             </div>
         </>
     );
@@ -292,7 +296,7 @@ function EvolucaoSalvador({ evolucao }: { evolucao: Evolucao }) {
         return (
             <EmptyState
                 title="Sem dados para comparar"
-                description="Falta a competência anterior da REDESIM e não há processos decididos no mês corrente."
+                description="Falta a competência anterior da REDESIM e não há processos deferidos no mês corrente."
             />
         );
     }
@@ -321,11 +325,11 @@ function EvolucaoSalvador({ evolucao }: { evolucao: Evolucao }) {
                         trouxer essa competência, no mês seguinte.
                     </li>
                 )}
-                {atual.media === null && <li>Nenhum processo foi decidido no VIABILIZA neste mês até agora.</li>}
+                {atual.media === null && <li>Nenhum processo foi deferido no VIABILIZA neste mês até agora.</li>}
                 {atual.media !== null && (
                     <li>
-                        O mês corrente é parcial: considera {numberFormat.format(atual.n)} processos decididos de 1º até hoje, e o valor
-                        muda até o fim do mês.
+                        O mês corrente é parcial: considera {numberFormat.format(atual.n)} processos deferidos (com TVL) de 1º até hoje,
+                        como na REDESIM, e o valor muda até o fim do mês.
                     </li>
                 )}
                 <li>{evolucao.ressalva}</li>

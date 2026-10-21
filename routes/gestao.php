@@ -21,6 +21,7 @@ use App\Http\Controllers\Gestao\Conta\ProfileController as ContaProfileControlle
 use App\Http\Controllers\Gestao\ContingenciaController;
 use App\Http\Controllers\Gestao\DashboardController;
 use App\Http\Controllers\Gestao\DecisionTextController;
+use App\Http\Controllers\Gestao\DicasTempoController;
 use App\Http\Controllers\Gestao\DocumentRequirementController;
 use App\Http\Controllers\Gestao\EmailLogController;
 use App\Http\Controllers\Gestao\EmailServerController;
@@ -238,6 +239,8 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             // coloca entre as capitais. Não se mistura com a telemetria do
             // VIABILIZA, que mede outra grandeza.
             Route::get('benchmark', BenchmarkController::class)->name('benchmark');
+            // Dicas de IA para reduzir o tempo: pedido do gestor, geração assíncrona.
+            Route::post('dicas-tempo', DicasTempoController::class)->middleware('throttle:6,1')->name('dicas-tempo');
             Route::get('tempo', [RelatorioController::class, 'tempo'])->name('tempo');
             Route::get('produtividade', [RelatorioController::class, 'produtividade'])->name('produtividade');
             Route::get('quedas', [RelatorioController::class, 'quedas'])->name('quedas');

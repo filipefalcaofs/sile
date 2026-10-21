@@ -942,6 +942,13 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'boolean'],
                 'description' => 'Habilita a sugestão de justificativa da atividade por IA; só após a decisão do analista na ficha; sempre sugestão revisável, nunca decisão; desligado degrada de forma comunicada',
             ],
+            'features.ia_dicas_tempo' => [
+                'group' => 'ia',
+                'type' => 'boolean',
+                'default_value' => '0',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'Habilita as dicas por IA para reduzir o tempo de viabilidade (Benchmark e Sala de Controle); a IA recebe só agregados, sem dado pessoal, e as dicas são sugestão para o gestor; desligado degrada de forma comunicada',
+            ],
             'features.ia_explicacao' => [
                 'group' => 'ia',
                 'type' => 'boolean',

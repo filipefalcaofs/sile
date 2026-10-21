@@ -29,6 +29,19 @@ class TempoViabilidadeService
     }
 
     /**
+     * Mesma distribuição, só dos processos deferidos (com número de TVL). É o
+     * universo do export da REDESIM, em que toda linha traz data de deferimento:
+     * viabilidade indeferida não aparece lá, então compará-la com a referência
+     * federal inflaria o nosso lado.
+     *
+     * @return array{n: int, media: ?float, p50: ?float, p75: ?float, p90: ?float, p95: ?float, p99: ?float, maximo: ?float}
+     */
+    public function porPeriodoDeferidas(ReportFilters $f): array
+    {
+        return Percentis::de($this->horas($f, somenteDeferidas: true))->toArray();
+    }
+
+    /**
      * Distribuição por categoria de análise, que é onde o gargalo aparece: o
      * expresso resolve em segundos, o que vai à análise humana leva horas.
      *
@@ -50,9 +63,9 @@ class TempoViabilidadeService
     /**
      * @return list<float>
      */
-    private function horas(ReportFilters $f, ?AnalysisCategory $categoria = null): array
+    private function horas(ReportFilters $f, ?AnalysisCategory $categoria = null, bool $somenteDeferidas = false): array
     {
-        return $this->baseQuery($f)
+        return $this->baseQuery($f, $somenteDeferidas)
             ->when($categoria !== null, fn (Builder $q) => $q->where('analysis_category', $categoria))
             ->pluck('viabilidade_horas_uteis')
             ->map(static fn ($valor): float => (float) $valor)
@@ -62,15 +75,16 @@ class TempoViabilidadeService
     /**
      * @return Builder<ViabilityRequest>
      */
-    private function baseQuery(ReportFilters $f): Builder
+    private function baseQuery(ReportFilters $f, bool $somenteDeferidas = false): Builder
     {
         $de = $f->from();
         $ate = $f->to();
 
         return ViabilityRequest::query()
             ->whereNotNull('viabilidade_horas_uteis')
-            ->whereHas('decision', function ($query) use ($de, $ate): void {
+            ->whereHas('decision', function ($query) use ($de, $ate, $somenteDeferidas): void {
                 $query
+                    ->when($somenteDeferidas, fn ($q) => $q->whereNotNull('tvl_product_number'))
                     ->when($de !== null, fn ($q) => $q->where('decided_at', '>=', $de))
                     ->when($ate !== null, fn ($q) => $q->where('decided_at', '<=', $ate));
             });
