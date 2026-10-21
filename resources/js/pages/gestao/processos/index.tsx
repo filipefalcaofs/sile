@@ -14,6 +14,7 @@ import Select from '@/components/form/select';
 import { CloseIcon, FileIcon, SearchIcon } from '@/components/icons';
 import Badge from '@/components/ui/badge';
 import Button from '@/components/ui/button';
+import PopoverAviso from '@/components/ui/popover-aviso';
 import DataTable from '@/components/ui/data-table/data-table';
 import type { ColumnDef } from '@/components/ui/data-table/types';
 import EmptyState from '@/components/ui/empty-state';
@@ -781,17 +782,19 @@ function colunasProcessos(opcoes: {
             id: 'status',
             header: 'Status',
             cell: (item) => (
-                <div className="flex max-w-xs flex-col gap-1">
-                    <Badge color={statusColor(item.status)} size="sm">
-                        {item.status_label}
-                    </Badge>
+                <div className="flex max-w-xs flex-col items-start gap-1">
+                    <div className="flex items-center gap-2">
+                        <Badge color={statusColor(item.status)} size="sm">
+                            {item.status_label}
+                        </Badge>
+                        {item.sem_decisao_automatica && item.motivo_encaminhamento && (
+                            <PopoverAviso label="Sem decisão automática: ver motivo" titulo="Sem decisão automática">
+                                {item.motivo_encaminhamento}
+                            </PopoverAviso>
+                        )}
+                    </div>
                     {item.analysis_status_label && (
                         <span className="text-xs text-gray-500 dark:text-gray-400">{item.analysis_status_label}</span>
-                    )}
-                    {item.sem_decisao_automatica && item.motivo_encaminhamento && (
-                        <p className="text-xs break-words text-gray-500 dark:text-gray-400">
-                            Sem decisão automática — {item.motivo_encaminhamento}
-                        </p>
                     )}
                 </div>
             ),
