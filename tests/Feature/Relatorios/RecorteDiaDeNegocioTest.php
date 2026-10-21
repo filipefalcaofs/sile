@@ -125,7 +125,7 @@ class RecorteDiaDeNegocioTest extends TestCase
         $painel = app(PainelOperacaoService::class)->montar(7, false);
 
         $this->assertSame('2026-06-15', $painel['data_ate']);
-        $this->assertSame('2026-06-08', $painel['data_de']);
+        $this->assertSame('2026-06-09', $painel['data_de']);
         $this->assertSame(1, $painel['protocolos']);
     }
 

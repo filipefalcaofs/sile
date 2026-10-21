@@ -3,19 +3,23 @@
 namespace Tests\Feature\Relatorios;
 
 use App\Enums\AnalysisCategory;
+use App\Enums\ConclusionOutcome;
 use App\Enums\DecisionOutcome;
 use App\Enums\RiscoMunicipal;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\Cnae;
 use App\Models\RiskClassification;
 use App\Models\RuleVersion;
+use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Relatorios\IndicadoresViabilidadeService;
 use App\Services\Relatorios\ReportFilters;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Carbon;
 use PHPUnit\Framework\Attributes\Test;
+use Tests\Support\MontaFluxosDeConclusao;
 use Tests\TestCase;
 
 /**
@@ -28,6 +32,7 @@ use Tests\TestCase;
 class IndicadoresViabilidadeServiceTest extends TestCase
 {
     use LazilyRefreshDatabase;
+    use MontaFluxosDeConclusao;
 
     private function service(): IndicadoresViabilidadeService
     {
@@ -104,13 +109,21 @@ class IndicadoresViabilidadeServiceTest extends TestCase
     #[Test]
     public function por_periodo_respeita_o_filtro_de_categoria(): void
     {
-        $this->protocolada(['analysis_category' => AnalysisCategory::Expresso, 'protocoled_at' => Carbon::parse('2026-03-10 12:00:00')]);
-        $this->protocolada(['analysis_category' => AnalysisCategory::Expresso, 'protocoled_at' => Carbon::parse('2026-03-10 12:00:00')]);
-        $this->protocolada(['analysis_category' => AnalysisCategory::SemiExpresso, 'protocoled_at' => Carbon::parse('2026-03-10 12:00:00')]);
+        // Categoria pela forma de conclusão, gravada pelos serviços reais.
+        Carbon::setTestNow('2026-03-10 12:00:00');
+        $this->seed(RolesAndPermissionsSeeder::class);
+        $this->cenarioZonaPermitida();
 
-        $serie = $this->service()->porPeriodo(ReportFilters::fromArray(['categoria' => 'expresso']));
+        $this->concluidaPeloMotor();
+        $this->concluidaPeloMotor();
+        $this->concluirAnalise($this->encaminhadaComDecisaoDoMotor(), User::factory()->analistaServidor()->create(), ConclusionOutcome::Deferido);
+        $this->encaminhadaComDecisaoDoMotor();
 
-        $this->assertSame([['dia' => '2026-03-10', 'total' => 2]], $serie);
+        $expressas = $this->service()->porPeriodo(ReportFilters::fromArray(['categoria' => 'expresso']));
+        $semiExpressas = $this->service()->porPeriodo(ReportFilters::fromArray(['categoria' => 'semi_expresso']));
+
+        $this->assertSame([['dia' => '2026-03-10', 'total' => 2]], $expressas);
+        $this->assertSame([['dia' => '2026-03-10', 'total' => 1]], $semiExpressas);
     }
 
     #[Test]

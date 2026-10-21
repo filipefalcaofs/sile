@@ -3,12 +3,17 @@
 namespace Tests\Feature\Relatorios;
 
 use App\Enums\AnalysisCategory;
+use App\Enums\ConclusionOutcome;
+use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
+use App\Services\Relatorios\ClassificacaoFluxoService;
 use App\Services\Relatorios\ReportFilters;
 use App\Services\Relatorios\TempoViabilidadeService;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Carbon;
+use Tests\Support\MontaFluxosDeConclusao;
 use Tests\TestCase;
 
 /**
@@ -18,6 +23,7 @@ use Tests\TestCase;
 class TempoViabilidadeServiceTest extends TestCase
 {
     use LazilyRefreshDatabase;
+    use MontaFluxosDeConclusao;
 
     private function service(): TempoViabilidadeService
     {
@@ -99,16 +105,22 @@ class TempoViabilidadeServiceTest extends TestCase
 
     public function test_separa_a_distribuicao_por_categoria_de_analise(): void
     {
-        $this->decidido(1.0, '2026-03-02 10:00:00', AnalysisCategory::Expresso);
-        $this->decidido(3.0, '2026-03-03 10:00:00', AnalysisCategory::Expresso);
-        $this->decidido(40.0, '2026-03-04 10:00:00', AnalysisCategory::SemiExpresso);
+        Carbon::setTestNow('2026-03-10 12:00:00');
+        $this->seed(RolesAndPermissionsSeeder::class);
+        $this->cenarioZonaPermitida();
+
+        $this->concluidaPeloMotor();
+        $this->concluidaPeloMotor();
+        $semi = $this->encaminhadaComDecisaoDoMotor(['protocoled_at' => Carbon::parse('2026-03-09 12:00:00')]);
+        $this->concluirAnalise($semi, User::factory()->analistaServidor()->create(), ConclusionOutcome::Deferido);
 
         $resultado = $this->service()->porCategoria($this->filtros('2026-03-01', '2026-03-31'));
 
-        $this->assertSame(2, $resultado[AnalysisCategory::Expresso->value]['n']);
-        $this->assertEqualsWithDelta(2.0, $resultado[AnalysisCategory::Expresso->value]['media'], 0.01);
-        $this->assertSame(1, $resultado[AnalysisCategory::SemiExpresso->value]['n']);
-        $this->assertEqualsWithDelta(40.0, $resultado[AnalysisCategory::SemiExpresso->value]['media'], 0.01);
+        $this->assertSame([ClassificacaoFluxoService::AUTOMATICA, ClassificacaoFluxoService::SEMI_EXPRESSA, ClassificacaoFluxoService::HUMANA], array_keys($resultado));
+        $this->assertSame(2, $resultado[ClassificacaoFluxoService::AUTOMATICA]['n']);
+        $this->assertSame(1, $resultado[ClassificacaoFluxoService::SEMI_EXPRESSA]['n']);
+        $this->assertSame(0, $resultado[ClassificacaoFluxoService::HUMANA]['n']);
+        $this->assertGreaterThan($resultado[ClassificacaoFluxoService::AUTOMATICA]['media'], $resultado[ClassificacaoFluxoService::SEMI_EXPRESSA]['media']);
     }
 
     public function test_sem_periodo_informado_considera_todos_os_processos_decididos(): void

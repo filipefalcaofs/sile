@@ -33,11 +33,14 @@ class DistanciaBenchmarkService
     ) {}
 
     /**
+     * @param  array{media: ?float}|null  $tempoDoPeriodo  Saída de TempoViabilidadeService::porPeriodo já apurada para o mesmo recorte.
      * @return array{interno: ?float, referencia: ?float, competencia: array{ano: int, mes: int}|null, diferenca_horas: ?float, diferenca_percentual: ?float, motivo: ?string, ressalva: string}
      */
-    public function calcular(ReportFilters $f): array
+    public function calcular(ReportFilters $f, ?array $tempoDoPeriodo = null): array
     {
-        $interno = $this->tempoViabilidade->porPeriodo($f)['media'];
+        // Quem já apurou o tempo do período (a Sala de Controle) o repassa,
+        // em vez de varrer as mesmas decisões de novo.
+        $interno = ($tempoDoPeriodo ?? $this->tempoViabilidade->porPeriodo($f))['media'];
         $competencia = $this->ranking->ultimaCompetenciaCompleta();
 
         $referencia = $competencia === null

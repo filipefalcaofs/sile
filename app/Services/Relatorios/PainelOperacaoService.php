@@ -116,21 +116,24 @@ class PainelOperacaoService
         ];
     }
 
+    /**
+     * "Últimos N dias": N dias de calendário terminando hoje, inclusive.
+     */
     private function filtrosDaJanela(int $janelaDias): ReportFilters
     {
         return ReportFilters::fromArray([
-            'data_de' => FusoNegocio::hoje()->subDays($janelaDias)->toDateString(),
+            'data_de' => FusoNegocio::hoje()->subDays($janelaDias - 1)->toDateString(),
             'data_ate' => FusoNegocio::hoje()->toDateString(),
         ]);
     }
 
+    /** Os N dias imediatamente anteriores à janela atual. */
     private function filtrosAnteriores(int $janelaDias): ReportFilters
     {
-        $inicioAtual = FusoNegocio::hoje()->subDays($janelaDias)->startOfDay();
-        $fimAnterior = $inicioAtual->copy()->subDay();
+        $fimAnterior = FusoNegocio::hoje()->subDays($janelaDias);
 
         return ReportFilters::fromArray([
-            'data_de' => $fimAnterior->copy()->subDays($janelaDias)->toDateString(),
+            'data_de' => $fimAnterior->copy()->subDays($janelaDias - 1)->toDateString(),
             'data_ate' => $fimAnterior->toDateString(),
         ]);
     }

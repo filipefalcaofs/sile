@@ -7,6 +7,7 @@ use App\Models\LegalTerm;
 use App\Models\LegalTermAcceptance;
 use App\Models\User;
 use App\Support\Settings;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Agrega as TRÊS fontes REAIS do monitoramento LGPD (HU-102), sempre em
@@ -34,7 +35,7 @@ class LgpdMonitorService
      */
     public function consentimentos(): array
     {
-        $total = User::query()->count();
+        $total = $this->elegiveis(User::query())->count();
         $term = LegalTerm::current('lgpd');
 
         if ($term === null) {
@@ -51,6 +52,7 @@ class LgpdMonitorService
 
         $aceitaram = LegalTermAcceptance::query()
             ->where('legal_term_id', $term->id)
+            ->whereHas('user', fn (Builder $u) => $this->elegiveis($u))
             ->distinct()
             ->count('user_id');
 
@@ -63,6 +65,21 @@ class LgpdMonitorService
             'pendentes_reaceite' => max(0, $total - $aceitaram),
             'percentual_aceite' => $total > 0 ? round($aceitaram / $total * 100, 1) : 0.0,
         ];
+    }
+
+    /**
+     * Quem precisa aceitar o termo: usuário ativo (o inativado não entra no
+     * sistema, então não teria como aceitar) e que não é a conta técnica da
+     * integração REGIN, que não faz login.
+     *
+     * @param  Builder<User>  $usuarios
+     * @return Builder<User>
+     */
+    private function elegiveis(Builder $usuarios): Builder
+    {
+        return $usuarios
+            ->whereNull('inactivated_at')
+            ->where('email', '!=', User::EMAIL_INTEGRACAO_REGIN);
     }
 
     /**

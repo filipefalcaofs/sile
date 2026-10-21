@@ -246,4 +246,17 @@ class SaturacaoServiceTest extends TestCase
 
         $this->assertSame([150.0, 80.0, 50.0], array_column($maiores, 'percentual'));
     }
+
+    public function test_grafias_do_mesmo_bairro_formam_um_par_so(): void
+    {
+        $comercio = Cnae::factory()->create(['code' => '4712100']);
+
+        $this->deferidaComCnae(' Pituba', $comercio);
+        $this->deferidaComCnae('PITUBA', $comercio);
+        $this->deferidaComCnae('  ', $comercio);
+
+        $linhas = $this->service()->porBairroCnae($this->filtros());
+
+        $this->assertSame([['bairro' => 'PITUBA', 'ativos' => 2]], array_map(fn (array $l): array => ['bairro' => $l['bairro'], 'ativos' => $l['ativos']], $linhas));
+    }
 }

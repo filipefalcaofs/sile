@@ -92,6 +92,30 @@ class LgpdMonitorTest extends TestCase
         $this->assertSame(0.0, $apos['percentual_aceite']);
     }
 
+    public function test_inativados_e_conta_tecnica_ficam_fora_do_aceite(): void
+    {
+        $termo = LegalTerm::factory()->published()->create(['type' => 'lgpd', 'version' => 1]);
+
+        $aceitou = User::factory()->create();
+        User::factory()->create();
+        $inativoQueAceitou = User::factory()->create();
+        $inativoQueAceitou->forceFill(['inactivated_at' => now()])->save();
+        $inativoSemAceite = User::factory()->create();
+        $inativoSemAceite->forceFill(['inactivated_at' => now()])->save();
+        User::factory()->create(['email' => User::EMAIL_INTEGRACAO_REGIN]);
+
+        foreach ([$aceitou, $inativoQueAceitou] as $user) {
+            LegalTermAcceptance::create(['user_id' => $user->id, 'legal_term_id' => $termo->id, 'accepted_at' => now()]);
+        }
+
+        $c = $this->service()->consentimentos();
+
+        $this->assertSame(2, $c['total_usuarios']);
+        $this->assertSame(1, $c['aceitaram_vigente']);
+        $this->assertSame(1, $c['pendentes_reaceite']);
+        $this->assertSame(50.0, $c['percentual_aceite']);
+    }
+
     public function test_consentimentos_degrada_honesto_sem_termo_publicado(): void
     {
         User::factory()->count(2)->create();

@@ -77,7 +77,7 @@ class ExpressoQuedaService
     public function serieTemporal(ReportFilters $f): array
     {
         $dias = (int) config('viabiliza.relatorios.expresso.janela_dias', 30);
-        $inicio = $f->from() ?? FusoNegocio::hoje()->subDays($dias)->startOfDay()->utc();
+        $inicio = $f->from() ?? FusoNegocio::hoje()->subDays($dias - 1)->startOfDay()->utc();
         $fim = $f->to() ?? FusoNegocio::hoje()->endOfDay()->utc();
 
         $respondidas = ViabilityDecision::query()

@@ -21,11 +21,18 @@ interface Tempo {
     maximo: number | null;
 }
 
+/** Processos decididos no período pela forma de conclusão; as categorias somam o total. */
 interface Operacao {
     total: number;
-    expresso: number;
-    semi_expresso: number;
+    automatica: number;
+    semi_expressa: number;
+    humana: number;
+    revisada: number;
+    sem_analise_concluida: number;
     taxa_automacao: number | null;
+    /** Produtividade semi-expressa: não se somam nem equivalem a processos concluídos. */
+    decisoes_do_motor: number;
+    analises_humanas: number;
 }
 
 interface Distancia {
@@ -166,15 +173,42 @@ export default function SalaDeControle({ tempo, operacao, distancia, evolucao, g
                     <KpiCard label="Tempo médio" value={formatarHoras(tempo.media)} note={`${numberFormat.format(tempo.n)} decididos`} tone="brand" />
                     <KpiCard label="P90" value={formatarHoras(tempo.p90)} note="90% saem abaixo disso" tone="brand" />
                     <KpiCard
-                        label="Automáticas"
+                        label="Taxa de automação"
                         value={operacao.taxa_automacao === null ? '—' : `${decimalFormat.format(operacao.taxa_automacao)}%`}
-                        note={`${numberFormat.format(operacao.expresso)} pelo fluxo expresso`}
+                        note={`${numberFormat.format(operacao.automatica)} de ${numberFormat.format(operacao.total)} concluídos pelo motor`}
                         tone="success"
                     />
                     <KpiCard
-                        label="Volume no período"
+                        label="Decididos no período"
                         value={numberFormat.format(operacao.total)}
-                        note={`${numberFormat.format(operacao.semi_expresso)} semiexpressas`}
+                        note={`${numberFormat.format(operacao.semi_expressa)} semi-expressos · ${numberFormat.format(operacao.humana)} só humanos`}
+                        tone="brand"
+                    />
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 md:gap-6">
+                    <KpiCard
+                        label="Decisões geradas pelo motor"
+                        value={numberFormat.format(operacao.decisoes_do_motor)}
+                        note="processos encaminhados à análise com veredito do motor"
+                        tone="brand"
+                    />
+                    <KpiCard
+                        label="Análises humanas dessas decisões"
+                        value={numberFormat.format(operacao.analises_humanas)}
+                        note="fichas finalizadas por analista"
+                        tone="brand"
+                    />
+                    <KpiCard
+                        label="Conclusões do motor revistas"
+                        value={numberFormat.format(operacao.revisada)}
+                        note="trocadas depois por uma pessoa"
+                        tone="brand"
+                    />
+                    <KpiCard
+                        label="Sem análise concluída"
+                        value={numberFormat.format(operacao.sem_analise_concluida)}
+                        note="decididos fora do motor sem ficha finalizada"
                         tone="brand"
                     />
                 </div>

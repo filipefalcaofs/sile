@@ -2,7 +2,6 @@
 
 namespace App\Services\Relatorios;
 
-use App\Enums\AnalysisCategory;
 use App\Enums\DecisionOutcome;
 use App\Models\ViabilityRequest;
 use App\Support\Settings;
@@ -27,14 +26,13 @@ use Illuminate\Support\Facades\DB;
  */
 class SaturacaoService
 {
-    /** Bairro oficial com o digitado de reserva (coalesce portável). */
-    private const BAIRRO = 'coalesce(viability_requests.bairro_oficial, viability_requests.address_neighborhood)';
-
     /** Linhas devolvidas para a tabela da tela. */
     public const LIMITE_TABELA = 500;
 
     /** Pares exibidos no gráfico de maiores saturações. */
     public const TOP_SATURACOES = 15;
+
+    public function __construct(private readonly ClassificacaoFluxoService $classificacao) {}
 
     /**
      * Saturação por par bairro×CNAE (estabelecimentos deferidos vs capacidade),
@@ -131,7 +129,7 @@ class SaturacaoService
         $deferida = DecisionOutcome::Deferida->value;
 
         return $this->baseQuery($f)
-            ->whereNotNull(DB::raw(self::BAIRRO))
+            ->whereNotNull(DB::raw(BairroCanonico::CHAVE))
             ->join('viability_decisions as vd', function (JoinClause $join) use ($deferida): void {
                 $join->on('vd.viability_request_id', '=', 'viability_requests.id')
                     ->where('vd.outcome', $deferida);
@@ -139,12 +137,12 @@ class SaturacaoService
             ->join('viability_request_cnaes as vrc', 'vrc.viability_request_id', '=', 'viability_requests.id')
             ->join('cnaes as c', 'c.id', '=', 'vrc.cnae_id')
             ->when($f->cnaeCodigo(), fn (Builder $q, string $codigo): Builder => $q->where('c.code', $codigo))
-            ->groupBy('bairro', 'c.code')
+            ->groupBy(DB::raw(BairroCanonico::CHAVE), 'c.code')
             ->orderByDesc('ativos')
             ->orderBy('bairro')
             ->orderBy('c.code')
             ->get([
-                DB::raw(self::BAIRRO.' as bairro'),
+                DB::raw('min('.BairroCanonico::ROTULO.') as bairro'),
                 'c.code as cnae_code',
                 DB::raw('count(distinct viability_requests.id) as ativos'),
             ])
@@ -176,7 +174,7 @@ class SaturacaoService
     public function solicitacoes(ReportFilters $f): Builder
     {
         return $this->baseQuery($f)
-            ->whereNotNull(DB::raw(self::BAIRRO))
+            ->whereNotNull(DB::raw(BairroCanonico::CHAVE))
             ->whereHas('decision', fn (Builder $d): Builder => $d->where('outcome', DecisionOutcome::Deferida->value))
             ->whereHas('cnaes', fn (Builder $c): Builder => $c->when($f->cnaeCodigo(), fn (Builder $q, string $codigo): Builder => $q->where('cnaes.code', $codigo)));
     }
@@ -255,7 +253,7 @@ class SaturacaoService
             ->when($f->from(), fn (Builder $q, $from): Builder => $q->where('viability_requests.protocoled_at', '>=', $from))
             ->when($f->to(), fn (Builder $q, $to): Builder => $q->where('viability_requests.protocoled_at', '<=', $to))
             ->when($f->setorId(), fn (Builder $q, int $id): Builder => $q->where('viability_requests.sector_id', $id))
-            ->when($f->bairro(), fn (Builder $q, string $b): Builder => $q->whereLike(DB::raw(self::BAIRRO), "%{$b}%", caseSensitive: false))
+            ->when($f->bairro(), fn (Builder $q, string $b): Builder => $q->whereLike(DB::raw(BairroCanonico::CHAVE), "%{$b}%", caseSensitive: false))
             ->when($f->categoria(), fn (Builder $q, string $c): Builder => $this->aplicarCategoria($q, $c));
     }
 
@@ -268,8 +266,9 @@ class SaturacaoService
         return match ($categoria) {
             'malha_fina' => $query->where('viability_requests.in_fine_mesh', true),
             'sede_escritorio' => $query->where('viability_requests.is_virtual_office', true),
-            'expresso' => $query->where('viability_requests.analysis_category', AnalysisCategory::Expresso->value),
-            'semi_expresso' => $query->where('viability_requests.analysis_category', AnalysisCategory::SemiExpresso->value),
+            // Pela forma de conclusão: processo ainda não concluído fica fora.
+            'expresso' => $this->classificacao->aplicar($query, ClassificacaoFluxoService::AUTOMATICA),
+            'semi_expresso' => $this->classificacao->aplicar($query, ClassificacaoFluxoService::SEMI_EXPRESSA),
             default => $query,
         };
     }

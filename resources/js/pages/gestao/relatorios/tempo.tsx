@@ -95,6 +95,13 @@ const ETAPA_LABELS: Record<string, string> = {
     pendencia: 'Convite',
 };
 
+/** Forma de conclusão do processo (ClassificacaoFluxoService). */
+const CATEGORIA_LABELS: Record<string, string> = {
+    automatica: 'Concluídos pelo motor',
+    semi_expressa: 'Decisão do motor analisada por analista',
+    humana: 'Análise integralmente humana',
+};
+
 const numberFormat = new Intl.NumberFormat('pt-BR');
 const horasFormat = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 });
 
@@ -395,7 +402,7 @@ export default function TempoAnalise({
                                     {percentisViabilidade.n === 1 ? 'processo decidido' : 'processos decididos'} no período.
                                     {Object.entries(percentisPorCategoria)
                                         .filter(([, dados]) => dados.n > 0)
-                                        .map(([categoria, dados]) => ` ${categoria}: ${formatarHoras(dados.media)} em média.`)
+                                        .map(([categoria, dados]) => ` ${CATEGORIA_LABELS[categoria] ?? categoria}: ${formatarHoras(dados.media)} em média.`)
                                         .join('')}
                                 </p>
                             </>

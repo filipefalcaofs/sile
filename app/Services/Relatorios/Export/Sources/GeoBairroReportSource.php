@@ -4,6 +4,7 @@ namespace App\Services\Relatorios\Export\Sources;
 
 use App\Models\ViabilityRequest;
 use App\Services\Analise\ProcessoQueryService;
+use App\Services\Relatorios\BairroCanonico;
 use App\Services\Relatorios\GeoBairroIndicadorService;
 use App\Services\Relatorios\ReportFilters;
 use Illuminate\Database\Eloquent\Builder;
@@ -29,6 +30,6 @@ final class GeoBairroReportSource extends SolicitacoesReportSource
 
     protected function bairro(ViabilityRequest $solicitacao): ?string
     {
-        return $solicitacao->bairro_oficial ?? $solicitacao->address_neighborhood;
+        return BairroCanonico::de($solicitacao);
     }
 }

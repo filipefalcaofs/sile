@@ -2,7 +2,6 @@
 
 namespace App\Services\Relatorios;
 
-use App\Enums\AnalysisCategory;
 use App\Enums\DecisionOutcome;
 use App\Models\ViabilityRequest;
 use Illuminate\Database\Eloquent\Builder;
@@ -30,8 +29,7 @@ use Illuminate\Support\Facades\DB;
  */
 class GeoBairroIndicadorService
 {
-    /** Bairro oficial com o digitado de reserva — a mesma chave em resumo, linhas e filtro. */
-    private const BAIRRO = 'coalesce(viability_requests.bairro_oficial, viability_requests.address_neighborhood)';
+    public function __construct(private readonly ClassificacaoFluxoService $classificacao) {}
 
     /**
      * Resumo do recorte: total protocolado, bairros distintos e quantos sem
@@ -44,13 +42,13 @@ class GeoBairroIndicadorService
         $total = $this->baseQuery($f)->count();
 
         $semBairro = $this->baseQuery($f)
-            ->whereNull(DB::raw(self::BAIRRO))
+            ->whereNull(DB::raw(BairroCanonico::CHAVE))
             ->count();
 
         $bairros = $this->baseQuery($f)
-            ->whereNotNull(DB::raw(self::BAIRRO))
+            ->whereNotNull(DB::raw(BairroCanonico::CHAVE))
             ->distinct()
-            ->count(DB::raw(self::BAIRRO));
+            ->count(DB::raw(BairroCanonico::CHAVE));
 
         return [
             'total' => $total,
@@ -79,14 +77,14 @@ class GeoBairroIndicadorService
         $indeferida = DecisionOutcome::Indeferida->value;
 
         $itens = $this->baseQuery($f)
-            ->whereNotNull(DB::raw(self::BAIRRO))
+            ->whereNotNull(DB::raw(BairroCanonico::CHAVE))
             ->leftJoin('viability_decisions as vd', 'vd.viability_request_id', '=', 'viability_requests.id')
-            ->groupBy('bairro')
+            ->groupBy(DB::raw(BairroCanonico::CHAVE))
             ->orderByDesc('total')
             ->orderBy('bairro')
             ->limit($limite)
             ->get([
-                DB::raw(self::BAIRRO.' as bairro'),
+                DB::raw('min('.BairroCanonico::ROTULO.') as bairro'),
                 DB::raw('count(distinct viability_requests.id) as total'),
                 DB::raw("count(distinct case when vd.outcome = '{$deferida}' then viability_requests.id end) as deferidas"),
                 DB::raw("count(distinct case when vd.outcome = '{$indeferida}' then viability_requests.id end) as indeferidas"),
@@ -190,7 +188,7 @@ class GeoBairroIndicadorService
             ->when($f->to(), fn (Builder $q, $to): Builder => $q->where('viability_requests.protocoled_at', '<=', $to))
             ->when($f->setorId(), fn (Builder $q, int $id): Builder => $q->where('viability_requests.sector_id', $id))
             ->when($f->analistaId(), fn (Builder $q, int $id): Builder => $q->where('viability_requests.assigned_user_id', $id))
-            ->when($f->bairro(), fn (Builder $q, string $b): Builder => $q->whereLike(DB::raw(self::BAIRRO), "%{$b}%", caseSensitive: false))
+            ->when($f->bairro(), fn (Builder $q, string $b): Builder => $q->whereLike(DB::raw(BairroCanonico::CHAVE), "%{$b}%", caseSensitive: false))
             ->when($f->categoria(), fn (Builder $q, string $c): Builder => $this->aplicarCategoria($q, $c))
             ->when($f->cnaeCodigo(), fn (Builder $q, string $cnae): Builder => $q->whereHas('cnaes', fn (Builder $c) => $c->where('cnaes.code', $cnae)));
     }
@@ -207,8 +205,9 @@ class GeoBairroIndicadorService
         return match ($categoria) {
             'malha_fina' => $query->where('viability_requests.in_fine_mesh', true),
             'sede_escritorio' => $query->where('viability_requests.is_virtual_office', true),
-            'expresso' => $query->where('viability_requests.analysis_category', AnalysisCategory::Expresso->value),
-            'semi_expresso' => $query->where('viability_requests.analysis_category', AnalysisCategory::SemiExpresso->value),
+            // Pela forma de conclusão: processo ainda não concluído fica fora.
+            'expresso' => $this->classificacao->aplicar($query, ClassificacaoFluxoService::AUTOMATICA),
+            'semi_expresso' => $this->classificacao->aplicar($query, ClassificacaoFluxoService::SEMI_EXPRESSA),
             default => $query,
         };
     }

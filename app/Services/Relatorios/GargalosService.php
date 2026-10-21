@@ -6,7 +6,7 @@ use App\Enums\ViabilityRequestStatus;
 use App\Models\ViabilityRequest;
 use App\Services\Expresso\BusinessDeadlineCalculator;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\LazyCollection;
 
 /**
  * Onde o tempo é gasto — "o que está nos segurando".
@@ -133,9 +133,12 @@ class GargalosService
     }
 
     /**
-     * @return Collection<int, ViabilityRequest>
+     * Decididos no período, em lotes: as transições de cada lote vêm junto e
+     * o histórico inteiro nunca fica em memória de uma vez.
+     *
+     * @return LazyCollection<int, ViabilityRequest>
      */
-    private function processos(ReportFilters $f)
+    private function processos(ReportFilters $f): LazyCollection
     {
         $de = $f->from();
         $ate = $f->to();
@@ -147,6 +150,6 @@ class GargalosService
                     ->when($de !== null, fn (Builder $q) => $q->where('decided_at', '>=', $de))
                     ->when($ate !== null, fn (Builder $q) => $q->where('decided_at', '<=', $ate));
             })
-            ->get();
+            ->lazyById(500);
     }
 }

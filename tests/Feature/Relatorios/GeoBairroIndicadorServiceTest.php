@@ -171,4 +171,20 @@ class GeoBairroIndicadorServiceTest extends TestCase
         $this->assertSame(1, $this->service()->resumo($this->filtros(['cnae' => '4712-1/00']))['total']);
         $this->assertSame(1, $this->service()->resumo($this->filtros(['cnae' => '4712100']))['total']);
     }
+
+    public function test_bairro_vazio_e_desconhecido_e_grafias_do_mesmo_bairro_se_juntam(): void
+    {
+        $this->protocolada(['bairro_oficial' => 'PITUBA', 'address_neighborhood' => null]);
+        $this->protocolada(['bairro_oficial' => null, 'address_neighborhood' => ' Pituba ']);
+        $this->protocolada(['bairro_oficial' => null, 'address_neighborhood' => 'pituba']);
+        $this->protocolada(['bairro_oficial' => '', 'address_neighborhood' => '   ']);
+        $this->protocolada(['bairro_oficial' => null, 'address_neighborhood' => null]);
+
+        $resumo = $this->service()->resumo($this->filtros());
+        $linhas = $this->service()->porBairro($this->filtros())['itens'];
+
+        $this->assertSame(['total' => 5, 'bairros_distintos' => 1, 'sem_bairro' => 2], $resumo);
+        $this->assertSame([['bairro' => 'PITUBA', 'total' => 3]], array_map(fn (array $l): array => ['bairro' => $l['bairro'], 'total' => $l['total']], $linhas));
+        $this->assertSame(3, $this->service()->resumo($this->filtros(['bairro' => 'pituba']))['total']);
+    }
 }

@@ -42,8 +42,20 @@ interface FiltrosAplicados {
     analista?: number;
 }
 
+/**
+ * Produtividade semi-expressa: decisões que o motor gerou para a análise e
+ * análises que analistas concluíram sobre elas. Os dois números não se somam
+ * nem equivalem a processos concluídos.
+ */
+interface SemiExpressa {
+    decisoes_do_motor: number;
+    analises_humanas: number;
+    por_analista: { rotulo: string; analises: number }[];
+}
+
 interface ProdutividadeProps {
     produtividade: ProdutividadeRow[];
+    semiExpressa: SemiExpressa;
     /** O backend liberou a visão nominal (RN-007)? A tela NUNCA força o nome. */
     nominal: boolean;
     filtros: FiltrosAplicados;
@@ -90,7 +102,7 @@ function GraficoSemDados() {
     );
 }
 
-export default function Produtividade({ produtividade, nominal, filtros }: ProdutividadeProps) {
+export default function Produtividade({ produtividade, semiExpressa, nominal, filtros }: ProdutividadeProps) {
     const [form, setForm] = useState<FiltrosForm>({
         data_de: filtros.data_de ?? '',
         data_ate: filtros.data_ate ?? '',
@@ -254,6 +266,39 @@ export default function Produtividade({ produtividade, nominal, filtros }: Produ
                             <Chart option={volumeChartOption(produtividade)} className="h-80 w-full" />
                         ) : (
                             <GraficoSemDados />
+                        )}
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader
+                        title="Semi-expressa: motor e análise humana"
+                        description="Decisões geradas pelo motor para processos encaminhados à análise e fichas finalizadas por analista sobre essas decisões. Atribuir ou abrir o processo não conta como análise."
+                    />
+                    <CardContent>
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">
+                            <KpiCard
+                                label="Decisões geradas pelo motor"
+                                value={numberFormat.format(semiExpressa.decisoes_do_motor)}
+                                note="uma por processo, mesmo reavaliado"
+                                tone="brand"
+                            />
+                            <KpiCard
+                                label="Análises humanas dessas decisões"
+                                value={numberFormat.format(semiExpressa.analises_humanas)}
+                                note={nominal ? 'todos os analistas' : 'só as suas'}
+                                tone="success"
+                            />
+                        </div>
+                        {semiExpressa.por_analista.length > 0 && (
+                            <ul className="mt-4 divide-y divide-gray-100 text-theme-sm dark:divide-gray-800">
+                                {semiExpressa.por_analista.map((linha) => (
+                                    <li key={linha.rotulo} className="flex justify-between py-2 text-gray-700 dark:text-gray-300">
+                                        <span>{linha.rotulo}</span>
+                                        <span className="font-medium">{numberFormat.format(linha.analises)}</span>
+                                    </li>
+                                ))}
+                            </ul>
                         )}
                     </CardContent>
                 </Card>

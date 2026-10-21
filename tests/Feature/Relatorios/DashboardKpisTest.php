@@ -15,6 +15,7 @@ use App\Services\Relatorios\SlaVencimentosService;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Testing\AssertableInertia as Assert;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -87,7 +88,7 @@ class DashboardKpisTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('gestao/dashboard')
                 ->where('kpis.operacao.protocolos', 3)
-                ->where('kpis.operacao.data_de', '2026-05-16')
+                ->where('kpis.operacao.data_de', '2026-05-17')
                 ->where('kpis.operacao.data_ate', '2026-06-15')
                 ->where('kpis.operacao.decisoes.total', 4)
                 ->where('kpis.operacao.decisoes.expresso', 2)
@@ -130,7 +131,7 @@ class DashboardKpisTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('gestao/dashboard')
                 ->where('kpis.operacao.protocolos', 0)
-                ->where('kpis.operacao.data_de', '2026-05-16')
+                ->where('kpis.operacao.data_de', '2026-05-17')
                 ->where('kpis.operacao.data_ate', '2026-06-15')
                 ->where('kpis.operacao.decisoes.total', 0)
                 ->where('kpis.operacao.taxa_expressa', null)
@@ -160,7 +161,8 @@ class DashboardKpisTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->where('kpis.operacao.janela_dias', 7)
-                ->where('kpis.operacao.data_de', '2026-06-08')
+                // Sete dias de calendário, hoje incluído.
+                ->where('kpis.operacao.data_de', '2026-06-09')
                 ->where('kpis.operacao.data_ate', '2026-06-15'));
 
         $this->actingAs($gestor, 'gestao')
@@ -168,7 +170,7 @@ class DashboardKpisTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->where('kpis.operacao.janela_dias', 30)
-                ->where('kpis.operacao.data_de', '2026-05-16'));
+                ->where('kpis.operacao.data_de', '2026-05-17'));
     }
 
     #[Test]
@@ -380,24 +382,27 @@ class DashboardKpisTest extends TestCase
     }
 
     #[Test]
-    public function projecao_divide_o_saldo_pelos_dias_reais_da_janela(): void
+    public function janela_de_n_dias_tem_n_dias_e_a_projecao_usa_esse_numero(): void
     {
         Carbon::setTestNow(self::AGORA);
 
         $gestor = User::factory()->gestor()->withAcceptedLgpdTerm()->create();
 
-        // Janela de 7: 08/06 a 15/06, oito dias de calendário.
-        foreach (range(1, 8) as $i) {
+        // "Últimos 7 dias": 09/06 a 15/06, sete dias de calendário.
+        foreach (range(1, 7) as $i) {
             $this->protocolada('2026-06-12 09:00:00');
         }
+        $this->protocolada('2026-06-08 09:00:00'); // fora da janela
 
-        // estoque 8 + (saldo 8 ÷ 8 dias) × 30 = 38.
+        // estoque 8 + (saldo 7 ÷ 7 dias) × 30 = 38.
         $this->actingAs($gestor, 'gestao')
             ->get('/gestao?janela=7')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
-                ->where('kpis.operacao.data_de', '2026-06-08')
-                ->where('kpis.operacao.saldo_periodo', 8)
+                ->where('kpis.operacao.data_de', '2026-06-09')
+                ->where('kpis.operacao.data_ate', '2026-06-15')
+                ->where('kpis.operacao.protocolos', 7)
+                ->where('kpis.operacao.saldo_periodo', 7)
                 ->where('kpis.operacao.estoque_total', 8)
                 ->where('kpis.operacao.projecao_30_dias', 38));
     }
@@ -421,6 +426,15 @@ class DashboardKpisTest extends TestCase
                         && $porChave['analise']['meta_unidade'] === 'corridos'
                         && $porChave['espera']['meta_unidade'] === null;
                 }));
+
+        // Mesma régua da média da etapa: dia útil de 24 h, então 36 h úteis = 1,5 dia útil.
+        config(['viabiliza.analise.pendencia.prazo_resposta_horas_uteis' => 36]);
+        Cache::flush();
+
+        $this->actingAs($gestor, 'gestao')
+            ->get('/gestao')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('kpis.operacao.etapas', fn ($etapas): bool => (float) collect($etapas)->keyBy('chave')['pendencia']['meta_dias'] === 1.5));
     }
 
     #[Test]

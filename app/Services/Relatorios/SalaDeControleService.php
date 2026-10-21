@@ -2,10 +2,7 @@
 
 namespace App\Services\Relatorios;
 
-use App\Enums\AnalysisCategory;
-use App\Models\ViabilityRequest;
 use App\Services\Benchmark\BenchmarkRankingService;
-use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Payload da Sala de Controle.
@@ -22,6 +19,7 @@ class SalaDeControleService
         private readonly GargalosService $gargalos,
         private readonly DistanciaBenchmarkService $distancia,
         private readonly BenchmarkRankingService $ranking,
+        private readonly ClassificacaoFluxoService $classificacao,
     ) {}
 
     /**
@@ -29,49 +27,34 @@ class SalaDeControleService
      */
     public function montar(ReportFilters $f): array
     {
+        $tempo = $this->tempoViabilidade->porPeriodo($f);
+
         return [
-            'tempo' => $this->tempoViabilidade->porPeriodo($f),
+            'tempo' => $tempo,
             'operacao' => $this->operacao($f),
-            'distancia' => $this->distancia->calcular($f),
+            'distancia' => $this->distancia->calcular($f, $tempo),
             'evolucao' => $this->ranking->serieSalvador(),
             'gargalos' => $this->gargalos->porPeriodo($f),
         ];
     }
 
     /**
-     * Volume decidido no período e quanto disso saiu sem análise humana.
-     * Período sem decisão devolve taxa nula, não zero: ausência de medida não
-     * é desempenho zero.
+     * Processos decididos no período pela forma de conclusão, com a taxa de
+     * automação (concluídos pelo motor ÷ decididos × 100) e, à parte, a
+     * produtividade semi-expressa: decisões geradas pelo motor e análises
+     * humanas sobre elas. Período sem decisão devolve taxa nula, não zero:
+     * ausência de medida não é desempenho zero.
      *
-     * @return array{total: int, expresso: int, semi_expresso: int, taxa_automacao: ?float}
+     * @return array{automatica: int, semi_expressa: int, humana: int, revisada: int, sem_analise_concluida: int, total: int, taxa_automacao: ?float, decisoes_do_motor: int, analises_humanas: int}
      */
     private function operacao(ReportFilters $f): array
     {
-        $total = $this->decididos($f)->count();
-        $expresso = $this->decididos($f)->where('analysis_category', AnalysisCategory::Expresso)->count();
-        $semiExpresso = $this->decididos($f)->where('analysis_category', AnalysisCategory::SemiExpresso)->count();
+        $semiExpressa = $this->classificacao->produtividadeSemiExpressa($f);
 
         return [
-            'total' => $total,
-            'expresso' => $expresso,
-            'semi_expresso' => $semiExpresso,
-            'taxa_automacao' => $total > 0 ? round($expresso / $total * 100, 2) : null,
+            ...$this->classificacao->contagem($f),
+            'decisoes_do_motor' => $semiExpressa['decisoes_do_motor'],
+            'analises_humanas' => $semiExpressa['analises_humanas'],
         ];
-    }
-
-    /**
-     * @return Builder<ViabilityRequest>
-     */
-    private function decididos(ReportFilters $f): Builder
-    {
-        $de = $f->from();
-        $ate = $f->to();
-
-        return ViabilityRequest::query()
-            ->whereHas('decision', function (Builder $query) use ($de, $ate): void {
-                $query
-                    ->when($de !== null, fn (Builder $q) => $q->where('decided_at', '>=', $de))
-                    ->when($ate !== null, fn (Builder $q) => $q->where('decided_at', '<=', $ate));
-            });
     }
 }

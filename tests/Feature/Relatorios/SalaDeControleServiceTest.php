@@ -3,16 +3,21 @@
 namespace Tests\Feature\Relatorios;
 
 use App\Enums\AnalysisCategory;
+use App\Enums\ConclusionOutcome;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\BenchmarkIngestion;
 use App\Models\BenchmarkMunicipalityMetric;
+use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Relatorios\ReportFilters;
 use App\Services\Relatorios\SalaDeControleService;
 use App\Support\Capitais;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
+use Tests\Support\MontaFluxosDeConclusao;
 use Tests\TestCase;
 
 /**
@@ -23,6 +28,7 @@ use Tests\TestCase;
 class SalaDeControleServiceTest extends TestCase
 {
     use LazilyRefreshDatabase;
+    use MontaFluxosDeConclusao;
 
     private function service(): SalaDeControleService
     {
@@ -94,16 +100,25 @@ class SalaDeControleServiceTest extends TestCase
 
     public function test_bloco_de_operacao_traz_volume_e_taxa_de_automacao(): void
     {
-        $this->processoDecidido(2.0, AnalysisCategory::Expresso);
-        $this->processoDecidido(2.0, AnalysisCategory::Expresso);
-        $this->processoDecidido(40.0, AnalysisCategory::SemiExpresso);
+        // Conclusões pelos serviços reais: duas do motor (uma disparada pela
+        // integração, com usuário) e uma decisão do motor concluída pelo analista.
+        Carbon::setTestNow('2026-03-10 12:00:00');
+        $this->seed(RolesAndPermissionsSeeder::class);
+        $this->cenarioZonaPermitida();
+
+        $this->concluidaPeloMotor();
+        $this->concluidaPeloMotor(User::factory()->create());
+        $this->concluirAnalise($this->encaminhadaComDecisaoDoMotor(), User::factory()->analistaServidor()->create(), ConclusionOutcome::Deferido);
+        $this->encaminhadaComDecisaoDoMotor();
 
         $operacao = $this->service()->montar($this->filtros())['operacao'];
 
         $this->assertSame(3, $operacao['total']);
-        $this->assertSame(2, $operacao['expresso']);
-        $this->assertSame(1, $operacao['semi_expresso']);
+        $this->assertSame(2, $operacao['automatica']);
+        $this->assertSame(1, $operacao['semi_expressa']);
         $this->assertEqualsWithDelta(66.67, $operacao['taxa_automacao'], 0.01);
+        $this->assertSame(2, $operacao['decisoes_do_motor']);
+        $this->assertSame(1, $operacao['analises_humanas']);
     }
 
     public function test_ausencia_de_benchmark_nao_derruba_os_blocos_internos(): void
@@ -135,5 +150,19 @@ class SalaDeControleServiceTest extends TestCase
         $painel = $this->service()->montar($this->filtros());
 
         $this->assertNotEmpty($painel['distancia']['ressalva']);
+    }
+
+    public function test_le_o_tempo_do_periodo_uma_vez_so(): void
+    {
+        $this->processoDecidido(2.0);
+        $this->referenciaCompleta();
+
+        DB::enableQueryLog();
+        $painel = $this->service()->montar($this->filtros());
+        $leituras = collect(DB::getQueryLog())->filter(fn (array $q): bool => str_contains($q['query'], '"viabilidade_horas_uteis" from'))->count();
+        DB::disableQueryLog();
+
+        $this->assertSame(1, $leituras);
+        $this->assertSame($painel['tempo']['media'], $painel['distancia']['interno']);
     }
 }

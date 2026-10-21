@@ -190,7 +190,8 @@ class SlaVencimentosTest extends TestCase
                 ->has('resumo.aging', 5)
                 ->has('resumo.atrasados_por_etapa', 2)
                 ->where('resumo.vencidos', 1)
-                ->where('resumo.cumprimento.data_de', '2026-05-16')
+                // 30 dias de calendário, hoje incluído.
+                ->where('resumo.cumprimento.data_de', '2026-05-17')
                 ->where('resumo.cumprimento.data_ate', '2026-06-15')
                 ->has('filtros.data_de')
                 ->has('filtros.data_ate'));

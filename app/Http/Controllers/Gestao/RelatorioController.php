@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
 use App\Services\Expresso\HolidayProvider;
+use App\Services\Relatorios\ClassificacaoFluxoService;
 use App\Services\Relatorios\ComunicacoesFalhaService;
 use App\Services\Relatorios\ContingenciaRelatorioService;
 use App\Services\Relatorios\Export\ReportExporter;
@@ -87,6 +88,7 @@ class RelatorioController extends Controller
         private ComunicacoesFalhaService $comunicacoesFalha,
         private TempoViabilidadeService $tempoViabilidade,
         private GargalosService $gargalos,
+        private ClassificacaoFluxoService $classificacao,
         private AuditService $audit,
     ) {}
 
@@ -182,9 +184,33 @@ class RelatorioController extends Controller
 
         return Inertia::render('gestao/relatorios/produtividade', [
             'produtividade' => $this->produtividade->porAnalista($filtros, $nominal, $escopo),
+            'semiExpressa' => $this->semiExpressa($filtros, $nominal, $escopo),
             'nominal' => $nominal,
             'filtros' => $filtros->aplicados(),
         ]);
+    }
+
+    /**
+     * Produtividade semi-expressa: decisões geradas pelo motor e análises
+     * humanas sobre elas, em números separados. Por analista, o nome só sai na
+     * visão nominal; sem ela, só a linha do próprio usuário (RN-007).
+     *
+     * @return array{decisoes_do_motor: int, analises_humanas: int, por_analista: list<array{rotulo: string, analises: int}>}
+     */
+    private function semiExpressa(ReportFilters $filtros, bool $nominal, ?int $escopo): array
+    {
+        $dados = $this->classificacao->produtividadeSemiExpressa($filtros, $escopo);
+
+        $nomes = $nominal
+            ? User::query()->whereIn('id', array_column($dados['por_analista'], 'analista_id'))->pluck('name', 'id')
+            : collect();
+
+        $dados['por_analista'] = array_map(fn (array $linha): array => [
+            'rotulo' => $nominal ? (string) ($nomes[$linha['analista_id']] ?? 'Analista #'.$linha['analista_id']) : 'Você',
+            'analises' => $linha['analises'],
+        ], $dados['por_analista']);
+
+        return $dados;
     }
 
     /**
@@ -558,7 +584,7 @@ class RelatorioController extends Controller
                 'relatorios.dashboard.janela_dias',
                 config('viabiliza.relatorios.dashboard.janela_dias', 30),
             );
-            $bag['data_de'] = FusoNegocio::hoje()->subDays($janela)->toDateString();
+            $bag['data_de'] = FusoNegocio::hoje()->subDays($janela - 1)->toDateString();
             $bag['data_ate'] = FusoNegocio::hoje()->toDateString();
         }
 

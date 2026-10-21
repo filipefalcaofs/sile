@@ -2,7 +2,6 @@
 
 namespace App\Services\Relatorios;
 
-use App\Enums\AnalysisCategory;
 use App\Enums\DecisionOutcome;
 use App\Enums\RuleDomain;
 use App\Enums\ViabilityRequestStatus;
@@ -35,6 +34,8 @@ use Illuminate\Support\Facades\DB;
  */
 class IndicadoresViabilidadeService
 {
+    public function __construct(private readonly ClassificacaoFluxoService $classificacao) {}
+
     /**
      * Solicitações protocoladas por dia no intervalo (HU-123). A data é truncada
      * em SQL com `date()` (portável SQLite/PostgreSQL — verificado) e agrupada
@@ -293,8 +294,9 @@ class IndicadoresViabilidadeService
         return match ($categoria) {
             'malha_fina' => $query->where('viability_requests.in_fine_mesh', true),
             'sede_escritorio' => $query->where('viability_requests.is_virtual_office', true),
-            'expresso' => $query->where('viability_requests.analysis_category', AnalysisCategory::Expresso->value),
-            'semi_expresso' => $query->where('viability_requests.analysis_category', AnalysisCategory::SemiExpresso->value),
+            // Pela forma de conclusão: processo ainda não concluído fica fora.
+            'expresso' => $this->classificacao->aplicar($query, ClassificacaoFluxoService::AUTOMATICA),
+            'semi_expresso' => $this->classificacao->aplicar($query, ClassificacaoFluxoService::SEMI_EXPRESSA),
             default => $query,
         };
     }

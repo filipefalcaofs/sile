@@ -2,7 +2,6 @@
 
 namespace App\Services\Relatorios;
 
-use App\Enums\AnalysisCategory;
 use App\Models\ViabilityRequest;
 use App\Support\Metricas\Percentis;
 use Illuminate\Database\Eloquent\Builder;
@@ -28,9 +27,18 @@ class TempoViabilidadeService
         return Percentis::de($this->horas($f))->toArray();
     }
 
+    /** Formas de conclusão comparadas no tempo (as demais não têm régua própria). */
+    private const CATEGORIAS = [
+        ClassificacaoFluxoService::AUTOMATICA,
+        ClassificacaoFluxoService::SEMI_EXPRESSA,
+        ClassificacaoFluxoService::HUMANA,
+    ];
+
+    public function __construct(private readonly ClassificacaoFluxoService $classificacao) {}
+
     /**
-     * Distribuição por categoria de análise, que é onde o gargalo aparece: o
-     * expresso resolve em segundos, o que vai à análise humana leva horas.
+     * Distribuição pela forma de conclusão, que é onde o gargalo aparece: o
+     * motor conclui em segundos, o que passa por análise humana leva horas.
      *
      * @return array<string, array{n: int, media: ?float, p50: ?float, p75: ?float, p90: ?float, p95: ?float, p99: ?float, maximo: ?float}>
      */
@@ -38,8 +46,8 @@ class TempoViabilidadeService
     {
         $resultado = [];
 
-        foreach (AnalysisCategory::cases() as $categoria) {
-            $resultado[$categoria->value] = Percentis::de(
+        foreach (self::CATEGORIAS as $categoria) {
+            $resultado[$categoria] = Percentis::de(
                 $this->horas($f, $categoria),
             )->toArray();
         }
@@ -50,10 +58,10 @@ class TempoViabilidadeService
     /**
      * @return list<float>
      */
-    private function horas(ReportFilters $f, ?AnalysisCategory $categoria = null): array
+    private function horas(ReportFilters $f, ?string $categoria = null): array
     {
         return $this->baseQuery($f)
-            ->when($categoria !== null, fn (Builder $q) => $q->where('analysis_category', $categoria))
+            ->when($categoria !== null, fn (Builder $q) => $this->classificacao->aplicar($q, $categoria))
             ->pluck('viabilidade_horas_uteis')
             ->map(static fn ($valor): float => (float) $valor)
             ->all();

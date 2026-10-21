@@ -108,7 +108,7 @@ class ExportacaoRecorteDaTelaTest extends TestCase
 
     public function test_geo_exporta_o_que_o_resumo_conta_pelo_bairro_oficial(): void
     {
-        $oficial = $this->solicitacao(['bairro_oficial' => 'PITUBA', 'address_neighborhood' => 'Pitubinha']);
+        $oficial = $this->solicitacao(['bairro_oficial' => ' Pituba', 'address_neighborhood' => 'Pitubinha']);
         $this->solicitacao(['bairro_oficial' => null, 'address_neighborhood' => 'Barra']);
         $this->solicitacao(['status' => ViabilityRequestStatus::Rascunho, 'protocol_number' => null, 'protocoled_at' => null, 'address_neighborhood' => 'Pituba']);
 
@@ -120,7 +120,7 @@ class ExportacaoRecorteDaTelaTest extends TestCase
         $this->assertCount($total, $this->idsExportados($source, $filtros));
 
         $linha = ($source->definition($filtros)->mapRow)($source->definition($filtros)->builder()->first());
-        $this->assertContains('PITUBA', $linha);
+        $this->assertContains('Pituba', $linha);
     }
 
     public function test_saturacao_exporta_os_deferidos_que_formam_os_pares(): void
