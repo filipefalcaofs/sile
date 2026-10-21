@@ -1,0 +1,60 @@
+# Serviço de inferência de edificações (SAM 2) do Viabiliza no OKD.
+# Imagem gerada de DockerFile_footprint_ia (raiz do repositório SEMIT).
+# Só acesso interno: sem Route. O Viabiliza chama
+# http://viabiliza-footprint-ia:8080 (URL do serviço de inferência no painel).
+# Ajuste o namespace e a imagem ao padrão do projeto antes de aplicar.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: viabiliza-footprint-ia
+  labels:
+    app: viabiliza-footprint-ia
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: viabiliza-footprint-ia
+  template:
+    metadata:
+      labels:
+        app: viabiliza-footprint-ia
+    spec:
+      containers:
+        - name: footprint-ia
+          image: IMAGEM_GERADA_DO_DockerFile_footprint_ia
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              cpu: "1"
+              memory: 2Gi
+            limits:
+              cpu: "2"
+              memory: 3Gi
+          # O modelo carrega na primeira requisição; a saúde responde antes.
+          readinessProbe:
+            httpGet:
+              path: /saude
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /saude
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: viabiliza-footprint-ia
+  labels:
+    app: viabiliza-footprint-ia
+spec:
+  selector:
+    app: viabiliza-footprint-ia
+  ports:
+    - port: 8080
+      targetPort: 8080
