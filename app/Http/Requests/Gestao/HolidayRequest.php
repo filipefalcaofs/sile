@@ -46,6 +46,10 @@ class HolidayRequest extends FormRequest
             }
         }
 
+        if ($this->input('type') === '') {
+            $merge['type'] = null;
+        }
+
         $this->merge($merge);
     }
 
@@ -62,6 +66,7 @@ class HolidayRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'recurring_annually' => ['boolean'],
             'active' => ['required', 'boolean'],
+            'type' => ['nullable', Rule::in(['nacional', 'estadual', 'municipal'])],
         ];
     }
 
@@ -75,6 +80,7 @@ class HolidayRequest extends FormRequest
             'name' => 'nome',
             'recurring_annually' => 'recorrência anual',
             'active' => 'situação',
+            'type' => 'tipo',
         ];
     }
 }

@@ -31,6 +31,8 @@ interface HolidayItem {
     name: string;
     recurring_annually: boolean;
     active: boolean;
+    /** nacional, estadual ou municipal; null = ainda não classificado. */
+    type: string | null;
 }
 
 interface HolidaysIndexProps {
@@ -45,6 +47,7 @@ interface HolidaysIndexProps {
         search: string;
         per_page: number;
         active: string;
+        type: string;
     };
     perPageOptions: number[];
 }
@@ -55,6 +58,18 @@ const SITUACAO_OPTIONS = [
     { value: '1', label: 'Ativo' },
     { value: '0', label: 'Inativo' },
 ];
+
+const TIPO_OPTIONS = [
+    { value: 'nacional', label: 'Nacional' },
+    { value: 'estadual', label: 'Estadual' },
+    { value: 'municipal', label: 'Municipal' },
+];
+
+const TIPO_BADGE_COLOR: Record<string, 'info' | 'success' | 'warning'> = {
+    nacional: 'info',
+    estadual: 'success',
+    municipal: 'warning',
+};
 
 const RECORRENCIA_OPTIONS = [
     { value: '0', label: 'Não (data fixa)' },
@@ -83,6 +98,7 @@ function SituationBadge({ active }: { active: boolean }) {
 function CreateHolidayModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
     const [recurring, setRecurring] = useState('0');
     const [active, setActive] = useState('1');
+    const [type, setType] = useState('');
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} className="m-4 max-h-[90vh] max-w-[560px] overflow-y-auto p-6 lg:p-8">
@@ -109,6 +125,18 @@ function CreateHolidayModal({ isOpen, onClose }: { isOpen: boolean; onClose: () 
                                 error={!!errors.name}
                                 hint={errors.name}
                             />
+                        </div>
+                        <div>
+                            <Label htmlFor="create-holiday-type">Tipo</Label>
+                            <Select
+                                id="create-holiday-type"
+                                name="type"
+                                value={type}
+                                onChange={setType}
+                                placeholder="Não classificado"
+                                options={TIPO_OPTIONS}
+                            />
+                            {errors.type && <FieldError>{errors.type}</FieldError>}
                         </div>
                         <div>
                             <Label htmlFor="create-holiday-recurring">Recorrência anual</Label>
@@ -142,6 +170,7 @@ function CreateHolidayModal({ isOpen, onClose }: { isOpen: boolean; onClose: () 
 function EditHolidayModal({ holiday, onClose }: { holiday: HolidayItem; onClose: () => void }) {
     const [recurring, setRecurring] = useState(holiday.recurring_annually ? '1' : '0');
     const [active, setActive] = useState(holiday.active ? '1' : '0');
+    const [type, setType] = useState(holiday.type ?? '');
 
     return (
         <Modal isOpen onClose={onClose} className="m-4 max-h-[90vh] max-w-[560px] overflow-y-auto p-6 lg:p-8">
@@ -172,6 +201,18 @@ function EditHolidayModal({ holiday, onClose }: { holiday: HolidayItem; onClose:
                                 error={!!errors.name}
                                 hint={errors.name}
                             />
+                        </div>
+                        <div>
+                            <Label htmlFor={`edit-holiday-type-${holiday.id}`}>Tipo</Label>
+                            <Select
+                                id={`edit-holiday-type-${holiday.id}`}
+                                name="type"
+                                value={type}
+                                onChange={setType}
+                                placeholder="Não classificado"
+                                options={TIPO_OPTIONS}
+                            />
+                            {errors.type && <FieldError>{errors.type}</FieldError>}
                         </div>
                         <div>
                             <Label htmlFor={`edit-holiday-recurring-${holiday.id}`}>Recorrência anual</Label>
@@ -220,7 +261,7 @@ export default function HolidaysIndex({ holidays, filters, perPageOptions }: Hol
         // coluna é sortable para não oferecer um controle que não faz nada.
         initialSort: { column: 'date', direction: 'desc' },
         initialPerPage: filters.per_page,
-        initialFilters: { active: filters.active },
+        initialFilters: { active: filters.active, type: filters.type },
     });
 
     const [showCreate, setShowCreate] = useState(false);
@@ -228,7 +269,7 @@ export default function HolidaysIndex({ holidays, filters, perPageOptions }: Hol
     const [pendingToggle, setPendingToggle] = useState<HolidayItem | null>(null);
     const [actionProcessing, setActionProcessing] = useState(false);
 
-    const filtering = table.search.trim() !== '' || table.filters.active !== '';
+    const filtering = table.search.trim() !== '' || table.filters.active !== '' || table.filters.type !== '';
 
     const columns: ColumnDef<HolidayItem>[] = [
         {
@@ -242,6 +283,20 @@ export default function HolidaysIndex({ holidays, filters, perPageOptions }: Hol
             header: 'Nome',
             cellClassName: 'text-gray-800 dark:text-white/90',
             cell: (holiday) => holiday.name,
+        },
+        {
+            id: 'type',
+            header: 'Tipo',
+            cell: (holiday) =>
+                holiday.type ? (
+                    <Badge color={TIPO_BADGE_COLOR[holiday.type] ?? 'light'} size="sm">
+                        {TIPO_OPTIONS.find((option) => option.value === holiday.type)?.label ?? holiday.type}
+                    </Badge>
+                ) : (
+                    <Badge color="light" size="sm">
+                        Não classificado
+                    </Badge>
+                ),
         },
         {
             id: 'recurring_annually',
@@ -349,33 +404,54 @@ export default function HolidaysIndex({ holidays, filters, perPageOptions }: Hol
                                     label: 'Buscar feriados',
                                 }}
                                 filters={
-                                    <div className="w-40">
-                                        <label htmlFor="filter-active" className="sr-only">
-                                            Filtrar por situação
-                                        </label>
-                                        <Select
-                                            id="filter-active"
-                                            value={table.filters.active}
-                                            onChange={(value) => table.setFilter('active', value)}
-                                            placeholder="Situação"
-                                            options={SITUACAO_OPTIONS.map((opt) => ({
-                                                value: opt.value,
-                                                label: opt.value === '1' ? 'Ativos' : 'Inativos',
-                                            }))}
-                                        />
-                                    </div>
+                                    <>
+                                        <div className="w-40">
+                                            <label htmlFor="filter-type" className="sr-only">
+                                                Filtrar por tipo
+                                            </label>
+                                            <Select
+                                                id="filter-type"
+                                                value={table.filters.type}
+                                                onChange={(value) => table.setFilter('type', value)}
+                                                placeholder="Tipo"
+                                                options={TIPO_OPTIONS}
+                                            />
+                                        </div>
+                                        <div className="w-40">
+                                            <label htmlFor="filter-active" className="sr-only">
+                                                Filtrar por situação
+                                            </label>
+                                            <Select
+                                                id="filter-active"
+                                                value={table.filters.active}
+                                                onChange={(value) => table.setFilter('active', value)}
+                                                placeholder="Situação"
+                                                options={SITUACAO_OPTIONS.map((opt) => ({
+                                                    value: opt.value,
+                                                    label: opt.value === '1' ? 'Ativos' : 'Inativos',
+                                                }))}
+                                            />
+                                        </div>
+                                    </>
                                 }
                                 actions={<PerPageSelect value={table.perPage} options={perPageOptions} onChange={table.setPerPage} />}
                             />
 
-                            {table.filters.active !== '' && (
+                            {(table.filters.active !== '' || table.filters.type !== '') && (
                                 <div className="flex flex-wrap items-center gap-2">
-                                    <Badge size="sm" color="light">
-                                        Situação: {table.filters.active === '1' ? 'Ativos' : 'Inativos'}
-                                    </Badge>
+                                    {table.filters.type !== '' && (
+                                        <Badge size="sm" color="light">
+                                            Tipo: {TIPO_OPTIONS.find((option) => option.value === table.filters.type)?.label}
+                                        </Badge>
+                                    )}
+                                    {table.filters.active !== '' && (
+                                        <Badge size="sm" color="light">
+                                            Situação: {table.filters.active === '1' ? 'Ativos' : 'Inativos'}
+                                        </Badge>
+                                    )}
                                     <button
                                         type="button"
-                                        onClick={() => table.setFilter('active', '')}
+                                        onClick={() => table.setFilters({ active: '', type: '' })}
                                         className="text-theme-xs font-medium text-brand-500 transition hover:text-brand-600 dark:text-brand-400"
                                     >
                                         Limpar filtro
