@@ -42,6 +42,7 @@ class HolidaySeeder extends Seeder
                     'name' => $name,
                     'recurring_annually' => true,
                     'active' => true,
+                    'type' => 'nacional',
                 ],
             );
         }

@@ -26,12 +26,16 @@ class HolidayController extends Controller
 
     private const DEFAULT_PER_PAGE = 15;
 
+    private const TYPES = ['nacional', 'estadual', 'municipal'];
+
     public function index(Request $request): Response
     {
         $perPage = (int) $request->input('per_page');
         $perPage = in_array($perPage, self::PER_PAGE_OPTIONS, true) ? $perPage : self::DEFAULT_PER_PAGE;
 
         $active = $request->string('active')->toString();
+        $type = $request->string('type')->toString();
+        $type = in_array($type, self::TYPES, true) ? $type : '';
 
         $holidays = Holiday::query()
             ->when($request->string('search')->isNotEmpty(), function ($query) use ($request) {
@@ -40,6 +44,7 @@ class HolidayController extends Controller
                 $query->whereLike('name', "%{$term}%", caseSensitive: false);
             })
             ->when(in_array($active, ['0', '1'], true), fn ($query) => $query->where('active', $active === '1'))
+            ->when($type !== '', fn ($query) => $query->where('type', $type))
             ->orderByDesc('date')
             ->paginate($perPage)
             ->withQueryString()
@@ -49,6 +54,7 @@ class HolidayController extends Controller
                 'name' => $holiday->name,
                 'recurring_annually' => $holiday->recurring_annually,
                 'active' => $holiday->active,
+                'type' => $holiday->type,
             ]);
 
         return Inertia::render('gestao/feriados/index', [
@@ -57,6 +63,7 @@ class HolidayController extends Controller
                 'search' => $request->string('search')->toString(),
                 'per_page' => $perPage,
                 'active' => in_array($active, ['0', '1'], true) ? $active : '',
+                'type' => $type,
             ],
             'perPageOptions' => self::PER_PAGE_OPTIONS,
         ]);
