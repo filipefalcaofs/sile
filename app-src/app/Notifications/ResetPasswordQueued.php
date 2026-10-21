@@ -9,7 +9,6 @@ use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
-use Illuminate\Support\Facades\Lang;
 
 class ResetPasswordQueued extends ResetPassword implements ShouldQueue
 {
@@ -49,7 +48,7 @@ class ResetPasswordQueued extends ResetPassword implements ShouldQueue
         $minutos = (int) config("auth.passwords.{$this->broker}.expire");
 
         return (new EmailViabiliza)
-            ->subject(Lang::get('Reset Password Notification'))
+            ->subject('Redefinição de senha')
             ->selo('Sua conta')
             ->titulo('Redefina sua senha')
             ->greeting('Olá!')
