@@ -6,7 +6,6 @@ use App\Enums\DecisionOutcome;
 use App\Enums\TipoGatilho;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\ExpressoQueda;
-use App\Models\Parameter;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Relatorios\Export\Sources\ExpressoQuedaReportSource;
@@ -101,7 +100,7 @@ class ExpressoQuedaServiceTest extends TestCase
         $this->assertSame(6, $resultado['respondidas']);
         $this->assertSame(8, $resultado['elegiveis']);
         $this->assertSame(75.0, $resultado['taxa']);
-        $this->assertNull($resultado['meta']);
+        $this->assertArrayNotHasKey('meta', $resultado);
     }
 
     #[Test]
@@ -118,28 +117,6 @@ class ExpressoQuedaServiceTest extends TestCase
 
         $this->assertSame(0, $resultado['elegiveis']);
         $this->assertNull($resultado['taxa']);
-    }
-
-    #[Test]
-    public function meta_reflete_o_parametro_e_e_null_quando_nao_definida(): void
-    {
-        // RN-004: a meta é parametrizável (HU-014) e NUNCA inventada. Sem o
-        // parâmetro → null; definida via Settings (banco) → reflete sem deploy.
-        $this->assertNull(
-            $this->service()->taxaRespostaExpressa(ReportFilters::fromArray([]))['meta'],
-        );
-
-        Parameter::factory()->create([
-            'key' => 'relatorios.expresso.meta_taxa',
-            'group' => 'relatorios',
-            'type' => 'string',
-            'value' => '80',
-        ]);
-
-        $this->assertSame(
-            80.0,
-            $this->service()->taxaRespostaExpressa(ReportFilters::fromArray([]))['meta'],
-        );
     }
 
     #[Test]

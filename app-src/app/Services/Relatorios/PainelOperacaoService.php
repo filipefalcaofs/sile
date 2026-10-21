@@ -88,13 +88,11 @@ class PainelOperacaoService
                 ? (int) round($estoque + ($saldo / $janelaDias) * 30)
                 : null,
             'taxa_expressa' => $expressa['taxa'],
-            'meta_expressa' => $expressa['meta'],
             'serie_fluxo' => $serie,
             'expresso' => [
                 'respondidas' => $expressa['respondidas'],
                 'elegiveis' => $expressa['elegiveis'],
                 'taxa' => $expressa['taxa'],
-                'meta' => $expressa['meta'],
                 'motivos' => array_map(
                     fn (array $motivo): array => [
                         'rotulo' => $motivo['rotulo'],

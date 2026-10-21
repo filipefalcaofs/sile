@@ -91,7 +91,8 @@ class DashboardKpisTest extends TestCase
                 ->where('kpis.operacao.decisoes.expresso', 2)
                 ->where('kpis.operacao.decisoes.humano', 2)
                 ->where('kpis.operacao.taxa_expressa', fn ($taxa) => (float) $taxa === 50.0)
-                ->where('kpis.operacao.meta_expressa', null)
+                ->missing('kpis.operacao.meta_expressa')
+                ->missing('kpis.operacao.expresso.meta')
                 ->missing('kpis.operacao.delta')
                 ->missing('kpis.relatorios'));
     }
