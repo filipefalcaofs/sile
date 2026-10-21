@@ -17,14 +17,12 @@ import EmptyState from '@/components/ui/empty-state';
 import KpiCard from '@/components/ui/kpi-card';
 import GestaoLayout from '@/layouts/gestao-layout';
 
-/** Taxa de resposta expressa (HU-135): respondidas ÷ elegíveis + meta (RN-004). */
+/** Taxa de resposta expressa (HU-135): respondidas ÷ elegíveis. */
 interface TaxaQuedas {
     respondidas: number;
     elegiveis: number;
     /** % ou null sem base no período (honesto, jamais 0% fabricado). */
     taxa: number | null;
-    /** Meta parametrizável (relatorios.expresso.meta_taxa) ou null — nunca inventada. */
-    meta: number | null;
 }
 
 /** Ponto da série temporal da taxa por dia. */
@@ -83,8 +81,8 @@ function formatarDia(dia: string): string {
     return partes.length === 3 ? `${partes[2]}/${partes[1]}` : dia;
 }
 
-/** Série temporal da taxa por dia (linha). Com meta, desenha a linha de meta. */
-function serieChartOption(serie: SeriePonto[], meta: number | null): EChartsOption {
+/** Série temporal da taxa por dia (linha). */
+function serieChartOption(serie: SeriePonto[]): EChartsOption {
     const series: NonNullable<EChartsOption['series']> = [
         {
             type: 'line',
@@ -93,15 +91,6 @@ function serieChartOption(serie: SeriePonto[], meta: number | null): EChartsOpti
             connectNulls: false,
             showSymbol: serie.length === 1,
             data: serie.map((ponto) => ponto.taxa),
-            ...(meta !== null
-                ? {
-                      markLine: {
-                          symbol: 'none',
-                          data: [{ yAxis: meta, name: 'Meta' }],
-                          label: { formatter: `Meta ${percentFormat.format(meta)}%` },
-                      },
-                  }
-                : {}),
         },
     ];
 
@@ -216,8 +205,6 @@ export default function QuedasExpresso({ taxa, serie, ranking, filtros }: Quedas
         return qs === '' ? URL_PROCESSOS : `${URL_PROCESSOS}?${qs}`;
     }, [form]);
 
-    const metaDefinida = taxa.meta !== null;
-
     return (
         <>
             <Head title="Quedas do fluxo expresso" />
@@ -267,7 +254,7 @@ export default function QuedasExpresso({ taxa, serie, ranking, filtros }: Quedas
                     </CardContent>
                 </Card>
 
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 xl:grid-cols-3">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">
                     <KpiCard
                         label="Taxa de resposta expressa"
                         value={formatarPercentual(taxa.taxa)}
@@ -278,13 +265,6 @@ export default function QuedasExpresso({ taxa, serie, ranking, filtros }: Quedas
                         }
                         icon={<ListIcon className="size-6" />}
                         tone="brand"
-                    />
-                    <KpiCard
-                        label="Meta da taxa"
-                        value={metaDefinida ? formatarPercentual(taxa.meta) : 'meta não definida'}
-                        note={metaDefinida ? 'meta definida nos parâmetros do sistema' : 'parametrize a meta para acompanhar'}
-                        icon={<ListIcon className="size-6" />}
-                        tone={metaDefinida ? 'success' : 'warning'}
                     />
                     <KpiCard
                         label="Elegíveis no período"
@@ -298,11 +278,11 @@ export default function QuedasExpresso({ taxa, serie, ranking, filtros }: Quedas
                 <Card>
                     <CardHeader
                         title="Série temporal da taxa"
-                        description="Taxa de resposta expressa por dia na janela. Quando a meta está parametrizada, a linha de meta aparece no gráfico."
+                        description="Taxa de resposta expressa por dia na janela."
                     />
                     <CardContent>
                         {serie.length > 0 ? (
-                            <Chart option={serieChartOption(serie, taxa.meta)} className="h-72 w-full" />
+                            <Chart option={serieChartOption(serie)} className="h-72 w-full" />
                         ) : (
                             <GraficoSemDados />
                         )}

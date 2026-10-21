@@ -9,7 +9,6 @@ use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityRequestTransition;
 use App\Services\Analise\ProcessoQueryService;
-use App\Support\Settings;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -47,10 +46,10 @@ class ExpressoQuedaService
     /**
      * Taxa de resposta expressa no período (HU-135 RN-002): respondidas pelo
      * expresso ÷ elegíveis. `taxa` é null sem base no período (honesto, jamais
-     * 0% fabricado); `meta` vem de `relatorios.expresso.meta_taxa` (RN-004) e é
-     * null quando não definida — NUNCA inventada.
+     * 0% fabricado). Sem meta: a taxa depende do enquadramento do que a JUCEB
+     * encaminha, então é indicador, não alvo.
      *
-     * @return array{respondidas: int, elegiveis: int, taxa: float|null, meta: float|null}
+     * @return array{respondidas: int, elegiveis: int, taxa: float|null}
      */
     public function taxaRespostaExpressa(ReportFilters $f): array
     {
@@ -61,7 +60,6 @@ class ExpressoQuedaService
             'respondidas' => $respondidas,
             'elegiveis' => $elegiveis,
             'taxa' => $elegiveis > 0 ? round($respondidas / $elegiveis * 100, 1) : null,
-            'meta' => $this->metaTaxa(),
         ];
     }
 
@@ -190,17 +188,6 @@ class ExpressoQuedaService
             ->whereIn('to_status', self::TO_STATUS_ELEGIVEL)
             ->when($f->from(), fn (Builder $q, Carbon $from): Builder => $q->where('created_at', '>=', $from))
             ->when($f->to(), fn (Builder $q, Carbon $to): Builder => $q->where('created_at', '<=', $to));
-    }
-
-    /**
-     * Meta (%) da taxa expressa do parâmetro `relatorios.expresso.meta_taxa`
-     * (HU-014/RN-004): null quando não definida — NUNCA inventada.
-     */
-    private function metaTaxa(): ?float
-    {
-        $meta = Settings::get('relatorios.expresso.meta_taxa');
-
-        return $meta !== null && $meta !== '' ? (float) $meta : null;
     }
 
     /**

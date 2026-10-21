@@ -15,7 +15,7 @@ class ParameterSeederTest extends TestCase
     {
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(116, Parameter::query()->count());
+        $this->assertSame(115, Parameter::query()->count());
         $this->assertSame(
             ['abuso', 'analise', 'expresso', 'features', 'geo', 'ia', 'integracoes', 'louos', 'notificacoes', 'relatorios', 'retencao', 'risco', 'seguranca', 'solicitacao', 'tll'],
             Parameter::query()->distinct()->orderBy('group')->pluck('group')->all(),
@@ -704,15 +704,8 @@ class ParameterSeederTest extends TestCase
         $this->assertSame(['required', 'integer', 'min:1', 'max:365'], $retencao->validation_rules);
         $this->assertNull($retencao->value);
 
-        // Meta da taxa de resposta expressa: nasce SEM valor (pendência SEDUR) —
-        // default null, degradação honesta "meta não definida" (nunca inventada).
-        $metaTaxa = Parameter::query()->where('key', 'relatorios.expresso.meta_taxa')->first();
-        $this->assertNotNull($metaTaxa);
-        $this->assertSame('relatorios', $metaTaxa->group);
-        $this->assertSame('string', $metaTaxa->type);
-        $this->assertNull($metaTaxa->default_value);
-        $this->assertSame(['nullable', 'numeric', 'min:0', 'max:100'], $metaTaxa->validation_rules);
-        $this->assertNull($metaTaxa->value);
+        // A taxa expressa depende do enquadramento enviado pela JUCEB: sem meta.
+        $this->assertNull(Parameter::query()->where('key', 'relatorios.expresso.meta_taxa')->first());
 
         $this->assertNull(Parameter::query()->where('key', 'relatorios.expresso.janela_dias')->first());
         $this->assertSame(30, config('viabiliza.relatorios.expresso.janela_dias'));
@@ -850,6 +843,6 @@ class ParameterSeederTest extends TestCase
         $this->seed(ParameterSeeder::class);
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(116, Parameter::query()->count());
+        $this->assertSame(115, Parameter::query()->count());
     }
 }

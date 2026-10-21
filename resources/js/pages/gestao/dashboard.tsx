@@ -89,7 +89,6 @@ interface OperacaoKpis {
     pico_entrada: number | null;
     projecao_30_dias: number | null;
     taxa_expressa: number | null;
-    meta_expressa: number | null;
     serie_fluxo: SerieFluxoPonto[];
     expresso: {
         respondidas: number;
@@ -325,35 +324,14 @@ function iniciais(nome: string): string {
         .join('');
 }
 
-function textoGapExpresso(operacao: OperacaoKpis): { texto: string; tom: TomDelta } {
-    const { taxa, meta, elegiveis } = operacao.expresso;
+function textoResumoExpresso(operacao: OperacaoKpis): string {
+    const { taxa, respondidas, elegiveis } = operacao.expresso;
 
     if (taxa === null) {
-        return { texto: 'Sem base no período para calcular a taxa.', tom: 'neutro' };
+        return 'Sem base no período para calcular a taxa.';
     }
 
-    if (meta === null) {
-        return { texto: 'Meta não definida.', tom: 'neutro' };
-    }
-
-    if (taxa >= meta) {
-        return {
-            texto: `Meta atingida. ${numberFormat.format(operacao.expresso.respondidas)} decisões sem toque humano no período.`,
-            tom: 'alta',
-        };
-    }
-
-    const faltam = meta - taxa;
-    const estimativa = elegiveis > 0 ? Math.round((elegiveis * faltam) / 100) : null;
-    const base = `Faltam ${formatarPercentual(faltam)} para a meta`;
-
-    return {
-        texto:
-            estimativa === null
-                ? `${base}.`
-                : `${base} — cerca de ${numberFormat.format(estimativa)} processos que ainda chegam ao analista.`,
-        tom: 'baixa',
-    };
+    return `${numberFormat.format(respondidas)} de ${numberFormat.format(elegiveis)} processos decididos sem toque humano no período.`;
 }
 
 function fluxoChartOption(pontos: SerieFluxoPonto[]): EChartsOption {
@@ -468,12 +446,12 @@ function motivosChartOption(motivos: MotivoExpresso[]): EChartsOption {
     };
 }
 
-function expressoChartOption(taxa: number | null, meta: number | null): EChartsOption {
+function expressoChartOption(taxa: number | null): EChartsOption {
     return {
         grid: { left: 0, right: 8, top: 8, bottom: 8 },
         xAxis: { type: 'value', min: 0, max: 100, show: false },
         yAxis: { type: 'category', data: ['Taxa'], show: false },
-        tooltip: { trigger: 'item', formatter: () => `Taxa ${formatarPercentual(taxa)} · meta ${formatarPercentual(meta)}` },
+        tooltip: { trigger: 'item', formatter: () => `Taxa ${formatarPercentual(taxa)}` },
         series: [
             {
                 type: 'bar',
@@ -483,15 +461,6 @@ function expressoChartOption(taxa: number | null, meta: number | null): EChartsO
                 showBackground: true,
                 backgroundStyle: { color: '#f2f4f7', borderRadius: 8 },
                 itemStyle: { color: chartPalette.brand, borderRadius: 8 },
-                markLine:
-                    meta === null
-                        ? undefined
-                        : {
-                              symbol: 'none',
-                              label: { show: false },
-                              lineStyle: { color: '#1d2939', width: 2, type: 'solid' },
-                              data: [{ xAxis: meta }],
-                          },
             },
         ],
     };
@@ -662,10 +631,7 @@ export default function Dashboard({ kpis, acesso }: DashboardProps) {
     const [visaoCarga, setVisaoCarga] = useState<'setor' | 'analista'>('setor');
     const optionEtapas = useMemo(() => etapasChartOption(operacao?.etapas ?? []), [operacao]);
     const optionMotivos = useMemo(() => motivosChartOption(operacao?.expresso.motivos ?? []), [operacao]);
-    const optionExpresso = useMemo(
-        () => expressoChartOption(operacao?.expresso.taxa ?? null, operacao?.expresso.meta ?? null),
-        [operacao],
-    );
+    const optionExpresso = useMemo(() => expressoChartOption(operacao?.expresso.taxa ?? null), [operacao]);
     const optionAging = useMemo(() => agingChartOption(operacao?.aging ?? []), [operacao]);
 
     if (!operacao) {
@@ -682,7 +648,7 @@ export default function Dashboard({ kpis, acesso }: DashboardProps) {
     }
 
     const variacao = formatarVariacao(operacao.variacao_protocolos);
-    const gap = textoGapExpresso(operacao);
+    const resumoExpresso = textoResumoExpresso(operacao);
     const totalAging = operacao.aging.reduce((soma, faixa) => soma + faixa.total, 0);
     const saldoPositivo = operacao.saldo_periodo > 0;
     const notaTempo =
@@ -813,12 +779,9 @@ export default function Dashboard({ kpis, acesso }: DashboardProps) {
                             <strong className="text-[40px] leading-[44px] font-bold tracking-tight text-gray-800 tabular-nums dark:text-white/90">
                                 {formatarPercentual(operacao.expresso.taxa)}
                             </strong>
-                            <span className="text-[13px] text-gray-500 dark:text-gray-400">
-                                meta {formatarPercentual(operacao.expresso.meta)}
-                            </span>
                         </div>
                         {operacao.expresso.taxa !== null && <Chart option={optionExpresso} className="mt-3 h-12 w-full" />}
-                        <p className={`mt-2.5 text-[13px] leading-[18px] ${DELTA[gap.tom]}`}>{gap.texto}</p>
+                        <p className="mt-2.5 text-[13px] leading-[18px] text-gray-500 dark:text-gray-400">{resumoExpresso}</p>
 
                         <div className="mt-4 flex flex-col gap-3 border-t border-gray-100 pt-3.5 dark:border-gray-800">
                             <span className="text-xs tracking-wide text-gray-500 uppercase dark:text-gray-400">Por que caiu para análise humana</span>

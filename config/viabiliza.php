@@ -466,10 +466,7 @@ return [
     // constantes TÉCNICAS (max_linhas, chunk, disk, pdf, cache_ttl_segundos,
     // job) ficam SÓ aqui, fora do catálogo (precedente [02-02]).
     // formatos_habilitados é o ARRAY já decodificado — typedValue() do parâmetro
-    // json também devolve array. meta_taxa é OMITIDO de propósito: a meta nasce
-    // "não definida" (pendência SEDUR); espelhá-la como null faria config()
-    // devolver null em vez do default do call site — Settings::get(chave,
-    // "indefinida") só cai em "indefinida" quando a CHAVE está ausente (Arr::get).
+    // json também devolve array.
     'relatorios' => [
         'export' => [
             'assincrono_limiar_linhas' => 5000,

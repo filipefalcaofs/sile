@@ -819,16 +819,6 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'integer', 'min:1', 'max:365'],
                 'description' => 'Dias de retenção dos arquivos de exportação gerados em segundo plano',
             ],
-            // Meta da taxa de resposta expressa: nasce SEM valor (pendência SEDUR).
-            // default null + NÃO espelhada no config/viabiliza.php → Settings::get cai
-            // no fallback do call site ("meta não definida"), nunca inventa meta.
-            'relatorios.expresso.meta_taxa' => [
-                'group' => 'relatorios',
-                'type' => 'string',
-                'default_value' => null,
-                'validation_rules' => ['nullable', 'numeric', 'min:0', 'max:100'],
-                'description' => 'Meta (%) da taxa de resposta expressa (vazio = meta não definida)',
-            ],
             // Observatório de Saturação Locacional (Módulo 2): capacidade
             // recomendada por CNAE (por bairro) e os limiares que classificam um
             // par bairro×CNAE como "saturando"/"saturado". A capacidade é DADO de
