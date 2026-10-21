@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Concerns\HasAuditoria;
+use App\Enums\CondicaoServico;
 use Database\Factories\ServicoNomenclaturaFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -15,9 +16,10 @@ use Illuminate\Support\Str;
  * De x Para do nome de um serviço: o evento como a JUCEB envia (de) e o nome
  * exibido no Viabiliza (para), parametrizado pela SEDUR. `exibir` decide se o
  * serviço aparece quando o processo traz mais de um evento. A chave é o `de`
- * normalizado, para não duplicar por caixa, acento ou espaço.
+ * normalizado, para não duplicar por caixa, acento ou espaço; o mesmo evento
+ * pode ter uma linha por condição (ver CondicaoServico).
  */
-#[Fillable(['de', 'para', 'exibir'])]
+#[Fillable(['de', 'condicao', 'para', 'exibir'])]
 class ServicoNomenclatura extends Model
 {
     use HasAuditoria;
@@ -41,7 +43,13 @@ class ServicoNomenclatura extends Model
     {
         static::saving(function (ServicoNomenclatura $linha): void {
             $linha->chave = self::chaveDe((string) $linha->de);
+            $linha->condicao = (string) $linha->condicao;
         });
+    }
+
+    public function condicaoServico(): ?CondicaoServico
+    {
+        return CondicaoServico::tryFrom((string) $this->condicao);
     }
 
     public static function chaveDe(string $nome): string

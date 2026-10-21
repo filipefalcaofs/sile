@@ -8,6 +8,7 @@ use App\Enums\AnalysisStatus;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\User;
 use App\Models\ViabilityRequest;
+use App\Models\ViabilityRequestEvento;
 use App\Services\Servicos\ServicoNomenclaturaResolver;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
@@ -91,7 +92,7 @@ class ProcessoQueryService
      */
     public function aplicarFiltros(Builder $query, array $filtros): Builder
     {
-        $codigosDoServico = $this->eventosDoServico($filtros);
+        $eventosDoServico = $this->eventosDoServico($filtros);
 
         return $query
             ->when($this->valor($filtros, 'grupo'), fn (Builder $q, string $grupo) => $this->aplicarGrupo($q, $grupo))
@@ -108,7 +109,7 @@ class ProcessoQueryService
             ->when($this->valor($filtros, 'bap'), fn (Builder $q, string $v) => $q->whereLike('external_reference', "%{$v}%", caseSensitive: false))
             ->when($this->valor($filtros, 'produto_tvl'), fn (Builder $q, string $v) => $q->whereHas('decision', fn ($d) => $d->whereLike('tvl_product_number', "%{$v}%", caseSensitive: false)))
             ->when($this->inteiro($filtros, 'servico'), fn (Builder $q, int $id) => $q->where('service_type_id', $id))
-            ->when($codigosDoServico !== null, fn (Builder $q) => $q->whereHas('eventos', fn ($e) => $e->whereIn('codigo', $codigosDoServico)))
+            ->when($eventosDoServico !== null, fn (Builder $q) => $q->whereHas('eventos', fn ($e) => $this->aplicarEventos($e, $eventosDoServico)))
             ->when($this->inteiro($filtros, 'setor'), fn (Builder $q, int $id) => $q->where('sector_id', $id))
             ->when($this->inteiro($filtros, 'analista'), fn (Builder $q, int $id) => $q->where('assigned_user_id', $id))
             ->when($this->valor($filtros, 'inscricao'), fn (Builder $q, string $v) => $q->whereLike('property_registration', "%{$v}%", caseSensitive: false))
@@ -519,19 +520,20 @@ class ProcessoQueryService
     }
 
     /**
-     * Códigos de evento do filtro "Serviço": pelo nome parametrizado
-     * ("nviabilidade de localizacao") ou pelos códigos, formato anterior
-     * ("e244", "e101,102"). Nome sem evento recebido não traz processo.
+     * Eventos do filtro "Serviço": pelo nome parametrizado
+     * ("nviabilidade de localizacao"), com código e condição, ou pelos códigos,
+     * formato anterior ("e244", "e101,102"), sem olhar a condição. Nome sem
+     * evento recebido não traz processo.
      *
      * @param  array<string, mixed>  $filtros
-     * @return list<string>|null
+     * @return list<array{codigo: string, condicao?: ?string}>|null
      */
     private function eventosDoServico(array $filtros): ?array
     {
         $valor = $this->valor($filtros, 'servico');
 
         if ($valor !== null && str_starts_with($valor, self::PREFIXO_NOME_SERVICO)) {
-            return app(ServicoNomenclaturaResolver::class)->codigosDoNome(substr($valor, strlen(self::PREFIXO_NOME_SERVICO)));
+            return app(ServicoNomenclaturaResolver::class)->eventosDoNome(substr($valor, strlen(self::PREFIXO_NOME_SERVICO)));
         }
 
         if ($valor === null || ! str_starts_with($valor, self::PREFIXO_EVENTO)) {
@@ -543,7 +545,32 @@ class ProcessoQueryService
             fn (string $codigo): bool => $codigo !== '',
         ));
 
-        return $codigos === [] ? null : $codigos;
+        return $codigos === [] ? null : array_map(fn (string $codigo): array => ['codigo' => $codigo], $codigos);
+    }
+
+    /**
+     * @param  Builder<ViabilityRequestEvento>  $query
+     * @param  list<array{codigo: string, condicao?: ?string}>  $eventos
+     */
+    private function aplicarEventos(Builder $query, array $eventos): void
+    {
+        if ($eventos === []) {
+            $query->whereRaw('1 = 0');
+
+            return;
+        }
+
+        $query->where(function (Builder $grupo) use ($eventos): void {
+            foreach ($eventos as $evento) {
+                $grupo->orWhere(function (Builder $um) use ($evento): void {
+                    $um->where('codigo', $evento['codigo']);
+
+                    if (array_key_exists('condicao', $evento)) {
+                        $evento['condicao'] === null ? $um->whereNull('condicao') : $um->where('condicao', $evento['condicao']);
+                    }
+                });
+            }
+        });
     }
 
     /**

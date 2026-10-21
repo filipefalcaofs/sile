@@ -5,6 +5,7 @@ namespace App\Services\Regin;
 use App\Models\ReginRecebimento;
 use App\Models\ServicoNomenclatura;
 use App\Models\ViabilityRequest;
+use App\Services\Servicos\CondicaoServicoDetector;
 
 /**
  * Eventos do protocolo enviados pela JUCEB (PEV_COD_EVENTO / PEV_NOME_EVENTO),
@@ -47,7 +48,8 @@ class ReginEventos
 
             ServicoNomenclatura::garantir($evento['nome']);
 
-            $processo->eventos()->create($evento);
+            $condicao = app(CondicaoServicoDetector::class)->detectar($processo, $evento['nome']);
+            $processo->eventos()->create($evento + ['condicao' => $condicao?->value]);
             $gravados++;
         }
 

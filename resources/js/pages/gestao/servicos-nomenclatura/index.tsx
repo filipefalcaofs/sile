@@ -24,6 +24,7 @@ import GestaoLayout from '@/layouts/gestao-layout';
 interface NomenclaturaItem {
     id: number;
     de: string;
+    condicao_label: string | null;
     para: string;
     exibir: boolean;
 }
@@ -45,6 +46,7 @@ interface NomenclaturaIndexProps {
     };
     perPageOptions: number[];
     sugestoesDe: string[];
+    condicaoOptions: { value: string; label: string }[];
 }
 
 const EXIBIR_OPTIONS = [
@@ -60,8 +62,19 @@ function ExibirBadge({ exibir }: { exibir: boolean }) {
     );
 }
 
-function CreateModal({ isOpen, onClose, sugestoesDe }: { isOpen: boolean; onClose: () => void; sugestoesDe: string[] }) {
+function CreateModal({
+    isOpen,
+    onClose,
+    sugestoesDe,
+    condicaoOptions,
+}: {
+    isOpen: boolean;
+    onClose: () => void;
+    sugestoesDe: string[];
+    condicaoOptions: { value: string; label: string }[];
+}) {
     const [exibir, setExibir] = useState('1');
+    const [condicao, setCondicao] = useState('');
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} className="m-4 max-h-[90vh] max-w-[600px] overflow-y-auto p-6 lg:p-8">
@@ -90,6 +103,17 @@ function CreateModal({ isOpen, onClose, sugestoesDe }: { isOpen: boolean; onClos
                                     <option key={nome} value={nome} />
                                 ))}
                             </datalist>
+                        </div>
+                        <div>
+                            <Label htmlFor="create-condicao">Condição</Label>
+                            <Select
+                                id="create-condicao"
+                                name="condicao"
+                                value={condicao}
+                                onChange={setCondicao}
+                                options={[{ value: '', label: 'Sem condição' }, ...condicaoOptions]}
+                            />
+                            {errors.condicao && <FieldError>{errors.condicao}</FieldError>}
                         </div>
                         <div>
                             <Label required htmlFor="create-para">Nome exibido (Para)</Label>
@@ -130,6 +154,7 @@ function EditModal({ linha, onClose }: { linha: NomenclaturaItem; onClose: () =>
         <Modal isOpen onClose={onClose} className="m-4 max-h-[90vh] max-w-[600px] overflow-y-auto p-6 lg:p-8">
             <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Editar nomenclatura</h4>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{linha.de} — o nome recebido não pode ser alterado.</p>
+            {linha.condicao_label && <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">*{linha.condicao_label}</p>}
 
             <Form action={`/gestao/servicos-nomenclatura/${linha.id}`} method="put" onSuccess={onClose} className="mt-6">
                 {({ errors, processing }) => (
@@ -166,7 +191,7 @@ function EditModal({ linha, onClose }: { linha: NomenclaturaItem; onClose: () =>
     );
 }
 
-export default function ServicosNomenclaturaIndex({ nomenclaturas, filters, perPageOptions, sugestoesDe }: NomenclaturaIndexProps) {
+export default function ServicosNomenclaturaIndex({ nomenclaturas, filters, perPageOptions, sugestoesDe, condicaoOptions }: NomenclaturaIndexProps) {
     const table = useServerTable({
         url: '/gestao/servicos-nomenclatura',
         initialSearch: filters.search,
@@ -196,7 +221,14 @@ export default function ServicosNomenclaturaIndex({ nomenclaturas, filters, perP
             header: 'Nome exibido (Para)',
             sortable: true,
             cellClassName: 'font-medium text-gray-800 dark:text-white/90',
-            cell: (linha) => linha.para,
+            cell: (linha) => (
+                <div>
+                    <div>{linha.para}</div>
+                    {linha.condicao_label && (
+                        <div className="mt-0.5 text-theme-xs font-normal text-gray-500 dark:text-gray-400">*{linha.condicao_label}</div>
+                    )}
+                </div>
+            ),
         },
         {
             id: 'exibir',
@@ -292,7 +324,12 @@ export default function ServicosNomenclaturaIndex({ nomenclaturas, filters, perP
                 </CardContent>
             </Card>
 
-            <CreateModal isOpen={showCreate} onClose={() => setShowCreate(false)} sugestoesDe={sugestoesDe} />
+            <CreateModal
+                isOpen={showCreate}
+                onClose={() => setShowCreate(false)}
+                sugestoesDe={sugestoesDe}
+                condicaoOptions={condicaoOptions}
+            />
 
             {editing && <EditModal linha={editing} onClose={() => setEditing(null)} />}
         </>

@@ -11,8 +11,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /**
  * Evento do protocolo enviado pela JUCEB (PEV_COD_EVENTO / PEV_NOME_EVENTO),
  * como "Inscrição de primeiro estabelecimento". Um processo pode ter vários.
+ * `condicao` é a CondicaoServico detectada no recebimento, quando o evento
+ * tem linhas condicionais no De x Para.
  */
-#[Fillable(['viability_request_id', 'codigo', 'nome'])]
+#[Fillable(['viability_request_id', 'codigo', 'nome', 'condicao'])]
 class ViabilityRequestEvento extends Model
 {
     /** @use HasFactory<ViabilityRequestEventoFactory> */

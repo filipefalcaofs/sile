@@ -14,7 +14,7 @@ use Illuminate\Support\Collection;
  */
 class ServicoNomenclaturaResolver
 {
-    /** @var array<string, ServicoNomenclatura>|null */
+    /** @var array<string, Collection<int, ServicoNomenclatura>>|null */
     private ?array $linhas = null;
 
     /**
@@ -33,8 +33,8 @@ class ServicoNomenclaturaResolver
         }
 
         $mapeados = $processo->eventos->map(fn ($evento): array => [
-            'para' => $this->nomePara($evento->nome),
-            'exibir' => $this->linha($evento->nome)?->exibir ?? false,
+            'para' => $this->nomePara($evento->nome, $evento->condicao),
+            'exibir' => $this->linha($evento->nome, $evento->condicao)?->exibir ?? false,
         ]);
 
         $exibidos = $mapeados->where('exibir', true);
@@ -46,9 +46,9 @@ class ServicoNomenclaturaResolver
             ->all();
     }
 
-    public function nomePara(string $nomeEvento): string
+    public function nomePara(string $nomeEvento, ?string $condicao = null): string
     {
-        return $this->linha($nomeEvento)?->para ?? $nomeEvento;
+        return $this->linha($nomeEvento, $condicao)?->para ?? $nomeEvento;
     }
 
     /**
@@ -71,36 +71,52 @@ class ServicoNomenclaturaResolver
     }
 
     /**
-     * Códigos dos eventos recebidos cujo nome Para tem a chave informada.
+     * Eventos recebidos (código e condição) cujo nome Para tem a chave informada.
      *
-     * @return list<string>
+     * @return list<array{codigo: string, condicao: ?string}>
      */
-    public function codigosDoNome(string $chaveDoNome): array
+    public function eventosDoNome(string $chaveDoNome): array
     {
-        return $this->eventosPorNome()->get($chaveDoNome)['codigos'] ?? [];
+        return $this->eventosPorNome()->get($chaveDoNome)['eventos'] ?? [];
     }
 
     /**
-     * @return Collection<string, array{label: string, codigos: list<string>}>
+     * @return Collection<string, array{label: string, eventos: list<array{codigo: string, condicao: ?string}>}>
      */
     private function eventosPorNome(): Collection
     {
         return ViabilityRequestEvento::query()
-            ->select(['codigo', 'nome'])
+            ->select(['codigo', 'nome', 'condicao'])
             ->distinct()
             ->get()
             ->sortBy('codigo', SORT_NATURAL)
-            ->groupBy(fn (ViabilityRequestEvento $evento): string => ServicoNomenclatura::chaveDe($this->nomePara($evento->nome)))
+            ->groupBy(fn (ViabilityRequestEvento $evento): string => ServicoNomenclatura::chaveDe($this->nomePara($evento->nome, $evento->condicao)))
             ->map(fn (Collection $eventos): array => [
-                'label' => $this->nomePara($eventos->first()->nome),
-                'codigos' => $eventos->pluck('codigo')->unique()->values()->all(),
+                'label' => $this->nomePara($eventos->first()->nome, $eventos->first()->condicao),
+                'eventos' => $eventos
+                    ->map(fn (ViabilityRequestEvento $evento): array => ['codigo' => $evento->codigo, 'condicao' => $evento->condicao])
+                    ->unique(fn (array $evento): string => $evento['codigo'].'|'.$evento['condicao'])
+                    ->values()
+                    ->all(),
             ]);
     }
 
-    private function linha(string $nomeEvento): ?ServicoNomenclatura
+    /**
+     * Linha do evento para a condição detectada; sem ela, a linha sem condição
+     * ou, por fim, a primeira linha cadastrada do evento.
+     */
+    private function linha(string $nomeEvento, ?string $condicao = null): ?ServicoNomenclatura
     {
-        $this->linhas ??= ServicoNomenclatura::query()->get()->keyBy('chave')->all();
+        $this->linhas ??= ServicoNomenclatura::query()->orderBy('id')->get()->groupBy('chave')->all();
 
-        return $this->linhas[ServicoNomenclatura::chaveDe($nomeEvento)] ?? null;
+        $linhas = $this->linhas[ServicoNomenclatura::chaveDe($nomeEvento)] ?? null;
+
+        if ($linhas === null) {
+            return null;
+        }
+
+        return $linhas->firstWhere('condicao', (string) $condicao)
+            ?? $linhas->firstWhere('condicao', '')
+            ?? $linhas->first();
     }
 }
