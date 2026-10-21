@@ -1,6 +1,7 @@
 import { Head, router } from '@inertiajs/react';
 import { useCallback, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
+import DicasTempoCard, { type PainelDicasTempo } from '@/components/app/dicas-tempo-card';
 import PageHeader from '@/components/app/page-header';
 import IsoDateInput from '@/components/form/iso-date-input';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -59,6 +60,7 @@ interface SalaProps {
     evolucao: PontoEvolucao[];
     gargalos: Gargalo[];
     filtros: { data_de?: string; data_ate?: string };
+    dicas: PainelDicasTempo;
 }
 
 const numberFormat = new Intl.NumberFormat('pt-BR');
@@ -109,7 +111,7 @@ function gargalosChartOption(gargalos: Gargalo[]): EChartsOption {
     };
 }
 
-export default function SalaDeControle({ tempo, operacao, distancia, evolucao, gargalos, filtros }: SalaProps) {
+export default function SalaDeControle({ tempo, operacao, distancia, evolucao, gargalos, filtros, dicas }: SalaProps) {
     const [form, setForm] = useState({
         data_de: filtros.data_de ?? '',
         data_ate: filtros.data_ate ?? '',
@@ -164,7 +166,7 @@ export default function SalaDeControle({ tempo, operacao, distancia, evolucao, g
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 md:gap-6">
                     <KpiCard label="Tempo médio" value={formatarHoras(tempo.media)} note={`${numberFormat.format(tempo.n)} decididos`} tone="brand" />
-                    <KpiCard label="P90" value={formatarHoras(tempo.p90)} note="90% saem abaixo disso" tone="brand" />
+                    <KpiCard label="9 em 10 saem em até" value={formatarHoras(tempo.p90)} note="só os 10% mais lentos passam disso" tone="brand" />
                     <KpiCard
                         label="Automáticas"
                         value={operacao.taxa_automacao === null ? '—' : `${decimalFormat.format(operacao.taxa_automacao)}%`}
@@ -210,6 +212,8 @@ export default function SalaDeControle({ tempo, operacao, distancia, evolucao, g
                         </CardContent>
                     </Card>
                 </div>
+
+                <DicasTempoCard dicas={dicas} />
             </div>
         </>
     );

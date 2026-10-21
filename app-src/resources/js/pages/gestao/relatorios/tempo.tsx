@@ -284,10 +284,7 @@ export default function TempoAnalise({
     // A lista de sedes de escritório virtual é servida pelo endpoint do próprio
     // domínio (?recorte=sedes) — o endpoint de tempo exporta só tempo por etapa.
     // Os filtros de período da tela são os que a fonte de sedes honra.
-    const sedesParams = useMemo<ServerTableParams>(
-        () => ({ ...currentParams, recorte: 'sedes' }),
-        [currentParams],
-    );
+    const sedesParams = useMemo<ServerTableParams>(() => ({ ...currentParams, recorte: 'sedes' }), [currentParams]);
 
     const etapasComAmostra = tempoPorEtapa.etapas.filter((item) => item.media_minutos !== null);
 
@@ -362,7 +359,7 @@ export default function TempoAnalise({
                 <Card>
                     <CardHeader
                         title="Distribuição do tempo de viabilidade"
-                        description="Horas úteis entre o protocolo e a decisão, descontando fins de semana, feriados e o tempo em que o processo fica com o cidadão — a mesma régua que o governo federal usa para publicar o tempo de viabilidade dos municípios. A média sozinha esconde a cauda: compare-a com o P90 e o P95."
+                        description="Horas úteis entre o protocolo e a decisão, descontando fins de semana, feriados e o tempo em que o processo fica com o cidadão — a mesma régua que o governo federal usa para publicar o tempo de viabilidade dos municípios. A média sozinha engana: poucos processos muito demorados a puxam para cima. Por isso a tela mostra também em quanto tempo saem 50%, 90% e 99% dos processos."
                     />
                     <CardContent>
                         {percentisViabilidade.n > 0 ? (
@@ -370,23 +367,21 @@ export default function TempoAnalise({
                                 <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
                                     {(
                                         [
-                                            ['Média', percentisViabilidade.media],
-                                            ['Mediana (P50)', percentisViabilidade.p50],
-                                            ['P75', percentisViabilidade.p75],
-                                            ['P90', percentisViabilidade.p90],
-                                            ['P95', percentisViabilidade.p95],
-                                            ['P99', percentisViabilidade.p99],
-                                            ['Máximo', percentisViabilidade.maximo],
+                                            ['Tempo médio', 'soma dos tempos ÷ nº de processos', percentisViabilidade.media],
+                                            ['Metade sai em até', 'o caso típico (mediana)', percentisViabilidade.p50],
+                                            ['3 em 4 saem em até', '75% dos processos', percentisViabilidade.p75],
+                                            ['9 em 10 saem em até', '90% dos processos', percentisViabilidade.p90],
+                                            ['19 em 20 saem em até', '95% dos processos', percentisViabilidade.p95],
+                                            ['99 em 100 saem em até', '99% dos processos', percentisViabilidade.p99],
+                                            ['Mais demorado', 'o pior caso do período', percentisViabilidade.maximo],
                                         ] as const
-                                    ).map(([rotulo, valor]) => (
-                                        <div
-                                            key={rotulo}
-                                            className="rounded-xl border border-gray-200 p-3 dark:border-gray-800"
-                                        >
+                                    ).map(([rotulo, dica, valor]) => (
+                                        <div key={rotulo} className="rounded-xl border border-gray-200 p-3 dark:border-gray-800">
                                             <dt className="text-theme-xs font-medium text-gray-500 dark:text-gray-400">{rotulo}</dt>
                                             <dd className="mt-1 text-theme-sm font-semibold text-gray-800 dark:text-white/90">
                                                 {formatarHoras(valor)}
                                             </dd>
+                                            <dd className="mt-0.5 text-theme-xs text-gray-400 dark:text-gray-500">{dica}</dd>
                                         </div>
                                     ))}
                                 </dl>
@@ -455,7 +450,10 @@ export default function TempoAnalise({
                 </Card>
 
                 <Card>
-                    <CardHeader title="Detalhamento por etapa" description="Média e número de amostras (processos que passaram pela etapa) no recorte." />
+                    <CardHeader
+                        title="Detalhamento por etapa"
+                        description="Média e número de amostras (processos que passaram pela etapa) no recorte."
+                    />
                     <CardContent>
                         <DataTable<EtapaTempo>
                             columns={colunasEtapas}
@@ -477,7 +475,8 @@ export default function TempoAnalise({
                     />
                     <CardContent>
                         <p className="text-theme-sm text-gray-500 dark:text-gray-400">
-                            Use a exportação acima (CSV/Excel/PDF) para obter a lista completa de sedes de escritório virtual do período filtrado.
+                            Use a exportação acima (CSV/Excel/PDF) para obter a lista completa de sedes de escritório virtual do período
+                            filtrado.
                         </p>
                     </CardContent>
                 </Card>

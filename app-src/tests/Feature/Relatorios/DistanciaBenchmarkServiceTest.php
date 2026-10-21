@@ -259,4 +259,42 @@ class DistanciaBenchmarkServiceTest extends TestCase
         $this->assertNull($evolucao['diferenca_mesmo_mes_horas']);
         $this->assertNull($evolucao['diferenca_mesmo_mes_percentual']);
     }
+
+    private function processoIndeferidoEm(float $horas, string $decididoEm): void
+    {
+        $request = ViabilityRequest::factory()->protocoled()->create([
+            'protocol_number' => fake()->unique()->numerify('VIA-2026-######'),
+            'protocoled_at' => Carbon::parse($decididoEm)->subDay(),
+        ]);
+
+        ViabilityDecision::factory()->for($request, 'viabilityRequest')->create([
+            'tvl_product_number' => null,
+            'decided_at' => Carbon::parse($decididoEm),
+        ]);
+
+        $request->forceFill(['viabilidade_horas_uteis' => $horas])->save();
+    }
+
+    public function test_evolucao_considera_so_processos_deferidos_como_a_redesim(): void
+    {
+        $this->processoDecididoEm(2.0, '2026-10-05 10:00:00');
+        $this->processoDecididoEm(4.0, '2026-10-06 10:00:00');
+        $this->processoIndeferidoEm(60.0, '2026-10-07 10:00:00');
+
+        $evolucao = $this->service()->evolucaoMensal(Carbon::parse('2026-10-15'));
+
+        $this->assertSame(2, $evolucao['atual']['n']);
+        $this->assertEqualsWithDelta(3.0, $evolucao['atual']['media'], 0.01);
+    }
+
+    public function test_distancia_considera_so_processos_deferidos_como_a_redesim(): void
+    {
+        $this->processoInternoCom(2.0);
+        $this->processoIndeferidoEm(60.0, '2026-03-04 10:00:00');
+        $this->referenciaCom(20.0);
+
+        $distancia = $this->service()->calcular($this->filtros());
+
+        $this->assertEqualsWithDelta(2.0, $distancia['interno'], 0.01);
+    }
 }

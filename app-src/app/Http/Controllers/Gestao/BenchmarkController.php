@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Gestao;
 
 use App\Http\Controllers\Controller;
+use App\Services\Ai\DicasTempoService;
 use App\Services\Benchmark\BenchmarkRankingService;
 use App\Services\Relatorios\DistanciaBenchmarkService;
+use App\Services\Relatorios\ReportFilters;
 use App\Support\Audit\AuditService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -25,6 +27,7 @@ class BenchmarkController extends Controller
     public function __construct(
         private readonly BenchmarkRankingService $ranking,
         private readonly DistanciaBenchmarkService $distancia,
+        private readonly DicasTempoService $dicas,
         private readonly AuditService $audit,
     ) {}
 
@@ -55,6 +58,7 @@ class BenchmarkController extends Controller
                 'capitais' => [],
                 'serie' => $this->ranking->serieSalvador(),
                 'evolucao' => $this->distancia->evolucaoMensal(now()),
+                'dicas' => $this->dicas->painel($this->periodoDasDicas()),
             ]);
         }
 
@@ -64,6 +68,19 @@ class BenchmarkController extends Controller
             'capitais' => $this->ranking->rankingCapitais($competencia['ano'], $competencia['mes']),
             'serie' => $this->ranking->serieSalvador(),
             'evolucao' => $this->distancia->evolucaoMensal(now()),
+            'dicas' => $this->dicas->painel($this->periodoDasDicas()),
+        ]);
+    }
+
+    /**
+     * As dicas do Benchmark olham o mesmo recorte da barra do VIABILIZA: do dia
+     * 1º do mês corrente até hoje.
+     */
+    private function periodoDasDicas(): ReportFilters
+    {
+        return ReportFilters::fromArray([
+            'data_de' => now()->startOfMonth()->toDateString(),
+            'data_ate' => now()->toDateString(),
         ]);
     }
 }

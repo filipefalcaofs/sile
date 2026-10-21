@@ -22,7 +22,7 @@ class DistanciaBenchmarkService
     /**
      * Texto que acompanha obrigatoriamente o número.
      */
-    public const RESSALVA = 'O tempo do VIABILIZA é a medição contínua dos processos decididos no período selecionado. '
+    public const RESSALVA = 'O tempo do VIABILIZA é a medição contínua dos processos deferidos no período selecionado — os que receberam o TVL, que é o universo da REDESIM, onde só entram solicitações deferidas. '
         .'A referência é a apuração da REDESIM para Salvador na competência indicada. '
         .'As duas usam a mesma régua — horas úteis de viabilidade, sem fins de semana, feriados nem o tempo com o cidadão — '
         .'mas são medições distintas: uma é telemetria operacional, a outra é benchmark periódico.';
@@ -37,7 +37,7 @@ class DistanciaBenchmarkService
      */
     public function calcular(ReportFilters $f): array
     {
-        $interno = $this->tempoViabilidade->porPeriodo($f)['media'];
+        $interno = $this->tempoViabilidade->porPeriodoDeferidas($f)['media'];
         $competencia = $this->ranking->ultimaCompetenciaCompleta();
 
         $referencia = $competencia === null
@@ -84,7 +84,7 @@ class DistanciaBenchmarkService
         $anterior = $this->pontoRedesim($mesAnterior->year, $mesAnterior->month);
         $redesimAtual = $this->pontoRedesim($hoje->year, $hoje->month);
 
-        $interno = $this->tempoViabilidade->porPeriodo(ReportFilters::fromArray([
+        $interno = $this->tempoViabilidade->porPeriodoDeferidas(ReportFilters::fromArray([
             'data_de' => $hoje->copy()->startOfMonth()->toDateString(),
             'data_ate' => $hoje->toDateString(),
         ]));

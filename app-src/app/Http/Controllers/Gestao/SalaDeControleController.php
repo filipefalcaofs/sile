@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Gestao;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Gestao\RelatorioFiltersRequest;
+use App\Services\Ai\DicasTempoService;
 use App\Services\Relatorios\SalaDeControleService;
 use App\Support\Audit\AuditService;
 use Inertia\Inertia;
@@ -20,6 +21,7 @@ class SalaDeControleController extends Controller
 {
     public function __construct(
         private readonly SalaDeControleService $sala,
+        private readonly DicasTempoService $dicas,
         private readonly AuditService $audit,
     ) {}
 
@@ -37,6 +39,7 @@ class SalaDeControleController extends Controller
         return Inertia::render('gestao/sala-de-controle', [
             ...$this->sala->montar($filtros),
             'filtros' => $filtros->aplicados(),
+            'dicas' => $this->dicas->painel($filtros),
         ]);
     }
 }
