@@ -11,9 +11,10 @@ import IsoDateInput from '@/components/form/iso-date-input';
 import MaskedInput from '@/components/form/masked-input';
 import Label from '@/components/form/label';
 import Select from '@/components/form/select';
-import { AlertIcon, CloseIcon, FileIcon, SearchIcon } from '@/components/icons';
+import { CloseIcon, FileIcon, SearchIcon } from '@/components/icons';
 import Badge from '@/components/ui/badge';
 import Button from '@/components/ui/button';
+import PopoverAviso from '@/components/ui/popover-aviso';
 import DataTable from '@/components/ui/data-table/data-table';
 import type { ColumnDef } from '@/components/ui/data-table/types';
 import EmptyState from '@/components/ui/empty-state';
@@ -780,30 +781,20 @@ function colunasProcessos(opcoes: {
         {
             id: 'status',
             header: 'Status',
-            cellClassName: 'min-w-64',
             cell: (item) => (
-                <div className="flex max-w-sm flex-col items-start gap-1.5">
-                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                <div className="flex max-w-xs flex-col items-start gap-1">
+                    <div className="flex items-center gap-2">
                         <Badge color={statusColor(item.status)} size="sm">
                             {item.status_label}
                         </Badge>
-                        {item.analysis_status_label && (
-                            <span className="text-xs text-gray-500 dark:text-gray-400">{item.analysis_status_label}</span>
+                        {item.sem_decisao_automatica && item.motivo_encaminhamento && (
+                            <PopoverAviso label="Sem decisão automática: ver motivo" titulo="Sem decisão automática">
+                                {item.motivo_encaminhamento}
+                            </PopoverAviso>
                         )}
                     </div>
-                    {item.sem_decisao_automatica && item.motivo_encaminhamento && (
-                        <div
-                            role="status"
-                            className="flex w-full items-start gap-2 rounded-lg border border-warning-200 bg-warning-50 px-2.5 py-2 dark:border-warning-500/30 dark:bg-warning-500/15"
-                        >
-                            <AlertIcon className="mt-0.5 size-3.5 shrink-0 fill-current text-warning-500" />
-                            <div className="min-w-0 text-xs leading-relaxed">
-                                <p className="font-medium text-gray-800 dark:text-gray-100">Sem decisão automática</p>
-                                <p className="break-words whitespace-normal text-gray-600 dark:text-gray-300">
-                                    {item.motivo_encaminhamento}
-                                </p>
-                            </div>
-                        </div>
+                    {item.analysis_status_label && (
+                        <span className="text-xs text-gray-500 dark:text-gray-400">{item.analysis_status_label}</span>
                     )}
                 </div>
             ),
