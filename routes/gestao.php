@@ -312,6 +312,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::put('usuarios/{user}/papel', [UserManagementController::class, 'updateRole'])->name('usuarios.papel.update');
             Route::put('usuarios/{user}/inativacao', [UserManagementController::class, 'toggleActivation'])->name('usuarios.inativacao.update');
             Route::put('usuarios/{user}/autenticacao', [UserManagementController::class, 'updateAuthType'])->name('usuarios.autenticacao.update');
+            Route::post('usuarios/{user}/redefinicao-senha', [UserManagementController::class, 'resendPasswordReset'])->name('usuarios.redefinicao-senha.store');
             Route::put('usuarios/solicitacoes/{accessRequest}/aprovar', [SolicitacaoAcessoController::class, 'approve'])->name('usuarios.solicitacoes.aprovar');
             Route::put('usuarios/solicitacoes/{accessRequest}/recusar', [SolicitacaoAcessoController::class, 'reject'])->name('usuarios.solicitacoes.recusar');
         });

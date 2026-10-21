@@ -6,7 +6,7 @@ import PageHeader from '@/components/app/page-header';
 import Label from '@/components/form/label';
 import Input from '@/components/form/input';
 import MaskedInput from '@/components/form/masked-input';
-import { PowerIcon } from '@/components/icons';
+import { MailIcon, PowerIcon } from '@/components/icons';
 import Select from '@/components/form/select';
 import Textarea from '@/components/form/textarea';
 import Avatar from '@/components/ui/avatar';
@@ -427,6 +427,8 @@ export default function UsersIndex({ users, filters, counts, roles, solicitacoes
     const [authTypeUser, setAuthTypeUser] = useState<UserItem | null>(null);
     const [activationUser, setActivationUser] = useState<UserItem | null>(null);
     const [activationProcessing, setActivationProcessing] = useState(false);
+    const [resetUser, setResetUser] = useState<UserItem | null>(null);
+    const [resetProcessing, setResetProcessing] = useState(false);
     const [rejectItem, setRejectItem] = useState<SolicitacaoItem | null>(null);
     const [creating, setCreating] = useState(false);
 
@@ -508,6 +510,14 @@ export default function UsersIndex({ users, filters, counts, roles, solicitacoes
                         <TableAction tone="brand" onClick={() => setRoleUser(user)}>
                             Alterar papel
                         </TableAction>
+                        {active && user.auth_type === 'local' && (
+                            <TableAction
+                                tone="neutral"
+                                icon={<MailIcon className="size-4.5" />}
+                                label="Reenviar link de senha"
+                                onClick={() => setResetUser(user)}
+                            />
+                        )}
                         <TableAction
                             tone={active ? 'warning' : 'success'}
                             icon={<PowerIcon className="size-4.5" />}
@@ -530,6 +540,21 @@ export default function UsersIndex({ users, filters, counts, roles, solicitacoes
             onStart: () => setActivationProcessing(true),
             onFinish: () => setActivationProcessing(false),
             onSuccess: () => setActivationUser(null),
+        });
+    }
+
+    function resendPasswordReset() {
+        if (!resetUser) {
+            return;
+        }
+
+        router.post(`/gestao/usuarios/${resetUser.id}/redefinicao-senha`, undefined, {
+            preserveScroll: true,
+            onStart: () => setResetProcessing(true),
+            onFinish: () => {
+                setResetProcessing(false);
+                setResetUser(null);
+            },
         });
     }
 
@@ -635,6 +660,19 @@ export default function UsersIndex({ users, filters, counts, roles, solicitacoes
             {rejectItem && <RejectModal item={rejectItem} onClose={() => setRejectItem(null)} />}
 
             {authTypeUser && <AuthTypeModal user={authTypeUser} onClose={() => setAuthTypeUser(null)} />}
+
+            {resetUser && (
+                <ConfirmDialog
+                    isOpen
+                    onClose={() => setResetUser(null)}
+                    onConfirm={resendPasswordReset}
+                    title="Reenviar link de senha"
+                    description={`Enviar novamente a ${resetUser.email} o link para definir a senha? Links enviados antes deixam de valer.`}
+                    confirmLabel="Reenviar"
+                    variant="info"
+                    processing={resetProcessing}
+                />
+            )}
 
             {activationContent && (
                 <ConfirmDialog

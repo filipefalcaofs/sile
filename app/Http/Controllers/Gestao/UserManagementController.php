@@ -155,6 +155,55 @@ class UserManagementController extends Controller
     }
 
     /**
+     * Reenvia o link de definição de senha (o da criação pode não ter
+     * chegado). Equipe do console recebe o link de /gestao; usuário do portal,
+     * o do portal. Conta AD tem a senha gerida pela rede corporativa e conta
+     * inativa não pode entrar. O intervalo do broker (auth.passwords.users.throttle)
+     * também vale aqui.
+     */
+    public function resendPasswordReset(User $user): RedirectResponse
+    {
+        if ($user->isAdAccount()) {
+            return back()->with('error', 'Conta AD usa a senha da rede corporativa; não há link para enviar.');
+        }
+
+        if ($user->isInactive()) {
+            return back()->with('error', 'Reative a conta antes de reenviar o link de senha.');
+        }
+
+        $doConsole = $user->can('acessar-gestao');
+
+        $status = Password::broker('users')->sendResetLink(
+            ['email' => $user->email],
+            $doConsole
+                ? fn (User $u, string $token) => $u->sendGestaoPasswordResetNotification($token)
+                : null,
+        );
+
+        if ($status === Password::RESET_THROTTLED) {
+            return back()->with('error', 'Um link foi enviado há pouco. Aguarde um minuto para reenviar.');
+        }
+
+        if ($status !== Password::RESET_LINK_SENT) {
+            return back()->with('error', 'Não foi possível enviar o link de senha.');
+        }
+
+        app(AuditService::class)->log(
+            'usuarios',
+            'link-senha-reenviado',
+            "Link de senha reenviado a {$user->email}",
+            [
+                'target_user_id' => $user->id,
+                'destino' => $doConsole ? 'gestao' : 'portal',
+            ],
+            $user,
+            personalData: true,
+        );
+
+        return back()->with('status', "Enviamos novamente a {$user->email} o link para definir a senha.");
+    }
+
+    /**
      * Alterna a situação da conta. inactivated_at está fora do fillable
      * por decisão do 02-03 — gravação só por forceFill em fluxo autorizado.
      * Auditoria explícita: HasAuditoria não cobre atributos fora do fillable.
