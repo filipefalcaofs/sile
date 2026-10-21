@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Gestao;
 
+use App\Enums\CondicaoServico;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Gestao\StoreServicoNomenclaturaRequest;
 use App\Http\Requests\Gestao\UpdateServicoNomenclaturaRequest;
@@ -16,7 +17,8 @@ use Inertia\Response;
 
 /**
  * De x Para dos nomes dos serviços enviados pela JUCEB: a SEDUR define o nome
- * exibido no Viabiliza e se o serviço aparece quando vem junto com outros.
+ * exibido no Viabiliza e se o serviço aparece quando vem junto com outros. Um
+ * evento pode ter uma linha por condição (CondicaoServico).
  * Não há exclusão; o evento novo entra sozinho com De = Para.
  */
 class ServicoNomenclaturaController extends Controller
@@ -53,11 +55,13 @@ class ServicoNomenclaturaController extends Controller
             ->when(in_array($exibir, ['0', '1'], true), fn ($query) => $query->where('exibir', $exibir === '1'))
             ->orderBy($sort, $direction)
             ->orderBy('de')
+            ->orderBy('id')
             ->paginate($perPage)
             ->withQueryString()
             ->through(fn (ServicoNomenclatura $linha) => [
                 'id' => $linha->id,
                 'de' => $linha->de,
+                'condicao_label' => $linha->condicaoServico()?->label(),
                 'para' => $linha->para,
                 'exibir' => $linha->exibir,
             ]);
@@ -72,6 +76,10 @@ class ServicoNomenclaturaController extends Controller
                 'exibir' => in_array($exibir, ['0', '1'], true) ? $exibir : '',
             ],
             'perPageOptions' => self::PER_PAGE_OPTIONS,
+            'condicaoOptions' => array_map(
+                fn (CondicaoServico $condicao): array => ['value' => $condicao->value, 'label' => $condicao->label()],
+                CondicaoServico::cases(),
+            ),
             'sugestoesDe' => ViabilityRequestEvento::query()->distinct()->orderBy('nome')->pluck('nome')->all(),
         ]);
     }
