@@ -59,9 +59,20 @@ interface Gargalo {
     percentual: number;
 }
 
+/** Mesmo cálculo no período anterior de mesma duração; só existe com data inicial e final. */
+interface OperacaoAnterior {
+    data_de: string;
+    data_ate: string;
+    automatica: number;
+    total: number;
+    taxa_automacao: number | null;
+    diferenca_pontos: number | null;
+}
+
 interface SalaProps {
     tempo: Tempo;
     operacao: Operacao;
+    operacao_anterior: OperacaoAnterior | null;
     distancia: Distancia;
     evolucao: PontoEvolucao[];
     gargalos: Gargalo[];
@@ -116,7 +127,14 @@ function gargalosChartOption(gargalos: Gargalo[]): EChartsOption {
     };
 }
 
-export default function SalaDeControle({ tempo, operacao, distancia, evolucao, gargalos, filtros }: SalaProps) {
+/** "2026-03-01" → "01/03/2026", sem passar por fuso: é um dia, não um instante. */
+function formatarDia(dia: string): string {
+    const [ano, mes, d] = dia.split('-');
+
+    return `${d}/${mes}/${ano}`;
+}
+
+export default function SalaDeControle({ tempo, operacao, operacao_anterior, distancia, evolucao, gargalos, filtros }: SalaProps) {
     const [form, setForm] = useState({
         data_de: filtros.data_de ?? '',
         data_ate: filtros.data_ate ?? '',
@@ -170,7 +188,7 @@ export default function SalaDeControle({ tempo, operacao, distancia, evolucao, g
                 </Card>
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 md:gap-6">
-                    <KpiCard label="Tempo médio" value={formatarHoras(tempo.media)} note={`${numberFormat.format(tempo.n)} decididos`} tone="brand" />
+                    <KpiCard label="Tempo médio" value={formatarHoras(tempo.media)} note={`${numberFormat.format(tempo.n)} decididos com tempo apurado`} tone="brand" />
                     <KpiCard label="P90" value={formatarHoras(tempo.p90)} note="90% saem abaixo disso" tone="brand" />
                     <KpiCard
                         label="Taxa de automação"
@@ -185,6 +203,18 @@ export default function SalaDeControle({ tempo, operacao, distancia, evolucao, g
                         tone="brand"
                     />
                 </div>
+
+                {operacao_anterior && (
+                    <p className="text-theme-sm text-gray-600 dark:text-gray-400">
+                        Período anterior equivalente ({formatarDia(operacao_anterior.data_de)} a {formatarDia(operacao_anterior.data_ate)}):{' '}
+                        {operacao_anterior.taxa_automacao === null
+                            ? 'sem decisões'
+                            : `${decimalFormat.format(operacao_anterior.taxa_automacao)}% de automação (${numberFormat.format(operacao_anterior.automatica)} de ${numberFormat.format(operacao_anterior.total)})`}
+                        {operacao_anterior.diferenca_pontos !== null &&
+                            ` · diferença de ${operacao_anterior.diferenca_pontos > 0 ? '+' : ''}${decimalFormat.format(operacao_anterior.diferenca_pontos)} p.p.`}
+                        .
+                    </p>
+                )}
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 md:gap-6">
                     <KpiCard

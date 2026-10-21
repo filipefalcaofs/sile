@@ -92,6 +92,8 @@ interface OperacaoKpis {
     projecao_30_dias: number | null;
     taxa_expressa: number | null;
     meta_expressa: number | null;
+    /** Taxa de automação da janela com a base — os mesmos números da Sala de Controle. */
+    automacao: { automatica: number; total: number; taxa: number | null };
     serie_fluxo: SerieFluxoPonto[];
     expresso: {
         respondidas: number;
@@ -172,18 +174,19 @@ const TOM_ACAO = {
     },
 } as const;
 
+// Escala neutra: as faixas são de leitura, não limites oficiais da SEDUR.
 const COR_AGING: Record<string, string> = {
-    '0_5': chartPalette.success,
+    '0_5': chartPalette.gray300,
     '6_10': chartPalette.brandSoft,
-    '11_20': chartPalette.warning,
-    acima_20: chartPalette.error,
+    '11_20': chartPalette.brand,
+    acima_20: chartPalette.gray800,
 };
 
 const TOM_AGING: Record<string, string> = {
-    '0_5': 'bg-success-500',
+    '0_5': 'bg-gray-300',
     '6_10': 'bg-brand-400',
-    '11_20': 'bg-warning-500',
-    acima_20: 'bg-error-500',
+    '11_20': 'bg-brand-500',
+    acima_20: 'bg-gray-800 dark:bg-gray-400',
 };
 
 const DELTA: Record<TomDelta, string> = {
@@ -398,11 +401,13 @@ function corEtapa(etapa: EtapaPainel): string {
         return '#eaecf0';
     }
 
-    if (etapa.meta_dias !== null && etapa.media_dias > etapa.meta_dias) {
-        return chartPalette.error;
+    // Acima/abaixo do prazo só quando média e prazo usam a mesma régua (dias
+    // úteis); a análise vence em dias corridos e a comparação não se sustenta.
+    if (etapa.meta_dias === null || etapa.meta_unidade !== 'uteis') {
+        return chartPalette.brand;
     }
 
-    return etapa.meta_dias === null ? chartPalette.brand : chartPalette.success;
+    return etapa.media_dias > etapa.meta_dias ? chartPalette.error : chartPalette.success;
 }
 
 function etapasChartOption(etapas: EtapaPainel[]): EChartsOption {
@@ -739,19 +744,19 @@ export default function Dashboard({ kpis, acesso }: DashboardProps) {
                         rotulo="Protocolos no período"
                         valor={numberFormat.format(operacao.protocolos)}
                         delta={variacao}
-                        tomDelta={operacao.variacao_protocolos !== null && operacao.variacao_protocolos < 0 ? 'baixa' : 'alta'}
+                        tomDelta="neutro"
                         nota={variacao === null ? `sem base nos ${operacao.janela_dias} dias anteriores` : `vs. ${operacao.janela_dias} dias anteriores`}
                     />
                     <CartaoResultado
                         href={hrefPeriodo('/gestao/relatorios/indicadores', operacao)}
                         rotulo="Decisões no período"
                         valor={numberFormat.format(operacao.decisoes.total)}
-                        delta={operacao.taxa_expressa === null ? null : `${formatarPercentual(operacao.taxa_expressa)} expresso`}
+                        delta={operacao.automacao.taxa === null ? null : `${formatarPercentual(operacao.automacao.taxa)} automação`}
                         tomDelta="marca"
                         nota={
-                            operacao.decisoes.total === 0
+                            operacao.automacao.total === 0
                                 ? 'nenhuma decisão no período'
-                                : `${numberFormat.format(operacao.decisoes.humano)} passaram por análise técnica`
+                                : `${numberFormat.format(operacao.automacao.automatica)} de ${numberFormat.format(operacao.automacao.total)} concluídos pelo motor`
                         }
                     />
                     <CartaoResultado
@@ -759,7 +764,7 @@ export default function Dashboard({ kpis, acesso }: DashboardProps) {
                         rotulo="Em andamento"
                         valor={numberFormat.format(operacao.estoque_total)}
                         delta={formatarSinal(operacao.saldo_periodo)}
-                        tomDelta={saldoPositivo ? 'baixa' : operacao.saldo_periodo < 0 ? 'alta' : 'neutro'}
+                        tomDelta="neutro"
                         nota={saldoPositivo ? 'entrou mais do que saiu' : operacao.saldo_periodo < 0 ? 'saiu mais do que entrou' : 'protocolos e decisões empataram'}
                     />
                     <CartaoResultado
@@ -786,7 +791,7 @@ export default function Dashboard({ kpis, acesso }: DashboardProps) {
                         <div className="mt-3.5 flex flex-wrap gap-3 border-t border-gray-100 pt-3.5 dark:border-gray-800">
                             <div className="min-w-40 flex-1">
                                 <span className="block text-xs tracking-wide text-gray-500 uppercase dark:text-gray-400">Saldo do período</span>
-                                <strong className={`text-lg font-semibold ${saldoPositivo ? 'text-error-700 dark:text-error-400' : 'text-success-700 dark:text-success-400'}`}>
+                                <strong className="text-lg font-semibold text-gray-800 dark:text-white/90">
                                     {formatarSinal(operacao.saldo_periodo)} processos
                                 </strong>
                             </div>
@@ -1032,8 +1037,8 @@ export default function Dashboard({ kpis, acesso }: DashboardProps) {
                                                             <span className="flex h-2 flex-1 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
                                                                 {proporcao !== null && (
                                                                     <>
-                                                                        <span className="block h-2 bg-success-500" style={{ width: `${proporcao}%` }} />
-                                                                        <span className="block h-2 bg-warning-500" style={{ width: `${100 - proporcao}%` }} />
+                                                                        <span className="block h-2 bg-brand-500" style={{ width: `${proporcao}%` }} />
+                                                                        <span className="block h-2 bg-gray-300 dark:bg-gray-600" style={{ width: `${100 - proporcao}%` }} />
                                                                     </>
                                                                 )}
                                                             </span>

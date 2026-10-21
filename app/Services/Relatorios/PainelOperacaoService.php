@@ -39,6 +39,7 @@ class PainelOperacaoService
         private readonly TempoAnaliseService $tempos,
         private readonly ProdutividadeAnalistaService $produtividade,
         private readonly BusinessDeadlineCalculator $prazos,
+        private readonly ClassificacaoFluxoService $classificacao,
     ) {}
 
     /**
@@ -84,6 +85,7 @@ class PainelOperacaoService
                 ? (int) round($estoque + ($saldo / $diasDaJanela) * 30)
                 : null,
             'taxa_expressa' => $expressa['taxa'],
+            'automacao' => $this->automacao($periodo),
             'meta_expressa' => $expressa['meta'],
             'serie_fluxo' => $serie,
             'expresso' => [
@@ -113,6 +115,23 @@ class PainelOperacaoService
                 'setores' => $this->cargaSetores($periodo),
                 'analistas' => $this->cargaAnalistas($periodo, $nominal),
             ],
+        ];
+    }
+
+    /**
+     * Taxa de automação da janela, com a base: os mesmos números da Sala de
+     * Controle para o mesmo período.
+     *
+     * @return array{automatica: int, total: int, taxa: ?float}
+     */
+    private function automacao(ReportFilters $periodo): array
+    {
+        $contagem = $this->classificacao->contagem($periodo);
+
+        return [
+            'automatica' => $contagem[ClassificacaoFluxoService::AUTOMATICA],
+            'total' => $contagem['total'],
+            'taxa' => $contagem['taxa_automacao'],
         ];
     }
 

@@ -3,6 +3,7 @@
 namespace App\Services\Relatorios;
 
 use App\Services\Benchmark\BenchmarkRankingService;
+use Illuminate\Support\Carbon;
 
 /**
  * Payload da Sala de Controle.
@@ -28,13 +29,51 @@ class SalaDeControleService
     public function montar(ReportFilters $f): array
     {
         $tempo = $this->tempoViabilidade->porPeriodo($f);
+        $operacao = $this->operacao($f);
 
         return [
             'tempo' => $tempo,
-            'operacao' => $this->operacao($f),
+            'operacao' => $operacao,
+            'operacao_anterior' => $this->operacaoAnterior($f, $operacao['taxa_automacao']),
             'distancia' => $this->distancia->calcular($f, $tempo),
             'evolucao' => $this->ranking->serieSalvador(),
             'gargalos' => $this->gargalos->porPeriodo($f),
+        ];
+    }
+
+    /**
+     * Automação no período anterior de mesma duração, terminando na véspera
+     * do recorte. Sem data inicial e final não há período equivalente.
+     *
+     * @return array{data_de: string, data_ate: string, automatica: int, total: int, taxa_automacao: ?float, diferenca_pontos: ?float}|null
+     */
+    private function operacaoAnterior(ReportFilters $f, ?float $atual): ?array
+    {
+        $de = $f->dataDe();
+        $ate = $f->dataAte();
+
+        if ($de === null || $ate === null || $de > $ate) {
+            return null;
+        }
+
+        $dias = (int) Carbon::parse($de)->diffInDays(Carbon::parse($ate)) + 1;
+        $fimAnterior = Carbon::parse($de)->subDay();
+        $anterior = ReportFilters::fromArray([
+            'data_de' => $fimAnterior->copy()->subDays($dias - 1)->toDateString(),
+            'data_ate' => $fimAnterior->toDateString(),
+        ]);
+
+        $contagem = $this->classificacao->contagem($anterior);
+
+        return [
+            'data_de' => (string) $anterior->dataDe(),
+            'data_ate' => (string) $anterior->dataAte(),
+            'automatica' => $contagem[ClassificacaoFluxoService::AUTOMATICA],
+            'total' => $contagem['total'],
+            'taxa_automacao' => $contagem['taxa_automacao'],
+            'diferenca_pontos' => $atual === null || $contagem['taxa_automacao'] === null
+                ? null
+                : round($atual - $contagem['taxa_automacao'], 2),
         ];
     }
 

@@ -9,10 +9,13 @@ use App\Models\ViabilityRequest;
 use App\Services\Analise\AnalysisRecordService;
 use App\Services\Analise\PreAnaliseService;
 use App\Services\Relatorios\ClassificacaoFluxoService;
+use App\Services\Relatorios\PainelOperacaoService;
 use App\Services\Relatorios\ReportFilters;
+use App\Services\Relatorios\SalaDeControleService;
 use App\Services\Solicitacao\SolicitacaoViabilityResolver;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Carbon;
 use RuntimeException;
 use Tests\Support\MontaFluxosDeConclusao;
 use Tests\TestCase;
@@ -177,5 +180,50 @@ class ClassificacaoFluxoTest extends TestCase
         $restrita = $this->actingAs($analista, 'gestao')->get('/gestao/relatorios/produtividade')->assertOk()->viewData('page')['props']['semiExpressa'];
         $this->assertSame(1, $restrita['analises_humanas']);
         $this->assertSame([['rotulo' => 'Você', 'analises' => 1]], $restrita['por_analista']);
+    }
+
+    public function test_painel_mostra_a_taxa_de_automacao_com_a_base_igual_a_da_classificacao(): void
+    {
+        $this->concluidaPeloMotor();
+        $this->concluirAnalise($this->encaminhadaComDecisaoDoMotor(), User::factory()->analistaServidor()->create(), ConclusionOutcome::Deferido);
+
+        $automacao = app(PainelOperacaoService::class)->montar(7, false)['automacao'];
+
+        $this->assertSame(['automatica' => 1, 'total' => 2, 'taxa' => 50.0], $automacao);
+    }
+
+    public function test_painel_sem_decisao_na_janela_tem_taxa_nula(): void
+    {
+        $this->assertSame(['automatica' => 0, 'total' => 0, 'taxa' => null], app(PainelOperacaoService::class)->montar(7, false)['automacao']);
+    }
+
+    public function test_sala_compara_a_automacao_com_o_periodo_anterior_equivalente(): void
+    {
+        $analista = User::factory()->analistaServidor()->create();
+
+        Carbon::setTestNow('2026-03-05 12:00:00');
+        $this->concluirAnalise($this->encaminhadaComDecisaoDoMotor(), $analista, ConclusionOutcome::Deferido);
+
+        Carbon::setTestNow('2026-03-15 12:00:00');
+        $this->concluidaPeloMotor();
+        $this->concluidaPeloMotor();
+        $this->concluirAnalise($this->encaminhadaComDecisaoDoMotor(), $analista, ConclusionOutcome::Deferido);
+
+        $sala = app(SalaDeControleService::class)->montar(ReportFilters::fromArray(['data_de' => '2026-03-11', 'data_ate' => '2026-03-20']));
+
+        $this->assertEqualsWithDelta(66.67, $sala['operacao']['taxa_automacao'], 0.01);
+        $this->assertSame([
+            'data_de' => '2026-03-01',
+            'data_ate' => '2026-03-10',
+            'automatica' => 0,
+            'total' => 1,
+            'taxa_automacao' => 0.0,
+            'diferenca_pontos' => 66.67,
+        ], $sala['operacao_anterior']);
+    }
+
+    public function test_sala_sem_as_duas_datas_nao_inventa_periodo_anterior(): void
+    {
+        $this->assertNull(app(SalaDeControleService::class)->montar(ReportFilters::fromArray(['data_de' => '2026-03-11']))['operacao_anterior']);
     }
 }

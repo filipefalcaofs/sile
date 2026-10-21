@@ -373,7 +373,7 @@ export default function IndicadoresViabilidade({
                     <KpiCard
                         label="Decisões no período"
                         value={numberFormat.format(taxaDeferimento.total)}
-                        note="deferidas + indeferidas"
+                        note="todos os desfechos, inclusive desativado, cassado e revogado"
                         icon={<ListIcon className="size-6" />}
                         tone="brand"
                     />
