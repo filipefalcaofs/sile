@@ -789,7 +789,7 @@ function colunasProcessos(opcoes: {
                         <span className="text-xs text-gray-500 dark:text-gray-400">{item.analysis_status_label}</span>
                     )}
                     {item.sem_decisao_automatica && item.motivo_encaminhamento && (
-                        <p title={item.motivo_encaminhamento} className="line-clamp-2 text-xs text-gray-500 dark:text-gray-400">
+                        <p className="text-xs break-words text-gray-500 dark:text-gray-400">
                             Sem decisão automática — {item.motivo_encaminhamento}
                         </p>
                     )}
