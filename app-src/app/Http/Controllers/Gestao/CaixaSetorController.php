@@ -98,16 +98,23 @@ class CaixaSetorController extends Controller
         $foraDaConclusao = fn ($query) => $query->where(
             fn ($q) => $q->whereNull('analysis_status')->orWhere('analysis_status', '!=', $paraConclusao),
         );
+        // Distribuídos inclui o Para conclusão que já tem destinatário: fora daqui ele
+        // não aparece em aba nenhuma e não poderia ser redistribuído.
+        $distribuidos = fn ($query) => $query->where(fn ($q) => $q
+            ->where(fn ($emAndamento) => $foraDaConclusao($emAndamento->whereNotNull('assigned_user_id')))
+            ->orWhere(fn ($conclusao) => $conclusao
+                ->where('analysis_status', $paraConclusao)
+                ->whereNotNull('conclusao_encaminhada_para_user_id')));
 
         $contadores = [
             'para_distribuir' => $foraDaConclusao((clone $base)->whereNull('assigned_user_id'))->count(),
-            'distribuidos' => $foraDaConclusao((clone $base)->whereNotNull('assigned_user_id'))->count(),
+            'distribuidos' => $distribuidos(clone $base)->count(),
             'para_conclusao' => (clone $baseConclusao)->count(),
         ];
 
         $processos = ($visao === 'para_conclusao' ? $baseConclusao : $base)
             ->when($visao === 'para_distribuir', fn ($query) => $foraDaConclusao($query->whereNull('assigned_user_id')))
-            ->when($visao === 'distribuidos', fn ($query) => $foraDaConclusao($query->whereNotNull('assigned_user_id')))
+            ->when($visao === 'distribuidos', fn ($query) => $distribuidos($query))
             ->with(['company', 'serviceType:id,name', 'eventos', 'cnaes', 'sector:id,name', 'assignedTo:id,name', 'conclusaoEncaminhadaPara:id,name'])
             ->orderBy('analysis_due_at')
             ->orderBy('id')
@@ -153,7 +160,7 @@ class CaixaSetorController extends Controller
                 'encaminhado_para' => $processo->conclusaoEncaminhadaPara?->name,
                 'analysis_due_at' => $processo->analysis_due_at?->toIso8601String(),
                 // Redistribuir só antes da conclusão (regra única do enum).
-                'pode_redistribuir' => $processo->assigned_user_id !== null
+                'pode_redistribuir' => ($processo->assigned_user_id !== null || $processo->conclusao_encaminhada_para_user_id !== null)
                     && ($processo->analysis_status?->permiteRedistribuicao() ?? false),
             ]);
 

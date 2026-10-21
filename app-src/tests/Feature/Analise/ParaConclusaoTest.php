@@ -257,8 +257,49 @@ class ParaConclusaoTest extends TestCase
             ->get('/gestao/caixa-setor?visao=distribuidos')
             ->viewData('page');
 
-        $this->assertSame([$emAndamento->id], collect($outras['props']['processos']['data'])->pluck('id')->all());
-        $this->assertSame(1, $outras['props']['contadores']['distribuidos']);
+        $this->assertEqualsCanonicalizing([$comDestino->id, $emAndamento->id], collect($outras['props']['processos']['data'])->pluck('id')->all());
+        $this->assertSame(2, $outras['props']['contadores']['distribuidos']);
+    }
+
+    /**
+     * Para conclusão já com destinatário (distribuído ou assumido) sumia de todas
+     * as abas e não podia ser redistribuído (caso VIA-2026-001080).
+     */
+    public function test_para_conclusao_com_destinatario_aparece_em_distribuidos_e_pode_ser_redistribuido(): void
+    {
+        $setor = Sector::factory()->create();
+        $analista = $this->analistaDoSetor($setor);
+        $quemAssumiu = $this->analistaDoSetor($setor);
+        $outra = $this->analistaDoSetor($setor);
+        $apoio = User::factory()->apoio()->withAcceptedLgpdTerm()->create();
+        $apoio->sectors()->attach($setor);
+
+        $processo = $this->processoEmAnalise($setor, $analista);
+        $processo->forceFill([
+            'analysis_status' => AnalysisStatus::ParaConclusao,
+            'assigned_user_id' => $quemAssumiu->id,
+            'conclusao_encaminhada_para_user_id' => $quemAssumiu->id,
+        ])->save();
+
+        $page = $this->actingAs($apoio, 'gestao')
+            ->get('/gestao/caixa-setor?visao=distribuidos')
+            ->assertOk()
+            ->viewData('page');
+
+        $linha = collect($page['props']['processos']['data'])->firstWhere('id', $processo->id);
+
+        $this->assertNotNull($linha);
+        $this->assertTrue($linha['pode_redistribuir']);
+        $this->assertSame($quemAssumiu->name, $linha['encaminhado_para']);
+
+        $this->actingAs($apoio, 'gestao')
+            ->post('/gestao/caixa-setor/redistribuir', ['request_id' => $processo->id, 'analista_id' => $outra->id])
+            ->assertSessionHas('status');
+
+        $processo->refresh();
+        $this->assertSame($outra->id, $processo->assigned_user_id);
+        $this->assertSame($outra->id, $processo->conclusao_encaminhada_para_user_id);
+        $this->assertSame(AnalysisStatus::ParaConclusao, $processo->analysis_status);
     }
 
     public function test_conclusao_exige_a_permissao_concluir_analise(): void
