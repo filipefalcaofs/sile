@@ -85,7 +85,9 @@ class SalaDeControleTelaTest extends TestCase
                 ->where('tempo.n', 1)
                 ->where('operacao.total', 1)
                 ->where('distancia.diferenca_horas', -18)
-                ->has('evolucao', 1)
+                ->has('evolucao.anterior')
+                ->has('evolucao.atual')
+                ->has('evolucao.redesim_atual')
                 ->has('gargalos'),
             );
     }
