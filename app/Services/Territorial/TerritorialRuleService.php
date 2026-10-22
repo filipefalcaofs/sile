@@ -261,11 +261,11 @@ class TerritorialRuleService
             return null;
         }
 
-        if ($localizacao->codLogTributario === null) {
+        if ($localizacao->codLogDoEndereco() === null) {
             return false;
         }
 
-        return $localizacao->codLogTributario === ltrim(trim((string) $regra->cod_log), '0');
+        return $localizacao->codLogDoEndereco() === ltrim(trim((string) $regra->cod_log), '0');
     }
 
     private function temCnaeDaRegra(TerritorialRule $regra, ViabilityRequest $request): bool

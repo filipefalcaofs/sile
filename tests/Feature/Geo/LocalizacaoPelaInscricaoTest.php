@@ -9,6 +9,7 @@ use App\Models\Cnae;
 use App\Models\GeoLayer;
 use App\Models\User;
 use App\Models\ViabilityRequest;
+use App\Services\Geo\CamadasIncidentesService;
 use App\Services\Geo\Geocoder;
 use App\Services\Geo\GeocodeResult;
 use App\Services\Geo\SpatialRepository;
@@ -69,15 +70,22 @@ class LocalizacaoPelaInscricaoTest extends TestCase
         return $solicitacao;
     }
 
-    private function fakeCadastro(?string $codLog, ?float $lat = -12.977769, ?float $lng = -38.516404, bool $indisponivel = false): void
+    /**
+     * @param  list<array<string, mixed>>  $enderecos
+     */
+    private function fakeCadastro(?string $codLog, ?float $lat = -12.977769, ?float $lng = -38.516404, bool $indisponivel = false, array $enderecos = []): void
     {
-        $this->app->instance(PropertyRegistryLookup::class, new class($codLog, $lat, $lng, $indisponivel) implements PropertyRegistryLookup
+        $this->app->instance(PropertyRegistryLookup::class, new class($codLog, $lat, $lng, $indisponivel, $enderecos) implements PropertyRegistryLookup
         {
+            /**
+             * @param  list<array<string, mixed>>  $enderecos
+             */
             public function __construct(
                 private ?string $codLog,
                 private ?float $lat,
                 private ?float $lng,
                 private bool $indisponivel,
+                private array $enderecos,
             ) {}
 
             public function resolve(string $inscricao): PropertyRegistryResult
@@ -93,6 +101,7 @@ class LocalizacaoPelaInscricaoTest extends TestCase
                     raw: [
                         'CodigoLogradouroTributario' => $this->codLog,
                         'LogradouroTributario' => 'Avenida Lafayete Coutinho',
+                        'ListaEndereco' => ['RetornoEndereco' => $this->enderecos],
                     ],
                 );
             }
@@ -251,5 +260,35 @@ class LocalizacaoPelaInscricaoTest extends TestCase
         $this->assertNull($solicitacao->property_point_lat);
         $this->assertNull($solicitacao->property_location_source);
         $this->assertSame('212', $solicitacao->cod_log);
+    }
+
+    public function test_codlog_do_processo_e_o_do_endereco_de_localizacao_e_nao_o_tributario(): void
+    {
+        $this->fakeCadastro('579', enderecos: [
+            [
+                'TipoEndereco' => 'Endereço Contribuinte Inscricao Imobiliaria',
+                'CodigoLogradouro' => '0401',
+                'Logradouro' => 'Rua Catharina Paraguassú',
+            ],
+            [
+                'TipoEndereco' => 'Localização',
+                'CodigoLogradouro' => '401',
+                'Logradouro' => 'Rua Catharina Paraguassú',
+                'NumeroMetrico' => '365',
+            ],
+        ]);
+        $ator = User::factory()->create();
+        $solicitacao = $this->rascunhoRegin(['address_street' => 'CATHARINA PARAGUASSÚ', 'address_number' => '365']);
+
+        app(ProtocolarSolicitacaoService::class)->protocol($solicitacao, $ator);
+
+        $solicitacao->refresh();
+
+        $this->assertSame('401', $solicitacao->cod_log);
+
+        $inventario = app(CamadasIncidentesService::class)->identificar($solicitacao);
+
+        $this->assertSame(['cod_log' => '401', 'nome' => 'Rua Catharina Paraguassú'], $inventario['logradouro']);
+        $this->assertSame('579', $inventario['logradouro_tributario']['cod_log']);
     }
 }

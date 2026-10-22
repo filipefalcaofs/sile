@@ -36,6 +36,8 @@ final readonly class LocalizacaoInscricao
         public ?GeocodeResult $geocode = null,
         public ?string $situacaoCadastral = null,
         public ?string $utilizacao = null,
+        public ?string $codLogLocalizacao = null,
+        public ?string $logradouroLocalizacao = null,
     ) {}
 
     /**
@@ -60,6 +62,22 @@ final readonly class LocalizacaoInscricao
         $uso = strtr($uso, ['ã' => 'a', 'á' => 'a', 'â' => 'a']);
 
         return str_starts_with($uso, 'nao residencial');
+    }
+
+    /**
+     * CODLOG do endereço do imóvel: o do endereço de Localização da inscrição,
+     * que casa com o nome e o número métrico do endereçamento. O tributário
+     * pode ser outra via (lote de esquina) e só entra quando a inscrição não
+     * traz endereço de Localização.
+     */
+    public function codLogDoEndereco(): ?string
+    {
+        return $this->codLogLocalizacao ?? $this->codLogTributario;
+    }
+
+    public function logradouroDoEndereco(): ?string
+    {
+        return $this->codLogLocalizacao !== null ? $this->logradouroLocalizacao : $this->logradouroTributario;
     }
 
     public function temPonto(): bool

@@ -83,6 +83,41 @@ class LocalizacaoInscricaoServiceTest extends TestCase
         $this->assertTrue($localizacao->temPonto());
     }
 
+    public function test_logradouro_do_endereco_vem_da_localizacao_e_nao_do_tributario(): void
+    {
+        $this->fakeCadastro(
+            [
+                'CodigoLogradouroTributario' => '579',
+                'LogradouroTributario' => 'Avenida Euclydes da Cunha',
+                'ListaEndereco' => ['RetornoEndereco' => [
+                    ['TipoEndereco' => 'Correspondência Inscricao Imobiliária', 'CodigoLogradouro' => '999', 'Logradouro' => 'Rua Outra'],
+                    ['TipoEndereco' => 'Localização', 'CodigoLogradouro' => '0401', 'Logradouro' => 'Rua Catharina Paraguassú'],
+                ]],
+            ],
+            -12.99,
+            -38.52,
+        );
+
+        $localizacao = app(LocalizacaoInscricaoService::class)->localizar('3693872');
+
+        $this->assertSame('579', $localizacao->codLogTributario);
+        $this->assertSame('401', $localizacao->codLogLocalizacao);
+        $this->assertSame('Rua Catharina Paraguassú', $localizacao->logradouroLocalizacao);
+        $this->assertSame('401', $localizacao->codLogDoEndereco());
+        $this->assertSame('Rua Catharina Paraguassú', $localizacao->logradouroDoEndereco());
+    }
+
+    public function test_sem_endereco_de_localizacao_o_logradouro_do_endereco_cai_no_tributario(): void
+    {
+        $this->fakeCadastro(['CodigoLogradouroTributario' => '212', 'LogradouroTributario' => 'Avenida Lafayete Coutinho'], -12.97, -38.51);
+
+        $localizacao = app(LocalizacaoInscricaoService::class)->localizar('344672');
+
+        $this->assertNull($localizacao->codLogLocalizacao);
+        $this->assertSame('212', $localizacao->codLogDoEndereco());
+        $this->assertSame('Avenida Lafayete Coutinho', $localizacao->logradouroDoEndereco());
+    }
+
     public function test_inscricao_sem_coordenada_devolve_sem_coordenada_mas_mantem_o_logradouro(): void
     {
         $this->fakeCadastro(['CodigoLogradouroTributario' => '212']);

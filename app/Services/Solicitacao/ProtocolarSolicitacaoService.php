@@ -93,7 +93,7 @@ class ProtocolarSolicitacaoService
     {
         // Sem polígono, o ponto vem da inscrição (Cadastro SEFAZ). A
         // materialização cobre zona/bairro/CODLOG da via quando ainda faltam.
-        // O logradouro tributário, quando a inscrição o traz, é a fonte do
+        // O logradouro do endereço de Localização da inscrição é a fonte do
         // CODLOG e sobrepõe a via mais próxima.
         $status = $this->territorioProcesso->localizarPelaInscricao($request);
 
@@ -104,13 +104,13 @@ class ProtocolarSolicitacaoService
             $materializou = true;
         }
 
-        $trocouCodLog = $this->territorioProcesso->aplicarLogradouroTributario($request);
+        $trocouCodLog = $this->territorioProcesso->aplicarLogradouroDaInscricao($request);
 
         if (! $materializou || $trocouCodLog) {
             $this->territorioProcesso->registrarClasseViaria($request);
         }
 
-        // Com o CODLOG tributário aplicado, a cadeia de geometria do lote roda:
+        // Com o CODLOG da inscrição aplicado, a cadeia de geometria do lote roda:
         // endereçamento SEDUR por CODLOG + número + complemento e, sem polígono
         // lá, o cadastro municipal (SEMAP) pela inscrição imobiliária.
         $this->poligonoEnderecamento->aplicar($request);

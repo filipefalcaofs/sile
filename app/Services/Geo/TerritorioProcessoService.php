@@ -185,12 +185,15 @@ class TerritorioProcessoService
     }
 
     /**
-     * O logradouro tributário da inscrição é o CODLOG do processo. Quando a
-     * via mais próxima tinha gravado outro código, a troca fica auditada.
+     * O logradouro do endereço de Localização da inscrição é o CODLOG do
+     * processo — o tributário só na falta dele (ver
+     * LocalizacaoInscricao::codLogDoEndereco). Quando a via mais próxima
+     * tinha gravado outro código, a troca fica auditada.
      */
-    public function aplicarLogradouroTributario(ViabilityRequest $request): bool
+    public function aplicarLogradouroDaInscricao(ViabilityRequest $request): bool
     {
-        $codLog = $this->localizacao->localizar($request->property_registration)->codLogTributario;
+        $localizacao = $this->localizacao->localizar($request->property_registration);
+        $codLog = $localizacao->codLogDoEndereco();
 
         if ($codLog === null) {
             return false;
@@ -206,11 +209,13 @@ class TerritorioProcessoService
             $this->audit->log(
                 logName: 'geo',
                 event: 'logradouro-tributario-diverge',
-                description: "Logradouro tributário {$codLog} substitui o CODLOG {$anterior} da via mais próxima na solicitação #{$request->id}",
+                description: "Logradouro da inscrição {$codLog} substitui o CODLOG {$anterior} gravado na solicitação #{$request->id}",
                 properties: [
                     'viability_request_id' => $request->id,
                     'cod_log_anterior' => $anterior,
-                    'cod_log_tributario' => $codLog,
+                    'cod_log_tributario' => $localizacao->codLogTributario,
+                    'cod_log_localizacao' => $localizacao->codLogLocalizacao,
+                    'cod_log_aplicado' => $codLog,
                 ],
                 subject: $request,
                 result: 'divergente',
