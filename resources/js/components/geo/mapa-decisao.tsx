@@ -216,7 +216,15 @@ function Caixa({ children, className = '' }: { children: ReactNode; className?: 
     );
 }
 
-function Amostra({ cor, tipo }: { cor: string; tipo: 'area' | 'linha' | 'tracejada' | 'pontilhada' }) {
+function Amostra({ cor, tipo }: { cor: string; tipo: 'area' | 'linha' | 'tracejada' | 'pontilhada' | 'ponto' }) {
+    if (tipo === 'ponto') {
+        return (
+            <span className="inline-flex w-5 justify-center">
+                <span className="inline-block size-3 rounded-full border-2 border-white shadow" style={{ backgroundColor: cor }} />
+            </span>
+        );
+    }
+
     if (tipo === 'area') {
         return <span className="inline-block h-3 w-5 rounded-sm border-2" style={{ borderColor: cor, backgroundColor: `${cor}33` }} />;
     }
@@ -266,7 +274,7 @@ export function MapaDecisao({ dados, rotuloLote = null, altura = 480 }: MapaDeci
     const viaDaDecisao = dados.vias.find((via) => via.da_decisao);
     const maior = dados.porcoes.find((porcao) => papelDaPorcao(dados.porcoes, porcao) === 'maior');
     const rotuloZona = rotuloDaZonaDoLote(dados);
-    const tituloZona = dados.porcoes.length > 1 ? `Zonas do lote (${dados.porcoes.map((p) => p.zona).join(' e ')})` : `Zona do lote${dados.zona ? ` (${dados.zona.codigo})` : ''}`;
+    const tituloZona = dados.porcoes.length > 1 ? `Zonas do lote (${dados.porcoes.map((p) => p.zona).join(' e ')})` : `${lote ? 'Zona do lote' : 'Zona do ponto'}${dados.zona ? ` (${dados.zona.codigo})` : ''}`;
 
     useEffect(() => {
         // Em coluna estreita o painel e a legenda cobririam o lote: começam recolhidos.
@@ -470,6 +478,21 @@ export function MapaDecisao({ dados, rotuloLote = null, altura = 480 }: MapaDeci
                         <Rotulo geometria={lote} texto={rotuloDoLote} classe="mapa-decisao-rotulo-lote" ancora="sul" direcao="bottom" deslocamento={[0, 6]} />
                     </Pane>
                 )}
+
+                {camadas.lote && !lote && dados.ponto && (
+                    <Pane name="mapa-ponto" style={{ zIndex: 455 }}>
+                        <CircleMarker
+                            center={[dados.ponto.lat, dados.ponto.lng]}
+                            radius={8}
+                            pathOptions={{ color: '#ffffff', weight: 3, fillColor: COR.lote, fillOpacity: 1 }}
+                            interactive={false}
+                        >
+                            <Tooltip pane="tooltipPane" permanent direction="bottom" offset={[0, 10]} className="mapa-decisao-rotulo mapa-decisao-rotulo-lote" opacity={1}>
+                                Ponto do imóvel
+                            </Tooltip>
+                        </CircleMarker>
+                    </Pane>
+                )}
             </MapContainer>
 
             <button
@@ -490,10 +513,10 @@ export function MapaDecisao({ dados, rotuloLote = null, altura = 480 }: MapaDeci
                         </label>
                     ))}
                     <hr className="my-2 border-gray-200 dark:border-gray-700" />
-                    {lote && (
+                    {(lote || dados.ponto) && (
                         <label className="flex cursor-pointer items-center gap-2">
                             <input type="checkbox" checked={camadas.lote} onChange={() => alternar('lote')} />
-                            Lote do processo
+                            {lote ? 'Lote do processo' : 'Ponto do imóvel'}
                         </label>
                     )}
                     {zonasDoLote.length > 0 && (
@@ -523,10 +546,16 @@ export function MapaDecisao({ dados, rotuloLote = null, altura = 480 }: MapaDeci
                 </Caixa>
 
                 <Caixa className="absolute bottom-10 left-3 z-[1000] space-y-1">
-                    {lote && (
+                    {lote ? (
                         <div className="flex items-center gap-2">
                             <Amostra cor={COR.lote} tipo="area" /> Lote
                         </div>
+                    ) : (
+                        dados.ponto && (
+                            <div className="flex items-center gap-2">
+                                <Amostra cor={COR.lote} tipo="ponto" /> Ponto do imóvel
+                            </div>
+                        )
                     )}
                     {dados.porcoes.length > 1 ? (
                         <>
@@ -544,7 +573,7 @@ export function MapaDecisao({ dados, rotuloLote = null, altura = 480 }: MapaDeci
                     ) : (
                         zonasDoLote.length > 0 && (
                             <div className="flex items-center gap-2">
-                                <Amostra cor={COR.zona} tipo="area" /> Zona do lote{dados.zona ? ` (${dados.zona.codigo})` : ''}
+                                <Amostra cor={COR.zona} tipo="area" /> {lote ? 'Zona do lote' : 'Zona do ponto'}{dados.zona ? ` (${dados.zona.codigo})` : ''}
                             </div>
                         )
                     )}
