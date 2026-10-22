@@ -44,11 +44,12 @@ class ReginIntegrationSettings
 
     /**
      * CODIGO_AREA da análise na Resposta: a área/secretaria da instituição no
-     * REGIN. A SEDUR tem uma só; o validador da JUCEB exige valor mínimo 1.
+     * REGIN. A viabilidade de Salvador é a área 70 (JUCEB); o 1 do exemplo do
+     * guia não corresponde a área nenhuma e deixa o protocolo pendente.
      */
     public function codigoArea(): int
     {
-        return max(1, (int) Settings::get('integrations.regin.codigo_area', config('viabiliza.integrations.regin.codigo_area', 1)));
+        return max(1, (int) Settings::get('integrations.regin.codigo_area', config('viabiliza.integrations.regin.codigo_area', 70)));
     }
 
     public function username(): string

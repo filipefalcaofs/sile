@@ -57,7 +57,7 @@ class HttpReginParecerNotifierTest extends TestCase
         $this->assertSame(1, $dados['FINALIZA_PROCESSO']);
         $this->assertSame(1, $dados['PROCESSO_INTERESSE_INSTITUICAO']);
         $this->assertSame(0, $dados['GERA_DOCUMENTO_PROCESSO']);
-        $this->assertSame(1, $dados['ANALISES']['AREA'][0]['CODIGO_AREA']);
+        $this->assertSame(70, $dados['ANALISES']['AREA'][0]['CODIGO_AREA']);
         $this->assertSame(2, $dados['ANALISES']['AREA'][0]['STATUS_ANALISE']);
         $this->assertSame($decision->decided_at->format('Ymd'), $dados['ANALISES']['AREA'][0]['DATA_ANALISE']);
         $this->assertNotSame('', $dados['ANALISES']['AREA'][0]['JUSTIFICATIVA_ANALISE']);
