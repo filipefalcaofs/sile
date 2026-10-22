@@ -68,6 +68,42 @@ class ConviteEixoOperacionalTest extends TestCase
         $this->assertSame(AnalysisStatus::EmConvite, $request->fresh()->analysis_status);
     }
 
+    public function test_quem_abre_o_convite_em_processo_de_outro_analista_passa_a_ser_o_responsavel(): void
+    {
+        Notification::fake();
+        $analistaOriginal = User::factory()->create();
+        $quemConclui = User::factory()->create();
+        $request = $this->emAnalise(AnalysisStatus::ParaConclusao);
+        $request->forceFill(['assigned_user_id' => $analistaOriginal->id, 'assigned_at' => now()->subDay()])->save();
+
+        app(PendenciaService::class)->abrir($request->fresh(), $quemConclui, 'Envie o IPTU.');
+
+        $fresh = $request->fresh();
+        $this->assertSame($quemConclui->id, $fresh->assigned_user_id);
+        $this->assertTrue($fresh->assigned_at->isToday());
+        $this->assertDatabaseHas('activity_log', [
+            'event' => 'assumir',
+            'subject_type' => $request->getMorphClass(),
+            'subject_id' => $request->id,
+        ]);
+    }
+
+    public function test_analista_responsavel_que_abre_o_convite_continua_responsavel(): void
+    {
+        Notification::fake();
+        $analista = User::factory()->create();
+        $request = $this->emAnalise();
+        $atribuidoEm = now()->subDay()->startOfSecond();
+        $request->forceFill(['assigned_user_id' => $analista->id, 'assigned_at' => $atribuidoEm])->save();
+
+        app(PendenciaService::class)->abrir($request->fresh(), $analista, 'Envie o IPTU.');
+
+        $fresh = $request->fresh();
+        $this->assertSame($analista->id, $fresh->assigned_user_id);
+        $this->assertTrue($atribuidoEm->equalTo($fresh->assigned_at));
+        $this->assertDatabaseMissing('activity_log', ['event' => 'assumir', 'subject_id' => $request->id]);
+    }
+
     public function test_resposta_do_requerente_marca_convite_respondido(): void
     {
         Notification::fake();

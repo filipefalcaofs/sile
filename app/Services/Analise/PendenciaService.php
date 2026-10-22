@@ -69,6 +69,41 @@ class PendenciaService
     }
 
     /**
+     * Quem abre o convite fica com o processo: aparece como analista na lista e
+     * recebe o aviso da resposta do requerente. Acontece quando quem conclui abre
+     * o convite num processo que ainda estava atribuído a quem o analisou.
+     */
+    private function assumirSeForOutroAnalista(ViabilityRequest $request, User $analista): void
+    {
+        if ((int) $request->assigned_user_id === $analista->id) {
+            return;
+        }
+
+        $anterior = $request->assigned_user_id;
+
+        $request->forceFill([
+            'assigned_user_id' => $analista->id,
+            'assigned_at' => now(),
+        ])->save();
+
+        $this->audit->log(
+            'analise',
+            'assumir',
+            "{$analista->name} assumiu o processo ao abrir o convite (solicitação #{$request->id}).",
+            properties: [
+                'viability_request_id' => $request->id,
+                'protocol_number' => $request->protocol_number,
+                'sector_id' => $request->sector_id,
+                'assigned_user_id' => $analista->id,
+                'analista_anterior_id' => $anterior,
+                'analista_nome' => $analista->name,
+                'ator_id' => $analista->id,
+            ],
+            subject: $request,
+        );
+    }
+
+    /**
      * Abre uma pendência e move o processo para em_pendencia. Exige em_analise;
      * caso contrário lança PendenciaInvalidaException sem gravar nada.
      */
@@ -112,6 +147,7 @@ class PendenciaService
             );
 
             $this->moverEixo($request, AnalysisStatus::EmConvite, $analista, 'Convite aberto pela análise técnica.');
+            $this->assumirSeForOutroAnalista($request, $analista);
 
             $this->audit->log(
                 'analise',
