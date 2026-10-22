@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Treino da IA — __EXECUCAO__</title>
+<style>
+body{font-family:system-ui,sans-serif;margin:0;background:#f6f6f3;color:#2c2c2a}
+header{padding:16px 20px}
+h1{font-size:20px;margin:0 0 4px}
+.barra{display:flex;flex-wrap:wrap;gap:12px;align-items:end;padding:0 20px 12px}
+.barra label{font-size:13px;display:flex;flex-direction:column;gap:4px}
+table.resumo{border-collapse:collapse;margin:0 20px 16px;background:#fff}
+table.resumo td,table.resumo th{border:1px solid #ddd;padding:6px 10px;font-size:13px;text-align:right}
+.grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;padding:0 20px 24px}
+.card{background:#fff;border:1px solid #ddd;border-radius:8px;padding:10px}
+.card img{width:100%;border-radius:4px}
+.card table{width:100%;font-size:12px;border-collapse:collapse}
+.card td{padding:2px 4px;border-top:1px solid #eee}
+.marca{font-size:11px;background:#fde7d8;color:#712b13;border-radius:4px;padding:1px 6px}
+.legenda span{display:inline-block;width:12px;height:12px;margin:0 4px 0 10px;vertical-align:-1px}
+</style>
+</head>
+<body>
+<header>
+<h1>Treino da IA de contorno de lote — __EXECUCAO__</h1>
+<div class="legenda">Lote do CODLOG<span style="background:#185FA5"></span>__LEGENDA__</div>
+</header>
+<table class="resumo" id="resumo"></table>
+<div class="barra">
+<label>Ordenar por<select id="ordem"><option value="iou">IoU</option><option value="divisa_media_ia_ref_m">Erro médio da divisa (m)</option><option value="dif_area_pct">Diferença de área (%)</option></select></label>
+<label>Variante da ordenação<select id="variante"></select></label>
+<label>Faixa de área do lote<select id="faixa"><option value="">Todas</option><option>&lt;200</option><option>200–1.000</option><option>1.000–5.000</option><option>&gt;5.000</option></select></label>
+<label>IoU mínimo aceitável<input id="iou_min" type="number" step="0.05" min="0" max="1" value="0.8"></label>
+<label>Erro máximo da divisa (m)<input id="divisa_max" type="number" step="0.5" min="0" value="2"></label>
+</div>
+<p style="padding:0 20px" id="aprovados"></p>
+<div class="grade" id="grade">__CARTOES__</div>
+<script>
+const LOTES = __DADOS__;
+const RESUMO = __RESUMO__;
+const VARIANTES = RESUMO.ordem_variantes;
+const sel = document.getElementById('variante');
+VARIANTES.forEach(v => { const o = document.createElement('option'); o.value = v; o.textContent = v; sel.appendChild(o); });
+sel.value = VARIANTES.includes('E') ? 'E' : VARIANTES[0];
+function fmt(v, d) { return v === null || v === undefined ? '—' : Number(v).toFixed(d); }
+function desenharResumo() {
+  let h = '<tr><th>Variante</th><th>Lotes</th><th>IoU mediana</th><th>IoU 1º–3º quartil</th><th>IoU mediana sem casos de Cadastro diferente</th><th>Erro da divisa mediano (m)</th><th>Diferença de área mediana (%)</th></tr>';
+  VARIANTES.forEach(v => { const r = RESUMO.variantes[v];
+    h += `<tr><td>${v}</td><td>${r.iou.n}</td><td>${fmt(r.iou.mediana,3)}</td><td>${fmt(r.iou.q1,3)}–${fmt(r.iou.q3,3)}</td><td>${fmt(r.iou_sem_cadastro_diferente.mediana,3)}</td><td>${fmt(r.divisa_media_ia_ref_m.mediana,1)}</td><td>${fmt(r.dif_area_pct.mediana,1)}</td></tr>`; });
+  document.getElementById('resumo').innerHTML = h;
+}
+function aprova(l) { const iou = +document.getElementById('iou_min').value, d = +document.getElementById('divisa_max').value;
+  return l.iou >= iou && l.divisa_media_ia_ref_m !== null && l.divisa_media_ia_ref_m <= d; }
+function desenhar() {
+  const campo = document.getElementById('ordem').value, v = sel.value, faixa = document.getElementById('faixa').value;
+  const grade = document.getElementById('grade');
+  const cartoes = Array.from(grade.querySelectorAll('.card'));
+  const porId = Object.fromEntries(LOTES.map(l => [l.lote_id, l]));
+  const chave = c => { const x = porId[c.dataset.lote].variantes[v]; const y = x ? x[campo] : null; return y === null || y === undefined ? -Infinity : (campo === 'iou' ? y : -Math.abs(y)); };
+  cartoes.sort((a, b) => chave(a) - chave(b)).forEach(c => { c.style.display = !faixa || c.dataset.faixa === faixa ? '' : 'none'; grade.appendChild(c); });
+  const visiveis = LOTES.filter(l => !faixa || l.faixa_area === faixa);
+  document.getElementById('aprovados').textContent = 'Lotes que passariam nos limites: ' + VARIANTES.map(x => `${x}: ${visiveis.filter(l => l.variantes[x] && aprova(l.variantes[x])).length}/${visiveis.length}`).join(' · ');
+}
+['ordem','variante','faixa','iou_min','divisa_max'].forEach(id => document.getElementById(id).addEventListener('input', desenhar));
+desenharResumo(); desenhar();
+</script>
+</body>
+</html>

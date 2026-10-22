@@ -389,6 +389,13 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'boolean'],
                 'description' => 'Gera o contorno da edificação por IA sobre a ortofoto da Prefeitura quando nenhuma base tem o prédio',
             ],
+            'features.treino_ia_galeria' => [
+                'group' => 'features',
+                'type' => 'boolean',
+                'default_value' => '0',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'Mostra na gestão a galeria do treino da IA de contorno de lote. Ligar só em homologação',
+            ],
             'features.edificacoes_importacao_agendada' => [
                 'group' => 'features',
                 'type' => 'boolean',
