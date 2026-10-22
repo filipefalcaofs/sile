@@ -3,7 +3,7 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import type { Geometry } from 'geojson';
 import type { PathOptions } from 'leaflet';
-import { Fragment, useEffect, useId, useMemo, useState, type ReactNode } from 'react';
+import { Fragment, useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import { CircleMarker, GeoJSON, MapContainer, Pane, TileLayer, Tooltip, useMap } from 'react-leaflet';
 
 import { chaveDaGeometria } from './geometria';
@@ -25,14 +25,19 @@ const FUNDOS: { id: Fundo; rotulo: string }[] = [
     { id: 'nenhum', rotulo: 'Sem mapa de fundo' },
 ];
 
-const TILES: Record<Exclude<Fundo, 'nenhum'>, { url: string; maxNativeZoom: number }> = {
+const TILES: Record<Exclude<Fundo, 'nenhum'>, { url: string; maxNativeZoom: number; atribuicao: string; classe: string }> = {
     claro: {
-        url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',
-        maxNativeZoom: 16,
+        // OSM em tons de cinza: nítido até o zoom 19 e sem chave de API.
+        url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        maxNativeZoom: 19,
+        atribuicao: '&copy; OpenStreetMap (ODbL)',
+        classe: 'mapa-decisao-fundo-claro',
     },
     satelite: {
         url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
         maxNativeZoom: 19,
+        atribuicao: 'Mapa &copy; Esri',
+        classe: '',
     },
 };
 
@@ -55,8 +60,9 @@ interface Camadas {
 
 const ESTILO_ROTULOS = `
 .mapa-decisao svg { max-width:none !important; max-height:none !important; }
-.mapa-decisao-rotulo { background:#fff; border:0; border-radius:6px; box-shadow:0 1px 4px rgba(16,24,40,.25); color:#1d2939; font-size:11px; font-weight:600; line-height:1.2; padding:3px 7px; white-space:nowrap; }
+.mapa-decisao-rotulo { background:#fff; border:0; border-radius:6px; box-shadow:0 1px 4px rgba(16,24,40,.25); color:#1d2939; font-size:11px; font-weight:600; line-height:1.2; padding:3px 7px; white-space:nowrap; max-width:240px; overflow:hidden; text-overflow:ellipsis; }
 .mapa-decisao-rotulo::before { display:none; }
+.mapa-decisao-fundo-claro { filter: grayscale(1) brightness(1.06) contrast(.88); }
 .mapa-decisao-rotulo-lote { color:#175cd3; }
 .mapa-decisao-rotulo-zona { color:#53389e; }
 .mapa-decisao-rotulo-menor { color:#027a48; }
@@ -77,6 +83,33 @@ function centroDe(geometria: Geometry, ancora: 'centro' | 'sul' = 'centro'): [nu
 }
 
 /** Texto permanente sobre um ponto da geometria (um círculo invisível carrega o rótulo). */
+/** Ponto a uma fração do comprimento da primeira linha, para tirar o rótulo de cima do lote. */
+function pontoAoLongo(geometria: Geometry, fracao: number): [number, number] | null {
+    const coordenadas =
+        geometria.type === 'LineString' ? geometria.coordinates : geometria.type === 'MultiLineString' ? geometria.coordinates[0] : null;
+
+    if (!coordenadas || coordenadas.length < 2) {
+        return null;
+    }
+
+    const trechos = coordenadas.slice(1).map((ponto, i) => Math.hypot(ponto[0] - coordenadas[i][0], ponto[1] - coordenadas[i][1]));
+    let restante = trechos.reduce((soma, trecho) => soma + trecho, 0) * fracao;
+
+    for (let i = 0; i < trechos.length; i++) {
+        if (restante <= trechos[i] || i === trechos.length - 1) {
+            const t = trechos[i] === 0 ? 0 : Math.min(restante / trechos[i], 1);
+            const [lng0, lat0] = coordenadas[i];
+            const [lng1, lat1] = coordenadas[i + 1];
+
+            return [lat0 + (lat1 - lat0) * t, lng0 + (lng1 - lng0) * t];
+        }
+
+        restante -= trechos[i];
+    }
+
+    return null;
+}
+
 function Rotulo({
     geometria,
     texto,
@@ -84,15 +117,21 @@ function Rotulo({
     direcao = 'center',
     deslocamento,
     ancora = 'centro',
+    fracao,
 }: {
     geometria: Geometry;
     texto: string;
     classe: string;
-    direcao?: 'center' | 'top' | 'bottom';
+    direcao?: 'center' | 'top' | 'bottom' | 'right';
     deslocamento?: [number, number];
     ancora?: 'centro' | 'sul';
+    /** Em linhas, posição ao longo do traçado (0 a 1) em vez do centro. */
+    fracao?: number;
 }) {
-    const centro = useMemo(() => centroDe(geometria, ancora), [geometria, ancora]);
+    const centro = useMemo(
+        () => (fracao === undefined ? null : pontoAoLongo(geometria, fracao)) ?? centroDe(geometria, ancora),
+        [geometria, ancora, fracao],
+    );
 
     if (!centro) {
         return null;
@@ -128,7 +167,11 @@ function Enquadrar({ geometrias, ponto }: { geometrias: Geometry[]; ponto: { lat
         }
 
         if (limites.isValid()) {
-            map.fitBounds(limites, { padding: [60, 60], maxZoom: 19 });
+            // Contexto mínimo (~90 m em volta): lote pequeno não pode encher a tela e esconder zonas e linhas.
+            const centro = limites.getCenter();
+            limites.extend([centro.lat - 0.0008, centro.lng - 0.0008]);
+            limites.extend([centro.lat + 0.0008, centro.lng + 0.0008]);
+            map.fitBounds(limites, { padding: [40, 40], maxZoom: 19 });
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [map, chave]);
@@ -206,6 +249,8 @@ export interface MapaDecisaoProps {
 export function MapaDecisao({ dados, rotuloLote = null, altura = 480 }: MapaDecisaoProps) {
     const grupoFundo = useId();
     const [fundo, setFundo] = useState<Fundo>('claro');
+    const raiz = useRef<HTMLDivElement>(null);
+    const [painel, setPainel] = useState(true);
     const [camadas, setCamadas] = useState<Camadas>({ lote: true, zonaDoLote: true, outrasZonas: true, vias: true, linhas: true });
 
     const lote = loteDoMapa(dados);
@@ -223,15 +268,23 @@ export function MapaDecisao({ dados, rotuloLote = null, altura = 480 }: MapaDeci
     const rotuloZona = rotuloDaZonaDoLote(dados);
     const tituloZona = dados.porcoes.length > 1 ? `Zonas do lote (${dados.porcoes.map((p) => p.zona).join(' e ')})` : `Zona do lote${dados.zona ? ` (${dados.zona.codigo})` : ''}`;
 
+    useEffect(() => {
+        // Em coluna estreita o painel e a legenda cobririam o lote: começam recolhidos.
+        if (raiz.current && raiz.current.clientWidth < 720) {
+            setPainel(false);
+        }
+    }, []);
+
     const alternar = (chave: keyof Camadas) => setCamadas((atual) => ({ ...atual, [chave]: !atual[chave] }));
 
     const corDaZona = (codigo: string) => (codigoMenor.includes(codigo) ? COR.menor : COR.zona);
     const ordenadas = (lista: typeof dados.zonas) => [...lista].sort((a, b) => Number(a.da_decisao) - Number(b.da_decisao));
     const centroLote = lote ? centroDe(lote) : null;
-    const rotuloDoLote = [rotuloLote, dados.area_lote_m2 ? formatarArea(dados.area_lote_m2) : null].filter(Boolean).join(' · ') || 'Lote do processo';
+    const enderecoCurto = rotuloLote && rotuloLote.length > 36 ? `${rotuloLote.slice(0, 35).trimEnd()}…` : rotuloLote;
+    const rotuloDoLote = [enderecoCurto, dados.area_lote_m2 ? formatarArea(dados.area_lote_m2) : null].filter(Boolean).join(' · ') || 'Lote do processo';
 
     return (
-        <div className="mapa-decisao relative">
+        <div ref={raiz} className="mapa-decisao relative">
             <style>{ESTILO_ROTULOS}</style>
             <MapContainer
                 center={centroLote ?? (dados.ponto ? [dados.ponto.lat, dados.ponto.lng] : [-12.97, -38.5])}
@@ -247,7 +300,8 @@ export function MapaDecisao({ dados, rotuloLote = null, altura = 480 }: MapaDeci
                         url={TILES[fundo].url}
                         maxNativeZoom={TILES[fundo].maxNativeZoom}
                         maxZoom={20}
-                        attribution="Mapa &copy; Esri"
+                        attribution={TILES[fundo].atribuicao}
+                        className={TILES[fundo].classe}
                     />
                 )}
                 <Enquadrar
@@ -307,7 +361,7 @@ export function MapaDecisao({ dados, rotuloLote = null, altura = 480 }: MapaDeci
                                   />
                               ))
                             : null}
-                        {rotuloZona && zonasDoLote.find((zona) => zona.da_decisao) && (
+                        {dados.porcoes.length <= 1 && rotuloZona && zonasDoLote.find((zona) => zona.da_decisao) && (
                             <Rotulo
                                 geometria={zonasDoLote.find((zona) => zona.da_decisao)!.geojson}
                                 texto={rotuloZona}
@@ -316,7 +370,7 @@ export function MapaDecisao({ dados, rotuloLote = null, altura = 480 }: MapaDeci
                                 deslocamento={[0, -22]}
                             />
                         )}
-                        {menor && zonasDoLote.find((zona) => zona.codigo === menor.zona) && (
+                        {dados.porcoes.length <= 1 && menor && zonasDoLote.find((zona) => zona.codigo === menor.zona) && (
                             <Rotulo
                                 geometria={zonasDoLote.find((zona) => zona.codigo === menor.zona)!.geojson}
                                 texto={`${menor.zona} · menor porção`}
@@ -345,6 +399,7 @@ export function MapaDecisao({ dados, rotuloLote = null, altura = 480 }: MapaDeci
                                 classe="mapa-decisao-rotulo-via"
                                 direcao="top"
                                 deslocamento={[0, -4]}
+                                fracao={0.35}
                             />
                         )}
                     </Pane>
@@ -372,6 +427,7 @@ export function MapaDecisao({ dados, rotuloLote = null, altura = 480 }: MapaDeci
                                 classe="mapa-decisao-rotulo-medida"
                                 direcao="bottom"
                                 deslocamento={[0, 4]}
+                                fracao={0.65}
                             />
                         ))}
                         {dados.linhas.map((linha, indice) => {
@@ -395,8 +451,8 @@ export function MapaDecisao({ dados, rotuloLote = null, altura = 480 }: MapaDeci
                                         texto={texto}
                                         classe="mapa-decisao-rotulo-medida"
                                         ancora={linha.passa_sobre_lote || !linha.ligacao ? 'sul' : 'centro'}
-                                        direcao={linha.passa_sobre_lote || !linha.ligacao ? 'bottom' : 'center'}
-                                        deslocamento={linha.passa_sobre_lote || !linha.ligacao ? [0, 32] : undefined}
+                                        direcao={linha.passa_sobre_lote || !linha.ligacao ? 'bottom' : 'right'}
+                                        deslocamento={linha.passa_sobre_lote || !linha.ligacao ? [0, 32] : [8, 0]}
                                     />
                                 </Fragment>
                             );
@@ -416,93 +472,105 @@ export function MapaDecisao({ dados, rotuloLote = null, altura = 480 }: MapaDeci
                 )}
             </MapContainer>
 
-            <Caixa className="absolute right-3 top-3 z-[1000] w-56 space-y-1">
-                {FUNDOS.map((opcao) => (
-                    <label key={opcao.id} className="flex cursor-pointer items-center gap-2">
-                        <input type="radio" name={grupoFundo} checked={fundo === opcao.id} onChange={() => setFundo(opcao.id)} />
-                        {opcao.rotulo}
-                    </label>
-                ))}
-                <hr className="my-2 border-gray-200 dark:border-gray-700" />
-                {lote && (
-                    <label className="flex cursor-pointer items-center gap-2">
-                        <input type="checkbox" checked={camadas.lote} onChange={() => alternar('lote')} />
-                        Lote do processo
-                    </label>
-                )}
-                {zonasDoLote.length > 0 && (
-                    <label className="flex cursor-pointer items-center gap-2">
-                        <input type="checkbox" checked={camadas.zonaDoLote} onChange={() => alternar('zonaDoLote')} />
-                        {tituloZona}
-                    </label>
-                )}
-                {outrasZonas.length > 0 && (
-                    <label className="flex cursor-pointer items-center gap-2">
-                        <input type="checkbox" checked={camadas.outrasZonas} onChange={() => alternar('outrasZonas')} />
-                        Outras zonas
-                    </label>
-                )}
-                {dados.vias.length > 0 && (
-                    <label className="flex cursor-pointer items-center gap-2">
-                        <input type="checkbox" checked={camadas.vias} onChange={() => alternar('vias')} />
-                        Vias
-                    </label>
-                )}
-                {dados.linhas.length > 0 && (
-                    <label className="flex cursor-pointer items-center gap-2">
-                        <input type="checkbox" checked={camadas.linhas} onChange={() => alternar('linhas')} />
-                        ZCLMu e ZCLMe (linhas)
-                    </label>
-                )}
-            </Caixa>
+            <button
+                type="button"
+                onClick={() => setPainel((aberto) => !aberto)}
+                className="absolute right-3 top-3 z-[1000] rounded-lg border border-gray-200 bg-white/95 px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm dark:border-gray-700 dark:bg-gray-900/95 dark:text-gray-200"
+            >
+                {painel ? 'Ocultar camadas' : 'Camadas e legenda'}
+            </button>
 
-            <Caixa className="absolute bottom-10 left-3 z-[1000] space-y-1">
-                {lote && (
-                    <div className="flex items-center gap-2">
-                        <Amostra cor={COR.lote} tipo="area" /> Lote
-                    </div>
-                )}
-                {dados.porcoes.length > 1 ? (
-                    <>
-                        {maior && (
-                            <div className="flex items-center gap-2">
-                                <Amostra cor={COR.zona} tipo="area" /> {maior.zona} (maior porção)
-                            </div>
-                        )}
-                        {menor && (
-                            <div className="flex items-center gap-2">
-                                <Amostra cor={COR.menor} tipo="area" /> {menor.zona} (menor porção)
-                            </div>
-                        )}
-                    </>
-                ) : (
-                    zonasDoLote.length > 0 && (
+            {painel && (
+                <>
+                <Caixa className="absolute right-3 top-12 z-[1000] w-56 space-y-1">
+                    {FUNDOS.map((opcao) => (
+                        <label key={opcao.id} className="flex cursor-pointer items-center gap-2">
+                            <input type="radio" name={grupoFundo} checked={fundo === opcao.id} onChange={() => setFundo(opcao.id)} />
+                            {opcao.rotulo}
+                        </label>
+                    ))}
+                    <hr className="my-2 border-gray-200 dark:border-gray-700" />
+                    {lote && (
+                        <label className="flex cursor-pointer items-center gap-2">
+                            <input type="checkbox" checked={camadas.lote} onChange={() => alternar('lote')} />
+                            Lote do processo
+                        </label>
+                    )}
+                    {zonasDoLote.length > 0 && (
+                        <label className="flex cursor-pointer items-center gap-2">
+                            <input type="checkbox" checked={camadas.zonaDoLote} onChange={() => alternar('zonaDoLote')} />
+                            {tituloZona}
+                        </label>
+                    )}
+                    {outrasZonas.length > 0 && (
+                        <label className="flex cursor-pointer items-center gap-2">
+                            <input type="checkbox" checked={camadas.outrasZonas} onChange={() => alternar('outrasZonas')} />
+                            Outras zonas
+                        </label>
+                    )}
+                    {dados.vias.length > 0 && (
+                        <label className="flex cursor-pointer items-center gap-2">
+                            <input type="checkbox" checked={camadas.vias} onChange={() => alternar('vias')} />
+                            Vias
+                        </label>
+                    )}
+                    {dados.linhas.length > 0 && (
+                        <label className="flex cursor-pointer items-center gap-2">
+                            <input type="checkbox" checked={camadas.linhas} onChange={() => alternar('linhas')} />
+                            ZCLMu e ZCLMe (linhas)
+                        </label>
+                    )}
+                </Caixa>
+
+                <Caixa className="absolute bottom-10 left-3 z-[1000] space-y-1">
+                    {lote && (
                         <div className="flex items-center gap-2">
-                            <Amostra cor={COR.zona} tipo="area" /> Zona do lote{dados.zona ? ` (${dados.zona.codigo})` : ''}
+                            <Amostra cor={COR.lote} tipo="area" /> Lote
                         </div>
-                    )
-                )}
-                {outrasZonas.length > 0 && (
-                    <div className="flex items-center gap-2">
-                        <Amostra cor="#98a2b3" tipo="pontilhada" /> Outras zonas
-                    </div>
-                )}
-                {dados.vias.length > 0 && (
-                    <div className="flex items-center gap-2">
-                        <Amostra cor={COR.via} tipo="linha" /> Via
-                    </div>
-                )}
-                {dados.linhas.some((linha) => linha.tipo === 'ZCLMu') && (
-                    <div className="flex items-center gap-2">
-                        <Amostra cor={COR.zclmu} tipo="linha" /> ZCLMu (linha)
-                    </div>
-                )}
-                {dados.linhas.some((linha) => linha.tipo === 'ZCLMe') && (
-                    <div className="flex items-center gap-2">
-                        <Amostra cor={COR.zclme} tipo="tracejada" /> ZCLMe (linha)
-                    </div>
-                )}
-            </Caixa>
+                    )}
+                    {dados.porcoes.length > 1 ? (
+                        <>
+                            {maior && (
+                                <div className="flex items-center gap-2">
+                                    <Amostra cor={COR.zona} tipo="area" /> {maior.zona} (maior porção)
+                                </div>
+                            )}
+                            {menor && (
+                                <div className="flex items-center gap-2">
+                                    <Amostra cor={COR.menor} tipo="area" /> {menor.zona} (menor porção)
+                                </div>
+                            )}
+                        </>
+                    ) : (
+                        zonasDoLote.length > 0 && (
+                            <div className="flex items-center gap-2">
+                                <Amostra cor={COR.zona} tipo="area" /> Zona do lote{dados.zona ? ` (${dados.zona.codigo})` : ''}
+                            </div>
+                        )
+                    )}
+                    {outrasZonas.length > 0 && (
+                        <div className="flex items-center gap-2">
+                            <Amostra cor="#98a2b3" tipo="pontilhada" /> Outras zonas
+                        </div>
+                    )}
+                    {dados.vias.length > 0 && (
+                        <div className="flex items-center gap-2">
+                            <Amostra cor={COR.via} tipo="linha" /> Via
+                        </div>
+                    )}
+                    {dados.linhas.some((linha) => linha.tipo === 'ZCLMu') && (
+                        <div className="flex items-center gap-2">
+                            <Amostra cor={COR.zclmu} tipo="linha" /> ZCLMu (linha)
+                        </div>
+                    )}
+                    {dados.linhas.some((linha) => linha.tipo === 'ZCLMe') && (
+                        <div className="flex items-center gap-2">
+                            <Amostra cor={COR.zclme} tipo="tracejada" /> ZCLMe (linha)
+                        </div>
+                    )}
+                </Caixa>
+                </>
+            )}
         </div>
     );
 }
