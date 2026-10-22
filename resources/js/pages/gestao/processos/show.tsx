@@ -718,7 +718,7 @@ export default function Show({
                                         ) : null}
                                         {geo.origem && !geo.poligono ? (
                                             <p className="text-sm text-gray-600 dark:text-gray-300">
-                                                Localização pelo {geo.origem.label} (ponto, sem o desenho do lote).
+                                                Localização pelo {geo.origem.label}.
                                             </p>
                                         ) : null}
                                     </div>
