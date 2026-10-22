@@ -28,3 +28,14 @@ def test_cli_recusa_etapa_desconhecida(monkeypatch, tmp_path):
 
     with pytest.raises(SystemExit):
         __main__.main(["inexistente"])
+
+
+def test_cli_avaliar_aceita_regra_f_e_inclui_a_variante_F(monkeypatch, tmp_path):
+    monkeypatch.setenv("TREINO_IA_RAIZ", str(tmp_path))
+    chamado = {}
+    from treino_ia import avaliacao
+
+    monkeypatch.setattr(avaliacao, "avaliar", lambda alvo, nomes, **k: chamado.update(alvo=alvo, nomes=nomes, **k) or "ok")
+
+    assert __main__.main(["avaliar", "teste", "--regra-f", "D"]) == 0
+    assert "F" in chamado["nomes"] and chamado["regra_f"] == "D"

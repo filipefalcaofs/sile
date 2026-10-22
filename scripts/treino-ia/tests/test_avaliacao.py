@@ -80,3 +80,50 @@ def test_teste_cego_usa_entrada_e_referencia_separadas_e_marca_ponto_fora(tmp_pa
 
     assert linhas[0]["cadastro_diferente"] is True
     assert linhas[0]["unidade"] is True
+
+
+def test_modelo_recebe_so_id_ponto_codlog_e_numero(tmp_path, monkeypatch):
+    _preparar(tmp_path, monkeypatch)
+    registro = []
+    monkeypatch.setattr(variantes, "rodar", _rodar_falso(registro))
+
+    avaliacao.avaliar("teste", ["A"], execucao="x", seg_base=object(), eixos=lambda codlog: [])
+
+    assert all(chaves <= {"id", "ponto", "codlog", "numero"} for _, chaves in registro)
+
+
+def test_falha_de_recorte_nao_grava_o_lote_e_registra_o_erro(tmp_path, monkeypatch):
+    _preparar(tmp_path, monkeypatch)
+
+    def sem_recorte(nome, lote, seg, contexto):
+        contexto["carregar_recorte"](lote["id"], 120)
+
+    monkeypatch.setattr(variantes, "rodar", sem_recorte)
+    monkeypatch.setattr(avaliacao.recortes, "baixar_um", lambda *a, **k: "falha")
+
+    linhas = arquivos.ler_json(avaliacao.avaliar("teste", ["A"], execucao="x", seg_base=object(), eixos=lambda codlog: []))
+
+    assert linhas == []
+    assert not list((config.caminhos().avaliacoes / "x" / "lotes").glob("*.json"))
+    assert "recorte" in (arquivos.ler_json(config.caminhos().estado / "situacao.json")["avaliar teste"]["ultimo_erro"] or "")
+
+
+def test_retomada_completa_variantes_que_faltam(tmp_path, monkeypatch):
+    _preparar(tmp_path, monkeypatch)
+    monkeypatch.setattr(variantes, "rodar", _rodar_falso([]))
+    avaliacao.avaliar("teste", ["A"], execucao="x", seg_base=object(), eixos=lambda codlog: [])
+
+    registro = []
+    monkeypatch.setattr(variantes, "rodar", _rodar_falso(registro))
+    linhas = arquivos.ler_json(avaliacao.avaliar("teste", ["A", "B"], execucao="x", seg_base=object(), eixos=lambda codlog: []))
+
+    assert {nome for nome, _ in registro} == {"B"}
+    assert sorted(l["variante"] for l in linhas) == ["A", "A", "B", "B"]
+
+
+def test_pedir_E_sem_pesos_treinados_para_com_mensagem(tmp_path, monkeypatch):
+    _preparar(tmp_path, monkeypatch)
+    import pytest
+
+    with pytest.raises(SystemExit, match="pesos"):
+        avaliacao.avaliar("teste", ["A", "E"], execucao="x", seg_base=object(), eixos=lambda codlog: [])

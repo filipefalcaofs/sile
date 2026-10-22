@@ -40,6 +40,8 @@ def comparar(ia: dict | None, referencia: dict) -> dict:
             "divisa_media_ia_ref_m": None, "divisa_media_ref_ia_m": None, "aceite_atual": False, "motivo_recusa": "sem_objeto",
         }
     contorno = _poligonal(geo.em_metros(shape(ia), lat_ref))
+    if contorno.is_empty or contorno.area <= 0:
+        return comparar(None, referencia)
     intersecao = contorno.intersection(ref).area
     uniao = contorno.union(ref).area
     return {

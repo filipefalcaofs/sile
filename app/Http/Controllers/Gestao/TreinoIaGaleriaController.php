@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Gestao;
 
 use App\Http\Controllers\Controller;
 use App\Support\Settings;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -34,13 +35,21 @@ class TreinoIaGaleriaController extends Controller
         return Inertia::render('gestao/treino-ia/index', ['execucoes' => $execucoes]);
     }
 
-    public function arquivo(string $execucao, ?string $arquivo = null): BinaryFileResponse
+    public function arquivo(string $execucao, ?string $arquivo = null): BinaryFileResponse|RedirectResponse
     {
         abort_unless(Settings::enabled('treino_ia_galeria'), 404);
         abort_unless(preg_match('/^[A-Za-z0-9._-]+$/', $execucao) === 1 && ! str_starts_with($execucao, '.'), 404);
 
+        // A galeria usa caminhos relativos (img/...): ela precisa abrir em
+        // .../{execucao}/index.html para as imagens resolverem dentro da execução.
         $base = realpath(Storage::disk('local')->path(self::PASTA.'/'.$execucao));
-        $caminho = $base === false ? false : realpath($base.DIRECTORY_SEPARATOR.($arquivo ?: 'index.html'));
+        abort_if($base === false || ! is_dir($base), 404);
+
+        if ($arquivo === null || $arquivo === '') {
+            return redirect()->route('gestao.treino-ia.arquivo', ['execucao' => $execucao, 'arquivo' => 'index.html']);
+        }
+
+        $caminho = realpath($base.DIRECTORY_SEPARATOR.$arquivo);
         $extensao = $caminho === false ? '' : strtolower(pathinfo($caminho, PATHINFO_EXTENSION));
 
         abort_unless($caminho !== false && str_starts_with($caminho, $base.DIRECTORY_SEPARATOR) && isset(self::TIPOS[$extensao]) && is_file($caminho), 404);

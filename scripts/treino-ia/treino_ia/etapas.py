@@ -52,13 +52,16 @@ def avaliar(args) -> None:
 
     alvo = args.alvo or "teste"
     nomes = ["A", "B", "C", "D", "E"] if alvo == "cego" else ["A", "B", "D", "E"]
-    print(avaliacao.avaliar(alvo, nomes, execucao=args.execucao))
+    if args.regra_f:
+        nomes.append("F")
+    print(avaliacao.avaliar(alvo, nomes, execucao=args.execucao, regra_f=args.regra_f))
 
 
 def cego(args) -> None:
     from treino_ia import avaliacao
 
-    print(avaliacao.avaliar("cego", ["A", "B", "C", "D", "E"], execucao=args.execucao))
+    nomes = ["A", "B", "C", "D", "E"] + (["F"] if args.regra_f else [])
+    print(avaliacao.avaliar("cego", nomes, execucao=args.execucao, regra_f=args.regra_f))
 
 
 def galeria(args) -> None:

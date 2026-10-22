@@ -78,11 +78,24 @@ class TreinoIaGaleriaControllerTest extends TestCase
         $this->ligar();
         $this->galeria('20261022-teste');
 
-        $indice = $this->actingAs($this->admin(), 'gestao')->get('/gestao/treino-ia/20261022-teste')->assertOk();
+        $indice = $this->actingAs($this->admin(), 'gestao')->get('/gestao/treino-ia/20261022-teste/index.html')->assertOk();
         $this->assertStringContainsString('Galeria de teste', $indice->baseResponse->getFile()->getContent());
         $this->assertStringStartsWith('text/html', $indice->headers->get('Content-Type'));
         $this->actingAs($this->admin(), 'gestao')->get('/gestao/treino-ia/20261022-teste/img/9-1.png')
             ->assertOk()->assertHeader('Content-Type', 'image/png');
+    }
+
+    public function test_galeria_abre_em_index_html_para_as_imagens_relativas_resolverem(): void
+    {
+        $this->ligar();
+        $this->galeria('20261022-teste');
+
+        $this->actingAs($this->admin(), 'gestao')->get('/gestao/treino-ia/20261022-teste')
+            ->assertRedirect('/gestao/treino-ia/20261022-teste/index.html');
+
+        $pagina = 'http://localhost/gestao/treino-ia/20261022-teste/index.html';
+        $imagem = rtrim(dirname(parse_url($pagina, PHP_URL_PATH)), '/').'/img/9-1.png';
+        $this->actingAs($this->admin(), 'gestao')->get($imagem)->assertOk()->assertHeader('Content-Type', 'image/png');
     }
 
     public function test_caminho_com_ponto_ponto_absoluto_ou_execucao_inexistente_devolve_404(): void

@@ -56,7 +56,7 @@ export default function TreinoIaIndex({ execucoes }: TreinoIaIndexProps) {
                                             </td>
                                             <td className="py-2">
                                                 <a
-                                                    href={`/gestao/treino-ia/${encodeURIComponent(e.execucao)}`}
+                                                    href={`/gestao/treino-ia/${encodeURIComponent(e.execucao)}/index.html`}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     className="text-brand-500 hover:underline"

@@ -51,3 +51,24 @@ def test_perda_registrada_por_epoca(conjunto, segmentador):
 
     log = (config.caminhos().logs / "treino.log").read_text()
     assert "época 1/2" in log and "época 2/2" in log
+
+
+def test_estado_de_outro_treino_e_arquivado_e_o_treino_recomeca(conjunto, segmentador):
+    treino.treinar(conjunto, epocas=1, semente=1, modelo=segmentador.preditor)
+
+    treino.treinar(conjunto, epocas=1, semente=2, modelo=segmentador.preditor)
+
+    estado = torch.load(config.caminhos().pesos / "estado.pt")
+    assert estado["semente"] == 2
+    assert estado["passo"] == 2
+    assert list(config.caminhos().pesos.glob("estado-anterior-*.pt"))
+
+
+def test_cache_diferente_do_estado_recomeca_o_treino(conjunto, segmentador):
+    treino.treinar(conjunto, epocas=2, semente=1, modelo=segmentador.preditor, parar_apos_passos=1)
+    menor = {**conjunto, "treino": conjunto["treino"][:1]}
+
+    treino.treinar(menor, epocas=2, semente=1, modelo=segmentador.preditor)
+
+    assert list(config.caminhos().pesos.glob("estado-anterior-*.pt"))
+    assert torch.load(config.caminhos().pesos / "estado.pt")["amostras"] == 1

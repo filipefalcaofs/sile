@@ -40,3 +40,14 @@ def test_caminhos_usam_a_raiz_do_ambiente(tmp_path, monkeypatch):
     assert c.recortes == tmp_path / "recortes"
     assert c.galerias == tmp_path / "galerias"
     assert c.cego == tmp_path / "cego"
+
+
+def test_requirements_do_treino_cobre_o_que_o_app_py_do_servico_exige():
+    from pathlib import Path
+
+    raiz = Path(__file__).resolve().parents[3]
+    nomes = lambda p: {l.split("==")[0].split("@")[0].strip().lower() for l in p.read_text().splitlines() if l.strip() and not l.startswith(("-", "#"))}
+    servico = nomes(raiz / "docker" / "footprint-ia" / "requirements-base.txt") - {"uvicorn[standard]"}
+    treino = nomes(Path(__file__).resolve().parents[1] / "requirements.txt")
+
+    assert servico <= treino, servico - treino

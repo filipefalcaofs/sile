@@ -18,6 +18,7 @@ def _argumentos(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--limite", type=int)
     parser.add_argument("--epocas", type=int, default=10)
     parser.add_argument("--execucao")
+    parser.add_argument("--regra-f", dest="regra_f", choices=("B", "C", "D"))
     return parser.parse_args(argv)
 
 

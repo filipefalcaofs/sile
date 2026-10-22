@@ -5,7 +5,7 @@ from collections import defaultdict
 
 from shapely.geometry import Point, shape
 
-from treino_ia import arquivos, config, geo, wfs
+from treino_ia import arquivos, config, geo, recursos, wfs
 
 AREA_MIN_M2 = 40
 AREA_MAX_M2 = 20000
@@ -24,7 +24,10 @@ def montar_de(lotes: list[dict], bairros: list[dict], semente: int, n_treino: in
     formas_bairro = [((b.get("properties") or {}).get("NOME_BAIRRO"), shape(b["geometry"])) for b in bairros if b.get("geometry")]
 
     por_chave = defaultdict(list)
-    for feicao in lotes:
+    recursos.conferir_memoria()
+    for indice, feicao in enumerate(lotes):
+        if indice % 2000 == 0:
+            recursos.conferir_memoria()
         geometria = feicao.get("geometry")
         forma = shape(geometria) if geometria else None
         if forma is None or forma.is_empty or not forma.is_valid:

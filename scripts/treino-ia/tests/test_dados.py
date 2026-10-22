@@ -66,3 +66,14 @@ def test_lote_traz_ponto_lado_e_poligono():
 
     assert set(lote) >= {"id", "codlog", "numero", "bairro", "ponto", "lado_m", "poligono"}
     assert lote["lado_m"] in (60, 120, 240)
+
+
+def test_montar_confere_a_memoria_durante_a_leitura(monkeypatch):
+    import pytest
+
+    from treino_ia import recursos
+
+    monkeypatch.setattr(recursos, "memoria_residente_mb", lambda: 9000)
+
+    with pytest.raises(recursos.MemoriaExcedida):
+        _montar(sinteticos.lotes_em_grade())

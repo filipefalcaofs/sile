@@ -59,3 +59,14 @@ def test_aceite_recusa_contorno_que_nao_contem_o_ponto():
     anel = [[10, 10], [200, 10], [200, 200], [10, 200]]
 
     assert metricas.aceite_atual(anel, caixa, -12.996143, -38.465385) == (False, "nao_contem_o_ponto")
+
+
+def test_contorno_degenerado_vira_sem_objeto():
+    ref = _ler("ref_maxcenter.json")
+    x, y = ref["coordinates"][0][0]
+    linha = {"type": "Polygon", "coordinates": [[[x, y], [x + 0.0001, y], [x + 0.0002, y], [x, y]]]}
+
+    m = metricas.comparar(linha, ref)
+
+    assert m["iou"] == 0
+    assert m["motivo_recusa"] == "sem_objeto"

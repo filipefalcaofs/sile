@@ -6,10 +6,11 @@ contra a máscara do lote, mais o erro do IoU previsto. O estado é salvo a cada
 5 minutos e ao fim de cada época, e uma nova chamada retoma de onde parou.
 """
 
+import hashlib
 import io
 import random
 import time
-from datetime import date
+from datetime import date, datetime
 
 import numpy as np
 import torch
@@ -88,18 +89,24 @@ def treinar(manifesto: dict, epocas: int, semente: int, modelo=None, parar_apos_
         parametro.requires_grad_(True)
     otimizador = torch.optim.AdamW(decodificador.parameters(), lr=TAXA)
 
+    amostras = _amostras(manifesto)
+    assinatura = hashlib.sha1("|".join(sorted(f"{a['lote']['id']}_{a['lote']['lado_m']}" for a in amostras)).encode()).hexdigest()
+    identidade = {"semente": semente, "epocas": epocas, "assinatura": assinatura, "amostras": len(amostras)}
+
     caminho_estado = c.pesos / "estado.pt"
     estado = {"epoca": 0, "indice": 0, "passo": 0, "soma_perda": 0.0}
     if caminho_estado.exists():
         salvo = torch.load(caminho_estado)
-        decodificador.load_state_dict(salvo["decodificador"])
-        otimizador.load_state_dict(salvo["otimizador"])
-        estado = {k: salvo[k] for k in estado}
+        if all(salvo.get(k) == v for k, v in identidade.items()):
+            decodificador.load_state_dict(salvo["decodificador"])
+            otimizador.load_state_dict(salvo["otimizador"])
+            estado = {k: salvo[k] for k in estado}
+        else:
+            caminho_estado.rename(c.pesos / f"estado-anterior-{datetime.now():%Y%m%d%H%M%S}.pt")
 
     def salvar_estado():
-        _salvar({**estado, "decodificador": decodificador.state_dict(), "otimizador": otimizador.state_dict()}, caminho_estado)
+        _salvar({**estado, **identidade, "decodificador": decodificador.state_dict(), "otimizador": otimizador.state_dict()}, caminho_estado)
 
-    amostras = _amostras(manifesto)
     final = c.pesos / f"decodificador_{date.today():%Y%m%d}_s{semente}.pt"
     ultimo_estado = time.monotonic()
     passos_nesta_chamada = 0

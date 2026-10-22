@@ -78,6 +78,9 @@ def baixar(type_name: str, destino: Path, pagina: int = 2000, sessao=None, filtr
 
 def ler(destino: Path) -> list[dict]:
     feicoes = []
+    from treino_ia import recursos
+
     for arquivo in sorted(destino.glob("pagina-*.json")):
         feicoes.extend(arquivos.ler_json(arquivo, padrao=[]))
+        recursos.conferir_memoria()
     return feicoes
