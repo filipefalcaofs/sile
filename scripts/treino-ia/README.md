@@ -14,6 +14,27 @@ Tudo o que as ferramentas geram fica em `storage/app/private/treino-ia/`
 cache do codificador, pesos, avaliações, galerias e registros. Nada vai para o
 banco. Para apagar tudo: `rm -rf storage/app/private/treino-ia`.
 
+## Na máquina local (macOS com Apple Silicon)
+
+O treino roda direto no macOS, fora do Docker, para usar a GPU (MPS). Os dados
+ficam em `~/treino-ia`. As etapas `dados` e `recortes` baixam do GeoServer e da
+ortofoto da prefeitura e precisam da VPN; `cache` e `treinar` rodam sem rede.
+
+```sh
+export TREINO_IA_RAIZ=$HOME/treino-ia
+export HF_HOME=$TREINO_IA_RAIZ/py/hf
+export PY=$TREINO_IA_RAIZ/py/bin/python
+export TREINO_IA_THREADS=8 TREINO_IA_TETO_MB=10240
+cd scripts/treino-ia
+PYTHON=/opt/homebrew/bin/python3.13 sh instalar.sh
+```
+
+Depois, os mesmos comandos da tabela abaixo. O dispositivo é escolhido sozinho
+(`mps` quando disponível); `TREINO_IA_DISPOSITIVO=cpu` força a CPU. O teste
+cego precisa de processos reais: o `cego/entrada.json` vem do comando
+`treino-ia:exportar-teste-cego` rodado num ambiente que tenha esse comando e
+esses processos, e é copiado para `$TREINO_IA_RAIZ/cego/`.
+
 ## Comandos no pod de homologação
 
 Rode a partir de `/opt/app-root/src`. Defina uma vez por sessão do terminal:

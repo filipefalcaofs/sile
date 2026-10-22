@@ -16,7 +16,7 @@ from pathlib import Path
 import numpy as np
 from shapely.geometry import Polygon
 
-from treino_ia import geo
+from treino_ia import geo, recursos
 
 LADOS = geo.LADOS_RECORTE
 PX = 800
@@ -39,7 +39,7 @@ class Segmentador:
         import torch
         from sam2.sam2_image_predictor import SAM2ImagePredictor
 
-        self.preditor = SAM2ImagePredictor.from_pretrained("facebook/sam2.1-hiera-small", device="cpu")
+        self.preditor = SAM2ImagePredictor.from_pretrained("facebook/sam2.1-hiera-small", device=recursos.dispositivo())
         if pesos_decodificador is not None:
             estado = torch.load(pesos_decodificador, map_location="cpu")
             self.preditor.model.sam_mask_decoder.load_state_dict(estado.get("decodificador", estado))

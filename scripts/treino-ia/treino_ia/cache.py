@@ -33,8 +33,8 @@ def gerar(manifesto: dict, seg, limite: int | None = None) -> dict:
             feats = seg.codificar(img)
             buffer = io.BytesIO()
             torch.save({
-                "image_embed": feats["image_embed"].to(torch.float16),
-                "high_res_feats": [f.to(torch.float16) for f in feats["high_res_feats"]],
+                "image_embed": feats["image_embed"].to("cpu", torch.float16),
+                "high_res_feats": [f.to("cpu", torch.float16) for f in feats["high_res_feats"]],
             }, buffer)
             arquivos.gravar_atomico(destino, buffer.getvalue())
             contagem["gerados"] += 1

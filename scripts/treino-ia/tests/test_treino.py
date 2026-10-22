@@ -43,7 +43,7 @@ def test_treino_so_altera_o_decodificador(conjunto, segmentador):
     for k, v in modelo.image_encoder.state_dict().items():
         assert torch.equal(v, codificador_antes[k])
     novo = torch.load(final)["decodificador"]
-    assert any(not torch.equal(novo[k], decodificador_antes[k]) for k in novo)
+    assert any(not torch.equal(novo[k], decodificador_antes[k].cpu()) for k in novo)
 
 
 def test_perda_registrada_por_epoca(conjunto, segmentador):

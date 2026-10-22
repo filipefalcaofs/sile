@@ -50,14 +50,15 @@ def _perda(logits, alvo):
 
 def _passo(preditor, amostra, rng: np.random.Generator):
     sam = preditor.model
-    feats = torch.load(cache.caminho(amostra["lote"]["id"], amostra["lote"]["lado_m"]))
+    dev = preditor.device
+    feats = torch.load(cache.caminho(amostra["lote"]["id"], amostra["lote"]["lado_m"]), map_location=dev)
     embed = feats["image_embed"].float()
     altas = [f.float() for f in feats["high_res_feats"]]
     mascara = recortes.mascara_lote(amostra["lote"]["poligono"], amostra["caixa"])
     ys, xs = np.nonzero(mascara)
     k = rng.integers(len(xs))
-    coords = preditor._transforms.transform_coords(torch.tensor([[[float(xs[k]), float(ys[k])]]]), normalize=True, orig_hw=mascara.shape)
-    rotulos = torch.tensor([[1]], dtype=torch.int)
+    coords = preditor._transforms.transform_coords(torch.tensor([[[float(xs[k]), float(ys[k])]]], device=dev), normalize=True, orig_hw=mascara.shape)
+    rotulos = torch.tensor([[1]], dtype=torch.int, device=dev)
     with torch.no_grad():
         esparso, denso = sam.sam_prompt_encoder(points=(coords, rotulos), boxes=None, masks=None)
     logits, iou_previsto, _, _ = sam.sam_mask_decoder(
@@ -65,7 +66,7 @@ def _passo(preditor, amostra, rng: np.random.Generator):
         sparse_prompt_embeddings=esparso, dense_prompt_embeddings=denso,
         multimask_output=True, repeat_image=False, high_res_features=altas,
     )
-    alvo = F.interpolate(torch.from_numpy(mascara).float()[None, None], size=logits.shape[-2:], mode="bilinear") > 0.5
+    alvo = F.interpolate(torch.from_numpy(mascara).float()[None, None].to(dev), size=logits.shape[-2:], mode="bilinear") > 0.5
     alvo = alvo.float()
     perdas = _perda(logits, alvo)[0]
     melhor = int(torch.argmin(perdas))
@@ -96,7 +97,7 @@ def treinar(manifesto: dict, epocas: int, semente: int, modelo=None, parar_apos_
     caminho_estado = c.pesos / "estado.pt"
     estado = {"epoca": 0, "indice": 0, "passo": 0, "soma_perda": 0.0}
     if caminho_estado.exists():
-        salvo = torch.load(caminho_estado)
+        salvo = torch.load(caminho_estado, map_location=modelo.device)
         if all(salvo.get(k) == v for k, v in identidade.items()):
             decodificador.load_state_dict(salvo["decodificador"])
             otimizador.load_state_dict(salvo["otimizador"])
@@ -142,6 +143,6 @@ def treinar(manifesto: dict, epocas: int, semente: int, modelo=None, parar_apos_
         estado["soma_perda"] = 0.0
         situacao.registrar(c, "treinar", feitos=estado["epoca"], total=epocas)
         salvar_estado()
-    _salvar({"decodificador": decodificador.state_dict(), "semente": semente, "epocas": epocas, "lotes": len(amostras)}, final)
+    _salvar({"decodificador": {k: v.cpu() for k, v in decodificador.state_dict().items()}, "semente": semente, "epocas": epocas, "lotes": len(amostras)}, final)
     decodificador.eval()
     return final
