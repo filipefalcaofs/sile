@@ -25,14 +25,19 @@ const FUNDOS: { id: Fundo; rotulo: string }[] = [
     { id: 'nenhum', rotulo: 'Sem mapa de fundo' },
 ];
 
-const TILES: Record<Exclude<Fundo, 'nenhum'>, { url: string; maxNativeZoom: number }> = {
+const TILES: Record<Exclude<Fundo, 'nenhum'>, { url: string; maxNativeZoom: number; atribuicao: string; classe: string }> = {
     claro: {
-        url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',
-        maxNativeZoom: 16,
+        // OSM em tons de cinza: nítido até o zoom 19 e sem chave de API.
+        url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        maxNativeZoom: 19,
+        atribuicao: '&copy; OpenStreetMap (ODbL)',
+        classe: 'mapa-decisao-fundo-claro',
     },
     satelite: {
         url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
         maxNativeZoom: 19,
+        atribuicao: 'Mapa &copy; Esri',
+        classe: '',
     },
 };
 
@@ -57,6 +62,7 @@ const ESTILO_ROTULOS = `
 .mapa-decisao svg { max-width:none !important; max-height:none !important; }
 .mapa-decisao-rotulo { background:#fff; border:0; border-radius:6px; box-shadow:0 1px 4px rgba(16,24,40,.25); color:#1d2939; font-size:11px; font-weight:600; line-height:1.2; padding:3px 7px; white-space:nowrap; max-width:240px; overflow:hidden; text-overflow:ellipsis; }
 .mapa-decisao-rotulo::before { display:none; }
+.mapa-decisao-fundo-claro { filter: grayscale(1) brightness(1.06) contrast(.88); }
 .mapa-decisao-rotulo-lote { color:#175cd3; }
 .mapa-decisao-rotulo-zona { color:#53389e; }
 .mapa-decisao-rotulo-menor { color:#027a48; }
@@ -77,6 +83,33 @@ function centroDe(geometria: Geometry, ancora: 'centro' | 'sul' = 'centro'): [nu
 }
 
 /** Texto permanente sobre um ponto da geometria (um círculo invisível carrega o rótulo). */
+/** Ponto a uma fração do comprimento da primeira linha, para tirar o rótulo de cima do lote. */
+function pontoAoLongo(geometria: Geometry, fracao: number): [number, number] | null {
+    const coordenadas =
+        geometria.type === 'LineString' ? geometria.coordinates : geometria.type === 'MultiLineString' ? geometria.coordinates[0] : null;
+
+    if (!coordenadas || coordenadas.length < 2) {
+        return null;
+    }
+
+    const trechos = coordenadas.slice(1).map((ponto, i) => Math.hypot(ponto[0] - coordenadas[i][0], ponto[1] - coordenadas[i][1]));
+    let restante = trechos.reduce((soma, trecho) => soma + trecho, 0) * fracao;
+
+    for (let i = 0; i < trechos.length; i++) {
+        if (restante <= trechos[i] || i === trechos.length - 1) {
+            const t = trechos[i] === 0 ? 0 : Math.min(restante / trechos[i], 1);
+            const [lng0, lat0] = coordenadas[i];
+            const [lng1, lat1] = coordenadas[i + 1];
+
+            return [lat0 + (lat1 - lat0) * t, lng0 + (lng1 - lng0) * t];
+        }
+
+        restante -= trechos[i];
+    }
+
+    return null;
+}
+
 function Rotulo({
     geometria,
     texto,
@@ -84,15 +117,21 @@ function Rotulo({
     direcao = 'center',
     deslocamento,
     ancora = 'centro',
+    fracao,
 }: {
     geometria: Geometry;
     texto: string;
     classe: string;
-    direcao?: 'center' | 'top' | 'bottom';
+    direcao?: 'center' | 'top' | 'bottom' | 'right';
     deslocamento?: [number, number];
     ancora?: 'centro' | 'sul';
+    /** Em linhas, posição ao longo do traçado (0 a 1) em vez do centro. */
+    fracao?: number;
 }) {
-    const centro = useMemo(() => centroDe(geometria, ancora), [geometria, ancora]);
+    const centro = useMemo(
+        () => (fracao === undefined ? null : pontoAoLongo(geometria, fracao)) ?? centroDe(geometria, ancora),
+        [geometria, ancora, fracao],
+    );
 
     if (!centro) {
         return null;
@@ -261,7 +300,8 @@ export function MapaDecisao({ dados, rotuloLote = null, altura = 480 }: MapaDeci
                         url={TILES[fundo].url}
                         maxNativeZoom={TILES[fundo].maxNativeZoom}
                         maxZoom={20}
-                        attribution="Mapa &copy; Esri"
+                        attribution={TILES[fundo].atribuicao}
+                        className={TILES[fundo].classe}
                     />
                 )}
                 <Enquadrar
@@ -321,7 +361,7 @@ export function MapaDecisao({ dados, rotuloLote = null, altura = 480 }: MapaDeci
                                   />
                               ))
                             : null}
-                        {rotuloZona && zonasDoLote.find((zona) => zona.da_decisao) && (
+                        {dados.porcoes.length <= 1 && rotuloZona && zonasDoLote.find((zona) => zona.da_decisao) && (
                             <Rotulo
                                 geometria={zonasDoLote.find((zona) => zona.da_decisao)!.geojson}
                                 texto={rotuloZona}
@@ -330,7 +370,7 @@ export function MapaDecisao({ dados, rotuloLote = null, altura = 480 }: MapaDeci
                                 deslocamento={[0, -22]}
                             />
                         )}
-                        {menor && zonasDoLote.find((zona) => zona.codigo === menor.zona) && (
+                        {dados.porcoes.length <= 1 && menor && zonasDoLote.find((zona) => zona.codigo === menor.zona) && (
                             <Rotulo
                                 geometria={zonasDoLote.find((zona) => zona.codigo === menor.zona)!.geojson}
                                 texto={`${menor.zona} · menor porção`}
@@ -359,6 +399,7 @@ export function MapaDecisao({ dados, rotuloLote = null, altura = 480 }: MapaDeci
                                 classe="mapa-decisao-rotulo-via"
                                 direcao="top"
                                 deslocamento={[0, -4]}
+                                fracao={0.35}
                             />
                         )}
                     </Pane>
@@ -386,6 +427,7 @@ export function MapaDecisao({ dados, rotuloLote = null, altura = 480 }: MapaDeci
                                 classe="mapa-decisao-rotulo-medida"
                                 direcao="bottom"
                                 deslocamento={[0, 4]}
+                                fracao={0.65}
                             />
                         ))}
                         {dados.linhas.map((linha, indice) => {
@@ -409,8 +451,8 @@ export function MapaDecisao({ dados, rotuloLote = null, altura = 480 }: MapaDeci
                                         texto={texto}
                                         classe="mapa-decisao-rotulo-medida"
                                         ancora={linha.passa_sobre_lote || !linha.ligacao ? 'sul' : 'centro'}
-                                        direcao={linha.passa_sobre_lote || !linha.ligacao ? 'bottom' : 'center'}
-                                        deslocamento={linha.passa_sobre_lote || !linha.ligacao ? [0, 32] : undefined}
+                                        direcao={linha.passa_sobre_lote || !linha.ligacao ? 'bottom' : 'right'}
+                                        deslocamento={linha.passa_sobre_lote || !linha.ligacao ? [0, 32] : [8, 0]}
                                     />
                                 </Fragment>
                             );

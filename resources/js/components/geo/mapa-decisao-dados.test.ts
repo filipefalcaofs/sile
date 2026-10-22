@@ -2,6 +2,7 @@ import type { Polygon } from 'geojson';
 import { describe, expect, it } from 'vitest';
 import {
     type DadosMapaDecisao,
+    explicacaoDaDecisao,
     formatarArea,
     formatarMetros,
     papelDaPorcao,
@@ -91,5 +92,63 @@ describe('temCamadasDeContexto', () => {
         expect(temCamadasDeContexto(base)).toBe(false);
         expect(temCamadasDeContexto({ ...base, zonas: [{ codigo: 'ZPR 3', da_decisao: true, geojson: poligono }] })).toBe(true);
         expect(temCamadasDeContexto({ ...base, lote: null, zonas: [{ codigo: 'ZPR 3', da_decisao: true, geojson: poligono }] })).toBe(false);
+    });
+});
+
+describe('explicacaoDaDecisao', () => {
+    const linha = { tipo: 'ZCLMu' as const, nome: 'Av. ACM', geojson: poligono };
+    const porcao = (zona: string, area_m2: number, percentual: number, da_decisao: boolean) => ({ zona, area_m2, percentual, da_decisao, geojson: poligono });
+
+    it('explica a maior porção, a linha mais próxima e a via com a classe', () => {
+        const texto = explicacaoDaDecisao({
+            ...base,
+            porcoes: [porcao('ZCMu 2', 1228, 62.6, true), porcao('ZPR 3', 735, 37.4, false)],
+            linhas: [
+                { ...linha, passa_sobre_lote: false, dentro_m: 0, distancia_m: 759, ligacao: poligono },
+                { ...linha, tipo: 'ZCLMe', passa_sobre_lote: false, dentro_m: 0, distancia_m: 38.4, ligacao: poligono },
+            ],
+            via: { cod_log: '2631', nome: 'Av. ACM', classe: 'ARTERIAL I' },
+            vias: [{ cod_log: '2631', nome: 'Av. ACM', classe: 'ARTERIAL I', da_decisao: true, geojson: poligono }],
+        });
+
+        expect(texto).toEqual([
+            'Zona ZCMu 2: maior porção do lote (63%, 1.228 m²). ZPR 3 ocupa 37% (735 m²).',
+            'Nenhuma linha de ZCLMu ou ZCLMe passa por cima do lote. A mais próxima é a da ZCLMe, a 38,4 m.',
+            'Via: Av. ACM (CODLOG 2631), classe ARTERIAL I.',
+        ]);
+    });
+
+    it('diz quando o lote está todo numa zona e a linha passa por cima', () => {
+        const texto = explicacaoDaDecisao({
+            ...base,
+            zona: { codigo: 'ZPR 3', fonte: 'Maior porção do lote' },
+            porcoes: [porcao('ZPR 3', 3179, 100, true)],
+            linhas: [{ ...linha, passa_sobre_lote: true, dentro_m: 142.7, distancia_m: 0, ligacao: null }],
+        });
+
+        expect(texto[0]).toBe('Zona ZPR 3: o lote está inteiro nela (3.179 m²).');
+        expect(texto[1]).toBe('A linha da ZCLMu passa por cima do lote: 142,7 m dentro dele.');
+    });
+
+    it('cobre zona pelo ponto, nenhuma linha no entorno e via fora do recorte', () => {
+        const texto = explicacaoDaDecisao({
+            ...base,
+            lote: null,
+            zona: { codigo: 'ZPR 3', fonte: 'Ponto da inscrição' },
+            via: { cod_log: '9', nome: null, classe: null },
+        });
+
+        expect(texto).toEqual([
+            'Zona ZPR 3: zona onde está o ponto da inscrição, porque o processo não tem o desenho do lote.',
+            'Nenhuma linha de ZCLMu ou ZCLMe no entorno do lote.',
+            'Via: CODLOG 9, sem classe viária publicada. A via não aparece no recorte do mapa.',
+        ]);
+    });
+
+    it('diz quando a zona não foi identificada e não há via', () => {
+        expect(explicacaoDaDecisao({ ...base, zona: null })).toEqual([
+            'Zona não identificada no processo.',
+            'Nenhuma linha de ZCLMu ou ZCLMe no entorno do lote.',
+        ]);
     });
 });
