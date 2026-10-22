@@ -55,7 +55,7 @@ use Illuminate\Support\Collection;
     'is_virtual_office', 'wants_virtual_office_hq', 'wants_virtual_office_tenant', 'confirma_perda_condicao_sede', 'is_public_area', 'has_independent_access',
     'simulation_snapshot', 'simulation_rules_versions', 'simulation_resultado', 'simulated_at',
     'applicant_proceeded_despite', 'contingency_reason', 'external_reference', 'regin_justificativa',
-    'origem_declarada',
+    'origem_declarada', 'solicitante_nome', 'solicitante_cpf', 'zona_manual', 'via_manual',
 ])]
 class ViabilityRequest extends Model
 {
@@ -539,6 +539,17 @@ class ViabilityRequest extends Model
     public function conclusaoEncaminhadaPara(): BelongsTo
     {
         return $this->belongsTo(User::class, 'conclusao_encaminhada_para_user_id');
+    }
+
+    /**
+     * Quem o analista indicou ao encaminhar para a chefia. Sugestão para o
+     * Apoio: não atribui o processo.
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function conclusaoIndicadaPara(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'conclusao_indicada_para_user_id');
     }
 
     /**
