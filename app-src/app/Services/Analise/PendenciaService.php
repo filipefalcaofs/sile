@@ -46,6 +46,7 @@ class PendenciaService
         private AuditService $audit,
         private BusinessDeadlineCalculator $prazos,
         private AnalysisStatusStateMachine $analysisStatus,
+        private DistribuicaoService $distribuicao,
     ) {}
 
     /**
@@ -112,6 +113,7 @@ class PendenciaService
             );
 
             $this->moverEixo($request, AnalysisStatus::EmConvite, $analista, 'Convite aberto pela análise técnica.');
+            $this->distribuicao->assumirAoAgir($request, $analista, 'abrir o convite');
 
             $this->audit->log(
                 'analise',

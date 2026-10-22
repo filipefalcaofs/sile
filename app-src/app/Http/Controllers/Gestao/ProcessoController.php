@@ -13,7 +13,9 @@ use App\Models\Activity;
 use App\Models\Sector;
 use App\Models\User;
 use App\Models\ViabilityRequest;
+use App\Services\Analise\AnalysisRecordService;
 use App\Services\Analise\AnalysisStatusStateMachine;
+use App\Services\Analise\DistribuicaoService;
 use App\Services\Analise\InvalidAnalysisStatusTransitionException;
 use App\Services\Analise\ProcessoQueryService;
 use App\Services\Analise\TramitacaoProcessoService;
@@ -447,6 +449,14 @@ class ProcessoController extends Controller
             );
         } catch (InvalidAnalysisStatusTransitionException $e) {
             return back()->with('error', $e->getMessage());
+        }
+
+        if ($to === AnalysisStatus::ParaConclusao) {
+            app(AnalysisRecordService::class)->guardarParaConclusao($viabilityRequest, $request->user());
+        }
+
+        if ($from === AnalysisStatus::ParaConclusao && $to !== AnalysisStatus::Encaminhado) {
+            app(DistribuicaoService::class)->assumirAoAgir($viabilityRequest, $request->user(), 'devolvê-lo para '.$to->label());
         }
 
         $confirmacao = $this->confirmacaoDaTramitacao($viabilityRequest, $to);

@@ -198,6 +198,22 @@ class AnalysisRecordService
     }
 
     /**
+     * Ao ir para conclusão, a ficha de quem analisou é finalizada e quem conclui
+     * trabalha numa revisão nova: a versão da analista fica guardada e
+     * consultável na tramitação, em vez de ser editada por cima.
+     */
+    public function guardarParaConclusao(ViabilityRequest $request, User $ator): AnalysisRecord
+    {
+        $record = $this->current($request);
+
+        if (! $record->isFinalizada()) {
+            $this->finalizar($record, $ator);
+        }
+
+        return $this->novaRevisao($request);
+    }
+
+    /**
      * Cria a próxima revisão (revision+1, rascunho) COPIANDO a última revisão como
      * base para reedição após a finalização — a finalizada permanece intacta
      * (append-only). "Recalcular" (reexecutar o motor) é uma variação explícita
