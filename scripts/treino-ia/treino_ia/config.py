@@ -4,7 +4,7 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
-RAIZ_PADRAO = "/opt/app-root/src/storage/app/treino-ia"
+RAIZ_PADRAO = "/opt/app-root/src/storage/app/private/treino-ia"
 
 
 @dataclass(frozen=True)

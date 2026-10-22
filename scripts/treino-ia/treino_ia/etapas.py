@@ -45,3 +45,25 @@ def treinar(args) -> None:
     if args.semente is None:
         raise SystemExit("Informe --semente.")
     print(f"pesos: {treino.treinar(_manifesto(), args.epocas, args.semente)}")
+
+
+def avaliar(args) -> None:
+    from treino_ia import avaliacao
+
+    alvo = args.alvo or "teste"
+    nomes = ["A", "B", "C", "D", "E"] if alvo == "cego" else ["A", "B", "D", "E"]
+    print(avaliacao.avaliar(alvo, nomes, execucao=args.execucao))
+
+
+def cego(args) -> None:
+    from treino_ia import avaliacao
+
+    print(avaliacao.avaliar("cego", ["A", "B", "C", "D", "E"], execucao=args.execucao))
+
+
+def galeria(args) -> None:
+    from treino_ia import galeria as modulo
+
+    execucoes = [args.execucao] if args.execucao else sorted(p.name for p in config.caminhos().avaliacoes.iterdir() if (p / "resultados.json").exists())
+    for execucao in execucoes:
+        print(modulo.gerar(execucao))

@@ -3,7 +3,7 @@
 # às trocas de pod. Uso: sh scripts/treino-ia/instalar.sh
 set -eu
 
-RAIZ="${TREINO_IA_RAIZ:-/opt/app-root/src/storage/app/treino-ia}"
+RAIZ="${TREINO_IA_RAIZ:-/opt/app-root/src/storage/app/private/treino-ia}"
 AQUI="$(cd "$(dirname "$0")" && pwd)"
 PY="$RAIZ/py"
 SAM2_ZIP="https://github.com/facebookresearch/sam2/archive/2b90b9f5ceec907a1c18123530e92e794ad901a4.zip"
