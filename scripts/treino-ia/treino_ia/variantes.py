@@ -45,6 +45,16 @@ class Segmentador:
             self.preditor.model.sam_mask_decoder.load_state_dict(estado.get("decodificador", estado))
         self.preditor.model.eval()
 
+    def codificar(self, img) -> dict:
+        import torch
+
+        with torch.no_grad():
+            self.preditor.set_image(img)
+        return {
+            "image_embed": self.preditor._features["image_embed"].detach().clone(),
+            "high_res_feats": [f.detach().clone() for f in self.preditor._features["high_res_feats"]],
+        }
+
     def mascaras(self, img, pontos, rotulos, caixa_px=None):
         import torch
 

@@ -31,3 +31,17 @@ def recortes(args) -> None:
     from treino_ia import recortes as modulo
 
     print(modulo.baixar_todos(_manifesto(), limite=args.limite))
+
+
+def cache(args) -> None:
+    from treino_ia import cache as modulo, variantes
+
+    print(modulo.gerar(_manifesto(), variantes.Segmentador(), limite=args.limite))
+
+
+def treinar(args) -> None:
+    from treino_ia import treino
+
+    if args.semente is None:
+        raise SystemExit("Informe --semente.")
+    print(f"pesos: {treino.treinar(_manifesto(), args.epocas, args.semente)}")
