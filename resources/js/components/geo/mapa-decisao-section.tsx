@@ -18,7 +18,7 @@ interface MapaDecisaoSectionProps {
     url: string;
     /** Endereço do lote, para o rótulo do polígono. */
     rotuloLote?: string | null;
-    /** Mapa simples mostrado enquanto carrega e quando não há camadas para justificar a decisão. */
+    /** Mapa simples mostrado quando as camadas falham ou não há o que justificar. */
     fallback: ReactNode;
 }
 
@@ -26,8 +26,8 @@ type Estado = { fase: 'carregando' } | { fase: 'pronto'; dados: DadosMapaDecisao
 
 /**
  * Mapa do processo com zonas, vias e linhas de centralidade. Busca as camadas ao
- * montar, sem travar o detalhe: enquanto não chegam, ou se falharem, o mapa
- * simples do lote continua na tela.
+ * montar, sem travar o detalhe: enquanto não chegam, um esqueleto do mesmo tamanho
+ * ocupa o lugar; se falharem, entra o mapa simples do lote.
  */
 export function MapaDecisaoSection({ url, rotuloLote = null, fallback }: MapaDecisaoSectionProps) {
     const [montado, setMontado] = useState(false);
@@ -55,15 +55,17 @@ export function MapaDecisaoSection({ url, rotuloLote = null, fallback }: MapaDec
         return () => controle.abort();
     }, [url]);
 
-    if (!montado || estado.fase === 'indisponivel') {
+    if (estado.fase === 'indisponivel') {
         return <>{fallback}</>;
     }
 
-    if (estado.fase === 'carregando') {
+    if (!montado || estado.fase === 'carregando') {
         return (
-            <div className="space-y-2">
-                {fallback}
-                <p className="text-sm text-gray-500 dark:text-gray-400">Carregando zonas, vias e linhas de centralidade…</p>
+            <div className="relative" aria-busy="true">
+                <MapaSkeleton />
+                <p className="absolute inset-0 flex items-center justify-center text-sm text-gray-500 dark:text-gray-400">
+                    Carregando zonas, vias e linhas de centralidade…
+                </p>
             </div>
         );
     }
