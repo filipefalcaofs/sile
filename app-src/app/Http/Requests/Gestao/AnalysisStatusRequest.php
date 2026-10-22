@@ -3,6 +3,9 @@
 namespace App\Http\Requests\Gestao;
 
 use App\Enums\AnalysisStatus;
+use App\Models\User;
+use App\Support\PerfisDeChefia;
+use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -32,6 +35,14 @@ class AnalysisStatusRequest extends FormRequest
             'user_id' => ['required_if:status,encaminhado', 'nullable', 'integer', 'exists:users,id'],
             // Para conclusão não tem destinatário: o Apoio distribui pela aba.
             'encaminhado_para_user_id' => ['prohibited'],
+            // Indicação opcional de quem concluir: só sugestão para o Apoio.
+            'indicado_user_id' => ['nullable', 'integer', function (string $attribute, mixed $value, Closure $fail): void {
+                $indicavel = User::query()->whereKey($value)->role(PerfisDeChefia::NOMES)->exists();
+
+                if (! $indicavel) {
+                    $fail('A indicação só aceita usuários com perfil de Chefe de setor, Subcoordenador ou Coordenador.');
+                }
+            }],
         ];
     }
 

@@ -8,15 +8,15 @@ export interface CnaeDoProcesso {
 
 const CNAES_VISIVEIS = 3;
 
-/** Lista de CNAEs da linha: principal primeiro; acima de 3, o restante expande sob demanda. */
-export default function CnaesDoProcesso({ cnaes }: { cnaes: CnaeDoProcesso[] }) {
+/** Lista de CNAEs da linha: principal primeiro; acima de 3, o restante expande sob demanda (ou todos de uma vez, com `exibirTodos`). */
+export default function CnaesDoProcesso({ cnaes, exibirTodos = false }: { cnaes: CnaeDoProcesso[]; exibirTodos?: boolean }) {
     const [expandido, setExpandido] = useState(false);
 
     if (cnaes.length === 0) {
         return <span className="text-gray-400 dark:text-gray-500">—</span>;
     }
 
-    const excedente = cnaes.length - CNAES_VISIVEIS;
+    const excedente = exibirTodos ? 0 : cnaes.length - CNAES_VISIVEIS;
     const visiveis = expandido || excedente <= 0 ? cnaes : cnaes.slice(0, CNAES_VISIVEIS);
 
     return (

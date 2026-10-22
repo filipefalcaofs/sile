@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 interface ButtonProps {
     children: ReactNode;
     size?: 'xs' | 'sm' | 'md';
-    variant?: 'primary' | 'outline' | 'ghost' | 'danger' | 'destaque';
+    variant?: 'primary' | 'outline' | 'ghost' | 'danger' | 'destaque' | 'claro';
     type?: 'button' | 'submit' | 'reset';
     startIcon?: ReactNode;
     endIcon?: ReactNode;
@@ -70,6 +70,7 @@ export default function Button({
         ghost: 'text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:hover:bg-transparent focus-visible:outline-brand-500 dark:text-gray-200 dark:hover:bg-white/[0.05] dark:hover:text-white',
         danger: 'bg-error-500 text-white shadow-theme-xs hover:bg-error-600 disabled:bg-error-300 focus-visible:outline-error-500',
     destaque: 'bg-orange-500 text-white shadow-theme-xs hover:bg-orange-600 disabled:opacity-50 focus-visible:outline-orange-500',
+        claro: 'bg-brand-100 text-brand-600 hover:bg-brand-200 disabled:opacity-50 disabled:hover:bg-brand-100 focus-visible:outline-brand-500 dark:bg-brand-500/20 dark:text-brand-200 dark:hover:bg-brand-500/30',
     };
 
     const isDisabled = disabled || loading;

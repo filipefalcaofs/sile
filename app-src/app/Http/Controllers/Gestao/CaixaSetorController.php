@@ -10,7 +10,6 @@ use App\Http\Requests\Gestao\DistribuirProcessoRequest;
 use App\Models\Activity;
 use App\Models\User;
 use App\Models\ViabilityRequest;
-use App\Models\ViabilityServiceType;
 use App\Services\Analise\CargaAnalistaService;
 use App\Services\Analise\DistribuicaoException;
 use App\Services\Analise\DistribuicaoInteligenteService;
@@ -115,7 +114,7 @@ class CaixaSetorController extends Controller
         $processos = ($visao === 'para_conclusao' ? $baseConclusao : $base)
             ->when($visao === 'para_distribuir', fn ($query) => $foraDaConclusao($query->whereNull('assigned_user_id')))
             ->when($visao === 'distribuidos', fn ($query) => $distribuidos($query))
-            ->with(['company', 'serviceType:id,name', 'eventos', 'cnaes', 'sector:id,name', 'assignedTo:id,name', 'conclusaoEncaminhadaPara:id,name'])
+            ->with(['company', 'serviceType:id,name', 'eventos', 'cnaes', 'sector:id,name', 'assignedTo:id,name', 'conclusaoEncaminhadaPara:id,name', 'conclusaoIndicadaPara:id,name'])
             ->orderBy('analysis_due_at')
             ->orderBy('id')
             ->paginate($perPage)
@@ -158,6 +157,7 @@ class CaixaSetorController extends Controller
                 'assigned_user_id' => $processo->assigned_user_id,
                 'assigned_to' => $processo->assignedTo?->name,
                 'encaminhado_para' => $processo->conclusaoEncaminhadaPara?->name,
+                'indicado_para' => $processo->analysis_status === AnalysisStatus::ParaConclusao ? $processo->conclusaoIndicadaPara?->name : null,
                 'analysis_due_at' => $processo->analysis_due_at?->toIso8601String(),
                 // Redistribuir só antes da conclusão (regra única do enum).
                 'pode_redistribuir' => ($processo->assigned_user_id !== null || $processo->conclusao_encaminhada_para_user_id !== null)
@@ -761,14 +761,7 @@ class CaixaSetorController extends Controller
      */
     private function servicoOptions(): array
     {
-        $eventos = collect(app(ServicoNomenclaturaResolver::class)->opcoesDeEvento());
-
-        $tipos = ViabilityServiceType::query()
-            ->orderBy('name')
-            ->get(['id', 'name'])
-            ->map(fn ($servico): array => ['value' => (string) $servico->id, 'label' => $servico->name]);
-
-        return $eventos->concat($tipos)->values()->all();
+        return app(ServicoNomenclaturaResolver::class)->opcoesDoFiltro();
     }
 
     /**

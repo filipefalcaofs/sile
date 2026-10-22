@@ -55,6 +55,8 @@ class LocalizacaoInscricaoService
         $nome = is_string($nome) ? trim($nome) : '';
 
         $situacao = $resultado->cadastro?->situacao_cadastral;
+        $uso = $resultado->raw['Utilizacao'] ?? null;
+        $utilizacao = is_string($uso) && trim($uso) !== '' ? trim($uso) : null;
 
         $temPonto = $resultado->latitude !== null && $resultado->longitude !== null;
 
@@ -67,6 +69,7 @@ class LocalizacaoInscricaoService
                 logradouroTributario: $nome !== '' ? $nome : null,
                 origemPonto: PropertyLocationSource::CadastroImobiliario,
                 situacaoCadastral: $situacao,
+                utilizacao: $utilizacao,
             );
         }
 
@@ -82,6 +85,7 @@ class LocalizacaoInscricaoService
                 origemPonto: PropertyLocationSource::Geocodificacao,
                 geocode: $geocode,
                 situacaoCadastral: $situacao,
+                utilizacao: $utilizacao,
             );
         }
 
@@ -90,6 +94,7 @@ class LocalizacaoInscricaoService
             codLogTributario: $codLog !== '' ? $codLog : null,
             logradouroTributario: $nome !== '' ? $nome : null,
             situacaoCadastral: $situacao,
+            utilizacao: $utilizacao,
         );
     }
 

@@ -35,6 +35,7 @@ final readonly class LocalizacaoInscricao
         public ?PropertyLocationSource $origemPonto = null,
         public ?GeocodeResult $geocode = null,
         public ?string $situacaoCadastral = null,
+        public ?string $utilizacao = null,
     ) {}
 
     /**
@@ -47,6 +48,18 @@ final readonly class LocalizacaoInscricao
         $situacao = trim((string) $this->situacaoCadastral);
 
         return $situacao !== '' && ! in_array($situacao, self::SITUACOES_ATIVAS, true);
+    }
+
+    /**
+     * Uso do imóvel no Cadastro Imobiliário (campo Utilizacao): só "NÃO
+     * RESIDENCIAL ..." conta. Sem o dado, residencial ou misto, devolve false.
+     */
+    public function usoNaoResidencial(): bool
+    {
+        $uso = mb_strtolower(trim((string) $this->utilizacao));
+        $uso = strtr($uso, ['ã' => 'a', 'á' => 'a', 'â' => 'a']);
+
+        return str_starts_with($uso, 'nao residencial');
     }
 
     public function temPonto(): bool

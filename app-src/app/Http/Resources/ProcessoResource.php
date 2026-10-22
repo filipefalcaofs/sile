@@ -51,7 +51,10 @@ class ProcessoResource extends JsonResource
             'contingency_reason' => $this->contingency_reason,
             'motivo_da_analise' => $this->motivoDaAnalise(),
             'empresa' => $this->company?->trade_name ?: $this->company?->legal_name,
-            'cnpj' => $this->company?->formatted_cnpj,
+            // Empresa a constituir não tem CNPJ: o documento de 11 dígitos é o CPF de quem pediu.
+            'cnpj' => strlen((string) $this->company?->cnpj) === 14 ? $this->company?->formatted_cnpj : null,
+            'solicitante' => $this->solicitante_nome,
+            'solicitante_cpf' => $this->solicitanteCpfFormatado(),
             'cnaes' => $this->cnaesRotulo(),
             'cnaes_detalhe' => $this->cnaesDetalhe(),
             'imovel' => $this->enderecoResumo(),
@@ -266,6 +269,15 @@ class ProcessoResource extends JsonResource
             ])
             ->values()
             ->all();
+    }
+
+    private function solicitanteCpfFormatado(): ?string
+    {
+        $cpf = (string) $this->solicitante_cpf;
+
+        return strlen($cpf) === 11
+            ? substr($cpf, 0, 3).'.'.substr($cpf, 3, 3).'.'.substr($cpf, 6, 3).'-'.substr($cpf, 9, 2)
+            : null;
     }
 
     /**

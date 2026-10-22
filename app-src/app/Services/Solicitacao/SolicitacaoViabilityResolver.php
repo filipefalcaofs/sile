@@ -9,6 +9,7 @@ use App\Models\Cnae;
 use App\Models\ViabilityRequest;
 use App\Services\Geo\TerritoryResult;
 use App\Services\Geo\TerritoryService;
+use App\Services\Realty\LocalizacaoInscricaoService;
 use App\Services\Risco\TipoImovel;
 use App\Services\Risco\TipoImovelCatalog;
 use App\Services\Tratamento\CategoriaEmpresa;
@@ -52,7 +53,25 @@ class SolicitacaoViabilityResolver
     public function __construct(
         private ConsultaViabilidadeService $consulta,
         private TerritoryService $territory,
+        private LocalizacaoInscricaoService $localizacaoInscricao,
     ) {}
+
+    /**
+     * Resolve como se a zona e a via informadas valessem para o processo, sem gravar:
+     * a prévia da alteração manual mostra o que o motor decidiria.
+     */
+    public function resolveComTerritorioManual(ViabilityRequest $request, ?string $zona, ?string $via): ResolvedViability
+    {
+        $original = $request->only(['zona_manual', 'via_manual']);
+        $request->setAttribute('zona_manual', $zona);
+        $request->setAttribute('via_manual', $via);
+
+        try {
+            return $this->resolve($request);
+        } finally {
+            $request->setRawAttributes([...$request->getAttributes(), ...$original]);
+        }
+    }
 
     /**
      * Resolve a viabilidade da solicitação por CNAE e consolida o pior caso, sem
@@ -73,12 +92,15 @@ class SolicitacaoViabilityResolver
         $porCnae = [];
         $rulesVersions = [];
         $territorioDoPonto = $ponto !== null ? $this->territorioDoPonto($request, $ponto) : null;
+        $usoNaoResidencial = $territorioDoPonto !== null
+            ? $this->localizacaoInscricao->localizar($request->property_registration)->usoNaoResidencial()
+            : null;
 
         foreach ($this->orderedCnaes($request) as $cnae) {
             $respostas = $request->respostasDaPlanilha($cnae->code);
 
             $result = $territorioDoPonto !== null
-                ? $this->consulta->consultarComTerritorio($territorioDoPonto, $cnae->code, $area, $tipoImovel, $respostas, $categoriaEmpresa)
+                ? $this->consulta->consultarComTerritorio($territorioDoPonto, $cnae->code, $area, $tipoImovel, $respostas, $categoriaEmpresa, $usoNaoResidencial)
                 : $this->consulta->consultarPorCnae($cnae->code, $area, $tipoImovel, $respostas, $categoriaEmpresa);
 
             $veredito = $result->vereditoLocacional();
@@ -143,7 +165,11 @@ class SolicitacaoViabilityResolver
             );
         }
 
-        return $this->territory->comCodLogOficial($base, $request->cod_log);
+        return TerritorioManual::aplicar(
+            $this->territory->comCodLogOficial($base, $request->cod_log),
+            $request->zona_manual,
+            $request->via_manual,
+        );
     }
 
     /**

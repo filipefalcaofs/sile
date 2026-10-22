@@ -2,19 +2,13 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import ConclusaoAnaliseForm from './conclusao-analise-form';
+import ConclusaoAnaliseForm, { TIPO_DEFERIMENTO_OPCOES } from './conclusao-analise-form';
 
-describe('ConclusaoAnaliseForm — copiar parecer', () => {
+describe('ConclusaoAnaliseForm — importar parecer', () => {
     let root: Root;
     let host: HTMLDivElement;
-    const escrever = vi.fn().mockResolvedValue(undefined);
 
     (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
-
-    beforeEach(() => {
-        escrever.mockClear();
-        Object.defineProperty(navigator, 'clipboard', { value: { writeText: escrever }, configurable: true });
-    });
 
     afterEach(() => {
         act(() => {
@@ -23,7 +17,7 @@ describe('ConclusaoAnaliseForm — copiar parecer', () => {
         host.remove();
     });
 
-    function montar(propriedades: { parecer?: string; parecerDaFicha?: string | null }) {
+    function montar(propriedades: { parecer?: string; parecerDaFicha?: string | null; onParecer?: (valor: string) => void }) {
         host = document.createElement('div');
         document.body.appendChild(host);
         root = createRoot(host);
@@ -34,7 +28,7 @@ describe('ConclusaoAnaliseForm — copiar parecer', () => {
                     resultado=""
                     onResultado={() => undefined}
                     opcoes={[{ value: 'deferido', label: 'Deferido' }]}
-                    onParecer={() => undefined}
+                    onParecer={propriedades.onParecer ?? (() => undefined)}
                     onConfirm={() => undefined}
                     {...propriedades}
                 />,
@@ -42,40 +36,41 @@ describe('ConclusaoAnaliseForm — copiar parecer', () => {
         });
     }
 
-    function botaoCopiar(): HTMLButtonElement {
-        const botao = Array.from(host.querySelectorAll('button')).find((item) => item.textContent?.includes('Copiar parecer'));
+    function botaoImportar(): HTMLButtonElement {
+        const botao = Array.from(host.querySelectorAll('button')).find((item) => item.textContent?.includes('Importar parecer'));
 
         if (!botao) {
-            throw new Error('botão Copiar parecer não encontrado');
+            throw new Error('botão Importar parecer não encontrado');
         }
 
         return botao as HTMLButtonElement;
     }
 
-    it('copia o parecer registrado na ficha de análise', async () => {
+    it('importa o parecer registrado na ficha de análise para o campo', () => {
+        const aoMudar = vi.fn();
+        montar({ parecer: '', parecerDaFicha: 'Parecer técnico da ficha.', onParecer: aoMudar });
+
+        act(() => {
+            botaoImportar().click();
+        });
+
+        expect(aoMudar).toHaveBeenCalledWith('Parecer técnico da ficha.');
+    });
+
+    it('confirma a importação no próprio botão', () => {
         montar({ parecer: '', parecerDaFicha: 'Parecer técnico da ficha.' });
 
-        await act(async () => {
-            botaoCopiar().click();
+        act(() => {
+            botaoImportar().click();
         });
 
-        expect(escrever).toHaveBeenCalledWith('Parecer técnico da ficha.');
+        expect(host.textContent).toContain('Importado!');
     });
 
-    it('sem parecer na ficha, copia o texto digitado na conclusão', async () => {
-        montar({ parecer: 'Texto digitado agora.', parecerDaFicha: null });
+    it('fica desabilitado quando a ficha não tem parecer', () => {
+        montar({ parecer: 'Texto digitado agora.', parecerDaFicha: '   ' });
 
-        await act(async () => {
-            botaoCopiar().click();
-        });
-
-        expect(escrever).toHaveBeenCalledWith('Texto digitado agora.');
-    });
-
-    it('fica desabilitado quando não há nada para copiar', () => {
-        montar({ parecer: '', parecerDaFicha: '   ' });
-
-        expect(botaoCopiar().disabled).toBe(true);
+        expect(botaoImportar().disabled).toBe(true);
     });
 });
 
@@ -92,7 +87,7 @@ describe('ConclusaoAnaliseForm — tipo do deferimento e validade', () => {
         host.remove();
     });
 
-    function montar(propriedades: { resultado: string; tipo?: string; validadeMeses?: string; semTipo?: boolean }) {
+    function montar(propriedades: { resultado: string; tipo?: string; validadeMeses?: string; validadeData?: string; semTipo?: boolean }) {
         host = document.createElement('div');
         document.body.appendChild(host);
         root = createRoot(host);
@@ -110,6 +105,8 @@ describe('ConclusaoAnaliseForm — tipo do deferimento e validade', () => {
                     onTipo={propriedades.semTipo ? undefined : () => undefined}
                     validadeMeses={propriedades.validadeMeses ?? ''}
                     onValidadeMeses={() => undefined}
+                    validadeData={propriedades.validadeData ?? ''}
+                    onValidadeData={() => undefined}
                     onConfirm={() => undefined}
                 />,
             );
@@ -150,6 +147,27 @@ describe('ConclusaoAnaliseForm — tipo do deferimento e validade', () => {
         montar({ resultado: 'deferido', tipo: 'provisoria', validadeMeses: '' });
 
         expect(botaoConcluir().disabled).toBe(true);
+    });
+
+    it('chama o tipo sem validade de Definitivo', () => {
+        expect(TIPO_DEFERIMENTO_OPCOES.find((opcao) => opcao.value === 'definitiva')?.label).toBe('Definitivo');
+    });
+
+    it('Personalizado pede a data e só libera concluir com ela preenchida', () => {
+        montar({ resultado: 'deferido', tipo: 'provisoria', validadeMeses: 'personalizado', validadeData: '' });
+        expect(host.querySelector('#validade-data-deferimento')).not.toBeNull();
+        expect(botaoConcluir().disabled).toBe(true);
+        act(() => root.unmount());
+        host.remove();
+
+        montar({ resultado: 'deferido', tipo: 'provisoria', validadeMeses: 'personalizado', validadeData: '2027-03-15' });
+        expect(botaoConcluir().disabled).toBe(false);
+    });
+
+    it('sem Personalizado a data não aparece', () => {
+        montar({ resultado: 'deferido', tipo: 'provisoria', validadeMeses: '12' });
+
+        expect(host.querySelector('#validade-data-deferimento')).toBeNull();
     });
 
     it('sem onTipo não mostra os campos (renovação)', () => {

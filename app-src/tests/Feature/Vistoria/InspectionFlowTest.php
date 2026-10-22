@@ -313,6 +313,57 @@ class InspectionFlowTest extends TestCase
         Storage::disk('local')->assertExists($anexo->path);
     }
 
+    public function test_upload_de_varios_anexos_de_uma_vez_persiste_todos(): void
+    {
+        Storage::fake('local');
+
+        $vistoriador = $this->vistoriador();
+        $processo = $this->processo($vistoriador);
+
+        $this->actingAs($vistoriador, 'gestao')->get("/gestao/processos/{$processo->id}/vistoria");
+
+        $this->actingAs($vistoriador, 'gestao')
+            ->post("/gestao/processos/{$processo->id}/vistoria/anexos", [
+                'files' => [
+                    UploadedFile::fake()->image('fachada.jpg', 800, 600),
+                    UploadedFile::fake()->image('interior.png', 800, 600),
+                    UploadedFile::fake()->create('laudo.pdf', 100, 'application/pdf'),
+                ],
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('status', '3 anexos enviados com sucesso.');
+
+        $this->assertEqualsCanonicalizing(
+            ['fachada.jpg', 'interior.png', 'laudo.pdf'],
+            InspectionAttachment::query()->pluck('original_name')->all(),
+        );
+
+        foreach (InspectionAttachment::query()->get() as $anexo) {
+            Storage::disk('local')->assertExists($anexo->path);
+        }
+    }
+
+    public function test_um_arquivo_invalido_entre_varios_nao_grava_nenhum(): void
+    {
+        Storage::fake('local');
+
+        $vistoriador = $this->vistoriador();
+        $processo = $this->processo($vistoriador);
+
+        $this->actingAs($vistoriador, 'gestao')->get("/gestao/processos/{$processo->id}/vistoria");
+
+        $this->actingAs($vistoriador, 'gestao')
+            ->post("/gestao/processos/{$processo->id}/vistoria/anexos", [
+                'files' => [
+                    UploadedFile::fake()->image('fachada.jpg'),
+                    UploadedFile::fake()->create('planilha.xlsx', 10, 'application/vnd.ms-excel'),
+                ],
+            ])
+            ->assertSessionHasErrors('files.1');
+
+        $this->assertSame(0, InspectionAttachment::query()->count());
+    }
+
     public function test_remover_anexo_exclui_arquivo_e_registro(): void
     {
         Storage::fake('local');

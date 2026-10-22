@@ -65,6 +65,7 @@ class LouosConsolidacaoTest extends TestCase
             territory: $territory,
             respostas: [11 => true],
             vagasDeclaradas: $extra['vagasDeclaradas'] ?? [],
+            usoNaoResidencial: $extra['usoNaoResidencial'] ?? null,
         );
     }
 
@@ -421,6 +422,62 @@ class LouosConsolidacaoTest extends TestCase
 
         $this->assertSame(ResultadoViabilidade::NaoPermitido->value, $result->resultado());
         $this->assertNull($this->condicionantePorTipo($result->consolidado['condicionantes'], 'via'));
+    }
+
+    public function test_uso_nao_residencial_em_via_local_nas_zonas_de_centralidade_nao_indefere_pela_via(): void
+    {
+        $this->seedTratamento();
+        $this->seedQuadro10('ZCMe', 'nR1', Quadro10Permissao::Permitido);
+        $this->seedQuadro11a('VL', 'nR1', ['Não']);
+
+        $result = $this->service()->enquadrar($this->inputMinimercado(
+            $this->territorio($this->zonaIdentificada('ZCMe'), null, $this->viaIdentificada('VL')),
+            ['usoNaoResidencial' => true],
+        ));
+
+        $this->assertSame(ResultadoViabilidade::Permitido->value, $result->resultado());
+    }
+
+    public function test_sem_uso_nao_residencial_a_via_local_continua_indeferindo_nas_zonas_de_centralidade(): void
+    {
+        $this->seedTratamento();
+        $this->seedQuadro10('ZCMe', 'nR1', Quadro10Permissao::Permitido);
+        $this->seedQuadro11a('VL', 'nR1', ['Não']);
+
+        $result = $this->service()->enquadrar($this->inputMinimercado(
+            $this->territorio($this->zonaIdentificada('ZCMe'), null, $this->viaIdentificada('VL')),
+            ['usoNaoResidencial' => false],
+        ));
+
+        $this->assertSame(ResultadoViabilidade::NaoPermitido->value, $result->resultado());
+    }
+
+    public function test_uso_nao_residencial_fora_das_zonas_de_centralidade_continua_indeferindo_pela_via(): void
+    {
+        $this->seedTratamento();
+        $this->seedQuadro10('ZR-1', 'nR1', Quadro10Permissao::Permitido);
+        $this->seedQuadro11a('VL', 'nR1', ['Não']);
+
+        $result = $this->service()->enquadrar($this->inputMinimercado(
+            $this->territorio($this->zonaIdentificada('ZR-1'), null, $this->viaIdentificada('VL')),
+            ['usoNaoResidencial' => true],
+        ));
+
+        $this->assertSame(ResultadoViabilidade::NaoPermitido->value, $result->resultado());
+    }
+
+    public function test_zona_de_centralidade_nao_libera_atividade_proibida_na_zona(): void
+    {
+        $this->seedTratamento();
+        $this->seedQuadro10('ZCMe', 'nR1', Quadro10Permissao::Proibido);
+        $this->seedQuadro11a('VL', 'nR1', ['Sim']);
+
+        $result = $this->service()->enquadrar($this->inputMinimercado(
+            $this->territorio($this->zonaIdentificada('ZCMe'), null, $this->viaIdentificada('VL')),
+            ['usoNaoResidencial' => true],
+        ));
+
+        $this->assertSame(ResultadoViabilidade::NaoPermitido->value, $result->resultado());
     }
 
     public function test_quadro11a_r_consolida_pendente(): void

@@ -5,6 +5,7 @@ namespace App\Services\Servicos;
 use App\Models\ServicoNomenclatura;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityRequestEvento;
+use App\Models\ViabilityServiceType;
 use App\Services\Analise\ProcessoQueryService;
 use Illuminate\Support\Collection;
 
@@ -61,6 +62,7 @@ class ServicoNomenclaturaResolver
     public function opcoesDeEvento(): array
     {
         return $this->eventosPorNome()
+            ->reject(fn (array $grupo): bool => $this->ocultoNoFiltro($grupo['label']))
             ->map(fn (array $grupo, string $chave): array => [
                 'value' => ProcessoQueryService::PREFIXO_NOME_SERVICO.$chave,
                 'label' => $grupo['label'],
@@ -68,6 +70,42 @@ class ServicoNomenclaturaResolver
             ->sortBy('label', SORT_NATURAL | SORT_FLAG_CASE)
             ->values()
             ->all();
+    }
+
+    /**
+     * Opções do filtro "Serviço" por tipo de serviço interno, sem os nomes que
+     * a SEDUR retirou da lista.
+     *
+     * @return list<array{value: string, label: string}>
+     */
+    public function opcoesDeTipo(): array
+    {
+        return ViabilityServiceType::query()
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->reject(fn (ViabilityServiceType $tipo): bool => $this->ocultoNoFiltro($tipo->name))
+            ->map(fn (ViabilityServiceType $tipo): array => ['value' => (string) $tipo->id, 'label' => $tipo->name])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Opções do filtro "Serviço": as de evento da JUCEB e, depois, as de tipo interno.
+     *
+     * @return list<array{value: string, label: string}>
+     */
+    public function opcoesDoFiltro(): array
+    {
+        return [...$this->opcoesDeEvento(), ...$this->opcoesDeTipo()];
+    }
+
+    private function ocultoNoFiltro(string $nome): bool
+    {
+        return in_array(
+            ServicoNomenclatura::chaveDe($nome),
+            array_map(ServicoNomenclatura::chaveDe(...), ServicoNomenclatura::NOMES_OCULTOS_NO_FILTRO),
+            true,
+        );
     }
 
     /**

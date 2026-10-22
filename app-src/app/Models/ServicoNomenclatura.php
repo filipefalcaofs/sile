@@ -29,6 +29,17 @@ class ServicoNomenclatura extends Model
 
     protected $table = 'servico_nomenclaturas';
 
+    /** Serviços que a SEDUR retirou das opções do filtro "Serviço". */
+    public const NOMES_OCULTOS_NO_FILTRO = [
+        'Alteração da forma de atuação',
+        'Alteração da natureza jurídica / Conversão',
+        'Alteração do nome empresarial (firma ou denominação)',
+        'Alteração do tipo de unidade',
+        'Alteração de atividade',
+        'Alteração de endereço',
+        'Viabilidade — primeiro estabelecimento',
+    ];
+
     /**
      * @return array<string, string>
      */

@@ -126,6 +126,8 @@ export interface ProcessoItem {
     contingency_reason: string | null;
     empresa: string | null;
     cnpj: string | null;
+    solicitante?: string | null;
+    solicitante_cpf?: string | null;
     /** Códigos separados por vírgula, com papel quando o vínculo gravou is_primary. */
     cnaes?: string | null;
     cnaes_detalhe?: { codigo: string; descricao: string; principal: boolean }[];

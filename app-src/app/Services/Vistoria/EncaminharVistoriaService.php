@@ -98,17 +98,16 @@ class EncaminharVistoriaService
     }
 
     /**
-     * Análise ainda aberta: o processo pode ir à vistoria sem o analista
-     * percorrer para_distribuir → encaminhado → analisar → em_analise.
+     * O processo pode ir à vistoria em qualquer momento da análise, inclusive
+     * em Para conclusão. Ficam de fora a análise já concluída, o convite
+     * expirado e o processo que já está na vistoria.
      */
     private function eixoAbertoParaVistoria(?AnalysisStatus $status): bool
     {
-        return in_array($status, [
-            null,
-            AnalysisStatus::ParaDistribuir,
-            AnalysisStatus::Encaminhado,
-            AnalysisStatus::Analisar,
-            AnalysisStatus::EmAnalise,
+        return ! in_array($status, [
+            AnalysisStatus::AnaliseConcluida,
+            AnalysisStatus::ConviteExpirado,
+            AnalysisStatus::Vistoriar,
         ], true);
     }
 

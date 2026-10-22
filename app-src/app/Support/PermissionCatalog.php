@@ -122,6 +122,12 @@ final class PermissionCatalog
                 'group' => 'Análise técnica',
             ],
             [
+                'name' => 'editar-zona-via',
+                'label' => 'Editar zona e via do imóvel',
+                'description' => 'Escolhe a zona e a via do imóvel na ficha de análise, com justificativa, e recalcula o enquadramento e a decisão do motor.',
+                'group' => 'Análise técnica',
+            ],
+            [
                 'name' => 'receber-escalonamento-sla',
                 'label' => 'Receber escalonamentos de prazo e alertas de TLL',
                 'description' => 'Recebe os avisos de processo com prazo de análise vencido e de exercício sem tabela TLL vigente.',

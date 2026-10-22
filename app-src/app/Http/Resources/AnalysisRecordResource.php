@@ -41,7 +41,7 @@ class AnalysisRecordResource extends JsonResource
             'revision' => $this->revision,
             'status' => $this->status->value,
             'status_label' => $this->status->label(),
-            'editavel' => ! $this->isFinalizada(),
+            'editavel' => ! $this->isFinalizada() && ! $this->somenteLeitura,
             'engine_available' => $this->engine_available,
             'per_cnae' => $this->perCnaeComJustificativaDoMotor(),
             'conditions' => array_values((array) ($this->conditions ?? [])),

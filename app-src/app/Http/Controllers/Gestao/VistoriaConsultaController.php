@@ -7,7 +7,6 @@ use App\Enums\InspectionStatus;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\ViabilityRequest;
-use App\Models\ViabilityServiceType;
 use App\Services\Analise\DistribuicaoService;
 use App\Services\Analise\ProcessoQueryService;
 use App\Services\Servicos\ServicoNomenclaturaResolver;
@@ -294,14 +293,7 @@ class VistoriaConsultaController extends Controller
      */
     private function servicoOptions(): array
     {
-        $eventos = collect(app(ServicoNomenclaturaResolver::class)->opcoesDeEvento());
-
-        $tipos = ViabilityServiceType::query()
-            ->orderBy('name')
-            ->get(['id', 'name'])
-            ->map(fn ($servico): array => ['value' => (string) $servico->id, 'label' => $servico->name]);
-
-        return $eventos->concat($tipos)->values()->all();
+        return app(ServicoNomenclaturaResolver::class)->opcoesDoFiltro();
     }
 
     /**

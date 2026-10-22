@@ -127,6 +127,9 @@ class VistoriaEncaminhamentoTest extends TestCase
             'encaminhado' => [AnalysisStatus::Encaminhado],
             'analisar' => [AnalysisStatus::Analisar],
             'em análise' => [AnalysisStatus::EmAnalise],
+            'para conclusão' => [AnalysisStatus::ParaConclusao],
+            'convite respondido' => [AnalysisStatus::ConviteRespondido],
+            'vistoriado' => [AnalysisStatus::Vistoriado],
         ];
     }
 
