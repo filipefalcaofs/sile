@@ -45,6 +45,7 @@ interface ProcessoItem {
   assigned_user_id: number | null;
   assigned_to: string | null;
   encaminhado_para: string | null;
+  indicado_para: string | null;
   analysis_due_at: string | null;
   pode_redistribuir: boolean;
 }
@@ -379,10 +380,10 @@ export default function CaixaSetorIndex({
     ...(visao === "para_conclusao"
       ? [
           {
-            id: "encaminhado_para",
-            header: "Encaminhado para",
+            id: "indicado_para",
+            header: "Indicado para",
             cellClassName: "whitespace-nowrap",
-            cell: (item: ProcessoItem) => item.encaminhado_para ?? "",
+            cell: (item: ProcessoItem) => item.indicado_para ?? "",
           },
         ]
       : []),

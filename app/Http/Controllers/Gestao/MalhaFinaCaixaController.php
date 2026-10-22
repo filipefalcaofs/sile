@@ -7,8 +7,8 @@ use App\Enums\ConclusionOutcome;
 use App\Http\Controllers\Controller;
 use App\Models\FineMeshReferral;
 use App\Models\ViabilityRequest;
-use App\Models\ViabilityServiceType;
 use App\Services\Analise\ProcessoQueryService;
+use App\Services\Servicos\ServicoNomenclaturaResolver;
 use App\Support\Audit\AuditService;
 use App\Support\Settings;
 use Illuminate\Database\Eloquent\Builder;
@@ -170,11 +170,7 @@ class MalhaFinaCaixaController extends Controller
      */
     private function servicoOptions(): array
     {
-        return ViabilityServiceType::query()
-            ->orderBy('name')
-            ->get(['id', 'name'])
-            ->map(fn ($servico): array => ['value' => (string) $servico->id, 'label' => $servico->name])
-            ->all();
+        return app(ServicoNomenclaturaResolver::class)->opcoesDeTipo();
     }
 
     /**

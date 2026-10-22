@@ -13,7 +13,6 @@ use App\Models\Activity;
 use App\Models\Sector;
 use App\Models\User;
 use App\Models\ViabilityRequest;
-use App\Models\ViabilityServiceType;
 use App\Services\Analise\AnalysisStatusStateMachine;
 use App\Services\Analise\InvalidAnalysisStatusTransitionException;
 use App\Services\Analise\ProcessoQueryService;
@@ -26,6 +25,7 @@ use App\Services\Relatorios\Export\ReportExporter;
 use App\Services\Relatorios\Export\Sources\ProcessosReportSource;
 use App\Services\Relatorios\PainelOperacaoService;
 use App\Services\Relatorios\ReportFilters;
+use App\Services\Servicos\ServicoNomenclaturaResolver;
 use App\Services\Vistoria\VistoriaAcesso;
 use App\Support\Audit\AuditService;
 use App\Support\ParecerDecisao;
@@ -420,7 +420,17 @@ class ProcessoController extends Controller
         // Para conclusão vai sempre para a aba da Caixa do setor: quem recebe é
         // definido na distribuição pelo Apoio.
         if ($to === AnalysisStatus::ParaConclusao) {
-            $viabilityRequest->forceFill(['conclusao_encaminhada_para_user_id' => null]);
+            $viabilityRequest->forceFill([
+                'conclusao_encaminhada_para_user_id' => null,
+                'conclusao_indicada_para_user_id' => $request->integer('indicado_user_id') ?: null,
+            ]);
+        }
+
+        $motivo = $request->string('motivo')->toString() ?: null;
+
+        if ($to === AnalysisStatus::ParaConclusao && $motivo === null && $request->integer('indicado_user_id') > 0) {
+            $indicado = User::query()->find($request->integer('indicado_user_id'));
+            $motivo = $indicado !== null ? "Indicado para concluir: {$indicado->name}" : null;
         }
 
         try {
@@ -428,7 +438,7 @@ class ProcessoController extends Controller
                 $viabilityRequest,
                 $to,
                 $request->user(),
-                $request->string('motivo')->toString() ?: null,
+                $motivo,
                 force: $force,
             );
         } catch (InvalidAnalysisStatusTransitionException $e) {
@@ -570,10 +580,6 @@ class ProcessoController extends Controller
      */
     private function servicoOptions(): array
     {
-        return ViabilityServiceType::query()
-            ->orderBy('name')
-            ->get(['id', 'name'])
-            ->map(fn ($servico): array => ['value' => (string) $servico->id, 'label' => $servico->name])
-            ->all();
+        return app(ServicoNomenclaturaResolver::class)->opcoesDeTipo();
     }
 }

@@ -242,6 +242,37 @@ class CaixaSetorTest extends TestCase
         $this->assertTrue(collect(array_slice($opcoes, 1))->every(fn (array $opcao): bool => ctype_digit($opcao['value'])));
     }
 
+    public function test_opcoes_do_filtro_de_servico_omitem_os_servicos_retirados_pela_sedur(): void
+    {
+        $setor = Sector::factory()->create();
+        $apoio = $this->apoioDoSetor($setor);
+        $retirados = [
+            'Alteração da forma de atuação',
+            'Alteração da natureza jurídica / Conversão',
+            'Alteração do nome empresarial (firma ou denominação)',
+            'Alteração do tipo de unidade',
+            'Alteração de atividade',
+            'Alteração de endereço',
+            'Viabilidade — primeiro estabelecimento',
+        ];
+
+        foreach ($retirados as $indice => $nome) {
+            $processo = $this->processoNaCaixa($setor);
+            ViabilityRequestEvento::factory()->create(['viability_request_id' => $processo->id, 'codigo' => (string) (900 + $indice), 'nome' => $nome]);
+            ViabilityServiceType::factory()->create(['name' => $nome]);
+        }
+
+        $mantido = $this->processoNaCaixa($setor);
+        ViabilityRequestEvento::factory()->create(['viability_request_id' => $mantido->id, 'codigo' => '950', 'nome' => 'Regularização de Viabilidade de Localização']);
+
+        $rotulos = collect($this->actingAs($apoio, 'gestao')
+            ->get('/gestao/caixa-setor')
+            ->viewData('page')['props']['servicoOptions'])->pluck('label')->all();
+
+        $this->assertSame([], array_values(array_intersect($retirados, $rotulos)));
+        $this->assertContains('Regularização de Viabilidade de Localização', $rotulos);
+    }
+
     public function test_index_lista_ordenada_por_prazo(): void
     {
         $setor = Sector::factory()->create();

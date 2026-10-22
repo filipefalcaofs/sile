@@ -10,7 +10,6 @@ use App\Http\Resources\DecisionExplanationResource;
 use App\Http\Resources\ViabilityDecisionResource;
 use App\Models\Activity;
 use App\Models\ViabilityRequest;
-use App\Models\ViabilityServiceType;
 use App\Services\Analise\ProcessoQueryService;
 use App\Services\Auditoria\DecisionExplanationService;
 use App\Services\Servicos\ServicoNomenclaturaResolver;
@@ -194,14 +193,7 @@ class ResultadoExpressoController extends Controller
      */
     private function servicoOptions(): array
     {
-        $eventos = collect(app(ServicoNomenclaturaResolver::class)->opcoesDeEvento());
-
-        $tipos = ViabilityServiceType::query()
-            ->orderBy('name')
-            ->get(['id', 'name'])
-            ->map(fn ($servico): array => ['value' => (string) $servico->id, 'label' => $servico->name]);
-
-        return $eventos->concat($tipos)->values()->all();
+        return app(ServicoNomenclaturaResolver::class)->opcoesDoFiltro();
     }
 
     /**
