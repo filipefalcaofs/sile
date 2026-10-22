@@ -46,6 +46,7 @@ use App\Http\Controllers\Gestao\LouosDraftController;
 use App\Http\Controllers\Gestao\LouosSandboxController;
 use App\Http\Controllers\Gestao\MalhaFinaCaixaController;
 use App\Http\Controllers\Gestao\MalhaFinaController;
+use App\Http\Controllers\Gestao\MapaDecisaoController;
 use App\Http\Controllers\Gestao\MetadataController;
 use App\Http\Controllers\Gestao\ParameterController;
 use App\Http\Controllers\Gestao\PrecedenteController;
@@ -691,6 +692,12 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
 
             Route::get('{viabilityRequest}', [ProcessoController::class, 'show'])->name('show');
         });
+
+        // Camadas do mapa que justificam zona e via do processo: só leitura, para
+        // quem consulta o processo, analisa ou vistoria (as mesmas telas do mapa).
+        Route::middleware('permission:consultar-solicitacoes|analisar-processos|preencher-ficha-vistoria|distribuir-processos')
+            ->get('processos/{viabilityRequest}/mapa-decisao', MapaDecisaoController::class)
+            ->name('processos.mapa-decisao');
 
         // Caixa do setor (HU-076/077): a fila da distribuição da análise técnica.
         // Veem a caixa quem ANALISA (analisar-processos) e quem TRAMITA

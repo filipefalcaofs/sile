@@ -17,6 +17,7 @@ import { sugerirCondicionantes } from '@/pages/gestao/ficha-analise/sugestoes-co
 import PageHeader from '@/components/app/page-header';
 import CamadasImovelLista, { type CamadasImovel } from '@/components/geo/camadas-imovel';
 import { centroDaGeometria, ESTILO_ENDERECAMENTO } from '@/components/geo/geometria';
+import { MapaDecisaoSection } from '@/components/geo/mapa-decisao-section';
 import { MapaSection } from '@/components/geo/mapa-section';
 import Checkbox from '@/components/form/checkbox';
 import Input from '@/components/form/input';
@@ -1648,13 +1649,18 @@ export default function FichaAnaliseShow({
                         <CardContent>
                             {temPoligono && centro ? (
                                 <>
-                                    <MapaSection
-                                        lat={centro.lat}
-                                        lng={centro.lng}
-                                        zoom={17}
-                                        draggable={false}
-                                        enquadrar
-                                        camadas={camadasDoMapa}
+                                    <MapaDecisaoSection
+                                        url={`/gestao/processos/${processo.id}/mapa-decisao`}
+                                        fallback={
+                                            <MapaSection
+                                                lat={centro.lat}
+                                                lng={centro.lng}
+                                                zoom={17}
+                                                draggable={false}
+                                                enquadrar
+                                                camadas={camadasDoMapa}
+                                            />
+                                        }
                                     />
                                     {localizacao?.poligono_enderecamento ? (
                                         <p className="mt-3 text-theme-xs text-gray-500 dark:text-gray-400">
@@ -1662,7 +1668,7 @@ export default function FichaAnaliseShow({
                                         </p>
                                     ) : null}
                                     <p className="mt-3 text-theme-xs text-gray-500 dark:text-gray-400">
-                                        Mapa &copy; OpenStreetMap (ODbL).
+                                        Mapa &copy; OpenStreetMap (ODbL) ou Esri.
                                     </p>
                                 </>
                             ) : (
