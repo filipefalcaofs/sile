@@ -113,7 +113,7 @@ export default function MalhaFinaIndex({
 }: MalhaFinaIndexProps) {
     const linhas = Array.isArray(processos?.data) ? processos.data : [];
     const [concluindo, setConcluindo] = useState<MalhaFinaItem | null>(null);
-    const conclusao = useForm({ resultado: '', observacao: '', tipo: '', validade_meses: '' });
+    const conclusao = useForm({ resultado: '', observacao: '', tipo: '', validade_meses: '', validade_data: '' });
 
     const { aba, per_page: _perPage, ...filtrosDeCampo } = filtros;
 
@@ -361,7 +361,7 @@ export default function MalhaFinaIndex({
                             conclusao.setData((dados) => ({
                                 ...dados,
                                 resultado: valor,
-                                ...(valor !== 'deferido' ? { tipo: '', validade_meses: '' } : {}),
+                                ...(valor !== 'deferido' ? { tipo: '', validade_meses: '', validade_data: '' } : {}),
                             }))
                         }
                         opcoes={conclusaoOpcoes}
@@ -373,11 +373,14 @@ export default function MalhaFinaIndex({
                                       conclusao.setData((dados) => ({
                                           ...dados,
                                           tipo: valor,
-                                          ...(valor === 'definitiva' ? { validade_meses: '' } : {}),
+                                          ...(valor === 'definitiva' ? { validade_meses: '', validade_data: '' } : {}),
                                       }))
                         }
                         validadeMeses={conclusao.data.validade_meses}
                         onValidadeMeses={(valor) => conclusao.setData('validade_meses', valor)}
+                        validadeData={conclusao.data.validade_data}
+                        onValidadeData={(valor) => conclusao.setData('validade_data', valor)}
+                        erroValidadeData={(conclusao.errors as Record<string, string | undefined>).validade_data ?? null}
                         erroTipo={(conclusao.errors as Record<string, string | undefined>).tipo ?? null}
                         erroValidade={(conclusao.errors as Record<string, string | undefined>).validade_meses ?? null}
                         parecerId="concluir-observacao"

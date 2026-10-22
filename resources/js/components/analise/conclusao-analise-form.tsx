@@ -4,6 +4,7 @@ import FieldError from '@/components/form/field-error';
 import Label from '@/components/form/label';
 import Select from '@/components/form/select';
 import Textarea from '@/components/form/textarea';
+import IsoDateInput from '@/components/form/iso-date-input';
 import Button from '@/components/ui/button';
 
 export interface ConclusaoOpcao {
@@ -13,7 +14,7 @@ export interface ConclusaoOpcao {
 
 /** Tipo do deferimento (SEDUR 20/10/2026): o valor é o tipo de validade gravado na decisão. */
 export const TIPO_DEFERIMENTO_OPCOES: ConclusaoOpcao[] = [
-    { value: 'definitiva', label: 'Deferido' },
+    { value: 'definitiva', label: 'Definitivo' },
     { value: 'provisoria', label: 'Provisório' },
     { value: 'pre_operacional', label: 'Pré-operacional' },
 ];
@@ -22,6 +23,7 @@ export const VALIDADE_OPCOES: ConclusaoOpcao[] = [
     { value: '6', label: '6 meses' },
     { value: '12', label: '1 ano' },
     { value: '24', label: '2 anos' },
+    { value: 'personalizado', label: 'Personalizado' },
 ];
 
 const TIPOS_COM_VALIDADE = ['provisoria', 'pre_operacional'];
@@ -35,7 +37,7 @@ interface ConclusaoAnaliseFormProps {
     parecer?: string;
     onParecer?: (valor: string) => void;
     parecerLabel?: string;
-    /** Parecer registrado na ficha de análise: é o texto que o botão "Copiar parecer" leva para a área de transferência. */
+    /** Parecer registrado na ficha de análise: é o texto que o botão "Importar parecer" coloca no campo. */
     parecerDaFicha?: string | null;
     erro?: string | null;
     /** Resultado contradiz a ficha: mostra o aviso e o botão para confirmar mesmo assim. */
@@ -50,30 +52,12 @@ interface ConclusaoAnaliseFormProps {
     onTipo?: (valor: string) => void;
     validadeMeses?: string;
     onValidadeMeses?: (valor: string) => void;
+    /** Data da validade (AAAA-MM-DD), pedida quando a validade é "Personalizado". */
+    validadeData?: string;
+    onValidadeData?: (valor: string) => void;
+    erroValidadeData?: string | null;
     erroTipo?: string | null;
     erroValidade?: string | null;
-}
-
-export async function copiarTexto(texto: string): Promise<void> {
-    if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(texto);
-
-        return;
-    }
-
-    const campo = document.createElement('textarea');
-    campo.value = texto;
-    campo.setAttribute('readonly', '');
-    campo.style.position = 'fixed';
-    campo.style.left = '-9999px';
-    document.body.appendChild(campo);
-    campo.select();
-    const copiou = document.execCommand('copy');
-    document.body.removeChild(campo);
-
-    if (!copiou) {
-        throw new Error('copia');
-    }
 }
 
 /** Resultado e parecer da conclusão de análise, nas três telas que decidem o processo. */
@@ -98,28 +82,27 @@ export default function ConclusaoAnaliseForm({
     onTipo,
     validadeMeses = '',
     onValidadeMeses,
+    validadeData = '',
+    onValidadeData,
+    erroValidadeData = null,
     erroTipo = null,
     erroValidade = null,
 }: ConclusaoAnaliseFormProps) {
     const pedeTipo = onTipo !== undefined && resultado === 'deferido';
     const pedeValidade = pedeTipo && TIPOS_COM_VALIDADE.includes(tipo);
-    const faltaCampo = (pedeTipo && tipo === '') || (pedeValidade && validadeMeses === '');
+    const validadePersonalizada = pedeValidade && validadeMeses === 'personalizado' && onValidadeData !== undefined;
+    const faltaCampo =
+        (pedeTipo && tipo === '') ||
+        (pedeValidade && validadeMeses === '') ||
+        (validadePersonalizada && validadeData === '');
 
-    const [copiado, setCopiado] = useState(false);
-    const [erroCopia, setErroCopia] = useState(false);
-    const textoParaCopiar = (parecerDaFicha ?? '').trim() !== '' ? (parecerDaFicha ?? '') : parecer;
+    const [importado, setImportado] = useState(false);
+    const textoDaFicha = (parecerDaFicha ?? '').trim();
 
-    async function copiarParecer() {
-        setErroCopia(false);
-
-        try {
-            await copiarTexto(textoParaCopiar);
-            setCopiado(true);
-            window.setTimeout(() => setCopiado(false), 2500);
-        } catch {
-            setCopiado(false);
-            setErroCopia(true);
-        }
+    function importarParecer() {
+        onParecer?.(textoDaFicha);
+        setImportado(true);
+        window.setTimeout(() => setImportado(false), 2500);
     }
 
     return (
@@ -161,9 +144,23 @@ export default function ConclusaoAnaliseForm({
                         value={validadeMeses}
                         onChange={(valor) => onValidadeMeses?.(valor)}
                         placeholder="Selecione a validade"
-                        options={VALIDADE_OPCOES}
+                        options={onValidadeData ? VALIDADE_OPCOES : VALIDADE_OPCOES.filter((opcao) => opcao.value !== 'personalizado')}
                     />
                     {erroValidade && <FieldError>{erroValidade}</FieldError>}
+                </div>
+            )}
+            {validadePersonalizada && (
+                <div>
+                    <Label htmlFor="validade-data-deferimento" required>
+                        Data
+                    </Label>
+                    <IsoDateInput
+                        id="validade-data-deferimento"
+                        value={validadeData}
+                        onChange={(iso) => onValidadeData?.(iso)}
+                        placeholder="dd/mm/aaaa"
+                    />
+                    {erroValidadeData && <FieldError>{erroValidadeData}</FieldError>}
                 </div>
             )}
             {onParecer && (
@@ -174,10 +171,10 @@ export default function ConclusaoAnaliseForm({
                             type="button"
                             variant="ghost"
                             size="xs"
-                            onClick={copiarParecer}
-                            disabled={textoParaCopiar.trim() === ''}
+                            onClick={importarParecer}
+                            disabled={textoDaFicha === ''}
                         >
-                            {copiado ? 'Copiado!' : 'Copiar parecer'}
+                            {importado ? 'Importado!' : 'Importar parecer'}
                         </Button>
                     </div>
                     <Textarea
@@ -187,7 +184,6 @@ export default function ConclusaoAnaliseForm({
                         onChange={(evento) => onParecer(evento.target.value)}
                         placeholder="Parecer da conclusão, se houver"
                     />
-                    {erroCopia && <FieldError>Não foi possível copiar. Selecione o texto e copie manualmente.</FieldError>}
                 </div>
             )}
             {erro && <FieldError>{erro}</FieldError>}

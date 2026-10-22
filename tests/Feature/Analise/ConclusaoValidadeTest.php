@@ -182,6 +182,38 @@ class ConclusaoValidadeTest extends TestCase
         $this->assertSame('2027-10-20', $decisao->tvl_valid_until->toDateString());
     }
 
+    public function test_validade_personalizada_grava_a_data_informada(): void
+    {
+        $processo = $this->processoComFicha();
+
+        $this->postarConclusao($processo, [
+            'resultado' => 'deferido',
+            'tipo' => 'provisoria',
+            'validade_meses' => 'personalizado',
+            'validade_data' => '2027-03-15',
+        ])->assertSessionHasNoErrors();
+
+        $decisao = $processo->fresh()->decision;
+        $this->assertSame(TvlKind::Provisoria, $decisao->tvl_kind);
+        $this->assertSame('2027-03-15', $decisao->tvl_valid_until->toDateString());
+    }
+
+    public function test_validade_personalizada_sem_data_e_recusada(): void
+    {
+        $this->postarConclusao($this->processoComFicha(), ['resultado' => 'deferido', 'tipo' => 'provisoria', 'validade_meses' => 'personalizado'])
+            ->assertSessionHasErrors(['validade_data' => 'Informe a data da validade.']);
+    }
+
+    public function test_validade_personalizada_com_data_que_ja_passou_e_recusada(): void
+    {
+        $this->postarConclusao($this->processoComFicha(), [
+            'resultado' => 'deferido',
+            'tipo' => 'pre_operacional',
+            'validade_meses' => 'personalizado',
+            'validade_data' => '2026-10-20',
+        ])->assertSessionHasErrors(['validade_data' => 'A data da validade precisa ser posterior a hoje.']);
+    }
+
     public function test_indeferir_ignora_tipo_enviado(): void
     {
         $processo = $this->processoComFicha();

@@ -10,7 +10,7 @@ use Illuminate\Validation\Rule;
 /**
  * Tipo do deferimento e validade na conclusão (SEDUR, 20/10/2026): Deferido
  * pede o tipo; Provisório e Pré-operacional pedem a validade (6, 12 ou 24
- * meses). Renovação fica de fora: tem o diálogo próprio.
+ * meses ou uma data personalizada). Renovação fica de fora: tem o diálogo próprio.
  */
 trait ValidaTipoDeferimento
 {
@@ -29,8 +29,15 @@ trait ValidaTipoDeferimento
                 Rule::requiredIf(fn (): bool => $this->pedeTipo()
                     && in_array($this->input('tipo'), [TvlKind::Provisoria->value, TvlKind::PreOperacional->value], true)),
                 'nullable',
-                'integer',
-                Rule::in([6, 12, 24]),
+                Rule::in(['6', '12', '24', ValidadeDeferimento::PERSONALIZADO, 6, 12, 24]),
+            ],
+            'validade_data' => [
+                Rule::requiredIf(fn (): bool => $this->pedeTipo()
+                    && $this->input('validade_meses') === ValidadeDeferimento::PERSONALIZADO
+                    && in_array($this->input('tipo'), [TvlKind::Provisoria->value, TvlKind::PreOperacional->value], true)),
+                'nullable',
+                'date_format:Y-m-d',
+                'after:today',
             ],
         ];
     }
@@ -43,7 +50,10 @@ trait ValidaTipoDeferimento
         return [
             'tipo.required' => 'Escolha o tipo do deferimento.',
             'validade_meses.required' => 'Escolha a data da validade.',
-            'validade_meses.in' => 'Escolha a validade entre 6 meses, 1 ano e 2 anos.',
+            'validade_meses.in' => 'Escolha a validade entre 6 meses, 1 ano, 2 anos ou Personalizado.',
+            'validade_data.required' => 'Informe a data da validade.',
+            'validade_data.date_format' => 'Informe a data da validade no formato válido.',
+            'validade_data.after' => 'A data da validade precisa ser posterior a hoje.',
         ];
     }
 
@@ -56,7 +66,7 @@ trait ValidaTipoDeferimento
             return null;
         }
 
-        return ValidadeDeferimento::de($this->validated('tipo'), $this->validated('validade_meses'));
+        return ValidadeDeferimento::de($this->validated('tipo'), $this->validated('validade_meses'), $this->validated('validade_data'));
     }
 
     /**
