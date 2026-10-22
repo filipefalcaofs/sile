@@ -19,13 +19,10 @@ import CamadasImovelLista, { type CamadasImovel } from '@/components/geo/camadas
 import { centroDaGeometria, ESTILO_ENDERECAMENTO } from '@/components/geo/geometria';
 import { MapaDecisaoSection } from '@/components/geo/mapa-decisao-section';
 import { MapaSection } from '@/components/geo/mapa-section';
-import OptionSelect from '@/components/form/option-select';
-import SearchableSelect from '@/components/form/searchable-select';
-import Select from '@/components/form/select';
+import CnaesDoProcesso from '@/components/analise/cnaes-do-processo';
 import { AlertIcon, ArrowRightIcon, MapPinIcon } from '@/components/icons';
 import Alert from '@/components/ui/alert';
 import Badge from '@/components/ui/badge';
-import Button from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import EmptyState from '@/components/ui/empty-state';
 import GestaoLayout from '@/layouts/gestao-layout';
@@ -174,10 +171,7 @@ export default function Show({
     divergencia_endereco = null,
     explicacao,
     justificativaRegin = null,
-    analysisStatusProximas,
     conclusaoOpcoes,
-    setoresEncaminhamento = [],
-    analistasEncaminhamento = [],
     consultaVistoria = false,
     despachoVistoria = null,
 }: ShowProps & {
@@ -191,24 +185,22 @@ export default function Show({
     const podeConcluirAnalise =
         !fichaExpresso &&
         auth.permissions.includes('concluir-analise') &&
-        (processo.status === 'em_analise' || processo.status === 'deferida');
+        processo.status === 'em_analise';
 
     const [aba, setAba] = useState<Aba>('informacoes');
     const [resultadoConclusao, setResultadoConclusao] = useState('');
     const [tipoDeferimento, setTipoDeferimento] = useState('');
     const [validadeMeses, setValidadeMeses] = useState('');
-    const [errosTipo, setErrosTipo] = useState<{ tipo: string | null; validade: string | null }>({ tipo: null, validade: null });
+    const [validadeData, setValidadeData] = useState('');
+    const [errosTipo, setErrosTipo] = useState<{ tipo: string | null; validade: string | null; validadeData: string | null }>({ tipo: null, validade: null, validadeData: null });
     const [conclusaoProcessing, setConclusaoProcessing] = useState(false);
     const [erroConclusao, setErroConclusao] = useState<string | null>(null);
     const [divergenciaConclusao, setDivergenciaConclusao] = useState<string | null>(null);
-    const [situacaoAnalise, setSituacaoAnalise] = useState('');
-    const [setorEncaminhamento, setSetorEncaminhamento] = useState('');
-    const [analistaEncaminhamento, setAnalistaEncaminhamento] = useState('');
 
     function concluirAnalise(confirmarDivergencia = false) {
         setErroConclusao(null);
         setDivergenciaConclusao(null);
-        setErrosTipo({ tipo: null, validade: null });
+        setErrosTipo({ tipo: null, validade: null, validadeData: null });
         router.post(
             `/gestao/processos/${processo.id}/conclusao-analise`,
             {
@@ -216,6 +208,7 @@ export default function Show({
                 confirmar_divergencia: confirmarDivergencia,
                 tipo: tipoDeferimento,
                 validade_meses: validadeMeses,
+                validade_data: validadeMeses === 'personalizado' ? validadeData : null,
             },
             {
                 preserveScroll: true,
@@ -225,12 +218,13 @@ export default function Show({
                     setResultadoConclusao('');
                     setTipoDeferimento('');
                     setValidadeMeses('');
+                    setValidadeData('');
                 },
                 onError: (erros) => {
                     const mapa = erros as Record<string, string>;
                     setDivergenciaConclusao(mapa.divergencia ?? null);
-                    setErrosTipo({ tipo: mapa.tipo ?? null, validade: mapa.validade_meses ?? null });
-                    const erroDeTipo = mapa.tipo !== undefined || mapa.validade_meses !== undefined;
+                    setErrosTipo({ tipo: mapa.tipo ?? null, validade: mapa.validade_meses ?? null, validadeData: mapa.validade_data ?? null });
+                    const erroDeTipo = mapa.tipo !== undefined || mapa.validade_meses !== undefined || mapa.validade_data !== undefined;
                     setErroConclusao(
                         mapa.divergencia || erroDeTipo ? null : (mapa.conclusao ?? mapa.resultado ?? 'Não foi possível concluir a análise.'),
                     );
@@ -450,8 +444,10 @@ export default function Show({
                                     <dl className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                                         <DescItem label="Empresa">{processo.empresa ?? '—'}</DescItem>
                                         <DescItem label="CNPJ">{processo.cnpj ?? '—'}</DescItem>
+                                        <DescItem label="Solicitante">{processo.solicitante ?? '—'}</DescItem>
+                                        <DescItem label="CPF do solicitante">{processo.solicitante_cpf ?? '—'}</DescItem>
                                         <DescItem label="CNAE" className="sm:col-span-2">
-                                            {processo.cnaes ?? '—'}
+                                            <CnaesDoProcesso cnaes={processo.cnaes_detalhe ?? []} exibirTodos />
                                         </DescItem>
                                         <DescItem label="Imóvel">{processo.endereco_completo || processo.imovel || '—'}</DescItem>
                                         <DescItem label="Inscrição imobiliária">{processo.inscricao ?? '—'}</DescItem>
@@ -480,6 +476,7 @@ export default function Show({
                                                         if (valor !== 'deferido') {
                                                             setTipoDeferimento('');
                                                             setValidadeMeses('');
+                                                            setValidadeData('');
                                                         }
                                                     }}
                                                     opcoes={conclusaoOpcoes}
@@ -491,11 +488,15 @@ export default function Show({
                                                                   setTipoDeferimento(valor);
                                                                   if (valor === 'definitiva') {
                                                                       setValidadeMeses('');
+                                                                      setValidadeData('');
                                                                   }
                                                               }
                                                     }
                                                     validadeMeses={validadeMeses}
                                                     onValidadeMeses={setValidadeMeses}
+                            validadeData={validadeData}
+                            onValidadeData={setValidadeData}
+                            erroValidadeData={errosTipo.validadeData}
                                                     erroTipo={errosTipo.tipo}
                                                     erroValidade={errosTipo.validade}
                                                     erro={erroConclusao}
@@ -504,88 +505,6 @@ export default function Show({
                                                     processing={conclusaoProcessing}
                                                     onConfirm={() => concluirAnalise()}
                                                 />
-                                            </DescItem>
-                                        )}
-                                        {podeAnalisar && analysisStatusProximas.length > 0 && (
-                                            <DescItem label="Alterar situação da análise">
-                                                <div className="flex flex-col gap-2">
-                                                    <Select
-                                                        ariaLabel="Situação da análise"
-                                                        value={situacaoAnalise}
-                                                        placeholder="Selecione…"
-                                                        options={analysisStatusProximas}
-                                                        onChange={(valor) => {
-                                                            setSituacaoAnalise(valor);
-                                                            if (valor !== '' && valor !== 'encaminhado' && valor !== 'para_conclusao') {
-                                                                router.post(
-                                                                    `/gestao/processos/${processo.id}/status-analise`,
-                                                                    { status: valor },
-                                                                );
-                                                            }
-                                                        }}
-                                                    />
-                                                    {situacaoAnalise === 'para_conclusao' && (
-                                                        <Button
-                                                            size="sm"
-                                                            onClick={() =>
-                                                                router.post(`/gestao/processos/${processo.id}/status-analise`, {
-                                                                    status: 'para_conclusao',
-                                                                })
-                                                            }
-                                                        >
-                                                            Enviar para conclusão
-                                                        </Button>
-                                                    )}
-                                                    {situacaoAnalise === 'encaminhado' && (
-                                                        <>
-                                                            <OptionSelect
-                                                                id="setor-encaminhamento"
-                                                                value={setorEncaminhamento}
-                                                                placeholder="Setor"
-                                                                options={setoresEncaminhamento.map((setor) => ({
-                                                                    value: String(setor.id),
-                                                                    label: setor.name,
-                                                                }))}
-                                                                onChange={(valor) => {
-                                                                    setSetorEncaminhamento(valor);
-                                                                    setAnalistaEncaminhamento('');
-                                                                }}
-                                                            />
-                                                            <SearchableSelect
-                                                                id="usuario-encaminhamento"
-                                                                value={analistaEncaminhamento}
-                                                                placeholder="Usuário"
-                                                                options={analistasEncaminhamento
-                                                                    .filter((analista) =>
-                                                                        setorEncaminhamento === ''
-                                                                            ? false
-                                                                            : analista.setores.includes(Number(setorEncaminhamento)),
-                                                                    )
-                                                                    .map((analista) => ({
-                                                                        value: String(analista.id),
-                                                                        label: analista.name,
-                                                                    }))}
-                                                                onChange={setAnalistaEncaminhamento}
-                                                            />
-                                                            <Button
-                                                                size="sm"
-                                                                disabled={setorEncaminhamento === '' || analistaEncaminhamento === ''}
-                                                                onClick={() =>
-                                                                    router.post(
-                                                                        `/gestao/processos/${processo.id}/status-analise`,
-                                                                        {
-                                                                            status: 'encaminhado',
-                                                                            sector_id: Number(setorEncaminhamento),
-                                                                            user_id: Number(analistaEncaminhamento),
-                                                                        },
-                                                                    )
-                                                                }
-                                                            >
-                                                                Encaminhar
-                                                            </Button>
-                                                        </>
-                                                    )}
-                                                </div>
                                             </DescItem>
                                         )}
                                         <DescItem label="Serviço">
@@ -693,12 +612,14 @@ export default function Show({
                                                         {evento.reason && (
                                                             <p className="mt-1 text-theme-sm text-gray-600 dark:text-gray-300">
                                                                 {evento.link && podeAbrirFicha ? (
-                                                                    <Link
+                                                                    <a
                                                                         href={evento.link}
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
                                                                         className="text-brand-500 underline underline-offset-2 hover:text-brand-600 dark:text-brand-400"
                                                                     >
                                                                         {evento.reason}
-                                                                    </Link>
+                                                                    </a>
                                                                 ) : (
                                                                     evento.reason
                                                                 )}
