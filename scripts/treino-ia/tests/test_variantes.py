@@ -106,3 +106,21 @@ def test_sem_mascara_que_contenha_o_ponto_devolve_nada():
     seg = SegFalso({60: [(_retangulo(10, 10, 50, 50), 0.9)], 120: [], 240: []})
 
     assert variantes.rodar("A", LOTE, seg, _contexto(seg)) is None
+
+
+def test_F_com_regra_B_escolhe_a_maior_mascara_e_nao_a_de_maior_score():
+    seg = SegFalso({60: [PEQUENA, GRANDE]})
+
+    r = variantes.rodar("F", LOTE, seg, _contexto(seg, regra_f="B"))
+
+    assert r["score"] == 0.5
+
+
+def test_F_com_regra_D_escolhe_a_maior_mascara_com_pontos_no_eixo():
+    seg = SegFalso({60: [PEQUENA, GRANDE]})
+    eixo = [[[LNG - 0.0002, LAT + 0.0001], [LNG + 0.0002, LAT + 0.0001]]]
+
+    r = variantes.rodar("F", LOTE, seg, _contexto(seg, regra_f="D", eixo=eixo))
+
+    assert r["score"] == 0.5
+    assert 0 in seg.chamadas[0]["rotulos"]

@@ -147,7 +147,7 @@ def rodar(nome: str, lote: dict, seg, contexto: dict) -> dict | None:
         if regra == "C" and contexto.get("unidade") is False and contexto.get("area_cadastro"):
             escolhido = _crescente(seg, lote, contexto, _perto_da_area(float(contexto["area_cadastro"])))
         else:
-            escolhido = _crescente(seg, lote, contexto, _melhor_score, negativos=regra == "D")
+            escolhido = _crescente(seg, lote, contexto, _maior, negativos=regra == "D")
     else:
         raise ValueError(f"Variante desconhecida: {nome}")
     if escolhido is None:
