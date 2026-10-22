@@ -139,7 +139,7 @@ function Rotulo({
 
     return (
         <CircleMarker center={centro} radius={1} pathOptions={{ opacity: 0, fillOpacity: 0 }} interactive={false}>
-            <Tooltip permanent direction={direcao} offset={deslocamento ?? [0, 0]} className={`mapa-decisao-rotulo ${classe}`} opacity={1}>
+            <Tooltip pane="tooltipPane" permanent direction={direcao} offset={deslocamento ?? [0, 0]} className={`mapa-decisao-rotulo ${classe}`} opacity={1}>
                 {texto}
             </Tooltip>
         </CircleMarker>
