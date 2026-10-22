@@ -70,6 +70,7 @@ use App\Http\Controllers\Gestao\TerritorialRuleController;
 use App\Http\Controllers\Gestao\TerritoryController;
 use App\Http\Controllers\Gestao\TllValorController;
 use App\Http\Controllers\Gestao\TratamentoPlanilhaController;
+use App\Http\Controllers\Gestao\TreinoIaGaleriaController;
 use App\Http\Controllers\Gestao\TvlDocumentController;
 use App\Http\Controllers\Gestao\UserManagementController;
 use App\Http\Controllers\Gestao\ViabilityServiceTypeController;
@@ -336,6 +337,8 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::post('config-inscricao-imobiliaria/testar', [InscricaoImobiliariaIntegrationController::class, 'test'])->name('config-inscricao-imobiliaria.testar');
             Route::get('config-apis', [ApiIntegracaoController::class, 'edit'])->name('config-apis.edit');
             Route::put('config-apis/{aba}', [ApiIntegracaoController::class, 'update'])->name('config-apis.update');
+            Route::get('treino-ia', [TreinoIaGaleriaController::class, 'index'])->name('treino-ia.index');
+            Route::get('treino-ia/{execucao}/{arquivo?}', [TreinoIaGaleriaController::class, 'arquivo'])->where('arquivo', '.*')->name('treino-ia.arquivo');
         });
 
         // Território (HU-029+): consulta territorial, geocodificação e validação

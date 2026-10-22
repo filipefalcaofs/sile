@@ -61,6 +61,9 @@ return [
         'edificacoes_overture' => false,
         'edificacoes_microsoft' => false,
         'edificacoes_ia' => false,
+        // Galeria do treino da IA de contorno de lote na gestão (/gestao/treino-ia).
+        // Ligar só em homologação: mostra lotes e endereços de processos reais.
+        'treino_ia_galeria' => false,
         'edificacoes_importacao_agendada' => false,
         // Ingestão do benchmark federal de tempo de viabilidade (microdados da
         // REDESIM). Desligada, as telas de benchmark mostram a lacuna com o

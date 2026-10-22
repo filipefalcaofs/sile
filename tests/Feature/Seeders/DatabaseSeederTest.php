@@ -101,7 +101,7 @@ class DatabaseSeederTest extends TestCase
         // integrations.sedur_auth.base_url — 2026-09-24).
         // + 8 das edificações complementares (4 interruptores + URL da IA, das
         // ortofotos 2024 e 2016/2017 e token da ortofoto — 2026-10-19).
-        $this->assertSame(123, Parameter::query()->count());
+        $this->assertSame(124, Parameter::query()->count());
         $this->assertTrue(
             Activity::query()
                 ->where('log_name', 'cnaes')
@@ -398,7 +398,7 @@ class DatabaseSeederTest extends TestCase
         $this->assertSame(1, User::query()->where('email', 'cidadao@sile.dev')->count());
         $this->assertSame(19, Role::query()->count());
         $this->assertSame(1331, Cnae::query()->count());
-        $this->assertSame(123, Parameter::query()->count());
+        $this->assertSame(124, Parameter::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoMunicipal)->count());
         $this->assertSame(1331, RiskClassification::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoSanitario)->count());
