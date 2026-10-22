@@ -116,6 +116,8 @@ class ReginProcessoProtocolador
             'service_type_id' => $this->tipoServico()->id,
             'company_id' => $this->empresa($rowset)->id,
             'requester_user_id' => null,
+            'solicitante_nome' => $this->solicitanteDoRowset($rowset)['nome'],
+            'solicitante_cpf' => $this->solicitanteDoRowset($rowset)['cpf'],
             'created_by_user_id' => $ator->id,
             'used_area_m2' => $area,
             'address_street' => $endereco['street'],
@@ -1174,12 +1176,48 @@ class ReginProcessoProtocolador
     }
 
     /**
+     * Corrige um processo já protocolado: separa o solicitante da empresa a
+     * constituir e passa a razão social pretendida para a empresa. Só atua em
+     * empresa cujo documento é um CPF (11 dígitos). Devolve false quando o
+     * envelope não traz nada a corrigir.
+     */
+    public function corrigirEmpresaESolicitante(ViabilityRequest $processo, ReginRecebimento $recebimento, bool $gravar = true): bool
+    {
+        $corpo = $recebimento->corpo ?? [];
+        $rowset = is_array($corpo['rowset'] ?? null)
+            ? $corpo['rowset']
+            : (is_array($corpo['ROWSET'] ?? null) ? $corpo['ROWSET'] : []);
+
+        $solicitante = $this->solicitanteDoRowset($rowset);
+        $pretendida = $this->razaoSocialPretendida($rowset);
+        $empresa = $processo->company;
+
+        if ($solicitante['cpf'] === null || $empresa === null || strlen((string) $empresa->cnpj) !== 11) {
+            return false;
+        }
+
+        if ($gravar) {
+            $processo->forceFill([
+                'solicitante_nome' => $solicitante['nome'],
+                'solicitante_cpf' => $solicitante['cpf'],
+            ])->save();
+
+            if ($pretendida !== null && $empresa->legal_name !== $pretendida) {
+                $empresa->forceFill(['legal_name' => $pretendida])->save();
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * @param  array<string, mixed>  $rowset
      */
     private function empresa(array $rowset): Company
     {
-        $cnpj = preg_replace('/\D/', '', (string) ($rowset['RUC_GENERAL']['RGE_CGC_CPF'] ?? ''));
-        $nome = trim((string) ($rowset['RUC_GENERAL']['RGE_NOMB'] ?? 'Empresa REGIN'));
+        $cnpj = $this->documentoDoRowset($rowset);
+        $pretendida = $this->razaoSocialPretendida($rowset);
+        $nome = $pretendida ?? trim((string) ($rowset['RUC_GENERAL']['RGE_NOMB'] ?? 'Empresa REGIN'));
 
         if ($cnpj === '') {
             $cnpj = '00000000000000';
@@ -1193,6 +1231,10 @@ class ReginProcessoProtocolador
                 $existente->forceFill(['legal_nature_code' => $natureza['codigo']])->save();
             }
 
+            if ($pretendida !== null && strlen($cnpj) === 11 && $existente->legal_name !== $pretendida) {
+                $existente->forceFill(['legal_name' => $pretendida])->save();
+            }
+
             return $existente;
         }
 
@@ -1203,6 +1245,61 @@ class ReginProcessoProtocolador
             'legal_nature_code' => $natureza['codigo'],
             'legal_nature' => $natureza['descricao'],
         ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $rowset
+     */
+    private function documentoDoRowset(array $rowset): string
+    {
+        return preg_replace('/\D/', '', (string) ($rowset['RUC_GENERAL']['RGE_CGC_CPF'] ?? '')) ?? '';
+    }
+
+    /**
+     * Na viabilidade de empresa a constituir o REGIN manda em RUC_GENERAL o nome
+     * e o CPF de quem pediu; o CNPJ ainda não existe. Com CNPJ, não há solicitante.
+     *
+     * @param  array<string, mixed>  $rowset
+     * @return array{nome: ?string, cpf: ?string}
+     */
+    private function solicitanteDoRowset(array $rowset): array
+    {
+        $documento = $this->documentoDoRowset($rowset);
+
+        if (strlen($documento) !== 11) {
+            return ['nome' => null, 'cpf' => null];
+        }
+
+        return [
+            'nome' => $this->textoOuNull($rowset['RUC_GENERAL']['RGE_NOMB'] ?? null),
+            'cpf' => $documento,
+        ];
+    }
+
+    /**
+     * Nome empresarial pretendido (GROUPVIA_PROT_RAZAO_SOCIAL): o de menor ordem
+     * de preferência. Vem como lista ou, com um só nome, como um objeto.
+     *
+     * @param  array<string, mixed>  $rowset
+     */
+    private function razaoSocialPretendida(array $rowset): ?string
+    {
+        $nomes = $rowset['GROUPVIA_PROT_RAZAO_SOCIAL']['VIA_PROT_RAZAO_SOCIAL'] ?? null;
+
+        if (! is_array($nomes)) {
+            return null;
+        }
+
+        if (isset($nomes['VRS_RAZAO_SOCIAL'])) {
+            $nomes = [$nomes];
+        }
+
+        $escolhido = collect($nomes)
+            ->filter(fn (mixed $linha): bool => is_array($linha) && $this->textoOuNull($linha['VRS_RAZAO_SOCIAL'] ?? null) !== null)
+            ->sortBy(fn (array $linha): int => (int) ($linha['VRS_ORDEM_PREFERENCIA'] ?? 99))
+            ->first();
+
+        return is_array($escolhido) ? $this->textoOuNull($escolhido['VRS_RAZAO_SOCIAL']) : null;
     }
 
     private function tipoServico(): ViabilityServiceType

@@ -188,6 +188,94 @@ class ReginProcessoProtocoladorTest extends TestCase
         $this->assertNotSame($gestor->id, $processo->created_by_user_id);
     }
 
+    public function test_viabilidade_de_empresa_a_constituir_usa_a_razao_social_pretendida_e_guarda_o_solicitante(): void
+    {
+        $envelope = $this->ruc([
+            'RUC_GENERAL' => [
+                'RGE_CGC_CPF' => '00449085040    ',
+                'RGE_NOMB' => 'GRAZIELLE DE FREITAS MUZYKANT',
+            ],
+            'GROUPVIA_PROT_RAZAO_SOCIAL' => [
+                'VIA_PROT_RAZAO_SOCIAL' => [
+                    ['VRS_RAZAO_SOCIAL' => 'SEGUNDA OPCAO LTDA', 'VRS_ORDEM_PREFERENCIA' => '2'],
+                    ['VRS_RAZAO_SOCIAL' => 'REBOREDO CONSULTORIA LTDA', 'VRS_ORDEM_PREFERENCIA' => '1'],
+                ],
+            ],
+        ]);
+
+        $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($envelope));
+
+        $this->assertNotNull($processo);
+        $this->assertSame('REBOREDO CONSULTORIA LTDA', $processo->company->legal_name);
+        $this->assertSame('GRAZIELLE DE FREITAS MUZYKANT', $processo->solicitante_nome);
+        $this->assertSame('00449085040', $processo->solicitante_cpf);
+        $this->assertNull($processo->requester_user_id);
+    }
+
+    public function test_razao_social_unica_sem_lista_tambem_e_lida(): void
+    {
+        $envelope = $this->ruc([
+            'RUC_GENERAL' => ['RGE_CGC_CPF' => '00449085040', 'RGE_NOMB' => 'FULANA DE TAL'],
+            'GROUPVIA_PROT_RAZAO_SOCIAL' => [
+                'VIA_PROT_RAZAO_SOCIAL' => ['VRS_RAZAO_SOCIAL' => 'NOVA EMPRESA LTDA', 'VRS_ORDEM_PREFERENCIA' => '1'],
+            ],
+        ]);
+
+        $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($envelope));
+
+        $this->assertSame('NOVA EMPRESA LTDA', $processo?->company->legal_name);
+    }
+
+    public function test_empresa_com_cnpj_mantem_o_nome_do_envelope_e_nao_tem_solicitante(): void
+    {
+        $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($this->ruc()));
+
+        $this->assertSame('Empresa REGIN Teste', $processo?->company->legal_name);
+        $this->assertNull($processo?->solicitante_nome);
+        $this->assertNull($processo?->solicitante_cpf);
+    }
+
+    public function test_empresa_a_constituir_ja_cadastrada_recebe_a_razao_social_pretendida(): void
+    {
+        Company::factory()->create(['cnpj' => '00449085040', 'legal_name' => 'GRAZIELLE DE FREITAS MUZYKANT']);
+        $envelope = $this->ruc([
+            'RUC_GENERAL' => ['RGE_CGC_CPF' => '00449085040', 'RGE_NOMB' => 'GRAZIELLE DE FREITAS MUZYKANT'],
+            'GROUPVIA_PROT_RAZAO_SOCIAL' => [
+                'VIA_PROT_RAZAO_SOCIAL' => [['VRS_RAZAO_SOCIAL' => 'REBOREDO CONSULTORIA LTDA', 'VRS_ORDEM_PREFERENCIA' => '1']],
+            ],
+        ]);
+
+        app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($envelope));
+
+        $this->assertSame('REBOREDO CONSULTORIA LTDA', Company::query()->where('cnpj', '00449085040')->value('legal_name'));
+    }
+
+    public function test_comando_separa_o_solicitante_da_empresa_nos_processos_ja_protocolados(): void
+    {
+        $empresa = Company::factory()->create(['cnpj' => '00449085040', 'legal_name' => 'GRAZIELLE DE FREITAS MUZYKANT']);
+        $processo = ViabilityRequest::factory()->create([
+            'origin' => ViabilityRequestOrigin::Regin,
+            'company_id' => $empresa->id,
+            'external_reference' => '43747',
+        ]);
+        $this->recebimento($this->ruc([
+            'RUC_GENERAL' => ['RGE_CGC_CPF' => '00449085040', 'RGE_NOMB' => 'GRAZIELLE DE FREITAS MUZYKANT'],
+            'GROUPVIA_PROT_RAZAO_SOCIAL' => [
+                'VIA_PROT_RAZAO_SOCIAL' => [['VRS_RAZAO_SOCIAL' => 'REBOREDO CONSULTORIA LTDA', 'VRS_ORDEM_PREFERENCIA' => '1']],
+            ],
+        ]));
+
+        $this->artisan('regin:corrigir-solicitantes', ['--dry-run' => true])->expectsOutput('A corrigir: 1')->assertSuccessful();
+        $this->assertNull($processo->fresh()?->solicitante_cpf);
+
+        $this->artisan('regin:corrigir-solicitantes')->expectsOutput('Corrigidos: 1')->assertSuccessful();
+
+        $processo->refresh();
+        $this->assertSame('GRAZIELLE DE FREITAS MUZYKANT', $processo->solicitante_nome);
+        $this->assertSame('00449085040', $processo->solicitante_cpf);
+        $this->assertSame('REBOREDO CONSULTORIA LTDA', $empresa->fresh()?->legal_name);
+    }
+
     public function test_cpf_ja_usado_nao_impede_o_solicitante_nao_identificado(): void
     {
         User::factory()->create(['cpf' => '00000000000']);
