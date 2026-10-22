@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\ViabilityRequest;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 /**
@@ -152,6 +153,57 @@ class AnalysisRecordFinalizeTest extends TestCase
         $this->assertSame('4712100', $atual->per_cnae[0]['cnae']);
         // A revisão finalizada permanece intacta (append-only).
         $this->assertSame(AnalysisRecordStatus::Finalizada, $finalizada->fresh()->status);
+    }
+
+    public function test_nova_revisao_traz_todos_os_campos_da_ficha_anterior_inclusive_sede_condicionantes_e_vagas(): void
+    {
+        $request = ViabilityRequest::factory()->protocoled()->create();
+        AnalysisRecord::factory()->finalizada()->create([
+            'viability_request_id' => $request->id,
+            'revision' => 1,
+            'is_virtual_office_hq' => true,
+            'conditions' => ['Instalar sinalização.'],
+            'parking' => ['vagas' => ['requerido' => 2]],
+        ]);
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->postJson("/gestao/processos/{$request->id}/ficha/nova-revisao")
+            ->assertOk();
+
+        $atual = $request->fresh()->currentAnalysisRecord;
+        $this->assertTrue($atual->is_virtual_office_hq);
+        $this->assertSame(['Instalar sinalização.'], $atual->conditions);
+        $this->assertSame(['vagas' => ['requerido' => 2]], $atual->parking);
+    }
+
+    public function test_ficha_abre_na_revisao_mais_recente_depois_de_criar_outra(): void
+    {
+        $request = ViabilityRequest::factory()->protocoled()->create();
+        AnalysisRecord::factory()->finalizada()->create(['viability_request_id' => $request->id, 'revision' => 1, 'parecer' => 'Primeira.']);
+        $analista = $this->analista();
+
+        $this->actingAs($analista, 'gestao')->postJson("/gestao/processos/{$request->id}/ficha/nova-revisao")->assertOk();
+
+        $this->actingAs($analista, 'gestao')
+            ->get("/gestao/processos/{$request->id}/ficha")
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('ficha.revision', 2)
+                ->where('ficha.editavel', true)
+                ->where('ficha.parecer', 'Primeira.'));
+    }
+
+    public function test_outra_ficha_pode_ser_aberta_depois_de_cada_finalizacao_sem_impedimento(): void
+    {
+        $request = ViabilityRequest::factory()->protocoled()->create();
+        AnalysisRecord::factory()->finalizada()->create(['viability_request_id' => $request->id, 'revision' => 1]);
+        $analista = $this->analista();
+
+        $this->actingAs($analista, 'gestao')->postJson("/gestao/processos/{$request->id}/ficha/nova-revisao")->assertOk();
+        $this->actingAs($analista, 'gestao')->postJson("/gestao/processos/{$request->id}/ficha/finalizar")->assertOk();
+        $this->actingAs($analista, 'gestao')->postJson("/gestao/processos/{$request->id}/ficha/nova-revisao")->assertOk();
+
+        $this->assertSame(3, $request->fresh()->currentAnalysisRecord->revision);
+        $this->assertSame(3, AnalysisRecord::query()->where('viability_request_id', $request->id)->count());
     }
 
     public function test_finalizar_e_auditado(): void

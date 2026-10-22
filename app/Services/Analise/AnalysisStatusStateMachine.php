@@ -58,7 +58,10 @@ class AnalysisStatusStateMachine
         $request->forceFill(['analysis_status' => $to]);
 
         if ($to !== AnalysisStatus::ParaConclusao) {
-            $request->forceFill(['conclusao_encaminhada_para_user_id' => null]);
+            $request->forceFill([
+                'conclusao_encaminhada_para_user_id' => null,
+                'conclusao_indicada_para_user_id' => null,
+            ]);
         }
 
         $request->save();

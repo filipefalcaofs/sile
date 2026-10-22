@@ -53,6 +53,14 @@ class AnalysisRecordService
      */
     public function current(ViabilityRequest $request): AnalysisRecord
     {
+        // Depois da primeira revisão a vigente é sempre a mais recente: a pré-análise
+        // só vale para criar ou atualizar a revisão inicial.
+        $maisRecente = $request->analysisRecords()->orderByDesc('revision')->first();
+
+        if ($maisRecente !== null && $maisRecente->revision > 1) {
+            return $maisRecente;
+        }
+
         $preAnalisada = $this->preAnalise->preAnalisar($request);
 
         if ($preAnalisada !== null) {
@@ -220,6 +228,7 @@ class AnalysisRecordService
                 'parking' => $ultima->parking,
                 'address_confirmed' => $ultima->address_confirmed,
                 'parecer' => $ultima->parecer,
+                'is_virtual_office_hq' => $ultima->is_virtual_office_hq,
                 'finalized_at' => null,
             ]);
 

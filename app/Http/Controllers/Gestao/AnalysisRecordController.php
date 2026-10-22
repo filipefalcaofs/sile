@@ -11,6 +11,7 @@ use App\Http\Requests\Gestao\AnalysisRecordRequest;
 use App\Http\Resources\AnalysisRecordResource;
 use App\Http\Resources\DecisionExplanationResource;
 use App\Http\Resources\ViabilityDecisionResource;
+use App\Models\Activity;
 use App\Models\AiSuggestion;
 use App\Models\AnalysisRecord;
 use App\Models\RuleVersion;
@@ -22,6 +23,7 @@ use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Models\VirtualOfficeInscriptionLock;
+use App\Models\Zona;
 use App\Services\Ai\AiFeatureGate;
 use App\Services\Ai\ResumoProcessoService;
 use App\Services\Ai\SugestaoJustificativaService;
@@ -38,6 +40,8 @@ use App\Services\Relatorios\RelatorioSedeEscritorioVirtualService;
 use App\Services\Servicos\ServicoNomenclaturaResolver;
 use App\Services\Vistoria\VistoriaAcesso;
 use App\Support\Audit\AuditService;
+use App\Support\Louos\Quadro11aClasseVia;
+use App\Support\PerfisDeChefia;
 use App\Support\Settings;
 use DomainException;
 use Illuminate\Http\JsonResponse;
@@ -86,6 +90,15 @@ class AnalysisRecordController extends Controller
         abort_unless($request->user()?->can('analisar-processos'), 403);
 
         $record = $this->records->current($viabilityRequest);
+
+        // Link da Tramitação: a revisão pedida, só para consulta, sem editar nem agir.
+        $somenteLeitura = $request->boolean('somente_leitura');
+
+        if ($somenteLeitura && $request->integer('revisao') > 0) {
+            $record = $viabilityRequest->analysisRecords()->where('revision', $request->integer('revisao'))->first() ?? $record;
+        }
+
+        $record->somenteLeitura = $somenteLeitura;
         $record->loadMissing('analyst');
         $viabilityRequest->loadMissing('expressoQuedas');
         $record->setRelation('viabilityRequest', $viabilityRequest);
@@ -150,6 +163,12 @@ class AnalysisRecordController extends Controller
             // A ficha de vistoria só é oferecida a quem pode consultá-la (VistoriaAcesso).
             'podeConsultarVistoria' => $request->user() !== null && app(VistoriaAcesso::class)->podeConsultar($viabilityRequest, $request->user()),
             'podeEncaminharChefia' => $this->podeEncaminharChefia($viabilityRequest, $request->user()),
+            'fichaSalva' => $this->fichaSalvaOuFinalizada($viabilityRequest),
+            'somenteLeitura' => $somenteLeitura,
+            'podeEditarZonaVia' => $request->user()?->can('editar-zona-via') === true,
+            'zonasDisponiveis' => $this->zonasDisponiveis(),
+            'viasDisponiveis' => Quadro11aClasseVia::oficiais(),
+            'usuariosIndicaveis' => $this->usuariosIndicaveisParaConclusao(),
             // Sugestões de IA (HU-107 alertas + HU-109 resumo do processo) — prop
             // DEFERIDA (carregada sob demanda pelo card, fora do load inicial).
             // Ao resolver, gera o resumo no mesmo request (gated; já existente ⇒
@@ -521,8 +540,8 @@ class AnalysisRecordController extends Controller
         $numeroMetrico = $this->textoOuNulo($request->address_number);
         $cep = $this->textoOuNulo($request->address_zip);
         $pontoReferencia = $this->textoOuNulo($request->address_reference);
-        $zona = $this->textoOuNulo($request->zona_codigo);
-        $via = $this->textoOuNulo($request->camadas_incidentes['via'] ?? null);
+        $zona = $this->textoOuNulo($request->zona_manual) ?? $this->textoOuNulo($request->zona_codigo);
+        $via = $this->textoOuNulo($request->via_manual) ?? $this->textoOuNulo($request->camadas_incidentes['via'] ?? null);
         $bairro = $this->bairroDaLocalizacao($request, $cadastro, $zona);
 
         $partes = array_values(array_filter(
@@ -962,17 +981,61 @@ class AnalysisRecordController extends Controller
     }
 
     /**
-     * "Encaminhar para Chefia" (Para conclusão sem destinatário) só aparece
-     * quando a tramitação permite sair do estado atual para Para conclusão.
+     * "Encaminhar para Chefia" (Para conclusão sem destinatário) é de quem não
+     * conclui a análise e só aparece quando a tramitação permite sair do estado
+     * atual para Para conclusão. A tela ainda exige a ficha salva ou finalizada.
      */
     private function podeEncaminharChefia(ViabilityRequest $viabilityRequest, ?User $user): bool
     {
-        if ($user === null || ! $user->can('analisar-processos')) {
+        if ($user === null || ! $user->can('analisar-processos') || $user->can('concluir-analise')) {
             return false;
         }
 
-        $proximas = $viabilityRequest->analysis_status?->proximasPara($user->can('concluir-analise')) ?? [];
+        $proximas = $viabilityRequest->analysis_status?->proximasPara(false) ?? [];
 
         return in_array(AnalysisStatus::ParaConclusao, $proximas, true);
+    }
+
+    /**
+     * Zonas da LOUOS que a ficha oferece ao editar a zona do imóvel.
+     *
+     * @return list<array{codigo: string, nome: string|null}>
+     */
+    private function zonasDisponiveis(): array
+    {
+        return Zona::query()
+            ->where('ativo', true)
+            ->orderBy('codigo')
+            ->get(['codigo', 'nome'])
+            ->map(fn (Zona $zona): array => ['codigo' => $zona->codigo, 'nome' => $zona->nome])
+            ->all();
+    }
+
+    /**
+     * Quem pode ser indicado ao encaminhar para a chefia: Chefe de setor,
+     * Subcoordenador e Coordenador.
+     *
+     * @return list<array{id: int, name: string}>
+     */
+    private function usuariosIndicaveisParaConclusao(): array
+    {
+        return User::query()
+            ->role(PerfisDeChefia::NOMES)
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn (User $usuario): array => ['id' => $usuario->id, 'name' => $usuario->name])
+            ->all();
+    }
+
+    /**
+     * A ficha foi salva pelo botão ou finalizada em alguma revisão do processo.
+     */
+    private function fichaSalvaOuFinalizada(ViabilityRequest $viabilityRequest): bool
+    {
+        return Activity::query()
+            ->where('subject_type', (new AnalysisRecord)->getMorphClass())
+            ->whereIn('subject_id', $viabilityRequest->analysisRecords()->select('id'))
+            ->whereIn('event', ['ficha-salvar', 'ficha-finalizar'])
+            ->exists();
     }
 }

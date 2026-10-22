@@ -47,24 +47,51 @@ class FichaUiSmokeTest extends TestCase
         return User::factory()->analista()->withAcceptedLgpdTerm()->create();
     }
 
-    public function test_ficha_oferece_encaminhar_para_chefia_so_em_analise(): void
+    public function test_ficha_oferece_encaminhar_para_chefia_so_em_analise_com_a_ficha_salva(): void
     {
         $analista = $this->analista();
 
         $emAnalise = ViabilityRequest::factory()->create(['status' => ViabilityRequestStatus::EmAnalise]);
         $emAnalise->forceFill(['analysis_status' => AnalysisStatus::EmAnalise, 'assigned_user_id' => $analista->id])->save();
-        AnalysisRecord::factory()->create(['viability_request_id' => $emAnalise->id, 'revision' => 1]);
+        $fichaSalva = AnalysisRecord::factory()->create(['viability_request_id' => $emAnalise->id, 'revision' => 1]);
+        activity('analise')->performedOn($fichaSalva)->event('ficha-salvar')->log('Ficha salva');
 
         $analisar = ViabilityRequest::factory()->create(['status' => ViabilityRequestStatus::EmAnalise]);
         $analisar->forceFill(['analysis_status' => AnalysisStatus::Analisar, 'assigned_user_id' => $analista->id])->save();
-        AnalysisRecord::factory()->create(['viability_request_id' => $analisar->id, 'revision' => 1]);
+        $fichaDoAnalisar = AnalysisRecord::factory()->create(['viability_request_id' => $analisar->id, 'revision' => 1]);
+        activity('analise')->performedOn($fichaDoAnalisar)->event('ficha-salvar')->log('Ficha salva');
 
         $this->actingAs($analista, 'gestao')
             ->get("/gestao/processos/{$emAnalise->id}/ficha")
-            ->assertInertia(fn (Assert $page) => $page->where('podeEncaminharChefia', true));
+            ->assertInertia(fn (Assert $page) => $page->where('podeEncaminharChefia', true)->where('fichaSalva', true));
 
         $this->actingAs($analista, 'gestao')
             ->get("/gestao/processos/{$analisar->id}/ficha")
+            ->assertInertia(fn (Assert $page) => $page->where('podeEncaminharChefia', false));
+    }
+
+    public function test_encaminhar_para_chefia_nao_aparece_com_a_ficha_ainda_nao_salva(): void
+    {
+        $analista = $this->analista();
+        $processo = ViabilityRequest::factory()->create(['status' => ViabilityRequestStatus::EmAnalise]);
+        $processo->forceFill(['analysis_status' => AnalysisStatus::EmAnalise, 'assigned_user_id' => $analista->id])->save();
+        AnalysisRecord::factory()->create(['viability_request_id' => $processo->id, 'revision' => 1]);
+
+        $this->actingAs($analista, 'gestao')
+            ->get("/gestao/processos/{$processo->id}/ficha")
+            ->assertInertia(fn (Assert $page) => $page->where('podeEncaminharChefia', true)->where('fichaSalva', false));
+    }
+
+    public function test_encaminhar_para_chefia_nao_aparece_para_quem_pode_concluir_a_analise(): void
+    {
+        $servidor = User::factory()->analistaServidor()->withAcceptedLgpdTerm()->create();
+        $processo = ViabilityRequest::factory()->create(['status' => ViabilityRequestStatus::EmAnalise]);
+        $processo->forceFill(['analysis_status' => AnalysisStatus::EmAnalise, 'assigned_user_id' => $servidor->id])->save();
+        $ficha = AnalysisRecord::factory()->create(['viability_request_id' => $processo->id, 'revision' => 1]);
+        activity('analise')->performedOn($ficha)->event('ficha-salvar')->log('Ficha salva');
+
+        $this->actingAs($servidor, 'gestao')
+            ->get("/gestao/processos/{$processo->id}/ficha")
             ->assertInertia(fn (Assert $page) => $page->where('podeEncaminharChefia', false));
     }
 

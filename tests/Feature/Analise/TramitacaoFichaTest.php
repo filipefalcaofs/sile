@@ -11,6 +11,7 @@ use App\Services\Analise\TramitacaoProcessoService;
 use App\Support\Audit\AuditService;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 /**
@@ -71,7 +72,38 @@ class TramitacaoFichaTest extends TestCase
         $this->assertSame('analise', $salvas[0]['tipo']);
         $this->assertSame('Suzana Carvalho dos Reis', $salvas[0]['ator']);
         $this->assertSame('Revisão 1 da ficha.', $salvas[0]['reason']);
-        $this->assertSame("/gestao/processos/{$ficha->viability_request_id}/ficha", $salvas[0]['link']);
+        $this->assertSame("/gestao/processos/{$ficha->viability_request_id}/ficha?revisao=1&somente_leitura=1", $salvas[0]['link']);
+    }
+
+    public function test_link_da_revisao_abre_a_ficha_somente_para_leitura(): void
+    {
+        $ficha = $this->fichaRascunho();
+        $analista = User::factory()->analista()->withAcceptedLgpdTerm()->create();
+        $processoId = $ficha->viability_request_id;
+
+        $this->actingAs($analista, 'gestao')
+            ->get("/gestao/processos/{$processoId}/ficha")
+            ->assertInertia(fn (Assert $page) => $page->where('ficha.editavel', true)->where('somenteLeitura', false));
+
+        $this->actingAs($analista, 'gestao')
+            ->get("/gestao/processos/{$processoId}/ficha?revisao=1&somente_leitura=1")
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('ficha.revision', 1)
+                ->where('ficha.editavel', false)
+                ->where('somenteLeitura', true));
+    }
+
+    public function test_link_da_revisao_mostra_a_revisao_pedida_e_nao_a_vigente(): void
+    {
+        $ficha = $this->fichaRascunho();
+        $analista = User::factory()->analista()->withAcceptedLgpdTerm()->create();
+        $processoId = $ficha->viability_request_id;
+        $ficha->forceFill(['status' => AnalysisRecordStatus::Finalizada])->save();
+        AnalysisRecord::factory()->create(['viability_request_id' => $processoId, 'revision' => 2, 'parecer' => 'Segunda revisão.']);
+
+        $this->actingAs($analista, 'gestao')
+            ->get("/gestao/processos/{$processoId}/ficha?revisao=1&somente_leitura=1")
+            ->assertInertia(fn (Assert $page) => $page->where('ficha.revision', 1));
     }
 
     public function test_autosave_automatico_nao_entra_na_tramitacao(): void
@@ -102,7 +134,7 @@ class TramitacaoFichaTest extends TestCase
         $this->assertCount(1, $finalizadas);
         $this->assertSame('Lisa Sousa', $finalizadas[0]['ator']);
         $this->assertSame('Revisão 1 da ficha.', $finalizadas[0]['reason']);
-        $this->assertSame("/gestao/processos/{$ficha->viability_request_id}/ficha", $finalizadas[0]['link']);
+        $this->assertSame("/gestao/processos/{$ficha->viability_request_id}/ficha?revisao=1&somente_leitura=1", $finalizadas[0]['link']);
     }
 
     public function test_ficha_de_outro_processo_nao_aparece(): void

@@ -55,6 +55,7 @@ class TramitacaoProcessoService
         'documento-anexado' => ['tipo' => 'documento', 'titulo' => 'Documento anexado'],
         'tvl-emitido' => ['tipo' => 'documento', 'titulo' => 'TVL emitido'],
         'ficha-conclusao' => ['tipo' => 'vistoria', 'titulo' => 'Ficha de vistoria concluída'],
+        'zona-via-alterada' => ['tipo' => 'analise', 'titulo' => 'Zona e via alteradas'],
         'ficha-salvar' => ['tipo' => 'analise', 'titulo' => 'Ficha de análise salva'],
         'ficha-finalizar' => ['tipo' => 'analise', 'titulo' => 'Ficha de análise finalizada'],
     ];
@@ -187,6 +188,10 @@ class TramitacaoProcessoService
         $detalhe = $daFicha
             ? 'Revisão '.$a->properties['revision'].' da ficha.'
             : (string) $a->description;
+        if ($a->event === 'zona-via-alterada') {
+            $detalhe = $this->detalheDaZonaVia($a->properties->toArray());
+        }
+
         $atribuido = in_array($a->event, self::ATRIBUICAO, true) && isset($a->properties['assigned_user_id'])
             ? ($usuarios[(int) $a->properties['assigned_user_id']]?->name ?? null)
             : null;
@@ -201,7 +206,26 @@ class TramitacaoProcessoService
             detalhe: $detalhe !== '' ? $detalhe : null,
             em: $a->created_at?->toIso8601String(),
             ator: $this->nomeDoAtor($usuarios, $a->properties['ator_id'] ?? $a->causer_id),
-            link: $daFicha ? route('gestao.processos.ficha.show', $processo, false) : null,
+            link: $daFicha ? route('gestao.processos.ficha.show', $processo, false).'?revisao='.$a->properties['revision'].'&somente_leitura=1' : null,
+        );
+    }
+
+    /**
+     * @param  array<string, mixed>  $propriedades
+     */
+    private function detalheDaZonaVia(array $propriedades): string
+    {
+        $antes = (array) ($propriedades['antes'] ?? []);
+        $depois = (array) ($propriedades['depois'] ?? []);
+        $traco = fn (mixed $valor): string => filled($valor) ? (string) $valor : '—';
+
+        return sprintf(
+            'Zona: %s → %s · Via: %s → %s. Justificativa: %s',
+            $traco($antes['zona'] ?? null),
+            $traco($depois['zona'] ?? null),
+            $traco($antes['via'] ?? null),
+            $traco($depois['via'] ?? null),
+            (string) ($propriedades['justificativa'] ?? ''),
         );
     }
 

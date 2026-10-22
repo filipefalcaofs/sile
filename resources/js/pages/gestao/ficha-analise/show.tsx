@@ -5,7 +5,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import type { ReactNode } from 'react';
 import ConclusaoAnaliseForm from '@/components/analise/conclusao-analise-form';
 import { QuadrosChecklist, type QuadroChecklist } from '@/components/analise/quadros-checklist';
-import { RecepcaoRecebida, rotuloFluxoRisco, type ProcessoRecepcao } from '@/components/analise/processo-ui';
+import { RecepcaoRecebida, type ProcessoRecepcao } from '@/components/analise/processo-ui';
 import {
     comAreaEmbarqueInformada,
     vereditoEstacionamento,
@@ -291,6 +291,23 @@ interface FichaAnaliseShowProps {
     temFichaVistoria: boolean;
     podeConsultarVistoria: boolean;
     podeEncaminharChefia: boolean;
+    /** A ficha foi salva pelo botão ou finalizada: só então "Encaminhar para Chefia" aparece. */
+    fichaSalva: boolean;
+    /** Quem pode ser indicado ao encaminhar para a chefia (Chefe de setor, Subcoordenador, Coordenador). */
+    usuariosIndicaveis: { id: number; name: string }[];
+    /** Aberta pelo link da Tramitação: só consulta, sem as ações do processo. */
+    somenteLeitura: boolean;
+    /** Quem tem a permissão no perfil escolhe a zona e a via do imóvel na ficha. */
+    podeEditarZonaVia: boolean;
+    zonasDisponiveis: { codigo: string; nome: string | null }[];
+    viasDisponiveis: string[];
+}
+
+interface PreviaZonaVia {
+    antes: { zona: string | null; via: string | null };
+    depois: { zona: string | null; via: string | null };
+    motor_disponivel: boolean;
+    mudancas: { cnae: string; antes: string | null; depois: string; motivo: string | null; mudou: boolean }[];
 }
 
 interface IaFicha {
@@ -720,6 +737,12 @@ export default function FichaAnaliseShow({
     temFichaVistoria,
     podeConsultarVistoria,
     podeEncaminharChefia,
+    fichaSalva: fichaSalvaNoServidor,
+    usuariosIndicaveis,
+    somenteLeitura,
+    podeEditarZonaVia,
+    zonasDisponiveis,
+    viasDisponiveis,
 }: FichaAnaliseShowProps) {
     const { auth } = usePage<SharedProps>().props;
     // Encaminhar à vistoria é ação do analista (handoff ao setor de vistoria).
@@ -733,11 +756,9 @@ export default function FichaAnaliseShow({
 
     const [perCnae, setPerCnae] = useState<PerCnae[]>(() => ficha.per_cnae ?? []);
     const [deferirTodos, setDeferirTodos] = useState(false);
+    const [salvouNestaTela, setSalvouNestaTela] = useState(false);
+    const fichaSalva = fichaSalvaNoServidor || salvouNestaTela;
     const statusAntesDeDeferirTodos = useRef<Record<string, PerCnae['status_escolhido']> | null>(null);
-    // Enquadramento com que a ficha abriu: enquanto o analista não troca, vale o encaminhamento do motor.
-    const [enquadramentoInicial] = useState<Record<string, string>>(() =>
-        Object.fromEntries((ficha.per_cnae ?? []).map((item) => [item.cnae, `${item.codigo_louos ?? ''}|${item.codigo_tll ?? ''}`])),
-    );
     // Regra de decisão: só o indeferimento é marcado por CNAE. Nenhum indeferido
     // → o processo é deferido; ao menos um indeferido → o processo é indeferido.
     const [conditions, setConditions] = useState<string[]>(() => ficha.conditions ?? []);
@@ -842,6 +863,65 @@ export default function FichaAnaliseShow({
     const [showEncaminharChefia, setShowEncaminharChefia] = useState(false);
     const [parecerExpandido, setParecerExpandido] = useState(false);
     const [encaminhandoChefia, setEncaminhandoChefia] = useState(false);
+    const [indicadoParaConclusao, setIndicadoParaConclusao] = useState('');
+    const zonaViaHttp = useHttp<Record<string, string>, PreviaZonaVia>({});
+    const [showZonaVia, setShowZonaVia] = useState(false);
+    const [zonaEscolhida, setZonaEscolhida] = useState('');
+    const [viaEscolhida, setViaEscolhida] = useState('');
+    const [justificativaZonaVia, setJustificativaZonaVia] = useState('');
+    const [previaZonaVia, setPreviaZonaVia] = useState<PreviaZonaVia | null>(null);
+    const [erroZonaVia, setErroZonaVia] = useState<string | null>(null);
+
+    function abrirZonaVia() {
+        setZonaEscolhida(localizacao?.zona ?? '');
+        setViaEscolhida(localizacao?.via ?? '');
+        setJustificativaZonaVia('');
+        setPreviaZonaVia(null);
+        setErroZonaVia(null);
+        setShowZonaVia(true);
+    }
+
+    function fecharZonaVia() {
+        setShowZonaVia(false);
+        setPreviaZonaVia(null);
+    }
+
+    function enviarZonaVia(acao: 'previa' | 'alterar') {
+        setErroZonaVia(null);
+        zonaViaHttp.transform(() => ({ zona: zonaEscolhida, via: viaEscolhida, justificativa: justificativaZonaVia }));
+
+        const aoFalhar = (erros: Record<string, string | string[]>) => {
+            const primeiro = Object.values(erros)[0];
+            setErroZonaVia(Array.isArray(primeiro) ? primeiro[0] : (primeiro ?? 'Não foi possível concluir. Tente novamente.'));
+        };
+
+        if (acao === 'previa') {
+            zonaViaHttp.post(`/gestao/processos/${processo.id}/zona-via/previa`, {
+                onSuccess: (resposta) => setPreviaZonaVia(resposta),
+                onError: aoFalhar,
+                onHttpException: () => {
+                    setErroZonaVia('Não foi possível simular a alteração.');
+
+                    return false;
+                },
+            });
+
+            return;
+        }
+
+        zonaViaHttp.patch(`/gestao/processos/${processo.id}/zona-via`, {
+            onSuccess: () => {
+                fecharZonaVia();
+                router.reload();
+            },
+            onError: aoFalhar,
+            onHttpException: () => {
+                setErroZonaVia('Não foi possível gravar a alteração.');
+
+                return false;
+            },
+        });
+    }
     const [parecerCancelamento, setParecerCancelamento] = useState('');
     const [cancelarConviteProcessing, setCancelarConviteProcessing] = useState(false);
     const [showVistoria, setShowVistoria] = useState(false);
@@ -856,7 +936,8 @@ export default function FichaAnaliseShow({
     const [parecerConclusao, setParecerConclusao] = useState('');
     const [tipoDeferimento, setTipoDeferimento] = useState('');
     const [validadeMeses, setValidadeMeses] = useState('');
-    const [errosTipo, setErrosTipo] = useState<{ tipo: string | null; validade: string | null }>({ tipo: null, validade: null });
+    const [validadeData, setValidadeData] = useState('');
+    const [errosTipo, setErrosTipo] = useState<{ tipo: string | null; validade: string | null; validadeData: string | null }>({ tipo: null, validade: null, validadeData: null });
     const [conclusaoProcessing, setConclusaoProcessing] = useState(false);
     const [erroConclusao, setErroConclusao] = useState<string | null>(null);
     const [divergenciaConclusao, setDivergenciaConclusao] = useState<string | null>(null);
@@ -894,7 +975,13 @@ export default function FichaAnaliseShow({
         setSaveState('salvando');
         autosave.transform(() => (manual ? { ...construirPayload(), manual: true } : construirPayload()));
         autosave.patch(fichaUrl, {
-            onSuccess: () => setSaveState('salvo'),
+            onSuccess: () => {
+                setSaveState('salvo');
+
+                if (manual) {
+                    setSalvouNestaTela(true);
+                }
+            },
             onError: () => setSaveState('erro'),
             onHttpException: () => {
                 setSaveState('erro');
@@ -1037,7 +1124,7 @@ export default function FichaAnaliseShow({
     function concluirAnalise(confirmarDivergencia = false) {
         setErroConclusao(null);
         setDivergenciaConclusao(null);
-        setErrosTipo({ tipo: null, validade: null });
+        setErrosTipo({ tipo: null, validade: null, validadeData: null });
         router.post(
             `/gestao/processos/${processo.id}/conclusao-analise`,
             {
@@ -1046,6 +1133,7 @@ export default function FichaAnaliseShow({
                 confirmar_divergencia: confirmarDivergencia,
                 tipo: tipoDeferimento,
                 validade_meses: validadeMeses,
+                validade_data: validadeMeses === 'personalizado' ? validadeData : null,
             },
             {
                 preserveScroll: true,
@@ -1057,12 +1145,13 @@ export default function FichaAnaliseShow({
                     setParecerConclusao('');
                     setTipoDeferimento('');
                     setValidadeMeses('');
+                    setValidadeData('');
                 },
                 onError: (erros) => {
                     const mapa = erros as Record<string, string>;
                     setDivergenciaConclusao(mapa.divergencia ?? null);
-                    setErrosTipo({ tipo: mapa.tipo ?? null, validade: mapa.validade_meses ?? null });
-                    const erroDeTipo = mapa.tipo !== undefined || mapa.validade_meses !== undefined;
+                    setErrosTipo({ tipo: mapa.tipo ?? null, validade: mapa.validade_meses ?? null, validadeData: mapa.validade_data ?? null });
+                    const erroDeTipo = mapa.tipo !== undefined || mapa.validade_meses !== undefined || mapa.validade_data !== undefined;
                     setErroConclusao(
                         mapa.divergencia || erroDeTipo
                             ? null
@@ -1126,7 +1215,11 @@ export default function FichaAnaliseShow({
     function encaminharParaChefia() {
         router.post(
             `/gestao/processos/${processo.id}/status-analise`,
-            { status: 'para_conclusao', voltar_para_caixa: true },
+            {
+                status: 'para_conclusao',
+                voltar_para_caixa: true,
+                indicado_user_id: indicadoParaConclusao === '' ? null : Number(indicadoParaConclusao),
+            },
             {
                 onStart: () => setEncaminhandoChefia(true),
                 onFinish: () => {
@@ -1668,6 +1761,14 @@ export default function FichaAnaliseShow({
                                 <DescItem label="Via">{valorOuTraco(localizacao?.via)}</DescItem>
                             </dl>
 
+                            {podeEditarZonaVia && !somenteLeitura && (
+                                <div className="mt-3">
+                                    <Button size="xs" variant="outline" onClick={abrirZonaVia}>
+                                        Editar zona e via
+                                    </Button>
+                                </div>
+                            )}
+
                             {(!localizacao?.zona || !localizacao?.via) && (
                                 <p className="mt-2 text-theme-xs text-gray-400 dark:text-gray-500">
                                     Zona urbanística e via oficiais seguem pendentes SEDUR (Quadro 10).
@@ -1835,9 +1936,6 @@ export default function FichaAnaliseShow({
                                             const opcaoSelecionada = opcoesCnae.find(
                                                 (opcao) => `${opcao.codigo_louos}|${opcao.codigo_tll ?? ''}` === enquadramentoAtual,
                                             );
-                                            const trocouEnquadramento = enquadramentoAtual !== (enquadramentoInicial[item.cnae] ?? enquadramentoAtual);
-                                            const fluxoDoEnquadramento =
-                                                trocouEnquadramento && opcaoSelecionada ? opcaoSelecionada.fluxo : item.fluxo;
                                             const riscoDaAtividade = opcaoSelecionada?.risco_label ?? item.risco_municipal ?? null;
                                             const atualForaDaPlanilha =
                                                 item.codigo_louos != null &&
@@ -1850,7 +1948,7 @@ export default function FichaAnaliseShow({
                                             return (
                                                 <li
                                                     key={`${item.cnae}-${indice}`}
-                                                    className="rounded-xl border border-gray-200 p-4 dark:border-gray-800"
+                                                    className="rounded-xl border-2 border-brand-200 p-4 dark:border-brand-500/40"
                                                 >
                                                     <div className="flex flex-wrap items-start justify-between gap-3">
                                                         <div>
@@ -1878,23 +1976,22 @@ export default function FichaAnaliseShow({
                                                                 </p>
                                                             )}
                                                         </div>
+                                                        <div>
+                                                            <Label className="mb-1.5">Decisão do analista</Label>
+                                                            <StatusEscolhido
+                                                                cnae={item.cnae}
+                                                                valor={escolhido}
+                                                                disabled={!editavel}
+                                                                onChange={(status) =>
+                                                                    atualizarCnae(indice, { status_escolhido: status })
+                                                                }
+                                                            />
+                                                        </div>
                                                     </div>
 
                                                     {(item.quadros?.length ?? 0) > 0 && (
                                                         <QuadrosChecklist quadros={item.quadros ?? []} />
                                                     )}
-
-                                                    <div className="mt-4">
-                                                        <Label className="mb-1.5">Decisão do analista</Label>
-                                                        <StatusEscolhido
-                                                            cnae={item.cnae}
-                                                            valor={escolhido}
-                                                            disabled={!editavel}
-                                                            onChange={(status) =>
-                                                                atualizarCnae(indice, { status_escolhido: status })
-                                                            }
-                                                        />
-                                                    </div>
 
                                                     {item.cnae.replace(/\D/g, '') ===
                                                         escritorioVirtual.cnae_gatilho.replace(/\D/g, '') && (
@@ -1923,27 +2020,26 @@ export default function FichaAnaliseShow({
                                                         </div>
                                                     )}
 
-                                                    <div className="mt-3 rounded-lg bg-gray-50 p-3 dark:bg-white/5">
-                                                        <p className="text-theme-xs font-medium text-gray-500 dark:text-gray-400">
-                                                            Pergunta: {item.pergunta_local?.pergunta ?? 'A atividade será desenvolvida no local?'}
-                                                        </p>
-                                                        <p
-                                                            className={`mt-0.5 text-theme-xs ${
-                                                                item.pergunta_local && !item.pergunta_local.pendente
-                                                                    ? 'text-gray-700 dark:text-gray-200'
-                                                                    : 'text-gray-400 dark:text-gray-500'
-                                                            }`}
-                                                        >
-                                                            Resposta:{' '}
-                                                            {item.pergunta_local && !item.pergunta_local.pendente
-                                                                ? item.pergunta_local.resposta
-                                                                : 'Pendente — requerente ainda não respondeu esta pergunta no formulário de solicitação.'}
-                                                        </p>
-                                                    </div>
-
-                                                    <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                                                    <div className="mt-3 grid items-start gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1.7fr)_minmax(0,0.8fr)_minmax(0,0.8fr)]">
+                                                        <div className="rounded-lg bg-gray-50 p-3 dark:bg-white/5">
+                                                            <p className="text-theme-xs font-medium text-gray-500 dark:text-gray-400">
+                                                                Pergunta: {item.pergunta_local?.pergunta ?? 'A atividade será desenvolvida no local?'}
+                                                            </p>
+                                                            <p
+                                                                className={`mt-0.5 text-theme-xs ${
+                                                                    item.pergunta_local && !item.pergunta_local.pendente
+                                                                        ? 'text-gray-700 dark:text-gray-200'
+                                                                        : 'text-gray-400 dark:text-gray-500'
+                                                                }`}
+                                                            >
+                                                                Resposta:{' '}
+                                                                {item.pergunta_local && !item.pergunta_local.pendente
+                                                                    ? item.pergunta_local.resposta
+                                                                    : 'Pendente — requerente ainda não respondeu esta pergunta no formulário de solicitação.'}
+                                                            </p>
+                                                        </div>
                                                         {editavel ? (
-                                                            <div className="sm:col-span-2">
+                                                            <div>
                                                                 <Label htmlFor={`enquadramento-${indice}`} className="mb-1.5">
                                                                     Enquadramento (LOUOS × TLL)
                                                                 </Label>
@@ -2017,7 +2113,6 @@ export default function FichaAnaliseShow({
                                                                 </span>
                                                             )}
                                                         </DescItem>
-                                                        <DescItem label="Enquadramento">{rotuloFluxoRisco(fluxoDoEnquadramento)}</DescItem>
                                                         <DescItem label="Risco da atividade">
                                                             {riscoDaAtividade ?? (
                                                                 <span className="text-gray-400 dark:text-gray-500">—</span>
@@ -2316,8 +2411,30 @@ export default function FichaAnaliseShow({
                             </CardContent>
                         </Card>
 
-                        {/* Parecer */}
-                        <Card>
+                    </div>
+
+                    {/* Coluna lateral: abrigados, precedentes, ações (mapa/localização
+                        já exibidos no topo da ficha — ver grid Localização | Polígono). */}
+                    <div className="space-y-6">
+                        {escritorioVirtual.is_sede && (
+                            <AbrigadosPanel
+                                inscricao={escritorioVirtual.inscricao}
+                                abrigados={escritorioVirtual.abrigados}
+                            />
+                        )}
+
+                        <PrecedentesPanel
+                            carregando={precedentes.processing}
+                            erro={precedentesErro}
+                            dados={precedentesData}
+                        />
+
+                    </div>
+                </div>
+
+                <div className="grid items-start gap-6 lg:grid-cols-3">
+                    <div className="lg:col-span-2">
+                                                <Card>
                             <CardHeader
                                 title="Parecer técnico"
                                 description="Em branco para o analista redigir — a fundamentação do sistema está na justificativa de cada atividade. Quando a IA está ligada, é possível pedir uma minuta para revisar."
@@ -2389,25 +2506,9 @@ export default function FichaAnaliseShow({
                                 </p>
                             </CardContent>
                         </Card>
-
                     </div>
-
-                    {/* Coluna lateral: abrigados, precedentes, ações (mapa/localização
-                        já exibidos no topo da ficha — ver grid Localização | Polígono). */}
-                    <div className="space-y-6">
-                        {escritorioVirtual.is_sede && (
-                            <AbrigadosPanel
-                                inscricao={escritorioVirtual.inscricao}
-                                abrigados={escritorioVirtual.abrigados}
-                            />
-                        )}
-
-                        <PrecedentesPanel
-                            carregando={precedentes.processing}
-                            erro={precedentesErro}
-                            dados={precedentesData}
-                        />
-
+                    <div>
+                        {!somenteLeitura && (
                         <Card>
                             <CardHeader title="Ações" description="Conforme a fase da análise e a permissão." />
                             <CardContent>
@@ -2446,8 +2547,8 @@ export default function FichaAnaliseShow({
                                         </Button>
                                     )}
 
-                                    {podeEncaminharChefia && (
-                                        <Button onClick={() => setShowEncaminharChefia(true)} variant="outline" size="sm">
+                                    {podeEncaminharChefia && fichaSalva && (
+                                        <Button onClick={() => setShowEncaminharChefia(true)} variant="claro" size="sm">
                                             Encaminhar para Chefia
                                         </Button>
                                     )}
@@ -2497,6 +2598,7 @@ export default function FichaAnaliseShow({
                                 </div>
                             </CardContent>
                         </Card>
+                        )}
                     </div>
                 </div>
             </div>
@@ -2549,16 +2651,167 @@ export default function FichaAnaliseShow({
                 </div>
             </Modal>
 
-            <ConfirmDialog
+            <Modal
                 isOpen={showEncaminharChefia}
-                variant="info"
-                title="Encaminhar para Chefia?"
-                description="O processo vai para a aba Para conclusão da Caixa do setor e sai da sua Caixa de entrada."
-                confirmLabel="Encaminhar"
-                processing={encaminhandoChefia}
-                onConfirm={encaminharParaChefia}
                 onClose={() => setShowEncaminharChefia(false)}
-            />
+                ariaLabel="Encaminhar para Chefia"
+                className="m-4 max-w-[480px] p-6 lg:p-8"
+            >
+                <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Encaminhar para Chefia?</h4>
+                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                    O processo vai para a aba Para conclusão da Caixa do Apoio e sai da sua Caixa de entrada. Quem
+                    distribui é o Apoio.
+                </p>
+                <div className="mt-4">
+                    <Label htmlFor="indicado-para-conclusao" className="mb-1.5">
+                        Indicar quem deve concluir (opcional)
+                    </Label>
+                    <OptionSelect
+                        id="indicado-para-conclusao"
+                        placeholder="Sem indicação"
+                        value={indicadoParaConclusao}
+                        onChange={setIndicadoParaConclusao}
+                        options={[
+                            { value: '', label: 'Sem indicação' },
+                            ...usuariosIndicaveis.map((usuario) => ({ value: String(usuario.id), label: usuario.name })),
+                        ]}
+                        hint="É só uma sugestão para o Apoio: o processo não vai direto para a pessoa indicada."
+                    />
+                </div>
+                <div className="mt-6 flex justify-end gap-3">
+                    <Button size="sm" variant="outline" onClick={() => setShowEncaminharChefia(false)}>
+                        Cancelar
+                    </Button>
+                    <Button size="sm" onClick={encaminharParaChefia} loading={encaminhandoChefia}>
+                        Encaminhar
+                    </Button>
+                </div>
+            </Modal>
+
+            <Modal
+                isOpen={showZonaVia}
+                onClose={fecharZonaVia}
+                ariaLabel="Editar zona e via"
+                className="m-4 max-w-[560px] p-6 lg:p-8"
+            >
+                <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Editar zona e via</h4>
+                {previaZonaVia === null ? (
+                    <>
+                        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                            Escolha a zona e a classe de via da LOUOS. Antes de gravar, o sistema mostra o que o motor
+                            vai recalcular.
+                        </p>
+                        <div className="mt-4 grid gap-4">
+                            <div>
+                                <Label htmlFor="zona-manual" className="mb-1.5">
+                                    Zona
+                                </Label>
+                                <OptionSelect
+                                    id="zona-manual"
+                                    placeholder="Selecione a zona"
+                                    value={zonaEscolhida}
+                                    onChange={setZonaEscolhida}
+                                    options={zonasDisponiveis.map((zona) => ({
+                                        value: zona.codigo,
+                                        label: zona.nome ? `${zona.codigo} — ${zona.nome}` : zona.codigo,
+                                    }))}
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="via-manual" className="mb-1.5">
+                                    Via
+                                </Label>
+                                <OptionSelect
+                                    id="via-manual"
+                                    placeholder="Selecione a classe da via"
+                                    value={viaEscolhida}
+                                    onChange={setViaEscolhida}
+                                    options={viasDisponiveis.map((via) => ({ value: via, label: via }))}
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="justificativa-zona-via" className="mb-1.5" required>
+                                    Justificativa
+                                </Label>
+                                <Textarea
+                                    id="justificativa-zona-via"
+                                    rows={3}
+                                    value={justificativaZonaVia}
+                                    onChange={setJustificativaZonaVia}
+                                    placeholder="Por que a zona ou a via precisa ser alterada?"
+                                />
+                            </div>
+                        </div>
+                        {erroZonaVia && <p className="mt-3 text-sm text-error-600 dark:text-error-500">{erroZonaVia}</p>}
+                        <div className="mt-6 flex justify-end gap-3">
+                            <Button size="sm" variant="outline" onClick={fecharZonaVia}>
+                                Cancelar
+                            </Button>
+                            <Button
+                                size="sm"
+                                onClick={() => enviarZonaVia('previa')}
+                                loading={zonaViaHttp.processing}
+                                disabled={justificativaZonaVia.trim().length < 5}
+                            >
+                                Ver o que muda
+                            </Button>
+                        </div>
+                    </>
+                ) : (
+                    <>
+                        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                            Ao confirmar, o enquadramento e a decisão do motor desta ficha são recalculados. A
+                            justificativa, quem alterou e a data e hora ficam registrados na Tramitação e no log.
+                        </p>
+                        <dl className="mt-4 grid grid-cols-2 gap-4">
+                            <DescItem label="Zona">
+                                {valorOuTraco(previaZonaVia.antes.zona)} → {valorOuTraco(previaZonaVia.depois.zona)}
+                            </DescItem>
+                            <DescItem label="Via">
+                                {valorOuTraco(previaZonaVia.antes.via)} → {valorOuTraco(previaZonaVia.depois.via)}
+                            </DescItem>
+                        </dl>
+                        <div className="mt-4">
+                            <p className="text-theme-xs font-medium tracking-wide text-gray-400 uppercase dark:text-gray-500">
+                                Decisão do motor por atividade
+                            </p>
+                            {!previaZonaVia.motor_disponivel ? (
+                                <p className="mt-2 text-sm text-warning-600 dark:text-warning-500">
+                                    O motor não respondeu agora; não foi possível simular. A alteração ainda pode ser gravada.
+                                </p>
+                            ) : (
+                                <ul className="mt-2 space-y-2">
+                                    {previaZonaVia.mudancas.map((mudanca) => (
+                                        <li
+                                            key={mudanca.cnae}
+                                            className="rounded-lg border border-gray-200 p-3 text-sm dark:border-gray-800"
+                                        >
+                                            <span className="font-medium text-gray-800 dark:text-white/90">{mudanca.cnae}</span>
+                                            <span className="ml-2 text-gray-600 dark:text-gray-300">
+                                                {mudanca.mudou
+                                                    ? `${mudanca.antes ?? '—'} → ${mudanca.depois}`
+                                                    : `sem mudança (${mudanca.depois})`}
+                                            </span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
+                        {erroZonaVia && <p className="mt-3 text-sm text-error-600 dark:text-error-500">{erroZonaVia}</p>}
+                        <div className="mt-6 flex justify-end gap-3">
+                            <Button size="sm" variant="outline" onClick={() => setPreviaZonaVia(null)}>
+                                Voltar
+                            </Button>
+                            <Button size="sm" onClick={() => enviarZonaVia('alterar')} loading={zonaViaHttp.processing}>
+                                Confirmar alteração
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={fecharZonaVia}>
+                                Cancelar
+                            </Button>
+                        </div>
+                    </>
+                )}
+            </Modal>
 
             <ConfirmDialog
                 isOpen={showFinalizar}
@@ -2658,6 +2911,7 @@ export default function FichaAnaliseShow({
                                 if (valor !== 'deferido') {
                                     setTipoDeferimento('');
                                     setValidadeMeses('');
+                                    setValidadeData('');
                                 }
                             }}
                             opcoes={conclusaoOpcoes}
@@ -2669,11 +2923,15 @@ export default function FichaAnaliseShow({
                                           setTipoDeferimento(valor);
                                           if (valor === 'definitiva') {
                                               setValidadeMeses('');
+                                              setValidadeData('');
                                           }
                                       }
                             }
                             validadeMeses={validadeMeses}
                             onValidadeMeses={setValidadeMeses}
+                            validadeData={validadeData}
+                            onValidadeData={setValidadeData}
+                            erroValidadeData={errosTipo.validadeData}
                             erroTipo={errosTipo.tipo}
                             erroValidade={errosTipo.validade}
                             parecer={parecerConclusao}
@@ -3108,18 +3366,19 @@ function ResumoProcessoCard({
                             const fonte = typeof sugestao.output.fonte === 'string' ? sugestao.output.fonte : null;
 
                             return (
-                                <li
-                                    key={sugestao.id}
-                                    className="rounded-xl border border-brand-200 bg-brand-50 p-4 dark:border-brand-500/30 dark:bg-brand-500/10"
-                                >
-                                    <div className="flex flex-wrap items-center justify-between gap-2">
+                                <li key={sugestao.id}>
+                                    <details
+                                        open
+                                        className="rounded-xl border border-brand-200 bg-brand-50 p-4 dark:border-brand-500/30 dark:bg-brand-500/10"
+                                    >
+                                    <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-2">
                                         <Badge color="info" size="sm">
                                             Sugestão — revise
                                         </Badge>
                                         <Badge color={sugestao.status === 'escalada_humano' ? 'error' : 'light'} size="sm">
                                             {sugestao.status_label}
                                         </Badge>
-                                    </div>
+                                    </summary>
 
                                     {resumo === '' ? (
                                         <p className="mt-3 text-theme-sm text-gray-600 dark:text-gray-300">
@@ -3149,6 +3408,7 @@ function ResumoProcessoCard({
                                             Fonte: {fonte}
                                         </p>
                                     )}
+                                    </details>
                                 </li>
                             );
                         })}

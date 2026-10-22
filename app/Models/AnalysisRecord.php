@@ -41,6 +41,9 @@ class AnalysisRecord extends Model
     /** @use HasFactory<AnalysisRecordFactory> */
     use HasFactory;
 
+    /** Abertura só para consulta (link da Tramitação): a ficha não fica editável. */
+    public bool $somenteLeitura = false;
+
     /**
      * @return array<string, string>
      */
