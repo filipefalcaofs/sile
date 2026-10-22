@@ -32,6 +32,7 @@ class RolesAndPermissionsSeeder extends Seeder
         'relatorios.produtividade.nominal',
         'forcar-transicao-analise',
         'receber-escalonamento-sla',
+        'editar-zona-via',
     ];
 
     private const array PERFIS_ANALISE = ['Analista Terceirizado', 'Analista Servidor'];
@@ -105,6 +106,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'relatorios.produtividade.nominal',
             'forcar-transicao-analise',
             'receber-escalonamento-sla',
+            'editar-zona-via',
         ];
 
         foreach ($permissions as $permission) {

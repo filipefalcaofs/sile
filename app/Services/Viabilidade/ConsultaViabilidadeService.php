@@ -155,7 +155,7 @@ class ConsultaViabilidadeService
      *
      * @param  array<int, bool|int|list<int>>  $respostas
      */
-    public function consultarComTerritorio(TerritoryResult $territory, string $cnae, ?float $area = null, ?TipoImovel $tipoImovel = null, array $respostas = [], ?string $categoriaEmpresa = null): ConsultaViabilidadeResult
+    public function consultarComTerritorio(TerritoryResult $territory, string $cnae, ?float $area = null, ?TipoImovel $tipoImovel = null, array $respostas = [], ?string $categoriaEmpresa = null, ?bool $usoNaoResidencial = null): ConsultaViabilidadeResult
     {
         $input = ConsultaViabilidadeInput::paraPonto($cnae, $area, $tipoImovel, $respostas, $categoriaEmpresa);
 
@@ -168,6 +168,7 @@ class ConsultaViabilidadeService
                 tipoImovel: $input->tipoImovel,
                 categoriaEmpresa: $input->categoriaEmpresa,
                 vagasDeclaradas: $input->vagas,
+                usoNaoResidencial: $usoNaoResidencial,
             ),
         );
 

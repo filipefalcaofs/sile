@@ -79,6 +79,7 @@ use App\Http\Controllers\Gestao\ViabilityServiceTypeController;
 use App\Http\Controllers\Gestao\ViaController;
 use App\Http\Controllers\Gestao\VistoriaConsultaController;
 use App\Http\Controllers\Gestao\ZonaController;
+use App\Http\Controllers\Gestao\ZonaViaController;
 use App\Http\Controllers\NotificationCenterController;
 use App\Http\Controllers\Portal\CnaeSearchController;
 use App\Http\Middleware\ResolveAssistedAttendance;
@@ -786,6 +787,11 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::post('ficha/gerar-resumo', [AnalysisRecordController::class, 'gerarResumo'])->name('ficha.gerar-resumo');
             Route::get('ficha/diff', [AnalysisRecordController::class, 'diff'])->name('ficha.diff');
             Route::get('precedentes', [PrecedenteController::class, 'show'])->name('precedentes');
+            // Zona e via escolhidas na ficha: prévia do que o motor decidiria e gravação com justificativa.
+            Route::middleware('permission:editar-zona-via')->group(function () {
+                Route::post('zona-via/previa', [ZonaViaController::class, 'previa'])->name('zona-via.previa');
+                Route::patch('zona-via', [ZonaViaController::class, 'alterar'])->name('zona-via.alterar');
+            });
             // Encaminhamento à vistoria (handoff real — não é malha fina): o
             // analista envia o processo à caixa do setor de vistoria,
             // desatribuído e com o eixo em Vistoriar, para o apoio distribuir

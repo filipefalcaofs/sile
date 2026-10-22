@@ -16,6 +16,7 @@ use App\Services\Tratamento\TratamentoRamoResolver;
 use App\Services\Tratamento\TratamentoRamoResult;
 use App\Support\Audit\AuditService;
 use App\Support\Louos\Quadro10Zona;
+use App\Support\Louos\ViaLocalPorCentralidade;
 use App\Support\Settings;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -231,6 +232,10 @@ class LouosEnquadramentoService
         }
 
         $vereditoVia = $this->vereditoQuadro11a($quadro11a);
+
+        if ($vereditoVia !== null && $this->viaLocalLiberadaPelaNota($quadro11a, $input)) {
+            $vereditoVia = null;
+        }
 
         if ($vereditoVia === ResultadoViabilidade::NaoPermitido) {
             $motivo = $this->textos->get('louos.motivo.via_vedada');
@@ -547,6 +552,24 @@ class LouosEnquadramentoService
         }
 
         return null;
+    }
+
+    /**
+     * Nota do Quadro 11A: uso não residencial em Via Local, em zona de
+     * centralidade e permitido na zona, não é indeferido pela via.
+     *
+     * @param  array<string, mixed>  $quadro11a
+     */
+    private function viaLocalLiberadaPelaNota(array $quadro11a, EnquadramentoInput $input): bool
+    {
+        $zona = $input->territory?->zona;
+
+        return ViaLocalPorCentralidade::libera(
+            is_array($zona) ? $this->zonaNome($zona) : null,
+            is_string($quadro11a['classe_via'] ?? null) ? $quadro11a['classe_via'] : null,
+            $input->cnaePrincipal,
+            $input->usoNaoResidencial === true,
+        );
     }
 
     /**

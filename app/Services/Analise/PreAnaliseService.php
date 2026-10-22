@@ -130,6 +130,67 @@ class PreAnaliseService
         });
     }
 
+    /**
+     * Recalcula a ficha em edição com o veredito atual do motor (por exemplo,
+     * depois de a zona ou a via serem alteradas à mão). O que o analista já
+     * fez é mantido: justificativa por atividade, decisão que ele mudou em
+     * relação à sugestão, condicionantes e vagas. Ficha finalizada não muda.
+     */
+    public function recalcularFicha(ViabilityRequest $request, AnalysisRecord $record): bool
+    {
+        if ($record->isFinalizada()) {
+            return false;
+        }
+
+        try {
+            $resolved = $this->resolver->resolve($request);
+        } catch (Throwable) {
+            return false;
+        }
+
+        $anteriores = collect($record->per_cnae ?? [])->keyBy('cnae');
+        $campos = $this->camposDoMotor($request, $resolved);
+        unset($campos['conditions'], $campos['parking']);
+
+        $campos['per_cnae'] = array_map(function (array $item) use ($anteriores): array {
+            $antigo = $anteriores->get($item['cnae']);
+
+            if (! is_array($antigo)) {
+                return $item;
+            }
+
+            $item['justificativa'] = $antigo['justificativa'] ?? null;
+
+            if (($antigo['status_escolhido'] ?? null) !== ($antigo['status_sugerido'] ?? null)) {
+                $item['status_escolhido'] = $antigo['status_escolhido'] ?? null;
+            }
+
+            return $item;
+        }, $campos['per_cnae']);
+
+        return DB::transaction(function () use ($request, $record, $resolved, $campos): bool {
+            $record->forceFill($campos)->save();
+
+            $this->audit->log(
+                logName: 'analise',
+                event: 'ficha-recalculada',
+                description: "Ficha do processo #{$request->id} recalculada pelo motor",
+                properties: [
+                    'viability_request_id' => $request->id,
+                    'protocol_number' => $request->protocol_number,
+                    'revision' => $record->revision,
+                    'consolidado' => $resolved->consolidado,
+                    'sugestao_por_cnae' => $this->sugestaoPorCnae($resolved),
+                ],
+                subject: $record,
+                result: 'sucesso',
+                rulesVersion: $this->rulesVersionRepresentativa($resolved->rules_versions),
+            );
+
+            return true;
+        });
+    }
+
     private function eRascunhoIntocado(AnalysisRecord $record): bool
     {
         return $record->revision === self::REVISAO_INICIAL

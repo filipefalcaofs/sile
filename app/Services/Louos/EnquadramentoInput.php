@@ -13,6 +13,8 @@ use Carbon\CarbonInterface;
  * território (de onde vêm zona e via — Fase 4, hoje indisponível/pendente
  * SEDUR) e as vagas declaradas pelo requerente (HU-040).
  *
+ * `usoNaoResidencial` vem do uso do imóvel no Cadastro Imobiliário (null = não informado).
+ *
  * `data` reproduz a decisão por época (null = versão vigente). `versoesOverride`
  * é o modo sandbox (HU-133): resolve um domínio por uma versão específica
  * (rascunho) sem afetar a vigente — chave = value de RuleDomain, valor = número
@@ -37,6 +39,7 @@ final readonly class EnquadramentoInput
         public array $respostas = [],
         public ?TipoImovel $tipoImovel = null,
         public ?string $categoriaEmpresa = null,
+        public ?bool $usoNaoResidencial = null,
     ) {}
 
     /**
