@@ -50,3 +50,9 @@ def test_lado_minimo_escolhe_o_menor_recorte_que_contem_o_lote():
 
 def test_area_m2_do_retangulo():
     assert geo.area_m2(sinteticos.retangulo(0, 0, 30, 20)) == pytest.approx(600, rel=0.01)
+
+
+def test_lados_de_treino_incluem_os_recortes_menores_que_o_lote():
+    assert geo.lados_de_treino({"lado_m": 240}) == [60, 120, 240]
+    assert geo.lados_de_treino({"lado_m": 120}) == [60, 120]
+    assert geo.lados_de_treino({"lado_m": 60}) == [60]

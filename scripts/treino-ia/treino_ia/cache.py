@@ -7,7 +7,7 @@ import numpy as np
 import torch
 from PIL import Image
 
-from treino_ia import arquivos, config, recursos, situacao
+from treino_ia import arquivos, config, geo, recursos, situacao
 
 
 def caminho(lote_id: str, lado: int):
@@ -19,11 +19,12 @@ def gerar(manifesto: dict, seg, limite: int | None = None) -> dict:
     lotes = manifesto.get("treino", [])
     if limite is not None:
         lotes = lotes[:limite]
+    pedidos = [(lote, lado) for lote in lotes for lado in geo.lados_de_treino(lote)]
     contagem = {"gerados": 0, "ja_existiam": 0, "sem_recorte": 0}
     inicio = time.monotonic()
-    for i, lote in enumerate(lotes, 1):
-        destino = caminho(lote["id"], lote["lado_m"])
-        png = c.recortes / f"{lote['id']}_{lote['lado_m']}.png"
+    for i, (lote, lado) in enumerate(pedidos, 1):
+        destino = caminho(lote["id"], lado)
+        png = c.recortes / f"{lote['id']}_{lado}.png"
         if destino.exists():
             contagem["ja_existiam"] += 1
         elif not png.exists():
@@ -39,8 +40,8 @@ def gerar(manifesto: dict, seg, limite: int | None = None) -> dict:
             arquivos.gravar_atomico(destino, buffer.getvalue())
             contagem["gerados"] += 1
             recursos.conferir_memoria()
-        if i % 5 == 0 or i == len(lotes):
+        if i % 5 == 0 or i == len(pedidos):
             gerados = contagem["gerados"]
-            situacao.registrar(c, "cache", feitos=i, total=len(lotes),
+            situacao.registrar(c, "cache", feitos=i, total=len(pedidos),
                                tempo_medio_s=(time.monotonic() - inicio) / gerados if gerados else None)
     return contagem

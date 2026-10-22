@@ -64,6 +64,11 @@ def ponto_interno(poligono: dict, rng: random.Random) -> tuple[float, float]:
     return (escolhido.y / M_LAT, escolhido.x / m_lng(lat_ref))
 
 
+def lados_de_treino(lote: dict) -> list[int]:
+    """O recorte que contém o lote e os menores, em que o lote encosta na borda."""
+    return [lado for lado in LADOS_RECORTE if lado <= lote["lado_m"]]
+
+
 def lado_minimo(poligono: dict, lat: float, lng: float) -> int | None:
     forma = shape(poligono)
     for lado in LADOS_RECORTE:

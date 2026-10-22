@@ -39,3 +39,16 @@ def test_cache_conta_lote_sem_recorte(tmp_path, monkeypatch):
     (config.caminhos().recortes / "9-1_60.png").unlink()
 
     assert cache.gerar(m, SegContador())["sem_recorte"] == 1
+
+
+def test_cache_gera_tambem_os_recortes_menores_do_treino(tmp_path, monkeypatch):
+    import shutil
+
+    m = conjunto_pequeno.preparar(tmp_path, monkeypatch, n=1)
+    r = config.caminhos().recortes
+    shutil.copy(r / "9-0_60.png", r / "9-0_120.png")
+    m["treino"][0]["lado_m"] = 120
+
+    cache.gerar(m, SegContador())
+
+    assert sorted(p.name for p in config.caminhos().cache.glob("*.pt")) == ["9-0_120.pt", "9-0_60.pt"]

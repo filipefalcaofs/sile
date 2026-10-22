@@ -1,7 +1,8 @@
 """Treino do decodificador de máscaras do SAM 2 com os lotes do CODLOG.
 
 O codificador fica congelado e suas saídas vêm do cache. A cada passo, um lote
-e um ponto sorteado dentro dele; a perda é Dice + BCE da melhor das 3 máscaras
+num dos seus recortes (o que o contém ou um menor, em que ele encosta na borda,
+para o modelo aprender a pedir o recorte maior) e um ponto sorteado dentro dele; a perda é Dice + BCE da melhor das 3 máscaras
 contra a máscara do lote, mais o erro do IoU previsto. O estado é salvo a cada
 5 minutos e ao fim de cada época, e uma nova chamada retoma de onde parou.
 """
@@ -16,7 +17,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
-from treino_ia import arquivos, cache, config, recortes, recursos, situacao
+from treino_ia import arquivos, cache, config, geo, recortes, recursos, situacao
 
 INTERVALO_ESTADO_S = 300
 TAXA = 1e-4
@@ -33,10 +34,11 @@ def _amostras(manifesto: dict) -> list[dict]:
     c = config.caminhos()
     saida = []
     for lote in manifesto.get("treino", []):
-        meta = arquivos.ler_json(c.recortes / f"{lote['id']}_{lote['lado_m']}.json")
-        if meta is None or not cache.caminho(lote["id"], lote["lado_m"]).exists():
-            continue
-        saida.append({"lote": lote, "caixa": meta["caixa"]})
+        for lado in geo.lados_de_treino(lote):
+            meta = arquivos.ler_json(c.recortes / f"{lote['id']}_{lado}.json")
+            if meta is None or not cache.caminho(lote["id"], lado).exists():
+                continue
+            saida.append({"lote": lote, "lado": lado, "caixa": meta["caixa"]})
     return saida
 
 
@@ -51,7 +53,7 @@ def _perda(logits, alvo):
 def _passo(preditor, amostra, rng: np.random.Generator):
     sam = preditor.model
     dev = preditor.device
-    feats = torch.load(cache.caminho(amostra["lote"]["id"], amostra["lote"]["lado_m"]), map_location=dev)
+    feats = torch.load(cache.caminho(amostra["lote"]["id"], amostra["lado"]), map_location=dev)
     embed = feats["image_embed"].float()
     altas = [f.float() for f in feats["high_res_feats"]]
     mascara = recortes.mascara_lote(amostra["lote"]["poligono"], amostra["caixa"])
@@ -91,7 +93,7 @@ def treinar(manifesto: dict, epocas: int, semente: int, modelo=None, parar_apos_
     otimizador = torch.optim.AdamW(decodificador.parameters(), lr=TAXA)
 
     amostras = _amostras(manifesto)
-    assinatura = hashlib.sha1("|".join(sorted(f"{a['lote']['id']}_{a['lote']['lado_m']}" for a in amostras)).encode()).hexdigest()
+    assinatura = hashlib.sha1("|".join(sorted(f"{a['lote']['id']}_{a['lado']}" for a in amostras)).encode()).hexdigest()
     identidade = {"semente": semente, "epocas": epocas, "assinatura": assinatura, "amostras": len(amostras)}
 
     caminho_estado = c.pesos / "estado.pt"
@@ -137,7 +139,7 @@ def treinar(manifesto: dict, epocas: int, semente: int, modelo=None, parar_apos_
         media = estado["soma_perda"] / max(1, len(ordem))
         c.logs.mkdir(parents=True, exist_ok=True)
         with open(c.logs / "treino.log", "a", encoding="utf-8") as log:
-            log.write(f"época {estado['epoca'] + 1}/{epocas}: perda média {media:.4f} ({len(ordem)} lotes)\n")
+            log.write(f"época {estado['epoca'] + 1}/{epocas}: perda média {media:.4f} ({len(ordem)} recortes)\n")
         estado["epoca"] += 1
         estado["indice"] = 0
         estado["soma_perda"] = 0.0

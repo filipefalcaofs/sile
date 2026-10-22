@@ -72,3 +72,16 @@ def test_cache_diferente_do_estado_recomeca_o_treino(conjunto, segmentador):
 
     assert list(config.caminhos().pesos.glob("estado-anterior-*.pt"))
     assert torch.load(config.caminhos().pesos / "estado.pt")["amostras"] == 1
+
+
+def test_amostras_incluem_um_recorte_por_lado_de_treino(tmp_path, monkeypatch):
+    m = conjunto_pequeno.preparar(tmp_path, monkeypatch, n=1)
+    c = config.caminhos()
+    m["treino"][0]["lado_m"] = 120
+    for sufixo in ("png", "json"):
+        (c.recortes / f"9-0_120.{sufixo}").write_bytes((c.recortes / f"9-0_60.{sufixo}").read_bytes())
+    c.cache.mkdir(parents=True, exist_ok=True)
+    for lado in (60, 120):
+        cache.caminho("9-0", lado).write_bytes(b"x")
+
+    assert sorted(a["lado"] for a in treino._amostras(m)) == [60, 120]

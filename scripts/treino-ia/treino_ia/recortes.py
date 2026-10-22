@@ -39,23 +39,25 @@ def baixar_um(lote_id: str, lat: float, lng: float, lado_m: int, sessao) -> str:
 def baixar_todos(manifesto: dict, sessao=None, limite: int | None = None) -> dict:
     sessao = sessao or wfs.SessaoHttp()
     c = config.caminhos()
-    lotes = manifesto.get("treino", []) + manifesto.get("teste", [])
+    lotes = [(l, geo.lados_de_treino(l)) for l in manifesto.get("treino", [])]
+    lotes += [(l, [l["lado_m"]]) for l in manifesto.get("teste", [])]
     if limite is not None:
         lotes = lotes[:limite]
+    pedidos = [(lote, lado) for lote, lados in lotes for lado in lados]
     contagem = {"baixados": 0, "ja_existiam": 0, "falhas": 0}
     inicio = time.monotonic()
     ultimo_erro = None
-    for i, lote in enumerate(lotes, 1):
+    for i, (lote, lado) in enumerate(pedidos, 1):
         lat, lng = lote["ponto"]
-        resultado = baixar_um(lote["id"], lat, lng, lote["lado_m"], sessao)
+        resultado = baixar_um(lote["id"], lat, lng, lado, sessao)
         chave = {"baixado": "baixados", "ja_existia": "ja_existiam", "falha": "falhas"}[resultado]
         contagem[chave] += 1
         if resultado == "falha":
-            ultimo_erro = f"recorte de {lote['id']} falhou"
-        if i % 20 == 0 or i == len(lotes):
+            ultimo_erro = f"recorte de {lote['id']} ({lado} m) falhou"
+        if i % 20 == 0 or i == len(pedidos):
             recursos.conferir_memoria()
             feitos = contagem["baixados"]
-            situacao.registrar(c, "recortes", feitos=i, total=len(lotes),
+            situacao.registrar(c, "recortes", feitos=i, total=len(pedidos),
                                tempo_medio_s=(time.monotonic() - inicio) / feitos if feitos else None,
                                ultimo_erro=ultimo_erro)
     return contagem

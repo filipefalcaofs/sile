@@ -82,3 +82,15 @@ def test_mascara_do_lote_cobre_a_area_esperada():
     assert mascara.dtype == bool
     assert mascara.sum() == pytest.approx(esperado, rel=0.03)
     assert mascara[400, 400]
+
+
+def test_lote_de_treino_ganha_os_recortes_menores_e_o_de_teste_nao(tmp_path, monkeypatch):
+    monkeypatch.setenv("TREINO_IA_RAIZ", str(tmp_path))
+    m = _manifesto()
+    m["treino"][0]["lado_m"] = 120
+    m["teste"][0]["lado_m"] = 120
+
+    recortes.baixar_todos(m, sessao=SessaoContadora())
+
+    nomes = sorted(p.name for p in config.caminhos().recortes.glob("*.png"))
+    assert nomes == ["1-0_120.png", "1-0_60.png", "1-1_120.png"]
