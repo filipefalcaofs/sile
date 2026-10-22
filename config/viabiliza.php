@@ -453,7 +453,7 @@ return [
             'senha' => '',
             'cnpj_prefeitura' => '13927801000149',
             'caminho_resposta' => '/recebe',
-            'codigo_area' => 1,
+            'codigo_area' => 70,
             'timeout' => 8,
             // Resiliência do job que abre o processo a partir do envelope
             // recebido, espelhando viabiliza.expresso.job. Constante TÉCNICA fora do

@@ -761,7 +761,7 @@ class ParameterSeeder extends Seeder
             'integrations.regin.codigo_area' => [
                 'group' => 'integracoes',
                 'type' => 'integer',
-                'default_value' => '1',
+                'default_value' => '70',
                 'validation_rules' => ['required', 'integer', 'min:1'],
                 'description' => 'CODIGO_AREA da análise no envelope Resposta: código da área/secretaria da Prefeitura no REGIN',
             ],
