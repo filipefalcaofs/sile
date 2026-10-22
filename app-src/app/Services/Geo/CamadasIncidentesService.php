@@ -74,6 +74,10 @@ class CamadasIncidentesService
                 'lng' => $ponto['lng'],
                 'origem' => $request->property_polygon_geojson ? 'poligono' : $request->property_location_source?->value,
             ],
+            'logradouro' => $localizacao->codLogDoEndereco() === null ? null : [
+                'cod_log' => $localizacao->codLogDoEndereco(),
+                'nome' => $this->nomeLogradouro($localizacao->logradouroDoEndereco()),
+            ],
             'logradouro_tributario' => $localizacao->codLogTributario === null ? null : [
                 'cod_log' => $localizacao->codLogTributario,
                 'nome' => $this->nomeLogradouro($localizacao->logradouroTributario),
@@ -81,7 +85,7 @@ class CamadasIncidentesService
             'logradouros_proximos' => [],
             'bairro' => null,
             'zona' => null,
-            'via' => $this->classeViaria($request->cod_log ?: $localizacao->codLogTributario),
+            'via' => $this->classeViaria($request->cod_log ?: $localizacao->codLogDoEndereco()),
             'camadas' => [],
         ];
 

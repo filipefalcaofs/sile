@@ -54,6 +54,8 @@ class LocalizacaoInscricaoService
         $nome = $resultado->raw['LogradouroTributario'] ?? $resultado->cadastro?->logradouro_tributario;
         $nome = is_string($nome) ? trim($nome) : '';
 
+        [$codLogLocalizacao, $logradouroLocalizacao] = $this->logradouroDaLocalizacao($resultado->raw);
+
         $situacao = $resultado->cadastro?->situacao_cadastral;
         $uso = $resultado->raw['Utilizacao'] ?? null;
         $utilizacao = is_string($uso) && trim($uso) !== '' ? trim($uso) : null;
@@ -70,6 +72,8 @@ class LocalizacaoInscricaoService
                 origemPonto: PropertyLocationSource::CadastroImobiliario,
                 situacaoCadastral: $situacao,
                 utilizacao: $utilizacao,
+                codLogLocalizacao: $codLogLocalizacao,
+                logradouroLocalizacao: $logradouroLocalizacao,
             );
         }
 
@@ -86,6 +90,8 @@ class LocalizacaoInscricaoService
                 geocode: $geocode,
                 situacaoCadastral: $situacao,
                 utilizacao: $utilizacao,
+                codLogLocalizacao: $codLogLocalizacao,
+                logradouroLocalizacao: $logradouroLocalizacao,
             );
         }
 
@@ -95,6 +101,8 @@ class LocalizacaoInscricaoService
             logradouroTributario: $nome !== '' ? $nome : null,
             situacaoCadastral: $situacao,
             utilizacao: $utilizacao,
+            codLogLocalizacao: $codLogLocalizacao,
+            logradouroLocalizacao: $logradouroLocalizacao,
         );
     }
 
@@ -117,5 +125,44 @@ class LocalizacaoInscricaoService
         }
 
         return $geocode;
+    }
+
+    /**
+     * Código e nome do logradouro do endereço de Localização da inscrição.
+     *
+     * @param  array<string, mixed>  $raw
+     * @return array{0: ?string, 1: ?string}
+     */
+    private function logradouroDaLocalizacao(array $raw): array
+    {
+        $lista = $raw['ListaEndereco']['RetornoEndereco'] ?? [];
+
+        if (! is_array($lista)) {
+            return [null, null];
+        }
+
+        if (! array_is_list($lista)) {
+            $lista = [$lista];
+        }
+
+        foreach ($lista as $endereco) {
+            if (! is_array($endereco) || ($endereco['TipoEndereco'] ?? null) !== 'Localização') {
+                continue;
+            }
+
+            $codigo = $endereco['CodigoLogradouro'] ?? null;
+            $codLog = is_string($codigo) || is_numeric($codigo) ? ltrim(trim((string) $codigo), '0') : '';
+
+            if ($codLog === '') {
+                return [null, null];
+            }
+
+            $nome = $endereco['Logradouro'] ?? $endereco['DescricaoLogradouro'] ?? null;
+            $nome = is_string($nome) ? trim($nome) : '';
+
+            return [$codLog, $nome !== '' ? $nome : null];
+        }
+
+        return [null, null];
     }
 }

@@ -97,8 +97,16 @@ class MapaDecisaoService
     private function viaDaDecisao(ViabilityRequest $request, string $codLog): array
     {
         $inventario = is_array($request->camadas_incidentes) ? $request->camadas_incidentes : [];
-        $tributario = is_array($inventario['logradouro_tributario'] ?? null) ? $inventario['logradouro_tributario'] : [];
-        $nome = ($tributario['cod_log'] ?? null) === $codLog && is_string($tributario['nome'] ?? null) ? $tributario['nome'] : null;
+        $nome = null;
+
+        foreach (['logradouro', 'logradouro_tributario'] as $chave) {
+            $logradouro = is_array($inventario[$chave] ?? null) ? $inventario[$chave] : [];
+
+            if (($logradouro['cod_log'] ?? null) === $codLog && is_string($logradouro['nome'] ?? null)) {
+                $nome = $logradouro['nome'];
+                break;
+            }
+        }
 
         return [
             'cod_log' => $codLog,
@@ -110,7 +118,7 @@ class MapaDecisaoService
     private function codLogDaDecisao(ViabilityRequest $request): ?string
     {
         $inventario = is_array($request->camadas_incidentes) ? $request->camadas_incidentes : [];
-        $codLog = $request->cod_log ?: ($inventario['logradouro_tributario']['cod_log'] ?? null);
+        $codLog = $request->cod_log ?: ($inventario['logradouro']['cod_log'] ?? $inventario['logradouro_tributario']['cod_log'] ?? null);
 
         return is_scalar($codLog) && trim((string) $codLog) !== '' ? trim((string) $codLog) : null;
     }
