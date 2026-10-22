@@ -17,6 +17,7 @@ import PageHeader from '@/components/app/page-header';
 import ParecerCard, { type ParecerDecisao } from '@/components/decisao/parecer-card';
 import CamadasImovelLista, { type CamadasImovel } from '@/components/geo/camadas-imovel';
 import { centroDaGeometria, ESTILO_ENDERECAMENTO, type FontePoligono } from '@/components/geo/geometria';
+import { MapaDecisaoSection } from '@/components/geo/mapa-decisao-section';
 import { MapaSection } from '@/components/geo/mapa-section';
 import OptionSelect from '@/components/form/option-select';
 import SearchableSelect from '@/components/form/searchable-select';
@@ -766,23 +767,29 @@ export default function Show({
                             <CardContent>
                                 {centro ? (
                                     <div className="space-y-3">
-                                        <MapaSection
-                                            lat={centro.lat}
-                                            lng={centro.lng}
-                                            draggable={false}
-                                            camadas={[
-                                                ...(geo.poligono ? [{ id: 'poligono', type: 'poligono', geojson: geo.poligono }] : []),
-                                                ...(geo.poligono_enderecamento
-                                                    ? [
-                                                          {
-                                                              id: 'enderecamento',
-                                                              type: 'enderecamento',
-                                                              geojson: geo.poligono_enderecamento,
-                                                              estilo: ESTILO_ENDERECAMENTO,
-                                                          },
-                                                      ]
-                                                    : []),
-                                            ]}
+                                        <MapaDecisaoSection
+                                            url={`/gestao/processos/${processo.id}/mapa-decisao`}
+                                            rotuloLote={processo.endereco_completo || processo.imovel || null}
+                                            fallback={
+                                                <MapaSection
+                                                    lat={centro.lat}
+                                                    lng={centro.lng}
+                                                    draggable={false}
+                                                    camadas={[
+                                                        ...(geo.poligono ? [{ id: 'poligono', type: 'poligono', geojson: geo.poligono }] : []),
+                                                        ...(geo.poligono_enderecamento
+                                                            ? [
+                                                                  {
+                                                                      id: 'enderecamento',
+                                                                      type: 'enderecamento',
+                                                                      geojson: geo.poligono_enderecamento,
+                                                                      estilo: ESTILO_ENDERECAMENTO,
+                                                                  },
+                                                              ]
+                                                            : []),
+                                                    ]}
+                                                />
+                                            }
                                         />
                                         {geo.poligono_enderecamento && geo.poligono_fonte ? (
                                             <p className="text-sm text-gray-600 dark:text-gray-300">{geo.poligono_fonte.legenda}</p>
