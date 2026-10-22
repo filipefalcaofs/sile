@@ -3,7 +3,7 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import type { Geometry } from 'geojson';
 import type { PathOptions } from 'leaflet';
-import { Fragment, useEffect, useId, useMemo, useState, type ReactNode } from 'react';
+import { Fragment, useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import { CircleMarker, GeoJSON, MapContainer, Pane, TileLayer, Tooltip, useMap } from 'react-leaflet';
 
 import { chaveDaGeometria } from './geometria';
@@ -55,7 +55,7 @@ interface Camadas {
 
 const ESTILO_ROTULOS = `
 .mapa-decisao svg { max-width:none !important; max-height:none !important; }
-.mapa-decisao-rotulo { background:#fff; border:0; border-radius:6px; box-shadow:0 1px 4px rgba(16,24,40,.25); color:#1d2939; font-size:11px; font-weight:600; line-height:1.2; padding:3px 7px; white-space:nowrap; }
+.mapa-decisao-rotulo { background:#fff; border:0; border-radius:6px; box-shadow:0 1px 4px rgba(16,24,40,.25); color:#1d2939; font-size:11px; font-weight:600; line-height:1.2; padding:3px 7px; white-space:nowrap; max-width:240px; overflow:hidden; text-overflow:ellipsis; }
 .mapa-decisao-rotulo::before { display:none; }
 .mapa-decisao-rotulo-lote { color:#175cd3; }
 .mapa-decisao-rotulo-zona { color:#53389e; }
@@ -128,7 +128,11 @@ function Enquadrar({ geometrias, ponto }: { geometrias: Geometry[]; ponto: { lat
         }
 
         if (limites.isValid()) {
-            map.fitBounds(limites, { padding: [60, 60], maxZoom: 19 });
+            // Contexto mínimo (~90 m em volta): lote pequeno não pode encher a tela e esconder zonas e linhas.
+            const centro = limites.getCenter();
+            limites.extend([centro.lat - 0.0008, centro.lng - 0.0008]);
+            limites.extend([centro.lat + 0.0008, centro.lng + 0.0008]);
+            map.fitBounds(limites, { padding: [40, 40], maxZoom: 19 });
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [map, chave]);
@@ -206,6 +210,8 @@ export interface MapaDecisaoProps {
 export function MapaDecisao({ dados, rotuloLote = null, altura = 480 }: MapaDecisaoProps) {
     const grupoFundo = useId();
     const [fundo, setFundo] = useState<Fundo>('claro');
+    const raiz = useRef<HTMLDivElement>(null);
+    const [painel, setPainel] = useState(true);
     const [camadas, setCamadas] = useState<Camadas>({ lote: true, zonaDoLote: true, outrasZonas: true, vias: true, linhas: true });
 
     const lote = loteDoMapa(dados);
@@ -223,15 +229,23 @@ export function MapaDecisao({ dados, rotuloLote = null, altura = 480 }: MapaDeci
     const rotuloZona = rotuloDaZonaDoLote(dados);
     const tituloZona = dados.porcoes.length > 1 ? `Zonas do lote (${dados.porcoes.map((p) => p.zona).join(' e ')})` : `Zona do lote${dados.zona ? ` (${dados.zona.codigo})` : ''}`;
 
+    useEffect(() => {
+        // Em coluna estreita o painel e a legenda cobririam o lote: começam recolhidos.
+        if (raiz.current && raiz.current.clientWidth < 720) {
+            setPainel(false);
+        }
+    }, []);
+
     const alternar = (chave: keyof Camadas) => setCamadas((atual) => ({ ...atual, [chave]: !atual[chave] }));
 
     const corDaZona = (codigo: string) => (codigoMenor.includes(codigo) ? COR.menor : COR.zona);
     const ordenadas = (lista: typeof dados.zonas) => [...lista].sort((a, b) => Number(a.da_decisao) - Number(b.da_decisao));
     const centroLote = lote ? centroDe(lote) : null;
-    const rotuloDoLote = [rotuloLote, dados.area_lote_m2 ? formatarArea(dados.area_lote_m2) : null].filter(Boolean).join(' · ') || 'Lote do processo';
+    const enderecoCurto = rotuloLote && rotuloLote.length > 36 ? `${rotuloLote.slice(0, 35).trimEnd()}…` : rotuloLote;
+    const rotuloDoLote = [enderecoCurto, dados.area_lote_m2 ? formatarArea(dados.area_lote_m2) : null].filter(Boolean).join(' · ') || 'Lote do processo';
 
     return (
-        <div className="mapa-decisao relative">
+        <div ref={raiz} className="mapa-decisao relative">
             <style>{ESTILO_ROTULOS}</style>
             <MapContainer
                 center={centroLote ?? (dados.ponto ? [dados.ponto.lat, dados.ponto.lng] : [-12.97, -38.5])}
@@ -416,93 +430,105 @@ export function MapaDecisao({ dados, rotuloLote = null, altura = 480 }: MapaDeci
                 )}
             </MapContainer>
 
-            <Caixa className="absolute right-3 top-3 z-[1000] w-56 space-y-1">
-                {FUNDOS.map((opcao) => (
-                    <label key={opcao.id} className="flex cursor-pointer items-center gap-2">
-                        <input type="radio" name={grupoFundo} checked={fundo === opcao.id} onChange={() => setFundo(opcao.id)} />
-                        {opcao.rotulo}
-                    </label>
-                ))}
-                <hr className="my-2 border-gray-200 dark:border-gray-700" />
-                {lote && (
-                    <label className="flex cursor-pointer items-center gap-2">
-                        <input type="checkbox" checked={camadas.lote} onChange={() => alternar('lote')} />
-                        Lote do processo
-                    </label>
-                )}
-                {zonasDoLote.length > 0 && (
-                    <label className="flex cursor-pointer items-center gap-2">
-                        <input type="checkbox" checked={camadas.zonaDoLote} onChange={() => alternar('zonaDoLote')} />
-                        {tituloZona}
-                    </label>
-                )}
-                {outrasZonas.length > 0 && (
-                    <label className="flex cursor-pointer items-center gap-2">
-                        <input type="checkbox" checked={camadas.outrasZonas} onChange={() => alternar('outrasZonas')} />
-                        Outras zonas
-                    </label>
-                )}
-                {dados.vias.length > 0 && (
-                    <label className="flex cursor-pointer items-center gap-2">
-                        <input type="checkbox" checked={camadas.vias} onChange={() => alternar('vias')} />
-                        Vias
-                    </label>
-                )}
-                {dados.linhas.length > 0 && (
-                    <label className="flex cursor-pointer items-center gap-2">
-                        <input type="checkbox" checked={camadas.linhas} onChange={() => alternar('linhas')} />
-                        ZCLMu e ZCLMe (linhas)
-                    </label>
-                )}
-            </Caixa>
+            <button
+                type="button"
+                onClick={() => setPainel((aberto) => !aberto)}
+                className="absolute right-3 top-3 z-[1000] rounded-lg border border-gray-200 bg-white/95 px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm dark:border-gray-700 dark:bg-gray-900/95 dark:text-gray-200"
+            >
+                {painel ? 'Ocultar camadas' : 'Camadas e legenda'}
+            </button>
 
-            <Caixa className="absolute bottom-10 left-3 z-[1000] space-y-1">
-                {lote && (
-                    <div className="flex items-center gap-2">
-                        <Amostra cor={COR.lote} tipo="area" /> Lote
-                    </div>
-                )}
-                {dados.porcoes.length > 1 ? (
-                    <>
-                        {maior && (
-                            <div className="flex items-center gap-2">
-                                <Amostra cor={COR.zona} tipo="area" /> {maior.zona} (maior porção)
-                            </div>
-                        )}
-                        {menor && (
-                            <div className="flex items-center gap-2">
-                                <Amostra cor={COR.menor} tipo="area" /> {menor.zona} (menor porção)
-                            </div>
-                        )}
-                    </>
-                ) : (
-                    zonasDoLote.length > 0 && (
+            {painel && (
+                <>
+                <Caixa className="absolute right-3 top-12 z-[1000] w-56 space-y-1">
+                    {FUNDOS.map((opcao) => (
+                        <label key={opcao.id} className="flex cursor-pointer items-center gap-2">
+                            <input type="radio" name={grupoFundo} checked={fundo === opcao.id} onChange={() => setFundo(opcao.id)} />
+                            {opcao.rotulo}
+                        </label>
+                    ))}
+                    <hr className="my-2 border-gray-200 dark:border-gray-700" />
+                    {lote && (
+                        <label className="flex cursor-pointer items-center gap-2">
+                            <input type="checkbox" checked={camadas.lote} onChange={() => alternar('lote')} />
+                            Lote do processo
+                        </label>
+                    )}
+                    {zonasDoLote.length > 0 && (
+                        <label className="flex cursor-pointer items-center gap-2">
+                            <input type="checkbox" checked={camadas.zonaDoLote} onChange={() => alternar('zonaDoLote')} />
+                            {tituloZona}
+                        </label>
+                    )}
+                    {outrasZonas.length > 0 && (
+                        <label className="flex cursor-pointer items-center gap-2">
+                            <input type="checkbox" checked={camadas.outrasZonas} onChange={() => alternar('outrasZonas')} />
+                            Outras zonas
+                        </label>
+                    )}
+                    {dados.vias.length > 0 && (
+                        <label className="flex cursor-pointer items-center gap-2">
+                            <input type="checkbox" checked={camadas.vias} onChange={() => alternar('vias')} />
+                            Vias
+                        </label>
+                    )}
+                    {dados.linhas.length > 0 && (
+                        <label className="flex cursor-pointer items-center gap-2">
+                            <input type="checkbox" checked={camadas.linhas} onChange={() => alternar('linhas')} />
+                            ZCLMu e ZCLMe (linhas)
+                        </label>
+                    )}
+                </Caixa>
+
+                <Caixa className="absolute bottom-10 left-3 z-[1000] space-y-1">
+                    {lote && (
                         <div className="flex items-center gap-2">
-                            <Amostra cor={COR.zona} tipo="area" /> Zona do lote{dados.zona ? ` (${dados.zona.codigo})` : ''}
+                            <Amostra cor={COR.lote} tipo="area" /> Lote
                         </div>
-                    )
-                )}
-                {outrasZonas.length > 0 && (
-                    <div className="flex items-center gap-2">
-                        <Amostra cor="#98a2b3" tipo="pontilhada" /> Outras zonas
-                    </div>
-                )}
-                {dados.vias.length > 0 && (
-                    <div className="flex items-center gap-2">
-                        <Amostra cor={COR.via} tipo="linha" /> Via
-                    </div>
-                )}
-                {dados.linhas.some((linha) => linha.tipo === 'ZCLMu') && (
-                    <div className="flex items-center gap-2">
-                        <Amostra cor={COR.zclmu} tipo="linha" /> ZCLMu (linha)
-                    </div>
-                )}
-                {dados.linhas.some((linha) => linha.tipo === 'ZCLMe') && (
-                    <div className="flex items-center gap-2">
-                        <Amostra cor={COR.zclme} tipo="tracejada" /> ZCLMe (linha)
-                    </div>
-                )}
-            </Caixa>
+                    )}
+                    {dados.porcoes.length > 1 ? (
+                        <>
+                            {maior && (
+                                <div className="flex items-center gap-2">
+                                    <Amostra cor={COR.zona} tipo="area" /> {maior.zona} (maior porção)
+                                </div>
+                            )}
+                            {menor && (
+                                <div className="flex items-center gap-2">
+                                    <Amostra cor={COR.menor} tipo="area" /> {menor.zona} (menor porção)
+                                </div>
+                            )}
+                        </>
+                    ) : (
+                        zonasDoLote.length > 0 && (
+                            <div className="flex items-center gap-2">
+                                <Amostra cor={COR.zona} tipo="area" /> Zona do lote{dados.zona ? ` (${dados.zona.codigo})` : ''}
+                            </div>
+                        )
+                    )}
+                    {outrasZonas.length > 0 && (
+                        <div className="flex items-center gap-2">
+                            <Amostra cor="#98a2b3" tipo="pontilhada" /> Outras zonas
+                        </div>
+                    )}
+                    {dados.vias.length > 0 && (
+                        <div className="flex items-center gap-2">
+                            <Amostra cor={COR.via} tipo="linha" /> Via
+                        </div>
+                    )}
+                    {dados.linhas.some((linha) => linha.tipo === 'ZCLMu') && (
+                        <div className="flex items-center gap-2">
+                            <Amostra cor={COR.zclmu} tipo="linha" /> ZCLMu (linha)
+                        </div>
+                    )}
+                    {dados.linhas.some((linha) => linha.tipo === 'ZCLMe') && (
+                        <div className="flex items-center gap-2">
+                            <Amostra cor={COR.zclme} tipo="tracejada" /> ZCLMe (linha)
+                        </div>
+                    )}
+                </Caixa>
+                </>
+            )}
         </div>
     );
 }
