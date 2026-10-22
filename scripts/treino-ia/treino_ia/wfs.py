@@ -17,16 +17,17 @@ class WfsIndisponivel(RuntimeError):
 
 
 class _Resposta:
-    def __init__(self, status_code: int, content: bytes):
+    def __init__(self, status_code: int, content: bytes, headers: dict | None = None):
         self.status_code = status_code
         self.content = content
+        self.headers = headers or {}
 
 
 class SessaoHttp:
     def get(self, url, params, timeout):
         try:
             with urllib.request.urlopen(url + "?" + urllib.parse.urlencode(params), timeout=timeout) as r:
-                return _Resposta(r.status, r.read())
+                return _Resposta(r.status, r.read(), dict(r.headers))
         except Exception as erro:
             return _Resposta(getattr(erro, "code", 0) or 0, str(erro).encode())
 

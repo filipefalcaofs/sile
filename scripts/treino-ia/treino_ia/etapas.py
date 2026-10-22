@@ -16,3 +16,18 @@ def dados(args) -> None:
         raise SystemExit("Informe --semente.")
     m = modulo.montar(args.semente, args.treino, args.teste)
     print(f"treino: {len(m['treino'])} | teste: {len(m['teste'])} | bairros de teste: {len(m['bairros_teste'])} | descartados: {m['descartados']}")
+
+
+def _manifesto():
+    from treino_ia import arquivos
+
+    m = arquivos.ler_json(config.caminhos().dados / "manifesto.json")
+    if m is None:
+        raise SystemExit("Rode antes: python -m treino_ia dados --semente N")
+    return m
+
+
+def recortes(args) -> None:
+    from treino_ia import recortes as modulo
+
+    print(modulo.baixar_todos(_manifesto(), limite=args.limite))
