@@ -14,7 +14,7 @@ def dados(args) -> None:
 
     if args.semente is None:
         raise SystemExit("Informe --semente.")
-    m = modulo.montar(args.semente, args.treino, args.teste)
+    m = modulo.montar(args.semente, args.treino, args.teste, teste_por_bairro=args.teste_por_bairro)
     print(f"treino: {len(m['treino'])} | teste: {len(m['teste'])} | bairros de teste: {len(m['bairros_teste'])} | descartados: {m['descartados']}")
 
 

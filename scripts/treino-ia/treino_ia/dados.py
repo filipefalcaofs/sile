@@ -18,7 +18,9 @@ def _chave(feicao: dict) -> tuple:
     return (p.get("CODLOG"), p.get("NUMERACAO_METRICA"))
 
 
-def montar_de(lotes: list[dict], bairros: list[dict], semente: int, n_treino: int = 600, n_teste: int = 60) -> dict:
+def montar_de(lotes: list[dict], bairros: list[dict], semente: int, n_treino: int = 600, n_teste: int = 60,
+              teste_por_bairro: int | None = None) -> dict:
+    """teste_por_bairro limita os lotes de teste de cada bairro, para o teste cobrir mais bairros."""
     rng = random.Random(semente)
     descartados = {"invalido": 0, "area": 0, "chave_ambigua": 0, "maior_que_recorte": 0, "sem_bairro": 0}
     formas_bairro = [((b.get("properties") or {}).get("NOME_BAIRRO"), shape(b["geometry"])) for b in bairros if b.get("geometry")]
@@ -66,7 +68,10 @@ def montar_de(lotes: list[dict], bairros: list[dict], semente: int, n_treino: in
         if len(no_teste) >= n_teste:
             break
         bairros_teste.append(nome)
-        no_teste.extend(c for c in candidatos if c["bairro"] == nome)
+        do_bairro = [c for c in candidatos if c["bairro"] == nome]
+        if teste_por_bairro is not None and len(do_bairro) > teste_por_bairro:
+            do_bairro = rng.sample(do_bairro, teste_por_bairro)
+        no_teste.extend(do_bairro)
     resto = [c for c in candidatos if c["bairro"] not in bairros_teste]
 
     return {
@@ -78,10 +83,10 @@ def montar_de(lotes: list[dict], bairros: list[dict], semente: int, n_treino: in
     }
 
 
-def montar(semente: int, n_treino: int = 600, n_teste: int = 60) -> dict:
+def montar(semente: int, n_treino: int = 600, n_teste: int = 60, teste_por_bairro: int | None = None) -> dict:
     c = config.caminhos()
     wfs.baixar(CAMADA_LOTES, c.dados / "wfs" / "lotes", ordenar_por="CODLOG,NUMERACAO_METRICA")
     wfs.baixar(CAMADA_BAIRROS, c.dados / "wfs" / "bairros", ordenar_por="ID")
-    manifesto = montar_de(wfs.ler(c.dados / "wfs" / "lotes"), wfs.ler(c.dados / "wfs" / "bairros"), semente, n_treino, n_teste)
+    manifesto = montar_de(wfs.ler(c.dados / "wfs" / "lotes"), wfs.ler(c.dados / "wfs" / "bairros"), semente, n_treino, n_teste, teste_por_bairro)
     arquivos.gravar_json(c.dados / "manifesto.json", manifesto)
     return manifesto

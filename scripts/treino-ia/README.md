@@ -49,7 +49,7 @@ cd /opt/app-root/src/scripts/treino-ia
 | Ordem | Etapa | Comando |
 |---|---|---|
 | 1 | Instalar o ambiente (uma vez) | `sh instalar.sh` |
-| 2 | Montar o conjunto | `$PY -m treino_ia dados --semente AAAAMMDD` |
+| 2 | Montar o conjunto | `$PY -m treino_ia dados --semente AAAAMMDD` (`--teste-por-bairro N` espalha o teste por mais bairros) |
 | 3 | Recortes (medição nos primeiros 50) | `$PY -m treino_ia recortes --limite 50` |
 | 4 | Cache do codificador (medição) | `nice -n 19 $PY -m treino_ia cache --limite 50` |
 | 5 | Recortes e cache completos | `nohup nice -n 19 $PY -m treino_ia recortes > $TREINO_IA_RAIZ/logs/recortes.log 2>&1 &` e depois o mesmo com `cache` |

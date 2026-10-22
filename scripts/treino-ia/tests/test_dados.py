@@ -77,3 +77,25 @@ def test_montar_confere_a_memoria_durante_a_leitura(monkeypatch):
 
     with pytest.raises(recursos.MemoriaExcedida):
         _montar(sinteticos.lotes_em_grade())
+
+
+def test_limite_por_bairro_espalha_o_teste_em_mais_bairros():
+    sem_limite = _montar(sinteticos.lotes_em_grade(), n_teste=6)
+    com_limite = dados.montar_de(sinteticos.lotes_em_grade(), sinteticos.bairros(), semente=2110, n_treino=10, n_teste=6, teste_por_bairro=2)
+
+    assert len(sem_limite["bairros_teste"]) == 1
+    assert len(com_limite["bairros_teste"]) == 3
+    assert len(com_limite["teste"]) == 6
+    assert max(sum(1 for l in com_limite["teste"] if l["bairro"] == b) for b in com_limite["bairros_teste"]) == 2
+    assert {l["bairro"] for l in com_limite["treino"]}.isdisjoint(com_limite["bairros_teste"])
+
+
+def test_cli_dados_repassa_o_limite_por_bairro(monkeypatch, tmp_path):
+    from treino_ia import __main__
+
+    monkeypatch.setenv("TREINO_IA_RAIZ", str(tmp_path))
+    chamado = {}
+    monkeypatch.setattr(dados, "montar", lambda *a, **k: chamado.update(args=a, **k) or {"treino": [], "teste": [], "bairros_teste": [], "descartados": {}})
+
+    assert __main__.main(["dados", "--semente", "1", "--teste-por-bairro", "10"]) == 0
+    assert chamado["teste_por_bairro"] == 10

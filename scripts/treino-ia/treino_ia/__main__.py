@@ -15,6 +15,7 @@ def _argumentos(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--semente", type=int)
     parser.add_argument("--treino", type=int, default=600)
     parser.add_argument("--teste", type=int, default=60)
+    parser.add_argument("--teste-por-bairro", dest="teste_por_bairro", type=int)
     parser.add_argument("--limite", type=int)
     parser.add_argument("--epocas", type=int, default=10)
     parser.add_argument("--execucao")
