@@ -726,7 +726,6 @@ export default function FichaAnaliseShow({
     const podeEncaminharVistoria = auth.permissions.includes('analisar-processos');
     // Malha fina é caixa à parte para alterar o processo (HU-127) — permissão própria.
     const podeMalhaFina = auth.permissions.includes('encaminhar-malha-fina');
-    const podeEmitirTvl = auth.permissions.includes('emitir-tvl');
     const classeAcaoFantasma =
         'inline-flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm text-gray-700 transition hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-brand-500 dark:text-gray-400 dark:hover:bg-white/[0.05] dark:hover:text-gray-300';
 
@@ -780,7 +779,6 @@ export default function FichaAnaliseShow({
     });
 
     const acao = useHttp<Record<string, never>>({});
-    const tvl = useHttp<Record<string, never>, { download_url?: string; url?: string }>({});
     const [pendenciaProcessing, setPendenciaProcessing] = useState(false);
     const [vistoriaProcessing, setVistoriaProcessing] = useState(false);
     const [erroEncaminhar, setErroEncaminhar] = useState<string | null>(null);
@@ -1226,21 +1224,6 @@ export default function FichaAnaliseShow({
                 },
             },
         );
-    }
-
-    function emitirTvl() {
-        tvl.post(`/gestao/processos/${processo.id}/tvl`, {
-            onSuccess: (resposta) => {
-                const url = resposta?.download_url ?? resposta?.url ?? null;
-
-                if (url) {
-                    window.open(url, '_blank', 'noopener');
-                } else {
-                    router.reload();
-                }
-            },
-            onHttpException: () => false,
-        });
     }
 
     function compararRevisoes() {
@@ -2448,11 +2431,6 @@ export default function FichaAnaliseShow({
                                             <Button onClick={novaRevisao} variant="outline" size="sm" loading={acao.processing}>
                                                 Criar nova ficha
                                             </Button>
-                                            {podeEmitirTvl && processo.status === 'deferida' && (
-                                                <Button onClick={emitirTvl} variant="outline" size="sm" loading={tvl.processing}>
-                                                    Visualizar Viabilidade
-                                                </Button>
-                                            )}
                                         </>
                                     )}
 
