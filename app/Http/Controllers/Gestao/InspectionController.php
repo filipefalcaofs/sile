@@ -317,7 +317,7 @@ class InspectionController extends Controller
     }
 
     /**
-     * Anexa foto/documento à ficha: disk parametrizado (NUNCA público), sha256
+     * Anexa foto/documento (um ou vários) à ficha: disk parametrizado (NUNCA público), sha256
      * real do conteúdo e metadados — espelha os anexos da solicitação (HU-064).
      */
     public function storeAnexo(InspectionAttachmentRequest $request, ViabilityRequest $viabilityRequest): RedirectResponse
@@ -332,43 +332,45 @@ class InspectionController extends Controller
         }
 
         $disk = $this->anexosDisk();
-        $file = $request->file('file');
+        $arquivos = $request->hasFile('files') ? array_values($request->file('files')) : [$request->file('file')];
 
-        // Metadados capturados ANTES do store() (a movimentação do temporário
-        // invalida getRealPath/getSize). sha256 REAL do conteúdo.
-        $sha256 = hash_file('sha256', $file->getRealPath());
-        $originalName = $file->getClientOriginalName();
-        $mimeType = $file->getMimeType();
-        $size = $file->getSize();
+        foreach ($arquivos as $file) {
+            // Metadados capturados ANTES do store() (a movimentação do temporário
+            // invalida getRealPath/getSize). sha256 REAL do conteúdo.
+            $sha256 = hash_file('sha256', $file->getRealPath());
+            $originalName = $file->getClientOriginalName();
+            $mimeType = $file->getMimeType();
+            $size = $file->getSize();
 
-        $anexo = DB::transaction(function () use ($ficha, $file, $disk, $sha256, $originalName, $mimeType, $size, $request): InspectionAttachment {
-            $path = $file->store('vistorias/'.$ficha->id, $disk);
+            $anexo = DB::transaction(function () use ($ficha, $file, $disk, $sha256, $originalName, $mimeType, $size, $request): InspectionAttachment {
+                $path = $file->store('vistorias/'.$ficha->id, $disk);
 
-            return $ficha->attachments()->create([
-                'disk' => $disk,
-                'path' => $path,
-                'original_name' => $originalName,
-                'mime_type' => $mimeType,
-                'size' => $size,
-                'sha256' => $sha256,
-                'uploaded_by_user_id' => $request->user()->id,
-            ]);
-        });
+                return $ficha->attachments()->create([
+                    'disk' => $disk,
+                    'path' => $path,
+                    'original_name' => $originalName,
+                    'mime_type' => $mimeType,
+                    'size' => $size,
+                    'sha256' => $sha256,
+                    'uploaded_by_user_id' => $request->user()->id,
+                ]);
+            });
 
-        $this->audit->log(
-            logName: 'vistoria',
-            event: 'anexo-adicionado',
-            description: "Anexo adicionado à ficha de vistoria do processo #{$viabilityRequest->id}",
-            properties: [
-                'viability_request_id' => $viabilityRequest->id,
-                'inspection_id' => $ficha->id,
-                'anexo_id' => $anexo->id,
-                'sha256' => $sha256,
-            ],
-            subject: $ficha,
-        );
+            $this->audit->log(
+                logName: 'vistoria',
+                event: 'anexo-adicionado',
+                description: "Anexo adicionado à ficha de vistoria do processo #{$viabilityRequest->id}",
+                properties: [
+                    'viability_request_id' => $viabilityRequest->id,
+                    'inspection_id' => $ficha->id,
+                    'anexo_id' => $anexo->id,
+                    'sha256' => $sha256,
+                ],
+                subject: $ficha,
+            );
+        }
 
-        return back()->with('status', 'Anexo enviado com sucesso.');
+        return back()->with('status', count($arquivos) === 1 ? 'Anexo enviado com sucesso.' : count($arquivos).' anexos enviados com sucesso.');
     }
 
     /**

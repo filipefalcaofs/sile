@@ -729,16 +729,16 @@ function VistoriaConteudo({
     };
 
     const enviarAnexo = (event: ChangeEvent<HTMLInputElement>) => {
-        const arquivo = event.target.files?.[0];
+        const arquivos = Array.from(event.target.files ?? []);
 
-        if (!arquivo) {
+        if (arquivos.length === 0) {
             return;
         }
 
         setEnviandoAnexo(true);
         router.post(
             `${baseUrl}/anexos`,
-            { file: arquivo },
+            { files: arquivos },
             {
                 forceFormData: true,
                 preserveScroll: true,
@@ -1468,6 +1468,7 @@ function VistoriaConteudo({
                                         <input
                                             ref={arquivoRef}
                                             type="file"
+                                            multiple
                                             accept="image/jpeg,image/png,image/webp,application/pdf"
                                             className="hidden"
                                             onChange={enviarAnexo}
