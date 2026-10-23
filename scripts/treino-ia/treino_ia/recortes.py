@@ -73,9 +73,9 @@ def baixar_todos(manifesto: dict, sessao=None, limite: int | None = None) -> dic
 
 def em_branco(png) -> bool:
     """Metade ou mais dos pixels com a mesma cor: o recorte caiu num buraco da ortofoto."""
-    pixels = np.asarray(Image.open(png).convert("RGB")).reshape(-1, 3)
-    _, contagens = np.unique(pixels, axis=0, return_counts=True)
-    return contagens.max() >= FRACAO_COR_UNICA * len(pixels)
+    pixels = np.asarray(Image.open(png).convert("RGB")).reshape(-1, 3).astype(np.int32)
+    cores = (pixels[:, 0] << 16) | (pixels[:, 1] << 8) | pixels[:, 2]
+    return np.bincount(cores).max() >= FRACAO_COR_UNICA * len(cores)
 
 
 def filtrar_com_imagem(manifesto: dict, n_treino: int, n_teste: int) -> dict:
