@@ -85,7 +85,7 @@ def _pesos_treinados():
 
 
 def avaliar(conjunto: str, nomes: list[str], execucao: str | None = None, seg_base=None, seg_treinado=None,
-            sessao=None, eixos=None, regra_f: str | None = None):
+            sessao=None, eixos=None, regra_f: str | None = None, juiza=None):
     c = config.caminhos()
     execucao = execucao or f"{date.today():%Y%m%d}-{conjunto}"
     pasta = c.avaliacoes / execucao
@@ -93,10 +93,14 @@ def avaliar(conjunto: str, nomes: list[str], execucao: str | None = None, seg_ba
     eixos = eixos or eixos_do_logradouro
     if seg_base is None and any(n in "ABCD" for n in nomes):
         seg_base = variantes.Segmentador()
-    if seg_treinado is None and any(n in "EF" for n in nomes):
+    if seg_treinado is None and any(n in "EFJ" for n in nomes):
         if _pesos_treinados() is None:
-            raise SystemExit("Variantes E/F pedidas sem pesos treinados em pesos/decodificador_*.pt. Rode treinar antes ou tire E/F.")
+            raise SystemExit("Variantes E/F/J pedidas sem pesos treinados em pesos/decodificador_*.pt. Rode treinar antes ou tire E/F/J.")
         seg_treinado = variantes.Segmentador(_pesos_treinados())
+    if juiza is None and "J" in nomes:
+        from treino_ia import juiza as modulo_juiza
+
+        juiza = modulo_juiza.Juiza()
 
     lotes = _lotes(conjunto)
     for i, (entrada, referencia, extra) in enumerate(lotes, 1):
@@ -107,8 +111,11 @@ def avaliar(conjunto: str, nomes: list[str], execucao: str | None = None, seg_ba
             continue
         lat, lng = entrada["ponto"]
         modelo_entrada = {k: entrada[k] for k in CAMPOS_DO_MODELO if k in entrada}
-        contexto = {"carregar_recorte": _carregador(entrada, sessao), "eixo": eixos(entrada.get("codlog")) if entrada.get("codlog") else [],
-                    "unidade": extra["unidade"], "area_cadastro": extra["area_cadastro"], "regra_f": regra_f}
+        usa_eixo = "D" in faltam or ("F" in faltam and regra_f == "D")
+        contexto = {"carregar_recorte": _carregador(entrada, sessao),
+                    "eixo": eixos(entrada.get("codlog")) if usa_eixo and entrada.get("codlog") else [],
+                    "unidade": extra["unidade"], "area_cadastro": extra["area_cadastro"], "regra_f": regra_f,
+                    "juiza": juiza, "seg_treinado": seg_treinado}
         novas, erro = [], None
         for nome in faltam:
             seg = seg_treinado if nome in "EF" else seg_base
@@ -125,7 +132,8 @@ def avaliar(conjunto: str, nomes: list[str], execucao: str | None = None, seg_ba
                 "lote_id": entrada["id"], "conjunto": conjunto, "variante": nome, "bairro": entrada.get("bairro"),
                 "faixa_area": faixa_area(m["area_ref_m2"]), "cadastro_diferente": extra["cadastro_diferente"],
                 "unidade": extra["unidade"], "lado_m": r["lado_m"] if r else None, "score": r["score"] if r else None,
-                "poligono_ia": r["poligono"] if r else None, "poligono_ref": referencia, "ponto": entrada["ponto"], **m,
+                "poligono_ia": r["poligono"] if r else None, "poligono_ref": referencia, "ponto": entrada["ponto"],
+                "juiza": r.get("juiza") if r else None, **m,
             })
         if erro is None:
             arquivos.gravar_json(arquivo, feitas + novas)

@@ -4,7 +4,9 @@ A: serviço atual (60 m, 1 ponto, maior score). B: recorte crescente, maior
 máscara que não encosta na borda. C: B escolhendo pela área do Cadastro, só
 quando a inscrição não é de unidade. D: B com pontos negativos no eixo do
 logradouro. E: recorte crescente com o decodificador treinado. F: E com a
-regra escolhida na avaliação. Nenhuma variante lê o polígono do lote.
+regra escolhida na avaliação. J: uma LLM escolhe entre os candidatos do modelo
+original e do treinado, no recorte de 120 m (240 m se o escolhido encostar na
+borda). Nenhuma variante lê o polígono do lote.
 """
 
 import importlib.util
@@ -14,7 +16,8 @@ from functools import lru_cache
 from pathlib import Path
 
 import numpy as np
-from shapely.geometry import Polygon
+from shapely.geometry import Polygon, shape
+from shapely.validation import make_valid
 
 from treino_ia import geo, recursos
 
@@ -22,6 +25,8 @@ LADOS = geo.LADOS_RECORTE
 PX = 800
 PASSO_NEGATIVOS_M = 15
 MARGEM_BORDA_PX = 2
+LADOS_JUIZA = (120, 240)
+REPETIDO_IOU = 0.9
 
 
 @lru_cache(maxsize=1)
@@ -107,6 +112,33 @@ def _pontos_no_eixo(linhas, caixa, lat) -> list[list[int]]:
     return pontos
 
 
+def _candidatos_sem_repetidos(segmentadores, lote, contexto, lado):
+    saida, formas = [], []
+    for seg in segmentadores:
+        for cand in _candidatos(seg, lote, contexto, lado, negativos=False):
+            forma = make_valid(shape(cand["poligono"]))
+            if any(forma.intersection(f).area > REPETIDO_IOU * forma.union(f).area for f in formas):
+                continue
+            saida.append(cand)
+            formas.append(forma)
+    return saida
+
+
+def _juiza(seg, lote, contexto):
+    lat, lng = lote["ponto"]
+    for lado in LADOS_JUIZA:
+        cands = _candidatos_sem_repetidos((seg, contexto["seg_treinado"]), lote, contexto, lado)
+        img, caixa = contexto["carregar_recorte"](lote["id"], lado)
+        x, y = geo.para_pixel(caixa, lat, lng, PX)
+        r = contexto["juiza"].escolher(img, [c["anel_px"] for c in cands], x, y, lado)
+        if r["escolha"] is None:
+            return None
+        escolhido = {**cands[r["escolha"] - 1], "juiza": r["justificativa"]}
+        if not escolhido["encosta"]:
+            break
+    return escolhido
+
+
 def _crescente(seg, lote, contexto, escolher, negativos=False):
     for lado in LADOS:
         todos = _candidatos(seg, lote, contexto, lado, negativos)
@@ -142,6 +174,8 @@ def rodar(nome: str, lote: dict, seg, contexto: dict) -> dict | None:
         escolhido = _crescente(seg, lote, contexto, _maior, negativos=True)
     elif nome == "E":
         escolhido = _crescente(seg, lote, contexto, _melhor_score)
+    elif nome == "J":
+        escolhido = _juiza(seg, lote, contexto)
     elif nome == "F":
         regra = contexto.get("regra_f")
         if regra == "C" and contexto.get("unidade") is False and contexto.get("area_cadastro"):
@@ -152,4 +186,5 @@ def rodar(nome: str, lote: dict, seg, contexto: dict) -> dict | None:
         raise ValueError(f"Variante desconhecida: {nome}")
     if escolhido is None:
         return None
-    return {"variante": nome, **{k: escolhido[k] for k in ("lado_m", "area_m2", "score", "poligono", "anel_px")}}
+    extra = {"juiza": escolhido["juiza"]} if "juiza" in escolhido else {}
+    return {"variante": nome, **{k: escolhido[k] for k in ("lado_m", "area_m2", "score", "poligono", "anel_px")}, **extra}

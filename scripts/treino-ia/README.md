@@ -35,6 +35,16 @@ cego precisa de processos reais: o `cego/entrada.json` vem do comando
 `treino-ia:exportar-teste-cego` rodado num ambiente que tenha esse comando e
 esses processos, e é copiado para `$TREINO_IA_RAIZ/cego/`.
 
+### Variante J: LLM como juíza
+
+`avaliar teste --juiza` (ou `cego --juiza`) inclui a variante J: o modelo original
+e o treinado geram os candidatos no recorte de 120 m (240 m se o escolhido
+encostar na borda) e a API da Anthropic escolhe o que representa o lote inteiro,
+ou nenhum. Vai para a API só a imagem do recorte com os candidatos e o ponto.
+A credencial vem de `ANTHROPIC_API_KEY`; `TREINO_IA_JUIZA_MODELO` (padrão
+`claude-opus-5-5`) e `TREINO_IA_JUIZA_ESFORCO` (padrão `high`) ajustam a chamada.
+Antes de avaliar, `recortes` e `filtrar` tiram os lotes sem imagem.
+
 ## Comandos no pod de homologação
 
 Rode a partir de `/opt/app-root/src`. Defina uma vez por sessão do terminal:

@@ -124,3 +124,60 @@ def test_F_com_regra_D_escolhe_a_maior_mascara_com_pontos_no_eixo():
 
     assert r["score"] == 0.5
     assert 0 in seg.chamadas[0]["rotulos"]
+
+
+MEDIA = (_retangulo(340, 340, 460, 460), 0.7)
+
+
+class JuizaFalsa:
+    def __init__(self, escolhas):
+        self.escolhas = list(escolhas)
+        self.vistos = []
+
+    def escolher(self, img, aneis, x, y, lado_m=120):
+        self.vistos.append(len(aneis))
+        escolha = self.escolhas.pop(0)
+        return {"escolha": escolha, "justificativa": f"escolhi {escolha}", "recusa": False}
+
+
+def _contexto_juiza(base, treinado, juiza):
+    contexto = _contexto(base, juiza=juiza, seg_treinado=treinado)
+    carregar = contexto["carregar_recorte"]
+
+    def carregar_os_dois(lote_id, lado):
+        treinado.lado = lado
+        return carregar(lote_id, lado)
+
+    contexto["carregar_recorte"] = carregar_os_dois
+    return contexto
+
+
+def test_J_mostra_os_candidatos_dos_dois_modelos_sem_repetidos_e_usa_a_escolha_da_juiza():
+    base = SegFalso({120: [PEQUENA, GRANDE]})
+    treinado = SegFalso({120: [GRANDE, MEDIA]})
+    juiza = JuizaFalsa([2])
+
+    r = variantes.rodar("J", LOTE, base, _contexto_juiza(base, treinado, juiza))
+
+    assert juiza.vistos == [3]
+    assert r["lado_m"] == 120
+    assert r["area_m2"] == pytest.approx((200 * 120 / 800) ** 2, rel=0.05)
+    assert r["juiza"] == "escolhi 2"
+
+
+def test_J_amplia_para_240_quando_o_escolhido_encosta_na_borda():
+    base = SegFalso({120: [PEQUENA, ENCOSTA], 240: [PEQUENA, GRANDE]})
+    treinado = SegFalso({120: [], 240: []})
+    juiza = JuizaFalsa([2, 2])
+
+    r = variantes.rodar("J", LOTE, base, _contexto_juiza(base, treinado, juiza))
+
+    assert juiza.vistos == [2, 2]
+    assert r["lado_m"] == 240
+
+
+def test_J_sem_escolha_da_juiza_devolve_nada():
+    base = SegFalso({120: [PEQUENA]})
+    treinado = SegFalso({120: []})
+
+    assert variantes.rodar("J", LOTE, base, _contexto_juiza(base, treinado, JuizaFalsa([None]))) is None

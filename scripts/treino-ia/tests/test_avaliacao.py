@@ -127,3 +127,52 @@ def test_pedir_E_sem_pesos_treinados_para_com_mensagem(tmp_path, monkeypatch):
 
     with pytest.raises(SystemExit, match="pesos"):
         avaliacao.avaliar("teste", ["A", "E"], execucao="x", seg_base=object(), eixos=lambda codlog: [])
+
+
+def _nao_chamar(codlog):
+    raise AssertionError("eixo baixado sem a variante D")
+
+
+def test_eixo_do_logradouro_so_e_baixado_quando_a_variante_D_roda(tmp_path, monkeypatch):
+    m = _preparar(tmp_path, monkeypatch)
+    m["teste"] = [{**l, "codlog": 123} for l in m["teste"]]
+    arquivos.gravar_json(config.caminhos().dados / "manifesto.json", m)
+    monkeypatch.setattr(variantes, "rodar", _rodar_falso([]))
+    baixados = []
+
+    avaliacao.avaliar("teste", ["A", "B"], execucao="x", seg_base=object(), eixos=_nao_chamar)
+    avaliacao.avaliar("teste", ["D"], execucao="x", seg_base=object(), eixos=lambda codlog: baixados.append(codlog) or [])
+
+    assert baixados == [123, 123]
+
+
+def test_variante_J_recebe_a_juiza_e_o_modelo_treinado_e_grava_a_justificativa(tmp_path, monkeypatch):
+    _preparar(tmp_path, monkeypatch)
+    contextos = []
+    rodar = _rodar_falso([])
+
+    def rodar_com_juiza(nome, lote, seg, contexto):
+        contextos.append(contexto)
+        return {**rodar(nome, lote, seg, contexto), "juiza": "lote inteiro"}
+
+    monkeypatch.setattr(variantes, "rodar", rodar_com_juiza)
+    juiza, treinado = object(), object()
+
+    linhas = arquivos.ler_json(avaliacao.avaliar("teste", ["J"], execucao="x", seg_base=object(), seg_treinado=treinado,
+                                                 juiza=juiza, eixos=_nao_chamar))
+
+    assert all(c["juiza"] is juiza and c["seg_treinado"] is treinado for c in contextos)
+    assert {l["juiza"] for l in linhas} == {"lote inteiro"}
+
+
+def test_cli_avaliar_com_juiza_inclui_a_variante_J(monkeypatch, tmp_path):
+    from treino_ia import __main__
+
+    monkeypatch.setenv("TREINO_IA_RAIZ", str(tmp_path))
+    chamado = {}
+    monkeypatch.setattr(avaliacao, "avaliar", lambda alvo, nomes, **k: chamado.update(nomes=nomes) or "ok")
+
+    assert __main__.main(["avaliar", "teste", "--juiza"]) == 0
+    assert "J" in chamado["nomes"]
+    assert __main__.main(["cego", "--juiza"]) == 0
+    assert "J" in chamado["nomes"]

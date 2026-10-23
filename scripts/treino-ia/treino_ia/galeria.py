@@ -11,7 +11,7 @@ from shapely.geometry import shape
 
 from treino_ia import arquivos, config, geo
 
-CORES = {"A": "#E24B4A", "B": "#EF9F27", "C": "#7F77DD", "D": "#1D9E75", "E": "#D4537E", "F": "#2C2C2A"}
+CORES = {"A": "#E24B4A", "B": "#EF9F27", "C": "#7F77DD", "D": "#1D9E75", "E": "#D4537E", "F": "#2C2C2A", "J": "#00A3E0"}
 REF = "#185FA5"
 TAMANHO_IMAGEM = 480
 

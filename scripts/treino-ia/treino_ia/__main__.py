@@ -20,6 +20,7 @@ def _argumentos(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--epocas", type=int, default=10)
     parser.add_argument("--execucao")
     parser.add_argument("--regra-f", dest="regra_f", choices=("B", "C", "D"))
+    parser.add_argument("--juiza", action="store_true", help="inclui a variante J (LLM escolhe o candidato; usa a API da Anthropic)")
     return parser.parse_args(argv)
 
 
