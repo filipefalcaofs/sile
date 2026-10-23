@@ -18,6 +18,7 @@ use Database\Seeders\RolesAndPermissionsSeeder;
 use Database\Seeders\TerritorialRuleSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Spatie\Activitylog\Models\Activity;
 use Tests\TestCase;
 
 /**
@@ -90,6 +91,24 @@ class TerritorialRuleServiceTest extends TestCase
         $this->assertStringContainsString('art. 172-A', (string) $verdict->motivo);
         $this->assertStringContainsString('Avenida Lafayette Coutinho', (string) $verdict->motivo);
         $this->assertSame('sedur-2026-08-28-regras-territoriais', $verdict->versaoRegra);
+    }
+
+    public function test_simular_avalia_sem_registrar_etapa_nem_auditoria(): void
+    {
+        Http::fake(fn () => Http::response($this->featureCollectionVazia()));
+        $request = $this->solicitacao([], ['4520006']);
+        $request->forceFill(['cod_log' => '212'])->save();
+
+        $verdict = app(TerritorialRuleService::class)->simular($request, self::PONTO);
+
+        $this->assertSame(TerritorialRuleVerdict::INDEFERIR, $verdict->status);
+        $this->assertSame('RT-01', $verdict->regra?->codigo);
+        $this->assertFalse($request->etapas()->where('etapa', 'regra_territorial')->exists());
+        $this->assertFalse(Activity::query()->where('event', 'regra-territorial')->exists());
+
+        app(TerritorialRuleService::class)->avaliar($request, self::PONTO);
+
+        $this->assertTrue(Activity::query()->where('event', 'regra-territorial')->exists());
     }
 
     // CA-RT-02

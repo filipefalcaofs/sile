@@ -15,6 +15,8 @@ use App\Services\Geo\ZonaMaiorPorcaoResolver;
 use App\Services\Realty\PropertyRegistryLookup;
 use App\Services\Realty\PropertyRegistryResult;
 use App\Services\Realty\PropertyRegistryUnavailableException;
+use App\Services\Solicitacao\ResolvedViability;
+use App\Services\Solicitacao\SolicitacaoViabilityResolver;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\Support\Geo\FakeZonaMaiorPorcaoResolver;
 use Tests\TestCase;
@@ -222,5 +224,97 @@ class AuditarCodLogInscricaoCommandTest extends TestCase
             ->assertSuccessful();
 
         $this->assertSame([], $this->linhasDoCsv());
+    }
+
+    /**
+     * Enquadramento falso: VC I (CODLOG 579) permite; VL (CODLOG 401) veda.
+     * Guarda o CODLOG e a zona que o motor recebeu em cada chamada.
+     */
+    private function fakeEnquadramento(): object
+    {
+        $fake = new class extends SolicitacaoViabilityResolver
+        {
+            /** @var list<array{cod_log: ?string, zona: ?string, fonte: ?string}> */
+            public array $chamadas = [];
+
+            public function __construct() {}
+
+            public function resolve(ViabilityRequest $request): ResolvedViability
+            {
+                $this->chamadas[] = [
+                    'cod_log' => $request->cod_log,
+                    'zona' => $request->zona_codigo,
+                    'fonte' => $request->zona_fonte?->value,
+                ];
+                $tendencia = $request->cod_log === '401' ? 'nao_permitido' : 'permitido';
+
+                return new ResolvedViability(
+                    por_cnae: [[
+                        'cnae' => '4712100',
+                        'cnae_formatado' => '4712-1/00',
+                        'is_primary' => true,
+                        'tendencia' => $tendencia,
+                        'fluxo' => 'expresso',
+                    ]],
+                    consolidado: $tendencia,
+                    rules_versions: [],
+                    ponto: null,
+                    area_m2: null,
+                );
+            }
+        };
+
+        $this->app->instance(SolicitacaoViabilityResolver::class, $fake);
+
+        return $fake;
+    }
+
+    public function test_simular_enquadra_com_os_dados_atuais_e_os_corrigidos_e_aponta_a_decisao_que_muda(): void
+    {
+        $motor = $this->fakeEnquadramento();
+        $afetado = $this->processo([
+            'cod_log' => '579',
+            'camadas_incidentes' => ['via' => 'VC I'],
+            'address_polygon_geojson' => $this->lote(-38.60),
+            'address_polygon_source' => PoligonoFonte::Chave,
+            'zona_codigo' => 'ZPR 3',
+        ]);
+        ViabilityDecision::factory()->create(['viability_request_id' => $afetado->id, 'outcome' => DecisionOutcome::Deferida]);
+        $antes = $afetado->fresh()->getAttributes();
+
+        $this->artisan('processos:auditar-codlog-inscricao', ['--csv' => $this->csv, '--simular' => true])
+            ->expectsOutputToContain('Decisão mudaria: 1')
+            ->assertSuccessful();
+
+        $linha = $this->linhasDoCsv()[0];
+
+        $this->assertSame('deferida', $linha['veredito_atual']);
+        $this->assertSame('indeferida', $linha['veredito_corrigido']);
+        $this->assertSame('sim', $linha['decisao_mudaria']);
+        $this->assertSame('4712-1/00: permitido → nao_permitido', $linha['cnaes_que_mudam']);
+        $this->assertSame(['cod_log' => '579', 'zona' => 'ZPR 3', 'fonte' => null], $motor->chamadas[0]);
+        $this->assertSame(['cod_log' => '401', 'zona' => 'ZCMe', 'fonte' => 'enderecamento_maior_porcao'], $motor->chamadas[1]);
+        $this->assertSame($antes, $afetado->fresh()->getAttributes());
+    }
+
+    public function test_simular_sem_mudanca_de_veredito_nao_conta_como_decisao_alterada(): void
+    {
+        $this->fakeEnquadramento();
+        $this->app->instance(GeoServerClassificacaoViariaClient::class, new class extends GeoServerClassificacaoViariaClient
+        {
+            public function __construct() {}
+
+            public function consultar(string $codLog): ClassificacaoViariaHit
+            {
+                return new ClassificacaoViariaHit(ClassificacaoViariaHit::IDENTIFICADO, 'VL', null, null);
+            }
+        });
+        $this->processo(['property_registration' => '1111111', 'cod_log' => '213']);
+
+        $this->artisan('processos:auditar-codlog-inscricao', ['--csv' => $this->csv, '--simular' => true])
+            ->expectsOutputToContain('Decisão mudaria: 0')
+            ->assertSuccessful();
+
+        $this->assertSame('não', $this->linhasDoCsv()[0]['decisao_mudaria']);
     }
 }
