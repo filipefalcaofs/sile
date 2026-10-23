@@ -15,6 +15,7 @@ def dados(args) -> None:
     if args.semente is None:
         raise SystemExit("Informe --semente.")
     m = modulo.montar(args.semente, args.treino, args.teste, teste_por_bairro=args.teste_por_bairro)
+    (config.caminhos().dados / "manifesto-bruto.json").unlink(missing_ok=True)
     print(f"treino: {len(m['treino'])} | teste: {len(m['teste'])} | bairros de teste: {len(m['bairros_teste'])} | descartados: {m['descartados']}")
 
 
@@ -31,6 +32,20 @@ def recortes(args) -> None:
     from treino_ia import recortes as modulo
 
     print(modulo.baixar_todos(_manifesto(), limite=args.limite))
+
+
+def filtrar(args) -> None:
+    """Sempre a partir do manifesto do sorteio (manifesto-bruto.json), para poder rodar de novo."""
+    from treino_ia import arquivos, recortes as modulo
+
+    c = config.caminhos()
+    bruto = arquivos.ler_json(c.dados / "manifesto-bruto.json")
+    if bruto is None:
+        bruto = _manifesto()
+        arquivos.gravar_json(c.dados / "manifesto-bruto.json", bruto)
+    m = modulo.filtrar_com_imagem(bruto, args.treino, args.teste)
+    arquivos.gravar_json(c.dados / "manifesto.json", m)
+    print(f"treino: {len(m['treino'])} | teste: {len(m['teste'])} | bairros de teste: {len(m['bairros_teste'])} | descartados: {m['descartados']}")
 
 
 def cache(args) -> None:

@@ -99,3 +99,15 @@ def test_cli_dados_repassa_o_limite_por_bairro(monkeypatch, tmp_path):
 
     assert __main__.main(["dados", "--semente", "1", "--teste-por-bairro", "10"]) == 0
     assert chamado["teste_por_bairro"] == 10
+
+
+def test_cli_dados_descarta_o_manifesto_bruto_do_sorteio_anterior(monkeypatch, tmp_path):
+    from treino_ia import __main__, arquivos, config
+
+    monkeypatch.setenv("TREINO_IA_RAIZ", str(tmp_path))
+    bruto = config.caminhos().dados / "manifesto-bruto.json"
+    arquivos.gravar_json(bruto, {"treino": []})
+    monkeypatch.setattr(dados, "montar", lambda *a, **k: {"treino": [], "teste": [], "bairros_teste": [], "descartados": {}})
+
+    assert __main__.main(["dados", "--semente", "1"]) == 0
+    assert not bruto.exists()

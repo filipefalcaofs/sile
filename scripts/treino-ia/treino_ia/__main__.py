@@ -5,7 +5,7 @@ import sys
 
 from treino_ia import recursos
 
-ETAPAS = ("dados", "recortes", "cache", "treinar", "avaliar", "cego", "galeria", "situacao")
+ETAPAS = ("dados", "recortes", "filtrar", "cache", "treinar", "avaliar", "cego", "galeria", "situacao")
 
 
 def _argumentos(argv: list[str]) -> argparse.Namespace:

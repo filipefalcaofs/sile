@@ -1,4 +1,9 @@
-"""Recortes da ortofoto 2024 em volta do ponto e a máscara do lote no recorte."""
+"""Recortes da ortofoto 2024 em volta do ponto e a máscara do lote no recorte.
+
+A ortofoto 2024 tem buracos: nesses pontos o serviço devolve uma imagem de cor
+única. Esses recortes ficam gravados (para não serem baixados de novo), são
+contados como em branco e o lote sai do conjunto em filtrar_com_imagem.
+"""
 
 import time
 
@@ -10,6 +15,7 @@ from treino_ia import arquivos, config, geo, recursos, situacao, wfs
 
 URL_ORTOFOTO = "https://geo.salvador.ba.gov.br/imageserver/rest/services/Ortofotos/2024/ImageServer/exportImage"
 PIXELS = 800
+FRACAO_COR_UNICA = 0.5
 
 
 def _parametros(caixa) -> dict:
@@ -40,11 +46,11 @@ def baixar_todos(manifesto: dict, sessao=None, limite: int | None = None) -> dic
     sessao = sessao or wfs.SessaoHttp()
     c = config.caminhos()
     lotes = [(l, geo.lados_de_treino(l)) for l in manifesto.get("treino", [])]
-    lotes += [(l, [l["lado_m"]]) for l in manifesto.get("teste", [])]
+    lotes += [(l, list(geo.LADOS_RECORTE)) for l in manifesto.get("teste", [])]
     if limite is not None:
         lotes = lotes[:limite]
     pedidos = [(lote, lado) for lote, lados in lotes for lado in lados]
-    contagem = {"baixados": 0, "ja_existiam": 0, "falhas": 0}
+    contagem = {"baixados": 0, "ja_existiam": 0, "falhas": 0, "em_branco": 0}
     inicio = time.monotonic()
     ultimo_erro = None
     for i, (lote, lado) in enumerate(pedidos, 1):
@@ -52,6 +58,8 @@ def baixar_todos(manifesto: dict, sessao=None, limite: int | None = None) -> dic
         resultado = baixar_um(lote["id"], lat, lng, lado, sessao)
         chave = {"baixado": "baixados", "ja_existia": "ja_existiam", "falha": "falhas"}[resultado]
         contagem[chave] += 1
+        if resultado == "baixado" and em_branco(c.recortes / f"{lote['id']}_{lado}.png"):
+            contagem["em_branco"] += 1
         if resultado == "falha":
             ultimo_erro = f"recorte de {lote['id']} ({lado} m) falhou"
         if i % 20 == 0 or i == len(pedidos):
@@ -61,6 +69,39 @@ def baixar_todos(manifesto: dict, sessao=None, limite: int | None = None) -> dic
                                tempo_medio_s=(time.monotonic() - inicio) / feitos if feitos else None,
                                ultimo_erro=ultimo_erro)
     return contagem
+
+
+def em_branco(png) -> bool:
+    """Metade ou mais dos pixels com a mesma cor: o recorte caiu num buraco da ortofoto."""
+    pixels = np.asarray(Image.open(png).convert("RGB")).reshape(-1, 3)
+    _, contagens = np.unique(pixels, axis=0, return_counts=True)
+    return contagens.max() >= FRACAO_COR_UNICA * len(pixels)
+
+
+def filtrar_com_imagem(manifesto: dict, n_treino: int, n_teste: int) -> dict:
+    """Tira os lotes com recorte em branco ou ausente e corta nas quantidades pedidas, mantendo a ordem do sorteio."""
+    c = config.caminhos()
+
+    def tem_imagem(lote, lados):
+        pngs = [c.recortes / f"{lote['id']}_{lado}.png" for lado in lados]
+        return all(p.exists() and not em_branco(p) for p in pngs)
+
+    treino = [l for l in manifesto.get("treino", []) if tem_imagem(l, geo.lados_de_treino(l))]
+    teste = [l for l in manifesto.get("teste", []) if tem_imagem(l, geo.LADOS_RECORTE)]
+    descartados = {
+        **manifesto.get("descartados", {}),
+        "sem_imagem_treino": len(manifesto.get("treino", [])) - len(treino),
+        "sem_imagem_teste": len(manifesto.get("teste", [])) - len(teste),
+    }
+    teste = teste[:n_teste]
+    return {
+        **manifesto,
+        "treino": treino[:n_treino],
+        "teste": teste,
+        "bairros_teste": sorted({l["bairro"] for l in teste}),
+        "bairros_sorteados_teste": manifesto.get("bairros_teste", []),
+        "descartados": descartados,
+    }
 
 
 def mascara_lote(poligono: dict, caixa, px: int = PIXELS) -> np.ndarray:
