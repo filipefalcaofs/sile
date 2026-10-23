@@ -2518,49 +2518,9 @@ export default function FichaAnaliseShow({
                     <div>
                         {!somenteLeitura && (
                         <Card>
-                            <CardHeader title="Ações" description="Conforme a fase da análise e a permissão." />
+                            <CardHeader title="Outras ações" description="Convite, vistoria e histórico da ficha." />
                             <CardContent>
                                 <div className="flex flex-col gap-2">
-                                    {editavel ? (
-                                        <>
-                                            <Button onClick={() => salvarRascunho(true)} variant="destaque" size="sm">
-                                                Salvar Ficha
-                                            </Button>
-                                            <Button onClick={() => setShowFinalizar(true)} size="sm">
-                                                Finalizar Ficha de Análise
-                                            </Button>
-                                        </>
-                                    ) : (
-                                        <>
-                                            {podeConcluir && (
-                                                <Button onClick={() => setShowDecidir(true)} size="sm">
-                                                    Decidir processo (conforme ficha)
-                                                </Button>
-                                            )}
-                                            <Button onClick={novaRevisao} variant="outline" size="sm" loading={acao.processing}>
-                                                Criar nova ficha
-                                            </Button>
-                                        </>
-                                    )}
-
-                                    {podeConcluirAnalise && (
-                                        <Button
-                                            onClick={() => {
-                                                setErroConclusao(null);
-                                                setShowConclusao(true);
-                                            }}
-                                            size="sm"
-                                        >
-                                            Conclusão de Análise
-                                        </Button>
-                                    )}
-
-                                    {podeEncaminharChefia && fichaSalva && (
-                                        <Button onClick={() => setShowEncaminharChefia(true)} variant="claro" size="sm">
-                                            Encaminhar para Chefia
-                                        </Button>
-                                    )}
-
                                     {processo.status === 'em_analise' && (
                                         <Button onClick={() => setShowPendencia(true)} variant="ghost" size="sm">
                                             Colocar em convite
@@ -2609,6 +2569,56 @@ export default function FichaAnaliseShow({
                         )}
                     </div>
                 </div>
+
+                {!somenteLeitura && (
+                    <div
+                        role="region"
+                        aria-label="Ações da ficha"
+                        className="sticky bottom-0 z-30 -mx-4 border-t border-gray-200 bg-white/95 px-4 py-3 shadow-theme-lg backdrop-blur md:-mx-6 md:px-6 dark:border-gray-800 dark:bg-gray-900/95"
+                    >
+                        <div className="flex flex-wrap items-center justify-end gap-2">
+                            {editavel ? (
+                                <>
+                                    <Button onClick={() => salvarRascunho(true)} variant="destaque" size="sm">
+                                        Salvar Ficha
+                                    </Button>
+                                    <Button onClick={() => setShowFinalizar(true)} size="sm">
+                                        Finalizar Ficha de Análise
+                                    </Button>
+                                </>
+                            ) : (
+                                <>
+                                    {podeConcluir && (
+                                        <Button onClick={() => setShowDecidir(true)} size="sm">
+                                            Decidir processo (conforme ficha)
+                                        </Button>
+                                    )}
+                                    <Button onClick={novaRevisao} variant="outline" size="sm" loading={acao.processing}>
+                                        Criar nova ficha
+                                    </Button>
+                                </>
+                            )}
+
+                            {podeConcluirAnalise && (
+                                <Button
+                                    onClick={() => {
+                                        setErroConclusao(null);
+                                        setShowConclusao(true);
+                                    }}
+                                    size="sm"
+                                >
+                                    Conclusão de Análise
+                                </Button>
+                            )}
+
+                            {podeEncaminharChefia && fichaSalva && (
+                                <Button onClick={() => setShowEncaminharChefia(true)} variant="claro" size="sm">
+                                    Encaminhar para Chefia
+                                </Button>
+                            )}
+                        </div>
+                    </div>
+                )}
             </div>
 
             <Modal isOpen={showSemFichaVistoria} onClose={() => setShowSemFichaVistoria(false)} className="m-4 max-w-[480px] p-6 lg:p-8">
