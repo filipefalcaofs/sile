@@ -24,6 +24,7 @@ use App\Services\Tratamento\CategoriaEmpresa;
 use App\Services\Tratamento\RespostaPlanilha;
 use App\Services\Tratamento\TratamentoRamoResolver;
 use App\Support\Audit\AuditService;
+use App\Support\EmailProvisorio;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -385,7 +386,7 @@ class ReginProcessoProtocolador
 
         return User::query()->create([
             'name' => $nome,
-            'email' => $emailEmUso ? $cpf.'@solicitante.viabiliza.local' : $email,
+            'email' => $emailEmUso ? EmailProvisorio::para($cpf) : $email,
             'cpf' => $cpf,
             'password' => Hash::make(Str::random(40)),
             'auth_type' => AuthType::Local,
