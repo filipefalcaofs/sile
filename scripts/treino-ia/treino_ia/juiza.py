@@ -100,7 +100,7 @@ class Juiza:
     def _openai(self, imagem: str, texto: str):
         resposta = self.cliente.chat.completions.create(
             model=self.modelo,
-            max_completion_tokens=1000,
+            max_completion_tokens=16000,
             response_format={"type": "json_schema", "json_schema": {"name": "escolha_do_lote", "schema": ESQUEMA, "strict": True}},
             messages=[{
                 "role": "user",
