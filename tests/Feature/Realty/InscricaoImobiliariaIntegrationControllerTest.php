@@ -47,7 +47,7 @@ class InscricaoImobiliariaIntegrationControllerTest extends TestCase
                 )
                 ->where(
                     'config.url_producao',
-                    'https://api.sedur.salvador.ba.gov.br/k8s/prd/ws-bff-portal-servicos/v1/inscricao-imobiliaria',
+                    'https://api.sedur.salvador.ba.gov.br/k8s/prd/ws-proxy-sefaz/integra/v1/inscricao-imobiliaria?valor=',
                 )
                 ->where(
                     'config.url_ativa',

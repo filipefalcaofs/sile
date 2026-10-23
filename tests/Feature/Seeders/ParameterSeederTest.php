@@ -241,7 +241,7 @@ class ParameterSeederTest extends TestCase
 
         $this->assertNotNull($cadastroProducao);
         $this->assertSame(
-            'https://api.sedur.salvador.ba.gov.br/k8s/prd/ws-bff-portal-servicos/v1/inscricao-imobiliaria',
+            'https://api.sedur.salvador.ba.gov.br/k8s/prd/ws-proxy-sefaz/integra/v1/inscricao-imobiliaria?valor=',
             $cadastroProducao->default_value,
         );
 

@@ -11,7 +11,7 @@ use Throwable;
 
 /**
  * Consulta real do Cadastro Imobiliário (SEFAZ via BFF da SEDUR).
- * Descarta NomeProprietario e históricos de propriedade (LGPD).
+ * Descarta proprietário, contribuinte, permissionário e históricos de propriedade (LGPD).
  */
 class SedurSefazPropertyRegistryLookup implements PropertyRegistryLookup
 {
@@ -50,7 +50,7 @@ class SedurSefazPropertyRegistryLookup implements PropertyRegistryLookup
                     },
                 )
                 ->acceptJson()
-                ->get("{$baseUrl}/{$digitos}");
+                ->get(InscricaoImobiliariaIntegrationSettings::urlDaConsulta($baseUrl, $digitos));
         } catch (ConnectionException) {
             Log::warning('cadastro_imobiliario.indisponivel', [
                 'inscricao' => $digitos,
@@ -145,7 +145,7 @@ class SedurSefazPropertyRegistryLookup implements PropertyRegistryLookup
             bairro: $this->texto($localizacao['Bairro'] ?? null),
             cep: $this->formatarCep($localizacao['CEP'] ?? null),
             area_construida_m2: $this->texto($corpo['AreaConstruida'] ?? null),
-            tipo_imovel: null,
+            tipo_imovel: $this->texto($corpo['Utilizacao'] ?? null),
             data_lancamento: $this->dataBr($corpo['DataEmissaoHabiteSe'] ?? null),
             situacao_cadastral: $this->texto($corpo['Status'] ?? null),
             contribuinte: null,
@@ -215,6 +215,11 @@ class SedurSefazPropertyRegistryLookup implements PropertyRegistryLookup
             $corpo['NomeProprietario'],
             $corpo['ListaOutrosProprietarios'],
             $corpo['ListaHistoricoPropriedade'],
+            $corpo['NomeContribuinte'],
+            $corpo['CodigoIdentificadorContribuinte'],
+            $corpo['NumeroIdentificadorContribuinte'],
+            $corpo['CodigoIdentificadorPermissionario'],
+            $corpo['NumeroIdentificadorPermissionario'],
         );
 
         return $corpo;

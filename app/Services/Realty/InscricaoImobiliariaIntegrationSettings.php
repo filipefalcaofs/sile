@@ -17,6 +17,15 @@ class InscricaoImobiliariaIntegrationSettings
         return (bool) Settings::get('integrations.inscricao_imobiliaria.em_producao', false);
     }
 
+    /**
+     * A base pode terminar em `?valor=` (proxy-sefaz): a inscrição entra no fim,
+     * como query. Sem query, entra como segmento do caminho (BFF).
+     */
+    public static function urlDaConsulta(string $base, string $inscricao): string
+    {
+        return str_contains($base, '?') ? $base.$inscricao : rtrim($base, '/').'/'.$inscricao;
+    }
+
     public function baseUrl(): string
     {
         $key = $this->usingProduction()
@@ -27,6 +36,8 @@ class InscricaoImobiliariaIntegrationSettings
             ? (string) config('viabiliza.integrations.inscricao_imobiliaria.url_producao')
             : (string) config('viabiliza.integrations.inscricao_imobiliaria.url_homologacao');
 
-        return rtrim((string) Settings::get($key, $fallback), '/');
+        $url = (string) Settings::get($key, $fallback);
+
+        return str_contains($url, '?') ? $url : rtrim($url, '/');
     }
 }

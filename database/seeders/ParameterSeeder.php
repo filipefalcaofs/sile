@@ -406,9 +406,9 @@ class ParameterSeeder extends Seeder
             'integrations.inscricao_imobiliaria.url_producao' => [
                 'group' => 'integracoes',
                 'type' => 'string',
-                'default_value' => 'https://api.sedur.salvador.ba.gov.br/k8s/prd/ws-bff-portal-servicos/v1/inscricao-imobiliaria',
+                'default_value' => 'https://api.sedur.salvador.ba.gov.br/k8s/prd/ws-proxy-sefaz/integra/v1/inscricao-imobiliaria?valor=',
                 'validation_rules' => ['required', 'url'],
-                'description' => 'URL base da API de inscrição imobiliária em produção (editável; usada somente com o interruptor ligado)',
+                'description' => 'URL da API de inscrição imobiliária em produção (proxy-sefaz; a inscrição entra no fim, após ?valor=; editável; usada somente com o interruptor ligado)',
             ],
             'integrations.inscricao_imobiliaria.base_url' => [
                 'group' => 'integracoes',
