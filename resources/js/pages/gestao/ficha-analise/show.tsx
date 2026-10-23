@@ -754,7 +754,7 @@ export default function FichaAnaliseShow({
     // Malha fina é caixa à parte para alterar o processo (HU-127) — permissão própria.
     const podeMalhaFina = auth.permissions.includes('encaminhar-malha-fina');
     const classeAcaoFantasma =
-        'inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-theme-xs text-gray-700 transition hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-brand-500 dark:text-gray-400 dark:hover:bg-white/[0.05] dark:hover:text-gray-300';
+        'inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm text-gray-700 transition hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-brand-500 dark:text-gray-400 dark:hover:bg-white/[0.05] dark:hover:text-gray-300';
 
     const editavel = ficha.editavel;
 
@@ -2419,30 +2419,7 @@ export default function FichaAnaliseShow({
                             </CardContent>
                         </Card>
 
-                    </div>
-
-                    {/* Coluna lateral: abrigados, precedentes, ações (mapa/localização
-                        já exibidos no topo da ficha — ver grid Localização | Polígono). */}
-                    <div className="space-y-6">
-                        {escritorioVirtual.is_sede && (
-                            <AbrigadosPanel
-                                inscricao={escritorioVirtual.inscricao}
-                                abrigados={escritorioVirtual.abrigados}
-                            />
-                        )}
-
-                        <PrecedentesPanel
-                            carregando={precedentes.processing}
-                            erro={precedentesErro}
-                            dados={precedentesData}
-                        />
-
-                    </div>
-                </div>
-
-                <div className="grid items-start gap-6 lg:grid-cols-3">
-                    <div className="lg:col-span-2">
-                                                <Card>
+                        <Card>
                             <CardHeader
                                 title="Parecer técnico"
                                 description="Em branco para o analista redigir — a fundamentação do sistema está na justificativa de cada atividade. Quando a IA está ligada, é possível pedir uma minuta para revisar."
@@ -2515,104 +2492,118 @@ export default function FichaAnaliseShow({
                             </CardContent>
                         </Card>
                     </div>
-                </div>
 
-                {!somenteLeitura && (
-                    <div
-                        role="region"
-                        aria-label="Ações da ficha"
-                        className="sticky bottom-0 z-30 -mx-4 border-t border-gray-200 bg-white/95 px-4 py-3 shadow-theme-lg backdrop-blur md:-mx-6 md:px-6 dark:border-gray-800 dark:bg-gray-900/95"
-                    >
-                        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-                            <div className="flex flex-wrap items-center gap-2">
-                                {ficha.revision > 1 && (
-                                    <Button onClick={() => setShowDiff(true)} variant="ghost" size="xs">
-                                        Comparar revisões
-                                    </Button>
-                                )}
+                    {/* Coluna lateral: ações da ficha (acompanham o scroll), abrigados e
+                        precedentes (mapa/localização já exibidos no topo da ficha). */}
+                    <div className="flex flex-col gap-6 lg:sticky lg:top-36 lg:max-h-[calc(100vh-10rem)] lg:self-start">
+                        {!somenteLeitura && (
+                            <Card className="shrink-0">
+                                <CardHeader title="Ações" description="Conforme a fase da análise e a permissão." />
+                                <CardContent>
+                                    <div className="flex flex-col gap-2">
+                                        {editavel ? (
+                                            <>
+                                                <Button onClick={() => salvarRascunho(true)} variant="destaque" size="sm">
+                                                    Salvar Ficha
+                                                </Button>
+                                                <Button onClick={() => setShowFinalizar(true)} size="sm">
+                                                    Finalizar Ficha de Análise
+                                                </Button>
+                                            </>
+                                        ) : (
+                                            <>
+                                                {podeConcluir && (
+                                                    <Button onClick={() => setShowDecidir(true)} size="sm">
+                                                        Decidir processo (conforme ficha)
+                                                    </Button>
+                                                )}
+                                                <Button onClick={novaRevisao} variant="outline" size="sm" loading={acao.processing}>
+                                                    Criar nova ficha
+                                                </Button>
+                                            </>
+                                        )}
 
-                                {temFichaVistoria ? (
-                                    podeConsultarVistoria && (
-                                        <Link
-                                            href={`/gestao/processos/${processo.id}/vistoria/visualizar`}
-                                            className={classeAcaoFantasma}
-                                        >
-                                            Visualizar ficha de vistoria
-                                        </Link>
-                                    )
-                                ) : (
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowSemFichaVistoria(true)}
-                                        className={classeAcaoFantasma}
-                                    >
-                                        Visualizar ficha de vistoria
-                                    </button>
-                                )}
-
-                                {podeEncaminharVistoria && (
-                                    <Button onClick={() => setShowVistoria(true)} variant="outline" size="xs">
-                                        Encaminhar para a vistoria
-                                    </Button>
-                                )}
-
-                                {processo.status === 'em_analise' && (
-                                    <Button onClick={() => setShowPendencia(true)} variant="outline" size="xs">
-                                        Colocar em convite
-                                    </Button>
-                                )}
-
-                                {processo.status === 'em_pendencia' && (
-                                    <Button onClick={() => setShowCancelarConvite(true)} variant="outline" size="xs">
-                                        Cancelar convite
-                                    </Button>
-                                )}
-                            </div>
-
-                            <div className="flex flex-wrap items-center justify-end gap-2">
-                                {editavel ? (
-                                    <>
-                                        <Button onClick={() => salvarRascunho(true)} variant="destaque" size="sm">
-                                            Salvar Ficha
-                                        </Button>
-                                        <Button onClick={() => setShowFinalizar(true)} size="sm">
-                                            Finalizar Ficha de Análise
-                                        </Button>
-                                    </>
-                                ) : (
-                                    <>
-                                        {podeConcluir && (
-                                            <Button onClick={() => setShowDecidir(true)} size="sm">
-                                                Decidir processo (conforme ficha)
+                                        {podeConcluirAnalise && (
+                                            <Button
+                                                onClick={() => {
+                                                    setErroConclusao(null);
+                                                    setShowConclusao(true);
+                                                }}
+                                                size="sm"
+                                            >
+                                                Conclusão de Análise
                                             </Button>
                                         )}
-                                        <Button onClick={novaRevisao} variant="outline" size="sm" loading={acao.processing}>
-                                            Criar nova ficha
-                                        </Button>
-                                    </>
-                                )}
 
-                                {podeConcluirAnalise && (
-                                    <Button
-                                        onClick={() => {
-                                            setErroConclusao(null);
-                                            setShowConclusao(true);
-                                        }}
-                                        size="sm"
-                                    >
-                                        Conclusão de Análise
-                                    </Button>
-                                )}
+                                        {podeEncaminharChefia && fichaSalva && (
+                                            <Button onClick={() => setShowEncaminharChefia(true)} variant="claro" size="sm">
+                                                Encaminhar para Chefia
+                                            </Button>
+                                        )}
 
-                                {podeEncaminharChefia && fichaSalva && (
-                                    <Button onClick={() => setShowEncaminharChefia(true)} variant="claro" size="sm">
-                                        Encaminhar para Chefia
-                                    </Button>
-                                )}
-                            </div>
+                                        {processo.status === 'em_analise' && (
+                                            <Button onClick={() => setShowPendencia(true)} variant="ghost" size="sm">
+                                                Colocar em convite
+                                            </Button>
+                                        )}
+
+                                        {processo.status === 'em_pendencia' && (
+                                            <Button onClick={() => setShowCancelarConvite(true)} variant="ghost" size="sm">
+                                                Cancelar convite
+                                            </Button>
+                                        )}
+
+                                        {podeEncaminharVistoria && (
+                                            <Button onClick={() => setShowVistoria(true)} variant="ghost" size="sm">
+                                                Encaminhar para a vistoria
+                                            </Button>
+                                        )}
+
+                                        {temFichaVistoria ? (
+                                            podeConsultarVistoria && (
+                                                <Link
+                                                    href={`/gestao/processos/${processo.id}/vistoria/visualizar`}
+                                                    className={classeAcaoFantasma}
+                                                >
+                                                    Visualizar ficha de vistoria
+                                                </Link>
+                                            )
+                                        ) : (
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowSemFichaVistoria(true)}
+                                                className={classeAcaoFantasma}
+                                            >
+                                                Visualizar ficha de vistoria
+                                            </button>
+                                        )}
+
+                                        {ficha.revision > 1 && (
+                                            <Button onClick={() => setShowDiff(true)} variant="ghost" size="sm">
+                                                Comparar revisões
+                                            </Button>
+                                        )}
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        )}
+
+                        <div className="flex min-h-0 flex-col gap-6 lg:overflow-y-auto">
+                            {escritorioVirtual.is_sede && (
+                                <AbrigadosPanel
+                                    inscricao={escritorioVirtual.inscricao}
+                                    abrigados={escritorioVirtual.abrigados}
+                                />
+                            )}
+
+                            <PrecedentesPanel
+                                carregando={precedentes.processing}
+                                erro={precedentesErro}
+                                dados={precedentesData}
+                            />
                         </div>
                     </div>
-                )}
+                </div>
             </div>
 
             <Modal isOpen={showSemFichaVistoria} onClose={() => setShowSemFichaVistoria(false)} className="m-4 max-w-[480px] p-6 lg:p-8">
