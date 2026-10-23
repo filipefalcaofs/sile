@@ -496,6 +496,17 @@ class ViabilityRequest extends Model
     }
 
     /**
+     * CPFs que veem o processo além do solicitante (sócios do REGIN e
+     * solicitante declarado).
+     *
+     * @return HasMany<ViabilityRequestCpf, $this>
+     */
+    public function cpfsVinculados(): HasMany
+    {
+        return $this->hasMany(ViabilityRequestCpf::class);
+    }
+
+    /**
      * Decisão do fluxo expresso (EP09) — 1:1 imutável, existe só após
      * deferir/indeferir. bap_due_at/bap_linked_at (HU-125) ficam fora do
      * fillable (como protocol_number/status): são gravados via forceFill pela
