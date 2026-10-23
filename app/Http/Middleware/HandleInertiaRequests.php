@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\PortalServicos\PortalServicos;
 use App\Support\Representation\CurrentRepresentation;
 use App\Support\Settings;
 use App\Support\Vocabulario;
@@ -52,6 +53,9 @@ class HandleInertiaRequests extends Middleware
             ],
             // Closure: avaliada na serialização da resposta, depois de o
             // ResolveRepresentation (middleware de rota) resolver o estado.
+            // Portal sem login, cadastro e senha próprios (HU-142): o front
+            // esconde a aba Senha de Minha conta.
+            'entradaPortalServicos' => fn () => PortalServicos::entradaDisponivel(),
             'actingFor' => fn () => app(CurrentRepresentation::class)->grantor()?->only('id', 'name'),
             // Banner do atendimento presencial assistido (HU-139): preenchido
             // pelo ResolveAssistedAttendance nas rotas do atendimento (console).

@@ -7,6 +7,8 @@ export interface SharedProps extends PageProps {
         roles: string[];
         permissions: string[];
     };
+    /** Portal sem login, cadastro e senha próprios: entrada pelo Portal de Serviços da SEDUR (HU-142). */
+    entradaPortalServicos: boolean;
     actingFor: { id: number; name: string } | null;
     attendingFor: { id: number; name: string } | null;
     /** Badge do sininho (HU-086): contagem real de não-lidas do usuário autenticado. */

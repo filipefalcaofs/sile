@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\BloqueiaEntradaLocalDoPortal;
 use App\Http\Middleware\ConfigureEnvironmentSession;
 use App\Http\Middleware\EnsureConsultaViabilidadeEnabled;
 use App\Http\Middleware\EnsureLgpdTermAccepted;
@@ -9,6 +10,7 @@ use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\RedirectGestaoIfAuthenticated;
 use App\Http\Middleware\SecurityHeaders;
+use App\Services\PortalServicos\PortalServicos;
 use App\Support\Audit\AuditService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
@@ -53,6 +55,7 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleInertiaRequests::class,
             SecurityHeaders::class,
             EnsureUserIsActive::class,
+            BloqueiaEntradaLocalDoPortal::class,
         ]);
 
         $middleware->alias([
@@ -67,10 +70,15 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Logins separados por contexto: retaguarda usa /gestao/login,
         // portal público usa /portal/login (Fortify).
+        // Com a entrada pelo Portal de Serviços ligada (HU-142), o portal manda
+        // o visitante ao login do Portal de Serviços; o redirect()->guest() do
+        // Laravel guarda a página pedida em url.intended para a volta.
         $middleware->redirectGuestsTo(
-            fn (Request $request) => $request->is('gestao', 'gestao/*')
-                ? route('gestao.login')
-                : route('login'),
+            fn (Request $request) => match (true) {
+                $request->is('gestao', 'gestao/*') => route('gestao.login'),
+                PortalServicos::entradaDisponivel() => PortalServicos::urlLogin(PortalServicos::urlEntrada()),
+                default => route('login'),
+            },
         );
 
         // Autenticado no portal em rota guest volta ao painel do cidadão.
