@@ -63,6 +63,68 @@ class PoligonoEnderecamentoService
         return true;
     }
 
+    /**
+     * Refaz a cadeia mesmo com polígono gravado, para quando o CODLOG do
+     * processo mudou: chave do endereçamento, SEMAP e o lote que contém o ponto
+     * gravado ou desenhado. O polígono antigo só sai quando a busca pelo ponto
+     * responde que não há lote ali; com ela fora do ar, ambígua ou sem ponto,
+     * ele fica. Devolve a fonte gravada (chave, semap, ponto), 'removido' ou
+     * 'mantido'.
+     */
+    public function refazer(ViabilityRequest $request): string
+    {
+        $codLog = trim((string) $request->cod_log);
+        $numero = trim((string) $request->address_number);
+        $complemento = $request->address_complement;
+
+        if ($codLog !== '' && $numero !== '') {
+            $hit = $this->cliente->consultar($codLog, $numero, $complemento);
+            $this->auditar($request, 'enderecamento', $hit->status, $codLog, $numero, $complemento, $hit);
+
+            if ($hit->encontrado()) {
+                $this->gravar($request, $hit, PoligonoFonte::Chave);
+
+                return PoligonoFonte::Chave->value;
+            }
+        }
+
+        $semap = $this->semap->consultar($request->property_registration);
+        $this->auditar($request, 'semap', $semap->status, $codLog, $numero, $complemento, $semap);
+
+        if ($semap->encontrado()) {
+            $this->gravar($request, $semap, PoligonoFonte::Semap, atributosDoLote: true);
+
+            return PoligonoFonte::Semap->value;
+        }
+
+        $ponto = $request->pontoGravadoOuDesenhado();
+
+        if ($ponto === null || ! Settings::enabled('geoserver_enderecamento')) {
+            return 'mantido';
+        }
+
+        $porPonto = $this->cliente->consultarPorPonto($ponto['lat'], $ponto['lng']);
+        $this->auditarPonto($request, $ponto, $porPonto);
+
+        if ($porPonto->encontrado()) {
+            $this->gravar($request, $porPonto, PoligonoFonte::Ponto);
+
+            return PoligonoFonte::Ponto->value;
+        }
+
+        if ($porPonto->status !== EnderecamentoHit::NAO_ENCONTRADO) {
+            return 'mantido';
+        }
+
+        $request->forceFill([
+            'address_polygon_geojson' => null,
+            'address_polygon_source' => null,
+            'address_polygon_consulted_at' => now(),
+        ])->save();
+
+        return 'removido';
+    }
+
     private function gravar(ViabilityRequest $request, EnderecamentoHit $hit, PoligonoFonte $fonte, bool $atributosDoLote = false): void
     {
         $dados = [
