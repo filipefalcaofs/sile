@@ -11,12 +11,13 @@
 | 19/10/2026 | Retirada das HUs sem funcionalidade no sistema, renumeração e reordenação das demais (retaguarda primeiro, portal depois) | 2.2 | Sudoeste Informática |
 | 22/10/2026 | O portal passa a abrir já autenticado a partir do Portal de Serviços da SEDUR, com o mesmo login, no lugar do botão próprio de login com GOV.BR | 2.3 | Sudoeste Informática |
 | 23/10/2026 | Quem chega pelo Portal de Serviços nunca fica sem entrar: e-mail em uso ou ausente vira e-mail provisório, conta com e-mail pendente é confirmada, e o botão Sair volta à Carta de Serviços | 2.4 | Sudoeste Informática |
+| 23/10/2026 | Caminhos de entrada combinados com a SEDUR: serviços de Renovação, Viabilidade Locacional e Profissional Liberal/Autônomo na Carta de Serviços e o Detalhar dos processos na área logada do Portal de Serviços | 2.5 | Sudoeste Informática |
 
 ---
 
 ## Visão Geral
 
-O cidadão entra no Portal de Serviços da SEDUR com a conta GOV.BR, escolhe na Carta de Serviços um serviço de Viabilidade de Localização e o portal do Viabiliza abre já com ele identificado, sem pedir login de novo. O Viabiliza não tem tela de login própria para o cidadão: a entrada é sempre a do Portal de Serviços. Funciona como a entrada do servidor pela rede da SEDUR: o Portal de Serviços confirma quem é a pessoa, a conta dela fica guardada no Viabiliza e, a partir daí, a sessão é do próprio Viabiliza.
+O cidadão entra no Portal de Serviços da SEDUR com a conta GOV.BR e o portal do Viabiliza abre numa nova aba, já com ele identificado, sem pedir login de novo. Há dois caminhos. Na Carta de Serviços, a Renovação de Viabilidade abre a tela de renovação, e a Viabilidade Locacional e a Viabilidade de Localização para Profissional Liberal/Autônomo Estabelecido abrem a tela de nova solicitação. Na área logada do Portal de Serviços, a lista de processos do cidadão traz os processos de viabilidade, e o botão Detalhar abre aquele processo no Viabiliza, onde ele vê os detalhes, os convites e as pendências e responde aos convites. Consulta de processos e resposta a convites não são serviços separados da Carta. A viabilidade MEI está em revisão pela SEDUR. O Viabiliza não tem tela de login própria para o cidadão: a entrada é sempre a do Portal de Serviços. Funciona como a entrada do servidor pela rede da SEDUR: o Portal de Serviços confirma quem é a pessoa, a conta dela fica guardada no Viabiliza e, a partir daí, a sessão é do próprio Viabiliza.
 
 Se o cidadão ainda não entrou no Portal de Serviços, o portal pede a entrada com GOV.BR antes de abrir o Viabiliza. Quem abre o endereço do Viabiliza direto, sem ter entrado, é levado à entrada do Portal de Serviços e, ao concluir, volta ao Viabiliza na página que tentou abrir.
 
@@ -51,7 +52,7 @@ Depois da entrada, valem as mesmas regras do portal: e-mail confirmado e aceite 
 
 - Conta GOV.BR com CPF e com o nível mínimo exigido
 - Entrada feita no Portal de Serviços da SEDUR (servicos.sedur.salvador.ba.gov.br)
-- Serviços de Viabilidade de Localização da Carta de Serviços levando ao Viabiliza
+- Serviços de viabilidade da Carta de Serviços e o Detalhar dos processos de viabilidade levando ao Viabiliza
 
 ## Dependências
 
@@ -70,7 +71,7 @@ Depois da entrada, valem as mesmas regras do portal: e-mail confirmado e aceite 
 
 ### Tela 1 — Chegada pelo Portal de Serviços da SEDUR
 
-**Caminho no menu:** Portal de Serviços da SEDUR › Carta de Serviços › Viabilidade de Localização. O Viabiliza não tem tela de login própria para o cidadão nem item de menu para esta entrada.
+**Caminho no menu:** Portal de Serviços da SEDUR › Carta de Serviços › Viabilidade de Localização (Renovação de Viabilidade, Viabilidade Locacional, Profissional Liberal/Autônomo), ou área logada do Portal de Serviços › processo de viabilidade › Detalhar. O Viabiliza não tem tela de login própria para o cidadão nem item de menu para esta entrada.
 
 *[Print da tela](screenshots/portal-servicos-sedur.png)*
 
@@ -78,8 +79,8 @@ Depois da entrada, valem as mesmas regras do portal: e-mail confirmado e aceite 
 
 **Cenário 1: Cidadão já entrou no Portal de Serviços**
 **Dado que** o cidadão entrou no Portal de Serviços da SEDUR e já tem conta ativa no Viabiliza com o mesmo CPF
-**Quando** abre um serviço de Viabilidade de Localização
-**Então** o Viabiliza abre no painel dele, sem pedir login, e a entrada fica registrada
+**Quando** abre um serviço de viabilidade na Carta de Serviços
+**Então** o Viabiliza abre numa nova aba, sem pedir login, na tela de renovação ou de nova solicitação, conforme o serviço, e a entrada fica registrada
 
 **Cenário 2: Cidadão ainda não entrou no Portal de Serviços**
 **Dado que** o cidadão não entrou no Portal de Serviços, ou abriu o endereço do Viabiliza direto
@@ -116,7 +117,17 @@ Depois da entrada, valem as mesmas regras do portal: e-mail confirmado e aceite 
 **Quando** chega ao Viabiliza pelo Portal de Serviços
 **Então** o e-mail fica confirmado, o provisório é trocado pelo e-mail do cadastro quando ele não está em outra conta, e o cidadão entra sem passar pela confirmação
 
-**Cenário 9: Botão Sair do Viabiliza**
+**Cenário 9: Detalhar um processo pelo Portal de Serviços**
+**Dado que** o cidadão está na área logada do Portal de Serviços e vê um processo de viabilidade dele na lista
+**Quando** escolhe Detalhar
+**Então** o Viabiliza abre numa nova aba, já identificado, na tela desse processo, com os detalhes, os convites e as pendências
+
+**Cenário 10: Detalhar um processo que não é do cidadão**
+**Dado que** o número do processo não existe ou não pertence ao cidadão que entrou
+**Quando** o Viabiliza recebe o pedido de abrir esse processo
+**Então** abre a lista de processos do cidadão com o aviso de que o processo não foi encontrado entre os dele, sem mostrar nada do outro processo
+
+**Cenário 11: Botão Sair do Viabiliza**
 **Dado que** o cidadão está usando o Viabiliza
 **Quando** escolhe Sair
 **Então** a sessão do Viabiliza é encerrada e ele volta à Carta de Serviços da SEDUR
