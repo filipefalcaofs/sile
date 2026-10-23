@@ -6,6 +6,7 @@ use App\Models\AccessLog;
 use App\Models\LegalTerm;
 use App\Models\Parameter;
 use App\Models\User;
+use App\Models\ViabilityRequest;
 use Database\Seeders\ParameterSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -53,10 +54,11 @@ class EntradaPortalServicosTest extends TestCase
         return User::factory()->cidadao()->withAcceptedLgpdTerm()->create(['cpf' => self::CPF]);
     }
 
-    private function entrar(?string $destino = 'renovacao', ?string $token = self::TOKEN)
+    private function entrar(?string $destino = 'renovacao', ?string $token = self::TOKEN, ?string $protocolo = null)
     {
         return $this->get('/portal/entrar/portal-servicos?'.http_build_query(array_filter([
             'destino' => $destino,
+            'protocolo' => $protocolo,
             'token' => $token,
         ])));
     }
@@ -73,13 +75,70 @@ class EntradaPortalServicosTest extends TestCase
         $this->assertTrue(AccessLog::query()->where('user_id', $user->id)->where('event', 'login')->where('origin', 'servicos')->exists());
     }
 
-    public function test_destinos_consulta_e_convites(): void
+    public function test_destinos_nova_e_autonomo_abrem_a_nova_solicitacao(): void
     {
         $this->sessaoValida();
         $this->cidadao();
 
-        $this->entrar('consulta')->assertRedirect('/portal/solicitacoes');
-        $this->entrar('convites')->assertRedirect('/portal/solicitacoes?status=em_pendencia');
+        $this->entrar('nova')->assertRedirect('/portal/solicitacoes/nova');
+        $this->entrar('autonomo')->assertRedirect('/portal/solicitacoes/nova');
+    }
+
+    public function test_consulta_e_convites_nao_sao_mais_destinos(): void
+    {
+        $this->sessaoValida();
+        $this->cidadao();
+
+        $this->entrar('consulta')->assertRedirect('/portal/painel');
+        $this->entrar('convites')->assertRedirect('/portal/painel');
+    }
+
+    public function test_detalhar_abre_o_processo_do_proprio_cpf(): void
+    {
+        $this->sessaoValida();
+        $user = $this->cidadao();
+        $processo = ViabilityRequest::factory()->protocoled()->create(['requester_user_id' => $user->id]);
+
+        $this->entrar('processo', protocolo: strtolower($processo->protocol_number))
+            ->assertRedirect('/portal/solicitacoes/'.$processo->id);
+    }
+
+    public function test_detalhar_processo_de_outra_pessoa_vai_para_a_lista_com_aviso(): void
+    {
+        $this->sessaoValida();
+        $this->cidadao();
+        $deOutro = ViabilityRequest::factory()->protocoled()->create();
+
+        $this->entrar('processo', protocolo: $deOutro->protocol_number)
+            ->assertRedirect('/portal/solicitacoes')
+            ->assertSessionHas('error', 'Não encontramos esse processo entre os seus. Confira a lista abaixo.');
+    }
+
+    public function test_detalhar_protocolo_inexistente_ou_invalido_vai_para_a_lista_com_aviso(): void
+    {
+        $this->sessaoValida();
+        $this->cidadao();
+
+        $this->entrar('processo', protocolo: 'VIA-2026-999999')
+            ->assertRedirect('/portal/solicitacoes')
+            ->assertSessionHas('error');
+        $this->entrar('processo', protocolo: '../../gestao')
+            ->assertRedirect('/portal/solicitacoes')
+            ->assertSessionHas('error');
+        $this->entrar('processo')
+            ->assertRedirect('/portal/solicitacoes')
+            ->assertSessionHas('error');
+    }
+
+    public function test_sem_token_preserva_o_protocolo_na_volta(): void
+    {
+        Http::fake();
+
+        $location = urldecode((string) $this->entrar('processo', null, 'VIA-2026-000123')->headers->get('Location'));
+
+        $this->assertStringContainsString('destino=processo', $location);
+        $this->assertStringContainsString('protocolo=VIA-2026-000123', $location);
+        $this->assertStringContainsString('token=PREENCHER_TOKEN', $location);
     }
 
     public function test_destino_invalido_vai_para_o_painel(): void
@@ -108,11 +167,11 @@ class EntradaPortalServicosTest extends TestCase
     {
         Http::fake();
 
-        $location = (string) $this->entrar('consulta', null)->assertRedirect()->headers->get('Location');
+        $location = (string) $this->entrar('nova', null)->assertRedirect()->headers->get('Location');
 
         $this->assertStringStartsWith('https://sso-homo.salvador.ba.gov.br/govbr/authorize/?client_id=SedurMais-PortalServicos-Hml&state=', $location);
         $this->assertStringContainsString('PREENCHER_TOKEN', urldecode($location));
-        $this->assertStringContainsString('destino=consulta', urldecode($location));
+        $this->assertStringContainsString('destino=nova', urldecode($location));
         Http::assertNothingSent();
     }
 
@@ -180,7 +239,7 @@ class EntradaPortalServicosTest extends TestCase
         $this->sessaoValida();
         $user = $this->cidadao();
 
-        $this->entrar('consulta')->assertRedirect('/portal/solicitacoes');
+        $this->entrar('nova')->assertRedirect('/portal/solicitacoes/nova');
 
         $this->assertAuthenticatedAs($user, 'web');
     }
@@ -201,8 +260,18 @@ class EntradaPortalServicosTest extends TestCase
         $this->cidadao();
 
         $this->withSession(['url.intended' => url('/portal/solicitacoes/15')])
-            ->entrar('renovacao')
+            ->entrar(null)
             ->assertRedirect('/portal/solicitacoes/15');
+    }
+
+    public function test_destino_explicito_vence_a_pagina_guardada(): void
+    {
+        $this->sessaoValida();
+        $this->cidadao();
+
+        $this->withSession(['url.intended' => url('/portal/solicitacoes/15')])
+            ->entrar('renovacao')
+            ->assertRedirect('/portal/renovacao');
     }
 
     public function test_conta_nova_passa_pelo_termo_lgpd(): void
@@ -210,7 +279,7 @@ class EntradaPortalServicosTest extends TestCase
         LegalTerm::factory()->published()->create();
         $this->sessaoValida();
 
-        $this->entrar('consulta')->assertRedirect('/portal/solicitacoes');
+        $this->entrar('nova')->assertRedirect('/portal/solicitacoes/nova');
 
         $this->get('/portal/painel')->assertRedirect(route('portal.termo-lgpd.show'));
     }

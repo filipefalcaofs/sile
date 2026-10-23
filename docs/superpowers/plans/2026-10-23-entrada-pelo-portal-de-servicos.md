@@ -278,3 +278,26 @@ Fluxo: chave desligada → `redirect()->route('login')` com `status` "Entrada pe
 - [ ] **Step 1:** `php artisan test --compact tests/Feature/PortalServicos tests/Feature/Auth tests/Feature/Renovacao tests/Feature/Solicitacao tests/Feature/Lgpd` → tudo PASS; colar o resumo.
 - [ ] **Step 2:** Perguntar ao usuário se roda a suíte inteira (`php artisan test --compact`).
 - [ ] **Step 3:** Com o Task 0 concluído: em homologação, ligar `features.login_portal_servicos`, abrir `/portal/entrar/portal-servicos?destino=renovacao&token=<token real>` e conferir que cai em `/portal/renovacao` autenticado; registrar o resultado. Sem o Task 0, declarar explicitamente que a integração real não foi verificada.
+
+---
+
+### Task 10: Destinos da reunião de 23/10/2026 (Carta + Detalhar)
+
+Substitui os destinos `consulta` e `convites` do Task 4 (não haverá serviços da Carta para eles).
+
+**Files:**
+- Modify: `app/Http/Controllers/Portal/EntradaPortalServicosController.php` (`DESTINOS`, resolução do destino)
+- Modify: `tests/Feature/PortalServicos/EntradaPortalServicosTest.php`
+- Modify: `docs/requisitos/hus/HU.142 - Autenticar pelo portal de servicos da SEDUR.md` (+ DOCX/PDF/consolidados), versão 2.5
+
+**Interfaces:**
+- `DESTINOS`: `renovacao` → `portal.renovacao.index`; `nova` → `portal.solicitacoes.create`; `autonomo` → `portal.solicitacoes.create`; `processo` → resolvido por `protocolo`.
+- `processo`: `protocolo` normalizado em maiúsculas, aceito só com `^[A-Z0-9][A-Z0-9-]{0,39}$`; busca `ViabilityRequest::where('protocol_number', ...)`; abre `portal.solicitacoes.show` só se `Gate::forUser($user)->allows('view', $solicitacao)`; senão `portal.solicitacoes.index` com flash `error` "Não encontramos esse processo entre os seus. Confira a lista abaixo." (mesma mensagem para inexistente, de outra pessoa ou formato inválido).
+- O `protocolo` vai junto no `urlEntrada()` quando o cidadão chega sem token (volta do login).
+
+- [ ] **Step 1:** Testes que falham: `test_destinos_nova_e_autonomo_abrem_a_nova_solicitacao`, `test_detalhar_abre_o_processo_do_proprio_cpf`, `test_detalhar_processo_de_outra_pessoa_vai_para_a_lista_com_aviso`, `test_detalhar_protocolo_inexistente_ou_invalido_vai_para_a_lista_com_aviso`, `test_consulta_e_convites_nao_sao_mais_destinos` (caem no painel), `test_sem_token_preserva_o_protocolo_na_volta`.
+- [ ] **Step 2:** `--filter=EntradaPortalServicosTest` → FAIL.
+- [ ] **Step 3:** Implementar.
+- [ ] **Step 4:** `php artisan test --compact tests/Feature/PortalServicos` → PASS.
+- [ ] **Step 5:** HU.142 v2.5 (Carta: renovação, viabilidade locacional, autônomo; Detalhar na área logada; MEI em revisão), regenerar DOCX/PDF e o bloco nos consolidados.
+- [ ] **Step 6:** Pint e commits.

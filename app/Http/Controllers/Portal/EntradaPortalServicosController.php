@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Portal;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
+use App\Models\ViabilityRequest;
 use App\Services\PortalServicos\EntradaPortalServicosRecusadaException;
 use App\Services\PortalServicos\PortalServicos;
 use App\Services\PortalServicos\PortalServicosAuthService;
@@ -13,6 +15,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -25,12 +28,22 @@ use Inertia\Response;
  */
 class EntradaPortalServicosController extends Controller
 {
-    /** @var array<string, array{0: string, 1: array<string, string>}> */
+    /**
+     * Serviços da Carta de Serviços e o Detalhar da área logada do Portal de
+     * Serviços (reunião de 23/10/2026). `processo` abre o processo pelo
+     * protocolo; o autônomo ainda não tem fluxo próprio e cai na nova
+     * solicitação.
+     *
+     * @var array<string, string|null>
+     */
     public const DESTINOS = [
-        'renovacao' => ['portal.renovacao.index', []],
-        'consulta' => ['portal.solicitacoes.index', []],
-        'convites' => ['portal.solicitacoes.index', ['status' => 'em_pendencia']],
+        'renovacao' => 'portal.renovacao.index',
+        'nova' => 'portal.solicitacoes.create',
+        'autonomo' => 'portal.solicitacoes.create',
+        'processo' => null,
     ];
+
+    private const PROCESSO_NAO_ENCONTRADO = 'Não encontramos esse processo entre os seus. Confira a lista abaixo.';
 
     public function __invoke(
         Request $request,
@@ -42,11 +55,12 @@ class EntradaPortalServicosController extends Controller
         }
 
         $destino = $request->query('destino');
-        $destino = is_string($destino) && isset(self::DESTINOS[$destino]) ? $destino : null;
+        $destino = is_string($destino) && array_key_exists($destino, self::DESTINOS) ? $destino : null;
+        $protocolo = $this->protocolo($request);
         $token = $request->query('token');
 
         if (! is_string($token) || $token === '' || $token === PortalServicos::MARCADOR_TOKEN) {
-            return redirect()->away(PortalServicos::urlLogin(PortalServicos::urlEntrada($destino)));
+            return redirect()->away(PortalServicos::urlLogin(PortalServicos::urlEntrada($destino, $protocolo)));
         }
 
         try {
@@ -72,7 +86,44 @@ class EntradaPortalServicosController extends Controller
         $request->session()->put('portal_servicos.token', Crypt::encryptString($token));
         $request->session()->put('portal_servicos.conferido_em', now()->timestamp);
 
-        return redirect()->to($intended ?? $this->urlDestino($destino));
+        if ($destino === 'processo') {
+            return $this->detalhar($user, $protocolo);
+        }
+
+        // Destino explícito (serviço da Carta) vence a página guardada antes do login.
+        return redirect()->to($destino !== null ? route(self::DESTINOS[$destino]) : ($intended ?? route('portal.dashboard')));
+    }
+
+    /**
+     * Detalhar da área logada do Portal de Serviços: abre o processo pelo
+     * protocolo só se ele for do cidadão (mesma regra da tela do processo).
+     * Inexistente, de outra pessoa ou inválido dão o mesmo aviso, sem revelar
+     * se o protocolo existe.
+     */
+    private function detalhar(User $user, ?string $protocolo): RedirectResponse
+    {
+        $solicitacao = $protocolo !== null
+            ? ViabilityRequest::query()->where('protocol_number', $protocolo)->first()
+            : null;
+
+        if ($solicitacao === null || ! Gate::forUser($user)->allows('view', $solicitacao)) {
+            return redirect()->route('portal.solicitacoes.index')->with('error', self::PROCESSO_NAO_ENCONTRADO);
+        }
+
+        return redirect()->route('portal.solicitacoes.show', $solicitacao);
+    }
+
+    private function protocolo(Request $request): ?string
+    {
+        $protocolo = $request->query('protocolo');
+
+        if (! is_string($protocolo)) {
+            return null;
+        }
+
+        $protocolo = strtoupper(trim($protocolo));
+
+        return preg_match('/^[A-Z0-9][A-Z0-9-]{0,39}$/', $protocolo) === 1 ? $protocolo : null;
     }
 
     private function aviso(string $mensagem): Response
@@ -103,16 +154,5 @@ class EntradaPortalServicosController extends Controller
         }
 
         return $intended;
-    }
-
-    private function urlDestino(?string $destino): string
-    {
-        if ($destino === null) {
-            return route('portal.dashboard');
-        }
-
-        [$rota, $parametros] = self::DESTINOS[$destino];
-
-        return route($rota, $parametros);
     }
 }

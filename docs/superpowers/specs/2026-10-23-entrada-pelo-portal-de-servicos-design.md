@@ -4,13 +4,20 @@ Data: 23/10/2026. Base de requisito: HU-142 (v2.3) e HUs 001, 002, 140, 141, 143
 
 ## Intenção
 
-O cidadão já se identifica no Portal de Serviços da SEDUR (servicos.sedur.salvador.ba.gov.br) com a conta GOV.BR. Três serviços da Carta de Serviços passam a abrir o portal do cidadão do Viabiliza inteiro, já autenticado, cada um numa tela de partida:
+O cidadão já se identifica no Portal de Serviços da SEDUR (servicos.sedur.salvador.ba.gov.br) com a conta GOV.BR. Os serviços de viabilidade da Carta de Serviços e o botão **Detalhar** da lista de processos do Portal passam a abrir o portal do cidadão do Viabiliza inteiro, já autenticado, numa nova aba, cada um numa tela de partida:
 
-| Serviço na Carta | Tela de partida no Viabiliza |
-|---|---|
-| Renovação de Viabilidade (serviço 345, já existe na Carta) | `/portal/renovacao` |
-| Consulta de processo (serviço novo na Carta) | `/portal/solicitacoes` |
-| Responder convites (serviço novo na Carta) | `/portal/solicitacoes?status=em_pendencia` |
+| Origem no Portal de Serviços | `destino` | Tela de partida no Viabiliza |
+|---|---|---|
+| Carta: Renovação de Viabilidade (serviço 345) | `renovacao` | `/portal/renovacao` |
+| Carta: Viabilidade Locacional | `nova` | `/portal/solicitacoes/nova` |
+| Carta: Viabilidade de Localização para Profissional Liberal/Autônomo Estabelecido | `autonomo` | `/portal/solicitacoes/nova` (ver lacuna abaixo) |
+| Área logada: Detalhar de um processo de viabilidade | `processo` + `protocolo=<número>` | `/portal/solicitacoes/{id}` do processo com esse protocolo, se for do CPF que entrou |
+
+Atualização de 23/10/2026 (reunião com a SEDUR): **não haverá serviços novos na Carta para consulta de processos e resposta a convites**. O Portal de Serviços vai listar, na área logada, os processos do CPF (de viabilidade e de outros serviços) e, nos do Viabiliza, o botão Detalhar abre o processo no Viabiliza, onde o cidadão vê os detalhes, os convites e responde. O serviço de viabilidade MEI será revisto pela SEDUR e fica fora por ora. A gestão do Portal de Serviços passou da Acto para a Sudoeste (Ricardo Luz); quem implementa a parte do Portal ainda será definido.
+
+**Lacuna do autônomo:** o Viabiliza não tem fluxo próprio para profissional liberal/autônomo — o assistente de nova solicitação exige uma empresa (CNPJ). O destino `autonomo` existe para o Portal já apontar para ele, mas hoje leva à nova solicitação comum; o fluxo do autônomo precisa ser definido com a SEDUR.
+
+**Lista de processos no Portal:** para o Portal listar os processos de viabilidade do CPF, os dados precisam sair do Viabiliza (consulta por CPF exposta pelo Viabiliza ou envio para a base da SEDUR). Fora do escopo desta spec; a ser definido com a Sudoeste/SEDUR.
 
 Depois de entrar, o cidadão navega por todo o portal. O portal do Viabiliza deixa de ter tela de login, cadastro e senha próprios para o cidadão.
 
@@ -39,7 +46,7 @@ Repositório `sedur-mais/portais/portal-servicos`, branch `prd`, no GitLab roma;
 
 ## Objetivos
 
-1. Entrada `GET /portal/entrar/portal-servicos?token=...&destino=renovacao|consulta|convites` que valida o token no BFF, acha ou cria a conta pelo CPF, abre a sessão do guard `web` e redireciona ao destino, sem o token no endereço final.
+1. Entrada `GET /portal/entrar/portal-servicos?token=...&destino=renovacao|nova|autonomo|processo[&protocolo=...]` que valida o token no BFF, acha ou cria a conta pelo CPF, abre a sessão do guard `web` e redireciona ao destino, sem o token no endereço final.
 2. Visitante sem sessão em qualquer rota protegida do portal vai ao login do Portal de Serviços (SSO com `state` contendo a nossa entrada com `PREENCHER_TOKEN`) e volta à página que tentou abrir.
 3. A sessão do Viabiliza confere, de tempos em tempos, se o token do Portal de Serviços ainda vale; se não vale, encerra a sessão do Viabiliza.
 4. O portal do cidadão deixa de oferecer login por CPF e senha, cadastro, "esqueci a senha" e troca de senha (conforme as HUs revistas), quando a entrada pelo Portal de Serviços estiver ligada.
@@ -49,7 +56,8 @@ Repositório `sedur-mais/portais/portal-servicos`, branch `prd`, no GitLab roma;
 
 - Mudar o código do Portal de Serviços (entregamos a especificação; quem faz é a SEDUR — decisão minha, ver "Decisões minhas").
 - Console (`/gestao`): continua igual, com AD e senha local.
-- Tela agregada de convites: usa-se o filtro de status da lista existente.
+- Tela agregada de convites: os convites são vistos dentro do processo (Detalhar).
+- Fluxo próprio do autônomo e lista de processos do Viabiliza no Portal (ver lacunas acima).
 - Deep link por protocolo ou número de TVL (só por id, como hoje).
 - Remover o código do login GOV.BR direto e do Fortify do portal: ficam desligados por chave, não apagados.
 
@@ -59,6 +67,7 @@ Repositório `sedur-mais/portais/portal-servicos`, branch `prd`, no GitLab roma;
 - Conta de cidadão criada sem CPF válido, ou duplicada para o mesmo CPF.
 - Usuário do console (conta AD ou com `acessar-gestao`) virando sessão do portal por essa entrada sem as mesmas regras de hoje (o mesmo CPF pode ser cidadão no portal: as sessões já são isoladas por guard e cookie; manter isso).
 - Redirecionamento aberto: o `destino` é uma lista fechada; a URL de volta (`state`) só pode apontar para o próprio Viabiliza.
+- Detalhar abrir processo de outra pessoa: o protocolo só leva ao processo se a política de visualização (dono ou representado) permitir para o CPF que entrou; senão o cidadão cai na lista dos próprios processos com aviso, sem revelar se o protocolo existe.
 - Cidadão que chega pelo Portal de Serviços ficar preso sem conseguir entrar (e-mail pendente, provisório ou em uso): com o login padrão desativado, o Portal de Serviços é o único caminho (decisão do usuário, 23/10/2026).
 
 ## Desenho
@@ -99,17 +108,24 @@ O botão Sair do portal encerra só a sessão do Viabiliza e devolve o cidadão 
 
 A tela padrão de login do portal é desativada: com o recurso ligado, o único caminho de entrada do cidadão é o Portal de Serviços (decisão do usuário). Login por CPF e senha, cadastro, esqueci a senha e aba Senha em Minha conta não aparecem nem respondem no portal (redirecionam à entrada). Botão "Entrar com GOV.BR" direto também sai. O reenvio de confirmação de e-mail continua (troca de e-mail no perfil).
 
-## Mudança necessária no Portal de Serviços (para a SEDUR)
+## Mudança necessária no Portal de Serviços (Sudoeste/SEDUR)
 
-1. Serviço 345 (Renovação de Viabilidade): abrir `https://<viabiliza>/portal/entrar/portal-servicos?destino=renovacao&token=<token>` em vez do caminho atual (`isSiteSedur && isSimplifica`). Mesmo padrão de `servicos_sudoeste`, mas numa lista própria do Viabiliza (o Viabiliza é da SEDUR, não da Sudoeste).
-2. Cadastrar na Carta os serviços "Consulta de processo de viabilidade" e "Responder convites da viabilidade", com `destino=consulta` e `destino=convites`.
-3. Abrir em nova aba ou na mesma aba, **sem iframe** (cookies de sessão do Viabiliza são de primeira parte).
+Responsável pelo Portal: Sudoeste (Ricardo Luz); desenvolvedor a definir com a SEDUR.
+
+1. Serviços da Carta, abrindo `https://<viabiliza>/portal/entrar/portal-servicos?destino=<destino>&token=<token da sessão>` em nova aba, sem iframe:
+   - Renovação de Viabilidade (345) → `destino=renovacao`;
+   - Viabilidade Locacional → `destino=nova`;
+   - Viabilidade de Localização para Profissional Liberal/Autônomo Estabelecido → `destino=autonomo`;
+   - Viabilidade MEI: aguardando revisão da SEDUR.
+2. Botão Detalhar dos processos de viabilidade na área logada → `destino=processo&protocolo=<número do protocolo>&token=<token>`.
+3. Lista de processos do CPF incluindo os do Viabiliza: definir a fonte dos dados (consulta exposta pelo Viabiliza ou base da SEDUR).
 4. Liberar o Viabiliza para chamar `buscar-sessao` no BFF (rede/OKD e, se houver, chave de API).
-5. Confirmar que URLs de volta do Viabiliza são aceitas no `state` do SSO.
+5. Aceitar URLs de volta do Viabiliza no `state` do SSO (com `PREENCHER_TOKEN`).
+6. Token ou acesso de homologação para os testes.
 
 ## Testes
 
-Feature tests com `Http::fake` para o BFF: token válido com conta existente, conta do REGIN com e-mail pendente e com e-mail provisório, primeiro acesso, primeiro acesso com e-mail em uso (nasce com provisório), conta inativa, nível insuficiente (com e sem nível na resposta), token inválido, BFF fora, destino inválido, token não aparece no redirect final nem no log, recurso desligado mantém o login antigo, convidado vai ao SSO com `PREENCHER_TOKEN`, checagem periódica derruba a sessão com token inválido e não derruba com BFF fora, isolamento com a sessão do console. Os testes atuais de GOV.BR, Fortify e renovação continuam passando com o recurso desligado.
+Feature tests com `Http::fake` para o BFF: destinos renovacao/nova/autonomo, Detalhar pelo protocolo (do próprio CPF, de outra pessoa, inexistente, formato inválido), token válido com conta existente, conta do REGIN com e-mail pendente e com e-mail provisório, primeiro acesso, primeiro acesso com e-mail em uso (nasce com provisório), conta inativa, nível insuficiente (com e sem nível na resposta), token inválido, BFF fora, destino inválido, token não aparece no redirect final nem no log, recurso desligado mantém o login antigo, convidado vai ao SSO com `PREENCHER_TOKEN`, checagem periódica derruba a sessão com token inválido e não derruba com BFF fora, isolamento com a sessão do console. Os testes atuais de GOV.BR, Fortify e renovação continuam passando com o recurso desligado.
 
 ## Decisões minhas (o usuário pode trocar)
 

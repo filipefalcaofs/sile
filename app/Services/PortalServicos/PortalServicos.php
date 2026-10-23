@@ -30,9 +30,10 @@ class PortalServicos
      * Endereço da entrada com o marcador que o Portal de Serviços substitui
      * pelo token. Montado à mão para o marcador sair literal na query.
      */
-    public static function urlEntrada(?string $destino = null): string
+    public static function urlEntrada(?string $destino = null, ?string $protocolo = null): string
     {
         $query = $destino !== null ? 'destino='.urlencode($destino).'&' : '';
+        $query .= $protocolo !== null ? 'protocolo='.urlencode($protocolo).'&' : '';
 
         return url('/portal/entrar/portal-servicos').'?'.$query.'token='.self::MARCADOR_TOKEN;
     }
