@@ -167,6 +167,20 @@ export function ChevronDownIcon(props: IconProps) {
     );
 }
 
+export function CalendarIcon(props: IconProps) {
+    return (
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+            <path
+                d="M6.667 2.5v2.5M13.333 2.5v2.5M3.333 8.333h13.334M4.583 4.167h10.834c.69 0 1.25.56 1.25 1.25v10c0 .69-.56 1.25-1.25 1.25H4.583c-.69 0-1.25-.56-1.25-1.25v-10c0-.69.56-1.25 1.25-1.25Z"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            />
+        </svg>
+    );
+}
+
 export function HorizontalDotsIcon(props: IconProps) {
     return (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>

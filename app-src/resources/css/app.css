@@ -403,3 +403,49 @@ html.acc-contrast {
         animation: none;
     }
 }
+
+/* Calendário do IsoDateInput (DayPicker) nas cores do tema. */
+.seletor-data .rdp-root {
+    --rdp-accent-color: var(--color-brand-500);
+    --rdp-accent-background-color: var(--color-brand-50);
+    --rdp-day-height: 40px;
+    --rdp-day-width: 40px;
+    --rdp-day_button-height: 38px;
+    --rdp-day_button-width: 38px;
+    --rdp-day_button-border-radius: 0.5rem;
+    --rdp-selected-border: none;
+    --rdp-nav-height: 2.25rem;
+    font-size: 0.875rem;
+}
+
+.seletor-data .rdp-day_button:hover:not(:disabled) {
+    background-color: var(--color-gray-100);
+}
+
+.seletor-data .rdp-selected .rdp-day_button,
+.seletor-data .rdp-selected .rdp-day_button:hover {
+    background-color: var(--color-brand-500);
+    color: #fff;
+    font-weight: 600;
+}
+
+.seletor-data .rdp-weekday {
+    color: var(--color-gray-500);
+    font-size: 0.75rem;
+    text-transform: capitalize;
+}
+
+.seletor-data .rdp-caption_label {
+    font-size: 0.875rem;
+    text-transform: capitalize;
+}
+
+.dark .seletor-data .rdp-root {
+    --rdp-accent-color: var(--color-brand-400);
+    --rdp-accent-background-color: color-mix(in srgb, var(--color-brand-500) 15%, transparent);
+    color-scheme: dark;
+}
+
+.dark .seletor-data .rdp-day_button:hover:not(:disabled) {
+    background-color: rgb(255 255 255 / 0.05);
+}
