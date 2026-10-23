@@ -301,3 +301,5 @@ Substitui os destinos `consulta` e `convites` do Task 4 (não haverá serviços 
 - [ ] **Step 4:** `php artisan test --compact tests/Feature/PortalServicos` → PASS.
 - [ ] **Step 5:** HU.142 v2.5 (Carta: renovação, viabilidade locacional, autônomo; Detalhar na área logada; MEI em revisão), regenerar DOCX/PDF e o bloco nos consolidados.
 - [ ] **Step 6:** Pint e commits.
+
+**Ajuste de 23/10/2026 (tarde):** o Detalhar pode mandar o número do processo, da viabilidade (TVL, na decisão) ou do BAP (`external_reference`). O parâmetro passou de `protocolo` a `numero` (aceita `[A-Z0-9./-]`, até 60, em maiúsculas); havendo mais de um processo visível, vale o que casa pelo número do processo e, depois, o mais recente. Testes: `test_detalhar_pelo_numero_do_processo_abre_o_do_proprio_cpf`, `test_detalhar_pelo_numero_da_viabilidade`, `test_detalhar_pelo_numero_do_bap`, `test_numero_que_casa_com_processo_de_outra_pessoa_e_com_o_proprio_abre_o_proprio`.

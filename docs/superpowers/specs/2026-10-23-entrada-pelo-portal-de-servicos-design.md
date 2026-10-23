@@ -11,7 +11,7 @@ O cidadão já se identifica no Portal de Serviços da SEDUR (servicos.sedur.sal
 | Carta: Renovação de Viabilidade (serviço 345) | `renovacao` | `/portal/renovacao` |
 | Carta: Viabilidade Locacional | `nova` | `/portal/solicitacoes/nova` |
 | Carta: Viabilidade de Localização para Profissional Liberal/Autônomo Estabelecido | `autonomo` | `/portal/solicitacoes/nova` (ver lacuna abaixo) |
-| Área logada: Detalhar de um processo de viabilidade | `processo` + `protocolo=<número>` | `/portal/solicitacoes/{id}` do processo com esse protocolo, se for do CPF que entrou |
+| Área logada: Detalhar de um processo de viabilidade | `processo` + `numero=<número>` | `/portal/solicitacoes/{id}` do processo, se for do CPF que entrou. O número pode ser o **do processo** (`protocol_number`), **da viabilidade** (`viability_decisions.tvl_product_number`) ou **do BAP** (`external_reference`); se casar com mais de um processo do cidadão, vale o que casa pelo número do processo e, depois, o mais recente |
 
 Atualização de 23/10/2026 (reunião com a SEDUR): **não haverá serviços novos na Carta para consulta de processos e resposta a convites**. O Portal de Serviços vai listar, na área logada, os processos do CPF (de viabilidade e de outros serviços) e, nos do Viabiliza, o botão Detalhar abre o processo no Viabiliza, onde o cidadão vê os detalhes, os convites e responde. O serviço de viabilidade MEI será revisto pela SEDUR e fica fora por ora. A gestão do Portal de Serviços passou da Acto para a Sudoeste (Ricardo Luz); quem implementa a parte do Portal ainda será definido.
 
@@ -46,7 +46,7 @@ Repositório `sedur-mais/portais/portal-servicos`, branch `prd`, no GitLab roma;
 
 ## Objetivos
 
-1. Entrada `GET /portal/entrar/portal-servicos?token=...&destino=renovacao|nova|autonomo|processo[&protocolo=...]` que valida o token no BFF, acha ou cria a conta pelo CPF, abre a sessão do guard `web` e redireciona ao destino, sem o token no endereço final.
+1. Entrada `GET /portal/entrar/portal-servicos?token=...&destino=renovacao|nova|autonomo|processo[&numero=...]` que valida o token no BFF, acha ou cria a conta pelo CPF, abre a sessão do guard `web` e redireciona ao destino, sem o token no endereço final.
 2. Visitante sem sessão em qualquer rota protegida do portal vai ao login do Portal de Serviços (SSO com `state` contendo a nossa entrada com `PREENCHER_TOKEN`) e volta à página que tentou abrir.
 3. A sessão do Viabiliza confere, de tempos em tempos, se o token do Portal de Serviços ainda vale; se não vale, encerra a sessão do Viabiliza.
 4. O portal do cidadão deixa de oferecer login por CPF e senha, cadastro, "esqueci a senha" e troca de senha (conforme as HUs revistas), quando a entrada pelo Portal de Serviços estiver ligada.
@@ -67,7 +67,7 @@ Repositório `sedur-mais/portais/portal-servicos`, branch `prd`, no GitLab roma;
 - Conta de cidadão criada sem CPF válido, ou duplicada para o mesmo CPF.
 - Usuário do console (conta AD ou com `acessar-gestao`) virando sessão do portal por essa entrada sem as mesmas regras de hoje (o mesmo CPF pode ser cidadão no portal: as sessões já são isoladas por guard e cookie; manter isso).
 - Redirecionamento aberto: o `destino` é uma lista fechada; a URL de volta (`state`) só pode apontar para o próprio Viabiliza.
-- Detalhar abrir processo de outra pessoa: o protocolo só leva ao processo se a política de visualização (dono ou representado) permitir para o CPF que entrou; senão o cidadão cai na lista dos próprios processos com aviso, sem revelar se o protocolo existe.
+- Detalhar abrir processo de outra pessoa: o número só leva ao processo se a política de visualização (dono ou representado) permitir para o CPF que entrou; senão o cidadão cai na lista dos próprios processos com aviso, sem revelar se o protocolo existe.
 - Cidadão que chega pelo Portal de Serviços ficar preso sem conseguir entrar (e-mail pendente, provisório ou em uso): com o login padrão desativado, o Portal de Serviços é o único caminho (decisão do usuário, 23/10/2026).
 
 ## Desenho
@@ -117,7 +117,7 @@ Responsável pelo Portal: Sudoeste (Ricardo Luz); desenvolvedor a definir com a 
    - Viabilidade Locacional → `destino=nova`;
    - Viabilidade de Localização para Profissional Liberal/Autônomo Estabelecido → `destino=autonomo`;
    - Viabilidade MEI: aguardando revisão da SEDUR.
-2. Botão Detalhar dos processos de viabilidade na área logada → `destino=processo&protocolo=<número do protocolo>&token=<token>`.
+2. Botão Detalhar dos processos de viabilidade na área logada → `destino=processo&numero=<número do processo, da viabilidade ou do BAP>&token=<token>`.
 3. Lista de processos do CPF incluindo os do Viabiliza: definir a fonte dos dados (consulta exposta pelo Viabiliza ou base da SEDUR).
 4. Liberar o Viabiliza para chamar `buscar-sessao` no BFF (rede/OKD e, se houver, chave de API).
 5. Aceitar URLs de volta do Viabiliza no `state` do SSO (com `PREENCHER_TOKEN`).
@@ -125,7 +125,7 @@ Responsável pelo Portal: Sudoeste (Ricardo Luz); desenvolvedor a definir com a 
 
 ## Testes
 
-Feature tests com `Http::fake` para o BFF: destinos renovacao/nova/autonomo, Detalhar pelo protocolo (do próprio CPF, de outra pessoa, inexistente, formato inválido), token válido com conta existente, conta do REGIN com e-mail pendente e com e-mail provisório, primeiro acesso, primeiro acesso com e-mail em uso (nasce com provisório), conta inativa, nível insuficiente (com e sem nível na resposta), token inválido, BFF fora, destino inválido, token não aparece no redirect final nem no log, recurso desligado mantém o login antigo, convidado vai ao SSO com `PREENCHER_TOKEN`, checagem periódica derruba a sessão com token inválido e não derruba com BFF fora, isolamento com a sessão do console. Os testes atuais de GOV.BR, Fortify e renovação continuam passando com o recurso desligado.
+Feature tests com `Http::fake` para o BFF: destinos renovacao/nova/autonomo, Detalhar pelo número do processo, da viabilidade e do BAP (do próprio CPF, de outra pessoa, inexistente, formato inválido, número que casa com mais de um processo), token válido com conta existente, conta do REGIN com e-mail pendente e com e-mail provisório, primeiro acesso, primeiro acesso com e-mail em uso (nasce com provisório), conta inativa, nível insuficiente (com e sem nível na resposta), token inválido, BFF fora, destino inválido, token não aparece no redirect final nem no log, recurso desligado mantém o login antigo, convidado vai ao SSO com `PREENCHER_TOKEN`, checagem periódica derruba a sessão com token inválido e não derruba com BFF fora, isolamento com a sessão do console. Os testes atuais de GOV.BR, Fortify e renovação continuam passando com o recurso desligado.
 
 ## Decisões minhas (o usuário pode trocar)
 
