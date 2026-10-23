@@ -30,6 +30,7 @@ use App\Http\Controllers\Portal\SolicitacaoImovelController;
 use App\Http\Controllers\Portal\SolicitacaoSimulacaoController;
 use App\Http\Controllers\Settings\PasswordController;
 use App\Http\Controllers\Settings\ProfileController;
+use App\Http\Middleware\ConfereSessaoPortalServicos;
 use App\Http\Middleware\ResolveRepresentation;
 use Illuminate\Support\Facades\Route;
 
@@ -82,7 +83,7 @@ Route::prefix('portal')->name('portal.')->group(function () {
 // Termo LGPD do portal do cidadão (guard web), fora do gate lgpd.accepted
 // (evita loop). O console tem o termo próprio em /gestao/termo-lgpd — sem
 // mais rota multi-guard compartilhada entre os ambientes.
-Route::middleware(['auth:web', 'verified'])
+Route::middleware(['auth:web', ConfereSessaoPortalServicos::class, 'verified'])
     ->prefix('portal')
     ->name('portal.')
     ->group(function () {
@@ -92,7 +93,7 @@ Route::middleware(['auth:web', 'verified'])
 
 // Guard web explícito: a sessão do console (guard gestao) não dá acesso
 // ao portal — autenticações independentes por ambiente.
-Route::middleware(['auth:web', 'verified'])
+Route::middleware(['auth:web', ConfereSessaoPortalServicos::class, 'verified'])
     ->prefix('portal')
     ->name('portal.')
     ->group(function () {
