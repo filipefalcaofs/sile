@@ -2441,7 +2441,7 @@ export default function FichaAnaliseShow({
                 </div>
 
                 <div className="grid items-start gap-6 lg:grid-cols-3">
-                    <div className="lg:col-span-3">
+                    <div className="lg:col-span-2">
                                                 <Card>
                             <CardHeader
                                 title="Parecer técnico"
