@@ -210,7 +210,7 @@ Total: 181 HUs. O comportamento vigente é o descrito em cada arquivo, não o te
 
 - [HU-140 — Cadastrar usuário](EP01-Identidade-Acesso-e-Seguranca/HU-140-Cadastrar-usuario.md) · EP01
 - [HU-141 — Confirmar e-mail](EP01-Identidade-Acesso-e-Seguranca/HU-141-Confirmar-e-mail.md) · EP01
-- [HU-142 — Autenticar com GOV.BR](EP01-Identidade-Acesso-e-Seguranca/HU-142-Autenticar-com-govbr.md) · EP01
+- [HU-142 — Autenticar pelo portal de serviços da SEDUR](EP01-Identidade-Acesso-e-Seguranca/HU-142-Autenticar-com-govbr.md) · EP01
 - [HU-143 — Alterar senha](EP01-Identidade-Acesso-e-Seguranca/HU-143-Alterar-senha.md) · EP01
 - [HU-144 — Gerenciar perfil do usuário](EP01-Identidade-Acesso-e-Seguranca/HU-144-Gerenciar-perfil-do-usuario.md) · EP01
 - [HU-145 — Aceitar termo LGPD](EP01-Identidade-Acesso-e-Seguranca/HU-145-Aceitar-termo-LGPD.md) · EP01

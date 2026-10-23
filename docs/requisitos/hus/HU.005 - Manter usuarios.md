@@ -9,6 +9,7 @@
 |:---:|---|:---:|:---:|
 | 16/10/2026 | Texto revisto para a linguagem de quem usa o sistema | 2.1 | Sudoeste Informática |
 | 19/10/2026 | Retirada das HUs sem funcionalidade no sistema, renumeração e reordenação das demais (retaguarda primeiro, portal depois); o cadastro de usuário pela gestão passou para a HU-004 | 2.2 | Sudoeste Informática |
+| 22/10/2026 | Portal sem login próprio: o cidadão entra pelo Portal de Serviços da SEDUR (HU-142); a conta do cidadão nasce no primeiro acesso pelo Portal de Serviços | 2.3 | Sudoeste Informática |
 
 ---
 
@@ -51,7 +52,7 @@ A lista tem duas abas. A da equipe mostra contas da rede da SEDUR e papéis com 
 
 **Passadas**
 
-- HU-140, HU-001 e HU-004 — as contas nascem pelo cadastro do portal, pelo primeiro acesso da rede da SEDUR ou pelo cadastro feito pelo administrador
+- HU-140, HU-001 e HU-004 — as contas nascem no primeiro acesso do cidadão pelo Portal de Serviços, no primeiro acesso pela rede da SEDUR ou pelo cadastro feito pelo administrador
 - HU-006 — os papéis que podem ser atribuídos
 
 **Futuras**
