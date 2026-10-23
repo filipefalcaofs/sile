@@ -14,6 +14,7 @@ use App\Http\Controllers\Portal\ConsultaProtocoloController;
 use App\Http\Controllers\Portal\ConsultaProtocoloPublicaController;
 use App\Http\Controllers\Portal\ConsultaViabilidadeController;
 use App\Http\Controllers\Portal\DashboardController;
+use App\Http\Controllers\Portal\EntradaPortalServicosController;
 use App\Http\Controllers\Portal\GovBrLoginController;
 use App\Http\Controllers\Portal\HistoricoConsultaController;
 use App\Http\Controllers\Portal\LgpdTermController;
@@ -40,6 +41,13 @@ Route::middleware('guest')
         Route::get('login/govbr', [GovBrLoginController::class, 'redirect'])->name('govbr.redirect');
         Route::get('login/govbr/callback', [GovBrLoginController::class, 'callback'])->name('govbr.callback');
     });
+
+// Entrada pelo Portal de Serviços da SEDUR (HU-142) — fora de guest e de auth:
+// troca a sessão de quem já estiver logado pela do token recebido. Throttle por
+// IP folgado: cidadãos de órgãos públicos saem pelo mesmo endereço.
+Route::get('portal/entrar/portal-servicos', EntradaPortalServicosController::class)
+    ->middleware('throttle:30,1')
+    ->name('portal.entrar.portal-servicos');
 
 // Consulta prévia de viabilidade (EP07) — PÚBLICA (cidadão anônimo acessa).
 // Fora de auth:web: a página não tem throttle; os endpoints JSON têm o throttle
