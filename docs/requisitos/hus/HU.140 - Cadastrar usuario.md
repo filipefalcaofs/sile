@@ -10,6 +10,7 @@
 | 16/10/2026 | Texto revisto para a linguagem de quem usa o sistema | 2.1 | Sudoeste Informática |
 | 19/10/2026 | Retirada das HUs sem funcionalidade no sistema, renumeração e reordenação das demais (retaguarda primeiro, portal depois); esclarecimento de que o administrador cadastra contas pela HU-004 | 2.2 | Sudoeste Informática |
 | 22/10/2026 | Portal sem login próprio: o cidadão entra pelo Portal de Serviços da SEDUR (HU-142); a conta do cidadão passa a nascer no primeiro acesso, sem formulário nem senha | 2.3 | Sudoeste Informática |
+| 23/10/2026 | Ninguém fica sem conta por causa do e-mail ou do nome: e-mail em uso ou ausente vira e-mail provisório e, sem nome, vale o do cadastro da SEDUR ou o CPF | 2.4 | Sudoeste Informática |
 
 ---
 
@@ -17,7 +18,7 @@
 
 A conta do cidadão é criada no Viabiliza no primeiro acesso pelo Portal de Serviços da SEDUR, do mesmo jeito que a conta do servidor nasce no primeiro acesso pela rede da SEDUR. O Portal de Serviços confirma quem é a pessoa; o Viabiliza guarda a conta com o nome, o CPF e o e-mail do cadastro, no perfil de cidadão. A partir daí, a conta e a sessão são do Viabiliza.
 
-Não há formulário de cadastro nem senha no portal do Viabiliza. A conta nasce com o e-mail já confirmado e ainda passa pelo aceite do termo vigente, quando houver. O telefone, quando o cadastro não trouxer, pode ser informado depois em Minha conta > Meus dados. O administrador cria contas do console pela gestão, na HU-004. Este cadastro não consulta mapa, REDESIM, CNAE nem as regras da LOUOS.
+Não há formulário de cadastro nem senha no portal do Viabiliza. A conta nasce com o e-mail já confirmado e ainda passa pelo aceite do termo vigente, quando houver. Como o Portal de Serviços é o único caminho de entrada, a conta é criada mesmo quando o e-mail do cadastro já está em outra conta ou falta: nesse caso ela nasce com um e-mail provisório, que o cidadão troca em Meus dados. Sem nome no cadastro, vale o nome do cadastro de contribuintes da SEDUR ou, na falta dele, o próprio CPF. O telefone, quando o cadastro não trouxer, pode ser informado depois em Minha conta > Meus dados. O administrador cria contas do console pela gestão, na HU-004. Este cadastro não consulta mapa, REDESIM, CNAE nem as regras da LOUOS.
 
 ---
 
@@ -44,7 +45,6 @@ Não há formulário de cadastro nem senha no portal do Viabiliza. A conta nasce
 
 - Entrada feita no Portal de Serviços da SEDUR com a conta GOV.BR (HU-142)
 - Nenhuma conta no Viabiliza com o mesmo CPF
-- Nome e e-mail no cadastro, sem o e-mail estar em outra conta do Viabiliza
 
 ## Dependências
 
@@ -79,15 +79,15 @@ Não há formulário de cadastro nem senha no portal do Viabiliza. A conta nasce
 **Quando** o cidadão chega ao Viabiliza
 **Então** nenhuma conta nova é criada e ele entra na conta que já existe
 
-**Cenário 3: E-mail já usado por outra conta**
-**Dado que** o e-mail do cadastro já pertence a outra conta do Viabiliza
+**Cenário 3: E-mail já usado por outra conta ou ausente**
+**Dado que** o e-mail do cadastro já pertence a outra conta do Viabiliza, ou o cadastro não traz e-mail
 **Quando** o cidadão chega ao Viabiliza pela primeira vez
-**Então** nenhuma conta é criada e a mensagem informa que o e-mail já está em uso
+**Então** a conta é criada com um e-mail provisório, o cidadão entra normalmente e pode trocar o e-mail em Meus dados
 
-**Cenário 4: Cadastro sem nome ou e-mail**
-**Dado que** o cadastro do cidadão não traz nome ou e-mail
+**Cenário 4: Cadastro sem nome**
+**Dado que** o cadastro do cidadão não traz nome
 **Quando** ele chega ao Viabiliza pela primeira vez
-**Então** nenhuma conta é criada e a mensagem orienta a completar o cadastro no GOV.BR
+**Então** a conta é criada com o nome do cadastro de contribuintes da SEDUR ou, se ele também não tiver, com o CPF, e o cidadão pode corrigir em Meus dados
 
 **Cenário 5: Conta nova ainda passa pelo termo**
 **Dado que** a conta acabou de ser criada

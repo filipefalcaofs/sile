@@ -10,6 +10,7 @@
 | 16/10/2026 | Texto revisto para a linguagem de quem usa o sistema | 2.1 | Sudoeste Informática |
 | 19/10/2026 | Retirada das HUs sem funcionalidade no sistema, renumeração e reordenação das demais (retaguarda primeiro, portal depois) | 2.2 | Sudoeste Informática |
 | 22/10/2026 | O portal passa a abrir já autenticado a partir do Portal de Serviços da SEDUR, com o mesmo login, no lugar do botão próprio de login com GOV.BR | 2.3 | Sudoeste Informática |
+| 23/10/2026 | Quem chega pelo Portal de Serviços nunca fica sem entrar: e-mail em uso ou ausente vira e-mail provisório, conta com e-mail pendente é confirmada, e o botão Sair volta à Carta de Serviços | 2.4 | Sudoeste Informática |
 
 ---
 
@@ -19,9 +20,9 @@ O cidadão entra no Portal de Serviços da SEDUR com a conta GOV.BR, escolhe na 
 
 Se o cidadão ainda não entrou no Portal de Serviços, o portal pede a entrada com GOV.BR antes de abrir o Viabiliza. Quem abre o endereço do Viabiliza direto, sem ter entrado, é levado à entrada do Portal de Serviços e, ao concluir, volta ao Viabiliza na página que tentou abrir.
 
-O cidadão é reconhecido pelo CPF. Quem já tem conta no Viabiliza com esse CPF entra nela. Quem ainda não tem conta ganha uma, como cidadão, com o nome e o e-mail do cadastro, desde que o e-mail não esteja em outra conta (HU-140). A conta GOV.BR precisa ter o nível mínimo exigido, bronze por padrão; abaixo disso, a entrada é recusada com a orientação para elevar o nível. Conta inativa no Viabiliza não entra e informa para procurar a SEDUR.
+O cidadão é reconhecido pelo CPF. Quem já tem conta no Viabiliza com esse CPF entra nela. Quem ainda não tem conta ganha uma, como cidadão, com o nome e o e-mail do cadastro (HU-140). Como o Portal de Serviços é o único caminho de entrada, ninguém fica de fora por causa do e-mail: se ele já estiver em outra conta ou faltar, a conta nasce com um e-mail provisório, que o cidadão troca depois em Meus dados. Conta que já existia com e-mail ainda não confirmado, como as criadas pelos pedidos vindos da Junta Comercial, tem o e-mail confirmado nessa entrada. A conta GOV.BR precisa ter o nível mínimo exigido, bronze por padrão; abaixo disso, a entrada é recusada com a orientação para elevar o nível. Conta inativa no Viabiliza não entra e informa para procurar a SEDUR.
 
-Depois da entrada, valem as mesmas regras do portal: e-mail confirmado e aceite do termo vigente, quando houver. Conta nova já nasce com o e-mail confirmado e ainda passa pelo termo. Quando o cidadão sai do Portal de Serviços, ou a entrada dele lá expira, a sessão do Viabiliza também é encerrada. O console da gestão não usa esta entrada.
+Depois da entrada, valem as mesmas regras do portal: e-mail confirmado e aceite do termo vigente, quando houver. Conta nova já nasce com o e-mail confirmado e ainda passa pelo termo. Quando o cidadão sai do Portal de Serviços, ou a entrada dele lá expira, a sessão do Viabiliza também é encerrada. O botão Sair do Viabiliza encerra só a sessão do Viabiliza e devolve o cidadão à Carta de Serviços. O console da gestão não usa esta entrada.
 
 ---
 
@@ -51,7 +52,6 @@ Depois da entrada, valem as mesmas regras do portal: e-mail confirmado e aceite 
 - Conta GOV.BR com CPF e com o nível mínimo exigido
 - Entrada feita no Portal de Serviços da SEDUR (servicos.sedur.salvador.ba.gov.br)
 - Serviços de Viabilidade de Localização da Carta de Serviços levando ao Viabiliza
-- No primeiro acesso, nome e e-mail no cadastro, sem o e-mail estar em outra conta do Viabiliza
 
 ## Dependências
 
@@ -96,10 +96,10 @@ Depois da entrada, valem as mesmas regras do portal: e-mail confirmado e aceite 
 **Quando** o cidadão chega ao Viabiliza
 **Então** a entrada é recusada com a mensagem para elevar o nível da conta GOV.BR ou para procurar a SEDUR
 
-**Cenário 5: E-mail já usado por outra conta**
-**Dado que** o cidadão ainda não tem conta no Viabiliza e o e-mail do cadastro já está em outra conta
+**Cenário 5: E-mail já usado por outra conta ou ausente**
+**Dado que** o cidadão ainda não tem conta no Viabiliza e o e-mail do cadastro já está em outra conta, ou o cadastro não traz e-mail
 **Quando** chega ao Viabiliza pela primeira vez
-**Então** nenhuma conta é criada e a mensagem informa que o e-mail já está em uso
+**Então** a conta é criada com um e-mail provisório, o cidadão entra normalmente e pode trocar o e-mail em Meus dados
 
 **Cenário 6: Entrada indisponível ou não confirmada**
 **Dado que** a entrada pelo Portal de Serviços está fora do ar, não foi concluída ou já expirou
@@ -110,6 +110,16 @@ Depois da entrada, valem as mesmas regras do portal: e-mail confirmado e aceite 
 **Dado que** o cidadão está usando o Viabiliza
 **Quando** sai do Portal de Serviços da SEDUR, ou a entrada dele lá expira
 **Então** a sessão do Viabiliza também é encerrada e, para continuar, ele precisa entrar de novo pelo Portal de Serviços
+
+**Cenário 8: Conta com e-mail ainda não confirmado**
+**Dado que** o cidadão já tem conta no Viabiliza com o e-mail ainda não confirmado ou provisório
+**Quando** chega ao Viabiliza pelo Portal de Serviços
+**Então** o e-mail fica confirmado, o provisório é trocado pelo e-mail do cadastro quando ele não está em outra conta, e o cidadão entra sem passar pela confirmação
+
+**Cenário 9: Botão Sair do Viabiliza**
+**Dado que** o cidadão está usando o Viabiliza
+**Quando** escolhe Sair
+**Então** a sessão do Viabiliza é encerrada e ele volta à Carta de Serviços da SEDUR
 
 ---
 
