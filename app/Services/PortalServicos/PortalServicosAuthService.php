@@ -116,9 +116,11 @@ class PortalServicosAuthService
     }
 
     /**
-     * Conta vinda do REGIN (e-mail pendente ou provisório): troca o provisório
-     * pelo e-mail da sessão quando ele está livre e confirma em qualquer caso.
-     * O tipo da conta (local, ad) nunca muda aqui.
+     * Conta vinda do REGIN ou com troca de e-mail pendente. Só se confirma um
+     * e-mail provado: o da sessão do portal (verificado no GOV.BR) ou o
+     * provisório. E-mail pendente diferente do da sessão é trocado pelo da
+     * sessão quando ele está livre, senão pelo provisório. O tipo da conta
+     * (local, ad) nunca muda aqui.
      */
     private function regularizarEmail(User $user, PortalServicosSessao $sessao): void
     {
@@ -128,8 +130,9 @@ class PortalServicosAuthService
             return;
         }
 
-        if ($provisorio && $this->emailLivre($sessao->email, $user)) {
-            $user->forceFill(['email' => $sessao->email])->save();
+        if ($user->email !== $sessao->email) {
+            $email = $this->emailLivre($sessao->email, $user) ? $sessao->email : EmailProvisorio::para($user->cpf);
+            $user->forceFill(['email' => $email])->save();
         }
 
         if (! $user->hasVerifiedEmail()) {

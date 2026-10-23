@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\PortalServicos;
 
+use App\Http\Middleware\HandleInertiaRequests;
 use App\Models\Parameter;
 use App\Models\User;
 use Database\Seeders\ParameterSeeder;
@@ -82,6 +83,29 @@ class EntradaLocalDesativadaTest extends TestCase
         $this->assertStringStartsWith(self::LOGIN_DO_PORTAL, $location);
         $this->assertStringContainsString('PREENCHER_TOKEN', urldecode($location));
         $this->assertStringEndsWith('/portal/solicitacoes/15', (string) session('url.intended'));
+    }
+
+    public function test_visitante_em_navegacao_inertia_recebe_409_para_o_portal_e_guarda_o_destino(): void
+    {
+        $this->ligarEntrada();
+        $versao = (string) app(HandleInertiaRequests::class)->version(request());
+
+        $response = $this->get('/portal/painel', ['X-Inertia' => 'true', 'X-Inertia-Version' => $versao]);
+
+        $response->assertStatus(409);
+        $this->assertStringStartsWith(self::LOGIN_DO_PORTAL, (string) $response->headers->get('X-Inertia-Location'));
+        $this->assertStringEndsWith('/portal/painel', (string) session('url.intended'));
+    }
+
+    public function test_tela_de_login_em_navegacao_inertia_recebe_409_para_o_portal(): void
+    {
+        $this->ligarEntrada();
+        $versao = (string) app(HandleInertiaRequests::class)->version(request());
+
+        $response = $this->get('/portal/login', ['X-Inertia' => 'true', 'X-Inertia-Version' => $versao]);
+
+        $response->assertStatus(409);
+        $this->assertStringStartsWith(self::LOGIN_DO_PORTAL, (string) $response->headers->get('X-Inertia-Location'));
     }
 
     public function test_console_nao_muda(): void

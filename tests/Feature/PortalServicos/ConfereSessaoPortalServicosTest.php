@@ -84,6 +84,27 @@ class ConfereSessaoPortalServicosTest extends TestCase
         $this->assertNull(session('portal_servicos.token'));
     }
 
+    public function test_queda_da_sessao_guarda_a_pagina_para_a_volta(): void
+    {
+        Http::fake(['*/v1/acesso/buscar-sessao' => Http::response([], 401)]);
+
+        $this->entrouPeloPortal(400)->get('/portal/acessos')->assertRedirect();
+
+        $this->assertStringEndsWith('/portal/acessos', (string) session('url.intended'));
+    }
+
+    public function test_com_a_chave_desligada_nao_confere_nem_derruba(): void
+    {
+        Parameter::query()->where('key', 'features.login_portal_servicos')->update(['value' => '0']);
+        Cache::flush();
+        Http::fake(['*/v1/acesso/buscar-sessao' => Http::response([], 401)]);
+
+        $this->entrouPeloPortal(400)->get('/portal/painel')->assertOk();
+
+        $this->assertAuthenticatedAs($this->cidadao, 'web');
+        Http::assertNothingSent();
+    }
+
     public function test_requisicao_inertia_recebe_409_com_location(): void
     {
         Http::fake(['*/v1/acesso/buscar-sessao' => Http::response([], 401)]);

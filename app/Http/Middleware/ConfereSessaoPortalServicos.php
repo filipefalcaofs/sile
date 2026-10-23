@@ -33,7 +33,8 @@ class ConfereSessaoPortalServicos
         $sessao = $request->session();
         $cifrado = $sessao->get('portal_servicos.token');
 
-        if (! is_string($cifrado) || ! $this->venceuAConferencia($request)) {
+        // Chave desligada (reversão): ninguém mais é conferido nem derrubado.
+        if (! is_string($cifrado) || ! PortalServicos::entradaDisponivel() || ! $this->venceuAConferencia($request)) {
             return $next($request);
         }
 
@@ -72,6 +73,11 @@ class ConfereSessaoPortalServicos
         Auth::guard('web')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
+        // A volta pelo Portal de Serviços cai na mesma página.
+        if ($request->isMethod('GET')) {
+            $request->session()->put('url.intended', $request->fullUrl());
+        }
 
         $destino = PortalServicos::urlLogin(PortalServicos::urlEntrada());
 

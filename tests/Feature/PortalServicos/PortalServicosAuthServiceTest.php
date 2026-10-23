@@ -66,16 +66,36 @@ class PortalServicosAuthServiceTest extends TestCase
         $this->assertSame(1, User::query()->count());
     }
 
-    public function test_conta_do_regin_com_email_pendente_fica_confirmada(): void
+    public function test_conta_com_email_pendente_igual_ao_da_sessao_fica_confirmada(): void
     {
-        $regin = User::factory()->unverified()->create(['cpf' => self::CPF, 'email' => 'antigo@exemplo.com']);
+        $regin = User::factory()->unverified()->create(['cpf' => self::CPF, 'email' => 'fulana@exemplo.com']);
 
         $user = $this->autenticar($this->sessao(email: 'fulana@exemplo.com'));
 
         $this->assertTrue($user->is($regin));
         $this->assertTrue($user->fresh()->hasVerifiedEmail());
-        $this->assertSame('antigo@exemplo.com', $user->fresh()->email);
         $this->assertSame(AuthType::Local, $user->fresh()->auth_type);
+    }
+
+    public function test_email_pendente_nao_provado_e_trocado_pelo_da_sessao_antes_de_confirmar(): void
+    {
+        User::factory()->unverified()->create(['cpf' => self::CPF, 'email' => 'digitado.errado@exemplo.com']);
+
+        $user = $this->autenticar($this->sessao(email: 'fulana@exemplo.com'));
+
+        $this->assertSame('fulana@exemplo.com', $user->fresh()->email);
+        $this->assertTrue($user->fresh()->hasVerifiedEmail());
+    }
+
+    public function test_email_pendente_nao_provado_vira_provisorio_quando_o_da_sessao_e_de_outra_conta(): void
+    {
+        User::factory()->create(['email' => 'fulana@exemplo.com']);
+        User::factory()->unverified()->create(['cpf' => self::CPF, 'email' => 'digitado.errado@exemplo.com']);
+
+        $user = $this->autenticar($this->sessao(email: 'fulana@exemplo.com'));
+
+        $this->assertSame(EmailProvisorio::para(self::CPF), $user->fresh()->email);
+        $this->assertTrue($user->fresh()->hasVerifiedEmail());
     }
 
     public function test_email_provisorio_e_trocado_pelo_da_sessao(): void

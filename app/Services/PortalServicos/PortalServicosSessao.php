@@ -31,7 +31,9 @@ final readonly class PortalServicosSessao
      */
     public static function deResposta(array $corpo): self
     {
-        $cpf = preg_replace('/\D/', '', (string) self::primeiro($corpo, ['cpf', 'documento', 'cpfCnpj', 'numeroDocumento']));
+        $bruto = self::primeiro($corpo, ['cpf', 'documento', 'cpfCnpj', 'numeroDocumento']);
+        // CPF vindo como número perde o zero à esquerda no JSON.
+        $cpf = is_int($bruto) ? str_pad((string) $bruto, 11, '0', STR_PAD_LEFT) : preg_replace('/\D/', '', (string) $bruto);
 
         if ($cpf === null || strlen($cpf) !== 11) {
             throw new SessaoPortalServicosInvalidaException('Sessão do Portal de Serviços sem CPF de 11 dígitos.');
@@ -54,7 +56,7 @@ final readonly class PortalServicosSessao
     private static function primeiro(array $corpo, array $chaves): mixed
     {
         foreach ($chaves as $chave) {
-            if (isset($corpo[$chave]) && is_scalar($corpo[$chave])) {
+            if (isset($corpo[$chave]) && is_scalar($corpo[$chave]) && trim((string) $corpo[$chave]) !== '') {
                 return $corpo[$chave];
             }
         }

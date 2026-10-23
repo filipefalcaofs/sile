@@ -77,6 +77,16 @@ class PortalServicosSessaoClientTest extends TestCase
         $this->assertSame('ouro', $documento->nivel);
     }
 
+    public function test_cpf_numerico_mantem_o_zero_a_esquerda_e_campo_vazio_e_ignorado(): void
+    {
+        Http::fakeSequence('*/v1/acesso/buscar-sessao')
+            ->push(['cpf' => 1234567890])
+            ->push(['cpf' => '', 'documento' => '01234567890']);
+
+        $this->assertSame('01234567890', $this->cliente()->buscarSessao(self::TOKEN)->cpf);
+        $this->assertSame('01234567890', $this->cliente()->buscarSessao(self::TOKEN)->cpf);
+    }
+
     public function test_corpo_sem_cpf_e_sessao_invalida(): void
     {
         Http::fake(['*/v1/acesso/buscar-sessao' => Http::response(['nome' => 'Sem CPF'])]);

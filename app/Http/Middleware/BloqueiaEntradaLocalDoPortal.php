@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Services\PortalServicos\PortalServicos;
 use Closure;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -39,6 +40,9 @@ class BloqueiaEntradaLocalDoPortal
 
         abort_unless($request->isMethod('GET') || $request->isMethod('HEAD'), 404);
 
-        return redirect()->away(PortalServicos::urlLogin(PortalServicos::urlEntrada()));
+        $destino = PortalServicos::urlLogin(PortalServicos::urlEntrada());
+
+        // Navegação do Inertia (XHR) não segue redirect para outro domínio.
+        return $request->header('X-Inertia') ? Inertia::location($destino) : redirect()->away($destino);
     }
 }

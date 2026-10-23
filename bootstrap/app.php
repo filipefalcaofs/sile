@@ -12,6 +12,7 @@ use App\Http\Middleware\RedirectGestaoIfAuthenticated;
 use App\Http\Middleware\SecurityHeaders;
 use App\Services\PortalServicos\PortalServicos;
 use App\Support\Audit\AuditService;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -19,6 +20,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Exceptions\InvalidSignatureException;
 use Illuminate\Support\Facades\Log;
+use Inertia\Inertia;
 use Spatie\Permission\Exceptions\UnauthorizedException;
 use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleMiddleware;
@@ -116,6 +118,21 @@ return Application::configure(basePath: dirname(__DIR__))
         // O Handler converte AuthorizationException em AccessDeniedHttpException
         // (prepareException) ANTES dos render callbacks — por isso o tipo aqui
         // é a exceção preparada, com a original em getPrevious().
+        // Visitante em navegação do Inertia no portal com a entrada pelo Portal de
+        // Serviços (HU-142): o XHR não segue redirect para outro domínio, então
+        // a ida ao login do portal é um 409 com X-Inertia-Location.
+        $exceptions->render(function (AuthenticationException $exception, Request $request) {
+            if (! $request->header('X-Inertia') || $request->is('gestao', 'gestao/*') || ! PortalServicos::entradaDisponivel()) {
+                return null;
+            }
+
+            if ($request->isMethod('GET')) {
+                $request->session()->put('url.intended', $request->fullUrl());
+            }
+
+            return Inertia::location(PortalServicos::urlLogin(PortalServicos::urlEntrada()));
+        });
+
         $exceptions->render(function (NotFoundHttpException $exception, Request $request) {
             if (! $request->expectsJson() || ! $exception->getPrevious() instanceof ModelNotFoundException) {
                 return null;
