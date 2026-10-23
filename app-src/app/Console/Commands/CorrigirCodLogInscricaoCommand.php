@@ -14,21 +14,25 @@ use App\Services\Realty\LocalizacaoInscricaoService;
 use App\Support\Audit\AuditService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Spatie\Activitylog\Models\Activity;
 use Throwable;
 
 /**
  * Corrige os processos protocolados com o CODLOG tributário no lugar do
  * endereço de Localização da inscrição: grava o CODLOG certo, refaz a busca do
- * lote pela chave correta (o lote achado pela chave errada sai), recalcula a
- * zona e a classe da via. Decisão, situação e ajustes manuais de zona e via
- * não mudam. Sem `--aplicar`, só mostra o levantamento.
+ * lote (chave correta, SEMAP e lote que contém o ponto do imóvel), recalcula
+ * a zona e a classe da via. Decisão, situação e ajustes manuais de zona e via
+ * não mudam. Sem `--aplicar`, só mostra o levantamento. `--reparar-lotes`
+ * devolve o lote, pelo ponto, aos processos que a primeira versão desta
+ * correção deixou sem polígono.
  */
 class CorrigirCodLogInscricaoCommand extends Command
 {
     protected $signature = 'processos:corrigir-codlog-inscricao
         {--processo= : Corrige só este processo}
         {--desde= : Só processos protocolados a partir desta data (AAAA-MM-DD)}
-        {--aplicar : Grava a correção (sem esta opção, só simula)}';
+        {--aplicar : Grava a correção (sem esta opção, só simula)}
+        {--reparar-lotes : Refaz o lote dos processos que perderam o polígono na correção}';
 
     protected $description = 'Corrige CODLOG, via, polígono e zona dos processos gravados com o logradouro tributário';
 
@@ -44,6 +48,10 @@ class CorrigirCodLogInscricaoCommand extends Command
             '--processo' => $this->option('processo'),
             '--desde' => $this->option('desde'),
         ], fn (mixed $valor): bool => $valor !== null);
+
+        if ($this->option('reparar-lotes')) {
+            return $this->repararLotes($territorio, $poligono, $zona, $audit);
+        }
 
         if (! $this->option('aplicar')) {
             $this->call('processos:auditar-codlog-inscricao', $filtros);
@@ -122,8 +130,10 @@ class CorrigirCodLogInscricaoCommand extends Command
     }
 
     /**
-     * Mesma ordem do protocolo. O lote achado pela chave errada sai quando a
-     * chave correta e o SEMAP não acham outro; aí a zona volta a ser a do ponto.
+     * Mesma ordem do protocolo. O lote é refeito quando a chave correta acha
+     * lote, quando o atual veio da chave errada ou quando não há lote; ele só
+     * sai se a busca pelo ponto responder que não há lote ali, e aí a zona
+     * volta a ser a do ponto.
      */
     private function corrigir(
         ViabilityRequest $processo,
@@ -139,29 +149,96 @@ class CorrigirCodLogInscricaoCommand extends Command
         $numero = trim((string) $processo->address_number);
         $loteNaChave = $numero !== '' && $enderecamento->consultar((string) $processo->cod_log, $numero, $processo->address_complement)->encontrado();
 
-        if ($loteNaChave || $fonte === PoligonoFonte::Chave) {
-            $achou = $poligono->aplicar($processo);
+        $semLote = ! is_array($processo->address_polygon_geojson) || $processo->address_polygon_geojson === [];
 
-            if (! $achou && $fonte === PoligonoFonte::Chave) {
-                $processo->forceFill([
-                    'address_polygon_geojson' => null,
-                    'address_polygon_source' => null,
-                    'address_polygon_consulted_at' => now(),
-                ])->save();
-
-                if ($processo->pontoGravadoOuDesenhado() === null) {
-                    $territorio->localizarPelaInscricao($processo);
-                }
-
-                // A materialização pelo ponto pode trocar o CODLOG pela via mais
-                // próxima: o da inscrição volta logo depois.
-                $territorio->materializar($processo);
-                $territorio->aplicarLogradouroDaInscricao($processo);
-            }
+        if ($loteNaChave || $fonte === PoligonoFonte::Chave || $semLote) {
+            $this->refazerLote($processo, $territorio, $poligono);
         }
 
         $zona->materializar($processo);
         $territorio->registrarClasseViaria($processo);
+    }
+
+    private function refazerLote(ViabilityRequest $processo, TerritorioProcessoService $territorio, PoligonoEnderecamentoService $poligono): string
+    {
+        if ($processo->pontoGravadoOuDesenhado() === null) {
+            $territorio->localizarPelaInscricao($processo);
+        }
+
+        $resultado = $poligono->refazer($processo);
+
+        if ($resultado === 'removido') {
+            // A materialização pelo ponto pode trocar o CODLOG pela via mais
+            // próxima: o da inscrição volta logo depois.
+            $territorio->materializar($processo);
+            $territorio->aplicarLogradouroDaInscricao($processo);
+        }
+
+        return $resultado;
+    }
+
+    /**
+     * Processos que a correção deixou sem polígono (antes da chave, depois sem
+     * lote) e que continuam sem: refaz a cadeia do lote, agora com o ponto.
+     */
+    private function repararLotes(TerritorioProcessoService $territorio, PoligonoEnderecamentoService $poligono, ZonaProcessoService $zona, AuditService $audit): int
+    {
+        $ids = Activity::query()
+            ->where('event', 'codlog-inscricao-corrigido')
+            ->where('subject_type', (new ViabilityRequest)->getMorphClass())
+            ->get()
+            ->filter(fn (Activity $registro): bool => ($registro->properties['antes']['poligono_fonte'] ?? null) === PoligonoFonte::Chave->value
+                && ($registro->properties['depois']['poligono_fonte'] ?? null) === null)
+            ->pluck('subject_id')
+            ->unique()
+            ->all();
+
+        $linhas = [];
+        $reparados = 0;
+
+        foreach (ViabilityRequest::query()->whereKey($ids)->orderBy('id')->get() as $processo) {
+            if (is_array($processo->address_polygon_geojson) && $processo->address_polygon_geojson !== []) {
+                continue;
+            }
+
+            $antes = $this->retrato($processo);
+
+            try {
+                $resultado = DB::transaction(function () use ($processo, $territorio, $poligono, $zona): string {
+                    $resultado = $this->refazerLote($processo, $territorio, $poligono);
+                    $zona->materializar($processo);
+
+                    return $resultado;
+                });
+            } catch (Throwable $exception) {
+                $this->error("Processo {$processo->id}: {$exception->getMessage()}");
+
+                continue;
+            }
+
+            $depois = $this->retrato($processo->refresh());
+
+            if ($depois['poligono_fonte'] !== null) {
+                $reparados++;
+                $audit->log(
+                    logName: 'geo',
+                    event: 'codlog-lote-reparado',
+                    description: "Lote refeito pela fonte {$depois['poligono_fonte']} na solicitação #{$processo->id}",
+                    properties: ['viability_request_id' => $processo->id, 'antes' => $antes, 'depois' => $depois],
+                    subject: $processo,
+                );
+            }
+
+            $linhas[] = [$processo->id, $processo->protocol_number, $resultado, "{$antes['zona_codigo']} → {$depois['zona_codigo']}"];
+        }
+
+        if ($linhas !== []) {
+            $this->table(['Processo', 'Protocolo', 'Lote', 'Zona'], $linhas);
+        }
+
+        $this->info("Lotes reparados: {$reparados}");
+
+        return self::SUCCESS;
     }
 
     /**
