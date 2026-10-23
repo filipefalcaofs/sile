@@ -31,6 +31,8 @@ import Badge from '@/components/ui/badge';
 import Button from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import ConfirmDialog from '@/components/ui/confirm-dialog';
+import { Dropdown } from '@/components/ui/dropdown';
+import { DropdownItem } from '@/components/ui/dropdown-item';
 import EmptyState from '@/components/ui/empty-state';
 import { Modal } from '@/components/ui/modal';
 import GestaoLayout from '@/layouts/gestao-layout';
@@ -753,14 +755,15 @@ export default function FichaAnaliseShow({
     const podeEncaminharVistoria = auth.permissions.includes('analisar-processos');
     // Malha fina é caixa à parte para alterar o processo (HU-127) — permissão própria.
     const podeMalhaFina = auth.permissions.includes('encaminhar-malha-fina');
-    const classeAcaoFantasma =
-        'inline-flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm text-gray-700 transition hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-brand-500 dark:text-gray-400 dark:hover:bg-white/[0.05] dark:hover:text-gray-300';
+    const classeItemMenu =
+        'block w-full rounded-lg px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-white/[0.05] dark:hover:text-white';
 
     const editavel = ficha.editavel;
 
     const [perCnae, setPerCnae] = useState<PerCnae[]>(() => ficha.per_cnae ?? []);
     const [deferirTodos, setDeferirTodos] = useState(false);
     const [salvouNestaTela, setSalvouNestaTela] = useState(false);
+    const [maisAcoesAberto, setMaisAcoesAberto] = useState(false);
     const fichaSalva = fichaSalvaNoServidor || salvouNestaTela;
     const statusAntesDeDeferirTodos = useRef<Record<string, PerCnae['status_escolhido']> | null>(null);
     // Regra de decisão: só o indeferimento é marcado por CNAE. Nenhum indeferido
@@ -2441,7 +2444,7 @@ export default function FichaAnaliseShow({
                 </div>
 
                 <div className="grid items-start gap-6 lg:grid-cols-3">
-                    <div className="lg:col-span-2">
+                    <div className="lg:col-span-3">
                                                 <Card>
                             <CardHeader
                                 title="Parecer técnico"
@@ -2515,59 +2518,6 @@ export default function FichaAnaliseShow({
                             </CardContent>
                         </Card>
                     </div>
-                    <div>
-                        {!somenteLeitura && (
-                        <Card>
-                            <CardHeader title="Outras ações" description="Convite, vistoria e histórico da ficha." />
-                            <CardContent>
-                                <div className="flex flex-col gap-2">
-                                    {processo.status === 'em_analise' && (
-                                        <Button onClick={() => setShowPendencia(true)} variant="ghost" size="sm">
-                                            Colocar em convite
-                                        </Button>
-                                    )}
-
-                                    {processo.status === 'em_pendencia' && (
-                                        <Button onClick={() => setShowCancelarConvite(true)} variant="ghost" size="sm">
-                                            Cancelar convite
-                                        </Button>
-                                    )}
-
-                                    {podeEncaminharVistoria && (
-                                        <Button onClick={() => setShowVistoria(true)} variant="ghost" size="sm">
-                                            Encaminhar para a vistoria
-                                        </Button>
-                                    )}
-
-                                    {temFichaVistoria ? (
-                                        podeConsultarVistoria && (
-                                            <Link
-                                                href={`/gestao/processos/${processo.id}/vistoria/visualizar`}
-                                                className={classeAcaoFantasma}
-                                            >
-                                                Visualizar ficha de vistoria
-                                            </Link>
-                                        )
-                                    ) : (
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowSemFichaVistoria(true)}
-                                            className={classeAcaoFantasma}
-                                        >
-                                            Visualizar ficha de vistoria
-                                        </button>
-                                    )}
-
-                                    {ficha.revision > 1 && (
-                                        <Button onClick={() => setShowDiff(true)} variant="ghost" size="sm">
-                                            Comparar revisões
-                                        </Button>
-                                    )}
-                                </div>
-                            </CardContent>
-                        </Card>
-                        )}
-                    </div>
                 </div>
 
                 {!somenteLeitura && (
@@ -2577,6 +2527,84 @@ export default function FichaAnaliseShow({
                         className="sticky bottom-0 z-30 -mx-4 border-t border-gray-200 bg-white/95 px-4 py-3 shadow-theme-lg backdrop-blur md:-mx-6 md:px-6 dark:border-gray-800 dark:bg-gray-900/95"
                     >
                         <div className="flex flex-wrap items-center justify-end gap-2">
+                            <div className="relative">
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="dropdown-toggle"
+                                    onClick={() => setMaisAcoesAberto((atual) => !atual)}
+                                    endIcon={
+                                        <ChevronDownIcon
+                                            className={`size-4 transition-transform ${maisAcoesAberto ? '' : 'rotate-180'}`}
+                                        />
+                                    }
+                                >
+                                    Mais ações
+                                </Button>
+                                <Dropdown
+                                    isOpen={maisAcoesAberto}
+                                    onClose={() => setMaisAcoesAberto(false)}
+                                    className="bottom-full mt-0! mb-2 w-64 origin-bottom-right p-2"
+                                >
+                                    {processo.status === 'em_analise' && (
+                                        <DropdownItem
+                                            baseClassName={classeItemMenu}
+                                            onClick={() => setShowPendencia(true)}
+                                            onItemClick={() => setMaisAcoesAberto(false)}
+                                        >
+                                            Colocar em convite
+                                        </DropdownItem>
+                                    )}
+                                    {processo.status === 'em_pendencia' && (
+                                        <DropdownItem
+                                            baseClassName={classeItemMenu}
+                                            onClick={() => setShowCancelarConvite(true)}
+                                            onItemClick={() => setMaisAcoesAberto(false)}
+                                        >
+                                            Cancelar convite
+                                        </DropdownItem>
+                                    )}
+                                    {podeEncaminharVistoria && (
+                                        <DropdownItem
+                                            baseClassName={classeItemMenu}
+                                            onClick={() => setShowVistoria(true)}
+                                            onItemClick={() => setMaisAcoesAberto(false)}
+                                        >
+                                            Encaminhar para a vistoria
+                                        </DropdownItem>
+                                    )}
+                                    {temFichaVistoria ? (
+                                        podeConsultarVistoria && (
+                                            <DropdownItem
+                                                tag="a"
+                                                href={`/gestao/processos/${processo.id}/vistoria/visualizar`}
+                                                baseClassName={classeItemMenu}
+                                                onItemClick={() => setMaisAcoesAberto(false)}
+                                            >
+                                                Visualizar ficha de vistoria
+                                            </DropdownItem>
+                                        )
+                                    ) : (
+                                        <DropdownItem
+                                            baseClassName={classeItemMenu}
+                                            onClick={() => setShowSemFichaVistoria(true)}
+                                            onItemClick={() => setMaisAcoesAberto(false)}
+                                        >
+                                            Visualizar ficha de vistoria
+                                        </DropdownItem>
+                                    )}
+                                    {ficha.revision > 1 && (
+                                        <DropdownItem
+                                            baseClassName={classeItemMenu}
+                                            onClick={() => setShowDiff(true)}
+                                            onItemClick={() => setMaisAcoesAberto(false)}
+                                        >
+                                            Comparar revisões
+                                        </DropdownItem>
+                                    )}
+                                </Dropdown>
+                            </div>
+
                             {editavel ? (
                                 <>
                                     <Button onClick={() => salvarRascunho(true)} variant="destaque" size="sm">
