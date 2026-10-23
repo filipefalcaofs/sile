@@ -149,14 +149,14 @@ class SolicitacaoViabilityResolver
     {
         $base = $this->territory->identify($ponto['lat'], $ponto['lng']);
 
-        if ($request->zona_fonte === ZonaFonte::EnderecamentoMaiorPorcao && filled($request->zona_codigo)) {
+        if (in_array($request->zona_fonte, [ZonaFonte::EnderecamentoMaiorPorcao, ZonaFonte::CentralidadeLinear], true) && filled($request->zona_codigo)) {
             $base = new TerritoryResult(
                 bairro: $base->bairro,
                 via: $base->via,
                 zona: [
                     'status' => 'identificado',
                     'nome' => $request->zona_codigo,
-                    'propriedades' => ['ZONA' => $request->zona_codigo, 'fonte' => ZonaFonte::EnderecamentoMaiorPorcao->value],
+                    'propriedades' => ['ZONA' => $request->zona_codigo, 'fonte' => $request->zona_fonte->value],
                     'motivo' => null,
                     'versao_camada' => 'geoserver-wfs-maior-porcao',
                 ],
@@ -192,7 +192,10 @@ class SolicitacaoViabilityResolver
 
     private function orderedCnaes(ViabilityRequest $request)
     {
+        $incluidos = $request->codigosIncluidosNaComparacao();
+
         return $request->cnaes()
+            ->when($incluidos !== null, fn ($query) => $query->whereIn('cnaes.code', $incluidos))
             ->orderByPivot('is_primary', 'desc')
             ->orderBy('code')
             ->get();

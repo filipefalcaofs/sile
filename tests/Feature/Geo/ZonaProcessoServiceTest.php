@@ -117,4 +117,39 @@ class ZonaProcessoServiceTest extends TestCase
         $this->assertSame(ZonaFonte::EnderecamentoMaiorPorcao, $request->fresh()->zona_fonte);
         $this->assertSame('ZPR 3', $request->fresh()->zona_codigo);
     }
+
+    public function test_hu_182_materializa_a_centralidade_linear(): void
+    {
+        $this->fake->para(self::LOTE, FakeZonaMaiorPorcaoResolver::centralidadeLinear('ZCLMu'));
+        $request = $this->processo();
+
+        app(ZonaProcessoService::class)->materializar($request);
+
+        $request->refresh();
+        $this->assertSame('ZCLMu', $request->zona_codigo);
+        $this->assertSame(ZonaFonte::CentralidadeLinear, $request->zona_fonte);
+        $auditoria = Activity::query()->where('event', 'zona-maior-porcao')->where('subject_id', $request->id)->sole();
+        $this->assertSame('hu-182-centralidade-linear', $auditoria->rules_version ?? $auditoria->properties['rules_version'] ?? null);
+    }
+
+    public function test_hu_182_conflito_linear_nao_grava_zona_vencedora(): void
+    {
+        $this->fake->para(self::LOTE, FakeZonaMaiorPorcaoResolver::conflitoLinear());
+        $request = $this->processo();
+
+        $resultado = app(ZonaProcessoService::class)->materializar($request);
+
+        $request->refresh();
+        $this->assertSame(ZonaMaiorPorcao::CONFLITO_LINEAR, $resultado->status);
+        $this->assertSame('ZEIS', $request->zona_codigo);
+        $this->assertSame(ZonaFonte::Ponto, $request->zona_fonte);
+    }
+
+    public function test_hu_182_motivo_do_conflito_cita_as_duas_zonas(): void
+    {
+        $motivo = app(ZonaProcessoService::class)->motivoConflito(FakeZonaMaiorPorcaoResolver::conflitoLinear());
+
+        $this->assertStringContainsString('ZCLMu', $motivo);
+        $this->assertStringContainsString('ZCLMe', $motivo);
+    }
 }

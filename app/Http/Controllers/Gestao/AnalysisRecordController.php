@@ -37,6 +37,7 @@ use App\Services\Analise\QuadrosFichaChecklist;
 use App\Services\Auditoria\DecisionExplanationService;
 use App\Services\Expresso\SedeEscritorioVirtualGatilho;
 use App\Services\Relatorios\RelatorioSedeEscritorioVirtualService;
+use App\Services\Sefaz\ComparacaoCnaesFicha;
 use App\Services\Servicos\ServicoNomenclaturaResolver;
 use App\Services\Vistoria\VistoriaAcesso;
 use App\Support\Audit\AuditService;
@@ -166,6 +167,8 @@ class AnalysisRecordController extends Controller
             'fichaSalva' => $this->fichaSalvaOuFinalizada($viabilityRequest),
             'somenteLeitura' => $somenteLeitura,
             'podeEditarZonaVia' => $request->user()?->can('editar-zona-via') === true,
+            // Alteração de atividade da JUCEB: o que entra, o que sai e o que já existia na viabilidade da SEFAZ.
+            'comparacaoCnaes' => app(ComparacaoCnaesFicha::class)->dados($viabilityRequest),
             'zonasDisponiveis' => $this->zonasDisponiveis(),
             'viasDisponiveis' => Quadro11aClasseVia::oficiais(),
             'usuariosIndicaveis' => $this->usuariosIndicaveisParaConclusao(),

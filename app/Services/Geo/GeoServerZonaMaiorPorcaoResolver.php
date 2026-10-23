@@ -72,6 +72,7 @@ class GeoServerZonaMaiorPorcaoResolver implements ZonaMaiorPorcaoResolver
 
         $camadas = [];
         $candidatas = [];
+        $lineares = [];
         $falhas = [];
 
         foreach ($typeNames as $typeName) {
@@ -92,6 +93,11 @@ class GeoServerZonaMaiorPorcaoResolver implements ZonaMaiorPorcaoResolver
 
                 if (in_array($tipo, ['LineString', 'MultiLineString'], true)) {
                     $linear = true;
+                    $zonaLinear = $this->zonaLinear($typeName);
+
+                    if ($zonaLinear !== null) {
+                        $lineares[] = ['zona' => $zonaLinear, 'geometria' => $geometria];
+                    }
 
                     continue;
                 }
@@ -114,7 +120,61 @@ class GeoServerZonaMaiorPorcaoResolver implements ZonaMaiorPorcaoResolver
             return ZonaMaiorPorcao::indisponivel('Camada de zona sem resposta do GeoServer SEDUR: '.implode(', ', $falhas).'.', $camadas);
         }
 
-        return $this->porcoes($poligono, $candidatas, $camadas);
+        return $this->centralidadeLinear($poligono, $lineares, $this->porcoes($poligono, $candidatas, $camadas));
+    }
+
+    /**
+     * Centralidade linear (HU.182): a linha da ZCLMu ou da ZCLMe que passa por
+     * cima do lote, em qualquer parte, define a zona, sem olhar o percentual em
+     * outras zonas. Linha em frente ao lote, sem tocá-lo, não conta. Duas zonas
+     * lineares sobre o mesmo lote não têm vencedora.
+     *
+     * @param  array<string, mixed>  $poligono
+     * @param  list<array{zona: string, geometria: array<string, mixed>}>  $lineares
+     */
+    private function centralidadeLinear(array $poligono, array $lineares, ZonaMaiorPorcao $base): ZonaMaiorPorcao
+    {
+        $cruzadas = [];
+
+        foreach ($lineares as $linear) {
+            $linha = DB::selectOne(
+                'SELECT ST_Intersects(
+                    ST_MakeValid(ST_SetSRID(ST_GeomFromGeoJSON(?), 4326)),
+                    ST_SetSRID(ST_GeomFromGeoJSON(?), 4326)
+                )::int AS cruza',
+                [json_encode($poligono), json_encode($linear['geometria'])],
+            );
+
+            if ($linha !== null && (int) $linha->cruza === 1) {
+                $cruzadas[] = $linear['zona'];
+            }
+        }
+
+        $zonas = array_values(array_intersect(['ZCLMu', 'ZCLMe'], $cruzadas));
+
+        if ($zonas === []) {
+            return $base;
+        }
+
+        return new ZonaMaiorPorcao(
+            count($zonas) > 1 ? ZonaMaiorPorcao::CONFLITO_LINEAR : ZonaMaiorPorcao::CENTRALIDADE_LINEAR,
+            codigo: count($zonas) > 1 ? null : $zonas[0],
+            porcoes: $base->porcoes,
+            empate: count($zonas) > 1 ? $zonas : [],
+            camadas: $base->camadas,
+            areaLoteM2: $base->areaLoteM2,
+        );
+    }
+
+    private function zonaLinear(string $typeName): ?string
+    {
+        $nome = strtoupper($typeName);
+
+        return match (true) {
+            str_contains($nome, 'ZCLME') => 'ZCLMe',
+            str_contains($nome, 'ZCLMU') => 'ZCLMu',
+            default => null,
+        };
     }
 
     /**

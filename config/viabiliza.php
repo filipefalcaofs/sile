@@ -180,6 +180,22 @@ return [
     'vistoria' => [
         'anexos' => ['max_mb' => 10, 'mime_permitidos' => ['application/pdf', 'image/jpeg', 'image/png', 'image/webp']],
     ],
+    // Consulta da viabilidade vinculada ao CNPJ na SEFAZ (alteração de atividade).
+    // `ativa` liga a comparação dos CNAEs da JUCEB (evento 244); desligada, o pedido
+    // é enquadrado inteiro como antes.
+    // `indisponivel` até o endpoint existir; `simulado` serve a homologação com
+    // os CNPJs de VIABILIZA_SEFAZ_SIMULADOR (JSON: {"viabilidades": {cnpj: {numero, cnaes}}, "indisponiveis": [cnpj]}).
+    'sefaz' => [
+        'consulta' => [
+            'ativa' => (bool) env('VIABILIZA_SEFAZ_CONSULTA_ATIVA', false),
+            'driver' => env('VIABILIZA_SEFAZ_CONSULTA_DRIVER', 'indisponivel'),
+            'simulador' => [
+                'viabilidades' => (array) (json_decode((string) env('VIABILIZA_SEFAZ_SIMULADOR', '{}'), true)['viabilidades'] ?? []),
+                'indisponiveis' => (array) (json_decode((string) env('VIABILIZA_SEFAZ_SIMULADOR', '{}'), true)['indisponiveis'] ?? []),
+            ],
+        ],
+    ],
+
     // Espelha os parâmetros HU-014 expresso.* / features.* do fluxo expresso
     // (EP09). Settings::get lê config("viabiliza.expresso.*") no fallback (banco
     // indisponível). Os valores de negócio (prazo BAP, assuntos de e-mail,

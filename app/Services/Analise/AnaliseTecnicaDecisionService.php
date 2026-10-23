@@ -240,7 +240,7 @@ class AnaliseTecnicaDecisionService
             'is_virtual_office_tenant' => $abrigado !== null,
             'virtual_office_hq_tvl_number' => $abrigado['hq_tvl_number'] ?? null,
             'tvl_product_number' => $outcome === DecisionOutcome::Deferida && ! $request->isRenewal()
-                ? $this->tvl->generate()
+                ? $this->tvl->paraProcesso($request)
                 : null,
             'tvl_kind' => $outcome === DecisionOutcome::Deferida ? $tvlKind : null,
             'tvl_valid_until' => $outcome === DecisionOutcome::Deferida ? $tvlValidUntil : null,

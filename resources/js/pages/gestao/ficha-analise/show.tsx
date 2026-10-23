@@ -3,6 +3,7 @@ import { Head, Link, router, useHttp, usePage, WhenVisible } from '@inertiajs/re
 import type { GeoJsonObject } from 'geojson';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
+import ComparacaoCnaesCard, { type ComparacaoCnaes } from '@/components/analise/comparacao-cnaes-card';
 import ConclusaoAnaliseForm from '@/components/analise/conclusao-analise-form';
 import { QuadrosChecklist, type QuadroChecklist } from '@/components/analise/quadros-checklist';
 import { RecepcaoRecebida, type ProcessoRecepcao } from '@/components/analise/processo-ui';
@@ -299,6 +300,8 @@ interface FichaAnaliseShowProps {
     somenteLeitura: boolean;
     /** Quem tem a permissão no perfil escolhe a zona e a via do imóvel na ficha. */
     podeEditarZonaVia: boolean;
+    /** Alteração de atividade da JUCEB: comparação dos CNAEs com a viabilidade da SEFAZ. */
+    comparacaoCnaes: ComparacaoCnaes | null;
     zonasDisponiveis: { codigo: string; nome: string | null }[];
     viasDisponiveis: string[];
 }
@@ -741,6 +744,7 @@ export default function FichaAnaliseShow({
     usuariosIndicaveis,
     somenteLeitura,
     podeEditarZonaVia,
+    comparacaoCnaes,
     zonasDisponiveis,
     viasDisponiveis,
 }: FichaAnaliseShowProps) {
@@ -1904,6 +1908,10 @@ export default function FichaAnaliseShow({
                                     </ul>
                                 </CardContent>
                             </Card>
+                        )}
+
+                        {comparacaoCnaes && (
+                            <ComparacaoCnaesCard processoId={processo.id} comparacao={comparacaoCnaes} podeCorrigir={editavel} />
                         )}
 
                         {/* Enquadramento por CNAE (espelha a ficha SAPS) */}

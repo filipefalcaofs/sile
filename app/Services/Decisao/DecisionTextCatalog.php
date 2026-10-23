@@ -157,6 +157,7 @@ final class DecisionTextCatalog
             'justificativa.conclusao.permitido_com_condicoes' => 'Diante do enquadramento acima, manifesta-se pelo deferimento desta atividade na zona :zona, condicionado ao cumprimento das exigências urbanísticas incidentes.',
             'justificativa.conclusao.nao_permitido' => 'Diante do enquadramento acima, manifesta-se pelo indeferimento desta atividade, por ser o uso proibido na zona :zona segundo o Quadro 10 da LOUOS.',
             'justificativa.conclusao.nao_permitido_via' => 'Diante do enquadramento acima, manifesta-se pelo indeferimento desta atividade, por ser o uso vedado na classe viária :classe_via pelo Quadro 11-A da LOUOS.',
+            'justificativa.indeferimento.estabilidade_sistemica' => "Solicitação indeferida por estabilidade sistêmica: não foi possível consultar a viabilidade vinculada ao CNPJ na SEFAZ Municipal durante o prazo de tentativas.\n\nCadastre uma nova solicitação para dar andamento à alteração de atividade.",
             'justificativa.indeferimento.inscricao_inativa' => "Solicitação indeferida em razão de pendências identificadas na situação cadastral da inscrição imobiliária junto à SEFAZ Municipal.\n\nRecomenda-se a regularização das pendências junto à SEFAZ Municipal para possibilitar o cadastramento de um novo processo.",
             'justificativa.indeferimento.sem_bap' => 'Indeferido sem atuação: o prazo de atuação na Junta Comercial (BAP) venceu sem que o requerente concluísse o registro, e a solicitação não pôde prosseguir.',
             'justificativa.indeferimento.pergunta_sem_resposta' => 'Indeferido: o requerimento recebido não trouxe a resposta da pergunta :numero (":enunciado") da planilha de tratamento, necessária ao enquadramento da atividade :cnae.',
@@ -190,6 +191,7 @@ final class DecisionTextCatalog
             'territorial.motivo.localizacao_indisponivel' => 'Não foi possível verificar a restrição territorial ":regra" (localização do imóvel não obtida: Cadastro Imobiliário indisponível ou inscrição sem coordenada) — segue para análise técnica.',
             'territorial.motivo.cadastro_indisponivel' => 'Não foi possível verificar a restrição territorial ":regra" (Cadastro Imobiliário indisponível para conferir o logradouro tributário) — segue para análise técnica.',
             'zona.motivo.empate_maior_porcao' => 'Zona urbanística indefinida (art. 18, § 2º, da Lei nº 9.148/2016): o terreno tem porções iguais nas zonas :zona_a e :zona_b — segue para análise técnica.',
+            'zona.motivo.conflito_centralidade_linear' => 'Zona urbanística indefinida (HU.182): as linhas da centralidade linear :zona_a e :zona_b passam por cima do mesmo terreno — segue para análise técnica.',
             'localizacao.motivo.divergencia_zona' => 'Localização divergente (HU-036 RN-005): o polígono informado está na zona :zona_poligono e a inscrição imobiliária, na zona :zona_inscricao — segue para análise técnica.',
             'localizacao.motivo.divergencia_zona_enderecamento' => 'Localização divergente: o polígono desenhado está na zona :zona_desenho e o polígono do endereçamento SEDUR, na zona :zona_enderecamento — segue para análise técnica.',
             // Planilha de tratamento — motivos do ramo não resolvido. A pergunta
@@ -215,6 +217,7 @@ final class DecisionTextCatalog
 
             // Fluxo expresso — motivos do encaminhamento à análise técnica,
             // registrados na transição e na queda do processo.
+            'expresso.motivo.cnae_invalido' => 'Código CNAE inexistente ou divergente da lista oficial (:cnaes) — encaminhado para análise, em que o analista corrige o código na ficha.',
             'expresso.motivo.abrigada_fora_do_anexo_b' => 'empresa abrigada em escritório virtual com atividade fora do Anexo B (:cnaes) — encaminhado para análise',
             'expresso.motivo.desativado' => 'fluxo expresso desativado',
             'expresso.motivo.alto_risco' => 'atividade de alto risco — análise técnica',

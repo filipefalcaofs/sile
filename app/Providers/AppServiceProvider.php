@@ -42,7 +42,10 @@ use App\Services\Regin\BapRegistry;
 use App\Services\Regin\HttpReginParecerNotifier;
 use App\Services\Regin\ReginParecerNotifier;
 use App\Services\Regin\UnavailableBapRegistry;
+use App\Services\Sefaz\SefazViabilidadeConsultaGateway;
 use App\Services\Sefaz\SefazViabilidadeGateway;
+use App\Services\Sefaz\SimuladoSefazViabilidadeConsultaGateway;
+use App\Services\Sefaz\UnavailableSefazViabilidadeConsultaGateway;
 use App\Services\Sefaz\UnavailableSefazViabilidadeGateway;
 use App\Services\Servicos\ServicoNomenclaturaResolver;
 use App\Services\Whatsapp\UnavailableWhatsAppGateway;
@@ -125,6 +128,9 @@ class AppServiceProvider extends ServiceProvider
         // listener audita pendência; nunca simula sucesso.
         $this->app->bind(ReginParecerNotifier::class, HttpReginParecerNotifier::class);
         $this->app->bind(SefazViabilidadeGateway::class, UnavailableSefazViabilidadeGateway::class);
+        $this->app->bind(SefazViabilidadeConsultaGateway::class, fn (): SefazViabilidadeConsultaGateway => config('viabiliza.sefaz.consulta.driver') === 'simulado'
+            ? new SimuladoSefazViabilidadeConsultaGateway
+            : new UnavailableSefazViabilidadeConsultaGateway);
         $this->app->bind(BapRegistry::class, UnavailableBapRegistry::class);
 
         // Canal de notificação por WhatsApp (HU-091) BLOQUEADO honesto: não há

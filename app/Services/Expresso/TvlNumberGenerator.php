@@ -3,6 +3,8 @@
 namespace App\Services\Expresso;
 
 use App\Models\TvlSequence;
+use App\Models\ViabilityDecision;
+use App\Models\ViabilityRequest;
 use App\Support\Settings;
 use Illuminate\Support\Facades\DB;
 
@@ -47,6 +49,24 @@ class TvlNumberGenerator
         });
 
         return $this->format($number);
+    }
+
+    /**
+     * Número do produto TVL do processo. A alteração de atividade com viabilidade
+     * vinculada na SEFAZ mantém o número dela; se ele já pertence a outra decisão
+     * do sistema (a coluna é única) ou não tem o formato {prefixo}-{N}, gera um novo.
+     */
+    public function paraProcesso(ViabilityRequest $request): string
+    {
+        $mantido = $request->comparacao_cnaes['numero_viabilidade'] ?? null;
+
+        if (is_string($mantido)
+            && preg_match('/^[A-Za-z]+-\d+$/', $mantido) === 1
+            && ! ViabilityDecision::query()->where('tvl_product_number', $mantido)->exists()) {
+            return $mantido;
+        }
+
+        return $this->generate();
     }
 
     public function format(int $number): string

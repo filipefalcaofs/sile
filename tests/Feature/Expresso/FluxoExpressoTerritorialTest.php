@@ -346,4 +346,22 @@ class FluxoExpressoTerritorialTest extends TestCase
 
         return $this->protocoladaComCnaes([$cnae]);
     }
+
+    public function test_regra_territorial_so_avalia_as_atividades_incluidas_na_comparacao_da_sefaz(): void
+    {
+        Event::fake([ResultadoEmitido::class]);
+
+        $request = $this->setupDeferivel('4520006');
+        $outra = Cnae::factory()->create(['code' => '4712100']);
+        $request->cnaes()->attach($outra->id, ['is_primary' => false]);
+        $this->classificarMunicipal('4712100', RiscoMunicipal::BaixoA);
+        $request->forceFill([
+            'cod_log' => '212',
+            'comparacao_cnaes' => ['incluidas' => ['4712100'], 'excluidas' => [], 'mantidas' => ['4520006'], 'invalidas' => []],
+        ])->save();
+
+        $result = $this->service()->decide($request->fresh());
+
+        $this->assertNotSame(ViabilityRequestStatus::Indeferida, $result->status, 'a atividade que já existia não é reavaliada pela RT-01');
+    }
 }

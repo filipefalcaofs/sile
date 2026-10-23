@@ -7,7 +7,7 @@ export interface PorcaoZona {
 export interface ZonaCamada {
     status: string;
     nome: string | null;
-    fonte?: 'ponto' | 'enderecamento_maior_porcao' | null;
+    fonte?: 'ponto' | 'enderecamento_maior_porcao' | 'centralidade_linear' | null;
     porcoes?: PorcaoZona[];
     maior_porcao?: { status: string; motivo: string | null; empate?: string[] } | null;
 }
@@ -15,6 +15,7 @@ export interface ZonaCamada {
 const ROTULO_FONTE: Record<string, string> = {
     ponto: 'ponto da inscrição',
     enderecamento_maior_porcao: 'maior porção do lote',
+    centralidade_linear: 'centralidade linear (linha sobre o lote)',
 };
 
 function percentual(valor: number): string {

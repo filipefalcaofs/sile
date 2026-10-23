@@ -118,7 +118,7 @@ class ZonaMaiorPorcaoResolverPostgisTest extends PostgisTestCase
         $this->assertSame(ZonaMaiorPorcao::SEM_INTERSECAO, app(ZonaMaiorPorcaoResolver::class)->resolver($this->lote())->status);
     }
 
-    public function test_ca_zn_06_camada_linear_nao_disputa_a_maior_porcao(): void
+    public function test_ca_zn_06_camada_linear_nao_entra_nas_porcoes_e_a_linha_por_cima_prevalece(): void
     {
         GeoServerLayer::factory()->create(['workspace' => 'louos_zona_uso_zclmu', 'type_name' => 'VM_L_Z_USO_ZCLMU', 'ordem' => 3]);
         $this->geoserver([
@@ -128,7 +128,8 @@ class ZonaMaiorPorcaoResolverPostgisTest extends PostgisTestCase
 
         $resultado = app(ZonaMaiorPorcaoResolver::class)->resolver($this->lote());
 
-        $this->assertSame(ZonaMaiorPorcao::IDENTIFICADO, $resultado->status);
+        $this->assertSame(ZonaMaiorPorcao::CENTRALIDADE_LINEAR, $resultado->status);
+        $this->assertSame('ZCLMu', $resultado->codigo);
         $this->assertSame(['ZPR 3'], array_column($resultado->porcoes, 'zona'));
         $linear = collect($resultado->camadas)->firstWhere('type_name', 'louos_zona_uso_zclmu:VM_L_Z_USO_ZCLMU');
         $this->assertSame('linear', $linear['geometria']);
@@ -193,5 +194,95 @@ class ZonaMaiorPorcaoResolverPostgisTest extends PostgisTestCase
 
             return isset($query['bbox']);
         });
+    }
+
+    private function camadasLineares(): void
+    {
+        GeoServerLayer::factory()->create(['workspace' => 'louos_zona_uso_zclmu', 'type_name' => 'VM_L_Z_USO_ZCLMU', 'ordem' => 3]);
+        GeoServerLayer::factory()->create(['workspace' => 'louos_zona_uso_zclme', 'type_name' => 'VM_L_Z_USO_ZCLME', 'ordem' => 4]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function linha(float $lat): array
+    {
+        return ['type' => 'LineString', 'coordinates' => [[-38.5005, $lat], [-38.4985, $lat]]];
+    }
+
+    public function test_hu_182_linha_por_cima_do_lote_vence_a_zona_poligonal(): void
+    {
+        $this->camadasLineares();
+        $this->geoserver([
+            'louos_zpr3:VM_L_Z_USO_ZPR_3' => $this->retangulo(-38.5010, -38.4980, -12.9810, -12.9780),
+            'louos_zona_uso_zclmu:VM_L_Z_USO_ZCLMU' => $this->linha(-12.9795),
+        ]);
+
+        $resultado = app(ZonaMaiorPorcaoResolver::class)->resolver($this->lote());
+
+        $this->assertSame(ZonaMaiorPorcao::CENTRALIDADE_LINEAR, $resultado->status);
+        $this->assertSame('ZCLMu', $resultado->codigo);
+        $this->assertTrue($resultado->identificado());
+        $this->assertSame('ZPR 3', $resultado->porcoes[0]['zona']);
+    }
+
+    public function test_hu_182_linha_em_frente_ao_lote_nao_conta(): void
+    {
+        $this->camadasLineares();
+        $this->geoserver([
+            'louos_zpr3:VM_L_Z_USO_ZPR_3' => $this->retangulo(-38.5010, -38.4980, -12.9810, -12.9780),
+            'louos_zona_uso_zclmu:VM_L_Z_USO_ZCLMU' => $this->linha(-12.9780),
+        ]);
+
+        $resultado = app(ZonaMaiorPorcaoResolver::class)->resolver($this->lote());
+
+        $this->assertSame(ZonaMaiorPorcao::IDENTIFICADO, $resultado->status);
+        $this->assertSame('ZPR 3', $resultado->codigo);
+    }
+
+    public function test_hu_182_linhas_zclmu_e_zclme_por_cima_dao_conflito(): void
+    {
+        $this->camadasLineares();
+        $this->geoserver([
+            'louos_zpr3:VM_L_Z_USO_ZPR_3' => $this->retangulo(-38.5010, -38.4980, -12.9810, -12.9780),
+            'louos_zona_uso_zclmu:VM_L_Z_USO_ZCLMU' => $this->linha(-12.9795),
+            'louos_zona_uso_zclme:VM_L_Z_USO_ZCLME' => $this->linha(-12.9793),
+        ]);
+
+        $resultado = app(ZonaMaiorPorcaoResolver::class)->resolver($this->lote());
+
+        $this->assertSame(ZonaMaiorPorcao::CONFLITO_LINEAR, $resultado->status);
+        $this->assertSame(['ZCLMu', 'ZCLMe'], $resultado->empate);
+        $this->assertFalse($resultado->identificado());
+    }
+
+    public function test_hu_182_linha_zclme_vence_mesmo_com_noventa_por_cento_em_outra_zona(): void
+    {
+        $this->camadasLineares();
+        $this->geoserver([
+            'louos_zpr3:VM_L_Z_USO_ZPR_3' => $this->retangulo(-38.5010, -38.49910, -12.9810, -12.9780),
+            'louos_zeis:VM_L_Z_USO_ZEIS' => $this->retangulo(-38.49910, -38.4980, -12.9810, -12.9780),
+            'louos_zona_uso_zclme:VM_L_Z_USO_ZCLME' => $this->linha(-12.9795),
+        ]);
+
+        $resultado = app(ZonaMaiorPorcaoResolver::class)->resolver($this->lote());
+
+        $this->assertSame(ZonaMaiorPorcao::CENTRALIDADE_LINEAR, $resultado->status);
+        $this->assertSame('ZCLMe', $resultado->codigo);
+        $this->assertGreaterThan(85.0, $resultado->porcoes[0]['percentual']);
+    }
+
+    public function test_hu_182_camada_linear_sem_resposta_e_indisponivel(): void
+    {
+        $this->camadasLineares();
+        $this->geoserver([
+            'louos_zpr3:VM_L_Z_USO_ZPR_3' => $this->retangulo(-38.5010, -38.4980, -12.9810, -12.9780),
+            'louos_zona_uso_zclmu:VM_L_Z_USO_ZCLMU' => 403,
+        ]);
+
+        $resultado = app(ZonaMaiorPorcaoResolver::class)->resolver($this->lote());
+
+        $this->assertSame(ZonaMaiorPorcao::INDISPONIVEL, $resultado->status);
+        $this->assertNull($resultado->codigo);
     }
 }

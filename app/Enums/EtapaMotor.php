@@ -10,6 +10,7 @@ enum EtapaMotor: string
     case Via = 'via';
     case Bairro = 'bairro';
     case RegraTerritorial = 'regra_territorial';
+    case ConsultaViabilidadeSefaz = 'consulta_viabilidade_sefaz';
 
     public function servico(): string
     {
@@ -20,6 +21,7 @@ enum EtapaMotor: string
             self::Via => 'geoserver_via',
             self::Bairro => 'geosalvador_bairro',
             self::RegraTerritorial => 'geoserver_camadas',
+            self::ConsultaViabilidadeSefaz => 'sefaz_viabilidade',
         };
     }
 
@@ -32,6 +34,7 @@ enum EtapaMotor: string
             self::Via => 4,
             self::Bairro => 5,
             self::RegraTerritorial => 6,
+            self::ConsultaViabilidadeSefaz => 7,
         };
     }
 
@@ -44,6 +47,7 @@ enum EtapaMotor: string
             self::Via => 'Classe viária',
             self::Bairro => 'Bairro oficial',
             self::RegraTerritorial => 'Regras territoriais',
+            self::ConsultaViabilidadeSefaz => 'Consulta da viabilidade na SEFAZ',
         };
     }
 }

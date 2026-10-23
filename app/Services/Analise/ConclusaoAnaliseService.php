@@ -173,7 +173,7 @@ class ConclusaoAnaliseService
             }
 
             if ($resultado === ConclusionOutcome::Deferido && $decisao->tvl_product_number === null && ! $request->isRenewal()) {
-                $decisao->update(['tvl_product_number' => $this->tvl->generate()]);
+                $decisao->update(['tvl_product_number' => $this->tvl->paraProcesso($request)]);
             }
 
             $this->stateMachine->transition(

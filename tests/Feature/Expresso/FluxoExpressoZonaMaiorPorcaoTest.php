@@ -264,4 +264,36 @@ class FluxoExpressoZonaMaiorPorcaoTest extends TestCase
         // conta chamadas; o memo real fica provado no teste postgis do resolvedor.
         $this->assertLessThanOrEqual(3, $fake->chamadas);
     }
+
+    public function test_hu_182_conflito_zclmu_zclme_vai_para_analise_com_os_dois_nomes(): void
+    {
+        Event::fake([ResultadoEmitido::class]);
+        $this->fakeCadastro(-12.9707, -38.5107);
+        $request = $this->comPoligonos($this->setupDeferivel());
+        $this->zonas(FakeZonaMaiorPorcaoResolver::conflitoLinear());
+
+        $result = app(FluxoExpressoService::class)->decide($request);
+
+        $this->assertSame(ViabilityRequestStatus::EmAnalise, $result->status);
+        $this->assertStringContainsString('ZCLMu', (string) $result->reason);
+        $this->assertStringContainsString('ZCLMe', (string) $result->reason);
+        $this->assertSame(TipoGatilho::ZonaEmpate->value, ExpressoQueda::query()->where('viability_request_id', $request->id)->first()?->tipo_gatilho);
+        $this->assertNotSame(ZonaFonte::CentralidadeLinear, $request->fresh()->zona_fonte);
+    }
+
+    public function test_hu_182_centralidade_linear_vira_a_zona_do_processo_e_do_inventario(): void
+    {
+        Event::fake([ResultadoEmitido::class]);
+        $this->fakeCadastro(-12.9707, -38.5107);
+        $request = $this->comPoligonos($this->setupDeferivel());
+        $this->zonas(FakeZonaMaiorPorcaoResolver::centralidadeLinear('ZCLMu'));
+
+        app(FluxoExpressoService::class)->decide($request);
+
+        $request->refresh();
+        $this->assertSame('ZCLMu', $request->zona_codigo);
+        $this->assertSame(ZonaFonte::CentralidadeLinear, $request->zona_fonte);
+        $this->assertSame('centralidade_linear', $request->camadas_incidentes['zona']['fonte']);
+        $this->assertSame('ZCLMu', $request->camadas_incidentes['zona']['nome']);
+    }
 }

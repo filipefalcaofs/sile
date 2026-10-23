@@ -12,6 +12,7 @@ use App\Http\Controllers\Gestao\AuditoriaPreditivaController;
 use App\Http\Controllers\Gestao\BenchmarkController;
 use App\Http\Controllers\Gestao\CaixaSetorController;
 use App\Http\Controllers\Gestao\CnaeController;
+use App\Http\Controllers\Gestao\CnaeInvalidoController;
 use App\Http\Controllers\Gestao\ConclusaoAnaliseController;
 use App\Http\Controllers\Gestao\ConsultarCpfSedurController;
 use App\Http\Controllers\Gestao\ConsultarDocumentoContingenciaController;
@@ -787,6 +788,8 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::post('ficha/gerar-resumo', [AnalysisRecordController::class, 'gerarResumo'])->name('ficha.gerar-resumo');
             Route::get('ficha/diff', [AnalysisRecordController::class, 'diff'])->name('ficha.diff');
             Route::get('precedentes', [PrecedenteController::class, 'show'])->name('precedentes');
+            // Código CNAE fora da lista oficial na alteração de atividade: o analista troca por um oficial.
+            Route::patch('cnae-invalido', [CnaeInvalidoController::class, 'corrigir'])->name('cnae-invalido.corrigir');
             // Zona e via escolhidas na ficha: prévia do que o motor decidiria e gravação com justificativa.
             Route::middleware('permission:editar-zona-via')->group(function () {
                 Route::post('zona-via/previa', [ZonaViaController::class, 'previa'])->name('zona-via.previa');

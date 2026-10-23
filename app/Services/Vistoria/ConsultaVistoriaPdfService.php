@@ -161,7 +161,7 @@ class ConsultaVistoriaPdfService
             return ($zona['status'] ?? '') === 'indisponivel' ? 'Camada indisponível' : 'Não identificado';
         }
 
-        $fonte = ['ponto' => 'ponto da inscrição', 'enderecamento_maior_porcao' => 'maior porção do lote'][$zona['fonte'] ?? ''] ?? null;
+        $fonte = ['ponto' => 'ponto da inscrição', 'enderecamento_maior_porcao' => 'maior porção do lote', 'centralidade_linear' => 'centralidade linear (linha sobre o lote)'][$zona['fonte'] ?? ''] ?? null;
         $porcoes = $zona['porcoes'] ?? [];
         $detalhe = count($porcoes) > 1
             ? ' ('.collect($porcoes)->map(fn (array $p): string => $p['zona'].' '.number_format((float) $p['percentual'], 1, ',', '').'%')->implode(' · ').')'

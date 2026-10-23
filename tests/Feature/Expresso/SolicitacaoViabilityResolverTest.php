@@ -384,4 +384,30 @@ class SolicitacaoViabilityResolverTest extends TestCase
         $this->assertIsArray($item['consulta']);
         $this->assertArrayHasKey('risco', $item['consulta']);
     }
+
+    public function test_com_comparacao_da_sefaz_so_enquadra_as_incluidas(): void
+    {
+        $this->fakeBairroSemZona();
+        $this->classificarMunicipal('2222222', RiscoMunicipal::BaixoA);
+        $this->classificarMunicipal('3333333', RiscoMunicipal::Alto);
+        $request = $this->draftComCnaes(['2222222', '3333333']);
+        $request->forceFill(['comparacao_cnaes' => ['incluidas' => ['2222222'], 'excluidas' => [], 'mantidas' => ['3333333'], 'invalidas' => []]])->save();
+
+        $resolved = $this->resolver()->resolve($request->fresh());
+
+        $this->assertCount(1, $resolved->por_cnae);
+        $this->assertTrue($resolved->elegivelExpresso(), 'a atividade mantida, de risco alto, não derruba o expresso');
+    }
+
+    public function test_sem_comparacao_enquadra_todos_como_antes(): void
+    {
+        $this->fakeBairroSemZona();
+        $this->classificarMunicipal('2222222', RiscoMunicipal::BaixoA);
+        $this->classificarMunicipal('3333333', RiscoMunicipal::Alto);
+
+        $resolved = $this->resolver()->resolve($this->draftComCnaes(['2222222', '3333333']));
+
+        $this->assertCount(2, $resolved->por_cnae);
+        $this->assertFalse($resolved->elegivelExpresso());
+    }
 }
