@@ -31,8 +31,8 @@ class EntradaPortalServicosController extends Controller
     /**
      * Serviços da Carta de Serviços e o Detalhar da área logada do Portal de
      * Serviços (reunião de 23/10/2026). `processo` abre o processo pelo
-     * protocolo; o autônomo ainda não tem fluxo próprio e cai na nova
-     * solicitação.
+     * número do processo, da viabilidade ou do BAP; o autônomo ainda não tem
+     * fluxo próprio e cai na nova solicitação.
      *
      * @var array<string, string|null>
      */
@@ -56,11 +56,11 @@ class EntradaPortalServicosController extends Controller
 
         $destino = $request->query('destino');
         $destino = is_string($destino) && array_key_exists($destino, self::DESTINOS) ? $destino : null;
-        $protocolo = $this->protocolo($request);
+        $numero = $this->numero($request);
         $token = $request->query('token');
 
         if (! is_string($token) || $token === '' || $token === PortalServicos::MARCADOR_TOKEN) {
-            return redirect()->away(PortalServicos::urlLogin(PortalServicos::urlEntrada($destino, $protocolo)));
+            return redirect()->away(PortalServicos::urlLogin(PortalServicos::urlEntrada($destino, $numero)));
         }
 
         try {
@@ -87,7 +87,7 @@ class EntradaPortalServicosController extends Controller
         $request->session()->put('portal_servicos.conferido_em', now()->timestamp);
 
         if ($destino === 'processo') {
-            return $this->detalhar($user, $protocolo);
+            return $this->detalhar($user, $numero);
         }
 
         // Destino explícito (serviço da Carta) vence a página guardada antes do login.
@@ -95,35 +95,44 @@ class EntradaPortalServicosController extends Controller
     }
 
     /**
-     * Detalhar da área logada do Portal de Serviços: abre o processo pelo
-     * protocolo só se ele for do cidadão (mesma regra da tela do processo).
+     * Detalhar da área logada do Portal de Serviços: o número pode ser o do
+     * processo, o da viabilidade (TVL) ou o do BAP. Abre só processo do
+     * cidadão (mesma regra da tela do processo); havendo mais de um, vale o
+     * que casa pelo número do processo e, depois, o mais recente.
      * Inexistente, de outra pessoa ou inválido dão o mesmo aviso, sem revelar
-     * se o protocolo existe.
+     * se o número existe.
      */
-    private function detalhar(User $user, ?string $protocolo): RedirectResponse
+    private function detalhar(User $user, ?string $numero): RedirectResponse
     {
-        $solicitacao = $protocolo !== null
-            ? ViabilityRequest::query()->where('protocol_number', $protocolo)->first()
-            : null;
+        $solicitacao = $numero === null ? null : ViabilityRequest::query()
+            ->where(fn ($query) => $query
+                ->where('protocol_number', $numero)
+                ->orWhere('external_reference', $numero)
+                ->orWhereHas('decision', fn ($decisao) => $decisao->where('tvl_product_number', $numero)))
+            ->latest('id')
+            ->get()
+            ->filter(fn (ViabilityRequest $candidata) => Gate::forUser($user)->allows('view', $candidata))
+            ->sortByDesc(fn (ViabilityRequest $candidata) => strtoupper((string) $candidata->protocol_number) === $numero)
+            ->first();
 
-        if ($solicitacao === null || ! Gate::forUser($user)->allows('view', $solicitacao)) {
+        if ($solicitacao === null) {
             return redirect()->route('portal.solicitacoes.index')->with('error', self::PROCESSO_NAO_ENCONTRADO);
         }
 
         return redirect()->route('portal.solicitacoes.show', $solicitacao);
     }
 
-    private function protocolo(Request $request): ?string
+    private function numero(Request $request): ?string
     {
-        $protocolo = $request->query('protocolo');
+        $numero = $request->query('numero');
 
-        if (! is_string($protocolo)) {
+        if (! is_string($numero)) {
             return null;
         }
 
-        $protocolo = strtoupper(trim($protocolo));
+        $numero = strtoupper(trim($numero));
 
-        return preg_match('/^[A-Z0-9][A-Z0-9-]{0,39}$/', $protocolo) === 1 ? $protocolo : null;
+        return preg_match('#^[A-Z0-9][A-Z0-9./-]{0,59}$#', $numero) === 1 ? $numero : null;
     }
 
     private function aviso(string $mensagem): Response

@@ -6,6 +6,7 @@ use App\Models\AccessLog;
 use App\Models\LegalTerm;
 use App\Models\Parameter;
 use App\Models\User;
+use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use Database\Seeders\ParameterSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -54,11 +55,11 @@ class EntradaPortalServicosTest extends TestCase
         return User::factory()->cidadao()->withAcceptedLgpdTerm()->create(['cpf' => self::CPF]);
     }
 
-    private function entrar(?string $destino = 'renovacao', ?string $token = self::TOKEN, ?string $protocolo = null)
+    private function entrar(?string $destino = 'renovacao', ?string $token = self::TOKEN, ?string $numero = null)
     {
         return $this->get('/portal/entrar/portal-servicos?'.http_build_query(array_filter([
             'destino' => $destino,
-            'protocolo' => $protocolo,
+            'numero' => $numero,
             'token' => $token,
         ])));
     }
@@ -93,14 +94,43 @@ class EntradaPortalServicosTest extends TestCase
         $this->entrar('convites')->assertRedirect('/portal/painel');
     }
 
-    public function test_detalhar_abre_o_processo_do_proprio_cpf(): void
+    public function test_detalhar_pelo_numero_do_processo_abre_o_do_proprio_cpf(): void
     {
         $this->sessaoValida();
         $user = $this->cidadao();
         $processo = ViabilityRequest::factory()->protocoled()->create(['requester_user_id' => $user->id]);
 
-        $this->entrar('processo', protocolo: strtolower($processo->protocol_number))
+        $this->entrar('processo', numero: strtolower($processo->protocol_number))
             ->assertRedirect('/portal/solicitacoes/'.$processo->id);
+    }
+
+    public function test_detalhar_pelo_numero_da_viabilidade(): void
+    {
+        $this->sessaoValida();
+        $user = $this->cidadao();
+        $processo = ViabilityRequest::factory()->protocoled()->create(['requester_user_id' => $user->id]);
+        ViabilityDecision::factory()->create(['viability_request_id' => $processo->id, 'tvl_product_number' => 'TVL-2026-004512']);
+
+        $this->entrar('processo', numero: 'tvl-2026-004512')->assertRedirect('/portal/solicitacoes/'.$processo->id);
+    }
+
+    public function test_detalhar_pelo_numero_do_bap(): void
+    {
+        $this->sessaoValida();
+        $user = $this->cidadao();
+        $processo = ViabilityRequest::factory()->protocoled()->create(['requester_user_id' => $user->id, 'external_reference' => 'BAP2600012345']);
+
+        $this->entrar('processo', numero: 'bap2600012345')->assertRedirect('/portal/solicitacoes/'.$processo->id);
+    }
+
+    public function test_numero_que_casa_com_processo_de_outra_pessoa_e_com_o_proprio_abre_o_proprio(): void
+    {
+        $this->sessaoValida();
+        $user = $this->cidadao();
+        ViabilityRequest::factory()->protocoled()->create(['protocol_number' => 'VIA-2026-000010', 'external_reference' => 'BAP-COMUM']);
+        $proprio = ViabilityRequest::factory()->protocoled()->create(['protocol_number' => 'VIA-2026-000011', 'requester_user_id' => $user->id, 'external_reference' => 'BAP-COMUM']);
+
+        $this->entrar('processo', numero: 'BAP-COMUM')->assertRedirect('/portal/solicitacoes/'.$proprio->id);
     }
 
     public function test_detalhar_processo_de_outra_pessoa_vai_para_a_lista_com_aviso(): void
@@ -109,20 +139,20 @@ class EntradaPortalServicosTest extends TestCase
         $this->cidadao();
         $deOutro = ViabilityRequest::factory()->protocoled()->create();
 
-        $this->entrar('processo', protocolo: $deOutro->protocol_number)
+        $this->entrar('processo', numero: $deOutro->protocol_number)
             ->assertRedirect('/portal/solicitacoes')
             ->assertSessionHas('error', 'Não encontramos esse processo entre os seus. Confira a lista abaixo.');
     }
 
-    public function test_detalhar_protocolo_inexistente_ou_invalido_vai_para_a_lista_com_aviso(): void
+    public function test_detalhar_numero_inexistente_ou_invalido_vai_para_a_lista_com_aviso(): void
     {
         $this->sessaoValida();
         $this->cidadao();
 
-        $this->entrar('processo', protocolo: 'VIA-2026-999999')
+        $this->entrar('processo', numero: 'VIA-2026-999999')
             ->assertRedirect('/portal/solicitacoes')
             ->assertSessionHas('error');
-        $this->entrar('processo', protocolo: '../../gestao')
+        $this->entrar('processo', numero: '../../gestao')
             ->assertRedirect('/portal/solicitacoes')
             ->assertSessionHas('error');
         $this->entrar('processo')
@@ -130,14 +160,14 @@ class EntradaPortalServicosTest extends TestCase
             ->assertSessionHas('error');
     }
 
-    public function test_sem_token_preserva_o_protocolo_na_volta(): void
+    public function test_sem_token_preserva_o_numero_na_volta(): void
     {
         Http::fake();
 
         $location = urldecode((string) $this->entrar('processo', null, 'VIA-2026-000123')->headers->get('Location'));
 
         $this->assertStringContainsString('destino=processo', $location);
-        $this->assertStringContainsString('protocolo=VIA-2026-000123', $location);
+        $this->assertStringContainsString('numero=VIA-2026-000123', $location);
         $this->assertStringContainsString('token=PREENCHER_TOKEN', $location);
     }
 
