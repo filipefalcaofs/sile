@@ -39,10 +39,12 @@ esses processos, e é copiado para `$TREINO_IA_RAIZ/cego/`.
 
 `avaliar teste --juiza` (ou `cego --juiza`) inclui a variante J: o modelo original
 e o treinado geram os candidatos no recorte de 120 m (240 m se o escolhido
-encostar na borda) e a API da Anthropic escolhe o que representa o lote inteiro,
-ou nenhum. Vai para a API só a imagem do recorte com os candidatos e o ponto.
-A credencial vem de `ANTHROPIC_API_KEY`; `TREINO_IA_JUIZA_MODELO` (padrão
-`claude-opus-5-5`) e `TREINO_IA_JUIZA_ESFORCO` (padrão `high`) ajustam a chamada.
+encostar na borda) e uma LLM escolhe o que representa o lote inteiro, ou nenhum.
+Vai para a API só a imagem do recorte com os candidatos e o ponto. O padrão é a
+IA cadastrada no Viabiliza (OpenAI, `gpt-4o-mini`), com a chave em
+`OPENAI_API_KEY`. `TREINO_IA_JUIZA_PROVEDOR=anthropic` usa a API da Anthropic
+(`ANTHROPIC_API_KEY`, padrão `claude-opus-5-5`); `TREINO_IA_JUIZA_MODELO` troca o
+modelo nos dois.
 Antes de avaliar, `recortes` e `filtrar` tiram os lotes sem imagem.
 
 ## Comandos no pod de homologação

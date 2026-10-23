@@ -3,6 +3,10 @@
 A juíza recebe só o recorte da ortofoto com os candidatos numerados e o ponto
 do imóvel, e devolve o número do candidato que representa o lote inteiro, ou 0
 quando nenhum serve. O polígono do CODLOG nunca entra no pedido.
+
+O provedor padrão é o mesmo da IA cadastrada no Viabiliza (OpenAI, gpt-4o-mini).
+TREINO_IA_JUIZA_PROVEDOR (openai ou anthropic) e TREINO_IA_JUIZA_MODELO trocam a
+juíza; a credencial vem de OPENAI_API_KEY ou ANTHROPIC_API_KEY.
 """
 
 import base64
@@ -13,8 +17,8 @@ import os
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
-MODELO = os.environ.get("TREINO_IA_JUIZA_MODELO", "claude-opus-5-5")
-ESFORCO = os.environ.get("TREINO_IA_JUIZA_ESFORCO", "high")
+MODELOS_PADRAO = {"openai": "gpt-4o-mini", "anthropic": "claude-opus-5-5"}
+ESFORCO_ANTHROPIC = os.environ.get("TREINO_IA_JUIZA_ESFORCO", "high")
 CORES = ["#E6194B", "#3CB44B", "#4363D8", "#F58231", "#911EB4", "#42D4F4", "#F032E6", "#9A6324"]
 ESQUEMA = {
     "type": "object",
@@ -32,6 +36,19 @@ INSTRUCAO = (
     "nenhum candidato representa o lote, por exemplo quando todos pegam só um pedaço do "
     "telhado ou a quadra inteira. Na justificativa, diga em uma frase o que você viu."
 )
+NENHUM = {"escolha": None, "justificativa": None, "recusa": False}
+RECUSA = {"escolha": None, "justificativa": None, "recusa": True}
+
+
+def provedor() -> str:
+    return os.environ.get("TREINO_IA_JUIZA_PROVEDOR", "openai")
+
+
+provedor_padrao = provedor
+
+
+def modelo(nome_provedor: str) -> str:
+    return os.environ.get("TREINO_IA_JUIZA_MODELO", MODELOS_PADRAO[nome_provedor])
 
 
 def desenhar(img: np.ndarray, aneis: list, x: int, y: int) -> bytes:
@@ -53,36 +70,66 @@ def desenhar(img: np.ndarray, aneis: list, x: int, y: int) -> bytes:
 
 
 class Juiza:
-    def __init__(self, cliente=None):
+    def __init__(self, cliente=None, provedor: str | None = None):
+        self.provedor = provedor or provedor_padrao()
+        self.modelo = modelo(self.provedor)
         if cliente is None:
-            import anthropic
+            if self.provedor == "openai":
+                import openai
 
-            cliente = anthropic.Anthropic()
+                cliente = openai.OpenAI()
+            else:
+                import anthropic
+
+                cliente = anthropic.Anthropic()
         self.cliente = cliente
 
     def escolher(self, img: np.ndarray, aneis: list, x: int, y: int, lado_m: int = 120) -> dict:
         if not aneis:
-            return {"escolha": None, "justificativa": None, "recusa": False}
+            return dict(NENHUM)
         imagem = base64.standard_b64encode(desenhar(img, aneis, x, y)).decode("utf-8")
+        texto = INSTRUCAO.format(lado=lado_m, n=len(aneis))
+        chamar = self._openai if self.provedor == "openai" else self._anthropic
+        resposta = chamar(imagem, texto)
+        if resposta in (NENHUM, RECUSA):
+            return dict(resposta)
+        dados = json.loads(resposta)
+        escolha = dados["escolha"] if 1 <= dados["escolha"] <= len(aneis) else None
+        return {"escolha": escolha, "justificativa": dados["justificativa"], "recusa": False}
+
+    def _openai(self, imagem: str, texto: str):
+        resposta = self.cliente.chat.completions.create(
+            model=self.modelo,
+            max_completion_tokens=1000,
+            response_format={"type": "json_schema", "json_schema": {"name": "escolha_do_lote", "schema": ESQUEMA, "strict": True}},
+            messages=[{
+                "role": "user",
+                "content": [
+                    {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{imagem}"}},
+                    {"type": "text", "text": texto},
+                ],
+            }],
+        )
+        mensagem = resposta.choices[0].message
+        if mensagem.refusal:
+            return RECUSA
+        return mensagem.content or NENHUM
+
+    def _anthropic(self, imagem: str, texto: str):
         resposta = self.cliente.beta.messages.create(
-            model=MODELO,
+            model=self.modelo,
             max_tokens=16000,
             betas=["server-side-fallback-2026-07-01"],
             fallbacks="default",
-            output_config={"effort": ESFORCO, "format": {"type": "json_schema", "schema": ESQUEMA}},
+            output_config={"effort": ESFORCO_ANTHROPIC, "format": {"type": "json_schema", "schema": ESQUEMA}},
             messages=[{
                 "role": "user",
                 "content": [
                     {"type": "image", "source": {"type": "base64", "media_type": "image/png", "data": imagem}},
-                    {"type": "text", "text": INSTRUCAO.format(lado=lado_m, n=len(aneis))},
+                    {"type": "text", "text": texto},
                 ],
             }],
         )
         if resposta.stop_reason == "refusal":
-            return {"escolha": None, "justificativa": None, "recusa": True}
-        texto = next((b.text for b in resposta.content if b.type == "text"), None)
-        if texto is None:
-            return {"escolha": None, "justificativa": None, "recusa": False}
-        dados = json.loads(texto)
-        escolha = dados["escolha"] if 1 <= dados["escolha"] <= len(aneis) else None
-        return {"escolha": escolha, "justificativa": dados["justificativa"], "recusa": False}
+            return RECUSA
+        return next((b.text for b in resposta.content if b.type == "text"), None) or NENHUM
