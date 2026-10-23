@@ -57,6 +57,29 @@ class SedurSefazPropertyRegistryLookupTest extends TestCase
         $this->assertArrayNotHasKey('ListaHistoricoPropriedade', $result->raw);
     }
 
+    public function test_utilizacao_do_cadastro_preenche_o_tipo_do_imovel(): void
+    {
+        $corpo = $this->fixtureSucesso();
+        $corpo['Utilizacao'] = ' COMERCIAL ';
+        Http::fake(['*' => Http::response($corpo, 200)]);
+
+        $result = app(PropertyRegistryLookup::class)->resolve('0010010010');
+
+        $this->assertSame('COMERCIAL', $result->cadastro->tipo_imovel);
+    }
+
+    public function test_sem_utilizacao_o_tipo_do_imovel_fica_vazio_sem_inferir_pela_sub_unidade(): void
+    {
+        $corpo = $this->fixtureSucesso();
+        unset($corpo['Utilizacao']);
+        $corpo['ListaEndereco']['RetornoEndereco'][1]['SubUnidade'] = 'Loja';
+        Http::fake(['*' => Http::response($corpo, 200)]);
+
+        $result = app(PropertyRegistryLookup::class)->resolve('0010010010');
+
+        $this->assertNull($result->cadastro->tipo_imovel);
+    }
+
     public function test_endereco_unico_como_objeto_e_normalizado(): void
     {
         $corpo = $this->fixtureSucesso();
@@ -134,6 +157,48 @@ class SedurSefazPropertyRegistryLookupTest extends TestCase
 
         $this->assertSame('0010010010', $result->inscricao);
         Http::assertSent(fn ($request) => $request->url() === 'https://api.sedur.local/hml/inscricao-imobiliaria/0010010010');
+    }
+
+    public function test_url_com_query_recebe_a_inscricao_no_fim_e_descarta_dados_de_contribuinte(): void
+    {
+        foreach ([
+            'integrations.inscricao_imobiliaria.em_producao' => ['boolean', '1'],
+            'integrations.inscricao_imobiliaria.url_producao' => ['string', 'https://api.sedur.local/prd/ws-proxy-sefaz/integra/v1/inscricao-imobiliaria?valor='],
+        ] as $key => [$type, $value]) {
+            Parameter::factory()->create([
+                'key' => $key,
+                'group' => 'integracoes',
+                'type' => $type,
+                'value' => $value,
+                'default_value' => $value,
+            ]);
+        }
+
+        $corpo = $this->fixtureSucesso();
+        unset($corpo['NomeProprietario']);
+        $corpo += [
+            'Utilizacao' => 'COMERCIAL',
+            'NomeContribuinte' => 'NOME DO CONTRIBUINTE',
+            'CodigoIdentificadorContribuinte' => '1',
+            'NumeroIdentificadorContribuinte' => '00000000000',
+            'CodigoIdentificadorPermissionario' => '2',
+            'NumeroIdentificadorPermissionario' => '11111111111',
+            'CIB' => '123',
+        ];
+
+        Http::fake([
+            'https://api.sedur.local/prd/ws-proxy-sefaz/integra/v1/inscricao-imobiliaria?valor=0010010010' => Http::response($corpo, 200),
+        ]);
+
+        $result = app(PropertyRegistryLookup::class)->resolve('0010010010');
+
+        $this->assertSame('COMERCIAL', $result->cadastro->tipo_imovel);
+        $this->assertNull($result->cadastro->contribuinte);
+        $this->assertNull($result->cadastro->cpf_cnpj);
+        foreach (['NomeContribuinte', 'CodigoIdentificadorContribuinte', 'NumeroIdentificadorContribuinte', 'CodigoIdentificadorPermissionario', 'NumeroIdentificadorPermissionario'] as $campo) {
+            $this->assertArrayNotHasKey($campo, $result->raw);
+        }
+        $this->assertSame('123', $result->raw['CIB']);
     }
 
     public function test_toggle_desligado_nao_chama_a_api(): void

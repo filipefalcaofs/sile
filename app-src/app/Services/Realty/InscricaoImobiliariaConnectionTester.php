@@ -19,7 +19,7 @@ class InscricaoImobiliariaConnectionTester
     {
         $ambiente = $this->settings->usingProduction() ? 'produção' : 'homologação';
         $inscricao = (string) config('viabiliza.integrations.inscricao_imobiliaria.inscricao_teste', '0000000000');
-        $url = $this->settings->baseUrl().'/'.$inscricao;
+        $url = InscricaoImobiliariaIntegrationSettings::urlDaConsulta($this->settings->baseUrl(), $inscricao);
 
         try {
             $response = Http::timeout((int) config('viabiliza.integrations.inscricao_imobiliaria.timeout', 12))
