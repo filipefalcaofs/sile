@@ -14,9 +14,14 @@ class Resposta:
         self.headers = {"Content-Type": tipo}
 
 
-def _png():
+def _png(vazio=False):
+    import numpy as np
+
     saida = io.BytesIO()
-    Image.new("RGB", (800, 800), (120, 120, 120)).save(saida, format="PNG")
+    if vazio:
+        Image.new("RGB", (800, 800), (253, 253, 253)).save(saida, format="PNG")
+    else:
+        Image.fromarray(np.random.default_rng(0).integers(0, 255, (800, 800, 3), dtype=np.uint8)).save(saida, format="PNG")
     return saida.getvalue()
 
 
@@ -123,9 +128,9 @@ def test_em_branco_reconhece_recorte_sem_imagem(tmp_path):
 def test_baixar_todos_conta_os_recortes_em_branco(tmp_path, monkeypatch):
     monkeypatch.setenv("TREINO_IA_RAIZ", str(tmp_path))
 
-    resultado = recortes.baixar_todos(_manifesto(), sessao=SessaoContadora())
+    resultado = recortes.baixar_todos(_manifesto(), sessao=SessaoContadora(conteudo=_png(vazio=True)))
 
-    assert resultado["em_branco"] == resultado["baixados"]
+    assert resultado["em_branco"] == resultado["baixados"] == 2
 
 
 def _com_recortes(tmp_path, monkeypatch, vazios):
@@ -185,3 +190,16 @@ def test_cli_filtrar_guarda_o_manifesto_bruto_e_grava_o_filtrado(tmp_path, monke
 
     assert __main__.main(["filtrar", "--treino", "1", "--teste", "5"]) == 0
     assert [l["id"] for l in arquivos.ler_json(c.dados / "manifesto.json")["treino"]] == ["t1"]
+
+
+def test_lote_com_primeiro_recorte_em_branco_nao_baixa_os_outros_lados(tmp_path, monkeypatch):
+    monkeypatch.setenv("TREINO_IA_RAIZ", str(tmp_path))
+    m = _manifesto()
+    m["treino"][0]["lado_m"] = 240
+    sessao = SessaoContadora(conteudo=_png(vazio=True))
+
+    resultado = recortes.baixar_todos(m, sessao=sessao)
+
+    assert sessao.chamadas == 2
+    assert resultado["em_branco"] == 2
+    assert sorted(p.name for p in config.caminhos().recortes.glob("*.png")) == ["1-0_60.png", "1-1_60.png"]

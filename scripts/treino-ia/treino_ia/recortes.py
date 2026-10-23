@@ -2,7 +2,8 @@
 
 A ortofoto 2024 tem buracos: nesses pontos o serviço devolve uma imagem de cor
 única. Esses recortes ficam gravados (para não serem baixados de novo), são
-contados como em branco e o lote sai do conjunto em filtrar_com_imagem.
+contados como em branco, os outros tamanhos do mesmo lote não são baixados e o
+lote sai do conjunto em filtrar_com_imagem.
 """
 
 import time
@@ -53,13 +54,17 @@ def baixar_todos(manifesto: dict, sessao=None, limite: int | None = None) -> dic
     contagem = {"baixados": 0, "ja_existiam": 0, "falhas": 0, "em_branco": 0}
     inicio = time.monotonic()
     ultimo_erro = None
+    sem_imagem = set()
     for i, (lote, lado) in enumerate(pedidos, 1):
+        if lote["id"] in sem_imagem:
+            continue
         lat, lng = lote["ponto"]
         resultado = baixar_um(lote["id"], lat, lng, lado, sessao)
         chave = {"baixado": "baixados", "ja_existia": "ja_existiam", "falha": "falhas"}[resultado]
         contagem[chave] += 1
-        if resultado == "baixado" and em_branco(c.recortes / f"{lote['id']}_{lado}.png"):
-            contagem["em_branco"] += 1
+        if resultado != "falha" and em_branco(c.recortes / f"{lote['id']}_{lado}.png"):
+            sem_imagem.add(lote["id"])
+            contagem["em_branco"] += resultado == "baixado"
         if resultado == "falha":
             ultimo_erro = f"recorte de {lote['id']} ({lado} m) falhou"
         if i % 20 == 0 or i == len(pedidos):
