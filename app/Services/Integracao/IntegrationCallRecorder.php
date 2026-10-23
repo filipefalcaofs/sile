@@ -134,6 +134,7 @@ class IntegrationCallRecorder
             'geocoding' => ['nominatim'],
             'cnpj' => ['brasilapi', '/cnpj/'],
             'govbr' => ['acesso.gov.br'],
+            'portal_servicos' => ['ws-bff-portal-servicos/v1/acesso/'],
             'inscricao_imobiliaria' => ['inscricao-imobiliaria'],
             'sedur_contato' => ['ws-contato'],
             'sedur_auth' => ['ws-autenticacao', 'ws-gp'],

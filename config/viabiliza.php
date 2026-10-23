@@ -41,6 +41,9 @@ return [
         'procuracoes' => true,
         'cnpj_lookup' => true,
         'govbr_login' => false,
+        // Entrada do cidadão pelo Portal de Serviços da SEDUR (HU-142). Ligada,
+        // o portal deixa de ter login, cadastro e senha próprios.
+        'login_portal_servicos' => false,
         'ad_login' => true,
         'geocoding' => true,
         'geoserver_zona' => true,
@@ -329,6 +332,15 @@ return [
         ],
         'sedur_auth' => [
             'base_url' => 'https://api.sedur.salvador.ba.gov.br/k8s/prd',
+            'timeout' => 8,
+        ],
+        // Sessão do cidadão no Portal de Serviços da SEDUR (HU-142): o token
+        // recebido na entrada é conferido no BFF do portal (buscar-sessao).
+        'portal_servicos' => [
+            'bff_base_url' => 'https://api.sedur.salvador.ba.gov.br/k8s/hml/ws-bff-portal-servicos',
+            'login_url' => 'https://sso-homo.salvador.ba.gov.br/govbr/authorize/?client_id=SedurMais-PortalServicos-Hml',
+            'carta_url' => 'https://servicos.sedur.salvador.ba.gov.br/carta-servicos/17',
+            'intervalo_checagem_sessao' => 300,
             'timeout' => 8,
         ],
         'sedur_contato' => [

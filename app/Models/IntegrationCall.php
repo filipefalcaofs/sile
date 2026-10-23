@@ -40,6 +40,7 @@ class IntegrationCall extends Model
         'govbr' => 'gov.br',
         'inscricao_imobiliaria' => 'Inscrição imobiliária',
         'sedur_contato' => 'SEDUR contato',
+        'portal_servicos' => 'Portal de Serviços SEDUR',
         'sedur_auth' => 'SEDUR autenticação',
         'ia' => 'IA',
     ];
