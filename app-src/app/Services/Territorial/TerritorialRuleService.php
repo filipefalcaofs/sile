@@ -50,6 +50,9 @@ class TerritorialRuleService
     /** Marca que alguma camada de poligonal não respondeu nesta avaliação. */
     private bool $camadaIndisponivel = false;
 
+    /** Avaliação de prévia: não registra a etapa nem audita. */
+    private bool $simulando = false;
+
     /**
      * Avalia as regras territoriais ativas da versão vigente contra a
      * solicitação. `$ponto` é o centroide do imóvel (lat/lng) — null quando
@@ -73,6 +76,24 @@ class TerritorialRuleService
         }
 
         return $verdict;
+    }
+
+    /**
+     * Mesma avaliação de `avaliar`, sem registrar a etapa nem auditar a
+     * incidência: serve a levantamentos que não podem tocar o processo.
+     *
+     * @param  array{lat: float, lng: float}|null  $ponto
+     */
+    public function simular(ViabilityRequest $request, ?array $ponto): TerritorialRuleVerdict
+    {
+        $this->camadaIndisponivel = false;
+        $this->simulando = true;
+
+        try {
+            return $this->avaliarRegras($request, $ponto);
+        } finally {
+            $this->simulando = false;
+        }
     }
 
     /**
@@ -546,6 +567,10 @@ class TerritorialRuleService
      */
     private function auditar(ViabilityRequest $request, TerritorialRuleVerdict $verdict): void
     {
+        if ($this->simulando) {
+            return;
+        }
+
         $this->audit->log(
             logName: 'regras',
             event: 'regra-territorial',
