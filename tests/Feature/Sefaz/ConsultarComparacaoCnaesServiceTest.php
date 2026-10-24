@@ -8,8 +8,10 @@ use App\Models\ViabilityRequest;
 use App\Models\ViabilityRequestEvento;
 use App\Services\Sefaz\ConsultarComparacaoCnaesService;
 use App\Services\Sefaz\SefazConsultaIndisponivelException;
+use App\Services\Sefaz\SefazViabilidadeConsultaGateway;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Spatie\Activitylog\Models\Activity;
+use Tests\Support\Sefaz\FakeSefazViabilidadeConsultaGateway;
 use Tests\TestCase;
 
 class ConsultarComparacaoCnaesServiceTest extends TestCase
@@ -18,18 +20,18 @@ class ConsultarComparacaoCnaesServiceTest extends TestCase
 
     private const CNPJ = '12345678000190';
 
+    private FakeSefazViabilidadeConsultaGateway $sefaz;
+
     protected function setUp(): void
     {
         parent::setUp();
 
-        config([
-            'viabiliza.sefaz.consulta.ativa' => true,
-            'viabiliza.sefaz.consulta.driver' => 'simulado',
-            'viabiliza.sefaz.consulta.simulador.viabilidades' => [
-                self::CNPJ => ['numero' => 'VIA-2026-1', 'cnaes' => ['4711-3/02']],
-            ],
-            'viabiliza.sefaz.consulta.simulador.indisponiveis' => ['99999999000199'],
-        ]);
+        config(['viabiliza.sefaz.consulta.ativa' => true]);
+
+        $this->sefaz = (new FakeSefazViabilidadeConsultaGateway)
+            ->com(self::CNPJ, 'VIA-2026-1', ['4711-3/02'])
+            ->foraDoAr('99999999000199');
+        $this->app->instance(SefazViabilidadeConsultaGateway::class, $this->sefaz);
     }
 
     /**
@@ -104,7 +106,7 @@ class ConsultarComparacaoCnaesServiceTest extends TestCase
         $servico = app(ConsultarComparacaoCnaesService::class);
         $servico->executar($request);
 
-        config(['viabiliza.sefaz.consulta.simulador.indisponiveis' => [self::CNPJ]]);
+        $this->sefaz->foraDoAr(self::CNPJ);
 
         $resultado = $servico->executar($request->fresh());
 
@@ -118,7 +120,7 @@ class ConsultarComparacaoCnaesServiceTest extends TestCase
         $servico = app(ConsultarComparacaoCnaesService::class);
         $servico->executar($request);
 
-        config(['viabiliza.sefaz.consulta.simulador.viabilidades' => [self::CNPJ => ['numero' => 'VIA-2026-1', 'cnaes' => ['4711-3/02', '5611-2/01']]]]);
+        $this->sefaz->com(self::CNPJ, 'VIA-2026-1', ['4711-3/02', '5611-2/01']);
 
         $resultado = $servico->executar($request->fresh(), refazer: true);
 

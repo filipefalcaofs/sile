@@ -115,6 +115,8 @@
 
 ### Task 5: Gateway de consulta à SEFAZ e simulador
 
+> Nota de 24/10/2026: o simulador (`SimuladoSefazViabilidadeConsultaGateway`, o driver e o bloco `simulador` da config) foi removido a pedido. Ficou só o provider indisponível; os testes usam `tests/Support/Sefaz/FakeSefazViabilidadeConsultaGateway`.
+
 **Files:**
 - Create: `app/Services/Sefaz/ViabilidadeVinculada.php` (DTO)
 - Create: `app/Services/Sefaz/SefazViabilidadeConsultaGateway.php` (interface)

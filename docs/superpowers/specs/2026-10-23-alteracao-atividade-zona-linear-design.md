@@ -11,7 +11,7 @@ Origem: documento "Requisitos para Homologação – Alteração de Atividade Ec
 
 - Não mexer na regra da maior porção (art. 18, § 2º, Lei 9.148/2016) quando nenhuma linha passa por cima do lote.
 - Não implementar distância ou lindeiro como critério de centralidade linear.
-- Não ligar a SEFAZ real: a consulta nasce atrás de uma interface, com simulador para a homologação.
+- Não ligar a SEFAZ real: a consulta nasce atrás de uma interface, sem simulador; o provider real entra trocando só o binding.
 
 ## RF-02: zona pela centralidade linear
 
@@ -40,14 +40,14 @@ Regras:
 - Registrar em log o resultado da consulta e da comparação.
 
 Arquitetura:
-- Interface `SefazViabilidadeConsultaGateway` com `consultarPorCnpj(string $cnpj): ?ViabilidadeVinculada` (lista de CNAEs e número da viabilidade). Duas implementações: simulador por configuração, para a homologação, e a real, a ser ligada quando a SEFAZ informar o endpoint.
+- Interface `SefazViabilidadeConsultaGateway` com `consultarPorCnpj(string $cnpj): ?ViabilidadeVinculada` (lista de CNAEs e número da viabilidade). Hoje só existe o provider indisponível, que lança `SefazConsultaIndisponivelException`; o provider real entra quando a SEFAZ informar o endpoint
 - Serviço `ComparacaoCnaesViabilidadeService` que devolve incluídas, excluídas e inválidas, sem efeitos colaterais. Fica testado isolado.
 - `FluxoExpressoService::decidirSobLock` chama a comparação antes do enquadramento, só para `alteracao-atividade`. O resultado alimenta o enquadramento (que atividades passam pelo motor), a taxa (`TllCalculoService`) e o motivo de encaminhamento.
 - A indisponibilidade da SEFAZ usa um job com tentativas espaçadas dentro de 24 horas e, ao esgotar, o indeferimento pelo caminho existente de indeferimento automático.
 
 ## Minhas escolhas (não confirmadas com você)
 
-1. **Consulta atrás de interface com simulador.** Não há endpoint da SEFAZ para viabilidade por CNPJ no código nem no documento.
+1. **Consulta atrás de interface, sem simulador (decisão de 24/10).** Não há endpoint da SEFAZ para viabilidade por CNPJ no código nem no documento.
 2. **Portal mantém as intenções incluir/excluir.** O RF-01 vale para o pedido que chega sem intenção por CNAE, ou seja, o evento 244 da JUCEB. Isso substitui, só para o serviço de alteração, a decisão de 19/10 de reenquadrar todos os CNAEs sem comparar. Confirmar.
 3. **Viabilidade vigente mais recente** quando houver mais de uma para o CNPJ.
 4. **Código inválido fora do cálculo da taxa** até o analista corrigir; depois da correção a comparação e a taxa são refeitas.

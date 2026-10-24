@@ -24,6 +24,7 @@ use App\Services\Geo\SpatialRepository;
 use App\Services\Realty\PropertyRegistryLookup;
 use App\Services\Realty\PropertyRegistryResult;
 use App\Services\Realty\PropertyRegistryUnavailableException;
+use App\Services\Sefaz\SefazViabilidadeConsultaGateway;
 use Database\Seeders\DecisionTextSeeder;
 use Database\Seeders\PropertyTypeSeeder;
 use Database\Seeders\RiskTriggerSeeder;
@@ -33,6 +34,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
 use Tests\Support\Geo\FakeSpatialRepository;
 use Tests\Support\SeedsTratamentoPlanilha;
+use Tests\Support\Sefaz\FakeSefazViabilidadeConsultaGateway;
 use Tests\TestCase;
 
 /**
@@ -46,6 +48,8 @@ class FluxoExpressoAlteracaoComparacaoTest extends TestCase
     use SeedsTratamentoPlanilha;
 
     private const CNPJ = '12345678000190';
+
+    private FakeSefazViabilidadeConsultaGateway $sefaz;
 
     protected function setUp(): void
     {
@@ -64,11 +68,15 @@ class FluxoExpressoAlteracaoComparacaoTest extends TestCase
      */
     private function viabilidadeNaSefaz(?array $cnaes, string $numero = 'VIA-2026-77'): void
     {
-        config([
-            'viabiliza.sefaz.consulta.ativa' => true,
-            'viabiliza.sefaz.consulta.driver' => 'simulado',
-            'viabiliza.sefaz.consulta.simulador.viabilidades' => $cnaes === null ? [] : [self::CNPJ => ['numero' => $numero, 'cnaes' => $cnaes]],
-        ]);
+        config(['viabiliza.sefaz.consulta.ativa' => true]);
+
+        $this->sefaz = new FakeSefazViabilidadeConsultaGateway;
+
+        if ($cnaes !== null) {
+            $this->sefaz->com(self::CNPJ, $numero, $cnaes);
+        }
+
+        $this->app->instance(SefazViabilidadeConsultaGateway::class, $this->sefaz);
     }
 
     private function comoAlteracaoDaJunta(ViabilityRequest $request, ?Company $empresa = null): ViabilityRequest
@@ -324,7 +332,7 @@ class FluxoExpressoAlteracaoComparacaoTest extends TestCase
 
     private function sefazForaDoAr(): void
     {
-        config(['viabiliza.sefaz.consulta.simulador.indisponiveis' => [self::CNPJ]]);
+        $this->sefaz->foraDoAr(self::CNPJ);
     }
 
     public function test_sefaz_fora_do_ar_dentro_da_janela_deixa_o_processo_aguardando(): void
@@ -352,7 +360,7 @@ class FluxoExpressoAlteracaoComparacaoTest extends TestCase
         $request = $this->comoAlteracaoDaJunta($this->setupDeferivel('4712100'));
         app(FluxoExpressoService::class)->decide($request);
 
-        config(['viabiliza.sefaz.consulta.simulador.indisponiveis' => []]);
+        $this->sefaz->voltou(self::CNPJ);
         $resultado = app(FluxoExpressoService::class)->decide($request->fresh());
 
         $this->assertSame(ViabilityRequestStatus::Deferida, $resultado->status);

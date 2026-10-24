@@ -190,16 +190,11 @@ return [
     // Consulta da viabilidade vinculada ao CNPJ na SEFAZ (alteração de atividade).
     // `ativa` liga a comparação dos CNAEs da JUCEB (evento 244); desligada, o pedido
     // é enquadrado inteiro como antes.
-    // `indisponivel` até o endpoint existir; `simulado` serve a homologação com
-    // os CNPJs de VIABILIZA_SEFAZ_SIMULADOR (JSON: {"viabilidades": {cnpj: {numero, cnaes}}, "indisponiveis": [cnpj]}).
+    // A consulta só funciona quando existir um provider real da SEFAZ no binding de
+    // SefazViabilidadeConsultaGateway; até lá ela degrada como indisponível.
     'sefaz' => [
         'consulta' => [
             'ativa' => (bool) env('VIABILIZA_SEFAZ_CONSULTA_ATIVA', false),
-            'driver' => env('VIABILIZA_SEFAZ_CONSULTA_DRIVER', 'indisponivel'),
-            'simulador' => [
-                'viabilidades' => (array) (json_decode((string) env('VIABILIZA_SEFAZ_SIMULADOR', '{}'), true)['viabilidades'] ?? []),
-                'indisponiveis' => (array) (json_decode((string) env('VIABILIZA_SEFAZ_SIMULADOR', '{}'), true)['indisponiveis'] ?? []),
-            ],
         ],
     ],
 
