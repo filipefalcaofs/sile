@@ -3,10 +3,14 @@
 namespace Tests\Feature\Renovacao;
 
 use App\Enums\CompanyLinkRole;
+use App\Enums\TvlKind;
+use App\Enums\ViabilityRequestStatus;
 use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\Procuration;
 use App\Models\User;
+use App\Models\ViabilityDecision;
+use App\Models\ViabilityRequest;
 use App\Services\Cnpj\CnpjData;
 use App\Services\Cnpj\CnpjLookup;
 use App\Services\Cnpj\CnpjLookupException;
@@ -52,10 +56,9 @@ class RenovacaoLegadaPortalTest extends TestCase
         });
     }
 
-    public function test_index_traz_provisorias_legadas_das_empresas_do_cidadao(): void
+    public function test_busca_por_cnpj_traz_provisorias_legadas_com_a_elegibilidade(): void
     {
         $cidadao = $this->portalUser();
-        $this->empresaDe($cidadao);
         $this->mockClient(function (MockInterface $client): void {
             $client->shouldReceive('provisoriasPorCnpj')->with(self::CNPJ)
                 ->andReturn([$this->resumo(1111111), $this->resumo(2222222)]);
@@ -64,41 +67,46 @@ class RenovacaoLegadaPortalTest extends TestCase
         });
 
         $this->actingAs($cidadao)
-            ->get('/portal/renovacao')
+            ->get('/portal/renovacao?busca='.self::CNPJ)
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('portal/renovacao/index')
-                ->has('tvls', 0)
-                ->has('legado', 2)
-                ->where('legado.0.numero', 1111111)
-                ->where('legado.0.elegivel', true)
-                ->where('legado.1.elegivel', false)
-                ->where('legado.1.motivo', 'Esta viabilidade já foi renovada.')
-                ->where('legado_indisponivel', false)
+                ->where('busca', self::CNPJ)
+                ->has('itens', 2)
+                ->where('itens.0.origem', 'legado')
+                ->where('itens.0.numero', '1111111')
+                ->where('itens.0.elegivel', true)
+                ->where('itens.0.url', '/portal/renovacao/legado/'.self::CNPJ.'/1111111')
+                ->where('itens.1.elegivel', false)
+                ->where('itens.1.motivo', 'Esta viabilidade já foi renovada.')
+                ->where('itens.1.url', null)
+                ->where('indisponivel', false)
             );
     }
 
-    public function test_index_traz_as_empresas_vinculadas_para_a_consulta_por_numero(): void
+    public function test_busca_por_cnpj_de_empresa_de_outro_usuario_traz_as_provisorias(): void
     {
         $cidadao = $this->portalUser();
-        $empresa = $this->empresaDe($cidadao);
+        $this->empresaDe($cidadao);
         $this->empresaDe($this->portalUser(), self::OUTRO_CNPJ);
         $this->mockClient(function (MockInterface $client): void {
-            $client->shouldReceive('provisoriasPorCnpj')->with(self::CNPJ)->andReturn([]);
+            $client->shouldReceive('provisoriasPorCnpj')->with(self::OUTRO_CNPJ)->andReturn([$this->resumo(1111111)]);
+            $client->shouldReceive('tvlPorNumero')->with(1111111)->andReturn($this->detalhe(1111111, titular: self::OUTRO_CNPJ));
+            $client->shouldNotReceive('provisoriasPorCnpj')->with(self::CNPJ);
         });
 
         $this->actingAs($cidadao)
-            ->get('/portal/renovacao')
+            ->get('/portal/renovacao?busca=99.888.777/0001-66')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
-                ->has('empresas', 1)
-                ->where('empresas.0.id', $empresa->id)
-                ->where('empresas.0.nome', $empresa->legal_name)
-                ->where('empresas.0.cnpj', $empresa->formatted_cnpj)
+                ->has('itens', 1)
+                ->where('itens.0.numero', '1111111')
+                ->where('itens.0.cnpj', '99.888.777/0001-66')
+                ->where('itens.0.elegivel', true)
             );
     }
 
-    public function test_index_com_api_legada_fora_do_ar_mantem_a_lista_do_viabiliza(): void
+    public function test_busca_com_api_legada_fora_do_ar_mantem_a_lista_do_viabiliza(): void
     {
         config([
             'viabiliza.integrations.legado_api.base_url' => 'https://legado.test/api',
@@ -106,20 +114,21 @@ class RenovacaoLegadaPortalTest extends TestCase
         ]);
         Http::fake(['legado.test/*' => Http::response([], 503)]);
         $cidadao = $this->portalUser();
-        $this->empresaDe($cidadao);
+        $local = $this->tvlLocal('TVL-2026-000777');
 
         $this->actingAs($cidadao)
-            ->get('/portal/renovacao')
+            ->get('/portal/renovacao?busca='.self::CNPJ)
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('portal/renovacao/index')
-                ->has('tvls', 0)
-                ->has('legado', 0)
-                ->where('legado_indisponivel', true)
+                ->has('itens', 1)
+                ->where('itens.0.origem', 'viabiliza')
+                ->where('itens.0.id', $local->id)
+                ->where('indisponivel', true)
             );
     }
 
-    public function test_procurador_ve_provisorias_das_empresas_do_outorgante(): void
+    public function test_procurador_atuando_busca_provisorias_pelo_cnpj(): void
     {
         $outorgante = $this->portalUser();
         $procurador = $this->portalUser();
@@ -137,11 +146,11 @@ class RenovacaoLegadaPortalTest extends TestCase
 
         $this->actingAs($procurador)
             ->withSession(['acting_procuration_id' => $procuracao->id])
-            ->get('/portal/renovacao')
+            ->get('/portal/renovacao?busca='.self::CNPJ)
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
-                ->has('legado', 1)
-                ->where('legado.0.numero', 1111111)
+                ->has('itens', 1)
+                ->where('itens.0.numero', '1111111')
             );
     }
 
@@ -212,7 +221,7 @@ class RenovacaoLegadaPortalTest extends TestCase
         });
 
         $this->actingAs($cidadao)
-            ->get("/portal/renovacao/legado/{$empresa->id}/1234567")
+            ->get('/portal/renovacao/legado/'.self::CNPJ.'/1234567')
             ->assertRedirect('/portal/renovacao')
             ->assertSessionHas('error', 'Esta viabilidade já foi renovada.');
     }
@@ -230,13 +239,13 @@ class RenovacaoLegadaPortalTest extends TestCase
         $generica = 'Esta viabilidade não pôde ser carregada para esta empresa.';
 
         $this->actingAs($cidadao)
-            ->get("/portal/renovacao/legado/{$empresa->id}/1234567")
+            ->get('/portal/renovacao/legado/'.self::CNPJ.'/1234567')
             ->assertRedirect('/portal/renovacao')
             ->assertSessionHas('error', $generica);
         $mensagemOutroTitular = session('error');
 
         $this->actingAs($cidadao)
-            ->get("/portal/renovacao/legado/{$empresa->id}/7654321")
+            ->get('/portal/renovacao/legado/'.self::CNPJ.'/7654321')
             ->assertRedirect('/portal/renovacao')
             ->assertSessionHas('error', $generica);
         $mensagemInexistente = session('error');
@@ -254,7 +263,7 @@ class RenovacaoLegadaPortalTest extends TestCase
         });
 
         $this->actingAs($cidadao)
-            ->get("/portal/renovacao/legado/{$empresa->id}/1234567")
+            ->get('/portal/renovacao/legado/'.self::CNPJ.'/1234567')
             ->assertRedirect('/portal/renovacao')
             ->assertSessionHas('error', 'Não foi possível conferir o CNPJ agora. Tente novamente em instantes.');
     }
@@ -268,19 +277,26 @@ class RenovacaoLegadaPortalTest extends TestCase
         });
 
         $this->actingAs($cidadao)
-            ->get("/portal/renovacao/legado/{$empresa->id}/1234567")
+            ->get('/portal/renovacao/legado/'.self::CNPJ.'/1234567')
             ->assertRedirect('/portal/renovacao')
             ->assertSessionHas('error', 'O serviço de consulta de viabilidades anteriores está indisponível. Tente novamente em instantes.');
     }
 
-    public function test_show_de_empresa_nao_vinculada_e_proibido(): void
+    public function test_show_de_empresa_nao_vinculada_abre_o_assistente(): void
     {
         $cidadao = $this->portalUser();
-        $alheia = Company::factory()->create(['cnpj' => self::CNPJ]);
+        Company::factory()->create(['cnpj' => self::CNPJ]);
+        $this->mockClient(function (MockInterface $client): void {
+            $client->shouldReceive('tvlPorNumero')->with(1234567)->andReturn($this->detalhe(1234567));
+        });
 
         $this->actingAs($cidadao)
-            ->get("/portal/renovacao/legado/{$alheia->id}/1234567")
-            ->assertForbidden();
+            ->get('/portal/renovacao/legado/'.self::CNPJ.'/1234567')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('portal/renovacao/wizard')
+                ->where('origem.cnpj_digitos', self::CNPJ)
+            );
     }
 
     public function test_show_de_tvl_elegivel_renderiza_o_wizard_com_origem_legada(): void
@@ -292,18 +308,19 @@ class RenovacaoLegadaPortalTest extends TestCase
         });
 
         $this->actingAs($cidadao)
-            ->get("/portal/renovacao/legado/{$empresa->id}/1234567")
+            ->get('/portal/renovacao/legado/'.self::CNPJ.'/1234567')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('portal/renovacao/wizard')
                 ->where('origem.legado', true)
                 ->where('origem.numero', 1234567)
-                ->where('origem.empresa_id', $empresa->id)
+                ->where('origem.cnpj_digitos', self::CNPJ)
+                ->where('origem.cnpj', '11.222.333/0001-81')
                 ->where('origem.endereco', 'RUA DA ENGOMADEIRA, 508, 41200000')
                 ->where('origem.validade', '2026-12-31')
                 ->where('origem.atividades.0', self::CODIGO_CNAE.' Padaria')
                 ->has('declaracoes')
-                ->where('contato.email', $empresa->email)
+                ->where('contato.email', $cidadao->email)
             );
     }
 
@@ -318,7 +335,7 @@ class RenovacaoLegadaPortalTest extends TestCase
         });
 
         $this->actingAs($cidadao)
-            ->get("/portal/renovacao/legado/{$empresa->id}/1234567")
+            ->get('/portal/renovacao/legado/'.self::CNPJ.'/1234567')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->where('origem.endereco', 'Rua do Cadastro, 77, 40000111')
@@ -338,7 +355,7 @@ class RenovacaoLegadaPortalTest extends TestCase
         });
 
         $this->actingAs($cidadao)
-            ->get("/portal/renovacao/legado/{$empresa->id}/1234567")
+            ->get('/portal/renovacao/legado/'.self::CNPJ.'/1234567')
             ->assertRedirect('/portal/renovacao')
             ->assertSessionHas('error', ResolvedorEnderecoImovel::M_INDISPONIVEL);
     }
@@ -354,7 +371,7 @@ class RenovacaoLegadaPortalTest extends TestCase
         });
 
         $this->actingAs($cidadao)
-            ->get("/portal/renovacao/legado/{$empresa->id}/1234567")
+            ->get('/portal/renovacao/legado/'.self::CNPJ.'/1234567')
             ->assertRedirect('/portal/renovacao')
             ->assertSessionHas('error', ResolvedorEnderecoImovel::M_NAO_ENCONTRADA);
     }
@@ -371,7 +388,7 @@ class RenovacaoLegadaPortalTest extends TestCase
         });
 
         $this->actingAs($cidadao)
-            ->get("/portal/renovacao/legado/{$empresa->id}/1234567")
+            ->get('/portal/renovacao/legado/'.self::CNPJ.'/1234567')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page->where('origem.endereco', 'Rua do Cadastro, 77, 40000111'));
 
@@ -390,7 +407,7 @@ class RenovacaoLegadaPortalTest extends TestCase
         });
 
         $this->actingAs($cidadao)
-            ->get("/portal/renovacao/legado/{$empresa->id}/1234567")
+            ->get('/portal/renovacao/legado/'.self::CNPJ.'/1234567')
             ->assertRedirect('/portal/renovacao')
             ->assertSessionHas('error', 'Esta viabilidade não pôde ser carregada para esta empresa.');
 
@@ -447,13 +464,13 @@ class RenovacaoLegadaPortalTest extends TestCase
             ->assertJsonPath('itens.0.numero', 1234567);
     }
 
-    public function test_procurador_atuando_nao_usa_a_propria_empresa_em_consultar_nem_show(): void
+    public function test_procurador_atuando_nao_consulta_com_a_propria_empresa_e_show_exige_o_cnpj_da_tvl(): void
     {
         [$procurador, $outorgante, $procuracao] = $this->procuracao();
         $this->empresaDe($outorgante);
         $propria = $this->empresaDe($procurador, self::OUTRO_CNPJ);
         $this->mockClient(function (MockInterface $client): void {
-            $client->shouldNotReceive('tvlPorNumero');
+            $client->shouldReceive('tvlPorNumero')->with(1234567)->andReturn($this->detalhe(1234567));
         });
 
         $this->actingAs($procurador)
@@ -466,17 +483,18 @@ class RenovacaoLegadaPortalTest extends TestCase
 
         $this->actingAs($procurador)
             ->withSession(['acting_procuration_id' => $procuracao->id])
-            ->get("/portal/renovacao/legado/{$propria->id}/1234567")
-            ->assertForbidden();
+            ->get('/portal/renovacao/legado/'.self::OUTRO_CNPJ.'/1234567')
+            ->assertRedirect('/portal/renovacao')
+            ->assertSessionHas('error', 'Esta viabilidade não pôde ser carregada para esta empresa.');
     }
 
-    public function test_vinculo_encerrado_nao_autoriza_consultar_nem_show(): void
+    public function test_vinculo_encerrado_nao_autoriza_consultar_mas_o_assistente_abre(): void
     {
         $cidadao = $this->portalUser();
         $empresa = $this->empresaDe($cidadao);
         $empresa->links()->update(['ended_at' => now()->subDay()]);
         $this->mockClient(function (MockInterface $client): void {
-            $client->shouldNotReceive('tvlPorNumero');
+            $client->shouldReceive('tvlPorNumero')->with(1234567)->once()->andReturn($this->detalhe(1234567));
         });
 
         $this->actingAs($cidadao)
@@ -487,25 +505,36 @@ class RenovacaoLegadaPortalTest extends TestCase
             ->assertForbidden();
 
         $this->actingAs($cidadao)
-            ->get("/portal/renovacao/legado/{$empresa->id}/1234567")
-            ->assertForbidden();
+            ->get('/portal/renovacao/legado/'.self::CNPJ.'/1234567')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->component('portal/renovacao/wizard'));
     }
 
-    public function test_show_nao_enumera_ids_de_empresa(): void
+    public function test_show_nao_aceita_id_de_empresa_nem_cnpj_diferente_do_gravado_na_tvl(): void
     {
         $cidadao = $this->portalUser();
         $alheia = Company::factory()->create(['cnpj' => self::CNPJ]);
         $this->mockClient(function (MockInterface $client): void {
-            $client->shouldNotReceive('tvlPorNumero');
+            $client->shouldReceive('tvlPorNumero')->with(1234567)->once()->andReturn($this->detalhe(1234567));
+            $client->shouldReceive('tvlPorNumero')->with(7654321)->once()->andReturn(null);
         });
 
         $this->actingAs($cidadao)
             ->get("/portal/renovacao/legado/{$alheia->id}/1234567")
-            ->assertForbidden();
+            ->assertNotFound();
 
         $this->actingAs($cidadao)
-            ->get('/portal/renovacao/legado/999999/1234567')
-            ->assertForbidden();
+            ->get('/portal/renovacao/legado/'.self::OUTRO_CNPJ.'/1234567')
+            ->assertRedirect('/portal/renovacao')
+            ->assertSessionHas('error', 'Esta viabilidade não pôde ser carregada para esta empresa.');
+        $mensagemOutroCnpj = session('error');
+
+        $this->actingAs($cidadao)
+            ->get('/portal/renovacao/legado/'.self::OUTRO_CNPJ.'/7654321')
+            ->assertRedirect('/portal/renovacao')
+            ->assertSessionHas('error', 'Esta viabilidade não pôde ser carregada para esta empresa.');
+
+        $this->assertSame(session('error'), $mensagemOutroCnpj);
     }
 
     /**
@@ -534,6 +563,22 @@ class RenovacaoLegadaPortalTest extends TestCase
                 endereco: null,
             ));
         });
+    }
+
+    private function tvlLocal(string $numero): ViabilityRequest
+    {
+        $empresa = Company::factory()->create(['cnpj' => self::CNPJ, 'legal_name' => self::RAZAO]);
+        $origem = ViabilityRequest::factory()->withPrimaryCnae()->create(['company_id' => $empresa->id]);
+        $origem->forceFill(['status' => ViabilityRequestStatus::Deferida, 'protocol_number' => 'VIA-2025-'.$origem->id, 'protocoled_at' => now()->subYear()])->save();
+        ViabilityDecision::factory()->create([
+            'viability_request_id' => $origem->id,
+            'tvl_kind' => TvlKind::Provisoria,
+            'tvl_product_number' => $numero,
+            'tvl_valid_until' => now()->addMonths(3)->toDateString(),
+            'decided_at' => now()->subMonths(6),
+        ]);
+
+        return $origem->refresh();
     }
 
     private function portalUser(): User

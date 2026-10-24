@@ -27,7 +27,7 @@ class RenovacaoPortalTest extends TestCase
         $this->seed(RolesAndPermissionsSeeder::class);
     }
 
-    public function test_lista_so_os_tvls_das_empresas_do_cidadao(): void
+    public function test_busca_pelo_numero_traz_tvl_de_qualquer_empresa_com_a_elegibilidade(): void
     {
         $cidadao = $this->portalUser();
         $empresa = $this->empresaDe($cidadao);
@@ -36,19 +36,34 @@ class RenovacaoPortalTest extends TestCase
         $alheio = $this->tvl(Company::factory()->create(), TvlKind::Provisoria);
 
         $this->actingAs($cidadao)
-            ->get('/portal/renovacao')
+            ->get('/portal/renovacao?busca=TVL-'.$elegivel->id)
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('portal/renovacao/index')
-                ->has('tvls', 2)
-                ->where('tvls.0.id', $elegivel->id)
-                ->where('tvls.0.elegivel', true)
-                ->where('tvls.1.id', $definitivo->id)
-                ->where('tvls.1.elegivel', false)
-                ->where('tvls.1.motivo', 'Viabilidade definitiva não pode ser renovada.')
+                ->has('itens', 1)
+                ->where('itens.0.origem', 'viabiliza')
+                ->where('itens.0.id', $elegivel->id)
+                ->where('itens.0.elegivel', true)
+                ->where('itens.0.url', '/portal/renovacao/'.$elegivel->id)
             );
 
-        $this->assertNotSame($alheio->company_id, $empresa->id);
+        $this->actingAs($cidadao)
+            ->get('/portal/renovacao?busca=TVL-'.$definitivo->id)
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('itens', 1)
+                ->where('itens.0.id', $definitivo->id)
+                ->where('itens.0.elegivel', false)
+                ->where('itens.0.motivo', 'Viabilidade definitiva não pode ser renovada.')
+                ->where('itens.0.url', null)
+            );
+
+        $this->actingAs($cidadao)
+            ->get('/portal/renovacao?busca=TVL-'.$alheio->id)
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('itens', 1)
+                ->where('itens.0.id', $alheio->id)
+                ->where('itens.0.elegivel', true)
+            );
     }
 
     public function test_wizard_de_tvl_elegivel_traz_declaracoes(): void
@@ -70,7 +85,7 @@ class RenovacaoPortalTest extends TestCase
                 ->component('portal/renovacao/wizard')
                 ->where('origem.id', $origem->id)
                 ->has('declaracoes', 1)
-                ->where('contato.email', $empresa->email)
+                ->where('contato.email', $cidadao->email)
             );
     }
 
@@ -110,14 +125,18 @@ class RenovacaoPortalTest extends TestCase
         $this->assertSame(ViabilityRequestStatus::EmAnalise, $renovacao->status);
     }
 
-    public function test_cidadao_nao_renova_tvl_de_outra_empresa(): void
+    public function test_cidadao_abre_o_assistente_de_tvl_de_outra_empresa(): void
     {
         $cidadao = $this->portalUser();
         $origem = $this->tvl(Company::factory()->create(), TvlKind::Provisoria);
 
         $this->actingAs($cidadao)
             ->get("/portal/renovacao/{$origem->id}")
-            ->assertForbidden();
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('portal/renovacao/wizard')
+                ->where('origem.id', $origem->id)
+            );
     }
 
     private function portalUser(): User
