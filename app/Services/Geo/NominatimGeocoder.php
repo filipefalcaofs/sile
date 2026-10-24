@@ -73,7 +73,7 @@ class NominatimGeocoder implements Geocoder
                 throw new AddressNotFoundException($address);
             }
 
-            return GeocodeResult::fromNominatim($payload[0])->toArray();
+            return GeocodeResult::fromNominatim($payload[0])->toCache();
         };
 
         return GeocodeResult::fromCached($this->lembrar($key, $ttl, $buscar));
@@ -97,7 +97,8 @@ class NominatimGeocoder implements Geocoder
             $payload = Cache::remember($key, $ttl, $buscar);
         }
 
-        if (! is_array($payload)) {
+        // Entrada de antes do tipo do endereço (sem a chave address_type): refaz.
+        if (! is_array($payload) || ! array_key_exists('address_type', $payload)) {
             Cache::forget($key);
             $payload = Cache::remember($key, $ttl, $buscar);
         }

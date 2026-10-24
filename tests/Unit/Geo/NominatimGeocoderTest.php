@@ -163,6 +163,63 @@ class NominatimGeocoderTest extends TestCase
         Http::assertSentCount(2);
     }
 
+    public function test_guarda_o_tipo_do_endereco_devolvido_pelo_nominatim(): void
+    {
+        $fixture = $this->nominatimFixture();
+        $fixture[0]['addresstype'] = 'road';
+        Http::fake(['*/search*' => Http::response($fixture, 200)]);
+
+        $result = app(Geocoder::class)->geocode('Praça da Sé, Salvador');
+
+        $this->assertSame('road', $result->addressType);
+        $this->assertTrue($result->nivelDeLogradouroOuMaior());
+    }
+
+    public function test_tipo_do_endereco_sobrevive_ao_cache(): void
+    {
+        $fixture = $this->nominatimFixture();
+        $fixture[0]['addresstype'] = 'building';
+        Http::fake(['*/search*' => Http::response($fixture, 200)]);
+
+        $geocoder = app(Geocoder::class);
+        $geocoder->geocode('Praça da Sé, Salvador');
+        $doCache = $geocoder->geocode('Praça da Sé, Salvador');
+
+        Http::assertSentCount(1);
+        $this->assertSame('building', $doCache->addressType);
+        $this->assertFalse($doCache->nivelDeLogradouroOuMaior());
+    }
+
+    public function test_to_array_do_endpoint_nao_expoe_o_tipo(): void
+    {
+        $fixture = $this->nominatimFixture();
+        $fixture[0]['addresstype'] = 'road';
+        Http::fake(['*/search*' => Http::response($fixture, 200)]);
+
+        $array = app(Geocoder::class)->geocode('Praça da Sé, Salvador')->toArray();
+
+        $this->assertArrayNotHasKey('address_type', $array);
+    }
+
+    public function test_cache_antigo_sem_tipo_e_descartado_e_refeito(): void
+    {
+        $fixture = $this->nominatimFixture();
+        $fixture[0]['addresstype'] = 'road';
+        Http::fake(['*/search*' => Http::response($fixture, 200)]);
+        Cache::put('viabiliza.geocoding.'.sha1('Praça da Sé, Salvador'), [
+            'latitude' => -12.97,
+            'longitude' => -38.51,
+            'display_name' => 'antigo',
+            'confidence' => 0.5,
+            'address' => ['city' => 'Salvador'],
+        ], 3600);
+
+        $result = app(Geocoder::class)->geocode('Praça da Sé, Salvador');
+
+        Http::assertSentCount(1);
+        $this->assertSame('road', $result->addressType);
+    }
+
     public function test_sucesso_e_cacheado(): void
     {
         Http::fake(['*/search*' => Http::response($this->nominatimFixture(), 200)]);

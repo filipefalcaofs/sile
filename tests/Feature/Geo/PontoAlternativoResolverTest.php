@@ -32,9 +32,9 @@ class PontoAlternativoResolverTest extends TestCase
         return new EnderecamentoHit($status);
     }
 
-    private function geocode(float $lat, float $lng): GeocodeResult
+    private function geocode(float $lat, float $lng, ?string $tipo = null): GeocodeResult
     {
-        return new GeocodeResult($lat, $lng, 'Av. Heitor Dias, Salvador', 0.5, []);
+        return new GeocodeResult($lat, $lng, 'Av. Heitor Dias, Salvador', 0.5, [], $tipo);
     }
 
     /**
@@ -113,6 +113,45 @@ class PontoAlternativoResolverTest extends TestCase
         $candidatos = $resolver->candidatos('1078739', '2075', '98', 'Avenida Heitor Dias, Salvador');
 
         $this->assertSame([PropertyLocationSource::Semap], array_map(static fn ($c) => $c->fonte, $candidatos));
+    }
+
+    public function test_geocodificacao_de_nivel_de_rua_nao_confirma_o_ponto(): void
+    {
+        $resolver = $this->resolver($this->semResultado(), $this->semResultado(), $this->geocode(-12.9687, -38.4822, 'road'));
+
+        $this->assertSame([], $resolver->candidatos('1078739', '2075', '98', 'Avenida Heitor Dias, Salvador'));
+    }
+
+    public function test_geocodificacao_de_bairro_ou_maior_tambem_nao_confirma(): void
+    {
+        foreach (['suburb', 'neighbourhood', 'city_district', 'city'] as $tipo) {
+            $resolver = $this->resolver($this->semResultado(), $this->semResultado(), $this->geocode(-12.9687, -38.4822, $tipo));
+
+            $this->assertSame([], $resolver->candidatos('1078739', '2075', '98', 'Avenida Heitor Dias, Salvador'), $tipo);
+        }
+    }
+
+    public function test_geocodificacao_de_casa_ou_predio_continua_valendo(): void
+    {
+        foreach (['house', 'building'] as $tipo) {
+            $resolver = $this->resolver($this->semResultado(), $this->semResultado(), $this->geocode(-12.9687, -38.4822, $tipo));
+
+            $candidatos = $resolver->candidatos('1078739', '2075', '98', 'Avenida Heitor Dias, Salvador');
+
+            $this->assertSame([PropertyLocationSource::Geocodificacao], array_map(static fn ($c) => $c->fonte, $candidatos), $tipo);
+        }
+    }
+
+    public function test_rua_no_nominatim_nao_atrapalha_endereçamento_nem_semap(): void
+    {
+        $resolver = $this->resolver($this->lote(-12.9710, -38.4750), $this->lote(-12.9720, -38.4760), $this->geocode(-12.9730, -38.4770, 'road'));
+
+        $candidatos = $resolver->candidatos('1078739', '2075', '98', 'Avenida Heitor Dias, Salvador');
+
+        $this->assertSame(
+            [PropertyLocationSource::EnderecamentoSedur, PropertyLocationSource::Semap],
+            array_map(static fn ($c) => $c->fonte, $candidatos),
+        );
     }
 
     public function test_nominatim_fora_de_salvador_e_descartado(): void

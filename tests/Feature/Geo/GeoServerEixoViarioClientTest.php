@@ -144,7 +144,20 @@ class GeoServerEixoViarioClientTest extends TestCase
         Http::assertNothingSent();
     }
 
-    public function test_rua_sem_feicao_na_camada_viaria_tenta_a_camada_de_logradouros(): void
+    public function test_consulta_primeiro_a_camada_de_logradouros_e_para_quando_acha_a_rua(): void
+    {
+        Http::fake(['*' => Http::response($this->colecao([
+            ['type' => 'LineString', 'coordinates' => [[-38.50, -12.97], [-38.49, -12.97]]],
+        ]), 200)]);
+
+        $hit = app(GeoServerEixoViarioClient::class)->consultar('2075');
+
+        $this->assertSame(EixoViarioHit::IDENTIFICADO, $hit->status);
+        Http::assertSentCount(1);
+        Http::assertSent(fn (Request $request): bool => str_contains(urldecode($request->url()), 'logradouros:VM_LOGRADOURO'));
+    }
+
+    public function test_rua_fora_dos_logradouros_tenta_a_camada_viaria(): void
     {
         Http::fakeSequence()
             ->push($this->colecao([]), 200)
@@ -157,7 +170,20 @@ class GeoServerEixoViarioClientTest extends TestCase
         $this->assertSame(EixoViarioHit::IDENTIFICADO, $hit->status);
         $this->assertCount(1, $hit->linhas);
         Http::assertSentCount(2);
-        Http::assertSent(fn (Request $request): bool => str_contains(urldecode($request->url()), 'logradouros:VM_LOGRADOURO'));
+        $urls = Http::recorded()->map(fn (array $par): string => urldecode($par[0]->url()))->values();
+        $this->assertStringContainsString('logradouros:VM_LOGRADOURO', $urls[0]);
+        $this->assertStringContainsString('louos_classificacao_viaria:VM_L_CLASSIF_VIARIA', $urls[1]);
+    }
+
+    public function test_camada_viaria_de_poligonos_nao_vira_eixo(): void
+    {
+        Http::fakeSequence()
+            ->push($this->colecao([]), 200)
+            ->push($this->colecao([
+                ['type' => 'MultiPolygon', 'coordinates' => [[[[-38.50, -12.97], [-38.49, -12.97], [-38.49, -12.96], [-38.50, -12.97]]]]],
+            ]), 200);
+
+        $this->assertSame(EixoViarioHit::NAO_ENCONTRADO, app(GeoServerEixoViarioClient::class)->consultar('2075')->status);
     }
 
     public function test_rua_sem_feicao_nas_duas_camadas_e_nao_encontrada(): void
@@ -168,7 +194,7 @@ class GeoServerEixoViarioClientTest extends TestCase
         Http::assertSentCount(2);
     }
 
-    public function test_camada_de_logradouros_fora_do_ar_nao_derruba_a_primeira_resposta(): void
+    public function test_segunda_camada_fora_do_ar_nao_derruba_a_resposta_da_primeira(): void
     {
         Http::fakeSequence()
             ->push($this->colecao([]), 200)

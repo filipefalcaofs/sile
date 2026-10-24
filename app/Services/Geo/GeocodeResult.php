@@ -15,7 +15,18 @@ namespace App\Services\Geo;
 final readonly class GeocodeResult
 {
     /**
+     * Tipos de endereço do Nominatim (addresstype) que localizam a rua, o bairro
+     * ou algo maior, não o imóvel.
+     */
+    private const NIVEIS_SEM_LOTE = [
+        'road', 'neighbourhood', 'quarter', 'suburb', 'city_district', 'borough',
+        'city', 'town', 'village', 'hamlet', 'municipality', 'county',
+        'state_district', 'state', 'region', 'country',
+    ];
+
+    /**
      * @param  array<string, mixed>  $address
+     * @param  ?string  $addressType  addresstype do Nominatim (road, house, suburb...); não faz parte do JSON do endpoint
      */
     public function __construct(
         public float $latitude,
@@ -23,6 +34,7 @@ final readonly class GeocodeResult
         public string $displayName,
         public ?float $confidence,
         public array $address,
+        public ?string $addressType = null,
     ) {}
 
     /**
@@ -39,6 +51,7 @@ final readonly class GeocodeResult
             displayName: (string) ($payload['display_name'] ?? ''),
             confidence: isset($payload['importance']) ? (float) $payload['importance'] : null,
             address: (array) ($payload['address'] ?? []),
+            addressType: isset($payload['addresstype']) ? (string) $payload['addresstype'] : null,
         );
     }
 
@@ -57,6 +70,7 @@ final readonly class GeocodeResult
             displayName: (string) ($payload['display_name'] ?? ''),
             confidence: isset($payload['confidence']) ? (float) $payload['confidence'] : null,
             address: is_array($address) ? $address : [],
+            addressType: isset($payload['address_type']) ? (string) $payload['address_type'] : null,
         );
     }
 
@@ -74,6 +88,28 @@ final readonly class GeocodeResult
             'confidence' => $this->confidence,
             'address' => $this->address,
         ];
+    }
+
+    /**
+     * Array gravado no cache: o contrato do endpoint mais o tipo do endereço,
+     * que o endpoint não expõe. A chave address_type sempre existe (mesmo nula):
+     * entrada de cache sem ela é de antes do tipo e deve ser refeita.
+     *
+     * @return array<string, mixed>
+     */
+    public function toCache(): array
+    {
+        return $this->toArray() + ['address_type' => $this->addressType];
+    }
+
+    /**
+     * O Nominatim localizou a rua, o bairro ou algo maior (addresstype road,
+     * suburb, city...), não o imóvel: o ponto vale como "está nesta rua", sem
+     * dizer em qual trecho. Sem tipo conhecido, não se presume.
+     */
+    public function nivelDeLogradouroOuMaior(): bool
+    {
+        return $this->addressType !== null && in_array($this->addressType, self::NIVEIS_SEM_LOTE, true);
     }
 
     /**
