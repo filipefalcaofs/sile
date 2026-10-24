@@ -36,6 +36,8 @@ def nome_do_modelo() -> str:
 
 def aplicar_pesos(modelo, caminho: str) -> None:
     """Carrega os pesos do decodificador treinado sobre o modelo base."""
+    if not os.path.isfile(caminho):
+        raise FileNotFoundError(f"FOOTPRINT_IA_PESOS aponta para {caminho}, que não existe.")
     import torch
 
     estado = torch.load(caminho, map_location="cpu", weights_only=True)

@@ -23,6 +23,10 @@ RUN pip install --no-cache-dir torch torchvision --index-url "$TORCH_INDEX" \
 RUN python -c "from huggingface_hub import snapshot_download; import os; snapshot_download(os.environ['FOOTPRINT_IA_MODELO'])"
 
 COPY app.py ./
+# Decodificador treinado com os lotes do CODLOG (scripts/treino-ia). O arquivo
+# precisa estar em pesos/; para usar o SAM 2 original, apague a variável.
+COPY pesos/ /opt/pesos/
+ENV FOOTPRINT_IA_PESOS=/opt/pesos/decodificador-lote.pt
 
 EXPOSE 8080
 CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8080", "--workers", "1"]

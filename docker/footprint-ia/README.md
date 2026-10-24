@@ -2,9 +2,13 @@
 
 Serviço de inferência que o Viabiliza chama como último recurso para obter o
 polígono de um imóvel. Ele recebe um recorte da ortofoto da Prefeitura e o
-ponto do imóvel em pixels, e devolve o contorno da edificação que contém esse
-ponto. O georreferenciamento e o aceite (área, compacidade, borda, ponto
-contido) ficam no Laravel (`GerarPoligonoIaJob`).
+ponto do imóvel em pixels, e devolve o contorno que contém esse ponto e os
+candidatos das três máscaras do SAM 2.1. Com `FOOTPRINT_IA_PESOS`, o
+decodificador treinado com os lotes do CODLOG (`scripts/treino-ia`) substitui o
+original e o contorno passa a ser o do lote inteiro, com estacionamento e
+recuos. O georreferenciamento, o recorte crescente (60, 120 e 240 m) e o aceite
+(área, compacidade, borda, ponto contido, score mínimo) ficam no Laravel
+(`GerarPoligonoIaJob`, `AceiteMascaraIa`).
 
 ## Contrato
 
@@ -17,12 +21,28 @@ contido) ficam no Laravel (`GerarPoligonoIaJob`).
   A resposta é:
 
   ```json
-  {"status": "ok" | "sem_objeto", "anel": [[px, py], ...], "score": 0.93, "modelo": "sam2.1-hiera-small@cpu"}
+  {
+    "status": "ok" | "sem_objeto",
+    "anel": [[px, py], ...],
+    "score": 0.93,
+    "candidatos": [{"anel": [[px, py], ...], "score": 0.93, "encosta": false}, ...],
+    "modelo": "sam2.1-hiera-small+decodificador-lote@cpu"
+  }
   ```
 
-  O `score` é o IoU previsto pelo SAM. Ele não é uma confiança calibrada, e o
-  Viabiliza o guarda apenas como diagnóstico. Um ponto fora da imagem ou uma
-  imagem inválida devolvem 422.
+  `anel` e `score` são os do candidato de maior score. Cada candidato é o
+  contorno de uma das três máscaras que contém o ponto; `encosta` diz se o
+  contorno chega a 2 px da borda (lote maior que o recorte). O `score` é o IoU
+  previsto pelo modelo. Um ponto fora da imagem ou uma imagem inválida devolvem
+  422.
+
+## Pesos treinados
+
+`FOOTPRINT_IA_PESOS` aponta para o arquivo de pesos do decodificador, carregado
+com `torch.load(weights_only=True)`. Se a variável aponta para um arquivo que
+não existe, o serviço falha na primeira segmentação com mensagem clara, em vez
+de usar o modelo original sem avisar. O `Dockerfile` copia `pesos/` para
+`/opt/pesos/` e usa `decodificador-lote.pt`.
 
 ## Build e execução
 

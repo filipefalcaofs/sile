@@ -106,3 +106,10 @@ def test_nome_do_modelo_identifica_os_pesos(monkeypatch):
     monkeypatch.setattr(servico, "PESOS", "/opt/pesos/decodificador_20261024_s1.pt")
 
     assert "decodificador_20261024_s1" in servico.nome_do_modelo()
+
+
+def test_pesos_configurados_e_ausentes_falham_com_mensagem_clara(tmp_path):
+    import app as servico
+
+    with pytest.raises(FileNotFoundError, match="FOOTPRINT_IA_PESOS"):
+        servico.aplicar_pesos(object(), str(tmp_path / "nao-existe.pt"))

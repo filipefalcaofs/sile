@@ -12,8 +12,8 @@ Uso (no ambiente do serviço, com shapely):
 """
 
 import argparse
-import io
 import json
+import math
 import os
 import resource
 import statistics
@@ -21,8 +21,7 @@ import sys
 import time
 from pathlib import Path
 
-from PIL import Image
-from shapely.geometry import Polygon, shape
+from shapely.geometry import Point, shape
 
 AQUI = Path(__file__).resolve().parent
 sys.path.insert(0, str(AQUI))
@@ -94,10 +93,14 @@ def main() -> None:
         poligono = _poligono(r["anel"], r["caixa"])
         m = metricas.comparar(poligono, lote["poligono"])
         forma = shape(poligono) if poligono else None
+        lat, lng = lote["ponto"]
+        em_m = geo.em_metros(forma, lat) if forma is not None else None
         linhas.append({
             "lote_id": lote["id"], "bairro": lote["bairro"], "lado_m": r["lado_m"], "score": r["score"],
             "tempos_s": r["tempos_s"], "vertices": len(r["anel"] or []),
             "valido": bool(forma is not None and forma.is_valid), "vazio": forma is None or forma.is_empty,
+            "contem_ponto": bool(forma is not None and forma.buffer(0).contains(Point(lng, lat))),
+            "compacidade": round(4 * math.pi * em_m.area / em_m.length ** 2, 4) if em_m is not None and em_m.length else 0.0,
             "dice": round(2 * m["intersecao_m2"] / (m["area_ref_m2"] + m["area_ia_m2"]), 4) if m["area_ia_m2"] else 0.0,
             "poligono_ia": poligono, **{k: v for k, v in m.items() if k != "aceite_atual"},
         })
