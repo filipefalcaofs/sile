@@ -8,6 +8,8 @@ import Badge from '@/components/ui/badge';
 import Button from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import EmptyState from '@/components/ui/empty-state';
+import ConsultaLegadoModal, { type EmpresaVinculada } from '@/components/renovacao/consulta-legado-modal';
+import LegadoItemCard, { type LegadoItem } from '@/components/renovacao/legado-item';
 import PortalLayout from '@/layouts/portal-layout';
 
 interface TvlItem {
@@ -59,7 +61,18 @@ function mensagemHttp(data: unknown): string | null {
     return null;
 }
 
-export default function RenovacaoIndex({ tvls }: { tvls: TvlItem[] }) {
+export default function RenovacaoIndex({
+    tvls,
+    legado = [],
+    legado_indisponivel: legadoIndisponivel = false,
+    empresas = [],
+}: {
+    tvls: TvlItem[];
+    legado?: LegadoItem[];
+    legado_indisponivel?: boolean;
+    empresas?: EmpresaVinculada[];
+}) {
+    const [consultaAberta, setConsultaAberta] = useState(false);
     const consulta = useHttp<{ cnpj: string }, ConsultaCnpj>({ cnpj: '' });
     const [cnpj, setCnpj] = useState('');
     const [resultado, setResultado] = useState<ConsultaCnpj | null>(null);
@@ -155,7 +168,26 @@ export default function RenovacaoIndex({ tvls }: { tvls: TvlItem[] }) {
                 </CardContent>
             </Card>
 
-            {!consultou && tvls.length === 0 ? (
+            <div className="mb-6 flex flex-col gap-3" aria-live="polite">
+                {legadoIndisponivel && (
+                    <Alert
+                        variant="warning"
+                        title="Sistema anterior indisponível"
+                        message="Não foi possível consultar as viabilidades do sistema anterior agora. As demais continuam disponíveis; tente novamente em instantes."
+                    />
+                )}
+            </div>
+
+            {empresas.length > 0 && (
+                <div className="mb-6">
+                    <Button variant="outline" className="min-h-11" onClick={() => setConsultaAberta(true)}>
+                        Renovar viabilidade do sistema anterior
+                    </Button>
+                </div>
+            )}
+            <ConsultaLegadoModal isOpen={consultaAberta} onClose={() => setConsultaAberta(false)} empresas={empresas} />
+
+            {!consultou && tvls.length === 0 && legado.length === 0 ? (
                 <Card>
                     <CardContent>
                         <EmptyState
@@ -166,6 +198,11 @@ export default function RenovacaoIndex({ tvls }: { tvls: TvlItem[] }) {
                 </Card>
             ) : !consultou ? (
                 <ul className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    {legado.map((item) => (
+                        <li key={`legado-${item.empresa_id}-${item.numero}`}>
+                            <LegadoItemCard item={item} />
+                        </li>
+                    ))}
                     {tvls.map((tvl) => (
                         <li key={tvl.id}>
                             <Card>

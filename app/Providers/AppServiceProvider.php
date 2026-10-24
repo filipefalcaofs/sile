@@ -42,6 +42,7 @@ use App\Services\Regin\BapRegistry;
 use App\Services\Regin\HttpReginParecerNotifier;
 use App\Services\Regin\ReginParecerNotifier;
 use App\Services\Regin\UnavailableBapRegistry;
+use App\Services\Renovacao\ResolvedorEnderecoImovel;
 use App\Services\Sefaz\SefazViabilidadeGateway;
 use App\Services\Sefaz\UnavailableSefazViabilidadeGateway;
 use App\Services\Servicos\ServicoNomenclaturaResolver;
@@ -104,6 +105,7 @@ class AppServiceProvider extends ServiceProvider
         // tributário e a checagem de divergência compartilham o resultado.
         $this->app->scoped(LocalizacaoInscricaoService::class);
         $this->app->scoped(ServicoNomenclaturaResolver::class);
+        $this->app->scoped(ResolvedorEnderecoImovel::class);
         $this->app->scoped(GeoServerWfsCamadaClient::class);
         $this->app->scoped(GeoServerEnderecamentoClient::class);
         $this->app->scoped(ZonaMaiorPorcaoResolver::class, GeoServerZonaMaiorPorcaoResolver::class);
