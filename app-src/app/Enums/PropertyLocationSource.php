@@ -12,6 +12,8 @@ enum PropertyLocationSource: string
     case CadastroImobiliario = 'cadastro_imobiliario';
     case CatalogoSimulacao = 'catalogo_simulacao';
     case Geocodificacao = 'geocodificacao';
+    case EnderecamentoSedur = 'enderecamento';
+    case Semap = 'semap';
 
     public function label(): string
     {
@@ -20,6 +22,8 @@ enum PropertyLocationSource: string
             self::CadastroImobiliario => 'Cadastro Imobiliário',
             self::CatalogoSimulacao => 'Catálogo da simulação',
             self::Geocodificacao => 'Geocodificação do endereço',
+            self::EnderecamentoSedur => 'Endereçamento SEDUR',
+            self::Semap => 'Cadastro municipal (SEMAP)',
         };
     }
 }
