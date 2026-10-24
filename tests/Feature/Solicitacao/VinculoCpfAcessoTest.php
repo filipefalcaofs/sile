@@ -54,28 +54,29 @@ class VinculoCpfAcessoTest extends TestCase
         return $processo->refresh();
     }
 
-    public function test_socio_ve_o_processo_e_responde_convite(): void
+    public function test_socio_so_consulta_e_nao_responde_convite(): void
     {
         $socio = $this->cidadao();
         $processo = $this->processoRegin([$socio->cpf]);
         $pendencia = AnalysisPendency::factory()->create(['viability_request_id' => $processo->id, 'status' => AnalysisPendencyStatus::Aberta]);
 
-        $this->actingAs($socio)->get(route('portal.solicitacoes.show', $processo))->assertOk();
+        $this->actingAs($socio)->get(route('portal.solicitacoes.show', $processo))->assertForbidden();
         $this->actingAs($socio)
             ->post(route('portal.solicitacoes.pendencias.responder', [$processo, $pendencia]), ['response' => 'Segue o documento pedido.'])
-            ->assertRedirect(route('portal.solicitacoes.show', $processo));
+            ->assertForbidden();
 
-        $this->assertSame(AnalysisPendencyStatus::Respondida, $pendencia->refresh()->status);
-        $this->assertNull($processo->refresh()->requester_user_id);
+        $this->assertSame(AnalysisPendencyStatus::Aberta, $pendencia->refresh()->status);
     }
 
-    public function test_socio_nao_ve_o_cpf_de_quem_pediu_no_lugar_do_cnpj(): void
+    public function test_solicitante_nao_ve_o_cpf_de_quem_pediu_no_lugar_do_cnpj(): void
     {
-        $socio = $this->cidadao();
-        $processo = $this->processoRegin([$socio->cpf]);
+        $solicitante = $this->cidadao();
+        $processo = $this->processoRegin([]);
+        $processo->forceFill(['solicitante_cpf' => $solicitante->cpf])->save();
+        app(VinculosCpfProcesso::class)->sincronizar($processo, []);
         $processo->company->forceFill(['cnpj' => '00449085040'])->save();
 
-        $this->actingAs($socio)->get(route('portal.solicitacoes.show', $processo))
+        $this->actingAs($solicitante)->get(route('portal.solicitacoes.show', $processo))
             ->assertInertia(fn (Assert $page) => $page->where('solicitacao.company.formatted_cnpj', null));
     }
 

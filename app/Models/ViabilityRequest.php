@@ -514,6 +514,23 @@ class ViabilityRequest extends Model
     }
 
     /**
+     * Processos em que a pessoa responde convite: os de que é requerente ou
+     * em que o CPF dela é o do solicitante declarado do REGIN. O sócio do
+     * REGIN fica de fora: ele só consulta.
+     */
+    public function scopeRespondivelPor(Builder $query, ?int $userId, ?string $cpf): Builder
+    {
+        $cpf = preg_replace('/\D/', '', (string) $cpf) ?? '';
+
+        return $query->where(fn (Builder $inner) => $inner
+            ->when($userId !== null, fn (Builder $dono) => $dono->where('requester_user_id', $userId))
+            ->when(strlen($cpf) === 11, fn (Builder $vinculo) => $vinculo->orWhereHas('cpfsVinculados', fn (Builder $cpfs) => $cpfs
+                ->where('cpf', $cpf)
+                ->where('papel', ViabilityRequestCpf::PAPEL_SOLICITANTE)))
+            ->when($userId === null && strlen($cpf) !== 11, fn (Builder $nada) => $nada->whereRaw('1 = 0')));
+    }
+
+    /**
      * CPFs que veem o processo além do solicitante (sócios do REGIN e
      * solicitante declarado).
      *

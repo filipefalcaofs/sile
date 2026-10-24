@@ -5,6 +5,7 @@ namespace App\Policies;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\User;
 use App\Models\ViabilityRequest;
+use App\Models\ViabilityRequestCpf;
 use App\Support\Representation\CurrentRepresentation;
 
 /**
@@ -35,7 +36,7 @@ class ViabilityRequestPolicy
 
     /**
      * Ver a solicitação: o dono/representado (qualquer status — o histórico
-     * continua visível ao requerente) ou quem tem o CPF vinculado.
+     * continua visível ao requerente) ou o solicitante declarado do REGIN.
      */
     public function view(User $user, ViabilityRequest $request): bool
     {
@@ -43,14 +44,17 @@ class ViabilityRequestPolicy
     }
 
     /**
-     * Sócio do REGIN ou solicitante declarado: vê o processo (e responde a
-     * convite, que usa esta mesma regra), sem ser o requerente.
+     * Solicitante declarado do REGIN: vê o processo e responde a convite (que
+     * usa esta mesma regra), sem ser o requerente. O sócio só consulta.
      */
     private function vinculadoPeloCpf(User $user, ViabilityRequest $request): bool
     {
         $cpf = (string) $this->effectiveUser($user)->cpf;
 
-        return strlen($cpf) === 11 && $request->cpfsVinculados()->where('cpf', $cpf)->exists();
+        return strlen($cpf) === 11 && $request->cpfsVinculados()
+            ->where('cpf', $cpf)
+            ->where('papel', ViabilityRequestCpf::PAPEL_SOLICITANTE)
+            ->exists();
     }
 
     /**
