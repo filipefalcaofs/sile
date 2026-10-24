@@ -193,3 +193,5 @@ output/
 
 # LSP/IDE
 storage/framework/lsp-*.php
+
+.superpowers/
