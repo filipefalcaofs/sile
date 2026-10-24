@@ -1,6 +1,7 @@
 import type { Polygon } from 'geojson';
 import { describe, expect, it } from 'vitest';
 import {
+    avisoDeLocalizacao,
     type DadosMapaDecisao,
     explicacaoDaDecisao,
     formatarArea,
@@ -26,6 +27,7 @@ const base: DadosMapaDecisao = {
     linhas: [],
     vias: [],
     indisponiveis: [],
+    localizacao: null,
 };
 
 describe('formatação', () => {
@@ -150,5 +152,47 @@ describe('explicacaoDaDecisao', () => {
             'Zona não identificada no processo.',
             'Nenhuma linha de ZCLMu ou ZCLMe no entorno do lote.',
         ]);
+    });
+});
+
+describe('localização não confirmada', () => {
+    const naoConfirmada: DadosMapaDecisao = {
+        ...base,
+        lote: null,
+        enderecamento: poligono,
+        zona: { codigo: 'ZCMe 1/02', fonte: 'Ponto da inscrição' },
+        localizacao: { distancia_m: 406, logradouro: 'Avenida Heitor Dias', lote_do_ponto: true },
+    };
+
+    it('avisa que o endereço não foi confirmado nem pelo polígono nem pelo ponto, com a distância e a rua', () => {
+        const aviso = avisoDeLocalizacao(naoConfirmada);
+
+        expect(aviso).toContain('não foi confirmado nem pelo polígono do endereçamento nem pelo ponto');
+        expect(aviso).toContain('406 m da Avenida Heitor Dias');
+        expect(aviso).toContain('O lote em vermelho é o que está nesse ponto');
+    });
+
+    it('sem lote tirado do ponto não fala do lote vermelho', () => {
+        const aviso = avisoDeLocalizacao({ ...naoConfirmada, localizacao: { distancia_m: 406, logradouro: null, lote_do_ponto: false } });
+
+        expect(aviso).toContain('406 m da rua do endereço');
+        expect(aviso).not.toContain('vermelho');
+    });
+
+    it('sem marca não há aviso', () => {
+        expect(avisoDeLocalizacao(base)).toBeNull();
+        expect(avisoDeLocalizacao({ ...base, localizacao: undefined })).toBeNull();
+    });
+
+    it('a zona do ponto aparece como não confirmada no rótulo e na explicação', () => {
+        expect(rotuloDaZonaDoLote(naoConfirmada)).toBe('ZCMe 1/02 · zona do ponto não confirmado');
+        expect(explicacaoDaDecisao(naoConfirmada)[0]).toContain('O ponto não foi confirmado: a zona pode não ser a do imóvel.');
+    });
+
+    it('com localização confirmada os textos não mudam', () => {
+        const confirmada = { ...naoConfirmada, localizacao: null };
+
+        expect(rotuloDaZonaDoLote(confirmada)).toBe('ZCMe 1/02 · zona do ponto');
+        expect(explicacaoDaDecisao(confirmada)[0]).not.toContain('não foi confirmado');
     });
 });

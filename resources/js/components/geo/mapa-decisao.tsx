@@ -43,6 +43,7 @@ const TILES: Record<Exclude<Fundo, 'nenhum'>, { url: string; maxNativeZoom: numb
 
 const COR = {
     lote: '#175cd3',
+    naoConfirmado: '#f04438',
     zona: '#6941c6',
     menor: '#039855',
     via: '#f79009',
@@ -64,6 +65,7 @@ const ESTILO_ROTULOS = `
 .mapa-decisao-rotulo::before { display:none; }
 .mapa-decisao-fundo-claro { filter: grayscale(1) brightness(1.06) contrast(.88); }
 .mapa-decisao-rotulo-lote { color:#175cd3; }
+.mapa-decisao-rotulo-nao-confirmado { color:#b42318; }
 .mapa-decisao-rotulo-zona { color:#53389e; }
 .mapa-decisao-rotulo-menor { color:#027a48; }
 .mapa-decisao-rotulo-medida { color:#b42318; }
@@ -289,7 +291,11 @@ export function MapaDecisao({ dados, rotuloLote = null, altura = 480 }: MapaDeci
     const ordenadas = (lista: typeof dados.zonas) => [...lista].sort((a, b) => Number(a.da_decisao) - Number(b.da_decisao));
     const centroLote = lote ? centroDe(lote) : null;
     const enderecoCurto = rotuloLote && rotuloLote.length > 36 ? `${rotuloLote.slice(0, 35).trimEnd()}…` : rotuloLote;
-    const rotuloDoLote = [enderecoCurto, dados.area_lote_m2 ? formatarArea(dados.area_lote_m2) : null].filter(Boolean).join(' · ') || 'Lote do processo';
+    // Lote tirado do ponto que nenhuma fonte confirmou: aparece, mas marcado.
+    const loteNaoConfirmado = dados.localizacao?.lote_do_ponto === true;
+    const rotuloDoLote = loteNaoConfirmado
+        ? 'Lote no ponto do Cadastro Imobiliário · não confirmado'
+        : [enderecoCurto, dados.area_lote_m2 ? formatarArea(dados.area_lote_m2) : null].filter(Boolean).join(' · ') || 'Lote do processo';
 
     return (
         <div ref={raiz} className="mapa-decisao relative">
@@ -473,9 +479,20 @@ export function MapaDecisao({ dados, rotuloLote = null, altura = 480 }: MapaDeci
                         <Camada
                             nome="lote"
                             geometria={lote}
-                            estilo={{ color: COR.lote, weight: 3, fillColor: COR.lote, fillOpacity: 0.25 }}
+                            estilo={
+                                loteNaoConfirmado
+                                    ? { color: COR.naoConfirmado, weight: 3, dashArray: '8 6', fillColor: COR.naoConfirmado, fillOpacity: 0.12 }
+                                    : { color: COR.lote, weight: 3, fillColor: COR.lote, fillOpacity: 0.25 }
+                            }
                         />
-                        <Rotulo geometria={lote} texto={rotuloDoLote} classe="mapa-decisao-rotulo-lote" ancora="sul" direcao="bottom" deslocamento={[0, 6]} />
+                        <Rotulo
+                            geometria={lote}
+                            texto={rotuloDoLote}
+                            classe={loteNaoConfirmado ? 'mapa-decisao-rotulo-nao-confirmado' : 'mapa-decisao-rotulo-lote'}
+                            ancora="sul"
+                            direcao="bottom"
+                            deslocamento={[0, 6]}
+                        />
                     </Pane>
                 )}
 
@@ -516,7 +533,7 @@ export function MapaDecisao({ dados, rotuloLote = null, altura = 480 }: MapaDeci
                     {(lote || dados.ponto) && (
                         <label className="flex cursor-pointer items-center gap-2">
                             <input type="checkbox" checked={camadas.lote} onChange={() => alternar('lote')} />
-                            {lote ? 'Lote do processo' : 'Ponto do imóvel'}
+                            {lote ? (loteNaoConfirmado ? 'Lote no ponto (não confirmado)' : 'Lote do processo') : 'Ponto do imóvel'}
                         </label>
                     )}
                     {zonasDoLote.length > 0 && (
@@ -548,7 +565,7 @@ export function MapaDecisao({ dados, rotuloLote = null, altura = 480 }: MapaDeci
                 <Caixa className="absolute bottom-10 left-3 z-[1000] space-y-1">
                     {lote ? (
                         <div className="flex items-center gap-2">
-                            <Amostra cor={COR.lote} tipo="area" /> Lote
+                            <Amostra cor={loteNaoConfirmado ? COR.naoConfirmado : COR.lote} tipo="area" /> {loteNaoConfirmado ? 'Lote não confirmado' : 'Lote'}
                         </div>
                     ) : (
                         dados.ponto && (

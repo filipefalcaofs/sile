@@ -254,6 +254,48 @@ class LocalizacaoPelaInscricaoTest extends TestCase
         $this->assertEquals(12.0, $auditoria->properties['distancia_final_m']);
     }
 
+    public function test_protocolo_grava_a_conferencia_nao_confirmada_no_processo(): void
+    {
+        $this->fakeCadastro('2075', -12.965543, -38.478635, enderecos: [
+            ['TipoEndereco' => 'Localização', 'CodigoLogradouro' => '2075', 'Logradouro' => 'Avenida Heitor Dias'],
+        ]);
+        $this->mock(ValidadorPontoInscricao::class, function ($mock): void {
+            $mock->shouldReceive('validar')->andReturn(
+                new ResultadoPonto(ConfirmacaoPonto::NaoConfirmado, -12.965543, -38.478635, PropertyLocationSource::CadastroImobiliario, 405.85),
+            );
+        });
+        $ator = User::factory()->create();
+        $solicitacao = $this->rascunhoRegin();
+
+        app(ProtocolarSolicitacaoService::class)->protocol($solicitacao, $ator);
+
+        $conferencia = $solicitacao->refresh()->localizacao_conferencia;
+        $this->assertSame('nao_confirmado', $conferencia['confirmacao']);
+        $this->assertEquals(405.85, $conferencia['distancia_m']);
+        $this->assertSame('Avenida Heitor Dias', $conferencia['logradouro']);
+        $this->assertNotEmpty($conferencia['conferido_em']);
+        $this->assertSame(406.0, $solicitacao->localizacaoNaoConfirmada()['distancia_m']);
+        $this->assertSame('Avenida Heitor Dias', $solicitacao->localizacaoNaoConfirmada()['logradouro']);
+    }
+
+    public function test_conferencia_confirmada_fica_gravada_sem_aviso(): void
+    {
+        $this->fakeCadastro('212');
+        $this->mock(ValidadorPontoInscricao::class, function ($mock): void {
+            $mock->shouldReceive('validar')->andReturn(
+                new ResultadoPonto(ConfirmacaoPonto::Confirmado, -12.977769, -38.516404, PropertyLocationSource::CadastroImobiliario, 20.0, 20.0),
+            );
+        });
+        $ator = User::factory()->create();
+        $solicitacao = $this->rascunhoRegin();
+
+        app(ProtocolarSolicitacaoService::class)->protocol($solicitacao, $ator);
+
+        $solicitacao->refresh();
+        $this->assertSame('confirmado', $solicitacao->localizacao_conferencia['confirmacao']);
+        $this->assertNull($solicitacao->localizacaoNaoConfirmada());
+    }
+
     public function test_cadastro_sem_coordenada_protocola_com_ponto_geocodificado(): void
     {
         $this->app->instance(PropertyRegistryLookup::class, new class implements PropertyRegistryLookup

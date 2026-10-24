@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Geo;
 
+use App\Enums\PoligonoFonte;
 use App\Enums\ZonaFonte;
 use App\Models\GeoServerLayer;
 use App\Models\User;
@@ -125,6 +126,40 @@ class MapaDecisaoTest extends TestCase
             ->assertJsonPath('zonas', []);
 
         Http::assertNothingSent();
+    }
+
+    public function test_localizacao_nao_confirmada_vem_com_distancia_logradouro_e_lote_do_ponto(): void
+    {
+        Http::fake();
+        $processo = ViabilityRequest::factory()->create(['address_polygon_geojson' => null, 'property_polygon_geojson' => null]);
+        $processo->forceFill([
+            'address_polygon_geojson' => self::LOTE,
+            'address_polygon_source' => PoligonoFonte::Ponto,
+            'localizacao_conferencia' => ['confirmacao' => 'nao_confirmado', 'distancia_m' => 405.85, 'logradouro' => 'Avenida Heitor Dias'],
+        ])->save();
+        config(['viabiliza.features.geoserver_zona' => false]);
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->getJson(route('gestao.processos.mapa-decisao', $processo))
+            ->assertOk()
+            ->assertJsonPath('localizacao.distancia_m', 406)
+            ->assertJsonPath('localizacao.logradouro', 'Avenida Heitor Dias')
+            ->assertJsonPath('localizacao.lote_do_ponto', true);
+    }
+
+    public function test_localizacao_confirmada_ou_sem_conferencia_vem_nula(): void
+    {
+        Http::fake();
+        $semConferencia = ViabilityRequest::factory()->create(['address_polygon_geojson' => null, 'property_polygon_geojson' => null]);
+        $confirmada = ViabilityRequest::factory()->create(['address_polygon_geojson' => null, 'property_polygon_geojson' => null]);
+        $confirmada->forceFill(['localizacao_conferencia' => ['confirmacao' => 'confirmado', 'distancia_m' => 12.0]])->save();
+
+        foreach ([$semConferencia, $confirmada] as $processo) {
+            $this->actingAs($this->analista(), 'gestao')
+                ->getJson(route('gestao.processos.mapa-decisao', $processo))
+                ->assertOk()
+                ->assertJsonPath('localizacao', null);
+        }
     }
 
     public function test_sem_permissao_recebe_403(): void

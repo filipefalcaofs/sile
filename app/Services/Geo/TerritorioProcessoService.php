@@ -187,14 +187,24 @@ class TerritorioProcessoService
     }
 
     /**
-     * Registra a conferência do ponto da inscrição: o ponto original da SEFAZ,
-     * o ponto e a fonte finais e as distâncias até a rua do endereço.
+     * Registra a conferência do ponto da inscrição no processo (a ficha avisa
+     * quando nenhuma fonte confirmou o local) e na auditoria: o ponto original
+     * da SEFAZ, o ponto e a fonte finais e as distâncias até a rua do endereço.
      */
     private function auditarConferenciaDoPonto(ViabilityRequest $request, LocalizacaoInscricao $localizacao): void
     {
         if ($localizacao->confirmacaoPonto === null) {
             return;
         }
+
+        $request->forceFill([
+            'localizacao_conferencia' => [
+                'confirmacao' => $localizacao->confirmacaoPonto->value,
+                'distancia_m' => $localizacao->distanciaPontoM,
+                'logradouro' => $localizacao->logradouroDoEndereco(),
+                'conferido_em' => now()->toIso8601String(),
+            ],
+        ])->save();
 
         $this->audit->log(
             logName: 'geo',

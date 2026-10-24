@@ -324,7 +324,7 @@ class CorrigirPontoInscricaoCommandTest extends TestCase
         $this->assertSame($antes, [$confirmado->refresh()->getAttributes(), $naoVerificado->refresh()->getAttributes()]);
     }
 
-    public function test_sem_fonte_que_confirme_so_lista_e_nao_altera(): void
+    public function test_sem_fonte_que_confirme_so_marca_o_aviso_e_nao_altera_o_resto(): void
     {
         $this->conferencias['1078739'] = new ResultadoPonto(ConfirmacaoPonto::NaoConfirmado, self::PONTO_SEFAZ[0], self::PONTO_SEFAZ[1], PropertyLocationSource::CadastroImobiliario, 640.0);
         $processo = $this->processo();
@@ -332,10 +332,64 @@ class CorrigirPontoInscricaoCommandTest extends TestCase
 
         $this->artisan('processos:corrigir-ponto-inscricao', ['--aplicar' => true])
             ->expectsOutputToContain('Sem fonte que confirme: 1')
+            ->expectsOutputToContain('Marcados como não confirmados: 1')
             ->expectsOutputToContain('Divergentes: 0')
             ->assertSuccessful();
 
-        $this->assertSame($antes, $processo->refresh()->getAttributes());
+        $processo->refresh();
+        $depois = $processo->getAttributes();
+        unset($antes['localizacao_conferencia'], $depois['localizacao_conferencia']);
+        $this->assertSame($antes, $depois);
+        $this->assertSame('nao_confirmado', $processo->localizacao_conferencia['confirmacao']);
+        $this->assertEquals(640.0, $processo->localizacao_conferencia['distancia_m']);
+        $this->assertSame('Avenida Heitor Dias', $processo->localizacao_conferencia['logradouro']);
+        $this->assertTrue($processo->localizacaoNaoConfirmada()['lote_do_ponto']);
+    }
+
+    public function test_sem_aplicar_nao_marca_o_aviso(): void
+    {
+        $this->conferencias['1078739'] = new ResultadoPonto(ConfirmacaoPonto::NaoConfirmado, self::PONTO_SEFAZ[0], self::PONTO_SEFAZ[1], PropertyLocationSource::CadastroImobiliario, 640.0);
+        $processo = $this->processo();
+
+        $this->artisan('processos:corrigir-ponto-inscricao')->assertSuccessful();
+
+        $this->assertNull($processo->refresh()->localizacao_conferencia);
+    }
+
+    public function test_marca_ja_gravada_nao_e_regravada(): void
+    {
+        $this->conferencias['1078739'] = new ResultadoPonto(ConfirmacaoPonto::NaoConfirmado, self::PONTO_SEFAZ[0], self::PONTO_SEFAZ[1], PropertyLocationSource::CadastroImobiliario, 640.0);
+        $processo = $this->processo(['localizacao_conferencia' => ['confirmacao' => 'nao_confirmado', 'distancia_m' => 640.0, 'logradouro' => 'Avenida Heitor Dias', 'conferido_em' => '2026-10-24T10:00:00-03:00']]);
+
+        $this->artisan('processos:corrigir-ponto-inscricao', ['--aplicar' => true])
+            ->expectsOutputToContain('Marcados como não confirmados: 0')
+            ->assertSuccessful();
+
+        $this->assertSame('2026-10-24T10:00:00-03:00', $processo->refresh()->localizacao_conferencia['conferido_em']);
+    }
+
+    public function test_correcao_grava_a_conferencia_substituida(): void
+    {
+        $this->substituido('1078739');
+        $processo = $this->processo(['localizacao_conferencia' => ['confirmacao' => 'nao_confirmado', 'distancia_m' => 640.0]]);
+
+        $this->artisan('processos:corrigir-ponto-inscricao', ['--aplicar' => true])->assertSuccessful();
+
+        $processo->refresh();
+        $this->assertSame('substituido', $processo->localizacao_conferencia['confirmacao']);
+        $this->assertNull($processo->localizacaoNaoConfirmada());
+    }
+
+    public function test_ponto_que_passou_a_ser_confirmado_limpa_a_marca(): void
+    {
+        $this->conferencias['1078739'] = new ResultadoPonto(ConfirmacaoPonto::Confirmado, self::PONTO_SEFAZ[0], self::PONTO_SEFAZ[1], PropertyLocationSource::CadastroImobiliario, 20.0, 20.0);
+        $processo = $this->processo(['localizacao_conferencia' => ['confirmacao' => 'nao_confirmado', 'distancia_m' => 640.0]]);
+
+        $this->artisan('processos:corrigir-ponto-inscricao', ['--aplicar' => true])->assertSuccessful();
+
+        $processo->refresh();
+        $this->assertSame('confirmado', $processo->localizacao_conferencia['confirmacao']);
+        $this->assertNull($processo->localizacaoNaoConfirmada());
     }
 
     public function test_poligono_desenhado_pelo_requerente_nao_e_tocado(): void

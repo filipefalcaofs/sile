@@ -52,6 +52,8 @@ class MapaDecisaoService
             'linhas' => [],
             'vias' => [],
             'indisponiveis' => [],
+            // Nenhuma fonte confirmou o local: a ficha avisa e marca o lote do ponto.
+            'localizacao' => $request->localizacaoNaoConfirmada(),
         ];
 
         $codLog = $this->codLogDaDecisao($request);

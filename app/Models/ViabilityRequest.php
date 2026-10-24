@@ -6,6 +6,7 @@ use App\Concerns\HasAuditoria;
 use App\Enums\AnalysisCategory;
 use App\Enums\AnalysisStage;
 use App\Enums\AnalysisStatus;
+use App\Enums\ConfirmacaoPonto;
 use App\Enums\IntencaoAtividade;
 use App\Enums\PoligonoFonte;
 use App\Enums\PropertyLocationSource;
@@ -140,6 +141,7 @@ class ViabilityRequest extends Model
             'property_point_lat' => 'float',
             'property_point_lng' => 'float',
             'property_location_source' => PropertyLocationSource::class,
+            'localizacao_conferencia' => 'array',
             'camadas_incidentes' => 'array',
             'comparacao_cnaes' => 'array',
             'simulation_snapshot' => 'array',
@@ -167,6 +169,35 @@ class ViabilityRequest extends Model
             'analysis_stage_started_at' => 'datetime',
             'analysis_due_at' => 'datetime',
             'viabilidade_horas_uteis' => 'float',
+        ];
+    }
+
+    /**
+     * Localização que nenhuma fonte confirmou: o ponto do Cadastro Imobiliário
+     * está longe da rua do endereço e nem o endereçamento, nem o SEMAP, nem a
+     * geocodificação localizaram o imóvel. `lote_do_ponto` diz se o lote gravado
+     * foi tirado desse ponto. Null quando a conferência confirmou, substituiu,
+     * não rodou ou não foi feita.
+     *
+     * @return array{distancia_m: ?float, logradouro: ?string, lote_do_ponto: bool}|null
+     */
+    public function localizacaoNaoConfirmada(): ?array
+    {
+        $conferencia = $this->localizacao_conferencia;
+
+        if (! is_array($conferencia) || ($conferencia['confirmacao'] ?? null) !== ConfirmacaoPonto::NaoConfirmado->value) {
+            return null;
+        }
+
+        $distancia = $conferencia['distancia_m'] ?? null;
+        $logradouro = $conferencia['logradouro'] ?? null;
+
+        return [
+            'distancia_m' => is_numeric($distancia) ? round((float) $distancia) : null,
+            'logradouro' => is_string($logradouro) && trim($logradouro) !== '' ? trim($logradouro) : null,
+            'lote_do_ponto' => $this->address_polygon_source === PoligonoFonte::Ponto
+                && is_array($this->address_polygon_geojson)
+                && $this->address_polygon_geojson !== [],
         ];
     }
 

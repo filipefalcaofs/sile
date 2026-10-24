@@ -32,6 +32,14 @@ export interface ViaDoMapa {
     geojson: Geometry;
 }
 
+/** Nenhuma fonte confirmou o local do imóvel (ponto do Cadastro Imobiliário longe da rua do endereço). */
+export interface LocalizacaoNaoConfirmada {
+    distancia_m: number | null;
+    logradouro: string | null;
+    /** O lote gravado foi tirado do ponto não confirmado. */
+    lote_do_ponto: boolean;
+}
+
 export interface DadosMapaDecisao {
     lote: Geometry | null;
     enderecamento: Geometry | null;
@@ -44,6 +52,7 @@ export interface DadosMapaDecisao {
     linhas: LinhaCentral[];
     vias: ViaDoMapa[];
     indisponiveis: string[];
+    localizacao?: LocalizacaoNaoConfirmada | null;
 }
 
 const numero = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 });
@@ -90,7 +99,30 @@ export function rotuloDaZonaDoLote(dados: DadosMapaDecisao): string | null {
         return `${dados.zona.codigo} · maior porção do lote`;
     }
 
-    return dados.zona.fonte === 'Ponto da inscrição' ? `${dados.zona.codigo} · zona do ponto` : `${dados.zona.codigo} · zona do lote`;
+    if (dados.zona.fonte === 'Ponto da inscrição') {
+        return dados.localizacao ? `${dados.zona.codigo} · zona do ponto não confirmado` : `${dados.zona.codigo} · zona do ponto`;
+    }
+
+    return `${dados.zona.codigo} · zona do lote`;
+}
+
+/** Aviso mostrado abaixo do mapa quando nenhuma fonte confirmou o local do imóvel. */
+export function avisoDeLocalizacao(dados: DadosMapaDecisao): string | null {
+    const localizacao = dados.localizacao;
+
+    if (!localizacao) {
+        return null;
+    }
+
+    const rua = localizacao.logradouro ?? 'rua do endereço';
+    const distancia = localizacao.distancia_m !== null ? `está a ${numero.format(localizacao.distancia_m)} m da ${rua}` : `não fica na ${rua}`;
+    const lote = localizacao.lote_do_ponto ? ' O lote em vermelho é o que está nesse ponto e pode não ser o do imóvel.' : '';
+
+    return (
+        `O endereço da inscrição não foi confirmado nem pelo polígono do endereçamento nem pelo ponto: o ponto do Cadastro Imobiliário ${distancia} ` +
+        `e nenhuma outra fonte de endereço confirmou o local.${lote} A zona pode não ser a do imóvel: confira a localização com a SEFAZ ou a SEDUR ` +
+        'antes de decidir; zona e via podem ser ajustadas manualmente.'
+    );
 }
 
 export function rotuloDaLinha(linha: LinhaCentral): string | null {
@@ -113,9 +145,11 @@ function linhaDaZona(dados: DadosMapaDecisao): string {
     const codigo = dados.zona.codigo;
 
     if (dados.zona.fonte === 'Ponto da inscrição') {
-        return loteDoMapa(dados)
+        const motivo = loteDoMapa(dados)
             ? `Zona ${codigo}: zona onde está o ponto da inscrição, porque a maior porção do lote não pôde ser calculada.`
             : `Zona ${codigo}: zona onde está o ponto da inscrição, porque o processo não tem o desenho do lote.`;
+
+        return dados.localizacao ? `${motivo} O ponto não foi confirmado: a zona pode não ser a do imóvel.` : motivo;
     }
 
     const [maior, ...demais] = dados.porcoes;

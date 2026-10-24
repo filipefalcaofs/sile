@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
 
-import { explicacaoDaDecisao, temCamadasDeContexto, type DadosMapaDecisao } from '@/components/geo/mapa-decisao-dados';
+import { avisoDeLocalizacao, explicacaoDaDecisao, temCamadasDeContexto, type DadosMapaDecisao } from '@/components/geo/mapa-decisao-dados';
+import Alert from '@/components/ui/alert';
 import { Modal } from '@/components/ui/modal';
 
 // Mesmo pitfall do MapaSection: o Leaflet acessa `window` na importação e quebra
@@ -22,7 +23,14 @@ interface MapaDecisaoSectionProps {
     fallback: ReactNode;
 }
 
-type Estado = { fase: 'carregando' } | { fase: 'pronto'; dados: DadosMapaDecisao } | { fase: 'indisponivel' };
+type Estado = { fase: 'carregando' } | { fase: 'pronto'; dados: DadosMapaDecisao } | { fase: 'indisponivel'; dados?: DadosMapaDecisao };
+
+/** Aviso abaixo do mapa quando nenhuma fonte confirmou o local do imóvel. */
+function AvisoLocalizacao({ dados }: { dados?: DadosMapaDecisao }) {
+    const aviso = dados ? avisoDeLocalizacao(dados) : null;
+
+    return aviso ? <Alert variant="warning" title="Localização não confirmada" message={aviso} /> : null;
+}
 
 /**
  * Mapa do processo com zonas, vias e linhas de centralidade. Busca as camadas ao
@@ -45,7 +53,7 @@ export function MapaDecisaoSection({ url, rotuloLote = null, fallback }: MapaDec
 
         fetch(url, { headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin', signal: controle.signal })
             .then((resposta) => (resposta.ok ? (resposta.json() as Promise<DadosMapaDecisao>) : Promise.reject(new Error(String(resposta.status)))))
-            .then((dados) => setEstado(temCamadasDeContexto(dados) ? { fase: 'pronto', dados } : { fase: 'indisponivel' }))
+            .then((dados) => setEstado(temCamadasDeContexto(dados) ? { fase: 'pronto', dados } : { fase: 'indisponivel', dados }))
             .catch((erro: unknown) => {
                 if ((erro as { name?: string }).name !== 'AbortError') {
                     setEstado({ fase: 'indisponivel' });
@@ -56,7 +64,12 @@ export function MapaDecisaoSection({ url, rotuloLote = null, fallback }: MapaDec
     }, [url]);
 
     if (estado.fase === 'indisponivel') {
-        return <>{fallback}</>;
+        return (
+            <div className="space-y-3">
+                {fallback}
+                <AvisoLocalizacao dados={estado.dados} />
+            </div>
+        );
     }
 
     if (!montado || estado.fase === 'carregando') {
@@ -86,6 +99,7 @@ export function MapaDecisaoSection({ url, rotuloLote = null, fallback }: MapaDec
                     Expandir mapa
                 </button>
             </div>
+            <AvisoLocalizacao dados={estado.dados} />
             <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 dark:border-gray-800 dark:bg-white/[0.03]">
                 <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Por que esta zona e esta via</p>
                 <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-gray-700 dark:text-gray-300">
