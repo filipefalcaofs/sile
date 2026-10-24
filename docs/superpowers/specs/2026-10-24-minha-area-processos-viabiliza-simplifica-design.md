@@ -74,3 +74,16 @@ No Portal de Serviços que subimos no Portainer, o botão "Minha área" hoje é 
 1. **Sequência do Contato:** sem risco. Em `pg_local` a biblioteca usa `nextval('pr_contato_seq')`, e a sequência vem da carga do esquema do portal de teste.
 2. **Dados reais num endereço público:** a API do legado lê a base real do Simplifica, e o login de demonstração aceita um token montado à mão. Por isso o endereço `minha-area-teste...` fica protegido por usuário e senha no proxy (Basic Auth). A credencial fica no `segredos.json` da stack, fora do repositório e fora do chat.
 3. **Dependências do SAD:** a imagem só precisa da Minha Área. Primeiro tenta-se `composer install` com acesso de leitura ao GitLab da SEDUR, trocando a `sedur-mais-shared` pela cópia do portal de teste (repositório `path`). Sem acesso ao GitLab, a imagem é montada com o vendor do portal de teste. O painel do servidor do SAD pode ficar quebrado nessa imagem, e isso é aceito.
+
+## Revisão de 24/10 (tarde): uma listagem só
+
+Decisão do usuário: a Minha Área funciona igual à original; a diferença é que a mesma listagem "Meus Processos" traz também os processos do Viabiliza e do Simplifica, cada um com botão que abre a consulta de processo do Viabiliza já filtrada pelo número.
+
+- Os blocos separados saem. A tabela da página passa a ter fonte própria (`records()` do Filament 4), que junta:
+  - processos do SAD (a mesma consulta `minhaArea()` de hoje), com o botão Detalhes de sempre;
+  - processos do Viabiliza (API do Viabiliza), com botão que abre `…/portal/entrar/portal-servicos?destino=processo&numero=<número>&token=<sessão>`;
+  - processos do Simplifica (API do legado, pelo CPF), com o mesmo botão, pelo número do processo do Simplifica.
+- Colunas: Origem (SAD, Viabiliza, Simplifica), Protocolo, Estágio, Data, Serviço.
+- Abas iguais às de hoje. SAD: como hoje. Viabiliza: convite pendente → Em convite; deferida, indeferida, cancelada, arquivada → Finalizados; o resto → Em andamento. Simplifica: status com fim → Finalizados; o resto → Em andamento. Os contadores das abas somam as três fontes.
+- Busca no texto de protocolo, estágio, data e serviço das três fontes; ordenação por data, mais recente primeiro; paginação de 10 em 10, como a padrão.
+- Decisão minha: a ação em massa de excluir (só fora de produção, para documentos do SAD) sai, porque a tabela mista não tem como excluir linhas de fora.

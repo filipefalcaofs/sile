@@ -114,3 +114,14 @@ O usuário pediu trabalho autônomo; estas ficaram por minha conta.
 5. **Representação "em nome de":** vale o usuário efetivo, como já fazem a política e a renovação. Não se cria representação nova pelo portal, mas quem já está em uma continua coerente.
 6. **CNPJ repetido no Viabiliza:** não acontece, porque `companies.cnpj` é único. O protocolo da TVL legada reaproveita a empresa com aquele CNPJ.
 7. **Contato da empresa no protocolo:** o protocolo da renovação gravava na empresa o e-mail e o telefone digitados. Com qualquer cidadão podendo renovar, o contato digitado passa a só preencher o que a empresa ainda não tem, e nunca troca o contato dela.
+
+## Revisão de 24/10 (tarde): consulta também no Simplifica
+
+Decisão do usuário: a consulta de processo procura no Viabiliza e também no Simplifica, porque a Minha Área manda as linhas do Simplifica para essa consulta.
+
+- Ordem: primeiro os processos do Viabiliza (como já está). Sem resultado, a busca vai ao Simplifica:
+  - número no formato de processo do Simplifica (`0000000000-00000000/0000`): `GET /v1/processos/{numero}`;
+  - 7 dígitos: a TVL do Simplifica (`GET /v1/tvls/{n}`) e, dela, o processo.
+- Resultado do Simplifica, no mesmo formato da tela: número do processo, viabilidades (números das TVLs), empresa (razão social e CNPJ da TVL), data de criação, situação (nome do status do Simplifica) e tramitação (data, título e status de cada item do histórico). O texto das mensagens do histórico não aparece, porque pode trazer conteúdo dirigido ao requerente. Selo "Sistema anterior". Sem botão de convite.
+- Simplifica fora do ar: aviso "Não foi possível consultar o sistema anterior agora", sem esconder um resultado do Viabiliza.
+- A consulta do Simplifica também é auditada (`consulta-processo-legado`, com o número).

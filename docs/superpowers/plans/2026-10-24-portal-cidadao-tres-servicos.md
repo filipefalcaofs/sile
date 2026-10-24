@@ -165,3 +165,9 @@
 
 - [ ] `DB_TEST_PORT=5444 php artisan test --compact` inteiro; comparar falhas com as 4 já conhecidas na base (`ConsultarProtocoloTest` de prazo e 3 do `SolicitacaoSmokeTest`).
 - [ ] Imagem nova da stack `viabiliza-portal-teste` e conferência no navegador (painel, consulta, convites, renovação da TVL 2104040 até o assistente).
+
+### Task 9: Consulta também no Simplifica (revisão de 24/10)
+
+**Files:** `app/Services/Legado/LegadoViabilidadeClient.php` (`processo(string $numero): ?array` → `GET /v1/processos/{numero}`), `app/Services/Solicitacao/ConsultaProcessoLegado.php` (`localizar(string $numero): ?array{processo, timeline}`), `app/Http/Controllers/Portal/ConsultaProcessoController.php`, `resources/js/pages/portal/consulta/index.tsx`, `tests/Feature/Portal/ConsultaProcessoLegadoTest.php`.
+
+- [ ] Testes: `test_numero_do_processo_do_simplifica_mostra_o_processo_com_a_tramitacao` (sem `mensagem` no payload), `test_numero_de_tvl_do_simplifica_leva_ao_processo`, `test_processo_do_viabiliza_tem_prioridade`, `test_simplifica_fora_do_ar_avisa`, `test_consulta_do_simplifica_e_auditada`. Ver falhar, implementar, ver passar, commit.

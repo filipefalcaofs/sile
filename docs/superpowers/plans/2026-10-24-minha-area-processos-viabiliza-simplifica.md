@@ -57,3 +57,9 @@
 - [ ] **Step 2:** Enviar a imagem ao Portainer (`images/load`) e incluir o serviço `psd-sad` na stack `portal-servicos-demo` (redes `psd_net`, `ssl_default`, `legado-simplifica_default`; `APP_ENV=pg_local`, `VIABILIZA_DEMO=true`, `VIABILIZA_URL`, `SIMPLIFICA_*`, `SEDUR_ENDPOINT_PORTAL_NOVO_CARTA`). No `psd-app`, `SEDUR_ENDPOINT_MINHA_AREA_LOGIN_GOVBR={SAD}/login/govbr` e `SEDUR_ENDPOINT_MINHA_AREA={SAD}/minha-area`.
 - [ ] **Step 3:** Publicar `minha-area-teste.144.22.212.3.nip.io` → `psd-sad:80` no `http.conf` custom do proxy, com Basic Auth; `nginx -t` e reload.
 - [ ] **Step 4:** Conferir no navegador: Portal de teste → Minha área → credencial do proxy → "Meus Processos" com a tabela do SAD, a lista do Viabiliza (Detalhar abre a consulta do Viabiliza) e a lista do Simplifica.
+
+### Task 4: Listagem única (revisão de 24/10)
+
+**Files (SAD):** `app/Services/ProcessosUnificados.php` (puro: `linhasViabiliza`, `linhasSimplifica`, `daAba`, `buscar`, `paginar`), `app/Services/ViabilizaProcessosService.php` (expõe `situacao_codigo` e `urlConsulta(string $numero, string $token): ?string`), `ListDocumento.php` (`records()`, abas e contadores pela lista junta, coluna Origem, Detalhes por linha), remover os widgets e views dos blocos; `tests/Unit/ProcessosUnificadosTest.php`.
+
+- [ ] Testes: abas de cada origem, busca nas três fontes, ordenação por data, paginação, URL da consulta do Viabiliza com o token para Viabiliza e Simplifica. Ver falhar, implementar, ver passar, commit; nova imagem `sad-minha-area-teste` e conferência da página.
