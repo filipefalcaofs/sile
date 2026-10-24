@@ -71,6 +71,10 @@ return [
         // desligado. O gestor religa em Parâmetros (features.portal_servicos)
         // sem deploy. Painel, notificações e conta não passam por este gate.
         'portal_servicos' => env('SILE_PORTAL_SERVICOS', false),
+        // Serviços do portal além de renovar, consultar processo e responder
+        // convite (consulta prévia, solicitação, empresas, procurações). Os
+        // processos começam na JUCEB; desligado, essas rotas respondem 404.
+        'portal_servicos_extras' => env('SILE_PORTAL_SERVICOS_EXTRAS', false),
         'consulta_viabilidade' => true,
         'solicitacao_viabilidade' => true,
         'simulacao_solicitacao' => true,

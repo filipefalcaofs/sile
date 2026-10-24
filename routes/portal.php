@@ -54,7 +54,7 @@ Route::get('portal/entrar/portal-servicos', EntradaPortalServicosController::cla
 // Fora de auth:web: a página não tem throttle; os endpoints JSON têm o throttle
 // parametrizado (07-01) e a guarda do toggle features.consulta_viabilidade no
 // controller (degradação comunicada quando desligado, nunca falha silenciosa).
-Route::middleware('portal.servicos')->prefix('portal')->name('portal.')->group(function () {
+Route::middleware(['portal.servicos', 'portal.extras'])->prefix('portal')->name('portal.')->group(function () {
     // ResolveRepresentation: logado, a consulta abre no shell do portal e
     // precisa do mesmo "atuando em nome de" das demais telas.
     Route::get('viabilidade', [ConsultaViabilidadeController::class, 'index'])
@@ -120,33 +120,33 @@ Route::middleware(['auth:web', ConfereSessaoPortalServicos::class, 'verified'])
                 // Histórico autenticado das consultas de viabilidade do próprio
                 // usuário (HU-058) — rota literal, sem conflito com a pública
                 // viabilidade.index (07-06). Escopo do dono no controller (forUser).
-                Route::get('viabilidade/historico', HistoricoConsultaController::class)->name('viabilidade.historico');
+                Route::get('viabilidade/historico', HistoricoConsultaController::class)->middleware('portal.extras')->name('viabilidade.historico');
 
-                Route::get('procuracoes', [ProcurationController::class, 'index'])->name('procuracoes.index');
-                Route::post('procuracoes', [ProcurationController::class, 'store'])->name('procuracoes.store');
-                Route::delete('procuracoes/{procuration}', [ProcurationController::class, 'destroy'])->name('procuracoes.destroy');
+                Route::get('procuracoes', [ProcurationController::class, 'index'])->middleware('portal.extras')->name('procuracoes.index');
+                Route::post('procuracoes', [ProcurationController::class, 'store'])->middleware('portal.extras')->name('procuracoes.store');
+                Route::delete('procuracoes/{procuration}', [ProcurationController::class, 'destroy'])->middleware('portal.extras')->name('procuracoes.destroy');
 
-                Route::post('representacao', [RepresentationController::class, 'store'])->name('representacao.store');
+                Route::post('representacao', [RepresentationController::class, 'store'])->middleware('portal.extras')->name('representacao.store');
 
                 // Empresas: rotas literais ANTES de empresas/{company} (03-05).
-                Route::get('empresas', [CompanyController::class, 'index'])->name('empresas.index');
-                Route::get('empresas/cadastrar', [CompanyController::class, 'create'])->name('empresas.create');
-                Route::post('empresas', [CompanyController::class, 'store'])->name('empresas.store');
+                Route::get('empresas', [CompanyController::class, 'index'])->middleware('portal.extras')->name('empresas.index');
+                Route::get('empresas/cadastrar', [CompanyController::class, 'create'])->middleware('portal.extras')->name('empresas.create');
+                Route::post('empresas', [CompanyController::class, 'store'])->middleware('portal.extras')->name('empresas.store');
                 Route::post('empresas/consultar-cnpj', CnpjLookupController::class)
                     ->middleware('throttle:cnpj-lookup')
-                    ->name('empresas.consultar-cnpj');
+                    ->middleware('portal.extras')->name('empresas.consultar-cnpj');
 
                 // Rotas com binding {company} DEPOIS das literais (03-05).
-                Route::get('empresas/{company}', [CompanyController::class, 'show'])->name('empresas.show');
-                Route::put('empresas/{company}', [CompanyController::class, 'update'])->name('empresas.update');
-                Route::delete('empresas/{company}/vinculo', [CompanyLinkController::class, 'destroy'])->name('empresas.vinculo.destroy');
+                Route::get('empresas/{company}', [CompanyController::class, 'show'])->middleware('portal.extras')->name('empresas.show');
+                Route::put('empresas/{company}', [CompanyController::class, 'update'])->middleware('portal.extras')->name('empresas.update');
+                Route::delete('empresas/{company}/vinculo', [CompanyLinkController::class, 'destroy'])->middleware('portal.extras')->name('empresas.vinculo.destroy');
 
                 // CNAEs da empresa (HU-024/HU-025) — escrita só via service (03-06).
-                Route::put('empresas/{company}/cnae-principal', [CompanyCnaeController::class, 'updatePrimary'])->name('empresas.cnae-principal');
-                Route::put('empresas/{company}/cnaes-secundarios', [CompanyCnaeController::class, 'updateSecondaries'])->name('empresas.cnaes-secundarios');
+                Route::put('empresas/{company}/cnae-principal', [CompanyCnaeController::class, 'updatePrimary'])->middleware('portal.extras')->name('empresas.cnae-principal');
+                Route::put('empresas/{company}/cnaes-secundarios', [CompanyCnaeController::class, 'updateSecondaries'])->middleware('portal.extras')->name('empresas.cnaes-secundarios');
 
                 // Busca da tabela oficial para os selects de CNAE (só ativos).
-                Route::get('cnaes', CnaeSearchController::class)->name('cnaes.search');
+                Route::get('cnaes', CnaeSearchController::class)->middleware('portal.extras')->name('cnaes.search');
 
                 // Solicitações de viabilidade (HU-059) — rotas literais; as rotas
                 // com {solicitacao} entram em 08-06/08-11. O store degrada de forma
@@ -154,9 +154,9 @@ Route::middleware(['auth:web', ConfereSessaoPortalServicos::class, 'verified'])
                 Route::get('renovacao', [RenovacaoController::class, 'index'])->middleware('portal.solicitacao')
                     ->name('renovacao.index');
                 Route::post('renovacao/consultar-cnpj', [RenovacaoController::class, 'consultarCnpj'])->middleware('portal.solicitacao')
-                    ->name('renovacao.consultar-cnpj');
+                    ->middleware('portal.extras')->name('renovacao.consultar-cnpj');
                 Route::post('renovacao/legado/consultar', [RenovacaoController::class, 'consultarLegado'])->middleware('portal.solicitacao')
-                    ->name('renovacao.legado.consultar');
+                    ->middleware('portal.extras')->name('renovacao.legado.consultar');
                 Route::get('renovacao/legado/{empresa}/{numero}', [RenovacaoController::class, 'showLegado'])->middleware('portal.solicitacao')
                     ->whereNumber(['empresa', 'numero'])
                     ->name('renovacao.legado.show');
@@ -168,9 +168,9 @@ Route::middleware(['auth:web', ConfereSessaoPortalServicos::class, 'verified'])
                 Route::post('renovacao/{origem}', [RenovacaoController::class, 'store'])->middleware('portal.solicitacao')
                     ->name('renovacao.store');
 
-                Route::get('solicitacoes', [SolicitacaoController::class, 'index'])->name('solicitacoes.index');
+                Route::get('solicitacoes', [SolicitacaoController::class, 'index'])->middleware('portal.extras')->name('solicitacoes.index');
                 Route::post('solicitacoes', [SolicitacaoController::class, 'store'])->middleware('portal.solicitacao')
-                    ->name('solicitacoes.store');
+                    ->middleware('portal.extras')->name('solicitacoes.store');
 
                 // Wizard multi-etapas (HU-059..065, 141) — rotas GET que RENDERIZAM o
                 // wizard. 'nova' é LITERAL e precisa vir ANTES de solicitacoes/{solicitacao}
@@ -178,9 +178,9 @@ Route::middleware(['auth:web', ConfereSessaoPortalServicos::class, 'verified'])
                 // rascunho existente (policy update, dono + rascunho). São DISTINTAS da
                 // GET solicitacoes/{solicitacao} (página de protocolo/consulta do 08-11).
                 Route::get('solicitacoes/nova', [SolicitacaoController::class, 'create'])->middleware('portal.solicitacao')
-                    ->name('solicitacoes.create');
+                    ->middleware('portal.extras')->name('solicitacoes.create');
                 Route::get('solicitacoes/{solicitacao}/editar', [SolicitacaoController::class, 'edit'])->middleware('portal.solicitacao')
-                    ->name('solicitacoes.edit');
+                    ->middleware('portal.extras')->name('solicitacoes.edit');
 
                 // Consulta AUTENTICADA do protocolo (HU-067) — rota com {solicitacao}
                 // DEPOIS das literais. Dono/representado (policy view) acompanha a
@@ -197,14 +197,14 @@ Route::middleware(['auth:web', ConfereSessaoPortalServicos::class, 'verified'])
                 // DEPOIS das literais. Define o CNAE principal + complementares
                 // (até o limite parametrizável) só do dono em rascunho (policy).
                 Route::put('solicitacoes/{solicitacao}/atividades', [SolicitacaoAtividadeController::class, 'update'])->middleware('portal.solicitacao')
-                    ->name('solicitacoes.atividades');
+                    ->middleware('portal.extras')->name('solicitacoes.atividades');
 
                 // Imóvel + área da solicitação (HU-060/HU-061) — rota com
                 // {solicitacao} DEPOIS das literais. Grava o polígono (fonte GeoJSON),
                 // identifica o território (Fase 4) e valida área×polígono; só do dono
                 // em rascunho (policy update).
                 Route::put('solicitacoes/{solicitacao}/imovel', [SolicitacaoImovelController::class, 'update'])->middleware('portal.solicitacao')
-                    ->name('solicitacoes.imovel');
+                    ->middleware('portal.extras')->name('solicitacoes.imovel');
 
                 // Documentos da solicitação (HU-064) — rotas com {solicitacao} DEPOIS
                 // das literais. Upload via Storage (disk parametrizado, nunca público)
@@ -212,10 +212,10 @@ Route::middleware(['auth:web', ConfereSessaoPortalServicos::class, 'verified'])
                 // substituição/remoção só em rascunho. {documento} é validado contra a
                 // solicitação no controller (anti-IDOR).
                 Route::post('solicitacoes/{solicitacao}/documentos', [SolicitacaoDocumentoController::class, 'store'])->middleware('portal.solicitacao')
-                    ->name('solicitacoes.documentos.store');
+                    ->middleware('portal.extras')->name('solicitacoes.documentos.store');
                 Route::get('solicitacoes/{solicitacao}/documentos/{documento}/download', [SolicitacaoDocumentoController::class, 'download'])->name('solicitacoes.documentos.download');
                 Route::delete('solicitacoes/{solicitacao}/documentos/{documento}', [SolicitacaoDocumentoController::class, 'destroy'])->middleware('portal.solicitacao')
-                    ->name('solicitacoes.documentos.destroy');
+                    ->middleware('portal.extras')->name('solicitacoes.documentos.destroy');
 
                 // Simulação pré-protocolo (HU-131) — rota com {solicitacao} DEPOIS
                 // das literais. Reusa o ConsultaViabilidadeService da Fase 7 por
@@ -223,7 +223,7 @@ Route::middleware(['auth:web', ConfereSessaoPortalServicos::class, 'verified'])
                 // ORIENTATIVA, NÃO bloqueia o protocolo. Só do dono em rascunho
                 // (policy update); toggle features.simulacao_solicitacao degrada.
                 Route::post('solicitacoes/{solicitacao}/simular', [SolicitacaoSimulacaoController::class, 'store'])->middleware('portal.solicitacao')
-                    ->name('solicitacoes.simular');
+                    ->middleware('portal.extras')->name('solicitacoes.simular');
 
                 // Protocolar a solicitação (HU-066) — rota com {solicitacao} DEPOIS
                 // das literais. Valida documentos obrigatórios (bloqueia com aviso se
@@ -232,7 +232,7 @@ Route::middleware(['auth:web', ConfereSessaoPortalServicos::class, 'verified'])
                 // evento de domínio após o commit. Só do dono em rascunho (policy
                 // protocol); toggle features.solicitacao_viabilidade degrada.
                 Route::post('solicitacoes/{solicitacao}/protocolar', [ProtocoloController::class, 'store'])->middleware('portal.solicitacao')
-                    ->name('solicitacoes.protocolar');
+                    ->middleware('portal.extras')->name('solicitacoes.protocolar');
 
                 // Cancelar a solicitação (HU-068) — rota com {solicitacao} DEPOIS das
                 // literais. Só o dono enquanto não decidida (policy cancel); o
@@ -240,7 +240,7 @@ Route::middleware(['auth:web', ConfereSessaoPortalServicos::class, 'verified'])
                 // auditoria) com os estados canceláveis parametrizáveis
                 // (solicitacao.cancelamento.estados_cancelaveis); fora deles, bloqueia
                 // com aviso e audita.
-                Route::delete('solicitacoes/{solicitacao}', [CancelamentoSolicitacaoController::class, 'destroy'])->name('solicitacoes.cancelar');
+                Route::delete('solicitacoes/{solicitacao}', [CancelamentoSolicitacaoController::class, 'destroy'])->middleware('portal.extras')->name('solicitacoes.cancelar');
 
                 // Pendências da análise técnica (HU-079/080) — resposta do requerente
                 // pelo portal. Rotas com {solicitacao} DEPOIS das literais (padrão

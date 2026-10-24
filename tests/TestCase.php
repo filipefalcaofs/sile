@@ -63,6 +63,8 @@ abstract class TestCase extends BaseTestCase
         // teste anterior no driver array.
         config(['viabiliza.features.portal_servicos' => true]);
         Cache::forget('viabiliza.parameters.features.portal_servicos');
+        config(['viabiliza.features.portal_servicos_extras' => true]);
+        Cache::forget('viabiliza.parameters.features.portal_servicos_extras');
 
         // O gatilho do fluxo expresso (listener auto-descoberto AvaliarFluxoExpresso)
         // despacha o DecidirFluxoExpressoJob a CADA protocolo (SolicitacaoProtocolada,

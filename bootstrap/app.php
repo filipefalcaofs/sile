@@ -5,6 +5,7 @@ use App\Http\Middleware\ConfigureEnvironmentSession;
 use App\Http\Middleware\EnsureConsultaViabilidadeEnabled;
 use App\Http\Middleware\EnsureLgpdTermAccepted;
 use App\Http\Middleware\EnsurePortalServicosEnabled;
+use App\Http\Middleware\EnsurePortalServicosExtrasEnabled;
 use App\Http\Middleware\EnsurePortalSolicitacaoEnabled;
 use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\HandleInertiaRequests;
@@ -67,6 +68,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'gestao.guest' => RedirectGestaoIfAuthenticated::class,
             'portal.solicitacao' => EnsurePortalSolicitacaoEnabled::class,
             'portal.servicos' => EnsurePortalServicosEnabled::class,
+            'portal.extras' => EnsurePortalServicosExtrasEnabled::class,
             'consulta.viabilidade' => EnsureConsultaViabilidadeEnabled::class,
         ]);
 
