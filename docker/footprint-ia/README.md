@@ -60,6 +60,42 @@ Para usar GPU, faça o build com
 leva de segundos a dezenas de segundos. Isso é suficiente para as dezenas de
 casos por dia que chegam a este passo.
 
+## Implantação no OKD (homologação e depois produção)
+
+A imagem do OKD é gerada do `DockerFile_footprint_ia` da raiz do repositório no
+GitLab do SEMIT, que copia o código de `app-src/docker/footprint-ia/`. Para
+levar o modelo treinado:
+
+1. Publicar no SEMIT, pelo fluxo incremental de sempre, os arquivos do serviço
+   (`app.py`, `pesos/decodificador-lote.pt`) e os do Viabiliza
+   (`GerarPoligonoIaJob`, `InferenciaEdificacaoClient`, `MascaraIa`,
+   `OrtofotoClient`, `AceiteMascaraIa`, `config/viabiliza.php` e os testes).
+2. No `DockerFile_footprint_ia`, depois do `COPY ... app.py`, acrescentar:
+
+   ```dockerfile
+   COPY app-src/docker/footprint-ia/pesos/decodificador-lote.pt /opt/footprint-ia/pesos/
+   ENV FOOTPRINT_IA_PESOS=/opt/footprint-ia/pesos/decodificador-lote.pt
+   ```
+
+   O `chown`/`chmod` que já vem depois cobre a pasta nova. O `torch==2.5.1` do
+   arquivo carrega os pesos (verificado com `torch.load(weights_only=True)`).
+3. Aplicar `okd-deployment.yaml` no namespace de homologação, com a imagem
+   gerada. O serviço é interno (sem Route).
+4. No Viabiliza de homologação, em Configuração de APIs, aba "Edificações
+   complementares": URL do serviço `http://viabiliza-footprint-ia:8080` e a IA
+   ligada (`features.edificacoes_ia`).
+5. Conferir: `GET /saude` responde com o modelo
+   `sam2.1-hiera-small+decodificador-lote@cpu`; um processo sem polígono do
+   CODLOG, Overture ou Microsoft gera o contorno pela IA e a resolução fica
+   registrada em `lot_polygon_resolutions` (fonte `ia`), com o motivo de
+   recusa quando não aceito.
+6. Produção: o mesmo procedimento, depois de conferir em homologação os
+   contornos aceitos de alguns processos reais.
+
+Voltar atrás: definir `FOOTPRINT_IA_PESOS` vazio no deployment (`env`) devolve
+o SAM 2 original sem novo build; desligar `features.edificacoes_ia` tira a IA do
+fluxo.
+
 ## Testes
 
 Os testes usam um modelo falso (`FOOTPRINT_IA_STUB=1`), sem baixar os pesos:
