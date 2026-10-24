@@ -49,9 +49,9 @@ class ProcessosPortalServicosController extends Controller
 
         $processos = ViabilityRequest::query()
             ->where('status', '!=', ViabilityRequestStatus::Rascunho)
-            ->where(fn ($query) => $query
-                ->when($contaId !== null, fn ($dono) => $dono->where('requester_user_id', $contaId))
-                ->orWhereHas('cpfsVinculados', fn ($vinculos) => $vinculos->where('cpf', $cpf)))
+            // Rascunho cancelado nunca teve protocolo: não há o que detalhar.
+            ->whereNotNull('protocol_number')
+            ->visivelPara($contaId, $cpf)
             ->with(['company', 'serviceType', 'decision', 'cpfsVinculados' => fn ($vinculos) => $vinculos->where('cpf', $cpf)])
             ->orderByDesc('protocoled_at')
             ->orderByDesc('id')

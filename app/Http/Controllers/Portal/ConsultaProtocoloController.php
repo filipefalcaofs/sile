@@ -6,11 +6,13 @@ use App\Enums\AiSuggestionType;
 use App\Http\Controllers\Controller;
 use App\Models\AiSuggestion;
 use App\Models\Cnae;
+use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Ai\ExplicacaoCidadaoService;
 use App\Services\Solicitacao\TimelineSolicitacao;
 use App\Support\Audit\AuditService;
 use App\Support\ParecerDecisao;
+use App\Support\Representation\CurrentRepresentation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
@@ -115,7 +117,10 @@ class ConsultaProtocoloController extends Controller
             'service_type' => $solicitacao->serviceType?->name,
             'company' => $solicitacao->company ? [
                 'legal_name' => $solicitacao->company->legal_name,
-                'formatted_cnpj' => $solicitacao->company->formatted_cnpj,
+                // Empresa a constituir guarda o CPF de quem pediu: só o requerente vê.
+                'formatted_cnpj' => strlen((string) $solicitacao->company->cnpj) === 14 || $solicitacao->requester_user_id === $this->efetivo()?->id
+                    ? $solicitacao->company->formatted_cnpj
+                    : null,
             ] : null,
             'used_area_m2' => $solicitacao->used_area_m2,
             'address' => [
@@ -161,5 +166,10 @@ class ConsultaProtocoloController extends Controller
                 'created_at' => $sugestao->created_at?->toIso8601String(),
             ])
             ->all();
+    }
+
+    private function efetivo(): ?User
+    {
+        return app(CurrentRepresentation::class)->grantor() ?? request()->user();
     }
 }

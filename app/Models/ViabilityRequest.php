@@ -16,6 +16,7 @@ use App\Enums\ZonaFonte;
 use App\Services\Tratamento\RespostaPlanilha;
 use Database\Factories\ViabilityRequestFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -493,6 +494,21 @@ class ViabilityRequest extends Model
     public function analysisStatusTransitions(): HasMany
     {
         return $this->hasMany(AnalysisStatusTransition::class, 'viability_request_id');
+    }
+
+    /**
+     * Processos que a pessoa vê no portal: os de que é requerente ou em que o
+     * CPF dela está vinculado (sócio do REGIN, solicitante declarado). Mesma
+     * regra da política view, para lista, painel e Portal de Serviços.
+     */
+    public function scopeVisivelPara(Builder $query, ?int $userId, ?string $cpf): Builder
+    {
+        $cpf = preg_replace('/\D/', '', (string) $cpf) ?? '';
+
+        return $query->where(fn (Builder $inner) => $inner
+            ->when($userId !== null, fn (Builder $dono) => $dono->where('requester_user_id', $userId))
+            ->when(strlen($cpf) === 11, fn (Builder $vinculo) => $vinculo->orWhereHas('cpfsVinculados', fn (Builder $cpfs) => $cpfs->where('cpf', $cpf)))
+            ->when($userId === null && strlen($cpf) !== 11, fn (Builder $nada) => $nada->whereRaw('1 = 0')));
     }
 
     /**

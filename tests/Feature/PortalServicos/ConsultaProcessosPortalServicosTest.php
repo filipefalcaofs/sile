@@ -13,8 +13,10 @@ use App\Services\Solicitacao\VinculosCpfProcesso;
 use Database\Seeders\ParameterSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\RateLimiter;
 use Tests\TestCase;
 
 class ConsultaProcessosPortalServicosTest extends TestCase
@@ -114,6 +116,35 @@ class ConsultaProcessosPortalServicosTest extends TestCase
         $this->processo(['requester_user_id' => $outro->id]);
 
         $this->consultar()->assertOk()->assertJsonCount(0, 'data');
+    }
+
+    public function test_rascunho_cancelado_fica_fora(): void
+    {
+        $this->sessaoDe();
+        $dono = User::factory()->create(['cpf' => self::CPF]);
+        ViabilityRequest::factory()->create(['requester_user_id' => $dono->id, 'status' => ViabilityRequestStatus::Cancelada, 'protocol_number' => null, 'protocoled_at' => null]);
+
+        $this->consultar()->assertOk()->assertJsonCount(0, 'data');
+    }
+
+    public function test_cpf_de_empresa_a_constituir_nao_sai_no_campo_cnpj(): void
+    {
+        $this->sessaoDe();
+        $processo = $this->processo(['requester_user_id' => null]);
+        $processo->company->forceFill(['cnpj' => '00449085040'])->save();
+        app(VinculosCpfProcesso::class)->sincronizar($processo, [self::CPF]);
+
+        $this->assertNull($this->consultar()->assertOk()->json('data.0.cnpj'));
+    }
+
+    public function test_limite_de_chamadas_e_por_sessao_e_nao_por_ip(): void
+    {
+        $limite = fn (string $token) => RateLimiter::limiter('portal-servicos-processos')(
+            Request::create(self::URL, 'GET', server: ['HTTP_AUTHORIZATION' => 'Bearer '.$token, 'REMOTE_ADDR' => '10.0.0.1'])
+        );
+
+        $this->assertNotSame($limite('token-a')->key, $limite('token-b')->key);
+        $this->assertStringNotContainsString('token-a', (string) $limite('token-a')->key);
     }
 
     public function test_parametro_cpf_e_ignorado(): void

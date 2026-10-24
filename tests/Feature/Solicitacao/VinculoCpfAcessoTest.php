@@ -69,6 +69,28 @@ class VinculoCpfAcessoTest extends TestCase
         $this->assertNull($processo->refresh()->requester_user_id);
     }
 
+    public function test_socio_nao_ve_o_cpf_de_quem_pediu_no_lugar_do_cnpj(): void
+    {
+        $socio = $this->cidadao();
+        $processo = $this->processoRegin([$socio->cpf]);
+        $processo->company->forceFill(['cnpj' => '00449085040'])->save();
+
+        $this->actingAs($socio)->get(route('portal.solicitacoes.show', $processo))
+            ->assertInertia(fn (Assert $page) => $page->where('solicitacao.company.formatted_cnpj', null));
+    }
+
+    public function test_painel_conta_e_lista_processos_vinculados(): void
+    {
+        $socio = $this->cidadao();
+        $processo = $this->processoRegin([$socio->cpf]);
+
+        $this->actingAs($socio)->get(route('portal.dashboard'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('indicadores.processos', 1)
+                ->where('indicadores.em_convite', 1)
+                ->where('solicitacoesRecentes.0.id', $processo->id));
+    }
+
     public function test_socio_nao_edita_nem_cancela(): void
     {
         $socio = $this->cidadao();

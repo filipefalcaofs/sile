@@ -32,7 +32,8 @@ class ProcessoPortalServicosResource extends JsonResource
             'bap' => $this->external_reference,
             'servico' => $this->serviceType?->name,
             'empresa' => $this->company?->legal_name,
-            'cnpj' => $this->company?->cnpj,
+            // Empresa a constituir guarda o CPF de quem pediu no lugar do CNPJ.
+            'cnpj' => strlen((string) $this->company?->cnpj) === 14 ? $this->company->cnpj : null,
             'situacao' => $this->status->value,
             'situacao_descricao' => $this->status->publicLabel(),
             'convite_pendente' => $this->status === ViabilityRequestStatus::EmPendencia,

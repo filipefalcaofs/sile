@@ -40,7 +40,7 @@ class PainelCidadaoService
     private function indicadores(User $efetivo): array
     {
         $porStatus = ViabilityRequest::query()
-            ->where('requester_user_id', $efetivo->id)
+            ->visivelPara($efetivo->id, $efetivo->cpf)
             ->selectRaw('status, count(*) as total')
             ->groupBy('status')
             ->pluck('total', 'status');
@@ -64,7 +64,7 @@ class PainelCidadaoService
 
         return SolicitacaoResumoResource::collection(
             ViabilityRequest::query()
-                ->where('requester_user_id', $efetivo->id)
+                ->visivelPara($efetivo->id, $efetivo->cpf)
                 ->with(['company', 'serviceType'])
                 ->orderByDesc('created_at')
                 ->orderByDesc('id')
@@ -83,7 +83,7 @@ class PainelCidadaoService
     {
         $pendencias = AnalysisPendency::query()
             ->where('status', AnalysisPendencyStatus::Aberta)
-            ->whereHas('viabilityRequest', fn ($query) => $query->where('requester_user_id', $efetivo->id))
+            ->whereHas('viabilityRequest', fn ($query) => $query->visivelPara($efetivo->id, $efetivo->cpf))
             ->with('viabilityRequest:id,protocol_number')
             ->latest()
             ->get()

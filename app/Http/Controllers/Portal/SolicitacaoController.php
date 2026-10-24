@@ -86,10 +86,7 @@ class SolicitacaoController extends Controller
         $cancelableStates = $this->cancelableStates();
 
         $solicitacoes = ViabilityRequest::query()
-            ->where(fn ($query) => $query
-                ->where('requester_user_id', $effectiveUser->id)
-                ->when(strlen((string) $effectiveUser->cpf) === 11, fn ($vinculo) => $vinculo
-                    ->orWhereHas('cpfsVinculados', fn ($cpfs) => $cpfs->where('cpf', $effectiveUser->cpf))))
+            ->visivelPara($effectiveUser->id, $effectiveUser->cpf)
             ->with(['company', 'serviceType'])
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($inner) use ($search) {

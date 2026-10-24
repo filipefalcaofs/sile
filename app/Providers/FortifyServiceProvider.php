@@ -253,7 +253,10 @@ class FortifyServiceProvider extends ServiceProvider
 
         // Consulta de processos por CPF do Portal de Serviços (cada chamada
         // confere a sessão no BFF da SEDUR).
-        RateLimiter::for('portal-servicos-processos', fn (Request $request) => Limit::perMinute(60)->by($request->ip()));
+        // Chave pela sessão (hash do token), não pelo IP: o Portal pode chamar do
+        // próprio servidor, e todos os cidadãos sairiam pelo mesmo endereço.
+        RateLimiter::for('portal-servicos-processos', fn (Request $request) => Limit::perMinute(60)
+            ->by('portal-servicos:'.sha1($request->bearerToken() ?? $request->ip())));
 
         // Throttle do webhook municipal /api_integracao/recebe (HU-099 RN-010).
         RateLimiter::for('regin-recebe', function (Request $request) {
