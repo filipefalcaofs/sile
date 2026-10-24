@@ -34,12 +34,23 @@ class ViabilityRequestPolicy
     }
 
     /**
-     * Ver a solicitação: somente o dono/representado (qualquer status — o
-     * histórico continua visível ao requerente).
+     * Ver a solicitação: o dono/representado (qualquer status — o histórico
+     * continua visível ao requerente) ou quem tem o CPF vinculado.
      */
     public function view(User $user, ViabilityRequest $request): bool
     {
-        return $this->owns($user, $request);
+        return $this->owns($user, $request) || $this->vinculadoPeloCpf($user, $request);
+    }
+
+    /**
+     * Sócio do REGIN ou solicitante declarado: vê o processo (e responde a
+     * convite, que usa esta mesma regra), sem ser o requerente.
+     */
+    private function vinculadoPeloCpf(User $user, ViabilityRequest $request): bool
+    {
+        $cpf = (string) $this->effectiveUser($user)->cpf;
+
+        return strlen($cpf) === 11 && $request->cpfsVinculados()->where('cpf', $cpf)->exists();
     }
 
     /**

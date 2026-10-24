@@ -8,6 +8,7 @@ use App\Models\Parameter;
 use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
+use App\Services\Solicitacao\VinculosCpfProcesso;
 use Database\Seeders\ParameterSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -131,6 +132,16 @@ class EntradaPortalServicosTest extends TestCase
         $proprio = ViabilityRequest::factory()->protocoled()->create(['protocol_number' => 'VIA-2026-000011', 'requester_user_id' => $user->id, 'external_reference' => 'BAP-COMUM']);
 
         $this->entrar('processo', numero: 'BAP-COMUM')->assertRedirect('/portal/solicitacoes/'.$proprio->id);
+    }
+
+    public function test_detalhar_abre_processo_regin_para_o_socio(): void
+    {
+        $this->sessaoValida();
+        $this->cidadao();
+        $processo = ViabilityRequest::factory()->protocoled()->create(['requester_user_id' => null, 'external_reference' => 'BAP2600099999']);
+        app(VinculosCpfProcesso::class)->sincronizar($processo, [self::CPF]);
+
+        $this->entrar('processo', numero: 'BAP2600099999')->assertRedirect('/portal/solicitacoes/'.$processo->id);
     }
 
     public function test_detalhar_processo_de_outra_pessoa_vai_para_a_lista_com_aviso(): void
