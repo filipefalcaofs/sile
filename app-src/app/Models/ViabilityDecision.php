@@ -28,6 +28,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 #[Fillable([
     'viability_request_id',
+    'analysis_record_id',
     'flow',
     'outcome',
     'consolidated_result',
@@ -132,5 +133,16 @@ class ViabilityDecision extends Model
     public function decidedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'decided_by_user_id');
+    }
+
+    /**
+     * Ficha de análise em que a decisão se baseou (HU.183). Vazia no fluxo
+     * expresso e nas decisões antigas sem vínculo seguro.
+     *
+     * @return BelongsTo<AnalysisRecord, $this>
+     */
+    public function analysisRecord(): BelongsTo
+    {
+        return $this->belongsTo(AnalysisRecord::class);
     }
 }

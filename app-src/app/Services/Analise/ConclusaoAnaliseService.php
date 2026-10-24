@@ -55,7 +55,7 @@ class ConclusaoAnaliseService
         $motivo = $this->motivo($resultado, $parecer);
 
         if (! $confirmarDivergencia) {
-            $this->avisarDivergencia($request, $resultado);
+            $this->avisarDivergencia($request, $ator, $resultado);
         }
 
         if ($exigirFichaSalva && $request->status === ViabilityRequestStatus::EmAnalise) {
@@ -90,17 +90,13 @@ class ConclusaoAnaliseService
      *
      * @throws DivergenciaConclusaoException
      */
-    private function avisarDivergencia(ViabilityRequest $request, ConclusionOutcome $resultado): void
+    private function avisarDivergencia(ViabilityRequest $request, User $ator, ConclusionOutcome $resultado): void
     {
         if (! in_array($resultado, [ConclusionOutcome::Deferido, ConclusionOutcome::Indeferido], true)) {
             return;
         }
 
-        $ficha = $request->currentAnalysisRecord()->first();
-
-        if ($ficha === null) {
-            return;
-        }
+        $ficha = $this->fichas->current($request, $ator);
 
         $atividades = array_values(array_filter($ficha->per_cnae ?? [], fn ($item): bool => is_array($item) && isset($item['cnae'])));
 
@@ -205,15 +201,13 @@ class ConclusaoAnaliseService
 
     private function concluirPelaFicha(ViabilityRequest $request, User $ator, ConclusionOutcome $resultado, ?string $parecer, bool $confirmarDivergencia = false, ?ValidadeDeferimento $validade = null): void
     {
-        $record = $request->currentAnalysisRecord()->first();
-
-        if ($record === null) {
-            throw new DomainException('A ficha de análise ainda não foi criada para este processo.');
-        }
+        // A ficha que quem conclui vê (HU.183): a própria, a base que serve a ele
+        // ou a última ficha do processo, de outro analista.
+        $record = $this->fichas->current($request, $ator);
 
         // A ficha salva e ainda em rascunho é finalizada aqui, ficando só para consulta.
         if (! $record->isFinalizada()) {
-            $record = $this->fichas->finalizar($record, $ator);
+            $record = $this->fichas->finalizarParaConcluir($record, $ator);
         }
 
         $deferido = $resultado === ConclusionOutcome::Deferido;

@@ -233,6 +233,7 @@ class AnaliseTecnicaDecisionService
 
         $decision = ViabilityDecision::create([
             'viability_request_id' => $request->id,
+            'analysis_record_id' => $record->id,
             'flow' => 'analise_tecnica',
             'outcome' => $outcome,
             'consolidated_result' => $consolidated,
