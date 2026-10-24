@@ -156,6 +156,9 @@ return [
         'ia' => [
             // Lado (m) e tamanho (px) do recorte da ortofoto em volta do ponto.
             'lado_recorte_m' => 60,
+            // Recorte crescente: passa ao lado seguinte enquanto algum contorno
+            // candidato encostar na borda (lote maior que o recorte).
+            'lados_recorte_m' => [60, 120, 240],
             'tamanho_px' => 800,
             'timeout' => 120,
             // Passadas do job de decisão esperando a IA antes de seguir sem ela.
@@ -166,9 +169,12 @@ return [
             // Critérios de aceite do contorno gerado.
             'aceite' => [
                 'area_min_m2' => 20,
-                'area_max_m2' => 5000,
+                // Limite de lote, o mesmo dos lotes usados no treino do modelo.
+                'area_max_m2' => 20000,
                 'compacidade_min' => 0.2,
                 'margem_borda_px' => 2,
+                // IoU previsto mínimo do modelo; nulo desliga a checagem.
+                'score_min' => null,
             ],
         ],
     ],

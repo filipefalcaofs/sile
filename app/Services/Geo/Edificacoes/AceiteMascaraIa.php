@@ -37,12 +37,18 @@ class AceiteMascaraIa
         [$area, $perimetro] = $this->medidas($coordenadas, $lat);
 
         if ($area < (float) config('viabiliza.edificacoes.ia.aceite.area_min_m2', 20)
-            || $area > (float) config('viabiliza.edificacoes.ia.aceite.area_max_m2', 5000)) {
+            || $area > (float) config('viabiliza.edificacoes.ia.aceite.area_max_m2', 20000)) {
             return $this->recusa('area_fora_dos_limites', $area);
         }
 
         if ($perimetro <= 0 || 4 * M_PI * $area / ($perimetro ** 2) < (float) config('viabiliza.edificacoes.ia.aceite.compacidade_min', 0.2)) {
             return $this->recusa('compacidade_baixa', $area);
+        }
+
+        $scoreMinimo = config('viabiliza.edificacoes.ia.aceite.score_min');
+
+        if (is_numeric($scoreMinimo) && $mascara->score !== null && $mascara->score < (float) $scoreMinimo) {
+            return $this->recusa('score_baixo', $area);
         }
 
         $coordenadas[] = $coordenadas[0];
