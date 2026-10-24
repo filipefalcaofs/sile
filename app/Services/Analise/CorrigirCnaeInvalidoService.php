@@ -52,6 +52,6 @@ class CorrigirCnaeInvalidoService
             );
         });
 
-        $this->preAnalise->recalcularFicha($processo, $this->fichas->current($processo));
+        $this->preAnalise->recalcularFicha($processo, $this->fichas->current($processo, $ator));
     }
 }

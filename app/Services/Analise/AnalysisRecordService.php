@@ -24,6 +24,11 @@ use Illuminate\Support\Facades\DB;
  * do motor (status_sugerido), que é o insumo da divergência na finalização.
  * O Motivo de Análise (`analysis_reasons`) é do sistema (queda do expresso) —
  * o autosave ignora qualquer valor enviado pelo cliente.
+ *
+ * Cada ficha pertence a quem a preencheu (HU.183). Rascunho sem dono é base: a
+ * base do motor, que serve a qualquer analista, ou a cópia de conclusão, que só
+ * serve a quem conclui. Quem salva ou finaliza uma base passa a ser o dono, e
+ * ninguém grava na ficha de outro analista.
  */
 class AnalysisRecordService
 {
@@ -48,10 +53,55 @@ class AnalysisRecordService
     ];
 
     /**
-     * Revisão vigente da ficha (a de maior revisão). Defensivamente cria a revisão
-     * 1 vazia se não houver nenhuma — normalmente a pré-análise (10-08) já a criou.
+     * Ficha que o usuário vê ao abrir (HU.183): a última ficha dele no processo;
+     * sem ficha própria, a base disponível para ele; sem base, a última ficha do
+     * processo, que é de outro analista e abre só para leitura. Abrir não cria
+     * ficha: a dele nasce em novaRevisao. Sem usuário: a revisão de maior número
+     * do processo, para rotinas internas.
      */
-    public function current(ViabilityRequest $request): AnalysisRecord
+    public function current(ViabilityRequest $request, ?User $usuario = null): AnalysisRecord
+    {
+        $vigenteDoProcesso = $this->vigenteDoProcesso($request);
+
+        if ($usuario === null) {
+            return $vigenteDoProcesso;
+        }
+
+        return $this->ultimaDoAnalista($request, $usuario) ?? $this->baseDisponivel($request, $usuario) ?? $vigenteDoProcesso;
+    }
+
+    private function ultimaDoAnalista(ViabilityRequest $request, User $usuario): ?AnalysisRecord
+    {
+        return $request->analysisRecords()
+            ->where('analyst_user_id', $usuario->id)
+            ->where('status', '!=', AnalysisRecordStatus::Substituida->value)
+            ->orderByDesc('revision')
+            ->first();
+    }
+
+    /**
+     * A ficha é de outro analista: quem a vê não grava nela.
+     */
+    public function eDeOutroAnalista(AnalysisRecord $record, ?User $usuario): bool
+    {
+        return $usuario !== null && $record->analyst_user_id !== null && $record->analyst_user_id !== $usuario->id;
+    }
+
+    /**
+     * Finaliza a ficha usada numa conclusão. A ficha de outro analista é
+     * finalizada no nome de quem a escreveu: a decisão fica com quem conclui e o
+     * parecer com quem analisou.
+     */
+    public function finalizarParaConcluir(AnalysisRecord $record, User $ator): AnalysisRecord
+    {
+        return $this->finalizar($record, $this->eDeOutroAnalista($record, $ator) ? null : $ator);
+    }
+
+    /**
+     * Revisão de maior número do processo. Defensivamente cria a revisão 1 vazia
+     * se não houver nenhuma — normalmente a pré-análise (10-08) já a criou.
+     */
+    private function vigenteDoProcesso(ViabilityRequest $request): AnalysisRecord
     {
         // Depois da primeira revisão a vigente é sempre a mais recente: a pré-análise
         // só vale para criar ou atualizar a revisão inicial.
@@ -87,16 +137,19 @@ class AnalysisRecordService
      * escolhido por CNAE, condicionantes, vagas e parecer). A revisão finalizada é
      * imutável (RN-003) — autosave nela lança AnalysisRecordImutavelException
      * (422 no caller). A sugestão do motor (status_sugerido) é preservada.
-     * Quem salva passa a ser o analista responsável pela revisão: é isso que
-     * distingue a ficha salva da que só nasceu pré-analisada pelo motor.
+     * Quem salva uma base sem dono passa a ser o analista responsável por ela: é
+     * isso que distingue a ficha salva da que só nasceu pré-analisada pelo motor.
+     * Ficha de outro analista lança FichaDeOutroAnalistaException (HU.183).
      *
      * @param  array<string, mixed>  $data
      */
     public function autosave(AnalysisRecord $record, array $data, ?User $ator = null): AnalysisRecord
     {
-        if ($record->isFinalizada()) {
+        if ($record->status !== AnalysisRecordStatus::Rascunho) {
             throw AnalysisRecordImutavelException::finalizada($record);
         }
+
+        $this->exigirDono($record, $ator);
 
         if (array_key_exists('per_cnae', $data) && is_array($data['per_cnae'])) {
             $record->per_cnae = $this->mergePerCnae($record->per_cnae, $data['per_cnae']);
@@ -163,9 +216,11 @@ class AnalysisRecordService
      */
     public function finalizar(AnalysisRecord $record, ?User $ator = null): AnalysisRecord
     {
-        if ($record->isFinalizada()) {
+        if ($record->status !== AnalysisRecordStatus::Rascunho) {
             throw AnalysisRecordImutavelException::finalizada($record);
         }
+
+        $this->exigirDono($record, $ator);
 
         return DB::transaction(function () use ($record, $ator): AnalysisRecord {
             $divergencias = $this->registrarDivergencias($record);
@@ -198,47 +253,87 @@ class AnalysisRecordService
     }
 
     /**
-     * Cria a próxima revisão (revision+1, rascunho) COPIANDO a última revisão como
-     * base para reedição após a finalização — a finalizada permanece intacta
-     * (append-only). "Recalcular" (reexecutar o motor) é uma variação explícita
-     * que reporia o engine_snapshot numa nova revisão (reusando o PreAnaliseService)
-     * — esta cria a revisão de EDIÇÃO; a finalizada nunca é alterada.
+     * Ao ir para conclusão, a ficha de quem encaminhou é finalizada. Com a chave
+     * `viabiliza.analise.ficha.conclusao_parte_da_ficha_do_analista` ligada,
+     * quem conclui recebe uma cópia sem dono dessa ficha; desligada, recebe a
+     * base do motor ao abrir. Devolve a cópia ou, sem ela, a ficha finalizada.
+     */
+    public function guardarParaConclusao(ViabilityRequest $request, User $ator): AnalysisRecord
+    {
+        $record = $this->current($request, $ator);
+
+        if ($record->status === AnalysisRecordStatus::Rascunho) {
+            $record = $this->finalizar($record, $ator);
+        }
+
+        if (! config('viabiliza.analise.ficha.conclusao_parte_da_ficha_do_analista', true)) {
+            return $record;
+        }
+
+        return $this->copiar($request, $record, dono: null, evento: 'ficha-copia-conclusao');
+    }
+
+    /**
+     * Abre a ficha do analista (HU.183): copia a última ficha DELE, que fica
+     * intacta (append-only). Com rascunho aberto, devolve o rascunho em vez de
+     * abrir outro. Sem ficha própria, devolve a base disponível ou cria a base do
+     * motor. Sem usuário (rotinas internas), copia a última revisão do processo.
      */
     public function novaRevisao(ViabilityRequest $request, ?User $ator = null): AnalysisRecord
     {
-        $ultima = $request->analysisRecords()->orderByDesc('revision')->first();
+        if ($ator === null) {
+            $ultima = $request->analysisRecords()->orderByDesc('revision')->first();
 
-        if ($ultima === null) {
-            // Defensivo: sem revisão anterior, materializa a revisão 1 vazia.
-            return $this->current($request);
+            return $ultima === null
+                ? $this->current($request)
+                : $this->copiar($request, $ultima, dono: $ultima->analyst_user_id, evento: 'ficha-nova-revisao');
         }
 
-        return DB::transaction(function () use ($request, $ultima, $ator): AnalysisRecord {
+        $propria = $this->ultimaDoAnalista($request, $ator);
+
+        if ($propria === null) {
+            return $this->baseDisponivel($request, $ator) ?? $this->criarBaseDoMotor($request);
+        }
+
+        if ($propria->status === AnalysisRecordStatus::Rascunho) {
+            return $propria;
+        }
+
+        return $this->copiar($request, $propria, dono: $ator->id, evento: 'ficha-nova-revisao');
+    }
+
+    /**
+     * Cria a próxima revisão (rascunho) copiando $origem, que permanece intacta.
+     */
+    private function copiar(ViabilityRequest $request, AnalysisRecord $origem, ?int $dono, string $evento): AnalysisRecord
+    {
+        return DB::transaction(function () use ($request, $origem, $dono, $evento): AnalysisRecord {
             $nova = AnalysisRecord::create([
                 'viability_request_id' => $request->id,
-                'revision' => $ultima->revision + 1,
+                'revision' => $this->proximaRevisao($request),
                 'status' => AnalysisRecordStatus::Rascunho,
-                'analyst_user_id' => $ator?->id ?? $ultima->analyst_user_id,
-                'engine_available' => $ultima->engine_available,
-                'engine_snapshot' => $ultima->engine_snapshot,
-                'engine_rules_versions' => $ultima->engine_rules_versions,
-                'per_cnae' => $ultima->per_cnae,
-                'conditions' => $ultima->conditions,
-                'analysis_reasons' => $ultima->motivosSistema() ?: null,
-                'parking' => $ultima->parking,
-                'address_confirmed' => $ultima->address_confirmed,
-                'parecer' => $ultima->parecer,
-                'is_virtual_office_hq' => $ultima->is_virtual_office_hq,
+                'analyst_user_id' => $dono,
+                'based_on_record_id' => $origem->id,
+                'engine_available' => $origem->engine_available,
+                'engine_snapshot' => $origem->engine_snapshot,
+                'engine_rules_versions' => $origem->engine_rules_versions,
+                'per_cnae' => $origem->per_cnae,
+                'conditions' => $origem->conditions,
+                'analysis_reasons' => $origem->motivosSistema() ?: null,
+                'parking' => $origem->parking,
+                'address_confirmed' => $origem->address_confirmed,
+                'parecer' => $origem->parecer,
+                'is_virtual_office_hq' => $origem->is_virtual_office_hq,
                 'finalized_at' => null,
             ]);
 
             $this->audit->log(
                 logName: 'analise',
-                event: 'ficha-nova-revisao',
-                description: "Nova revisão da ficha de análise do processo #{$request->id} (revisão {$nova->revision})",
+                event: $evento,
+                description: "Nova revisão da ficha de análise do processo #{$request->id} (revisão {$nova->revision}, a partir da revisão {$origem->revision})",
                 properties: [
                     'viability_request_id' => $request->id,
-                    'revision_anterior' => $ultima->revision,
+                    'revision_anterior' => $origem->revision,
                     'revision' => $nova->revision,
                 ],
                 subject: $nova,
@@ -247,6 +342,89 @@ class AnalysisRecordService
 
             return $nova;
         });
+    }
+
+    /**
+     * Base sem dono que serve a $usuario: a cópia de conclusão só para quem
+     * conclui a análise; a base do motor para qualquer analista.
+     */
+    private function baseDisponivel(ViabilityRequest $request, User $usuario): ?AnalysisRecord
+    {
+        $podeConcluir = $usuario->can('concluir-analise');
+
+        return $request->analysisRecords()
+            ->whereNull('analyst_user_id')
+            ->where('status', AnalysisRecordStatus::Rascunho->value)
+            ->orderByDesc('revision')
+            ->get()
+            ->first(fn (AnalysisRecord $base): bool => $base->based_on_record_id === null || $podeConcluir);
+    }
+
+    /**
+     * Base do motor para quem ainda não tem ficha no processo: a última revisão
+     * sem o que é opinião do analista (escolha e justificativa por atividade,
+     * parecer, confirmação de endereço e sede de escritório virtual). Ficam o
+     * snapshot do motor, o enquadramento das atividades, as condicionantes e as
+     * vagas, que descrevem o imóvel e a atividade.
+     */
+    private function criarBaseDoMotor(ViabilityRequest $request): AnalysisRecord
+    {
+        $ultima = $this->vigenteDoProcesso($request);
+
+        $perCnae = array_map(function (mixed $item): mixed {
+            if (! is_array($item)) {
+                return $item;
+            }
+
+            $item['status_escolhido'] = $item['status_sugerido'] ?? null;
+            $item['justificativa'] = null;
+
+            return $item;
+        }, $ultima->per_cnae ?? []);
+
+        try {
+            return AnalysisRecord::create([
+                'viability_request_id' => $request->id,
+                'revision' => $this->proximaRevisao($request),
+                'status' => AnalysisRecordStatus::Rascunho,
+                'analyst_user_id' => null,
+                'engine_available' => $ultima->engine_available,
+                'engine_snapshot' => $ultima->engine_snapshot,
+                'engine_rules_versions' => $ultima->engine_rules_versions,
+                'per_cnae' => $ultima->per_cnae === null ? null : $perCnae,
+                'conditions' => $ultima->conditions,
+                'analysis_reasons' => $ultima->motivosSistema() ?: null,
+                'parking' => $ultima->parking,
+                'parecer' => null,
+                'finalized_at' => null,
+            ]);
+        } catch (QueryException $e) {
+            // Corrida: outra abertura criou a base ao mesmo tempo (unique por revisão).
+            return $request->analysisRecords()
+                ->whereNull('analyst_user_id')
+                ->whereNull('based_on_record_id')
+                ->where('status', AnalysisRecordStatus::Rascunho->value)
+                ->orderByDesc('revision')
+                ->first() ?? throw $e;
+        }
+    }
+
+    private function proximaRevisao(ViabilityRequest $request): int
+    {
+        return ((int) $request->analysisRecords()->max('revision')) + 1;
+    }
+
+    /**
+     * Ninguém grava na ficha de outro analista (HU.183). Base sem dono passa a
+     * ser de quem a salva ou finaliza.
+     */
+    private function exigirDono(AnalysisRecord $record, ?User $ator): void
+    {
+        if ($ator === null || $record->analyst_user_id === null || $record->analyst_user_id === $ator->id) {
+            return;
+        }
+
+        throw FichaDeOutroAnalistaException::de($record);
     }
 
     /**

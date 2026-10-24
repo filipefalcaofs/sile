@@ -98,7 +98,7 @@ class AlterarZonaViaService
             );
         });
 
-        $ficha = $this->fichas->current($processo);
+        $ficha = $this->fichas->current($processo, $ator);
         $this->preAnalise->recalcularFicha($processo, $ficha);
     }
 

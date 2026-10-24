@@ -8,6 +8,7 @@ use App\Services\Analise\AnalysisRecordService;
 use App\Services\Analise\PrecedentService;
 use App\Support\Audit\AuditService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 /**
  * Endpoint de precedentes da ficha de análise (HU-132): serve o painel de apoio à
@@ -28,9 +29,9 @@ class PrecedenteController extends Controller
     /**
      * Precedentes da revisão vigente do processo: {imovel, cnae_zona}.
      */
-    public function show(ViabilityRequest $viabilityRequest): JsonResponse
+    public function show(Request $request, ViabilityRequest $viabilityRequest): JsonResponse
     {
-        $record = $this->records->current($viabilityRequest);
+        $record = $this->records->current($viabilityRequest, $request->user());
 
         $payload = $this->precedents->forRecord($record);
 

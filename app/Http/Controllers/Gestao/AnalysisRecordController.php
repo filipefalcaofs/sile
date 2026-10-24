@@ -33,6 +33,7 @@ use App\Services\Analise\AnalysisRecordDiff;
 use App\Services\Analise\AnalysisRecordImutavelException;
 use App\Services\Analise\AnalysisRecordService;
 use App\Services\Analise\CadastroImobiliarioFichaService;
+use App\Services\Analise\FichaDeOutroAnalistaException;
 use App\Services\Analise\QuadrosFichaChecklist;
 use App\Services\Auditoria\DecisionExplanationService;
 use App\Services\Expresso\SedeEscritorioVirtualGatilho;
@@ -90,7 +91,7 @@ class AnalysisRecordController extends Controller
 
         abort_unless($request->user()?->can('analisar-processos'), 403);
 
-        $record = $this->records->current($viabilityRequest);
+        $record = $this->records->current($viabilityRequest, $request->user());
 
         // Link da Tramitação: a revisão pedida, só para consulta, sem editar nem agir.
         $somenteLeitura = $request->boolean('somente_leitura');
@@ -241,12 +242,14 @@ class AnalysisRecordController extends Controller
      */
     public function autosave(AnalysisRecordRequest $request, ViabilityRequest $viabilityRequest): JsonResponse
     {
-        $record = $this->records->current($viabilityRequest);
+        $record = $this->records->current($viabilityRequest, $request->user());
 
         try {
             $record = $this->records->autosave($record, $request->validated(), $request->user());
         } catch (AnalysisRecordImutavelException $e) {
             throw ValidationException::withMessages(['ficha' => $e->getMessage()]);
+        } catch (FichaDeOutroAnalistaException $e) {
+            abort(403, $e->getMessage());
         }
 
         $manual = $request->boolean('manual');
@@ -276,12 +279,14 @@ class AnalysisRecordController extends Controller
      */
     public function finalizar(Request $request, ViabilityRequest $viabilityRequest): JsonResponse
     {
-        $record = $this->records->current($viabilityRequest);
+        $record = $this->records->current($viabilityRequest, $request->user());
 
         try {
             $record = $this->records->finalizar($record, $request->user());
         } catch (AnalysisRecordImutavelException $e) {
             throw ValidationException::withMessages(['ficha' => $e->getMessage()]);
+        } catch (FichaDeOutroAnalistaException $e) {
+            abort(403, $e->getMessage());
         }
 
         return response()->json([
@@ -298,11 +303,11 @@ class AnalysisRecordController extends Controller
      */
     public function concluirProcesso(Request $request, ViabilityRequest $viabilityRequest): JsonResponse
     {
-        $record = $this->records->current($viabilityRequest);
+        $record = $this->records->current($viabilityRequest, $request->user());
 
         if (! $record->isFinalizada()) {
             try {
-                $record = $this->records->finalizar($record, $request->user());
+                $record = $this->records->finalizarParaConcluir($record, $request->user());
             } catch (AnalysisRecordImutavelException $e) {
                 throw ValidationException::withMessages(['ficha' => $e->getMessage()]);
             }
@@ -356,7 +361,7 @@ class AnalysisRecordController extends Controller
      */
     public function sugerirParecer(Request $request, ViabilityRequest $viabilityRequest, SugestaoParecerService $parecer): JsonResponse
     {
-        $record = $this->records->current($viabilityRequest);
+        $record = $this->records->current($viabilityRequest, $request->user());
 
         if ($record->isFinalizada()) {
             abort(422, 'A revisão está finalizada (RN-003): crie uma nova revisão para trabalhar uma minuta.');
@@ -398,7 +403,7 @@ class AnalysisRecordController extends Controller
      */
     public function sugerirJustificativa(Request $request, ViabilityRequest $viabilityRequest, SugestaoJustificativaService $justificativa): JsonResponse
     {
-        $record = $this->records->current($viabilityRequest);
+        $record = $this->records->current($viabilityRequest, $request->user());
 
         if ($record->isFinalizada()) {
             abort(422, 'A revisão está finalizada (RN-003): crie uma nova revisão para trabalhar uma minuta.');

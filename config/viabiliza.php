@@ -224,6 +224,12 @@ return [
     // limiar do semáforo, prazo de pendência, janela/itens de precedentes e o
     // TVL PDF) nascem administráveis no ParameterSeeder; aqui é só o espelho.
     'analise' => [
+        // HU.183: ao ir para conclusão, quem conclui recebe uma cópia da ficha de
+        // quem analisou (true, comportamento anterior) ou começa da base do
+        // motor (false). Provisório até a decisão da SEDUR.
+        'ficha' => [
+            'conclusao_parte_da_ficha_do_analista' => env('SILE_ANALISE_CONCLUSAO_PARTE_DA_FICHA_DO_ANALISTA', true),
+        ],
         'sla' => [
             'distribuicao_dias' => 2,
             'analise_dias' => 10,

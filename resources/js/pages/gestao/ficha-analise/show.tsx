@@ -83,6 +83,7 @@ interface Ficha {
     status: string;
     status_label: string;
     editavel: boolean;
+    de_outro_analista: boolean;
     engine_available: boolean;
     per_cnae: PerCnae[];
     conditions: string[];
@@ -1642,7 +1643,18 @@ export default function FichaAnaliseShow({
                     </div>
                 </div>
 
-                {!editavel && (
+                {!editavel && ficha.de_outro_analista && (
+                    <div className="flex items-start gap-3 rounded-xl border border-brand-200 bg-brand-50 p-4 dark:border-brand-500/30 dark:bg-brand-500/15">
+                        <AlertIcon className="size-5 shrink-0 fill-current text-brand-500" />
+                        <p className="text-theme-sm text-gray-600 dark:text-gray-300">
+                            Esta ficha é de <strong>{ficha.analyst}</strong> e abre só para consulta. Para registrar a
+                            sua análise, use <strong>Abrir minha ficha</strong>: ela começa da sua última ficha neste
+                            processo ou, se for a primeira, da sugestão do sistema.
+                        </p>
+                    </div>
+                )}
+
+                {!editavel && !ficha.de_outro_analista && (
                     <div className="flex items-start gap-3 rounded-xl border border-success-200 bg-success-50 p-4 dark:border-success-500/30 dark:bg-success-500/15">
                         <CheckCircleIcon className="size-5 shrink-0 fill-current text-success-500" />
                         <p className="text-theme-sm text-gray-600 dark:text-gray-300">
@@ -2512,13 +2524,13 @@ export default function FichaAnaliseShow({
                                             </>
                                         ) : (
                                             <>
-                                                {podeConcluir && (
+                                                {podeConcluir && ficha.status === 'finalizada' && (
                                                     <Button onClick={() => setShowDecidir(true)} size="sm">
                                                         Decidir processo (conforme ficha)
                                                     </Button>
                                                 )}
                                                 <Button onClick={novaRevisao} variant="outline" size="sm" loading={acao.processing}>
-                                                    Criar nova ficha
+                                                    {ficha.de_outro_analista ? 'Abrir minha ficha' : 'Criar nova ficha'}
                                                 </Button>
                                             </>
                                         )}

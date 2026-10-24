@@ -2,11 +2,13 @@
 
 namespace App\Http\Resources;
 
+use App\Enums\AnalysisRecordStatus;
 use App\Enums\RuleDomain;
 use App\Models\AnalysisRecord;
 use App\Models\Cnae;
 use App\Models\RuleVersion;
 use App\Models\TllValor;
+use App\Services\Analise\AnalysisRecordService;
 use App\Services\Analise\PerguntaLocalFicha;
 use App\Services\Analise\QuadrosFichaChecklist;
 use Illuminate\Http\Request;
@@ -14,7 +16,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * Payload de leitura da ficha de análise (HU-126) para a retaguarda: a revisão
- * vigente, seu status (+rótulo) e a flag `editavel` (false na finalizada — RN-003),
+ * vigente, seu status (+rótulo) e a flag `editavel` (false na finalizada — RN-003 —
+ * e na ficha de outro analista, sinalizada em `de_outro_analista` — HU.183),
  * o per_cnae com a escolha do analista (status_escolhido), as condicionantes,
  * as vagas, o parecer e `finalized_at`. A sugestão do motor (status_sugerido)
  * NÃO sai no payload — o sistema não sugere decisão ao analista (relatório
@@ -35,13 +38,16 @@ class AnalysisRecordResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $deOutroAnalista = app(AnalysisRecordService::class)->eDeOutroAnalista($this->resource, $request->user());
+
         return [
             'id' => $this->id,
             'viability_request_id' => $this->viability_request_id,
             'revision' => $this->revision,
             'status' => $this->status->value,
             'status_label' => $this->status->label(),
-            'editavel' => ! $this->isFinalizada() && ! $this->somenteLeitura,
+            'editavel' => $this->status === AnalysisRecordStatus::Rascunho && ! $this->somenteLeitura && ! $deOutroAnalista,
+            'de_outro_analista' => $deOutroAnalista,
             'engine_available' => $this->engine_available,
             'per_cnae' => $this->perCnaeComJustificativaDoMotor(),
             'conditions' => array_values((array) ($this->conditions ?? [])),
