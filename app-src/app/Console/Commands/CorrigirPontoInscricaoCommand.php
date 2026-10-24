@@ -26,7 +26,9 @@ use Throwable;
  * correto. Grava o ponto certo, refaz o lote que veio do ponto, recalcula
  * zona, camadas e classe da via. Decisão, situação, polígono desenhado e
  * ajustes manuais de zona e via não mudam. Quando nenhuma fonte confirma o
- * ponto, o processo só é listado. Sem `--aplicar`, só mostra o levantamento.
+ * ponto, nada disso muda: com `--aplicar` o processo só recebe a marca que faz
+ * a ficha avisar que a localização não foi confirmada. Sem `--aplicar`, só
+ * mostra o levantamento.
  */
 class CorrigirPontoInscricaoCommand extends Command
 {
@@ -77,8 +79,9 @@ class CorrigirPontoInscricaoCommand extends Command
         $divergentes = [];
         $semFonte = [];
         $corrigidos = [];
+        $marcados = 0;
 
-        $query->orderBy('id')->chunkById(100, function ($processos) use ($localizacao, $territorio, $poligono, $zona, $camadas, $audit, $aplicar, &$verificados, &$erros, &$divergentes, &$semFonte, &$corrigidos): void {
+        $query->orderBy('id')->chunkById(100, function ($processos) use ($localizacao, $territorio, $poligono, $zona, $camadas, $audit, $aplicar, &$verificados, &$erros, &$divergentes, &$semFonte, &$corrigidos, &$marcados): void {
             foreach ($processos as $processo) {
                 if (is_array($processo->property_polygon_geojson) && $processo->property_polygon_geojson !== []) {
                     continue;
@@ -91,6 +94,8 @@ class CorrigirPontoInscricaoCommand extends Command
                     continue;
                 }
 
+                $marcadoAntes = ($processo->localizacao_conferencia['confirmacao'] ?? null) === ConfirmacaoPonto::NaoConfirmado->value;
+
                 if ($inscricao->confirmacaoPonto === ConfirmacaoPonto::NaoConfirmado) {
                     $semFonte[] = [
                         $processo->id,
@@ -99,10 +104,21 @@ class CorrigirPontoInscricaoCommand extends Command
                         $this->metros($inscricao->distanciaPontoM),
                     ];
 
+                    if ($aplicar && ! $marcadoAntes) {
+                        $this->gravarConferencia($processo, $inscricao);
+                        $marcados++;
+                    }
+
                     continue;
                 }
 
                 if ($inscricao->confirmacaoPonto !== ConfirmacaoPonto::Substituido || ! $this->pontoGravadoDifere($processo, $inscricao)) {
+                    // A conferência agora confirma o ponto gravado: o aviso de
+                    // localização não confirmada sai.
+                    if ($aplicar && $marcadoAntes && $inscricao->confirmacaoPonto !== null && $inscricao->confirmacaoPonto !== ConfirmacaoPonto::NaoVerificado) {
+                        $this->gravarConferencia($processo, $inscricao);
+                    }
+
                     continue;
                 }
 
@@ -179,6 +195,7 @@ class CorrigirPontoInscricaoCommand extends Command
         }
 
         $this->info('Corrigidos: '.count($corrigidos));
+        $this->info("Marcados como não confirmados: {$marcados}");
         $this->info("Com erro: {$erros}");
 
         return self::SUCCESS;
@@ -220,6 +237,7 @@ class CorrigirPontoInscricaoCommand extends Command
             'property_point_lat' => $inscricao->lat,
             'property_point_lng' => $inscricao->lng,
             'property_location_source' => $inscricao->origemPonto,
+            'localizacao_conferencia' => $this->conferencia($inscricao),
         ])->save();
 
         if ($fonteDoLote === PoligonoFonte::Ponto) {
@@ -241,6 +259,30 @@ class CorrigirPontoInscricaoCommand extends Command
         $camadas->materializar($processo);
         $zona->materializar($processo);
         $territorio->registrarClasseViaria($processo);
+    }
+
+    /**
+     * Grava só o resultado da conferência, sem mexer na data de atualização do
+     * processo: marcar ou desmarcar o aviso não é andamento.
+     */
+    private function gravarConferencia(ViabilityRequest $processo, LocalizacaoInscricao $inscricao): void
+    {
+        $processo->timestamps = false;
+        $processo->forceFill(['localizacao_conferencia' => $this->conferencia($inscricao)])->save();
+        $processo->timestamps = true;
+    }
+
+    /**
+     * @return array{confirmacao: ?string, distancia_m: ?float, logradouro: ?string, conferido_em: string}
+     */
+    private function conferencia(LocalizacaoInscricao $inscricao): array
+    {
+        return [
+            'confirmacao' => $inscricao->confirmacaoPonto?->value,
+            'distancia_m' => $inscricao->distanciaPontoM,
+            'logradouro' => $inscricao->logradouroDoEndereco(),
+            'conferido_em' => now()->toIso8601String(),
+        ];
     }
 
     /**
