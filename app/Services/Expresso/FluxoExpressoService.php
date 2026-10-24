@@ -4,6 +4,7 @@ namespace App\Services\Expresso;
 
 use App\Enums\AnalysisStage;
 use App\Enums\AnalysisStatus;
+use App\Enums\ConfirmacaoPonto;
 use App\Enums\DecisionOutcome;
 use App\Enums\EtapaMotor;
 use App\Enums\Fluxo;
@@ -339,6 +340,24 @@ class FluxoExpressoService
             && $request->status === ViabilityRequestStatus::Protocolada
             && $this->etapaTerritorialAguarda($request)) {
             return DecisionResult::aguardando((string) $territorial->motivo);
+        }
+
+        // Ponto da inscrição longe da rua do endereço e sem outra fonte que o
+        // confirme: lote, zona e poligonais saíram de um local não confirmado.
+        // Depois do indeferimento territorial (RT-01 não depende do ponto).
+        $pontoDaInscricao = $this->localizacaoInscricao->localizar($request->property_registration);
+
+        if ($pontoDaInscricao->confirmacaoPonto === ConfirmacaoPonto::NaoConfirmado) {
+            return $this->encaminharAnalise(
+                $request,
+                $this->textos->render('localizacao.motivo.ponto_nao_confirmado', [
+                    ':distancia' => (string) (int) round((float) $pontoDaInscricao->distanciaPontoM),
+                    ':logradouro' => (string) ($pontoDaInscricao->logradouroDoEndereco() ?? 'rua do endereço'),
+                ]),
+                $actor,
+                $resolved,
+                gatilho: TipoGatilho::LocalizacaoDivergente,
+            );
         }
 
         // Pergunta da planilha necessária ao enquadramento sem resposta: sem

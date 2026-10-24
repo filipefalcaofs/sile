@@ -55,6 +55,10 @@ return [
         // Lote por inscrição no ArcGIS municipal (camada SEMAP — Inscrições
         // Geo), fallback do endereçamento. Desligado, a zona segue pelo ponto.
         'arcgis_semap' => true,
+        // Confere o ponto da inscrição contra a rua do endereço (eixo da camada
+        // viária da SEDUR) e busca outro ponto por endereço quando está longe.
+        // Desligado, o ponto do Cadastro Imobiliário é usado sem conferência.
+        'validacao_ponto_inscricao' => true,
         // Ingestão do benchmark federal de tempo de viabilidade (microdados da
         // REDESIM). Desligada, as telas de benchmark mostram a lacuna com o
         // motivo — nenhum número é estimado no lugar.
@@ -102,6 +106,9 @@ return [
     // Fase 3.1.
     'geo' => [
         'validacao' => ['sobreposicao_minima' => 50],
+        // Distância máxima (metros) entre o ponto da inscrição e a rua do
+        // endereço para o ponto valer sem conferência por outra fonte.
+        'validacao_ponto' => ['distancia_maxima_m' => 150],
         // Atributos candidatos ao nome da zona na feição — fallback do
         // parâmetro geo.zona.atributos_nome (HU-014).
         'zona' => ['atributos_nome' => ['ZONA', 'zona', 'SIGLA_ZONA', 'SUBZONA']],

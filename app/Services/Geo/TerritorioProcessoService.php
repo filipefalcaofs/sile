@@ -181,7 +181,38 @@ class TerritorioProcessoService
             'property_location_source' => $localizacao->origemPonto ?? PropertyLocationSource::CadastroImobiliario,
         ])->save();
 
+        $this->auditarConferenciaDoPonto($request, $localizacao);
+
         return LocalizacaoInscricao::LOCALIZADA;
+    }
+
+    /**
+     * Registra a conferência do ponto da inscrição: o ponto original da SEFAZ,
+     * o ponto e a fonte finais e as distâncias até a rua do endereço.
+     */
+    private function auditarConferenciaDoPonto(ViabilityRequest $request, LocalizacaoInscricao $localizacao): void
+    {
+        if ($localizacao->confirmacaoPonto === null) {
+            return;
+        }
+
+        $this->audit->log(
+            logName: 'geo',
+            event: 'localizacao-ponto-conferido',
+            description: "{$localizacao->confirmacaoPonto->label()} na solicitação #{$request->id}",
+            properties: [
+                'viability_request_id' => $request->id,
+                'inscricao' => $request->property_registration,
+                'confirmacao' => $localizacao->confirmacaoPonto->value,
+                'fonte' => ($localizacao->origemPonto ?? PropertyLocationSource::CadastroImobiliario)->value,
+                'ponto_sefaz' => ['lat' => $localizacao->pontoSefazLat, 'lng' => $localizacao->pontoSefazLng],
+                'ponto_final' => ['lat' => $localizacao->lat, 'lng' => $localizacao->lng],
+                'distancia_original_m' => $localizacao->distanciaPontoM,
+                'distancia_final_m' => $localizacao->distanciaFinalPontoM,
+            ],
+            subject: $request,
+            result: $localizacao->confirmacaoPonto->value,
+        );
     }
 
     /**

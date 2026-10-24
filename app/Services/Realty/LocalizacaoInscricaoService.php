@@ -7,6 +7,7 @@ use App\Services\Geo\AddressNotFoundException;
 use App\Services\Geo\Geocoder;
 use App\Services\Geo\GeocodeResult;
 use App\Services\Geo\GeocoderException;
+use App\Services\Geo\ValidadorPontoInscricao;
 
 /**
  * Consulta a localização da inscrição no Cadastro Imobiliário uma vez por
@@ -24,6 +25,7 @@ class LocalizacaoInscricaoService
     public function __construct(
         private PropertyRegistryLookup $cadastro,
         private Geocoder $geocoder,
+        private ValidadorPontoInscricao $validador,
     ) {}
 
     public function localizar(?string $inscricao): LocalizacaoInscricao
@@ -63,17 +65,31 @@ class LocalizacaoInscricaoService
         $temPonto = $resultado->latitude !== null && $resultado->longitude !== null;
 
         if ($temPonto) {
+            $ponto = $this->validador->validar(
+                $resultado->latitude,
+                $resultado->longitude,
+                $codLogLocalizacao ?? ($codLog !== '' ? $codLog : null),
+                $this->texto($resultado->cadastro?->numero_porta),
+                $resultado->enderecoParaGeocode(),
+                $digitos,
+            );
+
             return new LocalizacaoInscricao(
                 status: LocalizacaoInscricao::LOCALIZADA,
-                lat: $resultado->latitude,
-                lng: $resultado->longitude,
+                lat: $ponto->lat,
+                lng: $ponto->lng,
                 codLogTributario: $codLog !== '' ? $codLog : null,
                 logradouroTributario: $nome !== '' ? $nome : null,
-                origemPonto: PropertyLocationSource::CadastroImobiliario,
+                origemPonto: $ponto->origem,
                 situacaoCadastral: $situacao,
                 utilizacao: $utilizacao,
                 codLogLocalizacao: $codLogLocalizacao,
                 logradouroLocalizacao: $logradouroLocalizacao,
+                confirmacaoPonto: $ponto->confirmacao,
+                pontoSefazLat: $resultado->latitude,
+                pontoSefazLng: $resultado->longitude,
+                distanciaPontoM: $ponto->distanciaOriginalM,
+                distanciaFinalPontoM: $ponto->distanciaFinalM,
             );
         }
 
@@ -164,5 +180,12 @@ class LocalizacaoInscricaoService
         }
 
         return [null, null];
+    }
+
+    private function texto(?string $valor): ?string
+    {
+        $valor = trim((string) $valor);
+
+        return $valor !== '' ? $valor : null;
     }
 }

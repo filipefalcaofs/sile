@@ -346,6 +346,13 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'boolean'],
                 'description' => 'Consulta o lote por inscrição imobiliária no cadastro municipal (ArcGIS, camada SEMAP — Inscrições Geo) quando o endereçamento não tem polígono para o endereço',
             ],
+            'features.validacao_ponto_inscricao' => [
+                'group' => 'features',
+                'type' => 'boolean',
+                'default_value' => '1',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'Confere se o ponto da inscrição no Cadastro Imobiliário está perto da rua do endereço e, estando longe, busca outro ponto pelo endereçamento SEDUR, SEMAP ou geocodificação. Desligado, o ponto do cadastro é usado sem conferência',
+            ],
             'features.benchmark_redesim' => [
                 'group' => 'features',
                 'type' => 'boolean',

@@ -2,6 +2,7 @@
 
 namespace App\Services\Realty;
 
+use App\Enums\ConfirmacaoPonto;
 use App\Enums\PropertyLocationSource;
 use App\Services\Geo\GeocodeResult;
 
@@ -38,6 +39,11 @@ final readonly class LocalizacaoInscricao
         public ?string $utilizacao = null,
         public ?string $codLogLocalizacao = null,
         public ?string $logradouroLocalizacao = null,
+        public ?ConfirmacaoPonto $confirmacaoPonto = null,
+        public ?float $pontoSefazLat = null,
+        public ?float $pontoSefazLng = null,
+        public ?float $distanciaPontoM = null,
+        public ?float $distanciaFinalPontoM = null,
     ) {}
 
     /**

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Geo;
 
+use App\Enums\ConfirmacaoPonto;
 use App\Enums\GeoLayerType;
 use App\Enums\PropertyLocationSource;
 use App\Enums\ViabilityRequestOrigin;
@@ -12,7 +13,10 @@ use App\Models\ViabilityRequest;
 use App\Services\Geo\CamadasIncidentesService;
 use App\Services\Geo\Geocoder;
 use App\Services\Geo\GeocodeResult;
+use App\Services\Geo\ResultadoPonto;
 use App\Services\Geo\SpatialRepository;
+use App\Services\Geo\ValidadorPontoInscricao;
+use App\Services\Realty\LocalizacaoInscricaoService;
 use App\Services\Realty\PropertyCadastroCampos;
 use App\Services\Realty\PropertyRegistryLookup;
 use App\Services\Realty\PropertyRegistryResult;
@@ -124,6 +128,130 @@ class LocalizacaoPelaInscricaoTest extends TestCase
         $this->assertSame('ZCN-1', $solicitacao->zona_codigo);
         $this->assertSame('Comércio', $solicitacao->bairro_oficial);
         $this->assertSame('212', $solicitacao->cod_log);
+    }
+
+    public function test_localizacao_expoe_ponto_original_origem_e_confirmacao_quando_substituido(): void
+    {
+        $this->fakeCadastro('579', -12.965543, -38.478635, enderecos: [
+            ['TipoEndereco' => 'Localização', 'CodigoLogradouro' => '401', 'Logradouro' => 'Rua Catharina Paraguassú'],
+        ]);
+        $this->mock(ValidadorPontoInscricao::class, function ($mock): void {
+            $mock->shouldReceive('validar')
+                ->once()
+                ->withArgs(fn (float $lat, float $lng, ?string $codLog, $numero, $endereco, string $inscricao): bool => $lat === -12.965543
+                    && $lng === -38.478635
+                    && $codLog === '401'
+                    && $inscricao === '344672')
+                ->andReturn(new ResultadoPonto(ConfirmacaoPonto::Substituido, -12.9701, -38.495, PropertyLocationSource::EnderecamentoSedur, 640.0, 12.0));
+        });
+
+        $localizacao = app(LocalizacaoInscricaoService::class)->localizar('344672');
+
+        $this->assertSame(-12.9701, $localizacao->lat);
+        $this->assertSame(-38.495, $localizacao->lng);
+        $this->assertSame(PropertyLocationSource::EnderecamentoSedur, $localizacao->origemPonto);
+        $this->assertSame(ConfirmacaoPonto::Substituido, $localizacao->confirmacaoPonto);
+        $this->assertSame(-12.965543, $localizacao->pontoSefazLat);
+        $this->assertSame(-38.478635, $localizacao->pontoSefazLng);
+        $this->assertSame(640.0, $localizacao->distanciaPontoM);
+    }
+
+    public function test_ponto_confirmado_mantem_o_ponto_da_sefaz_e_a_origem_cadastro(): void
+    {
+        $this->fakeCadastro('212');
+        $this->mock(ValidadorPontoInscricao::class, function ($mock): void {
+            $mock->shouldReceive('validar')->once()->andReturn(
+                new ResultadoPonto(ConfirmacaoPonto::Confirmado, -12.977769, -38.516404, PropertyLocationSource::CadastroImobiliario, 20.0, 20.0),
+            );
+        });
+
+        $localizacao = app(LocalizacaoInscricaoService::class)->localizar('344672');
+
+        $this->assertSame(PropertyLocationSource::CadastroImobiliario, $localizacao->origemPonto);
+        $this->assertSame(ConfirmacaoPonto::Confirmado, $localizacao->confirmacaoPonto);
+        $this->assertSame(20.0, $localizacao->distanciaPontoM);
+    }
+
+    public function test_ponto_geocodificado_pela_falta_de_coordenada_nao_passa_pelo_validador(): void
+    {
+        $this->app->instance(PropertyRegistryLookup::class, new class implements PropertyRegistryLookup
+        {
+            public function resolve(string $inscricao): PropertyRegistryResult
+            {
+                return new PropertyRegistryResult(
+                    latitude: null,
+                    longitude: null,
+                    inscricao: $inscricao,
+                    raw: ['CodigoLogradouroTributario' => '1625', 'LogradouroTributario' => '3ª Travessa Alto dos Coqueiros'],
+                    cadastro: new PropertyCadastroCampos(
+                        inscricao: $inscricao,
+                        endereco: '3ª Travessa Alto dos Coqueiros, 212',
+                        numero_metrico: null,
+                        loteamento: null,
+                        quadra: null,
+                        lote: null,
+                        conjunto_edificio: null,
+                        bloco: null,
+                        sub_unidade: null,
+                        numero_sub_unidade: null,
+                        bairro: 'Matatu',
+                        cep: null,
+                        area_construida_m2: null,
+                        tipo_imovel: null,
+                        data_lancamento: null,
+                        situacao_cadastral: null,
+                        contribuinte: null,
+                        cpf_cnpj: null,
+                        numero_porta: '212',
+                        area_terreno_m2: null,
+                        valor_venal_iptu: null,
+                        logradouro_tributario: '1625 - 3ª Travessa Alto dos Coqueiros',
+                        situacao_fiscal: null,
+                        data_emissao_certidao: null,
+                    ),
+                );
+            }
+        });
+        $this->app->instance(Geocoder::class, new class implements Geocoder
+        {
+            public function geocode(string $address): GeocodeResult
+            {
+                return new GeocodeResult(-12.99, -38.45, 'x', 0.5, []);
+            }
+        });
+        $this->mock(ValidadorPontoInscricao::class, fn ($mock) => $mock->shouldNotReceive('validar'));
+
+        $localizacao = app(LocalizacaoInscricaoService::class)->localizar('344672');
+
+        $this->assertSame(PropertyLocationSource::Geocodificacao, $localizacao->origemPonto);
+        $this->assertNull($localizacao->confirmacaoPonto);
+    }
+
+    public function test_protocolo_audita_ponto_original_fonte_final_distancias_e_confirmacao(): void
+    {
+        $this->fakeCadastro('212', -12.965543, -38.478635);
+        $this->mock(ValidadorPontoInscricao::class, function ($mock): void {
+            $mock->shouldReceive('validar')->andReturn(
+                new ResultadoPonto(ConfirmacaoPonto::Substituido, -12.9701, -38.495, PropertyLocationSource::EnderecamentoSedur, 640.0, 12.0),
+            );
+        });
+        $ator = User::factory()->create();
+        $solicitacao = $this->rascunhoRegin();
+
+        app(ProtocolarSolicitacaoService::class)->protocol($solicitacao, $ator);
+
+        $solicitacao->refresh();
+        $this->assertSame(PropertyLocationSource::EnderecamentoSedur, $solicitacao->property_location_source);
+        $this->assertEqualsWithDelta(-12.9701, $solicitacao->property_point_lat, 0.0000001);
+
+        $auditoria = Activity::query()->where('event', 'localizacao-ponto-conferido')->where('subject_id', $solicitacao->id)->first();
+        $this->assertNotNull($auditoria);
+        $this->assertSame('substituido', $auditoria->properties['confirmacao']);
+        $this->assertSame('enderecamento', $auditoria->properties['fonte']);
+        $this->assertSame(['lat' => -12.965543, 'lng' => -38.478635], $auditoria->properties['ponto_sefaz']);
+        $this->assertSame(['lat' => -12.9701, 'lng' => -38.495], $auditoria->properties['ponto_final']);
+        $this->assertEquals(640.0, $auditoria->properties['distancia_original_m']);
+        $this->assertEquals(12.0, $auditoria->properties['distancia_final_m']);
     }
 
     public function test_cadastro_sem_coordenada_protocola_com_ponto_geocodificado(): void

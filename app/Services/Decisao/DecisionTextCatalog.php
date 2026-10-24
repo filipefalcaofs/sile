@@ -194,6 +194,7 @@ final class DecisionTextCatalog
             'zona.motivo.conflito_centralidade_linear' => 'Zona urbanística indefinida (HU.182): as linhas da centralidade linear :zona_a e :zona_b passam por cima do mesmo terreno — segue para análise técnica.',
             'localizacao.motivo.divergencia_zona' => 'Localização divergente (HU-036 RN-005): o polígono informado está na zona :zona_poligono e a inscrição imobiliária, na zona :zona_inscricao — segue para análise técnica.',
             'localizacao.motivo.divergencia_zona_enderecamento' => 'Localização divergente: o polígono desenhado está na zona :zona_desenho e o polígono do endereçamento SEDUR, na zona :zona_enderecamento — segue para análise técnica.',
+            'localizacao.motivo.ponto_nao_confirmado' => 'Localização não confirmada: o ponto da inscrição no Cadastro Imobiliário está a :distancia m da :logradouro e nenhuma outra fonte de endereço confirmou o local — segue para análise técnica.',
             // Planilha de tratamento — motivos do ramo não resolvido. A pergunta
             // sem resposta cita o enunciado da planilha (:numero, :texto).
             'tratamento.pendencia.sem_fluxo_curado' => 'Aguardando confirmação da SEDUR: o texto da regra não define o fluxo de forma inequívoca. O motor usa a heurística desta versão.',
