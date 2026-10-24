@@ -74,6 +74,14 @@ def varrer(args) -> None:
         print(f"melhor: época {resumo['melhor']['epoca']} ({resumo['melhor']['pesos']})")
 
 
+def media(args) -> None:
+    from treino_ia import media_pesos
+
+    if args.semente is None or args.de is None or args.ate is None:
+        raise SystemExit("Informe --semente, --de e --ate.")
+    print(f"pesos: {media_pesos.media(args.semente, args.de, args.ate)}")
+
+
 def cache(args) -> None:
     from treino_ia import cache as modulo, variantes
 

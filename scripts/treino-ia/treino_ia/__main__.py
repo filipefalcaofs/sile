@@ -5,7 +5,7 @@ import sys
 
 from treino_ia import recursos
 
-ETAPAS = ("dados", "recortes", "filtrar", "validacao", "cache", "varrer", "treinar", "avaliar", "cego", "galeria", "situacao")
+ETAPAS = ("dados", "recortes", "filtrar", "validacao", "cache", "varrer", "media", "treinar", "avaliar", "cego", "galeria", "situacao")
 
 
 def _argumentos(argv: list[str]) -> argparse.Namespace:
@@ -19,6 +19,8 @@ def _argumentos(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--limite", type=int)
     parser.add_argument("--epocas", type=int, default=10)
     parser.add_argument("--taxa", type=float, default=1e-4, help="taxa de aprendizado do treino")
+    parser.add_argument("--de", type=int, help="primeira época da média de pesos")
+    parser.add_argument("--ate", type=int, help="última época da média de pesos")
     parser.add_argument("--passo", type=int, default=2, help="de quantas em quantas épocas a varredura avalia")
     parser.add_argument("--fracao", type=float, default=0.1, help="fração dos lotes de treino que vai para a validação")
     parser.add_argument("--variantes", help="variantes a avaliar, separadas por vírgula (ex.: E)")
