@@ -35,6 +35,31 @@ cego precisa de processos reais: o `cego/entrada.json` vem do comando
 `treino-ia:exportar-teste-cego` rodado num ambiente que tenha esse comando e
 esses processos, e é copiado para `$TREINO_IA_RAIZ/cego/`.
 
+### Reproduzir o modelo do serviço
+
+O `docker/footprint-ia/pesos/decodificador-lote.pt` saiu desta sequência (em
+`scripts/treino-ia`, com as variáveis acima e a VPN nas etapas de download):
+
+```sh
+$PY -m treino_ia dados --semente 20261026 --treino 4200 --teste 260 --teste-por-bairro 10
+$PY -m treino_ia recortes
+$PY -m treino_ia filtrar --treino 2000 --teste 100        # tira os buracos da ortofoto 2024
+$PY -m treino_ia validacao --fracao 0.1 --semente 20261027 # bairros de validação
+$PY -m treino_ia cache
+$PY -m treino_ia treinar --epocas 30 --semente 20261027 --taxa 1e-4
+$PY -m treino_ia varrer --semente 20261027 --passo 3       # escolhe a época na validação
+$PY -m treino_ia media --semente 20261027 --de 21 --ate 30 # pesos médios das últimas épocas
+$PY -m treino_ia avaliar validacao --variantes E --pesos <pesos/epocas/s20261027/media_e21-e30.pt>
+$PY -m treino_ia avaliar teste --variantes A,B,E --pesos <mesmo arquivo>   # uma vez, no fim
+```
+
+O GeoServer muda com o tempo, então refazer o `dados` hoje traz outro conjunto;
+o manifesto usado fica em `$TREINO_IA_RAIZ/dados/manifesto.json`.
+
+`ponta_a_ponta.py validacao|teste` roda o serviço real (`docker/footprint-ia`)
+com os pesos e o recorte crescente do Viabiliza, e `criterio_aceite.py` simula o
+aceite para cada score mínimo sobre a saída dele.
+
 ### Variante J: LLM como juíza
 
 `avaliar teste --juiza` (ou `cego --juiza`) inclui a variante J: o modelo original
