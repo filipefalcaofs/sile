@@ -13,11 +13,13 @@ final readonly class MascaraIa
 
     /**
      * @param  list<array{0: float|int, 1: float|int}>  $anelPixel
+     * @param  list<array{anel: list<array{0: float, 1: float}>, score: ?float, encosta: bool}>  $candidatos  as máscaras que o serviço devolveu
      */
     public function __construct(
         public string $status,
         public array $anelPixel,
         public ?float $score,
         public string $modelo,
+        public array $candidatos = [],
     ) {}
 }

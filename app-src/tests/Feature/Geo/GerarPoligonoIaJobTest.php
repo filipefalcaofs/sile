@@ -58,28 +58,125 @@ class GerarPoligonoIaJobTest extends TestCase
 
     /**
      * @param  array<string, mixed>|int  $ia  resposta do serviço ou status HTTP de erro
+     * @param  list<array<string, mixed>>  $iaPorRecorte  respostas do serviço na ordem dos recortes (60, 120, 240 m)
      */
-    private function fake(int $imageServer = 200, int $wms = 200, array|int|null $ia = null): void
+    private function fake(int $imageServer = 200, int $wms = 200, array|int|null $ia = null, array $iaPorRecorte = [], ?string $png2024 = null, ?string $png2016 = null): void
     {
         $ia ??= ['status' => 'ok', 'anel' => [[350, 350], [450, 350], [450, 450], [350, 450]], 'score' => 0.93, 'modelo' => 'sam2.1-hiera-small@1'];
 
-        Http::fake(function (Request $request) use ($imageServer, $wms, $ia) {
+        Http::fake(function (Request $request) use ($imageServer, $wms, $ia, &$iaPorRecorte, $png2024, $png2016) {
             $url = $request->url();
 
             if (str_contains($url, 'exportImage')) {
-                return $imageServer === 200 ? Http::response(self::PNG, 200, ['Content-Type' => 'image/png']) : Http::response('erro', $imageServer);
+                return $imageServer === 200 ? Http::response($png2024 ?? self::PNG, 200, ['Content-Type' => 'image/png']) : Http::response('erro', $imageServer);
             }
 
             if (str_contains($url, 'mapeamento.salvador')) {
-                return $wms === 200 ? Http::response(self::PNG, 200, ['Content-Type' => 'image/png']) : Http::response('erro', $wms);
+                return $wms === 200 ? Http::response($png2016 ?? self::PNG, 200, ['Content-Type' => 'image/png']) : Http::response('erro', $wms);
             }
 
             if (str_contains($url, 'ia.local/segmentar')) {
+                if ($iaPorRecorte !== []) {
+                    return Http::response(array_shift($iaPorRecorte));
+                }
+
                 return is_int($ia) ? Http::response('fora', $ia) : Http::response($ia);
             }
 
             return Http::response('inesperado', 404);
         });
+    }
+
+    private function pngReal(bool $corUnica): string
+    {
+        $imagem = imagecreatetruecolor(64, 64);
+
+        for ($x = 0; $x < 64; $x++) {
+            for ($y = 0; $y < 64; $y++) {
+                imagesetpixel($imagem, $x, $y, $corUnica ? 0xFDFDFD : (($x * 37 + $y * 91) % 0xFFFFFF));
+            }
+        }
+
+        ob_start();
+        imagepng($imagem);
+
+        return (string) ob_get_clean();
+    }
+
+    /**
+     * @param  list<array{0: list<array{0: int, 1: int}>, 1: float, 2: bool}>  $candidatos  anel, score e se encosta
+     * @return array<string, mixed>
+     */
+    private function resposta(array $candidatos): array
+    {
+        $lista = array_map(fn (array $c): array => ['anel' => $c[0], 'score' => $c[1], 'encosta' => $c[2]], $candidatos);
+        $melhor = $lista === [] ? null : array_reduce($lista, fn (?array $a, array $c): array => $a === null || $c['score'] > $a['score'] ? $c : $a);
+
+        return ['status' => $lista === [] ? 'sem_objeto' : 'ok', 'anel' => $melhor['anel'] ?? [], 'score' => $melhor['score'] ?? null, 'candidatos' => $lista, 'modelo' => 'sam2.1-hiera-small+decodificador@cpu'];
+    }
+
+    private function ladoLesteOesteM(ViabilityRequest $request): float
+    {
+        $lngs = array_column($request->fresh()->address_polygon_geojson['coordinates'][0][0], 0);
+
+        return (max($lngs) - min($lngs)) * 111320 * cos(deg2rad(-12.98));
+    }
+
+    public function test_ortofoto_2024_em_branco_usa_a_de_2016(): void
+    {
+        $this->fake(png2024: $this->pngReal(corUnica: true), png2016: $this->pngReal(corUnica: false));
+        $request = $this->processo();
+
+        $this->rodar($request);
+
+        $this->assertSame(PoligonoFonte::Ia, $request->fresh()->address_polygon_source);
+        $this->assertStringEndsWith('+wms-2016-2017', BuildingFootprint::query()->sole()->release);
+    }
+
+    public function test_recorte_cresce_ate_o_contorno_nao_encostar_na_borda(): void
+    {
+        $quadrado = [[350, 350], [450, 350], [450, 450], [350, 450]];
+        $naBorda = [[0, 300], [500, 300], [500, 500], [0, 500]];
+        $this->fake(iaPorRecorte: [
+            $this->resposta([[$naBorda, 0.9, true], [$quadrado, 0.5, false]]),
+            $this->resposta([[$quadrado, 0.8, false]]),
+        ]);
+        $request = $this->processo();
+
+        $this->rodar($request);
+
+        $exportacoes = Http::recorded(fn (Request $r): bool => str_contains($r->url(), 'exportImage'));
+        $this->assertCount(2, $exportacoes);
+        $this->assertSame(PoligonoFonte::Ia, $request->fresh()->address_polygon_source);
+        $this->assertEqualsWithDelta(15.0, $this->ladoLesteOesteM($request), 0.5);
+    }
+
+    public function test_fica_o_candidato_de_maior_score_entre_os_que_nao_encostam(): void
+    {
+        $pequeno = [[390, 390], [410, 390], [410, 410], [390, 410]];
+        $grande = [[300, 300], [500, 300], [500, 500], [300, 500]];
+        $this->fake(iaPorRecorte: [$this->resposta([[$pequeno, 0.6, false], [$grande, 0.9, false]])]);
+        $request = $this->processo();
+
+        $this->rodar($request);
+
+        $this->assertEqualsWithDelta(15.0, $this->ladoLesteOesteM($request), 0.5);
+        $this->assertCount(1, Http::recorded(fn (Request $r): bool => str_contains($r->url(), 'exportImage')));
+    }
+
+    public function test_no_ultimo_recorte_aceita_o_que_nao_encosta_mesmo_com_outros_na_borda(): void
+    {
+        $quadrado = [[350, 350], [450, 350], [450, 450], [350, 450]];
+        $naBorda = [[0, 300], [500, 300], [500, 500], [0, 500]];
+        $resposta = $this->resposta([[$naBorda, 0.9, true], [$quadrado, 0.65, false]]);
+        $this->fake(iaPorRecorte: [$resposta, $resposta, $resposta]);
+        $request = $this->processo();
+
+        $this->rodar($request);
+
+        $this->assertCount(3, Http::recorded(fn (Request $r): bool => str_contains($r->url(), 'exportImage')));
+        $this->assertSame(PoligonoFonte::Ia, $request->fresh()->address_polygon_source);
+        $this->assertEqualsWithDelta(30.0, $this->ladoLesteOesteM($request), 0.5);
     }
 
     private function rodar(ViabilityRequest $request): void
@@ -176,9 +273,11 @@ class GerarPoligonoIaJobTest extends TestCase
         $this->fake(ia: ['status' => 'sem_objeto', 'anel' => [], 'score' => null, 'modelo' => 'sam2']);
 
         $this->rodar($this->processo());
+        $antes = count(Http::recorded(fn (Request $r): bool => str_contains($r->url(), 'exportImage')));
         $this->rodar($this->processo());
 
-        $this->assertCount(1, Http::recorded(fn (Request $r): bool => str_contains($r->url(), 'exportImage')));
+        $this->assertSame(3, $antes);
+        $this->assertCount(3, Http::recorded(fn (Request $r): bool => str_contains($r->url(), 'exportImage')));
     }
 
     public function test_reaproveita_poligono_ia_gerado_por_outro_job(): void

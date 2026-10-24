@@ -36,6 +36,10 @@ class OrtofotoClient
                 Storage::disk('local')->put($caminho, $imagem);
             }
 
+            if ($this->emBranco((string) Storage::disk('local')->get($caminho))) {
+                continue;
+            }
+
             return new RecorteOrtofoto(Storage::disk('local')->path($caminho), $caixa[0], $caixa[1], $caixa[2], $caixa[3], $pixels, $pixels, $servico, $ano);
         }
 
@@ -86,6 +90,41 @@ class OrtofotoClient
         return $resposta->successful() && str_starts_with($tipo, 'image/') && $resposta->body() !== ''
             ? $resposta->body()
             : null;
+    }
+
+    /**
+     * A ortofoto 2024 tem buracos em que o serviço devolve uma imagem de cor
+     * única. Metade ou mais dos pixels amostrados com a mesma cor conta como
+     * imagem indisponível. Sem a extensão GD, ou com imagem que não decodifica,
+     * a checagem não se aplica.
+     */
+    private function emBranco(string $png): bool
+    {
+        if (! function_exists('imagecreatefromstring')) {
+            return false;
+        }
+
+        $imagem = @imagecreatefromstring($png);
+
+        if ($imagem === false) {
+            return false;
+        }
+
+        $largura = imagesx($imagem);
+        $altura = imagesy($imagem);
+        $passo = max(1, intdiv(min($largura, $altura), 40));
+        $cores = [];
+        $total = 0;
+
+        for ($x = 0; $x < $largura; $x += $passo) {
+            for ($y = 0; $y < $altura; $y += $passo) {
+                $cor = imagecolorat($imagem, $x, $y);
+                $cores[$cor] = ($cores[$cor] ?? 0) + 1;
+                $total++;
+            }
+        }
+
+        return $total > 0 && max($cores) >= 0.5 * $total;
     }
 
     private function cliente(int $timeout): PendingRequest

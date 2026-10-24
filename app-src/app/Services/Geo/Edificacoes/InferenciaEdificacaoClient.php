@@ -45,16 +45,39 @@ class InferenciaEdificacaoClient
             throw new InferenciaIndisponivelException("Serviço de inferência respondeu HTTP {$resposta->status()}.");
         }
 
-        $anel = array_values(array_filter(
-            is_array($dados['anel'] ?? null) ? $dados['anel'] : [],
-            fn (mixed $ponto): bool => is_array($ponto) && count($ponto) >= 2 && is_numeric($ponto[0]) && is_numeric($ponto[1]),
-        ));
+        $candidatos = [];
+
+        foreach (is_array($dados['candidatos'] ?? null) ? $dados['candidatos'] : [] as $candidato) {
+            $anelCandidato = is_array($candidato) ? $this->anel($candidato['anel'] ?? null) : [];
+
+            if (count($anelCandidato) >= 3) {
+                $candidatos[] = [
+                    'anel' => $anelCandidato,
+                    'score' => is_numeric($candidato['score'] ?? null) ? (float) $candidato['score'] : null,
+                    'encosta' => (bool) ($candidato['encosta'] ?? false),
+                ];
+            }
+        }
 
         return new MascaraIa(
             status: (string) $dados['status'],
-            anelPixel: array_map(fn (array $ponto): array => [(float) $ponto[0], (float) $ponto[1]], $anel),
+            anelPixel: $this->anel($dados['anel'] ?? null),
             score: is_numeric($dados['score'] ?? null) ? (float) $dados['score'] : null,
             modelo: (string) ($dados['modelo'] ?? 'desconhecido'),
+            candidatos: $candidatos,
         );
+    }
+
+    /**
+     * @return list<array{0: float, 1: float}>
+     */
+    private function anel(mixed $pontos): array
+    {
+        $validos = array_values(array_filter(
+            is_array($pontos) ? $pontos : [],
+            fn (mixed $ponto): bool => is_array($ponto) && count($ponto) >= 2 && is_numeric($ponto[0]) && is_numeric($ponto[1]),
+        ));
+
+        return array_map(fn (array $ponto): array => [(float) $ponto[0], (float) $ponto[1]], $validos);
     }
 }
