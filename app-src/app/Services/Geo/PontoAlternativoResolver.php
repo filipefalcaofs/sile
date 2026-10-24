@@ -8,8 +8,9 @@ use Throwable;
 /**
  * Pontos do imóvel por endereço ou inscrição, em outras fontes que não o
  * Cadastro Imobiliário: endereçamento SEDUR (CODLOG + número), lote da
- * inscrição no SEMAP e geocodificação do endereço. Devolve só as fontes que
- * acharam, na ordem de confiança; falha de uma fonte nunca derruba as outras.
+ * inscrição no SEMAP e geocodificação do endereço (só a que localiza o imóvel,
+ * não a rua ou o bairro). Devolve só as fontes que acharam, na ordem de
+ * confiança; falha de uma fonte nunca derruba as outras.
  */
 class PontoAlternativoResolver
 {
@@ -77,7 +78,9 @@ class PontoAlternativoResolver
     {
         $geocode = $this->geocoder->geocode($endereco);
 
-        if (! $geocode->estaEmSalvador()) {
+        // Nominatim sem o número da casa devolve um trecho qualquer da rua (ou o
+        // centro do bairro): confirma a rua, não o lugar do imóvel.
+        if (! $geocode->estaEmSalvador() || $geocode->nivelDeLogradouroOuMaior()) {
             return null;
         }
 

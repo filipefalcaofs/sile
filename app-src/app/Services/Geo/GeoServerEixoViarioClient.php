@@ -7,10 +7,10 @@ use Illuminate\Support\Facades\Http;
 use Throwable;
 
 /**
- * Eixo do logradouro por CODLOG, na camada viária da SEDUR usada para a classe
- * da via e, quando a rua não está lá (só vias classificadas), na camada de
- * logradouros. Traz todos os segmentos (a classificação lê só um) para medir a
- * distância do ponto da inscrição até a rua.
+ * Eixo do logradouro por CODLOG, na camada de logradouros da SEDUR (linhas) e,
+ * se a rua não estiver lá, na camada viária da LOUOS, que só serve quando traz
+ * linhas (hoje é de polígonos, a pista da via). Traz todos os segmentos para
+ * medir a distância do ponto da inscrição até a rua.
  *
  * Sem fachada: toggle desligado, GeoServer fora, resposta fora do contrato ou
  * CODLOG sem linha nunca viram eixo inventado — quem consome degrada.
@@ -48,11 +48,11 @@ class GeoServerEixoViarioClient
             return new EixoViarioHit(EixoViarioHit::IDENTIFICADO, $linhas);
         }
 
-        $hit = $this->consultarNoGeoServer($codLog, $this->typeName('classificacao_viaria', 'louos_classificacao_viaria:VM_L_CLASSIF_VIARIA'));
+        $hit = $this->consultarNoGeoServer($codLog, $this->typeName('logradouro', 'logradouros:VM_LOGRADOURO'));
 
         if ($hit->status === EixoViarioHit::NAO_ENCONTRADO) {
-            $nosLogradouros = $this->consultarNoGeoServer($codLog, $this->typeName('logradouro', 'logradouros:VM_LOGRADOURO'));
-            $hit = $nosLogradouros->identificado() ? $nosLogradouros : $hit;
+            $naViaria = $this->consultarNoGeoServer($codLog, $this->typeName('classificacao_viaria', 'louos_classificacao_viaria:VM_L_CLASSIF_VIARIA'));
+            $hit = $naViaria->identificado() ? $naViaria : $hit;
         }
 
         if ($hit->identificado()) {
