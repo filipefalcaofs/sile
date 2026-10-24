@@ -48,7 +48,7 @@ Decisão do usuário (23/10/2026): **o sócio cujo CPF está no processo do REGI
 
 - `ViabilityRequestPolicy::view`: `owns($user, $request)` **ou** existe vínculo com o CPF do usuário efetivo (`effectiveUser($user)->cpf`).
 - `SolicitacaoController::index` (Minhas solicitações): `requester_user_id = usuário efetivo` **ou** processo com vínculo do CPF do usuário efetivo. Ações de editar/cancelar continuam calculadas pelas políticas (`update`/`cancel`) e ficam desligadas para o vinculado.
-- Resposta a convite (`PendenciaRespostaController`) já usa `view`: o vinculado responde ao convite — é o que a reunião pediu para o Detalhar.
+- Resposta a convite (`PendenciaRespostaController`) já usa `view`, então o vinculado responderia ao convite. **Mas hoje não há convite em processo do REGIN:** `PendenciaService::abrir()` recusa abrir convite em processo sem requerente. Liberar isso é decisão pendente com o usuário (revisão de 23/10/2026).
 - O vinculado vê a mesma tela do processo que o solicitante: ela não mostra CPF de outras pessoas (o CPF do solicitante declarado só aparece na gestão).
 - Em Minhas solicitações, os botões de editar e cancelar passam a depender também das políticas `update` e `cancel` (hoje dependem só da situação); para o vinculado ficam desligados.
 - O Detalhar por número (entrada) já usa a política `view`: passa a abrir os processos do REGIN do sócio.
@@ -87,7 +87,7 @@ Decisão do usuário (23/10/2026): **o sócio cujo CPF está no processo do REGI
 - Consulta protegida pelo token da sessão do Portal (o CPF nunca vem como parâmetro), atrás da mesma chave da entrada.
 - Limite de 200 processos, sem paginação.
 - Sem chave separada para o vínculo de sócio: o filtro de CRC cobre o risco de contador.
-- Vínculos de sócio sincronizados com o recebimento mais recente (ex-sócio perde o acesso).
+- Vínculos de sócio sincronizados no protocolar e no comando. O REGIN não regrava protocolo repetido (responde '5'), então não há reenvio que mude o quadro de sócios de um processo existente.
 
 ## Pendências
 
