@@ -3,8 +3,6 @@
 namespace App\Http\Controllers\Portal;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
-use App\Models\ViabilityRequest;
 use App\Services\PortalServicos\EntradaPortalServicosRecusadaException;
 use App\Services\PortalServicos\PortalServicos;
 use App\Services\PortalServicos\PortalServicosAuthService;
@@ -15,7 +13,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
-use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -38,12 +35,12 @@ class EntradaPortalServicosController extends Controller
      */
     public const DESTINOS = [
         'renovacao' => 'portal.renovacao.index',
-        'nova' => 'portal.solicitacoes.create',
-        'autonomo' => 'portal.solicitacoes.create',
+        'nova' => 'portal.dashboard',
+        'autonomo' => 'portal.dashboard',
         'processo' => null,
     ];
 
-    private const PROCESSO_NAO_ENCONTRADO = 'Não encontramos esse processo entre os seus. Confira a lista abaixo.';
+    private const PEDIDO_NA_JUCEB = 'Os pedidos de viabilidade começam na JUCEB. Pelo portal você renova viabilidade, consulta processo e responde convite.';
 
     public function __invoke(
         Request $request,
@@ -86,40 +83,19 @@ class EntradaPortalServicosController extends Controller
         $request->session()->put('portal_servicos.token', Crypt::encryptString($token));
         $request->session()->put('portal_servicos.conferido_em', now()->timestamp);
 
+        // Detalhar da área logada do Portal: a consulta por número serve a
+        // qualquer cidadão (requerente, sócio ou quem tem o número).
         if ($destino === 'processo') {
-            return $this->detalhar($user, $numero);
+            return redirect()->route('portal.consulta', array_filter(['numero' => $numero]));
+        }
+
+        // Pedido novo começa na JUCEB: o portal só orienta.
+        if ($destino === 'nova' || $destino === 'autonomo') {
+            return redirect()->route('portal.dashboard')->with('status', self::PEDIDO_NA_JUCEB);
         }
 
         // Destino explícito (serviço da Carta) vence a página guardada antes do login.
         return redirect()->to($destino !== null ? route(self::DESTINOS[$destino]) : ($intended ?? route('portal.dashboard')));
-    }
-
-    /**
-     * Detalhar da área logada do Portal de Serviços: o número pode ser o do
-     * processo, o da viabilidade (TVL) ou o do BAP. Abre só processo do
-     * cidadão (mesma regra da tela do processo); havendo mais de um, vale o
-     * que casa pelo número do processo e, depois, o mais recente.
-     * Inexistente, de outra pessoa ou inválido dão o mesmo aviso, sem revelar
-     * se o número existe.
-     */
-    private function detalhar(User $user, ?string $numero): RedirectResponse
-    {
-        $solicitacao = $numero === null ? null : ViabilityRequest::query()
-            ->where(fn ($query) => $query
-                ->where('protocol_number', $numero)
-                ->orWhere('external_reference', $numero)
-                ->orWhereHas('decision', fn ($decisao) => $decisao->where('tvl_product_number', $numero)))
-            ->latest('id')
-            ->get()
-            ->filter(fn (ViabilityRequest $candidata) => Gate::forUser($user)->allows('view', $candidata))
-            ->sortByDesc(fn (ViabilityRequest $candidata) => strtoupper((string) $candidata->protocol_number) === $numero)
-            ->first();
-
-        if ($solicitacao === null) {
-            return redirect()->route('portal.solicitacoes.index')->with('error', self::PROCESSO_NAO_ENCONTRADO);
-        }
-
-        return redirect()->route('portal.solicitacoes.show', $solicitacao);
     }
 
     private function numero(Request $request): ?string
