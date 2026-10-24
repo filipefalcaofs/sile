@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Portal;
 use App\Enums\AnalysisPendencyStatus;
 use App\Http\Controllers\Controller;
 use App\Models\ViabilityRequest;
+use App\Services\Legado\LegadoIndisponivelException;
+use App\Services\Solicitacao\ConsultaProcessoLegado;
 use App\Services\Solicitacao\LocalizadorProcesso;
 use App\Services\Solicitacao\TimelineSolicitacao;
 use App\Support\Audit\AuditService;
@@ -14,7 +16,8 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Consulta de processo pelo número, para qualquer cidadão logado. Mostra o
+ * Consulta de processo pelo número, para qualquer cidadão logado, no
+ * Viabiliza e, sem resultado nele, no sistema anterior (Simplifica). Mostra o
  * que um extrato de andamento mostraria: números, empresa, situação e a
  * tramitação pública. Nada de CPF, contato, endereço, texto do convite ou
  * parecer. O botão de responder convite só vai para o requerente (ou o
@@ -26,6 +29,7 @@ class ConsultaProcessoController extends Controller
         private LocalizadorProcesso $localizador,
         private TimelineSolicitacao $timeline,
         private AuditService $audit,
+        private ConsultaProcessoLegado $legado,
     ) {}
 
     public function __invoke(Request $request): Response
@@ -44,11 +48,34 @@ class ConsultaProcessoController extends Controller
             );
         }
 
+        $legado = null;
+        $legadoIndisponivel = false;
+        $normalizado = $this->localizador->normalizar($numero);
+
+        // Sem processo no Viabiliza, o número pode ser do sistema anterior.
+        if ($processo === null && $normalizado !== null && ConsultaProcessoLegado::ehNumeroDoLegado($normalizado)) {
+            try {
+                $legado = $this->legado->localizar($normalizado);
+            } catch (LegadoIndisponivelException) {
+                $legadoIndisponivel = true;
+            }
+
+            if ($legado !== null) {
+                $this->audit->log(
+                    'solicitacoes',
+                    'consulta-processo-legado',
+                    "Consulta do processo {$legado['processo']['protocol_number']} do sistema anterior no portal",
+                    properties: ['numero' => $normalizado],
+                );
+            }
+        }
+
         return Inertia::render('portal/consulta/index', [
             'numero' => $numero,
-            'encontrado' => $processo !== null,
-            'processo' => $processo === null ? null : $this->resumo($request, $processo),
-            'timeline' => $processo === null ? null : $this->timeline->build($processo, publico: true),
+            'encontrado' => $processo !== null || $legado !== null,
+            'legado_indisponivel' => $legadoIndisponivel,
+            'processo' => $processo !== null ? $this->resumo($request, $processo) : $legado['processo'] ?? null,
+            'timeline' => $processo !== null ? $this->timeline->build($processo, publico: true) : $legado['timeline'] ?? null,
         ]);
     }
 
@@ -72,6 +99,7 @@ class ConsultaProcessoController extends Controller
             ->exists();
 
         return [
+            'origem' => 'viabiliza',
             'protocol_number' => $processo->protocol_number,
             'numero_viabilidade' => $processo->decision?->tvl_product_number,
             'bap' => $processo->external_reference,

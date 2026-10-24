@@ -67,6 +67,27 @@ class LegadoViabilidadeClient
     }
 
     /**
+     * Detalhe do processo do sistema anterior (número no formato
+     * 0000000000-00000000/0000), com TVLs e histórico; null quando não existe.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function processo(string $numero): ?array
+    {
+        $response = $this->enviar('/processos/'.$numero);
+
+        if ($response->status() === 404) {
+            return null;
+        }
+
+        $this->validar($response);
+
+        $data = $response->json('data');
+
+        return is_array($data) ? $data : null;
+    }
+
+    /**
      * @return array<string, mixed>|null
      */
     private function detalheBruto(int $numero): ?array

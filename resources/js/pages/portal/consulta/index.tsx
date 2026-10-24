@@ -13,6 +13,7 @@ import PortalLayout from '@/layouts/portal-layout';
 import { formatDateTime } from '@/lib/datas';
 
 interface Processo {
+    origem: 'viabiliza' | 'legado';
     protocol_number: string | null;
     numero_viabilidade: string | null;
     bap: string | null;
@@ -28,6 +29,7 @@ interface Processo {
 interface ConsultaProps {
     numero: string | null;
     encontrado: boolean;
+    legado_indisponivel?: boolean;
     processo: Processo | null;
     timeline: Timeline | null;
 }
@@ -41,7 +43,7 @@ function Dado({ rotulo, valor }: { rotulo: string; valor: string | null | undefi
     );
 }
 
-export default function ConsultaProcesso({ numero, encontrado, processo, timeline }: ConsultaProps) {
+export default function ConsultaProcesso({ numero, encontrado, legado_indisponivel: legadoIndisponivel = false, processo, timeline }: ConsultaProps) {
     const [termo, setTermo] = useState(numero ?? '');
     const [buscando, setBuscando] = useState(false);
 
@@ -60,8 +62,8 @@ export default function ConsultaProcesso({ numero, encontrado, processo, timelin
             <PageHeader title="Consultar processo" breadcrumbs={[{ label: 'Meu painel', href: '/portal/painel' }]} />
 
             <p className="mb-6 max-w-2xl text-sm text-gray-600 dark:text-gray-400">
-                Veja a situação e a tramitação de um processo de viabilidade. Os processos começam na JUCEB e chegam ao
-                Viabiliza pelo REGIN.
+                Veja a situação e a tramitação de um processo de viabilidade do Viabiliza ou do sistema anterior
+                (Simplifica). Os processos novos começam na JUCEB e chegam ao Viabiliza pelo REGIN.
             </p>
 
             <Card className="mb-6">
@@ -75,7 +77,7 @@ export default function ConsultaProcesso({ numero, encontrado, processo, timelin
                                 autoComplete="off"
                                 value={termo}
                                 onChange={(event) => setTermo(event.target.value)}
-                                hint="Exemplos: processo 2026.000123 · viabilidade 2104040 · BAP BAP2600012345"
+                                hint="Exemplos: processo 2026.000123 · viabilidade 2104040 · BAP BAP2600012345 · sistema anterior 0000123456-20230101/0001"
                             />
                         </div>
                         <Button type="submit" className="min-h-11" loading={buscando} disabled={termo.trim() === ''}>
@@ -87,7 +89,15 @@ export default function ConsultaProcesso({ numero, encontrado, processo, timelin
             </Card>
 
             <div aria-live="polite">
-                {numero && !encontrado && (
+                {legadoIndisponivel && (
+                    <Alert
+                        variant="warning"
+                        title="Sistema anterior indisponível"
+                        message="Não foi possível consultar o sistema anterior (Simplifica) agora. Tente novamente em instantes."
+                    />
+                )}
+
+                {numero && !encontrado && !legadoIndisponivel && (
                     <Alert
                         variant="warning"
                         title="Processo não encontrado"
@@ -110,6 +120,9 @@ export default function ConsultaProcesso({ numero, encontrado, processo, timelin
                                             </h2>
                                             <Badge size="sm" color={statusColor(processo.status.value)}>
                                                 {processo.status.public_label}
+                                            </Badge>
+                                            <Badge size="sm" color={processo.origem === 'legado' ? 'info' : 'primary'} variant="light">
+                                                {processo.origem === 'legado' ? 'Sistema anterior' : 'Viabiliza'}
                                             </Badge>
                                         </div>
                                     </div>
