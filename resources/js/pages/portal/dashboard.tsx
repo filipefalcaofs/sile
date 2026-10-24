@@ -8,7 +8,6 @@ import {
     BellIcon,
     CheckCircleIcon,
     FileIcon,
-    PencilIcon,
     SearchIcon,
 } from '@/components/icons';
 import Badge from '@/components/ui/badge';
@@ -16,7 +15,8 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import EmptyState from '@/components/ui/empty-state';
 import KpiCard, { type KpiTone } from '@/components/ui/kpi-card';
 import PortalLayout from '@/layouts/portal-layout';
-import { acoesDoPortal, FILTROS_SOLICITACOES } from '@/navigation/portal-nav';
+import ConvitesLista, { type ConviteResumo } from '@/components/processo/convites-lista';
+import { acoesDoPortal, ROTA_CONVITES } from '@/navigation/portal-nav';
 import { PORTAL_NAV_ICONS } from '@/navigation/portal-nav-icons';
 import type { SharedProps } from '@/types';
 
@@ -37,13 +37,6 @@ interface SolicitacaoResumo {
     created_at: string | null;
 }
 
-interface PendenciaResumo {
-    id: number;
-    solicitacao_id: number;
-    protocol_number: string | null;
-    descricao: string;
-    due_at: string | null;
-}
 
 interface DashboardProps {
     indicadores: {
@@ -52,7 +45,7 @@ interface DashboardProps {
         em_convite: number;
     };
     atencao: {
-        pendencias: PendenciaResumo[];
+        pendencias: ConviteResumo[];
     };
     solicitacoesRecentes: SolicitacaoResumo[];
     emRepresentacao: boolean;
@@ -121,7 +114,7 @@ export default function Dashboard({ indicadores, atencao, solicitacoesRecentes }
             note: 'aguardando a sua resposta',
             icon: <BellIcon className="size-6" aria-hidden="true" />,
             tone: 'warning',
-            href: servicosHabilitados ? FILTROS_SOLICITACOES.convites : undefined,
+            href: servicosHabilitados ? ROTA_CONVITES : undefined,
         },
         {
             key: 'analise',
@@ -130,16 +123,14 @@ export default function Dashboard({ indicadores, atencao, solicitacoesRecentes }
             note: 'sendo analisadas pela SEDUR',
             icon: <SearchIcon className="size-6" aria-hidden="true" />,
             tone: 'brand',
-            href: servicosHabilitados ? FILTROS_SOLICITACOES.emAnalise : undefined,
         },
         {
             key: 'processos',
-            label: 'Total de solicitações',
+            label: 'Seus processos',
             value: numberFormat.format(indicadores.processos),
-            note: 'todas as suas solicitações',
+            note: 'em que você é requerente ou está vinculado',
             icon: <FileIcon className="size-6" aria-hidden="true" />,
             tone: 'info',
-            href: servicosHabilitados ? FILTROS_SOLICITACOES.todas : undefined,
         },
     ];
 
@@ -161,43 +152,15 @@ export default function Dashboard({ indicadores, atencao, solicitacoesRecentes }
                                 </span>
                                 <div className="w-full">
                                     <h3 className="text-base font-semibold text-gray-800 dark:text-white/90">
-                                        Precisa da sua atenção
+                                        {atencao.pendencias.length === 1
+                                            ? 'Você tem 1 convite para responder'
+                                            : `Você tem ${atencao.pendencias.length} convites para responder`}
                                     </h3>
-                                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
-                                        Estes itens dependem de você para o processo seguir.
+                                    <p className="mt-1 mb-4 text-sm text-gray-600 dark:text-gray-300">
+                                        A SEDUR pediu uma informação ou um documento para seguir com a análise. Responda dentro do prazo.
                                     </p>
 
-                                    <ul className="mt-4 flex flex-col gap-3">
-                                        {atencao.pendencias.map((pendencia) => (
-                                            <li
-                                                key={`pendencia-${pendencia.id}`}
-                                                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-warning-200 bg-white px-4 py-3 dark:border-warning-500/20 dark:bg-white/[0.03]"
-                                            >
-                                                <div className="min-w-0">
-                                                    <p className="text-theme-sm font-medium text-gray-800 dark:text-white/90">
-                                                        Convite para responder — {pendencia.protocol_number ?? 'solicitação'}
-                                                    </p>
-                                                    <p className="text-theme-xs text-gray-500 dark:text-gray-400">
-                                                        A SEDUR pediu uma informação ou documento para seguir com a análise.
-                                                    </p>
-                                                    <p className="truncate text-theme-xs text-gray-500 dark:text-gray-400">
-                                                        {pendencia.descricao}
-                                                        {pendencia.due_at ? ` · responda até ${formatDate(pendencia.due_at)}` : ''}
-                                                    </p>
-                                                </div>
-                                                {servicosHabilitados && (
-                                                    <Link
-                                                        href={`/portal/solicitacoes/${pendencia.solicitacao_id}/pendencias`}
-                                                        className="inline-flex items-center gap-1.5 rounded-lg bg-warning-500 px-3 py-2 text-theme-sm font-medium text-white transition hover:bg-warning-600"
-                                                    >
-                                                        Responder
-                                                        <ArrowRightIcon className="size-4" aria-hidden="true" />
-                                                    </Link>
-                                                )}
-                                            </li>
-                                        ))}
-
-                                    </ul>
+                                    <ConvitesLista convites={atencao.pendencias} />
                                 </div>
                             </div>
                         </div>
@@ -209,7 +172,7 @@ export default function Dashboard({ indicadores, atencao, solicitacoesRecentes }
                             <div>
                                 <h3 className="text-base font-semibold text-gray-800 dark:text-white/90">Tudo em dia</h3>
                                 <p className="mt-0.5 text-sm text-gray-600 dark:text-gray-300">
-                                    Nada precisa de você agora. Acompanhe abaixo o andamento dos seus pedidos.
+                                    Nenhum convite para responder agora. Acompanhe abaixo o andamento dos seus processos.
                                 </p>
                             </div>
                         </div>
@@ -286,45 +249,15 @@ export default function Dashboard({ indicadores, atencao, solicitacoesRecentes }
                 <div className="col-span-12">
                     <Card>
                         <CardHeader
-                            title="Minhas solicitações recentes"
-                            description="Acompanhe o andamento dos seus pedidos de viabilidade."
-                            actions={
-                                servicosHabilitados ? (
-                                    <div className="flex flex-wrap items-center gap-4">
-                                        <Link
-                                            href="/portal/viabilidade/historico"
-                                            className="text-theme-sm font-medium text-gray-600 transition hover:text-brand-500 dark:text-gray-300 dark:hover:text-brand-400"
-                                        >
-                                            Minhas consultas de viabilidade
-                                        </Link>
-                                        <Link
-                                            href={FILTROS_SOLICITACOES.todas}
-                                            className="inline-flex items-center gap-1.5 text-theme-sm font-medium text-brand-500 transition hover:text-brand-600 dark:text-brand-400"
-                                        >
-                                            Ver todas
-                                            <ArrowRightIcon className="size-4" aria-hidden="true" />
-                                        </Link>
-                                    </div>
-                                ) : undefined
-                            }
+                            title="Meus processos recentes"
+                            description="Processos em que você é requerente ou está vinculado pelo CPF."
                         />
                         <CardContent flush>
                             {solicitacoesRecentes.length === 0 ? (
                                 <EmptyState
                                     icon={<FileIcon className="size-6" aria-hidden="true" />}
-                                    title="Você ainda não tem solicitações"
-                                    description="Comece verificando se a atividade é permitida no endereço desejado."
-                                    action={
-                                        servicosHabilitados ? (
-                                            <Link
-                                                href="/portal/viabilidade"
-                                                className="inline-flex items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2.5 text-theme-sm font-medium text-white transition hover:bg-brand-600"
-                                            >
-                                                Fazer consulta de viabilidade
-                                                <ArrowRightIcon className="size-4" aria-hidden="true" />
-                                            </Link>
-                                        ) : undefined
-                                    }
+                                    title="Nenhum processo ligado ao seu CPF"
+                                    description="Os processos de viabilidade começam na JUCEB. Para acompanhar outro processo, use Consultar processo."
                                 />
                             ) : (
                                 <ul className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -348,9 +281,9 @@ export default function Dashboard({ indicadores, atencao, solicitacoesRecentes }
 
                                         return (
                                             <li key={solicitacao.id}>
-                                                {servicosHabilitados ? (
+                                                {servicosHabilitados && solicitacao.protocol_number ? (
                                                     <Link
-                                                        href={`/portal/solicitacoes/${solicitacao.id}`}
+                                                        href={`/portal/consulta?numero=${encodeURIComponent(solicitacao.protocol_number ?? '')}`}
                                                         className="flex flex-wrap items-center justify-between gap-3 px-4 py-4 transition hover:bg-gray-50 dark:hover:bg-white/[0.02] sm:px-6"
                                                     >
                                                         {corpo}

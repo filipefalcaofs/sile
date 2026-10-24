@@ -15,7 +15,7 @@ import PortalLayout from '@/layouts/portal-layout';
 interface Origem {
     id: number | null;
     legado?: boolean;
-    empresa_id?: number;
+    cnpj_digitos?: string;
     numero: string | number | null;
     empresa: string | null;
     cnpj: string | null;
@@ -74,7 +74,7 @@ export default function RenovacaoWizard({
     function protocolar() {
         form.post(
             origem.legado
-                ? `/portal/renovacao/legado/${origem.empresa_id}/${origem.numero}`
+                ? `/portal/renovacao/legado/${origem.cnpj_digitos}/${origem.numero}`
                 : `/portal/renovacao/${origem.id}`,
         );
     }

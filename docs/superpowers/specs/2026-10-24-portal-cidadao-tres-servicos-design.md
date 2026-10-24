@@ -112,4 +112,5 @@ O usuário pediu trabalho autônomo; estas ficaram por minha conta.
 3. **Sócio no painel:** indicadores e processos recentes continuam com `visivelPara`, mas cada processo leva a `portal/consulta?numero=<protocolo>`, que funciona para qualquer pessoa. Assim o sócio nunca cai num 403. Aviso, badge e lista de convites usam `respondivelPor`.
 4. **Contato no assistente de renovação:** pré-preenchido com o e-mail e o telefone do próprio usuário logado, não com os da empresa. Quem digita um CNPJ não vê contato de terceiros.
 5. **Representação "em nome de":** vale o usuário efetivo, como já fazem a política e a renovação. Não se cria representação nova pelo portal, mas quem já está em uma continua coerente.
-6. **CNPJ repetido no Viabiliza:** a busca junta as TVLs de todas as empresas com o CNPJ. O protocolo da TVL legada reaproveita a empresa de menor id com aquele CNPJ.
+6. **CNPJ repetido no Viabiliza:** não acontece, porque `companies.cnpj` é único. O protocolo da TVL legada reaproveita a empresa com aquele CNPJ.
+7. **Contato da empresa no protocolo:** o protocolo da renovação gravava na empresa o e-mail e o telefone digitados. Com qualquer cidadão podendo renovar, o contato digitado passa a só preencher o que a empresa ainda não tem, e nunca troca o contato dela.

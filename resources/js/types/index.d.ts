@@ -13,6 +13,7 @@ export interface SharedProps extends PageProps {
     attendingFor: { id: number; name: string } | null;
     /** Badge do sininho (HU-086): contagem real de não-lidas do usuário autenticado. */
     notificacoes: { nao_lidas: number };
+    convitesPendentes: number;
     flash: {
         status?: string;
         error?: string | null;
