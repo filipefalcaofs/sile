@@ -25,7 +25,7 @@ def gerar(manifesto: dict, seg, limite: int | None = None) -> dict:
     for i, (lote, lado) in enumerate(pedidos, 1):
         destino = caminho(lote["id"], lado)
         png = c.recortes / f"{lote['id']}_{lado}.png"
-        if destino.exists():
+        if destino.exists() and (not png.exists() or destino.stat().st_mtime >= png.stat().st_mtime):
             contagem["ja_existiam"] += 1
         elif not png.exists():
             contagem["sem_recorte"] += 1

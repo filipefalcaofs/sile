@@ -29,9 +29,10 @@ def _parametros(caixa) -> dict:
 def baixar_um(lote_id: str, lat: float, lng: float, lado_m: int, sessao) -> str:
     c = config.caminhos()
     png = c.recortes / f"{lote_id}_{lado_m}.png"
-    if png.exists():
-        return "ja_existia"
     caixa = geo.caixa_recorte(lat, lng, lado_m)
+    meta = arquivos.ler_json(c.recortes / f"{lote_id}_{lado_m}.json")
+    if png.exists() and meta and all(abs(a - b) < 1e-7 for a, b in zip(meta["caixa"], caixa)):
+        return "ja_existia"
     resposta = sessao.get(URL_ORTOFOTO, _parametros(caixa), timeout=60)
     tipo = str(resposta.headers.get("Content-Type", "")).lower()
     if resposta.status_code != 200 or not tipo.startswith("image/") or not resposta.content:

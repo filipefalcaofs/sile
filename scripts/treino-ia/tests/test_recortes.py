@@ -222,3 +222,25 @@ def test_filtrar_tira_validacao_sem_imagem(tmp_path, monkeypatch):
     filtrado = recortes.filtrar_com_imagem(m, n_treino=5, n_teste=5)
 
     assert [l["id"] for l in filtrado["validacao"]] == ["s2"]
+
+
+def test_recorte_guardado_de_outro_ponto_e_baixado_de_novo(tmp_path, monkeypatch):
+    monkeypatch.setenv("TREINO_IA_RAIZ", str(tmp_path))
+    lat, lng = -12.98, -38.47
+    recortes.baixar_um("9-9", lat, lng, 60, SessaoContadora())
+
+    sessao = SessaoContadora()
+    resultado = recortes.baixar_um("9-9", lat + 0.0002, lng, 60, sessao)
+
+    assert resultado == "baixado" and sessao.chamadas == 1
+    caixa = config.caminhos().recortes / "9-9_60.json"
+    assert recortes.arquivos.ler_json(caixa)["caixa"] == list(geo.caixa_recorte(lat + 0.0002, lng, 60))
+
+
+def test_recorte_guardado_do_mesmo_ponto_nao_e_baixado_de_novo(tmp_path, monkeypatch):
+    monkeypatch.setenv("TREINO_IA_RAIZ", str(tmp_path))
+    recortes.baixar_um("9-9", -12.98, -38.47, 60, SessaoContadora())
+
+    sessao = SessaoContadora()
+
+    assert recortes.baixar_um("9-9", -12.98, -38.47, 60, sessao) == "ja_existia" and sessao.chamadas == 0
