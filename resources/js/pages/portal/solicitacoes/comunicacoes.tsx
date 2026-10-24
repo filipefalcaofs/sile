@@ -21,7 +21,6 @@ export default function PortalComunicacoes({ processo, comunicacoes }: Comunicac
                 title="Histórico de comunicações"
                 breadcrumbs={[
                     { label: 'Meu painel', href: '/portal/painel' },
-                    { label: 'Minhas solicitações', href: '/portal/solicitacoes' },
                     { label: titulo, href: `/portal/solicitacoes/${processo.id}` },
                 ]}
             />
