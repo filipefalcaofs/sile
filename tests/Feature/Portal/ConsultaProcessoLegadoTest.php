@@ -53,8 +53,8 @@ class ConsultaProcessoLegadoTest extends TestCase
                 'titular' => ['documento' => '57461624000123', 'tipo' => 'cnpj', 'origem' => 'tvl'],
             ]],
             'historico' => [
-                ['em' => '2023-01-10T09:30:00-03:00', 'titulo' => 'Processo aberto', 'mensagem' => 'Prezado Fulano, CPF 111.222.333-44', 'status' => 'Em análise'],
-                ['em' => '2023-01-20T15:00:00-03:00', 'titulo' => 'Viabilidade emitida', 'mensagem' => 'Texto interno', 'status' => 'Emissão TVL - Deferido'],
+                ['em' => '2023-01-10T09:30:00-03:00', 'titulo' => self::PROCESSO, 'mensagem' => 'Prezado Fulano, CPF 111.222.333-44', 'status' => 'Em análise'],
+                ['em' => '2023-01-20T15:00:00-03:00', 'titulo' => self::PROCESSO, 'mensagem' => 'Texto interno', 'status' => 'Emissão TVL - Deferido'],
             ],
         ]];
     }
@@ -78,7 +78,8 @@ class ConsultaProcessoLegadoTest extends TestCase
             ->where('processo.status.public_label', 'Emissão TVL - Deferido')
             ->where('processo.pode_responder', false)
             ->has('timeline.etapas', 2)
-            ->where('timeline.etapas.1.rotulo', 'Viabilidade emitida')
+            ->where('timeline.etapas.0.rotulo', 'Em análise')
+            ->where('timeline.etapas.1.rotulo', 'Emissão TVL - Deferido')
             ->where('timeline.status_atual.public_label', 'Emissão TVL - Deferido'));
 
         $props = json_encode($resposta->viewData('page')['props']);

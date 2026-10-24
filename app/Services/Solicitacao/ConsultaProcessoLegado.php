@@ -10,9 +10,8 @@ use Carbon\CarbonImmutable;
 /**
  * Processo do sistema anterior (Simplifica) para a consulta de processo do
  * portal, no mesmo formato do processo do Viabiliza. Aceita o número do
- * processo do Simplifica ou o de uma TVL dele. Do histórico saem data,
- * título e status; o texto das mensagens não, porque pode ser dirigido ao
- * requerente.
+ * processo do Simplifica ou o de uma TVL dele. Do histórico saem data e
+ * status; o texto das mensagens não, porque pode ser dirigido ao requerente.
  */
 class ConsultaProcessoLegado
 {
@@ -83,13 +82,32 @@ class ConsultaProcessoLegado
             'timeline' => [
                 'status_atual' => ['value' => 'legado', 'public_label' => $situacao],
                 'etapas' => array_values(array_map(fn (array $item): array => [
-                    'rotulo' => is_string($item['titulo'] ?? null) && $item['titulo'] !== '' ? $item['titulo'] : (string) ($item['status'] ?? 'Andamento'),
+                    'rotulo' => $this->rotulo($item, (string) ($dados['numero'] ?? '')),
                     'data' => $this->data($item['em'] ?? null),
                 ], array_filter(is_array($dados['historico'] ?? null) ? $dados['historico'] : [], 'is_array'))),
                 'pendencias' => [],
                 'prazo_estimado' => null,
             ],
         ];
+    }
+
+    /**
+     * Rótulo da etapa: o status do item. No Simplifica o título costuma ser o
+     * próprio número do processo, que não diz nada como etapa.
+     *
+     * @param  array<string, mixed>  $item
+     */
+    private function rotulo(array $item, string $numeroProcesso): string
+    {
+        foreach (['status', 'titulo'] as $campo) {
+            $valor = trim((string) ($item[$campo] ?? ''));
+
+            if ($valor !== '' && $valor !== $numeroProcesso) {
+                return $valor;
+            }
+        }
+
+        return 'Andamento';
     }
 
     private function data(mixed $valor): ?string
