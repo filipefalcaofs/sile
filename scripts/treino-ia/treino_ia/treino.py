@@ -78,7 +78,8 @@ def _passo(preditor, amostra, rng: np.random.Generator):
     return perdas[melhor] + PESO_IOU * F.mse_loss(iou_previsto[0], iou_real)
 
 
-def treinar(manifesto: dict, epocas: int, semente: int, modelo=None, parar_apos_passos: int | None = None):
+def treinar(manifesto: dict, epocas: int, semente: int, modelo=None, parar_apos_passos: int | None = None,
+            taxa: float = TAXA):
     c = config.caminhos()
     if modelo is None:
         from treino_ia import variantes
@@ -90,11 +91,11 @@ def treinar(manifesto: dict, epocas: int, semente: int, modelo=None, parar_apos_
     decodificador = sam.sam_mask_decoder
     for parametro in decodificador.parameters():
         parametro.requires_grad_(True)
-    otimizador = torch.optim.AdamW(decodificador.parameters(), lr=TAXA)
+    otimizador = torch.optim.AdamW(decodificador.parameters(), lr=taxa)
 
     amostras = _amostras(manifesto)
     assinatura = hashlib.sha1("|".join(sorted(f"{a['lote']['id']}_{a['lado']}" for a in amostras)).encode()).hexdigest()
-    identidade = {"semente": semente, "epocas": epocas, "assinatura": assinatura, "amostras": len(amostras)}
+    identidade = {"semente": semente, "epocas": epocas, "assinatura": assinatura, "amostras": len(amostras), "taxa": taxa}
 
     caminho_estado = c.pesos / "estado.pt"
     estado = {"epoca": 0, "indice": 0, "passo": 0, "soma_perda": 0.0}
@@ -144,6 +145,8 @@ def treinar(manifesto: dict, epocas: int, semente: int, modelo=None, parar_apos_
         estado["indice"] = 0
         estado["soma_perda"] = 0.0
         situacao.registrar(c, "treinar", feitos=estado["epoca"], total=epocas)
+        _salvar({"decodificador": {k: v.cpu() for k, v in decodificador.state_dict().items()}, "semente": semente,
+                 "epoca": estado["epoca"], "taxa": taxa}, c.pesos / "epocas" / f"s{semente}" / f"epoca_{estado['epoca']:02d}.pt")
         salvar_estado()
     _salvar({"decodificador": {k: v.cpu() for k, v in decodificador.state_dict().items()}, "semente": semente, "epocas": epocas, "lotes": len(amostras)}, final)
     decodificador.eval()

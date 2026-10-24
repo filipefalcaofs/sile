@@ -48,8 +48,8 @@ def eixos_do_logradouro(codlog) -> list:
 def _lotes(conjunto: str) -> list[tuple[dict, dict, dict]]:
     c = config.caminhos()
     saida = []
-    if conjunto == "teste":
-        for lote in arquivos.ler_json(c.dados / "manifesto.json")["teste"]:
+    if conjunto in ("teste", "validacao"):
+        for lote in arquivos.ler_json(c.dados / "manifesto.json").get(conjunto, []):
             entrada = {k: v for k, v in lote.items() if k not in CAMPOS_DE_REFERENCIA}
             saida.append((entrada, lote["poligono"], {"cadastro_diferente": False, "unidade": None, "area_cadastro": None}))
     else:
@@ -85,7 +85,7 @@ def _pesos_treinados():
 
 
 def avaliar(conjunto: str, nomes: list[str], execucao: str | None = None, seg_base=None, seg_treinado=None,
-            sessao=None, eixos=None, regra_f: str | None = None, juiza=None):
+            sessao=None, eixos=None, regra_f: str | None = None, juiza=None, pesos=None):
     c = config.caminhos()
     execucao = execucao or f"{date.today():%Y%m%d}-{conjunto}"
     pasta = c.avaliacoes / execucao
@@ -93,6 +93,8 @@ def avaliar(conjunto: str, nomes: list[str], execucao: str | None = None, seg_ba
     eixos = eixos or eixos_do_logradouro
     if seg_base is None and any(n in "ABCD" for n in nomes):
         seg_base = variantes.Segmentador()
+    if seg_treinado is None and pesos is not None and any(n in "EFJ" for n in nomes):
+        seg_treinado = variantes.Segmentador(pesos)
     if seg_treinado is None and any(n in "EFJ" for n in nomes):
         if _pesos_treinados() is None:
             raise SystemExit("Variantes E/F/J pedidas sem pesos treinados em pesos/decodificador_*.pt. Rode treinar antes ou tire E/F/J.")

@@ -83,6 +83,30 @@ def montar_de(lotes: list[dict], bairros: list[dict], semente: int, n_treino: in
     }
 
 
+def separar_validacao(manifesto: dict, fracao: float, semente: int) -> dict:
+    """Tira do treino bairros inteiros para a validação, até a fração pedida dos lotes.
+
+    Parte sempre do treino somado à validação anterior, então refazer com a mesma
+    semente devolve a mesma separação.
+    """
+    todos = manifesto.get("treino", []) + manifesto.get("validacao", [])
+    nomes = sorted({l["bairro"] for l in todos})
+    random.Random(semente).shuffle(nomes)
+    escolhidos, quantidade = [], 0
+    for nome in nomes:
+        if quantidade >= fracao * len(todos):
+            break
+        escolhidos.append(nome)
+        quantidade += sum(1 for l in todos if l["bairro"] == nome)
+    return {
+        **manifesto,
+        "treino": [l for l in todos if l["bairro"] not in escolhidos],
+        "validacao": [l for l in todos if l["bairro"] in escolhidos],
+        "bairros_validacao": sorted(escolhidos),
+        "semente_validacao": semente,
+    }
+
+
 def montar(semente: int, n_treino: int = 600, n_teste: int = 60, teste_por_bairro: int | None = None) -> dict:
     c = config.caminhos()
     wfs.baixar(CAMADA_LOTES, c.dados / "wfs" / "lotes", ordenar_por="CODLOG,NUMERACAO_METRICA")

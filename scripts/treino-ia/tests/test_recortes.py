@@ -203,3 +203,22 @@ def test_lote_com_primeiro_recorte_em_branco_nao_baixa_os_outros_lados(tmp_path,
     assert sessao.chamadas == 2
     assert resultado["em_branco"] == 2
     assert sorted(p.name for p in config.caminhos().recortes.glob("*.png")) == ["1-0_60.png", "1-1_60.png"]
+
+
+def test_lotes_de_validacao_ganham_todos_os_lados_da_avaliacao(tmp_path, monkeypatch):
+    monkeypatch.setenv("TREINO_IA_RAIZ", str(tmp_path))
+    m = _manifesto()
+    m["validacao"], m["teste"] = m["teste"], []
+
+    recortes.baixar_todos(m, sessao=SessaoContadora())
+
+    assert sorted(p.name for p in config.caminhos().recortes.glob("1-1_*.png")) == ["1-1_120.png", "1-1_240.png", "1-1_60.png"]
+
+
+def test_filtrar_tira_validacao_sem_imagem(tmp_path, monkeypatch):
+    m = _com_recortes(tmp_path, monkeypatch, vazios={("s1", 240)})
+    m["validacao"], m["teste"] = m["teste"], []
+
+    filtrado = recortes.filtrar_com_imagem(m, n_treino=5, n_teste=5)
+
+    assert [l["id"] for l in filtrado["validacao"]] == ["s2"]

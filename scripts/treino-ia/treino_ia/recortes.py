@@ -47,7 +47,7 @@ def baixar_todos(manifesto: dict, sessao=None, limite: int | None = None) -> dic
     sessao = sessao or wfs.SessaoHttp()
     c = config.caminhos()
     lotes = [(l, geo.lados_de_treino(l)) for l in manifesto.get("treino", [])]
-    lotes += [(l, list(geo.LADOS_RECORTE)) for l in manifesto.get("teste", [])]
+    lotes += [(l, list(geo.LADOS_RECORTE)) for l in manifesto.get("teste", []) + manifesto.get("validacao", [])]
     if limite is not None:
         lotes = lotes[:limite]
     pedidos = [(lote, lado) for lote, lados in lotes for lado in lados]
@@ -93,16 +93,19 @@ def filtrar_com_imagem(manifesto: dict, n_treino: int, n_teste: int) -> dict:
 
     treino = [l for l in manifesto.get("treino", []) if tem_imagem(l, geo.lados_de_treino(l))]
     teste = [l for l in manifesto.get("teste", []) if tem_imagem(l, geo.LADOS_RECORTE)]
+    validacao = [l for l in manifesto.get("validacao", []) if tem_imagem(l, geo.LADOS_RECORTE)]
     descartados = {
         **manifesto.get("descartados", {}),
         "sem_imagem_treino": len(manifesto.get("treino", [])) - len(treino),
         "sem_imagem_teste": len(manifesto.get("teste", [])) - len(teste),
+        "sem_imagem_validacao": len(manifesto.get("validacao", [])) - len(validacao),
     }
     teste = teste[:n_teste]
     return {
         **manifesto,
         "treino": treino[:n_treino],
         "teste": teste,
+        "validacao": validacao,
         "bairros_teste": sorted({l["bairro"] for l in teste}),
         "bairros_sorteados_teste": manifesto.get("bairros_teste", []),
         "descartados": descartados,

@@ -111,3 +111,25 @@ def test_cli_dados_descarta_o_manifesto_bruto_do_sorteio_anterior(monkeypatch, t
 
     assert __main__.main(["dados", "--semente", "1"]) == 0
     assert not bruto.exists()
+
+
+def test_validacao_separa_bairros_inteiros_do_treino():
+    m = _montar(sinteticos.lotes_em_grade(n_bairros=4), n_treino=30, n_teste=5)
+
+    v = dados.separar_validacao(m, fracao=0.3, semente=7)
+
+    assert v["validacao"]
+    assert {l["bairro"] for l in v["validacao"]} == set(v["bairros_validacao"])
+    assert {l["bairro"] for l in v["treino"]}.isdisjoint(v["bairros_validacao"])
+    assert set(v["bairros_validacao"]).isdisjoint(m["bairros_teste"])
+    assert len(v["treino"]) + len(v["validacao"]) == len(m["treino"])
+
+
+def test_validacao_refeita_parte_do_treino_inteiro_e_repete_com_a_mesma_semente():
+    m = _montar(sinteticos.lotes_em_grade(n_bairros=4), n_treino=30, n_teste=5)
+
+    uma = dados.separar_validacao(m, fracao=0.3, semente=7)
+    outra = dados.separar_validacao(uma, fracao=0.3, semente=7)
+
+    assert [l["id"] for l in outra["validacao"]] == [l["id"] for l in uma["validacao"]]
+    assert len(outra["treino"]) + len(outra["validacao"]) == len(m["treino"])

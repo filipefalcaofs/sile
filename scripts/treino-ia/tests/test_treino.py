@@ -85,3 +85,12 @@ def test_amostras_incluem_um_recorte_por_lado_de_treino(tmp_path, monkeypatch):
         cache.caminho("9-0", lado).write_bytes(b"x")
 
     assert sorted(a["lado"] for a in treino._amostras(m)) == [60, 120]
+
+
+def test_pesos_de_cada_epoca_ficam_guardados_e_a_taxa_entra_no_estado(conjunto, segmentador):
+    treino.treinar(conjunto, epocas=2, semente=3, modelo=segmentador.preditor, taxa=3e-5)
+
+    pasta = config.caminhos().pesos / "epocas" / "s3"
+    assert sorted(p.name for p in pasta.glob("*.pt")) == ["epoca_01.pt", "epoca_02.pt"]
+    assert "decodificador" in torch.load(pasta / "epoca_02.pt")
+    assert torch.load(config.caminhos().pesos / "estado.pt")["taxa"] == 3e-5

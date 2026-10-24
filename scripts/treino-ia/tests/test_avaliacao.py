@@ -176,3 +176,33 @@ def test_cli_avaliar_com_juiza_inclui_a_variante_J(monkeypatch, tmp_path):
     assert "J" in chamado["nomes"]
     assert __main__.main(["cego", "--juiza"]) == 0
     assert "J" in chamado["nomes"]
+
+
+def test_avaliacao_na_validacao_com_pesos_escolhidos(tmp_path, monkeypatch):
+    m = _preparar(tmp_path, monkeypatch)
+    m["validacao"], m["teste"] = m["teste"], []
+    arquivos.gravar_json(config.caminhos().dados / "manifesto.json", m)
+    carregados = []
+
+    class SegRegistrado:
+        def __init__(self, pesos=None):
+            carregados.append(pesos)
+
+    monkeypatch.setattr(variantes, "Segmentador", SegRegistrado)
+    monkeypatch.setattr(variantes, "rodar", _rodar_falso([]))
+
+    linhas = arquivos.ler_json(avaliacao.avaliar("validacao", ["E"], execucao="v", pesos="/x/epoca_03.pt", eixos=_nao_chamar))
+
+    assert carregados == ["/x/epoca_03.pt"]
+    assert len(linhas) == len(m["validacao"]) and {l["conjunto"] for l in linhas} == {"validacao"}
+
+
+def test_cli_avaliar_so_as_variantes_pedidas_com_pesos(monkeypatch, tmp_path):
+    from treino_ia import __main__
+
+    monkeypatch.setenv("TREINO_IA_RAIZ", str(tmp_path))
+    chamado = {}
+    monkeypatch.setattr(avaliacao, "avaliar", lambda alvo, nomes, **k: chamado.update(alvo=alvo, nomes=nomes, **k) or "ok")
+
+    assert __main__.main(["avaliar", "validacao", "--variantes", "E", "--pesos", "/x/p.pt"]) == 0
+    assert chamado["alvo"] == "validacao" and chamado["nomes"] == ["E"] and chamado["pesos"] == "/x/p.pt"

@@ -48,6 +48,20 @@ def filtrar(args) -> None:
     print(f"treino: {len(m['treino'])} | teste: {len(m['teste'])} | bairros de teste: {len(m['bairros_teste'])} | descartados: {m['descartados']}")
 
 
+def validacao(args) -> None:
+    """Separa bairros de validação do treino, baixa os recortes deles e tira os sem imagem."""
+    from treino_ia import arquivos, dados as modulo_dados, recortes as modulo_recortes
+
+    if args.semente is None:
+        raise SystemExit("Informe --semente.")
+    c = config.caminhos()
+    m = modulo_dados.separar_validacao(_manifesto(), args.fracao, args.semente)
+    print(modulo_recortes.baixar_todos({"validacao": m["validacao"]}))
+    m = modulo_recortes.filtrar_com_imagem(m, len(m["treino"]), len(m["teste"]))
+    arquivos.gravar_json(c.dados / "manifesto.json", m)
+    print(f"treino: {len(m['treino'])} | validação: {len(m['validacao'])} em {len(m['bairros_validacao'])} bairros | teste: {len(m['teste'])}")
+
+
 def cache(args) -> None:
     from treino_ia import cache as modulo, variantes
 
@@ -59,7 +73,7 @@ def treinar(args) -> None:
 
     if args.semente is None:
         raise SystemExit("Informe --semente.")
-    print(f"pesos: {treino.treinar(_manifesto(), args.epocas, args.semente)}")
+    print(f"pesos: {treino.treinar(_manifesto(), args.epocas, args.semente, taxa=args.taxa)}")
 
 
 def avaliar(args) -> None:
@@ -71,7 +85,9 @@ def avaliar(args) -> None:
         nomes.append("F")
     if args.juiza:
         nomes.append("J")
-    print(avaliacao.avaliar(alvo, nomes, execucao=args.execucao, regra_f=args.regra_f))
+    if args.variantes:
+        nomes = [n.strip() for n in args.variantes.split(",") if n.strip()]
+    print(avaliacao.avaliar(alvo, nomes, execucao=args.execucao, regra_f=args.regra_f, pesos=args.pesos))
 
 
 def cego(args) -> None:
