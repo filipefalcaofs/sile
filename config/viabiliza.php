@@ -173,8 +173,11 @@ return [
                 'area_max_m2' => 20000,
                 'compacidade_min' => 0.2,
                 'margem_borda_px' => 2,
-                // IoU previsto mínimo do modelo; nulo desliga a checagem.
-                'score_min' => null,
+                // IoU previsto mínimo do modelo; nulo desliga a checagem. 0,6 vem
+                // da validação do modelo treinado (24/10/2026): tira 21% dos
+                // contornos ruins (IoU < 0,3) e perde 6% dos bons; acima disso a
+                // perda de bons cresce mais que o ganho.
+                'score_min' => 0.6,
             ],
         ],
     ],

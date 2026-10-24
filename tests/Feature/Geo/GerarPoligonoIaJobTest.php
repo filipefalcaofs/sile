@@ -168,7 +168,7 @@ class GerarPoligonoIaJobTest extends TestCase
     {
         $quadrado = [[350, 350], [450, 350], [450, 450], [350, 450]];
         $naBorda = [[0, 300], [500, 300], [500, 500], [0, 500]];
-        $resposta = $this->resposta([[$naBorda, 0.9, true], [$quadrado, 0.4, false]]);
+        $resposta = $this->resposta([[$naBorda, 0.9, true], [$quadrado, 0.65, false]]);
         $this->fake(iaPorRecorte: [$resposta, $resposta, $resposta]);
         $request = $this->processo();
 
