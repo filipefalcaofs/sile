@@ -10,6 +10,7 @@ use App\Http\Controllers\Portal\CompanyCnaeController;
 use App\Http\Controllers\Portal\CompanyController;
 use App\Http\Controllers\Portal\CompanyLinkController;
 use App\Http\Controllers\Portal\ComprovanteProtocoloController;
+use App\Http\Controllers\Portal\ConsultaProcessoController;
 use App\Http\Controllers\Portal\ConsultaProtocoloController;
 use App\Http\Controllers\Portal\ConsultaProtocoloPublicaController;
 use App\Http\Controllers\Portal\ConsultaViabilidadeController;
@@ -167,6 +168,13 @@ Route::middleware(['auth:web', ConfereSessaoPortalServicos::class, 'verified'])
                     ->name('renovacao.show');
                 Route::post('renovacao/{origem}', [RenovacaoController::class, 'store'])->middleware('portal.solicitacao')
                     ->name('renovacao.store');
+
+                // Consulta de processo por número (do processo, da viabilidade
+                // ou do BAP), aberta a qualquer cidadão logado, sem dados
+                // pessoais. Os processos começam na JUCEB.
+                Route::get('consulta', ConsultaProcessoController::class)
+                    ->middleware('throttle:consulta-processo')
+                    ->name('consulta');
 
                 Route::get('solicitacoes', [SolicitacaoController::class, 'index'])->middleware('portal.extras')->name('solicitacoes.index');
                 Route::post('solicitacoes', [SolicitacaoController::class, 'store'])->middleware('portal.solicitacao')

@@ -258,6 +258,11 @@ class FortifyServiceProvider extends ServiceProvider
         RateLimiter::for('portal-servicos-processos', fn (Request $request) => Limit::perMinute(60)
             ->by('portal-servicos:'.sha1($request->bearerToken() ?? $request->ip())));
 
+        // Consulta de processo por número no portal do cidadão (aberta a
+        // qualquer cidadão logado): por usuário, para não virar varredura.
+        RateLimiter::for('consulta-processo', fn (Request $request) => Limit::perMinute(30)
+            ->by('consulta-processo:'.($request->user()?->id ?: $request->ip())));
+
         // Throttle do webhook municipal /api_integracao/recebe (HU-099 RN-010).
         RateLimiter::for('regin-recebe', function (Request $request) {
             return Limit::perMinute(
