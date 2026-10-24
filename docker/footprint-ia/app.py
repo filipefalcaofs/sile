@@ -38,7 +38,7 @@ def aplicar_pesos(modelo, caminho: str) -> None:
     """Carrega os pesos do decodificador treinado sobre o modelo base."""
     import torch
 
-    estado = torch.load(caminho, map_location="cpu")
+    estado = torch.load(caminho, map_location="cpu", weights_only=True)
     modelo.sam_mask_decoder.load_state_dict(estado.get("decodificador", estado))
 
 
