@@ -62,6 +62,18 @@ def validacao(args) -> None:
     print(f"treino: {len(m['treino'])} | validação: {len(m['validacao'])} em {len(m['bairros_validacao'])} bairros | teste: {len(m['teste'])}")
 
 
+def varrer(args) -> None:
+    from treino_ia import varredura
+
+    if args.semente is None:
+        raise SystemExit("Informe --semente do treino.")
+    resumo = varredura.varrer(args.semente, args.passo)
+    for e in resumo["epocas"]:
+        print(f"época {e['epoca']:2d}: IoU mediano {e['iou_mediano']:.3f} | IoU ≥ 0,5: {e['iou_05']} | ≥ 0,7: {e['iou_07']} | {e['lotes']} lotes")
+    if resumo["melhor"]:
+        print(f"melhor: época {resumo['melhor']['epoca']} ({resumo['melhor']['pesos']})")
+
+
 def cache(args) -> None:
     from treino_ia import cache as modulo, variantes
 
