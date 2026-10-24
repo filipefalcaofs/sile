@@ -116,7 +116,7 @@ class PainelCidadaoTest extends TestCase
                 ->where('solicitacoesRecentes.0.status.public_label', 'Recebida — em processamento'));
     }
 
-    public function test_painel_atencao_traz_pendencias_abertas_e_rascunhos_do_efetivo(): void
+    public function test_painel_atencao_traz_convites_abertos_do_efetivo_sem_rascunhos(): void
     {
         $user = $this->portalUser();
         $other = $this->portalUser();
@@ -141,7 +141,7 @@ class PainelCidadaoTest extends TestCase
         ]);
         AnalysisPendency::factory()->create(['viability_request_id' => $otherReq->id]);
 
-        // Rascunho do usuário (aparece).
+        // Rascunho do usuário (não aparece: pedido novo começa na JUCEB).
         ViabilityRequest::factory()->draft()->create([
             'requester_user_id' => $user->id,
             'company_id' => $company->id,
@@ -160,7 +160,7 @@ class PainelCidadaoTest extends TestCase
                 ->has('atencao.pendencias', 1)
                 ->where('atencao.pendencias.0.solicitacao_id', $req->id)
                 ->where('atencao.pendencias.0.protocol_number', 'VIA-2026-000100')
-                ->has('atencao.rascunhos', 1));
+                ->missing('atencao.rascunhos'));
     }
 
     public function test_painel_vazio_zera_indicadores_e_listas(): void
@@ -175,7 +175,7 @@ class PainelCidadaoTest extends TestCase
                 ->where('indicadores.processos', 0)
                 ->where('indicadores.em_convite', 0)
                 ->has('atencao.pendencias', 0)
-                ->has('atencao.rascunhos', 0)
+                ->missing('atencao.rascunhos')
                 ->has('solicitacoesRecentes', 0)
                 ->where('emRepresentacao', false));
     }

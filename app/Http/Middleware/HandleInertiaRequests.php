@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\Painel\ConvitesDoCidadao;
 use App\Services\PortalServicos\PortalServicos;
 use App\Support\Representation\CurrentRepresentation;
 use App\Support\Settings;
@@ -67,6 +68,11 @@ class HandleInertiaRequests extends Middleware
             'notificacoes' => [
                 'nao_lidas' => fn (): int => $user?->unreadNotifications()->count() ?? 0,
             ],
+            // Badge do item Responder convite: convites abertos e no prazo dos
+            // processos de que o usuário (efetivo) é requerente. Só no portal.
+            'convitesPendentes' => fn (): int => $guard === 'web' && $user !== null
+                ? app(ConvitesDoCidadao::class)->total(app(CurrentRepresentation::class)->effectiveUser($user))
+                : 0,
             'flash' => [
                 'status' => $request->session()->get('status'),
                 'error' => $request->session()->get('error'),

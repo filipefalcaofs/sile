@@ -45,13 +45,6 @@ interface PendenciaResumo {
     due_at: string | null;
 }
 
-interface RascunhoResumo {
-    id: number;
-    service_type: string | null;
-    company_legal_name: string | null;
-    created_at: string | null;
-}
-
 interface DashboardProps {
     indicadores: {
         em_analise: number;
@@ -60,7 +53,6 @@ interface DashboardProps {
     };
     atencao: {
         pendencias: PendenciaResumo[];
-        rascunhos: RascunhoResumo[];
     };
     solicitacoesRecentes: SolicitacaoResumo[];
     emRepresentacao: boolean;
@@ -119,7 +111,7 @@ export default function Dashboard({ indicadores, atencao, solicitacoesRecentes }
     const servicosHabilitados = portalServicos.enabled;
     const primeiroNome = auth.user?.name.split(' ')[0] ?? 'cidadão';
 
-    const temAtencao = atencao.pendencias.length > 0 || atencao.rascunhos.length > 0;
+    const temAtencao = atencao.pendencias.length > 0;
 
     const indicators: Indicator[] = [
         {
@@ -205,30 +197,6 @@ export default function Dashboard({ indicadores, atencao, solicitacoesRecentes }
                                             </li>
                                         ))}
 
-                                        {atencao.rascunhos.map((rascunho) => (
-                                            <li
-                                                key={`rascunho-${rascunho.id}`}
-                                                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 dark:border-gray-800 dark:bg-white/[0.03]"
-                                            >
-                                                <div className="min-w-0">
-                                                    <p className="text-theme-sm font-medium text-gray-800 dark:text-white/90">
-                                                        Rascunho não protocolado
-                                                    </p>
-                                                    <p className="truncate text-theme-xs text-gray-500 dark:text-gray-400">
-                                                        {rascunho.company_legal_name ?? rascunho.service_type ?? 'Solicitação em preenchimento'}
-                                                    </p>
-                                                </div>
-                                                {servicosHabilitados && (
-                                                    <Link
-                                                        href={`/portal/solicitacoes/${rascunho.id}/editar`}
-                                                        className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-2 text-theme-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.03]"
-                                                    >
-                                                        <PencilIcon className="size-4" aria-hidden="true" />
-                                                        Retomar e protocolar
-                                                    </Link>
-                                                )}
-                                            </li>
-                                        ))}
                                     </ul>
                                 </div>
                             </div>

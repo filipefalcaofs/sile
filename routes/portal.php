@@ -14,6 +14,7 @@ use App\Http\Controllers\Portal\ConsultaProcessoController;
 use App\Http\Controllers\Portal\ConsultaProtocoloController;
 use App\Http\Controllers\Portal\ConsultaProtocoloPublicaController;
 use App\Http\Controllers\Portal\ConsultaViabilidadeController;
+use App\Http\Controllers\Portal\ConviteController;
 use App\Http\Controllers\Portal\DashboardController;
 use App\Http\Controllers\Portal\EntradaPortalServicosController;
 use App\Http\Controllers\Portal\GovBrLoginController;
@@ -168,6 +169,9 @@ Route::middleware(['auth:web', ConfereSessaoPortalServicos::class, 'verified'])
                     ->name('renovacao.show');
                 Route::post('renovacao/{origem}', [RenovacaoController::class, 'store'])->middleware('portal.solicitacao')
                     ->name('renovacao.store');
+
+                // Convites que o cidadão (requerente) pode responder agora.
+                Route::get('convites', [ConviteController::class, 'index'])->name('convites.index');
 
                 // Consulta de processo por número (do processo, da viabilidade
                 // ou do BAP), aberta a qualquer cidadão logado, sem dados
