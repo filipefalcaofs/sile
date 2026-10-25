@@ -1,0 +1,108 @@
+# Serviço de IA de contorno (footprint-ia) no projeto viabiliza do OKD de
+# produção (console apps.prod). Mesmo padrão dos recursos que já existem lá:
+# build da branch main com o segredo tokenokdhmlg, imagem num ImageStream e
+# deployment atualizado pelo gatilho de imagem. Colar em "Import YAML" com o
+# projeto viabiliza selecionado.
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: viabiliza-footprint-ia
+  namespace: viabiliza
+  labels:
+    app: viabiliza-footprint-ia
+    app.kubernetes.io/part-of: viabiliza
+---
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: viabiliza-footprint-ia
+  namespace: viabiliza
+  labels:
+    app: viabiliza-footprint-ia
+    app.kubernetes.io/part-of: viabiliza
+spec:
+  runPolicy: Serial
+  source:
+    type: Git
+    git:
+      uri: https://repositoriosemit.salvador.ba.gov.br/sedur/viabiliza.git
+      ref: main
+    contextDir: /
+    sourceSecret:
+      name: tokenokdhmlg
+  strategy:
+    type: Docker
+    dockerStrategy:
+      dockerfilePath: DockerFile_footprint_ia
+  output:
+    to:
+      kind: ImageStreamTag
+      name: viabiliza-footprint-ia:latest
+  triggers:
+    - type: ConfigChange
+  successfulBuildsHistoryLimit: 5
+  failedBuildsHistoryLimit: 5
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: viabiliza-footprint-ia
+  namespace: viabiliza
+  labels:
+    app: viabiliza-footprint-ia
+    app.kubernetes.io/part-of: viabiliza
+  annotations:
+    alpha.image.policy.openshift.io/resolve-names: "*"
+    image.openshift.io/triggers: '[{"from":{"kind":"ImageStreamTag","name":"viabiliza-footprint-ia:latest","namespace":"viabiliza"},"fieldPath":"spec.template.spec.containers[?(@.name==\"footprint-ia\")].image","paused":false}]'
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: viabiliza-footprint-ia
+  template:
+    metadata:
+      labels:
+        app: viabiliza-footprint-ia
+    spec:
+      containers:
+        - name: footprint-ia
+          image: viabiliza-footprint-ia:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              cpu: "1"
+              memory: 2Gi
+            limits:
+              cpu: "2"
+              memory: 3Gi
+          # O modelo carrega na primeira segmentação; a saúde responde antes.
+          readinessProbe:
+            httpGet:
+              path: /saude
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /saude
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: viabiliza-footprint-ia
+  namespace: viabiliza
+  labels:
+    app: viabiliza-footprint-ia
+    app.kubernetes.io/part-of: viabiliza
+spec:
+  selector:
+    app: viabiliza-footprint-ia
+  ports:
+    - port: 8080
+      targetPort: 8080
