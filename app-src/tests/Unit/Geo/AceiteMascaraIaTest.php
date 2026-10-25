@@ -72,11 +72,37 @@ class AceiteMascaraIaTest extends TestCase
         $this->assertSame('area_fora_dos_limites', $this->avaliar($this->mascara($recorte, sqrt(19), sqrt(19)), $recorte)['motivo']);
     }
 
-    public function test_recusa_area_5001m2(): void
+    public function test_aceita_lote_de_6000m2(): void
     {
-        $recorte = $this->recorte(200);
+        $recorte = $this->recorte(240);
 
-        $this->assertSame('area_fora_dos_limites', $this->avaliar($this->mascara($recorte, 100.01, 50.01), $recorte)['motivo']);
+        $resultado = $this->avaliar($this->mascara($recorte, 100, 60), $recorte);
+
+        $this->assertTrue($resultado['aceita']);
+        $this->assertEqualsWithDelta(6000.0, $resultado['area_m2'], 60.0);
+    }
+
+    public function test_recusa_area_acima_de_20000m2(): void
+    {
+        $recorte = $this->recorte(240);
+
+        $this->assertSame('area_fora_dos_limites', $this->avaliar($this->mascara($recorte, 200.01, 100.01), $recorte)['motivo']);
+    }
+
+    public function test_recusa_score_abaixo_do_minimo_configurado(): void
+    {
+        config(['viabiliza.edificacoes.ia.aceite.score_min' => 0.95]);
+        $recorte = $this->recorte();
+
+        $this->assertSame('score_baixo', $this->avaliar($this->mascara($recorte, 10, 10), $recorte)['motivo']);
+    }
+
+    public function test_sem_score_minimo_configurado_aceita_qualquer_score(): void
+    {
+        config(['viabiliza.edificacoes.ia.aceite.score_min' => null]);
+        $recorte = $this->recorte();
+
+        $this->assertTrue($this->avaliar($this->mascara($recorte, 10, 10), $recorte)['aceita']);
     }
 
     public function test_recusa_tira_fina_compacidade_0_1(): void

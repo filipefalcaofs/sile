@@ -14,8 +14,10 @@ use App\Services\Geo\Edificacoes\BuildingFootprintRepository;
 use App\Services\Geo\Edificacoes\EdificacaoCandidata;
 use App\Services\Geo\Edificacoes\InferenciaEdificacaoClient;
 use App\Services\Geo\Edificacoes\InferenciaIndisponivelException;
+use App\Services\Geo\Edificacoes\MascaraIa;
 use App\Services\Geo\Edificacoes\OrtofotoClient;
 use App\Services\Geo\Edificacoes\PoligonoComplementarService;
+use App\Services\Geo\Edificacoes\RecorteOrtofoto;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -122,21 +124,22 @@ class GerarPoligonoIaJob implements ShouldBeUnique, ShouldQueue
         }
 
         $inicio = hrtime(true);
-        $recorte = $ortofoto->recortar($lat, $lng);
-
-        if ($recorte === null) {
-            $this->falha($complementar, $request, StatusResolucaoPoligono::NaoResolvido, 'imagem_indisponivel', $inicio);
-
-            return;
-        }
 
         try {
-            $mascara = $inferencia->segmentar($recorte, ...$recorte->pixel($lat, $lng));
+            $resultado = $this->segmentarCrescente($ortofoto, $inferencia, $lat, $lng);
         } catch (InferenciaIndisponivelException) {
             $this->falha($complementar, $request, StatusResolucaoPoligono::Indisponivel, 'servico_fora', $inicio);
 
             return;
         }
+
+        if ($resultado === null) {
+            $this->falha($complementar, $request, StatusResolucaoPoligono::NaoResolvido, 'imagem_indisponivel', $inicio);
+
+            return;
+        }
+
+        [$recorte, $mascara] = $resultado;
 
         $avaliacao = $aceite->avaliar($mascara, $recorte, $lat, $lng);
         $normal = $avaliacao['aceita'] ? $base->normalizar($avaliacao['geojson']) : null;
@@ -177,6 +180,68 @@ class GerarPoligonoIaJob implements ShouldBeUnique, ShouldQueue
             confidence: null,
             metodo: 'ia_ponto',
         ), (int) round((hrtime(true) - $inicio) / 1_000_000));
+    }
+
+    /**
+     * Recorte crescente, a regra avaliada no treino do modelo: em cada lado,
+     * separa os contornos candidatos que não encostam na borda; se nenhum
+     * encosta, ou no último lado, fica o de maior score entre eles, senão passa
+     * ao lado seguinte. Sem escolha, devolve o último recorte, que o aceite
+     * recusa.
+     *
+     * @return array{0: RecorteOrtofoto, 1: MascaraIa}|null
+     */
+    private function segmentarCrescente(OrtofotoClient $ortofoto, InferenciaEdificacaoClient $inferencia, float $lat, float $lng): ?array
+    {
+        $lados = array_values((array) config('viabiliza.edificacoes.ia.lados_recorte_m', [60, 120, 240]));
+        $ultimo = null;
+
+        foreach ($lados as $indice => $lado) {
+            $recorte = $ortofoto->recortar($lat, $lng, (float) $lado);
+
+            if ($recorte === null) {
+                break;
+            }
+
+            $mascara = $inferencia->segmentar($recorte, ...$recorte->pixel($lat, $lng));
+            $ultimo = [$recorte, $mascara];
+            $candidatos = $this->candidatos($mascara, $recorte);
+            $livres = array_values(array_filter($candidatos, fn (array $c): bool => ! $c['encosta']));
+
+            if ($livres !== [] && (count($livres) === count($candidatos) || $indice === count($lados) - 1)) {
+                usort($livres, fn (array $a, array $b): int => ($b['score'] ?? 0) <=> ($a['score'] ?? 0));
+
+                return [$recorte, new MascaraIa(MascaraIa::OK, $livres[0]['anel'], $livres[0]['score'], $mascara->modelo, $candidatos)];
+            }
+        }
+
+        return $ultimo;
+    }
+
+    /**
+     * Candidatos do serviço; um serviço que ainda não os devolve conta com o
+     * contorno único da resposta.
+     *
+     * @return list<array{anel: list<array{0: float, 1: float}>, score: ?float, encosta: bool}>
+     */
+    private function candidatos(MascaraIa $mascara, RecorteOrtofoto $recorte): array
+    {
+        if ($mascara->candidatos !== []) {
+            return $mascara->candidatos;
+        }
+
+        if ($mascara->status !== MascaraIa::OK || count($mascara->anelPixel) < 3) {
+            return [];
+        }
+
+        $margem = (float) config('viabiliza.edificacoes.ia.aceite.margem_borda_px', 2);
+        $encosta = false;
+
+        foreach ($mascara->anelPixel as [$x, $y]) {
+            $encosta = $encosta || $x <= $margem || $y <= $margem || $x >= $recorte->largura - 1 - $margem || $y >= $recorte->altura - 1 - $margem;
+        }
+
+        return [['anel' => $mascara->anelPixel, 'score' => $mascara->score, 'encosta' => $encosta]];
     }
 
     private function falha(PoligonoComplementarService $complementar, ViabilityRequest $request, StatusResolucaoPoligono $status, string $motivo, int $inicio): void
