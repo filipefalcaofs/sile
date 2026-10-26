@@ -10,10 +10,12 @@ use App\Http\Responses\RespostaRecuperacaoSenhaSemRevelarConta;
 use App\Models\AccessLog;
 use App\Models\User;
 use App\Services\GovBr\GovBr;
+use App\Services\PortalServicos\PortalServicos;
 use App\Support\PasswordPolicy;
 use App\Support\Settings;
 use Illuminate\Cache\RateLimiter as CacheRateLimiter;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
@@ -24,6 +26,7 @@ use Inertia\Inertia;
 use Laravel\Fortify\Actions\RedirectIfTwoFactorAuthenticatable;
 use Laravel\Fortify\Contracts\FailedPasswordResetLinkRequestResponse;
 use Laravel\Fortify\Contracts\LoginResponse;
+use Laravel\Fortify\Contracts\LogoutResponse;
 use Laravel\Fortify\Features;
 use Laravel\Fortify\Fortify;
 use Laravel\Fortify\LoginRateLimiter;
@@ -55,6 +58,22 @@ class FortifyServiceProvider extends ServiceProvider
                 }
 
                 return redirect()->intended(route('portal.dashboard'));
+            }
+        });
+
+        // Entrada pelo Portal de Serviços (HU-142): sair encerra só o Viabiliza e
+        // devolve o cidadão à Carta de Serviços. A sessão do portal continua.
+        $this->app->instance(LogoutResponse::class, new class implements LogoutResponse
+        {
+            public function toResponse($request)
+            {
+                if (! PortalServicos::entradaDisponivel()) {
+                    return $request->wantsJson() ? new JsonResponse('', 204) : redirect(Fortify::redirects('logout', '/'));
+                }
+
+                return $request->header('X-Inertia')
+                    ? Inertia::location(PortalServicos::urlCarta())
+                    : redirect()->away(PortalServicos::urlCarta());
             }
         });
 
@@ -231,6 +250,18 @@ class FortifyServiceProvider extends ServiceProvider
                 (int) Settings::get('seguranca.throttle.ai_test.por_minuto', 10),
             )->by($request->user()?->id ?: $request->ip());
         });
+
+        // Consulta de processos por CPF do Portal de Serviços (cada chamada
+        // confere a sessão no BFF da SEDUR).
+        // Chave pela sessão (hash do token), não pelo IP: o Portal pode chamar do
+        // próprio servidor, e todos os cidadãos sairiam pelo mesmo endereço.
+        RateLimiter::for('portal-servicos-processos', fn (Request $request) => Limit::perMinute(60)
+            ->by('portal-servicos:'.sha1($request->bearerToken() ?? $request->ip())));
+
+        // Consulta de processo por número no portal do cidadão (aberta a
+        // qualquer cidadão logado): por usuário, para não virar varredura.
+        RateLimiter::for('consulta-processo', fn (Request $request) => Limit::perMinute(30)
+            ->by('consulta-processo:'.($request->user()?->id ?: $request->ip())));
 
         // Throttle do webhook municipal /api_integracao/recebe (HU-099 RN-010).
         RateLimiter::for('regin-recebe', function (Request $request) {

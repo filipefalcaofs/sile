@@ -21,6 +21,8 @@ export interface SidebarItem {
     href: string;
     icon: ReactNode;
     visible?: boolean;
+    /** Contador ao lado do nome (ex.: convites para responder); zero não aparece. */
+    badge?: number;
 }
 
 export interface SidebarGroup {
@@ -276,13 +278,18 @@ export default function AppSidebar({
                                                 <li key={item.href}>
                                                     <Link
                                                         href={item.href}
-                                                        aria-label={item.name}
+                                                        aria-label={item.badge ? `${item.name} (${item.badge})` : item.name}
                                                         className={`menu-item group ${itemStyles(isActive(item.href))}`}
                                                     >
                                                         <span className={`menu-item-icon-size ${iconStyles(isActive(item.href))}`}>
                                                             {item.icon}
                                                         </span>
                                                         {showText && <span className="menu-item-text">{item.name}</span>}
+                                                        {showText && item.badge ? (
+                                                            <span className="ml-auto rounded-full bg-warning-500 px-2 py-0.5 text-theme-xs font-medium text-white" aria-hidden="true">
+                                                                {item.badge}
+                                                            </span>
+                                                        ) : null}
                                                     </Link>
                                                 </li>
                                             ))}

@@ -11,7 +11,7 @@ import {
     ShieldIcon,
     UserCircleIcon,
 } from '@/components/icons';
-import { PORTAL_NAV_GROUPS, ROTA_CONSULTA_VIABILIDADE, type PortalNavIcon } from '@/navigation/portal-nav';
+import { PORTAL_NAV_GROUPS, ROTA_CONSULTA_VIABILIDADE, ROTA_CONVITES, type PortalNavIcon } from '@/navigation/portal-nav';
 
 export const PORTAL_NAV_ICONS: Record<PortalNavIcon, ComponentType<SVGProps<SVGSVGElement>>> = {
     grid: GridIcon,
@@ -30,7 +30,7 @@ export const PORTAL_NAV_ICONS: Record<PortalNavIcon, ComponentType<SVGProps<SVGS
  * Com os serviços desligados, o grupo some: o aviso fica no layout. Com só a
  * consulta desligada, apenas o item dela sai do menu.
  */
-export function portalSidebarGroups(servicosHabilitados = true, consultaHabilitada = true): SidebarGroup[] {
+export function portalSidebarGroups(servicosHabilitados = true, consultaHabilitada = true, convitesPendentes = 0): SidebarGroup[] {
     const groups = servicosHabilitados
         ? PORTAL_NAV_GROUPS
         : PORTAL_NAV_GROUPS.filter((group) => group.id !== 'servicos');
@@ -42,7 +42,12 @@ export function portalSidebarGroups(servicosHabilitados = true, consultaHabilita
             .map((item) => {
                 const Icon = PORTAL_NAV_ICONS[item.icon];
 
-                return { name: item.name, href: item.href, icon: <Icon /> };
+                return {
+                    name: item.name,
+                    href: item.href,
+                    icon: <Icon />,
+                    badge: item.href === ROTA_CONVITES ? convitesPendentes : undefined,
+                };
             }),
     }));
 }

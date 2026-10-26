@@ -1,6 +1,7 @@
 /**
  * Catálogo único do portal do cidadão. Fonte de verdade da sidebar, do
- * "O que você quer fazer?" do painel e dos serviços da landing.
+ * "O que você quer fazer?" do painel e dos serviços da landing. O portal fica
+ * com três serviços: os processos começam na JUCEB.
  *
  * Antes de incluir ou mover item: ler `.cursor/rules/menu-navegacao.mdc`.
  */
@@ -28,6 +29,9 @@ export interface PortalAcao {
     publica: boolean;
 }
 
+/** Lista de convites que o cidadão pode responder (badge no menu). */
+export const ROTA_CONVITES = '/portal/convites';
+
 export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
     {
         id: 'inicio',
@@ -41,10 +45,9 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
         id: 'servicos',
         label: 'Serviços',
         items: [
-            { name: 'Consultar viabilidade', href: '/portal/viabilidade', icon: 'search' },
-            { name: 'Minhas solicitações', href: '/portal/solicitacoes', icon: 'file' },
             { name: 'Renovar viabilidade', href: '/portal/renovacao', icon: 'check-circle' },
-            { name: 'Minhas empresas', href: '/portal/empresas', icon: 'list' },
+            { name: 'Consultar processo', href: '/portal/consulta', icon: 'search' },
+            { name: 'Responder convite', href: ROTA_CONVITES, icon: 'file' },
         ],
     },
     {
@@ -59,48 +62,28 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
 
 export const PORTAL_ACOES: PortalAcao[] = [
     {
-        titulo: 'Consultar viabilidade',
-        descricao: 'Veja se a atividade pode funcionar no endereço, antes de fazer o pedido.',
-        href: '/portal/viabilidade',
-        icon: 'search',
-        publica: true,
-    },
-    {
-        titulo: 'Solicitar viabilidade',
-        descricao: 'Protocole o pedido e acompanhe a análise. Atividades de baixo risco têm resposta automática.',
-        href: '/portal/solicitacoes/nova',
-        icon: 'file',
-        publica: true,
-    },
-    {
         titulo: 'Renovar viabilidade',
-        descricao: 'Prorrogue uma viabilidade provisória emitida pelo portal.',
+        descricao: 'Renove uma viabilidade provisória pelo CNPJ da empresa ou pelo número, do Viabiliza ou do sistema anterior.',
         href: '/portal/renovacao',
         icon: 'check-circle',
         publica: true,
     },
     {
-        titulo: 'Gerenciar empresas',
-        descricao: 'Cadastre suas empresas e mantenha as atividades (CNAEs) atualizadas.',
-        href: '/portal/empresas',
-        icon: 'list',
-        publica: false,
+        titulo: 'Consultar processo',
+        descricao: 'Veja a situação e a tramitação de um processo pelo número do processo, da viabilidade ou do BAP.',
+        href: '/portal/consulta',
+        icon: 'search',
+        publica: true,
     },
     {
-        titulo: 'Procurações',
-        descricao: 'Autorize alguém a agir em seu nome ou atue por quem autorizou você.',
-        href: '/portal/procuracoes',
-        icon: 'group',
+        titulo: 'Responder convite',
+        descricao: 'Responda aos pedidos da SEDUR nos processos em que você é o requerente.',
+        href: ROTA_CONVITES,
+        icon: 'file',
         publica: true,
     },
 ];
 
-/** Destinos dos indicadores do painel: a lista de solicitações já filtrada. */
-export const FILTROS_SOLICITACOES = {
-    emAnalise: '/portal/solicitacoes?status=em_analise',
-    convites: '/portal/solicitacoes?status=em_pendencia',
-    todas: '/portal/solicitacoes',
-} as const;
 
 /** Rota da consulta prévia: some do menu e das ações quando o gestor a desliga. */
 export const ROTA_CONSULTA_VIABILIDADE = '/portal/viabilidade';

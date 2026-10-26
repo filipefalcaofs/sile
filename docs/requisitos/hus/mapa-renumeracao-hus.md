@@ -168,7 +168,7 @@ Há três numerações:
 | HU-139 | HU-172 | HU-183 | Relatório de falhas de comunicação | Retaguarda — Relatórios e indicadores |
 | HU-140 | HU-001 | HU-001 | Cadastrar usuário | Portal — Conta do cidadão |
 | HU-141 | HU-005 | HU-005 | Confirmar e-mail | Portal — Conta do cidadão |
-| HU-142 | HU-140 | HU-151 | Autenticar com GOV.BR | Portal — Conta do cidadão |
+| HU-142 | HU-140 | HU-151 | Autenticar pelo portal de serviços da SEDUR (até 21/10/2026: Autenticar com GOV.BR) | Portal — Conta do cidadão |
 | HU-143 | HU-004 | HU-004 | Alterar senha | Portal — Conta do cidadão |
 | HU-144 | HU-007 | HU-007 | Gerenciar perfil do usuário | Portal — Conta do cidadão |
 | HU-145 | HU-006 | HU-006 | Aceitar termo LGPD | Portal — Conta do cidadão |

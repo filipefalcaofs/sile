@@ -9,6 +9,7 @@
 |:---:|---|:---:|:---:|
 | 16/10/2026 | Texto revisto para a linguagem de quem usa o sistema | 2.1 | Sudoeste Informática |
 | 19/10/2026 | Retirada das HUs sem funcionalidade no sistema, renumeração e reordenação das demais (retaguarda primeiro, portal depois) | 2.2 | Sudoeste Informática |
+| 22/10/2026 | Portal sem login próprio: o cidadão entra pelo Portal de Serviços da SEDUR (HU-142); a sessão aberta pode vir da HU-001 ou da HU-142 | 2.3 | Sudoeste Informática |
 
 ---
 
@@ -50,7 +51,7 @@ No portal, o caminho é Minha conta > Meus dados. No console, os dados da conta 
 
 **Passadas**
 
-- HU-001 — sessão aberta
+- HU-001 ou HU-142 — sessão aberta no console ou no portal
 - HU-145 — termo vigente aceito
 
 **Futuras**

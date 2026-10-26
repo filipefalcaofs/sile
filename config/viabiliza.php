@@ -41,6 +41,9 @@ return [
         'procuracoes' => true,
         'cnpj_lookup' => true,
         'govbr_login' => false,
+        // Entrada do cidadão pelo Portal de Serviços da SEDUR (HU-142). Ligada,
+        // o portal deixa de ter login, cadastro e senha próprios.
+        'login_portal_servicos' => false,
         'ad_login' => true,
         'geocoding' => true,
         'geoserver_zona' => true,
@@ -72,6 +75,10 @@ return [
         // desligado. O gestor religa em Parâmetros (features.portal_servicos)
         // sem deploy. Painel, notificações e conta não passam por este gate.
         'portal_servicos' => env('SILE_PORTAL_SERVICOS', false),
+        // Serviços do portal além de renovar, consultar processo e responder
+        // convite (consulta prévia, solicitação, empresas, procurações). Os
+        // processos começam na JUCEB; desligado, essas rotas respondem 404.
+        'portal_servicos_extras' => env('SILE_PORTAL_SERVICOS_EXTRAS', false),
         'consulta_viabilidade' => true,
         'solicitacao_viabilidade' => true,
         'simulacao_solicitacao' => true,
@@ -355,8 +362,23 @@ return [
             'base_url' => 'https://api.sedur.salvador.ba.gov.br/k8s/prd',
             'timeout' => 8,
         ],
+        // Sessão do cidadão no Portal de Serviços da SEDUR (HU-142): o token
+        // recebido na entrada é conferido no BFF do portal (buscar-sessao).
+        'portal_servicos' => [
+            'bff_base_url' => 'https://api.sedur.salvador.ba.gov.br/k8s/hml/ws-bff-portal-servicos',
+            'login_url' => 'https://sso-homo.salvador.ba.gov.br/govbr/authorize/?client_id=SedurMais-PortalServicos-Hml',
+            'carta_url' => 'https://servicos.sedur.salvador.ba.gov.br/carta-servicos/17',
+            'intervalo_checagem_sessao' => 300,
+            'timeout' => 8,
+        ],
         'sedur_contato' => [
             'base_url' => 'https://api.sedur.salvador.ba.gov.br/k8s/prd/ws-contato',
+            'timeout' => 8,
+        ],
+        'legado_api' => [
+            // A base aceita com ou sem o sufixo /v1.
+            'base_url' => env('LEGADO_API_URL', ''),
+            'token' => env('LEGADO_API_TOKEN', ''),
             'timeout' => 8,
         ],
         'geocoding' => [

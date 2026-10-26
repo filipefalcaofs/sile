@@ -30,6 +30,23 @@ class AuthTypeUserTest extends TestCase
         $this->assertTrue($user->isAdAccount());
     }
 
+    public function test_conta_portal_servicos_grava_e_le_o_tipo(): void
+    {
+        $user = User::factory()->create(['auth_type' => AuthType::PortalServicos]);
+
+        $this->assertSame(AuthType::PortalServicos, $user->fresh()->auth_type);
+        $this->assertFalse($user->isAdAccount());
+        $this->assertSame('Portal de Serviços da SEDUR', AuthType::PortalServicos->label());
+    }
+
+    public function test_conta_portal_servicos_entra_no_scope_usuario_portal_e_nao_na_equipe(): void
+    {
+        $user = User::factory()->create(['auth_type' => AuthType::PortalServicos]);
+
+        $this->assertTrue(User::query()->usuarioPortal()->whereKey($user->id)->exists());
+        $this->assertFalse(User::query()->equipeSedur()->whereKey($user->id)->exists());
+    }
+
     public function test_ad_username_e_unico(): void
     {
         User::factory()->ad('seuusuarioad')->create();

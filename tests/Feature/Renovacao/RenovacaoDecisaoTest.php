@@ -102,7 +102,10 @@ class RenovacaoDecisaoTest extends TestCase
 
     private function analista(): User
     {
-        return User::factory()->analista()->withAcceptedLgpdTerm()->create();
+        $analista = User::factory()->analista()->withAcceptedLgpdTerm()->create();
+        $analista->givePermissionTo('concluir-analise');
+
+        return $analista;
     }
 
     private function renovacaoEmAnalise(): ViabilityRequest

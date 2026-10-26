@@ -24,6 +24,7 @@ class RenovacaoProtocoloServiceTest extends TestCase
     public function test_protocolar_cria_renovacao_semi_expressa_sem_alterar_endereco(): void
     {
         [$origem, $declaracao, $ator] = $this->cenarioElegivel();
+        $origem->company->forceFill(['email' => 'contato@empresa.com', 'phone' => '7133330000'])->save();
 
         $renovacao = app(RenovacaoProtocoloService::class)->protocolar(
             $origem,
@@ -42,14 +43,30 @@ class RenovacaoProtocoloServiceTest extends TestCase
             $origem->cnaes()->pluck('cnaes.id')->all(),
             $renovacao->cnaes()->pluck('cnaes.id')->all(),
         );
-        $this->assertSame('novo@example.com', $origem->company->fresh()->email);
-        $this->assertSame('71999990000', $origem->company->fresh()->phone);
+        $this->assertSame('contato@empresa.com', $origem->company->fresh()->email);
+        $this->assertSame('7133330000', $origem->company->fresh()->phone);
         $this->assertTrue(
             ServiceDeclarationAcceptance::query()
                 ->where('viability_request_id', $renovacao->id)
                 ->where('version', $declaracao->version)
                 ->exists(),
         );
+    }
+
+    public function test_protocolar_preenche_o_contato_que_a_empresa_nao_tem(): void
+    {
+        [$origem, $declaracao, $ator] = $this->cenarioElegivel();
+        $origem->company->forceFill(['email' => null, 'phone' => null])->save();
+
+        app(RenovacaoProtocoloService::class)->protocolar(
+            $origem,
+            $ator,
+            ['email' => 'novo@example.com', 'phone' => '71999990000'],
+            [$declaracao->id],
+        );
+
+        $this->assertSame('novo@example.com', $origem->company->fresh()->email);
+        $this->assertSame('71999990000', $origem->company->fresh()->phone);
     }
 
     public function test_recusa_quando_falta_declaracao_obrigatoria(): void

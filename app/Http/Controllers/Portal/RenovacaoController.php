@@ -4,16 +4,25 @@ namespace App\Http\Controllers\Portal;
 
 use App\Enums\ViabilityRequestStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Portal\ConsultarLegadoRequest;
 use App\Http\Requests\Portal\LookupCnpjRequest;
 use App\Http\Requests\Portal\ProtocolarRenovacaoRequest;
 use App\Models\Company;
-use App\Models\CompanyUser;
 use App\Models\ServiceDeclaration;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
+use App\Services\Legado\LegadoIndisponivelException;
+use App\Services\Legado\LegadoViabilidadeClient;
+use App\Services\Legado\TvlLegadaDetalhe;
+use App\Services\Renovacao\BuscaRenovacao;
+use App\Services\Renovacao\EnderecoImovelIndisponivelException;
+use App\Services\Renovacao\EnderecoImovelNaoEncontradoException;
+use App\Services\Renovacao\ProvisoriasLegadasService;
 use App\Services\Renovacao\RenovacaoElegibilidadeService;
+use App\Services\Renovacao\RenovacaoLegadaElegibilidadeService;
 use App\Services\Renovacao\RenovacaoProtocoloService;
+use App\Services\Renovacao\ResolvedorEnderecoImovel;
 use App\Services\Sedur\SedurContatoClient;
 use App\Services\Sedur\SedurContatoIndisponivelException;
 use App\Services\Sedur\SedurContatoNaoEncontradoException;
@@ -33,42 +42,31 @@ use Inertia\Response;
  */
 class RenovacaoController extends Controller
 {
+    private const MENSAGEM_LEGADO_GENERICA = 'Esta viabilidade não pôde ser carregada para esta empresa.';
+
     public function __construct(
         private RenovacaoElegibilidadeService $elegibilidade,
         private RenovacaoProtocoloService $protocolo,
         private SedurContatoClient $contato,
+        private ProvisoriasLegadasService $legado,
+        private LegadoViabilidadeClient $legadoClient,
+        private RenovacaoLegadaElegibilidadeService $elegibilidadeLegada,
+        private ResolvedorEnderecoImovel $enderecoImovel,
     ) {}
 
-    public function index(Request $request): Response
+    public function index(Request $request, BuscaRenovacao $busca): Response
     {
-        $usuario = $this->usuarioEfetivo($request);
-        $ids = $this->empresasDo($usuario);
-
-        $tvls = ViabilityRequest::query()
-            ->whereIn('company_id', $ids)
-            ->where('status', ViabilityRequestStatus::Deferida)
-            ->whereHas('decision', fn ($query) => $query->whereNotNull('tvl_product_number'))
-            ->with(['decision', 'company'])
-            ->orderBy('id')
-            ->get()
-            ->map(function (ViabilityRequest $origem): array {
-                $avaliacao = $this->elegibilidade->avaliar($origem);
-
-                return [
-                    'id' => $origem->id,
-                    'elegivel' => $avaliacao->elegivel,
-                    'motivo' => $avaliacao->motivo,
-                    'numero' => $origem->decision?->tvl_product_number,
-                    'validade' => $origem->decision?->tvl_valid_until?->toDateString(),
-                    'tipo' => $origem->decision?->tvl_kind?->label(),
-                    'empresa' => $origem->company?->legal_name,
-                    'endereco' => $origem->address_street,
-                ];
-            })
-            ->values();
+        $termo = $request->query('busca');
+        $termo = is_string($termo) && trim($termo) !== '' ? trim($termo) : null;
+        $resultado = $termo === null
+            ? ['itens' => [], 'indisponivel' => false, 'termo_invalido' => false]
+            : $busca->buscar($termo);
 
         return Inertia::render('portal/renovacao/index', [
-            'tvls' => $tvls,
+            'busca' => $termo,
+            'itens' => $resultado['itens'],
+            'indisponivel' => $resultado['indisponivel'],
+            'termo_invalido' => $resultado['termo_invalido'],
         ]);
     }
 
@@ -95,10 +93,11 @@ class RenovacaoController extends Controller
         }
 
         $usuario = $this->usuarioEfetivo($request);
-        $empresas = Company::query()
+        $empresasVinculadas = Company::query()
             ->where('cnpj', $cnpj)
             ->whereIn('id', $this->empresasDo($usuario))
-            ->pluck('id');
+            ->get();
+        $empresas = $empresasVinculadas->pluck('id');
 
         $viabilidades = ViabilityRequest::query()
             ->whereIn('company_id', $empresas)
@@ -126,13 +125,78 @@ class RenovacaoController extends Controller
             'telefone' => $empresa->telefone,
             'endereco' => $empresa->endereco,
             'viabilidades' => $viabilidades,
+            'legado' => $empresasVinculadas->isEmpty() ? [] : $this->legado->paraEmpresas($empresasVinculadas)['itens'],
+        ]);
+    }
+
+    public function consultarLegado(ConsultarLegadoRequest $request): JsonResponse
+    {
+        $empresa = Company::query()->findOrFail((int) $request->validated('empresa_id'));
+
+        return response()->json(
+            $this->legado->buscarPorNumero($empresa, (string) $request->validated('numero_viabilidade')),
+        );
+    }
+
+    public function showLegado(Request $request, string $cnpj, string $numero): Response|RedirectResponse
+    {
+        try {
+            $tvl = $this->legadoClient->tvlPorNumero((int) $numero);
+
+            if ($tvl === null || ProvisoriasLegadasService::cnpjDaRenovacao($tvl, $cnpj) !== $cnpj) {
+                return $this->voltarAoIndice(self::MENSAGEM_LEGADO_GENERICA);
+            }
+
+            $titularidade = $this->elegibilidadeLegada->titularidade($tvl, new Company(['cnpj' => $cnpj]));
+        } catch (LegadoIndisponivelException) {
+            return $this->voltarAoIndice('O serviço de consulta de viabilidades anteriores está indisponível. Tente novamente em instantes.');
+        }
+
+        if ($titularidade->consultaIndisponivel) {
+            return $this->voltarAoIndice((string) $titularidade->motivo);
+        }
+
+        if (! $titularidade->titular) {
+            return $this->voltarAoIndice(self::MENSAGEM_LEGADO_GENERICA);
+        }
+
+        $avaliacao = $this->elegibilidadeLegada->avaliarAposTitularidade($tvl);
+
+        if (! $avaliacao->elegivel) {
+            return $this->voltarAoIndice((string) $avaliacao->motivo);
+        }
+
+        try {
+            $enderecoTexto = $this->enderecoLegadoTexto($tvl);
+        } catch (EnderecoImovelNaoEncontradoException|EnderecoImovelIndisponivelException $exception) {
+            return $this->voltarAoIndice($exception->getMessage());
+        }
+
+        $empresa = Company::query()->where('cnpj', $cnpj)->orderBy('id')->first();
+        $tipo = ViabilityServiceType::query()->where('code', 'renovacao-tvl')->first();
+
+        return Inertia::render('portal/renovacao/wizard', [
+            'origem' => [
+                'id' => null,
+                'legado' => true,
+                'numero' => $tvl->numero,
+                'cnpj_digitos' => $cnpj,
+                'empresa' => $empresa?->legal_name ?? $tvl->razaoSocial,
+                'cnpj' => (new Company(['cnpj' => $cnpj]))->formatted_cnpj,
+                'endereco' => $enderecoTexto,
+                'atividades' => collect($tvl->atividades)
+                    ->map(fn (array $atividade): string => trim($atividade['codigo'].' '.$atividade['descricao']))
+                    ->values(),
+                'validade' => $tvl->validade?->toDateString(),
+                'tipo' => 'Provisória',
+            ],
+            'declaracoes' => $this->declaracoes($tipo),
+            'contato' => $this->contatoDoUsuario($request),
         ]);
     }
 
     public function show(Request $request, ViabilityRequest $origem): Response|RedirectResponse
     {
-        $this->autorizarEmpresa($request, $origem);
-
         $avaliacao = $this->elegibilidade->avaliar($origem);
 
         if (! $avaliacao->elegivel) {
@@ -167,17 +231,12 @@ class RenovacaoController extends Controller
                     'body' => $declaracao->body,
                     'required' => $declaracao->required,
                 ])->values(),
-            'contato' => [
-                'email' => $origem->company?->email,
-                'phone' => $origem->company?->phone,
-            ],
+            'contato' => $this->contatoDoUsuario($request),
         ]);
     }
 
     public function store(ProtocolarRenovacaoRequest $request, ViabilityRequest $origem): RedirectResponse
     {
-        $this->autorizarEmpresa($request, $origem);
-
         try {
             $renovacao = $this->protocolo->protocolar(
                 $origem,
@@ -194,9 +253,78 @@ class RenovacaoController extends Controller
             ->with('status', 'Renovação protocolada. O processo foi encaminhado para análise.');
     }
 
+    public function storeLegado(ProtocolarRenovacaoRequest $request, string $cnpj, string $numero): RedirectResponse
+    {
+        try {
+            $tvl = $this->legadoClient->tvlPorNumero((int) $numero);
+
+            if ($tvl === null || ProvisoriasLegadasService::cnpjDaRenovacao($tvl, $cnpj) !== $cnpj) {
+                return $this->voltarAoIndice(self::MENSAGEM_LEGADO_GENERICA);
+            }
+
+            $titularidade = $this->elegibilidadeLegada->titularidade($tvl, new Company(['cnpj' => $cnpj]));
+
+            if ($titularidade->consultaIndisponivel) {
+                return $this->voltarAoIndice((string) $titularidade->motivo);
+            }
+
+            if (! $titularidade->titular) {
+                return $this->voltarAoIndice(self::MENSAGEM_LEGADO_GENERICA);
+            }
+
+            $renovacao = $this->protocolo->protocolarLegada(
+                $tvl,
+                $cnpj,
+                $this->usuarioEfetivo($request),
+                $request->safe()->only(['email', 'phone', 'mobile']),
+                $request->validated('declaration_ids'),
+            );
+        } catch (LegadoIndisponivelException) {
+            return back()->with('error', 'O serviço de consulta de viabilidades anteriores está indisponível. Tente novamente em instantes.');
+        } catch (DomainException $exception) {
+            return back()->with('error', $exception->getMessage());
+        }
+
+        return redirect()
+            ->route('portal.solicitacoes.show', $renovacao)
+            ->with('status', 'Renovação protocolada. O processo foi encaminhado para análise.');
+    }
+
+    /**
+     * Contato pré-preenchido: o de quem está renovando, nunca o da empresa,
+     * que qualquer cidadão pode buscar pelo CNPJ. E-mail provisório da conta
+     * criada pelo Portal de Serviços não serve de contato.
+     *
+     * @return array{email: ?string, phone: ?string}
+     */
+    private function contatoDoUsuario(Request $request): array
+    {
+        $usuario = $this->usuarioEfetivo($request);
+        $email = (string) $usuario->email;
+
+        return [
+            'email' => $email === '' || str_ends_with($email, '.viabiliza.local') ? null : $email,
+            'phone' => $usuario->phone,
+        ];
+    }
+
+    /**
+     * @return list<array{id: int, body: string, required: bool}>
+     */
+    private function declaracoes(?ViabilityServiceType $tipo): array
+    {
+        return $tipo === null
+            ? []
+            : ServiceDeclaration::vigentesPara($tipo->id)->map(fn (ServiceDeclaration $declaracao): array => [
+                'id' => $declaracao->id,
+                'body' => $declaracao->body,
+                'required' => $declaracao->required,
+            ])->values()->all();
+    }
+
     private function usuarioEfetivo(Request $request): User
     {
-        return app(CurrentRepresentation::class)->grantor() ?? $request->user();
+        return app(CurrentRepresentation::class)->effectiveUser($request->user());
     }
 
     /**
@@ -204,19 +332,31 @@ class RenovacaoController extends Controller
      */
     private function empresasDo(User $usuario): array
     {
-        return CompanyUser::query()
-            ->where('user_id', $usuario->id)
-            ->whereNull('ended_at')
-            ->pluck('company_id')
-            ->map(fn (mixed $id): int => (int) $id)
-            ->all();
+        return app(CurrentRepresentation::class)->companyIds($usuario);
     }
 
-    private function autorizarEmpresa(Request $request, ViabilityRequest $origem): void
+    /**
+     * Endereço do imóvel pela inscrição da TVL; sem inscrição, o do legado.
+     *
+     * @throws EnderecoImovelNaoEncontradoException
+     * @throws EnderecoImovelIndisponivelException
+     */
+    private function enderecoLegadoTexto(TvlLegadaDetalhe $tvl): string
     {
-        abort_unless(
-            in_array((int) $origem->company_id, $this->empresasDo($this->usuarioEfetivo($request)), true),
-            403,
-        );
+        if ($this->enderecoImovel->temInscricao($tvl->inscricaoImobiliaria)) {
+            return $this->enderecoImovel->resolver($tvl->inscricaoImobiliaria)->texto();
+        }
+
+        return collect([
+            $tvl->endereco['logradouro'],
+            $tvl->endereco['numero'],
+            $tvl->endereco['bairro'],
+            $tvl->endereco['cep'],
+        ])->filter()->implode(', ');
+    }
+
+    private function voltarAoIndice(string $mensagem): RedirectResponse
+    {
+        return redirect()->route('portal.renovacao.index')->with('error', $mensagem);
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Support\Representation;
 
 use App\Models\AssistedAttendance;
+use App\Models\CompanyUser;
 use App\Models\Procuration;
 use App\Models\User;
 
@@ -62,5 +63,33 @@ class CurrentRepresentation
     public function grantor(): ?User
     {
         return $this->attendance?->citizen ?? $this->procuration?->grantor;
+    }
+
+    /**
+     * Usuário em nome de quem a request age: o representado, se houver, ou o próprio autenticado.
+     */
+    public function effectiveUser(User $authenticated): User
+    {
+        return $this->grantor() ?? $authenticated;
+    }
+
+    /**
+     * Ids das empresas com vínculo ativo do usuário efetivo.
+     *
+     * @return list<int>
+     */
+    public function companyIds(User $authenticated): array
+    {
+        return CompanyUser::query()
+            ->where('user_id', $this->effectiveUser($authenticated)->id)
+            ->whereNull('ended_at')
+            ->pluck('company_id')
+            ->map(fn (mixed $id): int => (int) $id)
+            ->all();
+    }
+
+    public function actsForCompany(User $authenticated, int $companyId): bool
+    {
+        return in_array($companyId, $this->companyIds($authenticated), true);
     }
 }

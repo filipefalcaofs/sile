@@ -175,6 +175,13 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'boolean'],
                 'description' => 'Habilita o login com a conta GOV.BR no portal do cidadão (exige credenciais configuradas)',
             ],
+            'features.login_portal_servicos' => [
+                'group' => 'features',
+                'type' => 'boolean',
+                'default_value' => '0',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'Entrada do cidadão pelo Portal de Serviços da SEDUR. Ligada, o portal deixa de ter login, cadastro e senha próprios',
+            ],
             'features.ad_login' => [
                 'group' => 'features',
                 'type' => 'boolean',
@@ -240,6 +247,34 @@ class ParameterSeeder extends Seeder
                 'default_value' => null,
                 'validation_rules' => ['required', 'string', 'max:255'],
                 'description' => 'Client Secret da credencial do Login Único GOV.BR (armazenado criptografado)',
+            ],
+            'integrations.portal_servicos.bff_base_url' => [
+                'group' => 'integracoes',
+                'type' => 'string',
+                'default_value' => 'https://api.sedur.salvador.ba.gov.br/k8s/hml/ws-bff-portal-servicos',
+                'validation_rules' => ['required', 'url'],
+                'description' => 'URL base do BFF do Portal de Serviços da SEDUR, onde a sessão do cidadão é conferida',
+            ],
+            'integrations.portal_servicos.login_url' => [
+                'group' => 'integracoes',
+                'type' => 'string',
+                'default_value' => 'https://sso-homo.salvador.ba.gov.br/govbr/authorize/?client_id=SedurMais-PortalServicos-Hml',
+                'validation_rules' => ['required', 'url'],
+                'description' => 'Endereço de entrada do Portal de Serviços da SEDUR (login da Prefeitura com GOV.BR)',
+            ],
+            'integrations.portal_servicos.carta_url' => [
+                'group' => 'integracoes',
+                'type' => 'string',
+                'default_value' => 'https://servicos.sedur.salvador.ba.gov.br/carta-servicos/17',
+                'validation_rules' => ['required', 'url'],
+                'description' => 'Página da Carta de Serviços para onde o cidadão volta ao sair do portal',
+            ],
+            'integrations.portal_servicos.intervalo_checagem_sessao' => [
+                'group' => 'integracoes',
+                'type' => 'integer',
+                'default_value' => '300',
+                'validation_rules' => ['required', 'integer', 'min:60', 'max:3600'],
+                'description' => 'Intervalo, em segundos, para conferir se a sessão do cidadão no Portal de Serviços ainda vale',
             ],
             'integrations.sedur_contato.em_producao' => [
                 'group' => 'integracoes',
@@ -573,6 +608,20 @@ class ParameterSeeder extends Seeder
                 'default_value' => '3',
                 'validation_rules' => ['required', 'integer', 'min:1', 'max:60'],
                 'description' => 'Intervalo mínimo (meses) entre renovações da mesma viabilidade locacional. Dentro do intervalo o sistema recusa um novo protocolo',
+            ],
+            'renovacao.legado.janela_a_vencer_dias' => [
+                'group' => 'solicitacao',
+                'type' => 'integer',
+                'default_value' => '90',
+                'validation_rules' => ['required', 'integer', 'min:1', 'max:365'],
+                'description' => 'Janela (dias) antes do vencimento em que uma provisória do sistema legado aparece como "a vencer" para o cidadão',
+            ],
+            'renovacao.legado.permite_vencida' => [
+                'group' => 'solicitacao',
+                'type' => 'boolean',
+                'default_value' => '1',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'Permite ao cidadão renovar uma provisória do sistema legado já vencida. Desligue se a SEDUR definir um atraso máximo',
             ],
             'features.fluxo_expresso' => [
                 'group' => 'features',
@@ -977,6 +1026,8 @@ class ParameterSeeder extends Seeder
             'analise.escritorio_virtual.cnae_gatilho_sede',
             'features.fluxo_expresso',
             'renovacao.intervalo_meses',
+            'renovacao.legado.janela_a_vencer_dias',
+            'renovacao.legado.permite_vencida',
         ];
     }
 }

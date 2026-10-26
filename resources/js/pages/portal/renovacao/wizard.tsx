@@ -9,11 +9,14 @@ import { StepTransition } from '@/components/motion';
 import Alert from '@/components/ui/alert';
 import Button from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { formatarData } from '@/components/renovacao/legado-item';
 import PortalLayout from '@/layouts/portal-layout';
 
 interface Origem {
-    id: number;
-    numero: string | null;
+    id: number | null;
+    legado?: boolean;
+    cnpj_digitos?: string;
+    numero: string | number | null;
     empresa: string | null;
     cnpj: string | null;
     endereco: string;
@@ -69,7 +72,11 @@ export default function RenovacaoWizard({
     }
 
     function protocolar() {
-        form.post(`/portal/renovacao/${origem.id}`);
+        form.post(
+            origem.legado
+                ? `/portal/renovacao/legado/${origem.cnpj_digitos}/${origem.numero}`
+                : `/portal/renovacao/${origem.id}`,
+        );
     }
 
     return (
@@ -105,7 +112,7 @@ export default function RenovacaoWizard({
                     {passo === 0 && (
                         <div className="flex flex-col gap-4 text-sm">
                             <p className="text-gray-600 dark:text-gray-300">
-                                Confira se é esta a viabilidade que você quer renovar. Endereço e atividades não podem ser alterados na renovação.
+                                Confira se é esta a viabilidade que você quer renovar. Endereço e atividades não podem ser alterados na renovação.{origem.legado && ' Esta viabilidade foi emitida no sistema anterior.'}
                             </p>
                             <dl className="grid grid-cols-1 gap-3 md:grid-cols-2">
                                 <div>
@@ -115,7 +122,7 @@ export default function RenovacaoWizard({
                                 </div>
                                 <div>
                                     <dt className="text-gray-500">Validade atual</dt>
-                                    <dd className="font-medium text-gray-800 dark:text-white/90">{origem.validade ?? '—'} ({origem.tipo ?? 'provisória'})</dd>
+                                    <dd className="font-medium text-gray-800 dark:text-white/90">{origem.legado ? formatarData(origem.validade) : (origem.validade ?? '—')} ({origem.tipo ?? 'provisória'})</dd>
                                 </div>
                                 <div className="md:col-span-2">
                                     <dt className="text-gray-500">Endereço</dt>

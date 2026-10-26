@@ -20,10 +20,12 @@ use App\Services\Geo\PoligonoEnderecamentoService;
 use App\Services\Realty\PropertyCadastroCampos;
 use App\Services\Realty\PropertyRegistryLookup;
 use App\Services\Solicitacao\ProtocolarSolicitacaoService;
+use App\Services\Solicitacao\VinculosCpfProcesso;
 use App\Services\Tratamento\CategoriaEmpresa;
 use App\Services\Tratamento\RespostaPlanilha;
 use App\Services\Tratamento\TratamentoRamoResolver;
 use App\Support\Audit\AuditService;
+use App\Support\EmailProvisorio;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -55,6 +57,7 @@ class ReginProcessoProtocolador
         private TratamentoRamoResolver $tratamento,
         private PropertyRegistryLookup $cadastro,
         private AuditService $audit,
+        private VinculosCpfProcesso $vinculos,
     ) {}
 
     public function protocolar(ReginRecebimento $recebimento): ?ViabilityRequest
@@ -130,6 +133,9 @@ class ReginProcessoProtocolador
             'contingency_reason' => self::CONTINGENCIA_RECEBE,
             'external_reference' => $recebimento->protocolo,
         ]);
+
+        // Sócios e solicitante declarado veem o processo sem virar requerente.
+        $this->vinculos->sincronizar($solicitacao, ReginSociosExtrator::cpfs($rowset));
 
         foreach (array_values($cnaes) as $indice => $cnae) {
             $solicitacao->cnaes()->attach($cnae->id, ['is_primary' => $indice === 0]);
@@ -385,7 +391,7 @@ class ReginProcessoProtocolador
 
         return User::query()->create([
             'name' => $nome,
-            'email' => $emailEmUso ? $cpf.'@solicitante.viabiliza.local' : $email,
+            'email' => $emailEmUso ? EmailProvisorio::para($cpf) : $email,
             'cpf' => $cpf,
             'password' => Hash::make(Str::random(40)),
             'auth_type' => AuthType::Local,
@@ -1173,6 +1179,21 @@ class ReginProcessoProtocolador
         }
 
         return null;
+    }
+
+    /**
+     * CPFs dos sócios no recebimento guardado (mesmo rowset que o protocolar lê).
+     *
+     * @return list<string>
+     */
+    public function sociosDoRecebimento(ReginRecebimento $recebimento): array
+    {
+        $corpo = $recebimento->corpo ?? [];
+        $rowset = is_array($corpo['rowset'] ?? null)
+            ? $corpo['rowset']
+            : (is_array($corpo['ROWSET'] ?? null) ? $corpo['ROWSET'] : []);
+
+        return ReginSociosExtrator::cpfs($rowset);
     }
 
     /**

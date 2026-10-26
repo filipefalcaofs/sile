@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Portal\ProcessosPortalServicosController;
 use App\Http\Controllers\Regin\ReginDocumentacaoController;
 use App\Http\Controllers\Regin\ReginRecebeController;
 use App\Http\Controllers\VerificacaoDocumentoController;
@@ -29,6 +30,12 @@ Route::middleware(LogInboundIntegration::class)->group(function (): void {
         Route::get('/api_integracao/recebe', [ReginRecebeController::class, 'ping'])->name('regin.recebe.ping');
         Route::post('/api_integracao/recebe', [ReginRecebeController::class, 'store'])->name('regin.recebe.store');
     });
+
+    // Processos de viabilidade do CPF da sessão do Portal de Serviços (lista e
+    // Detalhar da área logada do Portal). Autenticado pelo token da sessão.
+    Route::get('/api_integracao/portal-servicos/processos', ProcessosPortalServicosController::class)
+        ->middleware('throttle:portal-servicos-processos')
+        ->name('portal-servicos.processos');
 });
 
 // Landing pública do portal (rota nomeada "home" — usada pelos redirects de guest do framework).

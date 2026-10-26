@@ -1,0 +1,29 @@
+import { Head } from '@inertiajs/react';
+import Alert from '@/components/ui/alert';
+import AuthLayout from '@/layouts/auth-layout';
+
+interface EntradaPortalServicosProps {
+    mensagem: string;
+    cartaUrl: string;
+}
+
+export default function EntradaPortalServicos({ mensagem, cartaUrl }: EntradaPortalServicosProps) {
+    return (
+        <AuthLayout
+            title="Entrada pelo Portal de Serviços"
+            subtitle="O acesso ao Viabiliza é feito pelo Portal de Serviços da SEDUR, com a sua conta GOV.BR"
+        >
+            <Head title="Entrada pelo Portal de Serviços" />
+            <div className="space-y-6">
+                <Alert variant="warning" title="Não foi possível entrar" message={mensagem} />
+
+                <a
+                    href={cartaUrl}
+                    className="inline-flex w-full items-center justify-center rounded-lg bg-brand-500 px-4 py-3 text-sm font-medium text-white shadow-theme-xs transition hover:bg-brand-600"
+                >
+                    Voltar ao Portal de Serviços
+                </a>
+            </div>
+        </AuthLayout>
+    );
+}
