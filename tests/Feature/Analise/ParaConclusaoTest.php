@@ -96,6 +96,62 @@ class ParaConclusaoTest extends TestCase
         $this->assertSame($servidor->id, $processo->assigned_user_id);
     }
 
+    public function test_quem_conclui_sem_a_permissao_de_encaminhar_nao_envia_para_conclusao(): void
+    {
+        $setor = Sector::factory()->create();
+        $servidor = $this->analistaSemConcluir();
+        $servidor->givePermissionTo('concluir-analise');
+        $servidor->sectors()->attach($setor);
+        $processo = $this->processoEmAnalise($setor, $servidor);
+
+        $this->actingAs($servidor, 'gestao')
+            ->post("/gestao/processos/{$processo->id}/status-analise", ['status' => 'para_conclusao'])
+            ->assertSessionHas('error');
+
+        $this->assertSame(AnalysisStatus::EmAnalise, $processo->refresh()->analysis_status);
+    }
+
+    public function test_quem_nao_conclui_sem_a_permissao_de_encaminhar_nao_ve_nem_envia_para_conclusao(): void
+    {
+        $setor = Sector::factory()->create();
+        $terceirizada = $this->analistaSemConcluir();
+        $terceirizada->givePermissionTo('consultar-solicitacoes');
+        $terceirizada->sectors()->attach($setor);
+        $processo = $this->processoEmAnalise($setor, $terceirizada);
+
+        $valores = collect(
+            $this->actingAs($terceirizada, 'gestao')
+                ->get("/gestao/processos/{$processo->id}")
+                ->assertOk()
+                ->viewData('page')['props']['analysisStatusProximas'],
+        )->pluck('value')->all();
+
+        $this->assertSame(['encaminhado'], $valores);
+
+        $this->actingAs($terceirizada, 'gestao')
+            ->post("/gestao/processos/{$processo->id}/status-analise", ['status' => 'para_conclusao'])
+            ->assertSessionHas('error');
+    }
+
+    public function test_ficha_so_oferece_encaminhar_para_chefia_a_quem_tem_a_permissao(): void
+    {
+        $setor = Sector::factory()->create();
+        $servidor = $this->analistaSemConcluir();
+        $servidor->givePermissionTo('concluir-analise');
+        $servidor->sectors()->attach($setor);
+        $processo = $this->processoEmAnalise($setor, $servidor);
+        $abrir = fn (): bool => $this->actingAs($servidor->fresh(), 'gestao')
+            ->get("/gestao/processos/{$processo->id}/ficha")
+            ->assertOk()
+            ->viewData('page')['props']['podeEncaminharChefia'];
+
+        $this->assertFalse($abrir());
+
+        $servidor->givePermissionTo('encaminhar-para-conclusao');
+
+        $this->assertTrue($abrir());
+    }
+
     public function test_terceirizada_em_analise_nao_marca_conclusao_convite_nem_vistoria(): void
     {
         $setor = Sector::factory()->create();

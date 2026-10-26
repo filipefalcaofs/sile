@@ -46,13 +46,13 @@ class ManageRolesTest extends TestCase
                             && $role['users_count'] === 1
                     )
                 )
-                ->has('permissions', 42)
+                ->has('permissions', 43)
                 ->where('roles.total', 19)
                 ->where('roles.per_page', 50)
                 ->where('filters.search', '')
                 ->where('filters.per_page', 50)
                 ->has('perPageOptions', 4)
-                ->has('permissionCatalog', 42)
+                ->has('permissionCatalog', 43)
                 ->where(
                     'permissionCatalog',
                     fn ($catalog) => collect($catalog)->contains(

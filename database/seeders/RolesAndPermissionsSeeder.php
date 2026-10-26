@@ -88,6 +88,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'manter-requisitos-documentais',
             'analisar-processos',
             'concluir-analise',
+            'encaminhar-para-conclusao',
             'distribuir-processos',
             'distribuir-qualquer-setor',
             'emitir-tvl',
@@ -124,6 +125,10 @@ class RolesAndPermissionsSeeder extends Seeder
 
         foreach (self::PERFIS_CHEFIA as $nome) {
             $this->perfil($nome)->givePermissionTo([...self::PERMISSOES_ANALISE, ...self::PERMISSOES_CHEFIA]);
+        }
+
+        foreach ([...self::PERFIS_ANALISE, ...self::PERFIS_CHEFIA] as $nome) {
+            $this->perfil($nome)->givePermissionTo('encaminhar-para-conclusao');
         }
 
         foreach (self::PERFIS_CONCLUSAO as $nome) {

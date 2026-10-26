@@ -989,17 +989,18 @@ class AnalysisRecordController extends Controller
     }
 
     /**
-     * "Encaminhar para Chefia" (Para conclusão sem destinatário) é de quem não
-     * conclui a análise e só aparece quando a tramitação permite sair do estado
-     * atual para Para conclusão. A tela ainda exige a ficha salva ou finalizada.
+     * "Encaminhar para Chefia" (Para conclusão sem destinatário) é de quem tem a
+     * permissão encaminhar-para-conclusao (conclua ou não a análise) e só aparece
+     * quando a tramitação permite sair do estado atual para Para conclusão. A
+     * tela ainda exige a ficha salva ou finalizada.
      */
     private function podeEncaminharChefia(ViabilityRequest $viabilityRequest, ?User $user): bool
     {
-        if ($user === null || ! $user->can('analisar-processos') || $user->can('concluir-analise')) {
+        if ($user === null || ! $user->can('analisar-processos') || ! $user->can('encaminhar-para-conclusao')) {
             return false;
         }
 
-        $proximas = $viabilityRequest->analysis_status?->proximasPara(false) ?? [];
+        $proximas = $viabilityRequest->analysis_status?->proximasPara($user->can('concluir-analise')) ?? [];
 
         return in_array(AnalysisStatus::ParaConclusao, $proximas, true);
     }
