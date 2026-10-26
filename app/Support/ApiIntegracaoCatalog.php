@@ -26,6 +26,7 @@ class ApiIntegracaoCatalog
             self::geocoding(),
             self::geoserver(),
             self::arcgisSemap(),
+            self::legado(),
         ];
     }
 
@@ -261,6 +262,33 @@ class ApiIntegracaoCatalog
                 self::interruptor('habilitada', 'features.arcgis_semap', 'Consulta do lote por inscrição habilitada'),
                 self::url('query_url', 'integrations.arcgis_semap.query_url', 'URL de consulta da camada'),
                 self::senha('token', 'integrations.arcgis_semap.token', 'Token'),
+            ],
+        ];
+    }
+
+    /**
+     * @return Aba
+     */
+    private static function legado(): array
+    {
+        return [
+            'id' => 'legado',
+            'nome' => 'Simplifica (legado)',
+            'descricao' => 'API de consulta do sistema anterior (somente leitura): usada na consulta de processos da gestão e na renovação. Informe o token OU usuário e senha (o token tem prioridade). O interruptor escolhe a URL ativa.',
+            'teste' => ['url' => '/gestao/config-apis/legado/testar', 'erro' => 'legado_connection'],
+            'espelhar_url_ativa' => [
+                'destino' => 'integrations.legado_api.base_url',
+                'interruptor' => 'em_producao',
+                'producao' => 'url_producao',
+                'homologacao' => 'url_homologacao',
+            ],
+            'campos' => [
+                self::interruptor('em_producao', 'integrations.legado_api.em_producao', 'Usar produção'),
+                self::url('url_homologacao', 'integrations.legado_api.url_homologacao', 'URL de homologação'),
+                self::url('url_producao', 'integrations.legado_api.url_producao', 'URL de produção'),
+                self::senha('token', 'integrations.legado_api.token', 'Token'),
+                self::texto('usuario', 'integrations.legado_api.usuario', 'Usuário'),
+                self::senha('senha_acesso', 'integrations.legado_api.senha', 'Senha'),
             ],
         ];
     }

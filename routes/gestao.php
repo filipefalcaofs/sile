@@ -345,6 +345,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::post('config-inscricao-imobiliaria/testar', [InscricaoImobiliariaIntegrationController::class, 'test'])->name('config-inscricao-imobiliaria.testar');
             Route::get('config-apis', [ApiIntegracaoController::class, 'edit'])->name('config-apis.edit');
             Route::put('config-apis/{aba}', [ApiIntegracaoController::class, 'update'])->name('config-apis.update');
+            Route::post('config-apis/legado/testar', [ApiIntegracaoController::class, 'testarLegado'])->name('config-apis.legado.testar');
         });
 
         // Território (HU-028+): consulta territorial, geocodificação e validação
@@ -683,6 +684,8 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::get('/', [ProcessoController::class, 'index'])->name('index');
             Route::get('fila', [ProcessoController::class, 'fila'])->name('fila');
             Route::get('busca', ProcessoBuscaController::class)->name('busca');
+            Route::get('legado', [ProcessoController::class, 'legado'])->name('legado');
+            Route::get('legado/detalhe', [ProcessoController::class, 'legadoDetalhe'])->name('legado.detalhe');
 
             // Histórico unificado de comunicações do processo (HU-092): fonte
             // ÚNICA (ledger communications, todos os canais/tipos), REUSO da

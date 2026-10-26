@@ -19,6 +19,8 @@ use App\Services\Analise\ProcessoQueryService;
 use App\Services\Analise\TramitacaoProcessoService;
 use App\Services\Auditoria\DecisionExplanationService;
 use App\Services\Geo\DivergenciaLogradouroInscricao;
+use App\Services\Legado\BuscaProcessosLegado;
+use App\Services\Legado\LegadoIndisponivelException;
 use App\Services\Regin\HttpReginParecerNotifier;
 use App\Services\Regin\JustificativaReginService;
 use App\Services\Relatorios\Export\ReportExporter;
@@ -30,6 +32,7 @@ use App\Services\Vistoria\VistoriaAcesso;
 use App\Support\Audit\AuditService;
 use App\Support\ParecerDecisao;
 use App\Support\Settings;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -124,6 +127,58 @@ class ProcessoController extends Controller
             'categoriaOptions' => $this->categoriaOptions(),
             'analistaOptions' => $this->processos->analistasParaFiltro($request->user()),
         ]);
+    }
+
+    /**
+     * Processos do Simplifica para o mesmo filtro da tela, consultados só na API
+     * do legado (nada é gravado). Falha da API não derruba a tela: volta o aviso.
+     */
+    public function legado(Request $request, BuscaProcessosLegado $legado): JsonResponse
+    {
+        $filtros = $this->filtros($request);
+
+        try {
+            $resultado = $legado->buscar($filtros);
+            $erro = null;
+        } catch (LegadoIndisponivelException) {
+            $resultado = ['consultado' => true, 'processos' => []];
+            $erro = 'Não foi possível consultar o Simplifica agora.';
+        }
+
+        if ($resultado['consultado']) {
+            $this->audit->log('analise', 'consulta-processos-legado', 'Consulta de processos do Simplifica', [
+                'filtros' => $this->filtrosPreenchidos($filtros),
+                'encontrados' => count($resultado['processos']),
+                'erro' => $erro !== null,
+            ]);
+        }
+
+        return response()->json($resultado + ['erro' => $erro]);
+    }
+
+    /**
+     * Ficha completa de um processo do Simplifica (número interno ou protocolo
+     * REGIN), lida só na API do legado. Auditada; falha da API volta como aviso.
+     */
+    public function legadoDetalhe(Request $request, BuscaProcessosLegado $legado): JsonResponse
+    {
+        $numero = trim($request->string('numero')->toString());
+
+        try {
+            $processo = $legado->detalhe($numero);
+            $erro = null;
+        } catch (LegadoIndisponivelException) {
+            $processo = null;
+            $erro = 'Não foi possível consultar o Simplifica agora.';
+        }
+
+        $this->audit->log('analise', 'consulta-ficha-legado', 'Consulta da ficha de processo do Simplifica', [
+            'numero' => $numero,
+            'encontrado' => $processo !== null,
+            'erro' => $erro !== null,
+        ]);
+
+        return response()->json(['processo' => $processo, 'erro' => $erro]);
     }
 
     /**
