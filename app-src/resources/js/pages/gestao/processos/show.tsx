@@ -3,7 +3,6 @@ import type { MultiPolygon, Polygon } from 'geojson';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import ConclusaoAnaliseForm from '@/components/analise/conclusao-analise-form';
-import BaixarTvl from '@/components/analise/baixar-tvl';
 import JustificativaReginCard, { type JustificativaRegin } from '@/components/analise/justificativa-regin-card';
 import {
     CategoriaBadges,
@@ -335,10 +334,7 @@ export default function Show({
                                 <DescItem label="Protocolo BAP">{processo.bap ?? '—'}</DescItem>
                                 <DescItem label="Nº da viabilidade">
                                     {processo.tvl_product_number ? (
-                                        <span className="inline-flex flex-wrap items-center justify-end gap-2">
-                                            <span>{processo.tvl_product_number}</span>
-                                            <BaixarTvl solicitacaoId={processo.id} />
-                                        </span>
+                                        <span>{processo.tvl_product_number}</span>
                                     ) : (
                                         '—'
                                     )}

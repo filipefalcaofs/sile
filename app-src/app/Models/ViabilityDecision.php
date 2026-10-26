@@ -110,6 +110,14 @@ class ViabilityDecision extends Model
         return (int) $partes[1];
     }
 
+    /**
+     * Número TVL como é exibido (sem o prefixo "TVL-"); o valor gravado não muda.
+     */
+    public static function semPrefixo(?string $numero): ?string
+    {
+        return $numero === null ? null : preg_replace('/^TVL-/i', '', $numero);
+    }
+
     public function isIndeferida(): bool
     {
         return $this->outcome === DecisionOutcome::Indeferida;

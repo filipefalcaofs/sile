@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Enums\ViabilityRequestStatus;
+use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Analise\AnalysisSlaService;
 use App\Services\Analise\ProcessoQueryService;
@@ -38,7 +39,7 @@ class ProcessoResource extends JsonResource
             'protocol_number' => $this->protocol_number,
             'bap' => $this->external_reference,
             'renovacao' => $this->isRenewal(),
-            'tvl_product_number' => $this->decision?->tvl_product_number,
+            'tvl_product_number' => ViabilityDecision::semPrefixo($this->decision?->tvl_product_number),
             'status' => $this->status->value,
             'status_label' => $this->status->label(),
             'fluxo' => $this->fluxoConsulta(),
@@ -117,7 +118,7 @@ class ProcessoResource extends JsonResource
 
         return [
             'tipo' => $ehSede ? 'sede' : 'abrigado',
-            'tvl_sede' => $ehSede ? $decision->tvl_product_number : $decision->virtual_office_hq_tvl_number,
+            'tvl_sede' => ViabilityDecision::semPrefixo($ehSede ? $decision->tvl_product_number : $decision->virtual_office_hq_tvl_number),
             'inscricao' => $this->property_registration,
             // Validade do produto da sede não modelada (desfecho spec-2).
             'validade_sede' => null,

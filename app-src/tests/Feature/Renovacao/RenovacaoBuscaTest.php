@@ -71,7 +71,7 @@ class RenovacaoBuscaTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->has('itens', 2)
                 ->where('itens.0.origem', 'viabiliza')
-                ->where('itens.0.numero', 'TVL-2026-000777')
+                ->where('itens.0.numero', '2026-000777')
                 ->where('itens.0.url', '/portal/renovacao/'.$local->id)
                 ->where('itens.1.origem', 'legado')
                 ->where('itens.1.numero', '1111111')

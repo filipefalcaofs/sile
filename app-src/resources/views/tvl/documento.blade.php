@@ -31,7 +31,7 @@
         <div class="orgao">Viabiliza &mdash; Sistema de Licenciamento Eletrônico</div>
         <div class="orgao">Prefeitura Municipal de Salvador &mdash; SEDUR</div>
         <h1>Viabilidade locacional</h1>
-        <div class="numero-produto">Nº da viabilidade: {{ $tvl_product_number ?? '—' }}</div>
+        <div class="numero-produto">Nº da viabilidade: {{ \App\Models\ViabilityDecision::semPrefixo($tvl_product_number) ?? '—' }}</div>
     </div>
 
     <p class="nota-interna">

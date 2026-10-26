@@ -106,12 +106,12 @@ class RelatorioSedeQueryTest extends TestCase
 
         $sede = $linhas['VIA-2026-SEDE1'];
         $this->assertSame('sede', $sede['tipo']);
-        $this->assertSame('TVL-2026-SEDE1', $sede['tvl']);
+        $this->assertSame('2026-SEDE1', $sede['tvl']);
         $this->assertSame('Sede EV Ltda', $sede['razao_social']);
 
         $ab1 = $linhas['VIA-2026-AB1'];
         $this->assertSame('abrigado', $ab1['tipo']);
-        $this->assertSame('TVL-2026-AB1', $ab1['tvl']);
+        $this->assertSame('2026-AB1', $ab1['tvl']);
         $this->assertSame('Abrigado AB1 ME', $ab1['razao_social']);
 
         $this->assertSame('abrigado', $linhas['VIA-2026-AB2']['tipo']);

@@ -10,6 +10,7 @@ use App\Http\Requests\Portal\ProtocolarRenovacaoRequest;
 use App\Models\Cidadao;
 use App\Models\Company;
 use App\Models\ServiceDeclaration;
+use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
 use App\Services\Legado\LegadoIndisponivelException;
@@ -111,7 +112,7 @@ class RenovacaoController extends Controller
 
                 return [
                     'id' => $origem->id,
-                    'numero' => $origem->decision?->tvl_product_number,
+                    'numero' => ViabilityDecision::semPrefixo($origem->decision?->tvl_product_number),
                     'elegivel' => $avaliacao->elegivel,
                     'motivo' => $avaliacao->motivo,
                 ];
@@ -211,7 +212,7 @@ class RenovacaoController extends Controller
         return Inertia::render('portal/renovacao/wizard', [
             'origem' => [
                 'id' => $origem->id,
-                'numero' => $origem->decision?->tvl_product_number,
+                'numero' => ViabilityDecision::semPrefixo($origem->decision?->tvl_product_number),
                 'empresa' => $origem->company?->legal_name,
                 'cnpj' => $origem->company?->formatted_cnpj,
                 'endereco' => collect([

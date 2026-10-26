@@ -3,6 +3,7 @@
 namespace App\Services\Renovacao;
 
 use App\Enums\ViabilityRequestStatus;
+use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -43,7 +44,7 @@ class BuscaRenovacao
             return ['itens' => [], 'indisponivel' => false, 'termo_invalido' => true];
         }
 
-        $locais = $this->doViabiliza(fn (Builder $query) => $query->whereHas('decision', fn (Builder $decisao) => $decisao->whereRaw('upper(tvl_product_number) = ?', [$numero])));
+        $locais = $this->doViabiliza(fn (Builder $query) => $query->whereHas('decision', fn (Builder $decisao) => $decisao->whereRaw('upper(tvl_product_number) in (?, ?)', [$numero, 'TVL-'.$numero])));
         $legado = $this->ehNumeroDoLegado($numero) ? $this->legado->porNumero($numero) : ['itens' => [], 'indisponivel' => false];
 
         return [
@@ -78,7 +79,7 @@ class BuscaRenovacao
                 return [
                     'origem' => 'viabiliza',
                     'id' => $origem->id,
-                    'numero' => (string) $origem->decision?->tvl_product_number,
+                    'numero' => (string) ViabilityDecision::semPrefixo($origem->decision?->tvl_product_number),
                     'empresa' => $origem->company?->legal_name,
                     'cnpj' => $origem->company?->formatted_cnpj,
                     'endereco' => collect([$origem->address_street, $origem->address_number, $origem->address_neighborhood])->filter()->implode(', '),
