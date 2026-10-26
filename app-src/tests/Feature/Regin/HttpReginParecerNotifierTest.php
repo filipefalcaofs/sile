@@ -115,7 +115,7 @@ class HttpReginParecerNotifierTest extends TestCase
 
         $justificativa = $espiao->envios[0]['dadosProcesso']['ANALISES']['AREA'][0]['JUSTIFICATIVA_ANALISE'];
 
-        $this->assertSame('Viabilidade deferida pelo motor de regras.', $justificativa);
+        $this->assertSame('Viabilidade deferida pelo fluxo expresso.', $justificativa);
     }
 
     public function test_justificativa_so_com_notas_internas_cai_no_texto_padrao(): void
@@ -134,7 +134,7 @@ class HttpReginParecerNotifierTest extends TestCase
         $this->app->make(HttpReginParecerNotifier::class)->notifyParecer($request, $decision);
 
         $this->assertSame(
-            'Viabilidade deferida pelo motor de regras.',
+            'Viabilidade deferida pelo fluxo expresso.',
             $espiao->envios[0]['dadosProcesso']['ANALISES']['AREA'][0]['JUSTIFICATIVA_ANALISE'],
         );
     }

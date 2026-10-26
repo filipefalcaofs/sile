@@ -126,7 +126,7 @@ class JustificativaReginTest extends TestCase
 
         event(new ResultadoEmitido($processo, $decisao));
 
-        $esperado = 'Viabilidade deferida pelo motor de regras.';
+        $esperado = 'Viabilidade deferida pelo fluxo expresso.';
 
         Http::assertSent(fn ($r) => str_ends_with($r->url(), '/recebe')
             && $r['dadosProcesso']['ANALISES']['AREA'][0]['JUSTIFICATIVA_ANALISE'] === $esperado);
@@ -203,7 +203,7 @@ class JustificativaReginTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('gestao/processos/show')
                 ->where('justificativaRegin.personalizada', false)
-                ->where('justificativaRegin.texto', 'Viabilidade deferida pelo motor de regras.'));
+                ->where('justificativaRegin.texto', 'Viabilidade deferida pelo fluxo expresso.'));
 
         $processo->forceFill(['regin_justificativa' => 'Texto do analista.'])->save();
 

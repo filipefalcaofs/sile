@@ -83,7 +83,7 @@ class HttpReginParecerNotifier implements ReginParecerNotifier
 
         $motivo = trim((string) $decision->reason);
 
-        $origem = $decision->flow === 'analise_tecnica' ? 'após análise técnica' : 'pelo motor de regras';
+        $origem = $decision->flow === 'analise_tecnica' ? 'após análise técnica' : 'pelo fluxo expresso';
 
         $texto = $motivo !== ''
             ? $motivo
