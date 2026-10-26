@@ -39,6 +39,7 @@ use App\Services\Auditoria\DecisionExplanationService;
 use App\Services\Expresso\SedeEscritorioVirtualGatilho;
 use App\Services\Geo\ProcedenciaPoligono;
 use App\Services\Relatorios\RelatorioSedeEscritorioVirtualService;
+use App\Services\Sefaz\ComparacaoCnaesFicha;
 use App\Services\Servicos\ServicoNomenclaturaResolver;
 use App\Services\Vistoria\VistoriaAcesso;
 use App\Support\Audit\AuditService;
@@ -143,7 +144,8 @@ class AnalysisRecordController extends Controller
                 'tvl_numero' => $viabilityRequest->renews?->decision?->tvl_product_number,
                 'bap' => $viabilityRequest->external_reference,
                 'servicos' => $this->servicosDoProcesso($viabilityRequest),
-                'empresa' => $viabilityRequest->company?->trade_name ?: $viabilityRequest->company?->legal_name,
+                'empresa' => $viabilityRequest->nomeDaEmpresa(),
+                'requerente' => $viabilityRequest->nomeDoRequerente(),
             ],
             'localizacao' => $this->localizacaoDoImovel($viabilityRequest, $cadastro),
             'dadosTvl' => $this->dadosTvl($viabilityRequest, $record),
@@ -168,6 +170,8 @@ class AnalysisRecordController extends Controller
             'fichaSalva' => $this->fichaSalvaOuFinalizada($viabilityRequest),
             'somenteLeitura' => $somenteLeitura,
             'podeEditarZonaVia' => $request->user()?->can('editar-zona-via') === true,
+            // Alteração de atividade da JUCEB: o que entra, o que sai e o que já existia na viabilidade da SEFAZ.
+            'comparacaoCnaes' => app(ComparacaoCnaesFicha::class)->dados($viabilityRequest),
             'zonasDisponiveis' => $this->zonasDisponiveis(),
             'viasDisponiveis' => Quadro11aClasseVia::oficiais(),
             'usuariosIndicaveis' => $this->usuariosIndicaveisParaConclusao(),
@@ -223,7 +227,8 @@ class AnalysisRecordController extends Controller
                 'protocol_number' => $viabilityRequest->protocol_number,
                 'status' => $viabilityRequest->status->value,
                 'status_label' => $viabilityRequest->status->label(),
-                'empresa' => $viabilityRequest->company?->trade_name ?: $viabilityRequest->company?->legal_name,
+                'empresa' => $viabilityRequest->nomeDaEmpresa(),
+                'requerente' => $viabilityRequest->nomeDoRequerente(),
                 'cnpj' => $viabilityRequest->company?->formatted_cnpj,
             ],
             'decisao' => $decisaoPayload,

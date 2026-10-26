@@ -15,14 +15,21 @@ use Illuminate\Support\Facades\DB;
  */
 class PostgisPrecedentRepository implements PrecedentRepository
 {
-    public function propertyPrecedents(array $currentGeojson, int $limit, ?string $fallbackStreet = null, ?string $fallbackNumber = null, ?int $exceptRequestId = null): array
+    public function propertyPrecedents(array $currentGeojson, int $limit, ?string $fallbackStreet = null, ?string $fallbackNumber = null, ?int $exceptRequestId = null, ?string $inscricao = null): array
     {
         $query = DB::table('viability_requests as vr')
             ->join('viability_decisions as vd', 'vd.viability_request_id', '=', 'vr.id')
             ->leftJoin('viability_service_types as vst', 'vst.id', '=', 'vr.service_type_id')
             ->leftJoin('users as analyst', 'analyst.id', '=', 'vd.decided_by_user_id');
 
-        if ($this->hasPolygon($currentGeojson)) {
+        $inscricao = preg_replace('/\D/', '', (string) $inscricao);
+
+        if ($inscricao !== '') {
+            // Com inscrição, o imóvel é a inscrição: o mesmo recorte da consulta
+            // de processos (ProcessoQueryService), para a ficha e a consulta
+            // mostrarem os mesmos processos.
+            $query->whereLike('vr.property_registration', "%{$inscricao}%");
+        } elseif ($this->hasPolygon($currentGeojson)) {
             // SRID 4326 explícito nos DOIS operandos (igual ao PropertyGeometryWriter):
             // ST_GeomFromGeoJSON sem ST_SetSRID quebraria por SRID misto.
             $query->whereNotNull('vr.property_polygon')

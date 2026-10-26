@@ -20,8 +20,8 @@ use Tests\TestCase;
 
 /**
  * Linhas condicionais do De x Para da SEDUR: a alteração de atividades vira
- * Inclusão ou Exclusão e a alteração de endereço no município vira Revisão de
- * Endereço ou Alteração de Espaço, comparando com o último processo da empresa.
+ * Inclusão ou Exclusão e a alteração de endereço no município vira Alteração
+ * de Endereço ou Revisão Alteração de Espaço, comparando com o último processo da empresa.
  */
 class CondicaoServicoTest extends TestCase
 {
@@ -70,11 +70,11 @@ class CondicaoServicoTest extends TestCase
             ['Inscrição de primeiro estabelecimento', 'Viabilidade de Localização', ''],
             ['Inscrição dos demais estabelecimentos', 'Viabilidade de Localização', ''],
             [self::ATIVIDADES, 'Revisão de Atividade - Inclusão', 'cnae_incluido'],
-            [self::ENDERECO, 'Revisão de Endereço', 'endereco_localizacao'],
-            ['Alteração de endereço entre estados', 'Revisão de Endereço', ''],
-            ['Alteração de endereço entre municípios dentro do mesmo estado', 'Revisão de Endereço', ''],
+            [self::ENDERECO, 'Alteração de Endereço', 'endereco_localizacao'],
+            ['Alteração de endereço entre estados', 'Alteração de Endereço', ''],
+            ['Alteração de endereço entre municípios dentro do mesmo estado', 'Alteração de Endereço', ''],
             [self::ATIVIDADES, 'Revisão de Atividade - Exclusão', 'cnae_excluido'],
-            [self::ENDERECO, 'Revisão de Endereço - Alteração de Espaço', 'endereco_espaco'],
+            [self::ENDERECO, 'Revisão Alteração de Espaço', 'endereco_espaco'],
         ], $linhas);
     }
 
@@ -122,6 +122,28 @@ class CondicaoServicoTest extends TestCase
 
         $this->assertSame(CondicaoServico::EnderecoLocalizacao, $this->detectar($this->processo($empresa, [], ['address_number' => '20']), self::ENDERECO));
         $this->assertSame(CondicaoServico::EnderecoLocalizacao, $this->detectar($this->processo($empresa, [], ['address_neighborhood' => 'Barra', 'cod_log' => '123']), self::ENDERECO));
+    }
+
+    public function test_mudar_logradouro_e_alteracao_de_endereco(): void
+    {
+        $empresa = Company::factory()->create();
+        $this->processo($empresa);
+
+        $this->assertSame(CondicaoServico::EnderecoLocalizacao, $this->detectar($this->processo($empresa, [], ['address_street' => 'Avenida B']), self::ENDERECO));
+
+        $outra = Company::factory()->create();
+        $this->processo($outra);
+
+        $this->assertSame(CondicaoServico::EnderecoLocalizacao, $this->detectar($this->processo($outra, [], ['address_street' => 'Avenida B', 'address_complement' => 'Sala 2']), self::ENDERECO));
+    }
+
+    public function test_logradouro_vazio_de_um_dos_lados_nao_conta(): void
+    {
+        $empresa = Company::factory()->create();
+        $this->processo($empresa, [], ['address_street' => '']);
+
+        $this->assertNull($this->detectar($this->processo($empresa), self::ENDERECO));
+        $this->assertNull($this->detectar($this->processo($empresa, [], ['address_street' => '']), self::ENDERECO));
     }
 
     public function test_mudar_so_complemento_ou_cep_e_alteracao_de_espaco(): void
@@ -178,7 +200,7 @@ class CondicaoServicoTest extends TestCase
 
         $this->assertSame(['Revisão de Atividade - Exclusão'], $resolver->servicos($exclusao));
         $this->assertSame(['Revisão de Atividade - Inclusão'], $resolver->servicos($semCondicao));
-        $this->assertSame(['Revisão de Endereço - Alteração de Espaço'], $resolver->servicos($espaco));
+        $this->assertSame(['Revisão Alteração de Espaço'], $resolver->servicos($espaco));
     }
 
     public function test_filtro_separa_inclusao_de_exclusao(): void

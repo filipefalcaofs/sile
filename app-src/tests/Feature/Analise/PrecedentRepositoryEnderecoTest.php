@@ -44,4 +44,23 @@ class PrecedentRepositoryEnderecoTest extends TestCase
         $this->assertSame('BAP2601853153', $porId[$anterior->id]['bap']);
         $this->assertNull($porId[$semBap->id]['bap']);
     }
+
+    /**
+     * Inscrição 518548-3 (Lisa, 26/10): com inscrição, "neste imóvel" é o mesmo
+     * recorte da consulta pela inscrição, não o desenho nem o endereço.
+     */
+    public function test_com_inscricao_casa_pela_inscricao_como_a_consulta(): void
+    {
+        $atual = $this->decidido('BAP-ATUAL');
+        $atual->forceFill(['property_registration' => '5185483'])->save();
+        $mesmaInscricao = $this->decidido('BAP-MESMA');
+        $mesmaInscricao->forceFill(['property_registration' => '5185483'])->save();
+        $outraInscricaoMesmoEndereco = $this->decidido('BAP-OUTRA');
+        $outraInscricaoMesmoEndereco->forceFill(['property_registration' => '7140088'])->save();
+
+        $linhas = app(PostgisPrecedentRepository::class)
+            ->propertyPrecedents([], 10, 'Rua do Jaracatiá', '106', $atual->id, '518548-3');
+
+        $this->assertSame([$mesmaInscricao->id], array_column($linhas, 'viability_request_id'));
+    }
 }

@@ -293,7 +293,10 @@ class TerritorialRuleService
     {
         $codigosRegra = $regra->cnaes->pluck('cnae')->all();
 
+        $incluidos = $request->codigosIncluidosNaComparacao();
+
         $cnaes = $request->cnaes()
+            ->when($incluidos !== null, fn ($query) => $query->whereIn('cnaes.code', $incluidos))
             ->where(function ($query): void {
                 $query->whereNull('viability_request_cnaes.intencao')
                     ->orWhere('viability_request_cnaes.intencao', '!=', IntencaoAtividade::Excluir->value);

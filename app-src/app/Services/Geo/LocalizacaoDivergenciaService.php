@@ -75,7 +75,7 @@ class LocalizacaoDivergenciaService
             return null;
         }
 
-        $zonaDesenho = $this->maiorPorcao->resolver($request->property_polygon_geojson);
+        $zonaDesenho = $this->maiorPorcao->resolver($request->property_polygon_geojson, trim((string) $request->cod_log) ?: null);
 
         if (! $zonaDesenho->identificado()) {
             $this->auditarEnderecamento($request, 'nao_verificada', $zonaDesenho->motivo, null, $zonaEnderecamento->codigo);

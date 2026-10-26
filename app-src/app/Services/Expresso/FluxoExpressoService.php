@@ -36,7 +36,10 @@ use App\Services\Geo\LocalizacaoDivergenciaService;
 use App\Services\Geo\PoligonoEnderecamentoService;
 use App\Services\Geo\ZonaMaiorPorcao;
 use App\Services\Geo\ZonaProcessoService;
+use App\Services\Motor\EtapaMotorRegistrador;
 use App\Services\Realty\LocalizacaoInscricaoService;
+use App\Services\Sefaz\ConsultarComparacaoCnaesService;
+use App\Services\Sefaz\SefazConsultaIndisponivelException;
 use App\Services\Solicitacao\ResolvedViability;
 use App\Services\Solicitacao\SolicitacaoViabilityResolver;
 use App\Services\Solicitacao\ViabilityRequestStateMachine;
@@ -97,6 +100,9 @@ class FluxoExpressoService
         private PreAnaliseService $preAnalise,
         private LocalizacaoInscricaoService $localizacaoInscricao,
         private IndeferirInscricaoInativaService $indeferirInscricaoInativa,
+        private ConsultarComparacaoCnaesService $comparacaoCnaes,
+        private EtapaMotorRegistrador $etapas,
+        private IndeferirPorEstabilidadeSefazService $indeferirPorEstabilidadeSefaz,
     ) {}
 
     /**
@@ -181,6 +187,44 @@ class FluxoExpressoService
                 $this->textos->render('expresso.motivo.abrigada_fora_do_anexo_b', [':cnaes' => implode(', ', $foraDoAnexoB)]),
                 $actor,
             );
+        }
+
+        // Alteração de atividades da JUCEB (evento 244): compara os CNAEs do pedido
+        // com os da viabilidade vinculada ao CNPJ na SEFAZ. Código fora da lista
+        // oficial vai para a análise; sem atividade incluída não há o que
+        // enquadrar (só exclusão, ou pedido igual à viabilidade) e defere sem taxa.
+        try {
+            $comparacao = $this->comparacaoCnaes->executar($request);
+        } catch (SefazConsultaIndisponivelException $e) {
+            return $this->sefazIndisponivel($request, $e);
+        }
+
+        $this->registrarSefazRespondeu($request, $comparacao !== null);
+
+        if ($comparacao !== null) {
+            if ($comparacao->invalidas !== []) {
+                return $this->encaminharAnalise(
+                    $request,
+                    $this->textos->render('expresso.motivo.cnae_invalido', [':cnaes' => $this->cnaesFormatados($comparacao->invalidas)]),
+                    $actor,
+                    gatilho: TipoGatilho::DadosDoProcesso,
+                );
+            }
+
+            if ($comparacao->incluidas === []) {
+                return $this->deferirExclusao($request, $actor, $comparacao->excluidas);
+            }
+        }
+
+        // Sem a comparação da SEFAZ, a alteração de atividades da JUCEB é
+        // comparada com o último processo deferido da empresa: sem atividade
+        // nova e com alguma retirada, é exclusão e defere sem enquadramento.
+        if ($comparacao === null) {
+            $excluidas = $this->excluidasFrenteAoProcessoAnterior($request);
+
+            if ($excluidas !== null) {
+                return $this->deferirExclusaoPeloProcessoAnterior($request, $actor, $excluidas);
+            }
         }
 
         // RN-AA-03/RN-AA-05: solicitação EXCLUSIVAMENTE de exclusão de
@@ -339,11 +383,15 @@ class FluxoExpressoService
             return $this->indeferirPerguntaSemResposta($request, $resolved, $perguntaSemResposta, $actor);
         }
 
-        // Empate de porções: a lei não diz qual zona prevalece.
-        if ($zonaPorArea?->status === ZonaMaiorPorcao::EMPATE) {
+        // Empate de porções: a lei não diz qual zona prevalece. Linhas da ZCLMu e
+        // da ZCLMe sobre o mesmo lote (HU.182, RN-07): o negócio diz que não
+        // ocorre, e se ocorrer quem decide é o analista.
+        if (in_array($zonaPorArea?->status, [ZonaMaiorPorcao::EMPATE, ZonaMaiorPorcao::CONFLITO_LINEAR], true)) {
             return $this->encaminharAnalise(
                 $request,
-                $this->zonaProcesso->motivoEmpate($zonaPorArea),
+                $zonaPorArea->status === ZonaMaiorPorcao::CONFLITO_LINEAR
+                    ? $this->zonaProcesso->motivoConflito($zonaPorArea)
+                    : $this->zonaProcesso->motivoEmpate($zonaPorArea),
                 $actor,
                 $resolved,
                 gatilho: TipoGatilho::ZonaEmpate,
@@ -560,6 +608,52 @@ class FluxoExpressoService
         $request->refresh();
     }
 
+    /**
+     * SEFAZ sem resposta à consulta da viabilidade: o processo espera, com nova
+     * tentativa agendada pelo reprocessamento de etapas; esgotada a janela de
+     * 24 horas, indefere por estabilidade sistêmica e orienta nova solicitação.
+     */
+    private function sefazIndisponivel(ViabilityRequest $request, SefazConsultaIndisponivelException $e): DecisionResult
+    {
+        $etapa = $this->etapas->registrar($request, EtapaMotor::ConsultaViabilidadeSefaz, SituacaoEtapa::Indisponivel, $e->getMessage());
+
+        if ($etapa->esgotada_em !== null) {
+            return DecisionResult::decidida($this->indeferirPorEstabilidadeSefaz->indeferir($request, $e->getMessage()));
+        }
+
+        return DecisionResult::aguardando('Consulta da viabilidade à SEFAZ indisponível: nova tentativa agendada.');
+    }
+
+    /**
+     * Fecha a espera da consulta quando a SEFAZ volta a responder.
+     */
+    private function registrarSefazRespondeu(ViabilityRequest $request, bool $consultou): void
+    {
+        if (! $consultou) {
+            return;
+        }
+
+        $aguardava = $request->etapas()
+            ->where('etapa', EtapaMotor::ConsultaViabilidadeSefaz->value)
+            ->where('situacao', SituacaoEtapa::Indisponivel->value)
+            ->exists();
+
+        if ($aguardava) {
+            $this->etapas->registrar($request, EtapaMotor::ConsultaViabilidadeSefaz, SituacaoEtapa::Ok);
+        }
+    }
+
+    /**
+     * @param  list<string>  $codigos  só dígitos
+     */
+    private function cnaesFormatados(array $codigos): string
+    {
+        return implode(', ', array_map(
+            fn (string $codigo): string => (string) preg_replace('/^(\d{4})(\d)(\d{2})$/', '$1-$2/$3', $codigo),
+            $codigos,
+        ));
+    }
+
     private function encaminharAnalise(
         ViabilityRequest $request,
         string $reason,
@@ -759,6 +853,85 @@ class FluxoExpressoService
     }
 
     /**
+     * Códigos (só dígitos) que saíram da alteração de atividades da JUCEB
+     * (evento 244) frente ao último processo deferido da mesma empresa. Null
+     * quando a chave está desligada, o pedido traz intenção por CNAE, não há
+     * processo anterior deferido, alguma atividade é nova ou nada saiu.
+     *
+     * @return list<string>|null
+     */
+    private function excluidasFrenteAoProcessoAnterior(ViabilityRequest $request): ?array
+    {
+        if (! (bool) config('viabiliza.expresso.exclusao_pelo_processo_anterior', true)
+            || $request->company_id === null
+            || ! $request->eventos()->where('codigo', SedeEscritorioVirtualGatilho::EVENTO_ALTERACAO_ATIVIDADES)->exists()
+            || $request->cnaes()->wherePivotNotNull('intencao')->exists()) {
+            return null;
+        }
+
+        $anterior = ViabilityRequest::query()
+            ->where('company_id', $request->company_id)
+            ->where('id', '<', $request->id)
+            ->where('status', ViabilityRequestStatus::Deferida->value)
+            ->latest('id')
+            ->first();
+
+        if ($anterior === null) {
+            return null;
+        }
+
+        $digitos = fn (string $codigo): string => preg_replace('/\D/', '', $codigo) ?? '';
+        $pedidas = $request->cnaes()->pluck('code')->map($digitos)->unique();
+        $anteriores = $anterior->cnaes()->pluck('code')->map($digitos)->unique();
+
+        if ($pedidas->isEmpty() || $pedidas->diff($anteriores)->isNotEmpty()) {
+            return null;
+        }
+
+        $excluidas = $anteriores->diff($pedidas)->values()->all();
+
+        return $excluidas === [] ? null : $excluidas;
+    }
+
+    /**
+     * Exclusão apurada pelo processo anterior. Se o CNAE gatilho saiu de uma
+     * sede ativa, segue as mesmas exigências da exclusão declarada do gatilho:
+     * só a titular do vínculo, com a perda da condição confirmada.
+     *
+     * @param  list<string>  $excluidas  só dígitos
+     */
+    private function deferirExclusaoPeloProcessoAnterior(ViabilityRequest $request, ?User $actor, array $excluidas): DecisionResult
+    {
+        $lock = in_array($this->gatilhoSede->cnaeGatilho(), $excluidas, true) && filled($request->property_registration)
+            ? VirtualOfficeInscriptionLock::sedeAtiva((string) $request->property_registration)
+            : null;
+
+        if ($lock !== null) {
+            if (! $this->gatilhoSede->titularDoVinculo($request, $lock)) {
+                return $this->encaminharAnalise(
+                    $request,
+                    $this->textos->get('expresso.motivo.exclusao_sede_nao_titular'),
+                    $actor,
+                );
+            }
+
+            if ($request->confirma_perda_condicao_sede !== true) {
+                $mensagem = str_replace(
+                    ':cnae',
+                    $this->gatilhoSede->cnaeGatilhoFormatado(),
+                    (string) config('viabiliza.analise.escritorio_virtual.mensagem_confirma_perda_sede'),
+                );
+
+                return $this->encaminharAnalise($request, $mensagem, $actor);
+            }
+        }
+
+        // Com a lista de excluídas informada, `deferirExclusao()` retira a
+        // condição de sede da titular que ficou sem o CNAE gatilho.
+        return $this->deferirExclusao($request, $actor, $excluidas);
+    }
+
+    /**
      * Defere automaticamente a solicitação exclusivamente de exclusão de
      * atividade (RN-AA-03/RN-AA-05), SEM enquadramento: cria a
      * ViabilityDecision imutável com per_cnae/fundamentação próprios do caso
@@ -778,13 +951,15 @@ class FluxoExpressoService
      * Robustez idempotente igual a `emitir()`: corrida rara que escape do
      * Cache::lock vira NO-OP via a unique(viability_request_id).
      */
-    private function deferirExclusao(ViabilityRequest $request, ?User $actor): DecisionResult
+    private function deferirExclusao(ViabilityRequest $request, ?User $actor, ?array $excluidasPorComparacao = null): DecisionResult
     {
         $abrigado = $this->abrigadoResolver->resolve($request);
 
         try {
-            $decision = DB::transaction(function () use ($request, $actor, $abrigado): ViabilityDecision {
-                $cnaesExcluidos = $request->cnaesParaExcluir();
+            $decision = DB::transaction(function () use ($request, $actor, $abrigado, $excluidasPorComparacao): ViabilityDecision {
+                // Pelo portal, a saída vem da intenção por CNAE; pela comparação com a
+                // SEFAZ, vem dos códigos da viabilidade que o pedido não traz mais.
+                $codigosExcluidos = $excluidasPorComparacao ?? $request->cnaesParaExcluir()->pluck('code')->all();
 
                 $decision = ViabilityDecision::create([
                     'viability_request_id' => $request->id,
@@ -793,11 +968,11 @@ class FluxoExpressoService
                     'consolidated_result' => ResultadoViabilidade::Permitido->value,
                     'is_virtual_office_tenant' => $abrigado !== null,
                     'virtual_office_hq_tvl_number' => $abrigado['hq_tvl_number'] ?? null,
-                    'tvl_product_number' => $this->tvl->generate(),
-                    'per_cnae' => $cnaesExcluidos
-                        ->map(fn (Cnae $cnae): array => [
-                            'cnae' => $cnae->code,
-                            'cnae_formatado' => $cnae->formatted_code,
+                    'tvl_product_number' => $this->tvl->paraProcesso($request),
+                    'per_cnae' => collect($codigosExcluidos)
+                        ->map(fn (string $codigo): array => [
+                            'cnae' => $codigo,
+                            'cnae_formatado' => $this->cnaesFormatados([$codigo]),
                             'intencao' => IntencaoAtividade::Excluir->value,
                         ])
                         ->values()
@@ -830,7 +1005,7 @@ class FluxoExpressoService
                         'outcome' => DecisionOutcome::Deferida->value,
                         'consolidado' => $decision->consolidated_result,
                         'tvl_product_number' => $decision->tvl_product_number,
-                        'cnaes_excluidos' => $cnaesExcluidos->pluck('code')->all(),
+                        'cnaes_excluidos' => $codigosExcluidos,
                     ],
                     subject: $request,
                     result: DecisionOutcome::Deferida->value,
@@ -847,6 +1022,12 @@ class FluxoExpressoService
             }
 
             throw $e;
+        }
+
+        // Alteração de atividades da JUCEB comparada com a SEFAZ: a sede que ficou
+        // sem o CNAE gatilho perde a condição, como no deferimento com inclusão.
+        if ($excluidasPorComparacao !== null) {
+            $this->desvincularSedeSePerdida($request, $actor);
         }
 
         // APÓS o commit: só decisões efetivadas geram efeitos.
@@ -885,7 +1066,7 @@ class FluxoExpressoService
                     'consolidated_result' => ResultadoViabilidade::Permitido->value,
                     'is_virtual_office_tenant' => false,
                     'virtual_office_hq_tvl_number' => null,
-                    'tvl_product_number' => $this->tvl->generate(),
+                    'tvl_product_number' => $this->tvl->paraProcesso($request),
                     'per_cnae' => $cnaesExcluidos
                         ->map(fn (Cnae $cnae): array => [
                             'cnae' => $cnae->code,
@@ -1156,7 +1337,7 @@ class FluxoExpressoService
                     'consolidated_result' => $resolved->consolidado,
                     'is_virtual_office_tenant' => $abrigado !== null,
                     'virtual_office_hq_tvl_number' => $abrigado['hq_tvl_number'] ?? null,
-                    'tvl_product_number' => $outcome === DecisionOutcome::Deferida ? $this->tvl->generate() : null,
+                    'tvl_product_number' => $outcome === DecisionOutcome::Deferida ? $this->tvl->paraProcesso($request) : null,
                     'per_cnae' => $this->perCnae($resolved),
                     'rules_versions' => $resolved->rules_versions,
                     'fundamentacao' => $this->fundamentacaoConsolidada($resolved),
@@ -1205,16 +1386,7 @@ class FluxoExpressoService
         // APÓS o commit: a sede que deixou de ter o CNAE gatilho na alteração de
         // atividades da JUCEB perde a condição. Cascata compartilhada (RN-EV-06).
         if ($outcome === DecisionOutcome::Deferida) {
-            $vinculo = $this->gatilhoSede->vinculoPerdidoPorAlteracaoDeAtividades($request);
-
-            if ($vinculo !== null) {
-                $this->desvincular->desvincular(
-                    $vinculo,
-                    "alteração de atividades recebida da JUCEB sem o CNAE gatilho ({$this->gatilhoSede->cnaeGatilho()}) da sede, na solicitação #{$request->id}",
-                    $actor,
-                    SefazNotificationEvent::SedePerdeuCondicao,
-                );
-            }
+            $this->desvincularSedeSePerdida($request, $actor);
         }
 
         // APÓS o commit: só decisões efetivadas geram efeitos (notificação, Regin,
@@ -1222,6 +1394,22 @@ class FluxoExpressoService
         ResultadoEmitido::dispatch($request, $decision);
 
         return DecisionResult::decidida($decision, emitted: true);
+    }
+
+    private function desvincularSedeSePerdida(ViabilityRequest $request, ?User $actor): void
+    {
+        $vinculo = $this->gatilhoSede->vinculoPerdidoPorAlteracaoDeAtividades($request);
+
+        if ($vinculo === null) {
+            return;
+        }
+
+        $this->desvincular->desvincular(
+            $vinculo,
+            "alteração de atividades recebida da JUCEB sem o CNAE gatilho ({$this->gatilhoSede->cnaeGatilho()}) da sede, na solicitação #{$request->id}",
+            $actor,
+            SefazNotificationEvent::SedePerdeuCondicao,
+        );
     }
 
     /**

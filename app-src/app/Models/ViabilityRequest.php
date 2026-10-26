@@ -27,6 +27,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 /**
  * Solicitação de viabilidade (EP08) — aggregate root com o imóvel embutido 1:1.
@@ -59,7 +60,7 @@ use Illuminate\Support\Collection;
     'is_virtual_office', 'wants_virtual_office_hq', 'wants_virtual_office_tenant', 'confirma_perda_condicao_sede', 'is_public_area', 'has_independent_access',
     'simulation_snapshot', 'simulation_rules_versions', 'simulation_resultado', 'simulated_at',
     'applicant_proceeded_despite', 'contingency_reason', 'external_reference', 'regin_justificativa',
-    'origem_declarada', 'solicitante_nome', 'solicitante_cpf', 'zona_manual', 'via_manual',
+    'origem_declarada', 'solicitante_nome', 'solicitante_cpf', 'zona_manual', 'via_manual', 'comparacao_cnaes',
 ])]
 class ViabilityRequest extends Model
 {
@@ -149,6 +150,7 @@ class ViabilityRequest extends Model
             'property_location_precision' => PropertyLocationPrecision::class,
             'localizacao_conferencia' => 'array',
             'camadas_incidentes' => 'array',
+            'comparacao_cnaes' => 'array',
             'simulation_snapshot' => 'array',
             'simulation_rules_versions' => 'array',
             'used_area_m2' => 'decimal:2',
@@ -438,6 +440,37 @@ class ViabilityRequest extends Model
     }
 
     /**
+     * Nome do campo Empresa (SEDUR, 22/10): a razão social, nunca o nome do
+     * solicitante. Empresa a constituir do REGIN sem razão social pretendida
+     * nasce com o nome da pessoa; nesse caso o campo diz "Empresa a constituir".
+     */
+    public function nomeDaEmpresa(): ?string
+    {
+        $empresa = $this->company;
+        $nome = $empresa?->legal_name ?: $empresa?->trade_name;
+
+        if ($nome === null || $nome === '') {
+            return null;
+        }
+
+        $documento = preg_replace('/\D/', '', (string) $empresa->cnpj);
+        $solicitante = (string) $this->solicitante_nome;
+
+        if (strlen($documento) === 11 && $solicitante !== ''
+            && mb_strtolower(Str::ascii(trim($nome))) === mb_strtolower(Str::ascii(trim($solicitante)))) {
+            return 'Empresa a constituir';
+        }
+
+        return $nome;
+    }
+
+    /** Campo Requerente: quem pediu no REGIN (solicitante) ou, sem ele, o usuário requerente. */
+    public function nomeDoRequerente(): ?string
+    {
+        return $this->solicitante_nome ?: $this->requester?->name;
+    }
+
+    /**
      * Abrigado de escritório virtual: declarou a intenção no portal ou o
      * produto já foi decidido como abrigado.
      */
@@ -547,6 +580,19 @@ class ViabilityRequest extends Model
     public function cnaesParaExcluir(): Collection
     {
         return $this->cnaes()->wherePivot('intencao', IntencaoAtividade::Excluir->value)->get();
+    }
+
+    /**
+     * Códigos (só dígitos) das atividades incluídas segundo a comparação com a
+     * viabilidade da SEFAZ; null quando o pedido não passou por essa comparação.
+     *
+     * @return list<string>|null
+     */
+    public function codigosIncluidosNaComparacao(): ?array
+    {
+        $comparacao = $this->comparacao_cnaes;
+
+        return is_array($comparacao) ? array_values($comparacao['incluidas'] ?? []) : null;
     }
 
     /**

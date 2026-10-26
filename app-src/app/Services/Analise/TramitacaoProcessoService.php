@@ -17,7 +17,8 @@ use App\Models\ViabilityRequest;
  * fechada de eventos: consulta de tela, autosave automático da ficha e demais
  * registros técnicos não entram. Os eventos das fichas são gravados com a
  * própria ficha como sujeito. Cada item tem o mesmo formato da linha do tempo
- * de status; o evento da ficha de análise traz o link para abri-la.
+ * de status; os eventos da ficha de análise e da ficha de vistoria concluída
+ * trazem o link para abri-las somente para leitura.
  *
  * Uma ação, uma linha: o espelho da situação de análise e o registro de
  * pendência/convite gravados junto com uma mudança de situação do processo
@@ -186,6 +187,11 @@ class TramitacaoProcessoService
         }
 
         $daFicha = in_array($a->event, self::FICHA_ANALISE, true) && isset($a->properties['revision']);
+        $link = $daFicha ? route('gestao.processos.ficha.show', $processo, false).'?revisao='.$a->properties['revision'].'&somente_leitura=1' : null;
+
+        if ($a->event === 'ficha-conclusao') {
+            $link = route('gestao.processos.vistoria.visualizar', $processo, false).'?ficha='.$a->subject_id;
+        }
         $detalhe = $daFicha
             ? 'Revisão '.$a->properties['revision'].' da ficha.'
             : (string) $a->description;
@@ -207,7 +213,7 @@ class TramitacaoProcessoService
             detalhe: $detalhe !== '' ? $detalhe : null,
             em: $a->created_at?->toIso8601String(),
             ator: $this->atorDaAtividade($a, $usuarios),
-            link: $daFicha ? route('gestao.processos.ficha.show', $processo, false).'?revisao='.$a->properties['revision'].'&somente_leitura=1' : null,
+            link: $link,
         );
     }
 

@@ -445,6 +445,46 @@ class RolesAndPermissionsSeederTest extends TestCase
         }
     }
 
+    public function test_analistas_e_chefias_recebem_editar_zona_via(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        foreach (['Analista Servidor', 'Analista Terceirizado', 'Chefe de setor', 'Coordenador', 'Subcoordenador'] as $nome) {
+            $this->assertTrue(Role::findByName($nome, 'web')->hasPermissionTo('editar-zona-via'), $nome);
+        }
+
+        $this->assertFalse(Role::findByName('apoio', 'web')->hasPermissionTo('editar-zona-via'));
+    }
+
+    public function test_migration_concede_editar_zona_via_aos_analistas_sem_duplicar(): void
+    {
+        foreach (['Analista Servidor', 'Analista Terceirizado', 'Coordenador', 'apoio'] as $nome) {
+            Role::create(['name' => $nome, 'guard_name' => 'web']);
+        }
+        Permission::firstOrCreate(['name' => 'editar-zona-via', 'guard_name' => 'web'])->assignRole('Coordenador');
+
+        $migracao = require database_path('migrations/2026_10_26_120000_concede_editar_zona_via_aos_analistas.php');
+        $migracao->up();
+        $migracao->up();
+
+        foreach (['Analista Servidor', 'Analista Terceirizado', 'Coordenador'] as $nome) {
+            $this->assertTrue(Role::findByName($nome, 'web')->hasPermissionTo('editar-zona-via'), $nome);
+        }
+        $this->assertFalse(Role::findByName('apoio', 'web')->hasPermissionTo('editar-zona-via'));
+        $this->assertSame(1, Permission::query()->where('name', 'editar-zona-via')->count());
+        $this->assertSame(1, Role::findByName('Analista Servidor', 'web')->permissions()->where('name', 'editar-zona-via')->count());
+    }
+
+    public function test_migration_de_editar_zona_via_cria_a_permissao_quando_falta(): void
+    {
+        Role::create(['name' => 'Analista Servidor', 'guard_name' => 'web']);
+        Permission::query()->where('name', 'editar-zona-via')->delete();
+
+        (require database_path('migrations/2026_10_26_120000_concede_editar_zona_via_aos_analistas.php'))->up();
+
+        $this->assertTrue(Role::findByName('Analista Servidor', 'web')->hasPermissionTo('editar-zona-via'));
+    }
+
     public function test_migration_concede_analise_aos_perfis_que_ficaram_sem_permissao(): void
     {
         $perfis = ['Chefe de setor', 'Coordenador', 'Subcoordenador', 'Analista Terceirizado', 'Analista Servidor'];

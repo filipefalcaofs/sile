@@ -245,6 +245,11 @@ class ProcessoController extends Controller
         return Inertia::render('gestao/processos/show', [
             'processo' => (new ProcessoResource($viabilityRequest))->resolve(),
             'consultaVistoria' => $consultaVistoria,
+            // Anexos do processo, visíveis para todos que o consultam (SEDUR, 22/10).
+            'anexos' => ProcessoAnexoController::lista($viabilityRequest),
+            // Link da ficha de vistoria na tramitação: a consulta exige analisar-processos (rota) e VistoriaAcesso.
+            'podeVerFichaVistoria' => $request->user()->can('analisar-processos')
+                && app(VistoriaAcesso::class)->podeConsultar($viabilityRequest, $request->user()),
             // Despacho do analista ao encaminhar à vistoria: o que verificar em campo.
             'despachoVistoria' => $despacho === null ? null : [
                 'orientacoes' => $despacho->motivo,
@@ -388,7 +393,8 @@ class ProcessoController extends Controller
      * (convite_respondido/expirado) fazem parte do grafo completo da máquina,
      * mas não podem ser setados manualmente. A guarda é ignorada quando o
      * usuário tem forcar-transicao-analise E pede o override (`force`), que aí passa a valer o
-     * grafo completo validado pela state machine. `motivo` é opcional na Fase
+     * grafo completo validado pela state machine. A análise concluída não sai
+     * nem com o override (SPEC-07). `motivo` é opcional na Fase
      * 1 (a obrigatoriedade de parecer no cancelamento chega com o convite, na
      * Fase 2). Transição recusada é comunicada com flash.error — nunca
      * silenciosa.
@@ -403,6 +409,17 @@ class ProcessoController extends Controller
         $force = $request->boolean('force') && $request->user()->can('forcar-transicao-analise');
 
         $podeConcluir = $request->user()->can('concluir-analise');
+
+        // SPEC-07: a reabertura da análise concluída depende de regra da SEDUR
+        // (decisão e TVL já emitidos); nem o override reabre por enquanto.
+        if ($from === AnalysisStatus::AnaliseConcluida) {
+            return back()->with('error', 'A análise já foi concluída e não pode ser reaberta: a reabertura ainda depende de regra da SEDUR.');
+        }
+
+        // Item 8 (SEDUR, 22/10): o processo em Para conclusão só sai pelas mãos de quem conclui.
+        if ($from === AnalysisStatus::ParaConclusao && ! $podeConcluir) {
+            return back()->with('error', 'Só quem conclui a análise pode tirar o processo de Para conclusão.');
+        }
 
         if (! $force && ($from === null || ! in_array($to, $from->proximasPara($podeConcluir), true))) {
             return back()->with('error', 'Transição de situação da análise não permitida.');

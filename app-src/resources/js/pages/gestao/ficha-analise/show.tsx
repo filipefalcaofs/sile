@@ -3,6 +3,7 @@ import { Head, Link, router, useHttp, usePage, WhenVisible } from '@inertiajs/re
 import type { GeoJsonObject } from 'geojson';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
+import ComparacaoCnaesCard, { type ComparacaoCnaes } from '@/components/analise/comparacao-cnaes-card';
 import ConclusaoAnaliseForm from '@/components/analise/conclusao-analise-form';
 import { QuadrosChecklist, type QuadroChecklist } from '@/components/analise/quadros-checklist';
 import { RecepcaoRecebida, type ProcessoRecepcao } from '@/components/analise/processo-ui';
@@ -106,6 +107,7 @@ interface Processo {
     bap: string | null;
     servicos: string[];
     empresa: string | null;
+    requerente?: string | null;
 }
 
 interface TextoPadrao {
@@ -301,6 +303,8 @@ interface FichaAnaliseShowProps {
     somenteLeitura: boolean;
     /** Quem tem a permissão no perfil escolhe a zona e a via do imóvel na ficha. */
     podeEditarZonaVia: boolean;
+    /** Alteração de atividade da JUCEB: comparação dos CNAEs com a viabilidade da SEFAZ. */
+    comparacaoCnaes: ComparacaoCnaes | null;
     zonasDisponiveis: { codigo: string; nome: string | null }[];
     viasDisponiveis: string[];
 }
@@ -743,6 +747,7 @@ export default function FichaAnaliseShow({
     usuariosIndicaveis,
     somenteLeitura,
     podeEditarZonaVia,
+    comparacaoCnaes,
     zonasDisponiveis,
     viasDisponiveis,
 }: FichaAnaliseShowProps) {
@@ -1926,6 +1931,10 @@ export default function FichaAnaliseShow({
                             </Card>
                         )}
 
+                        {comparacaoCnaes && (
+                            <ComparacaoCnaesCard processoId={processo.id} comparacao={comparacaoCnaes} podeCorrigir={editavel} />
+                        )}
+
                         {/* Enquadramento por CNAE (espelha a ficha SAPS) */}
                         <Card>
                             <CardHeader
@@ -2673,10 +2682,6 @@ export default function FichaAnaliseShow({
                 className="m-4 max-w-[480px] p-6 lg:p-8"
             >
                 <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Encaminhar para Chefia?</h4>
-                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                    O processo vai para a aba Para conclusão da Caixa do Apoio e sai da sua Caixa de entrada. Quem
-                    distribui é o Apoio.
-                </p>
                 <div className="mt-4">
                     <Label htmlFor="indicado-para-conclusao" className="mb-1.5">
                         Indicar quem deve concluir (opcional)
@@ -2690,7 +2695,6 @@ export default function FichaAnaliseShow({
                             { value: '', label: 'Sem indicação' },
                             ...usuariosIndicaveis.map((usuario) => ({ value: String(usuario.id), label: usuario.name })),
                         ]}
-                        hint="É só uma sugestão para o Apoio: o processo não vai direto para a pessoa indicada."
                     />
                 </div>
                 <div className="mt-6 flex justify-end gap-3">
@@ -3327,6 +3331,7 @@ function ResumoProcessoCard({
                         )}
                     </DescItem>
                     <DescItem label="Empresa">{valorOuTraco(processo.empresa)}</DescItem>
+                    <DescItem label="Requerente">{valorOuTraco(processo.requerente)}</DescItem>
                 </dl>
 
                 <div className="mt-5 border-t border-gray-100 pt-5 dark:border-gray-800">
@@ -3797,7 +3802,7 @@ function PrecedentesPanel({
 }) {
     return (
         <Card>
-            <CardHeader title="Precedentes" description="Histórico do imóvel e estatística do CNAE na zona (HU-142)." />
+            <CardHeader title="Precedentes" description="Processos da mesma inscrição imobiliária e resultados do CNAE em toda a zona." />
             <CardContent>
                 {carregando && (
                     <div className="space-y-2">
@@ -3875,7 +3880,7 @@ function PrecedentesPanel({
 
                         <div>
                             <p className="text-theme-xs font-medium tracking-wide text-gray-400 uppercase dark:text-gray-500">
-                                CNAE na zona
+                                CNAE na zona (todos os imóveis)
                             </p>
                             {dados.cnae_zona.disponivel ? (
                                 <p className="mt-1 text-theme-sm text-gray-600 dark:text-gray-300">

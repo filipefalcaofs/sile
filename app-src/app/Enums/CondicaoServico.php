@@ -19,7 +19,7 @@ enum CondicaoServico: string
         return match ($this) {
             self::CnaeIncluido => 'Caso sistema identifique que está sendo incluído algum CNAE',
             self::CnaeExcluido => 'Caso sistema identifique que está sendo incluído e também excluindo algum CNAE',
-            self::EnderecoLocalizacao => 'Caso o sistema identifique que está sendo alterado o: codlog / nº de porta ou métrico / Bairro',
+            self::EnderecoLocalizacao => 'Caso o sistema identifique que está sendo alterado o: codlog / logradouro / nº de porta ou métrico / Bairro',
             self::EnderecoEspaco => 'Caso o sistema identifique que está sendo alterado o Complemento / Sub-unidade / nº Sub-unidade / CEP',
         };
     }

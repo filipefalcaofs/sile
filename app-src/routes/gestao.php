@@ -13,6 +13,7 @@ use App\Http\Controllers\Gestao\BenchmarkController;
 use App\Http\Controllers\Gestao\CaixaSetorController;
 use App\Http\Controllers\Gestao\CidadaoManagementController;
 use App\Http\Controllers\Gestao\CnaeController;
+use App\Http\Controllers\Gestao\CnaeInvalidoController;
 use App\Http\Controllers\Gestao\ConclusaoAnaliseController;
 use App\Http\Controllers\Gestao\ConsultarCpfSedurController;
 use App\Http\Controllers\Gestao\ConsultarDocumentoContingenciaController;
@@ -51,6 +52,7 @@ use App\Http\Controllers\Gestao\MapaDecisaoController;
 use App\Http\Controllers\Gestao\MetadataController;
 use App\Http\Controllers\Gestao\ParameterController;
 use App\Http\Controllers\Gestao\PrecedenteController;
+use App\Http\Controllers\Gestao\ProcessoAnexoController;
 use App\Http\Controllers\Gestao\ProcessoBuscaController;
 use App\Http\Controllers\Gestao\ProcessoController;
 use App\Http\Controllers\Gestao\ProcessoDecisaoController;
@@ -693,6 +695,10 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             // segmentos — não colide com o {viabilityRequest} show.
             Route::get('{viabilityRequest}/comunicacoes', [ComunicacaoHistoricoController::class, 'gestao'])->name('comunicacoes');
 
+            // Anexos do processo (documentos e fotos da vistoria) para quem consulta (SEDUR, 22/10).
+            Route::get('{viabilityRequest}/anexos/documento/{documento}', [ProcessoAnexoController::class, 'documento'])->name('anexos.documento');
+            Route::get('{viabilityRequest}/anexos/vistoria/{anexo}', [ProcessoAnexoController::class, 'vistoria'])->name('anexos.vistoria');
+
             Route::get('{viabilityRequest}', [ProcessoController::class, 'show'])->name('show');
         });
 
@@ -789,6 +795,8 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::post('ficha/gerar-resumo', [AnalysisRecordController::class, 'gerarResumo'])->name('ficha.gerar-resumo');
             Route::get('ficha/diff', [AnalysisRecordController::class, 'diff'])->name('ficha.diff');
             Route::get('precedentes', [PrecedenteController::class, 'show'])->name('precedentes');
+            // Código CNAE fora da lista oficial na alteração de atividade: o analista troca por um oficial.
+            Route::patch('cnae-invalido', [CnaeInvalidoController::class, 'corrigir'])->name('cnae-invalido.corrigir');
             // Zona e via escolhidas na ficha: prévia do que o motor decidiria e gravação com justificativa.
             Route::middleware('permission:editar-zona-via')->group(function () {
                 Route::post('zona-via/previa', [ZonaViaController::class, 'previa'])->name('zona-via.previa');
