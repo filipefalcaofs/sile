@@ -20,6 +20,8 @@ interface AppShellProps {
     variant?: SidebarVariant;
     collapsibleGroups?: boolean;
     headerToolbar?: ReactNode;
+    /** Marca no cabeçalho, ao lado do botão do menu. */
+    headerMarca?: ReactNode;
     children: ReactNode;
 }
 
@@ -59,6 +61,7 @@ function ShellContent({
     variant,
     collapsibleGroups,
     headerToolbar,
+    headerMarca,
     children,
 }: AppShellProps) {
     const { isExpanded, isHovered, isMobileOpen } = useSidebar();
@@ -90,6 +93,7 @@ function ShellContent({
                         logoutHref={logoutHref ?? '/portal/logout'}
                         accountHref={accountHref ?? '/portal/conta/perfil'}
                         toolbar={headerToolbar}
+                        marca={headerMarca}
                     />
                 </div>
                 <main id="conteudo" tabIndex={-1} className="w-full min-w-0 p-4 outline-none md:p-6">
