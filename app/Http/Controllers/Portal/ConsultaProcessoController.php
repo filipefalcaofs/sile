@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ViabilityRequest;
 use App\Services\Legado\LegadoIndisponivelException;
 use App\Services\Solicitacao\ConsultaProcessoLegado;
+use App\Services\Solicitacao\ConsultaProcessoPorCnpj;
 use App\Services\Solicitacao\LocalizadorProcesso;
 use App\Services\Solicitacao\TimelineSolicitacao;
 use App\Support\Audit\AuditService;
@@ -30,12 +31,35 @@ class ConsultaProcessoController extends Controller
         private TimelineSolicitacao $timeline,
         private AuditService $audit,
         private ConsultaProcessoLegado $legado,
+        private ConsultaProcessoPorCnpj $porCnpj,
     ) {}
 
     public function __invoke(Request $request): Response
     {
         $numero = $request->query('numero');
         $numero = is_string($numero) && trim($numero) !== '' ? trim($numero) : null;
+        $cnpj = ConsultaProcessoPorCnpj::cnpj($numero);
+
+        // CNPJ: lista os processos da empresa nos dois sistemas.
+        if ($cnpj !== null) {
+            $resultado = $this->porCnpj->listar($cnpj);
+            $this->audit->log(
+                'solicitacoes',
+                'consulta-processo-cnpj',
+                'Consulta dos processos de um CNPJ no portal',
+                properties: ['cnpj' => $cnpj, 'itens' => count($resultado['lista'])],
+            );
+
+            return Inertia::render('portal/consulta/index', [
+                'numero' => $numero,
+                'encontrado' => $resultado['lista'] !== [],
+                'legado_indisponivel' => $resultado['legado_indisponivel'],
+                'processo' => null,
+                'timeline' => null,
+                'lista' => $resultado['lista'] === [] ? null : $resultado['lista'],
+            ]);
+        }
+
         $processo = $this->localizador->localizar($numero);
 
         if ($processo !== null) {
@@ -76,6 +100,7 @@ class ConsultaProcessoController extends Controller
             'legado_indisponivel' => $legadoIndisponivel,
             'processo' => $processo !== null ? $this->resumo($request, $processo) : $legado['processo'] ?? null,
             'timeline' => $processo !== null ? $this->timeline->build($processo, publico: true) : $legado['timeline'] ?? null,
+            'lista' => null,
         ]);
     }
 

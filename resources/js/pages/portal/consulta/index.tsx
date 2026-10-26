@@ -32,6 +32,15 @@ interface ConsultaProps {
     legado_indisponivel?: boolean;
     processo: Processo | null;
     timeline: Timeline | null;
+    lista?: ItemLista[] | null;
+}
+
+interface ItemLista {
+    origem: 'viabiliza' | 'legado';
+    numero: string;
+    empresa: string | null;
+    situacao: string;
+    data: string | null;
 }
 
 function Dado({ rotulo, valor }: { rotulo: string; valor: string | null | undefined }) {
@@ -43,7 +52,14 @@ function Dado({ rotulo, valor }: { rotulo: string; valor: string | null | undefi
     );
 }
 
-export default function ConsultaProcesso({ numero, encontrado, legado_indisponivel: legadoIndisponivel = false, processo, timeline }: ConsultaProps) {
+export default function ConsultaProcesso({
+    numero,
+    encontrado,
+    legado_indisponivel: legadoIndisponivel = false,
+    processo,
+    timeline,
+    lista = null,
+}: ConsultaProps) {
     const [termo, setTermo] = useState(numero ?? '');
     const [buscando, setBuscando] = useState(false);
 
@@ -70,14 +86,14 @@ export default function ConsultaProcesso({ numero, encontrado, legado_indisponiv
                 <CardContent>
                     <form onSubmit={consultar} className="flex flex-col gap-3 sm:flex-row sm:items-end" role="search">
                         <div className="w-full sm:max-w-md">
-                            <Label htmlFor="numero-processo">Número do processo, da viabilidade ou do BAP</Label>
+                            <Label htmlFor="numero-processo">CNPJ ou número do processo, da viabilidade ou do BAP</Label>
                             <Input
                                 id="numero-processo"
                                 name="numero"
                                 autoComplete="off"
                                 value={termo}
                                 onChange={(event) => setTermo(event.target.value)}
-                                hint="Exemplos: processo 2026.000123 · viabilidade 2104040 · BAP BAP2600012345 · sistema anterior 0000123456-20230101/0001"
+                                hint="Exemplos: CNPJ 57.461.624/0001-23 · processo 2026.000123 · viabilidade 2104040 · BAP BAP2600012345 · sistema anterior 0000123456-20230101/0001"
                             />
                         </div>
                         <Button type="submit" className="min-h-11" loading={buscando} disabled={termo.trim() === ''}>
@@ -101,8 +117,45 @@ export default function ConsultaProcesso({ numero, encontrado, legado_indisponiv
                     <Alert
                         variant="warning"
                         title="Processo não encontrado"
-                        message="Confira o número. A consulta aceita o número do processo, o da viabilidade (TVL) ou o do BAP."
+                        message="Confira o número. A consulta aceita o CNPJ da empresa, o número do processo, o da viabilidade (TVL) ou o do BAP."
                     />
+                )}
+
+                {lista && lista.length > 0 && (
+                    <Card>
+                        <CardHeader
+                            title={`${lista.length} ${lista.length === 1 ? 'processo encontrado' : 'processos encontrados'} para o CNPJ`}
+                            description="Processos da empresa no Viabiliza e no sistema anterior (Simplifica). Abra um para ver a situação e a tramitação."
+                        />
+                        <CardContent flush>
+                            <ul className="divide-y divide-gray-100 dark:divide-gray-800">
+                                {lista.map((item) => (
+                                    <li key={`${item.origem}-${item.numero}`}>
+                                        <Link
+                                            href={`/portal/consulta?numero=${encodeURIComponent(item.numero)}`}
+                                            className="flex flex-wrap items-center justify-between gap-3 px-4 py-4 transition hover:bg-gray-50 dark:hover:bg-white/[0.02] sm:px-6"
+                                        >
+                                            <div className="min-w-0">
+                                                <p className="font-medium text-gray-800 dark:text-white/90">{item.numero}</p>
+                                                <p className="truncate text-theme-xs text-gray-500 dark:text-gray-400">
+                                                    {[item.empresa, item.data ? formatDateTime(item.data) : null].filter(Boolean).join(' · ') || '—'}
+                                                </p>
+                                            </div>
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <Badge size="sm" color={item.origem === 'legado' ? 'info' : 'primary'} variant="light">
+                                                    {item.origem === 'legado' ? 'Sistema anterior' : 'Viabiliza'}
+                                                </Badge>
+                                                <Badge size="sm" color="light">
+                                                    {item.situacao}
+                                                </Badge>
+                                                <ArrowRightIcon className="size-4 text-gray-400" aria-hidden="true" />
+                                            </div>
+                                        </Link>
+                                    </li>
+                                ))}
+                            </ul>
+                        </CardContent>
+                    </Card>
                 )}
 
                 {processo && timeline && (
