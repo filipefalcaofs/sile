@@ -34,7 +34,7 @@ class ApiIntegracaoControllerTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('gestao/config-apis/index')
                 ->where('aba', 'regin')
-                ->has('abas', 10)
+                ->has('abas', 11)
                 ->where('abas.0.nome', 'REGIN')
                 ->where('abas.1.nome', 'Inscrição imobiliária')
                 ->where('abas.2.nome', 'CPF e CNPJ')

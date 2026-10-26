@@ -5,8 +5,11 @@ namespace App\Http\Controllers\Gestao;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Gestao\UpdateApiIntegracaoRequest;
 use App\Models\Parameter;
+use App\Services\Legado\LegadoIndisponivelException;
+use App\Services\Legado\LegadoViabilidadeClient;
 use App\Support\ApiIntegracaoCatalog;
 use App\Support\Audit\AuditService;
+use App\Support\Settings;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -57,6 +60,36 @@ class ApiIntegracaoController extends Controller
         return redirect()
             ->route('gestao.config-apis.edit', ['aba' => $aba])
             ->with('status', 'Configuração de '.$definicao['nome'].' atualizada.');
+    }
+
+    /**
+     * Teste de conexão da API do Simplifica: uma consulta de leitura com a URL
+     * e a credencial gravadas. Falha aparece como falha.
+     */
+    public function testarLegado(LegadoViabilidadeClient $legado): RedirectResponse
+    {
+        $url = (string) Settings::get('integrations.legado_api.base_url', '');
+
+        try {
+            $legado->testarConexao();
+            $erro = null;
+        } catch (LegadoIndisponivelException $e) {
+            $erro = $e->getMessage();
+        }
+
+        $this->audit->log(
+            'config-apis',
+            'testar-legado',
+            'Teste de conexão da API do Simplifica (legado)',
+            ['url' => $url],
+            result: $erro === null ? 'sucesso' : 'falha',
+        );
+
+        if ($erro !== null) {
+            return back()->withErrors(['legado_connection' => $erro]);
+        }
+
+        return back()->with('status', 'Conexão com a API do Simplifica funcionando.');
     }
 
     /**

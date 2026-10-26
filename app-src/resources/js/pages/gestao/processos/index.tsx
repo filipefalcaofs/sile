@@ -2,6 +2,7 @@ import FieldError from '@/components/form/field-error';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import type { FormEvent, ReactNode } from 'react';
 import { useEffect, useState } from 'react';
+import ProcessosSimplifica from '@/components/analise/processos-simplifica';
 import { mascararDocumento } from '@/components/analise/processo-filtros';
 import { rotuloSemSla, type ProcessoItem } from '@/components/analise/processo-ui';
 import PageHeader from '@/components/app/page-header';
@@ -710,6 +711,8 @@ export default function ConsultaProcessos({
                     )}
                 </div>
             </section>
+
+            <ProcessosSimplifica filtros={filtros} />
         </>
     );
 }

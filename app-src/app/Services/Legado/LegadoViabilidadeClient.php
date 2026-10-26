@@ -2,8 +2,10 @@
 
 namespace App\Services\Legado;
 
+use App\Support\Settings;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
 /**
@@ -74,7 +76,18 @@ class LegadoViabilidadeClient
      */
     public function processosPorDocumento(string $documento): array
     {
-        $response = $this->enviar('/processos', ['documento' => preg_replace('/\D/', '', $documento) ?? '']);
+        return $this->processosPorChave('documento', preg_replace('/\D/', '', $documento) ?? '');
+    }
+
+    /**
+     * Lista de processos do sistema anterior por uma das chaves da API:
+     * numero_processo, inscricao, documento ou numero_tvl.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function processosPorChave(string $chave, string $valor): array
+    {
+        $response = $this->enviar('/processos', [$chave => $valor]);
 
         if ($response->status() === 404) {
             return [];
@@ -125,19 +138,120 @@ class LegadoViabilidadeClient
     }
 
     /**
+     * Consulta de leitura mínima para o teste de conexão da tela de APIs: 401,
+     * 403 e erro de rede viram LegadoIndisponivelException; "não achou" é ok.
+     *
+     * @throws LegadoIndisponivelException
+     */
+    public function testarConexao(): void
+    {
+        $this->processosPorChave('numero_tvl', '0');
+    }
+
+    /**
      * @param  array<string, string>  $query
      */
     private function enviar(string $caminho, array $query = []): Response
     {
-        $baseUrl = trim((string) config('viabiliza.integrations.legado_api.base_url'));
-        $token = trim((string) config('viabiliza.integrations.legado_api.token'));
+        $base = $this->base();
+        $url = $base.$caminho;
+        $resposta = $this->tentar($url, $query, $this->credencial($base));
 
-        if ($baseUrl === '' || $token === '') {
+        if ($resposta->status() === 401 && $this->usaSessao()) {
+            Cache::forget($this->chaveDaSessao($base));
+            $resposta = $this->tentar($url, $query, $this->credencial($base));
+        }
+
+        return $resposta;
+    }
+
+    /**
+     * Base já com /v1: a URL da tela (ou do .env) vale com ou sem o sufixo.
+     */
+    private function base(): string
+    {
+        $baseUrl = trim((string) Settings::get('integrations.legado_api.base_url', config('viabiliza.integrations.legado_api.base_url')));
+
+        if ($baseUrl === '') {
             throw new LegadoIndisponivelException('API legada de viabilidade não configurada.');
         }
 
         $base = rtrim($baseUrl, '/');
-        $url = (str_ends_with($base, '/v1') ? $base : $base.'/v1').$caminho;
+
+        return str_ends_with($base, '/v1') ? $base : $base.'/v1';
+    }
+
+    private function token(): string
+    {
+        return trim((string) Settings::get('integrations.legado_api.token', config('viabiliza.integrations.legado_api.token')));
+    }
+
+    private function usuario(): string
+    {
+        return trim((string) Settings::get('integrations.legado_api.usuario', ''));
+    }
+
+    private function senha(): string
+    {
+        return (string) Settings::get('integrations.legado_api.senha', '');
+    }
+
+    private function usaSessao(): bool
+    {
+        return $this->token() === '' && $this->usuario() !== '' && $this->senha() !== '';
+    }
+
+    /**
+     * Token fixo quando há um; senão a sessão aberta com usuário e senha
+     * (guardada em cache, o token da API dura 8 horas).
+     */
+    private function credencial(string $base): string
+    {
+        $token = $this->token();
+
+        if ($token !== '') {
+            return $token;
+        }
+
+        if (! $this->usaSessao()) {
+            throw new LegadoIndisponivelException('API legada de viabilidade sem token nem usuário e senha configurados.');
+        }
+
+        return Cache::remember($this->chaveDaSessao($base), now()->addHours(7), fn (): string => $this->entrar($base));
+    }
+
+    private function chaveDaSessao(string $base): string
+    {
+        return 'legado.sessao.'.hash('sha256', $base.'|'.$this->usuario().'|'.$this->senha());
+    }
+
+    private function entrar(string $base): string
+    {
+        try {
+            $response = Http::timeout((int) config('viabiliza.integrations.legado_api.timeout', 8))
+                ->connectTimeout(4)
+                ->acceptJson()
+                ->post($base.'/auth', ['identificador' => $this->usuario(), 'senha' => $this->senha()]);
+        } catch (ConnectionException) {
+            throw new LegadoIndisponivelException('API legada de viabilidade indisponível.');
+        }
+
+        $this->validar($response);
+
+        $token = $response->json('token');
+
+        if (! is_string($token) || $token === '') {
+            throw new LegadoIndisponivelException('API legada de viabilidade não devolveu o token de acesso.');
+        }
+
+        return $token;
+    }
+
+    /**
+     * @param  array<string, string>  $query
+     */
+    private function tentar(string $url, array $query, string $token): Response
+    {
         $ultima = null;
 
         for ($tentativa = 1; $tentativa <= self::TENTATIVAS; $tentativa++) {
