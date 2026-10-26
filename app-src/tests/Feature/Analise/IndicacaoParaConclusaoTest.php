@@ -57,6 +57,7 @@ class IndicacaoParaConclusaoTest extends TestCase
         $analista = $this->terceirizado($setor);
         $coordenador = User::factory()->gestor()->withAcceptedLgpdTerm()->create();
         $processo = $this->processoEmAnalise($setor, $analista);
+        $this->fichaFinalizadaDe($processo, $analista);
 
         $this->actingAs($analista, 'gestao')
             ->post("/gestao/processos/{$processo->id}/status-analise", [
@@ -76,6 +77,7 @@ class IndicacaoParaConclusaoTest extends TestCase
         $setor = Sector::factory()->create();
         $analista = $this->terceirizado($setor);
         $processo = $this->processoEmAnalise($setor, $analista);
+        $this->fichaFinalizadaDe($processo, $analista);
 
         $this->actingAs($analista, 'gestao')
             ->post("/gestao/processos/{$processo->id}/status-analise", ['status' => 'para_conclusao'])
@@ -116,6 +118,7 @@ class IndicacaoParaConclusaoTest extends TestCase
         $semIndicacao = $this->processoEmAnalise($setor, $analista);
 
         foreach ([$processo, $semIndicacao] as $alvo) {
+            $this->fichaFinalizadaDe($alvo, $analista);
             $this->actingAs($analista, 'gestao')->post("/gestao/processos/{$alvo->id}/status-analise", [
                 'status' => 'para_conclusao',
                 'indicado_user_id' => $alvo->is($processo) ? $coordenador->id : null,
@@ -147,5 +150,17 @@ class IndicacaoParaConclusaoTest extends TestCase
                 $this->assertContains($coordenador->id, $ids);
                 $this->assertNotContains($colega->id, $ids);
             });
+    }
+
+    /**
+     * Encaminhar à chefia exige a ficha finalizada de quem encaminha (SEDUR, 26/10/2026).
+     */
+    private function fichaFinalizadaDe(ViabilityRequest $processo, User $analista): void
+    {
+        AnalysisRecord::factory()->finalizada()->create([
+            'viability_request_id' => $processo->id,
+            'revision' => ((int) $processo->analysisRecords()->max('revision')) + 1,
+            'analyst_user_id' => $analista->id,
+        ]);
     }
 }

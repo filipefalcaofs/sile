@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Gestao;
 
+use App\Enums\AnalysisRecordStatus;
 use App\Enums\AnalysisStatus;
 use App\Enums\ConclusionOutcome;
 use App\Enums\ViabilityRequestStatus;
@@ -425,6 +426,13 @@ class ProcessoController extends Controller
             return back()->with('error', 'Transição de situação da análise não permitida.');
         }
 
+        // Encaminhar à chefia só com a ficha de quem encaminha finalizada (regra
+        // confirmada pela SEDUR em 26/10/2026). Forçar a transição é correção
+        // administrativa e não passa por aqui.
+        if ($to === AnalysisStatus::ParaConclusao && ! $force && ! $this->fichaFinalizadaPor($viabilityRequest, $request->user())) {
+            return back()->with('error', 'Finalize a sua ficha de análise antes de encaminhar à chefia.');
+        }
+
         if ($to === AnalysisStatus::Encaminhado) {
             $analista = User::query()->findOrFail($request->integer('user_id'));
             $pertence = $analista->sectors()->where('sectors.id', $request->integer('sector_id'))->exists();
@@ -450,10 +458,12 @@ class ProcessoController extends Controller
         }
 
         $motivo = $request->string('motivo')->toString() ?: null;
+        $indicadoNome = $to === AnalysisStatus::ParaConclusao && $request->integer('indicado_user_id') > 0
+            ? User::query()->find($request->integer('indicado_user_id'))?->name
+            : null;
 
-        if ($to === AnalysisStatus::ParaConclusao && $motivo === null && $request->integer('indicado_user_id') > 0) {
-            $indicado = User::query()->find($request->integer('indicado_user_id'));
-            $motivo = $indicado !== null ? "Indicado para concluir: {$indicado->name}" : null;
+        if ($motivo === null && $indicadoNome !== null) {
+            $motivo = "Indicado para concluir: {$indicadoNome}";
         }
 
         try {
@@ -468,8 +478,8 @@ class ProcessoController extends Controller
             return back()->with('error', $e->getMessage());
         }
 
-        if ($to === AnalysisStatus::ParaConclusao) {
-            app(AnalysisRecordService::class)->guardarParaConclusao($viabilityRequest, $request->user());
+        if ($to === AnalysisStatus::ParaConclusao && $this->fichaFinalizadaPor($viabilityRequest, $request->user())) {
+            app(AnalysisRecordService::class)->guardarParaConclusao($viabilityRequest, $request->user(), $indicadoNome);
         }
 
         if ($from === AnalysisStatus::ParaConclusao && $to !== AnalysisStatus::Encaminhado) {
@@ -612,5 +622,17 @@ class ProcessoController extends Controller
     private function servicoOptions(): array
     {
         return app(ServicoNomenclaturaResolver::class)->opcoesDeTipo();
+    }
+
+    /**
+     * A última ficha de análise do usuário no processo está finalizada.
+     */
+    private function fichaFinalizadaPor(ViabilityRequest $viabilityRequest, User $usuario): bool
+    {
+        return $viabilityRequest->analysisRecords()
+            ->where('analyst_user_id', $usuario->id)
+            ->where('status', '!=', AnalysisRecordStatus::Substituida->value)
+            ->orderByDesc('revision')
+            ->first()?->status === AnalysisRecordStatus::Finalizada;
     }
 }

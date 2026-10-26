@@ -225,8 +225,10 @@ class FichaPorAnalistaTest extends TestCase
         $this->assertSame(1, $processo->analysisRecords()->count());
     }
 
-    public function test_nova_revisao_pela_rota_usa_a_ficha_de_quem_pede(): void
+    public function test_nova_revisao_pela_rota_parte_da_ficha_finalizada_recebida(): void
     {
+        // Regra confirmada pela SEDUR em 26/10/2026: quem recebe usa a ficha
+        // finalizada anterior como base da própria ficha.
         $processo = $this->processoComBaseDoMotor();
         $a = $this->terceirizado();
         $b = $this->terceirizado();
@@ -237,7 +239,10 @@ class FichaPorAnalistaTest extends TestCase
         $this->actingAs($b, 'gestao')
             ->postJson("/gestao/processos/{$processo->id}/ficha/nova-revisao")
             ->assertOk()
-            ->assertJsonPath('ficha.parecer', null);
+            ->assertJsonPath('ficha.parecer', 'Parecer de A')
+            ->assertJsonPath('ficha.editavel', true);
+
+        $this->assertSame('Parecer de A', $daA->fresh()->parecer);
     }
 
     public function test_ir_para_conclusao_deixa_copia_sem_dono_para_quem_conclui(): void
@@ -271,34 +276,34 @@ class FichaPorAnalistaTest extends TestCase
         $this->fichas()->autosave($this->fichas()->current($processo, $a), $this->preenchimento('Parecer de A'), $a);
         $copia = $this->fichas()->guardarParaConclusao($processo, $a);
 
-        $outro = $this->fichas()->novaRevisao($processo, $this->terceirizado());
+        $terceiro = $this->terceirizado();
+        $outro = $this->fichas()->novaRevisao($processo, $terceiro);
 
         $this->assertNotSame($copia->id, $outro->id);
-        $this->assertNull($outro->parecer);
-        $this->assertNull($outro->based_on_record_id);
+        $this->assertSame($terceiro->id, $outro->analyst_user_id);
+        $this->assertSame($copia->based_on_record_id, $outro->based_on_record_id);
+        $this->assertNull($copia->fresh()->analyst_user_id);
     }
 
-    public function test_com_a_chave_desligada_quem_conclui_parte_da_base_do_motor(): void
+    public function test_quem_conclui_sem_copia_de_conclusao_parte_da_ficha_finalizada(): void
     {
-        config(['viabiliza.analise.ficha.conclusao_parte_da_ficha_do_analista' => false]);
-
+        // A chave provisória da HU.183 (começar da base do motor) saiu: a SEDUR
+        // confirmou em 26/10/2026 que quem recebe parte da ficha anterior.
         $processo = $this->processoComBaseDoMotor();
         $a = $this->terceirizado();
 
         $daA = $this->fichas()->autosave($this->fichas()->current($processo, $a), $this->preenchimento('Parecer de A'), $a);
-
-        $this->fichas()->guardarParaConclusao($processo, $a);
-
-        $this->assertSame(AnalysisRecordStatus::Finalizada, $daA->fresh()->status);
+        $daA = $this->fichas()->finalizar($daA, $a);
 
         $chefia = $this->servidor();
         $this->assertSame($daA->id, $this->fichas()->current($processo, $chefia)->id);
 
         $daChefia = $this->fichas()->novaRevisao($processo, $chefia);
 
-        $this->assertNull($daChefia->parecer);
-        $this->assertNull($daChefia->based_on_record_id);
-        $this->assertSame('deferida', $daChefia->per_cnae[0]['status_escolhido']);
+        $this->assertSame($chefia->id, $daChefia->analyst_user_id);
+        $this->assertSame('Parecer de A', $daChefia->parecer);
+        $this->assertSame($daA->id, $daChefia->based_on_record_id);
+        $this->assertSame(AnalysisRecordStatus::Finalizada, $daA->fresh()->status);
     }
 
     public function test_abrir_a_ficha_de_outro_analista_mostra_so_para_leitura_sem_criar_ficha(): void

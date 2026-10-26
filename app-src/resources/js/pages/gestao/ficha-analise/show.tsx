@@ -760,6 +760,8 @@ export default function FichaAnaliseShow({
         'inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm text-gray-700 transition hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-brand-500 dark:text-gray-400 dark:hover:bg-white/[0.05] dark:hover:text-gray-300';
 
     const editavel = ficha.editavel;
+    // Encaminhar à chefia só com a própria ficha finalizada (SEDUR, 26/10/2026).
+    const fichaFinalizadaPropria = ficha.status === 'finalizada' && !ficha.de_outro_analista;
 
     const [perCnae, setPerCnae] = useState<PerCnae[]>(() => ficha.per_cnae ?? []);
     const [deferirTodos, setDeferirTodos] = useState(false);
@@ -2697,11 +2699,25 @@ export default function FichaAnaliseShow({
                         ]}
                     />
                 </div>
+                {!fichaFinalizadaPropria && (
+                    <div className="mt-4 flex items-start gap-3 rounded-xl border border-warning-200 bg-warning-50 p-3 dark:border-warning-500/30 dark:bg-warning-500/15">
+                        <AlertIcon className="size-5 shrink-0 fill-current text-warning-500" />
+                        <p className="text-theme-sm text-gray-600 dark:text-gray-300">
+                            Finalize a sua ficha de análise antes de encaminhar à chefia. A ficha finalizada fica
+                            registrada na tramitação.
+                        </p>
+                    </div>
+                )}
                 <div className="mt-6 flex justify-end gap-3">
                     <Button size="sm" variant="outline" onClick={() => setShowEncaminharChefia(false)}>
                         Cancelar
                     </Button>
-                    <Button size="sm" onClick={encaminharParaChefia} loading={encaminhandoChefia}>
+                    <Button
+                        size="sm"
+                        onClick={encaminharParaChefia}
+                        loading={encaminhandoChefia}
+                        disabled={!fichaFinalizadaPropria}
+                    >
                         Encaminhar
                     </Button>
                 </div>

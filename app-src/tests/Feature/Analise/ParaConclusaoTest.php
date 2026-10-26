@@ -66,6 +66,7 @@ class ParaConclusaoTest extends TestCase
         $servidor = User::factory()->analistaServidor()->withAcceptedLgpdTerm()->create();
         $servidor->sectors()->attach($setor);
         $processo = $this->processoEmAnalise($setor, $servidor);
+        $this->fichaFinalizadaDe($processo, $servidor);
 
         $this->actingAs($servidor, 'gestao')
             ->from("/gestao/processos/{$processo->id}/ficha")
@@ -84,6 +85,7 @@ class ParaConclusaoTest extends TestCase
         $servidor = User::factory()->analistaServidor()->withAcceptedLgpdTerm()->create();
         $servidor->sectors()->attach($setor);
         $processo = $this->processoEmAnalise($setor, $servidor);
+        $this->fichaFinalizadaDe($processo, $servidor);
 
         $this->actingAs($servidor, 'gestao')
             ->post("/gestao/processos/{$processo->id}/status-analise", ['status' => 'para_conclusao'])
@@ -398,5 +400,17 @@ class ParaConclusaoTest extends TestCase
             ->assertSessionHasErrors(['decisao' => 'Processo em Para conclusão: distribua-o antes. Só quem o recebeu pode concluí-lo.']);
 
         $this->assertSame(ViabilityRequestStatus::EmAnalise, $processo->fresh()->status);
+    }
+
+    /**
+     * Encaminhar à chefia exige a ficha finalizada de quem encaminha (SEDUR, 26/10/2026).
+     */
+    private function fichaFinalizadaDe(ViabilityRequest $processo, User $analista): void
+    {
+        AnalysisRecord::factory()->finalizada()->create([
+            'viability_request_id' => $processo->id,
+            'revision' => ((int) $processo->analysisRecords()->max('revision')) + 1,
+            'analyst_user_id' => $analista->id,
+        ]);
     }
 }

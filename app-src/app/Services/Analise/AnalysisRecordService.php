@@ -53,11 +53,13 @@ class AnalysisRecordService
     ];
 
     /**
-     * Ficha que o usuário vê ao abrir (HU.183): a última ficha dele no processo;
-     * sem ficha própria, a base disponível para ele; sem base, a última ficha do
-     * processo, que é de outro analista e abre só para leitura. Abrir não cria
-     * ficha: a dele nasce em novaRevisao. Sem usuário: a revisão de maior número
-     * do processo, para rotinas internas.
+     * Ficha que o usuário vê ao abrir (HU.183): a última ficha dele no processo.
+     * Sem ficha própria: a cópia de conclusão, se ele conclui; senão a última
+     * ficha finalizada do processo, só para leitura, que é a ficha recebida;
+     * senão a base do motor sem dono; senão a última ficha do processo, de outro
+     * analista, só para leitura. Abrir não cria ficha: a dele nasce em
+     * novaRevisao. Sem usuário: a revisão de maior número do processo, para
+     * rotinas internas.
      */
     public function current(ViabilityRequest $request, ?User $usuario = null): AnalysisRecord
     {
@@ -67,7 +69,23 @@ class AnalysisRecordService
             return $vigenteDoProcesso;
         }
 
-        return $this->ultimaDoAnalista($request, $usuario) ?? $this->baseDisponivel($request, $usuario) ?? $vigenteDoProcesso;
+        return $this->ultimaDoAnalista($request, $usuario)
+            ?? $this->copiaDeConclusao($request, $usuario)
+            ?? $this->ultimaFinalizada($request)
+            ?? $this->baseDoMotorSemDono($request)
+            ?? $vigenteDoProcesso;
+    }
+
+    /**
+     * A ficha finalizada mais recente do processo: a ficha recebida por quem
+     * assume o processo depois de outro analista.
+     */
+    private function ultimaFinalizada(ViabilityRequest $request): ?AnalysisRecord
+    {
+        return $request->analysisRecords()
+            ->where('status', AnalysisRecordStatus::Finalizada->value)
+            ->orderByDesc('revision')
+            ->first();
     }
 
     private function ultimaDoAnalista(ViabilityRequest $request, User $usuario): ?AnalysisRecord
@@ -253,12 +271,12 @@ class AnalysisRecordService
     }
 
     /**
-     * Ao ir para conclusão, a ficha de quem encaminhou é finalizada. Com a chave
-     * `viabiliza.analise.ficha.conclusao_parte_da_ficha_do_analista` ligada,
-     * quem conclui recebe uma cópia sem dono dessa ficha; desligada, recebe a
-     * base do motor ao abrir. Devolve a cópia ou, sem ela, a ficha finalizada.
+     * Ao ir para conclusão, a ficha finalizada de quem encaminhou fica registrada
+     * na tramitação (evento ficha-encaminhada) e quem conclui recebe uma cópia
+     * sem dono dela, que vira a sua ficha ao salvar. Rascunho é finalizado aqui
+     * só por segurança: a rota de encaminhamento já exige a ficha finalizada.
      */
-    public function guardarParaConclusao(ViabilityRequest $request, User $ator): AnalysisRecord
+    public function guardarParaConclusao(ViabilityRequest $request, User $ator, ?string $indicado = null): AnalysisRecord
     {
         $record = $this->current($request, $ator);
 
@@ -266,9 +284,18 @@ class AnalysisRecordService
             $record = $this->finalizar($record, $ator);
         }
 
-        if (! config('viabiliza.analise.ficha.conclusao_parte_da_ficha_do_analista', true)) {
-            return $record;
-        }
+        $this->audit->log(
+            logName: 'analise',
+            event: 'ficha-encaminhada',
+            description: "Ficha de análise do processo #{$request->id} encaminhada à chefia (revisão {$record->revision})",
+            properties: [
+                'viability_request_id' => $request->id,
+                'revision' => $record->revision,
+                'indicado' => $indicado,
+            ],
+            subject: $record,
+            result: 'sucesso',
+        );
 
         return $this->copiar($request, $record, dono: null, evento: 'ficha-copia-conclusao');
     }
@@ -276,8 +303,11 @@ class AnalysisRecordService
     /**
      * Abre a ficha do analista (HU.183): copia a última ficha DELE, que fica
      * intacta (append-only). Com rascunho aberto, devolve o rascunho em vez de
-     * abrir outro. Sem ficha própria, devolve a base disponível ou cria a base do
-     * motor. Sem usuário (rotinas internas), copia a última revisão do processo.
+     * abrir outro. Sem ficha própria, parte da ficha recebida: a cópia de
+     * conclusão, para quem conclui, ou uma cópia da última ficha finalizada do
+     * processo (regra confirmada pela SEDUR em 26/10/2026); sem ficha
+     * finalizada, a base do motor. Sem usuário (rotinas internas), copia a última
+     * revisão do processo.
      */
     public function novaRevisao(ViabilityRequest $request, ?User $ator = null): AnalysisRecord
     {
@@ -292,7 +322,12 @@ class AnalysisRecordService
         $propria = $this->ultimaDoAnalista($request, $ator);
 
         if ($propria === null) {
-            return $this->baseDisponivel($request, $ator) ?? $this->criarBaseDoMotor($request);
+            $recebida = $this->ultimaFinalizada($request);
+
+            return $this->copiaDeConclusao($request, $ator)
+                ?? ($recebida === null ? null : $this->copiar($request, $recebida, dono: $ator->id, evento: 'ficha-nova-revisao'))
+                ?? $this->baseDoMotorSemDono($request)
+                ?? $this->criarBaseDoMotor($request);
         }
 
         if ($propria->status === AnalysisRecordStatus::Rascunho) {
@@ -345,19 +380,33 @@ class AnalysisRecordService
     }
 
     /**
-     * Base sem dono que serve a $usuario: a cópia de conclusão só para quem
-     * conclui a análise; a base do motor para qualquer analista.
+     * Cópia sem dono da ficha encaminhada à chefia: só serve a quem conclui.
      */
-    private function baseDisponivel(ViabilityRequest $request, User $usuario): ?AnalysisRecord
+    private function copiaDeConclusao(ViabilityRequest $request, User $usuario): ?AnalysisRecord
     {
-        $podeConcluir = $usuario->can('concluir-analise');
+        if (! $usuario->can('concluir-analise')) {
+            return null;
+        }
 
         return $request->analysisRecords()
             ->whereNull('analyst_user_id')
+            ->whereNotNull('based_on_record_id')
             ->where('status', AnalysisRecordStatus::Rascunho->value)
             ->orderByDesc('revision')
-            ->get()
-            ->first(fn (AnalysisRecord $base): bool => $base->based_on_record_id === null || $podeConcluir);
+            ->first();
+    }
+
+    /**
+     * Base do motor ainda sem dono: serve a qualquer analista.
+     */
+    private function baseDoMotorSemDono(ViabilityRequest $request): ?AnalysisRecord
+    {
+        return $request->analysisRecords()
+            ->whereNull('analyst_user_id')
+            ->whereNull('based_on_record_id')
+            ->where('status', AnalysisRecordStatus::Rascunho->value)
+            ->orderByDesc('revision')
+            ->first();
     }
 
     /**

@@ -66,9 +66,13 @@ class ParaConclusaoQuemAgeTest extends TestCase
         $analista = $this->servidor($setor);
         $processo = $this->processoEmAnalise($setor, $analista);
 
+        // Encaminhar à chefia exige a ficha finalizada (SEDUR, 26/10/2026).
+        $this->actingAs($analista, 'gestao')->postJson("/gestao/processos/{$processo->id}/ficha/finalizar")->assertOk();
+
         $this->actingAs($analista, 'gestao')
             ->post("/gestao/processos/{$processo->id}/status-analise", ['status' => 'para_conclusao'])
-            ->assertSessionHasNoErrors();
+            ->assertSessionHasNoErrors()
+            ->assertSessionMissing('error');
 
         $revisoes = $processo->analysisRecords()->orderBy('revision')->get();
         $this->assertCount(2, $revisoes);
@@ -85,8 +89,10 @@ class ParaConclusaoQuemAgeTest extends TestCase
         $chefe = $this->servidor($setor);
         $processo = $this->processoEmAnalise($setor, $analista);
 
+        $this->actingAs($analista, 'gestao')->postJson("/gestao/processos/{$processo->id}/ficha/finalizar")->assertOk();
         $this->actingAs($analista, 'gestao')
-            ->post("/gestao/processos/{$processo->id}/status-analise", ['status' => 'para_conclusao']);
+            ->post("/gestao/processos/{$processo->id}/status-analise", ['status' => 'para_conclusao'])
+            ->assertSessionMissing('error');
 
         $this->actingAs($chefe, 'gestao')
             ->patchJson("/gestao/processos/{$processo->id}/ficha", ['parecer' => 'Sugiro vistoria.'])
