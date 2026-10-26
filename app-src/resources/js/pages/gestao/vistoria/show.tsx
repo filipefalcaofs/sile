@@ -132,6 +132,8 @@ interface VistoriaShowProps {
     tiposImovel: Array<{ value: string; label: string }>;
     opcoes: Opcoes;
     anexos: Anexo[];
+    /** Analistas do setor que recebe o processo de volta, para designar ao encaminhar. */
+    analistasDoSetor?: Array<{ id: number; name: string }>;
     /** Consulta a partir da análise: exibe a ficha e bloqueia a edição. */
     somenteLeitura?: boolean;
     /** O processo não tem ficha de vistoria. */
@@ -499,6 +501,7 @@ function VistoriaConteudo({
     tiposImovel,
     opcoes,
     anexos,
+    analistasDoSetor = [],
     somenteLeitura,
 }: VistoriaConteudoProps) {
     const [ficha, setFicha] = useState<Ficha>(fichaInicial);
@@ -517,14 +520,17 @@ function VistoriaConteudo({
         ficha.status === 'concluida' &&
         (ficha.vistoriador_id === auth.user?.id || auth.permissions.includes('distribuir-processos'));
     const [encaminhando, setEncaminhando] = useState(false);
+    const [showEncaminharSetor, setShowEncaminharSetor] = useState(false);
+    const [analistaDesignado, setAnalistaDesignado] = useState('');
 
     function encaminharAoSetor() {
         router.post(
             `/gestao/processos/${processo.id}/vistoria/encaminhar-ao-setor`,
-            {},
+            { analista_id: analistaDesignado === '' ? null : Number(analistaDesignado) },
             {
                 preserveScroll: true,
                 onStart: () => setEncaminhando(true),
+                onSuccess: () => setShowEncaminharSetor(false),
                 onFinish: () => setEncaminhando(false),
             },
         );
@@ -1660,7 +1666,7 @@ function VistoriaConteudo({
                             {editavel ? 'Cancelar' : 'Voltar'}
                         </Link>
                         {podeEncaminharAoSetor && (
-                            <Button onClick={encaminharAoSetor} loading={encaminhando}>
+                            <Button onClick={() => setShowEncaminharSetor(true)}>
                                 Encaminhar para a Caixa do Setor
                             </Button>
                         )}
@@ -1676,6 +1682,30 @@ function VistoriaConteudo({
                 </div>
                 </div>
             </div>
+
+            <ConfirmDialog
+                isOpen={showEncaminharSetor}
+                onClose={() => setShowEncaminharSetor(false)}
+                onConfirm={encaminharAoSetor}
+                title="Encaminhar para a Caixa do Setor"
+                description={
+                    <span className="flex flex-col gap-3 text-left font-normal text-gray-700 dark:text-gray-300">
+                        <span>
+                            Escolha o analista que vai continuar a análise. Sem escolha, o processo volta para distribuição
+                            na Caixa do Setor.
+                        </span>
+                        <Select
+                            value={analistaDesignado}
+                            onChange={setAnalistaDesignado}
+                            placeholder="Sem designar (distribuir depois)"
+                            options={analistasDoSetor.map((analista) => ({ value: String(analista.id), label: analista.name }))}
+                        />
+                    </span>
+                }
+                confirmLabel="Encaminhar"
+                variant="info"
+                processing={encaminhando}
+            />
 
             <ConfirmDialog
                 isOpen={showConcluir}

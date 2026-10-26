@@ -72,7 +72,7 @@ class ParaConclusaoTest extends TestCase
             ->from("/gestao/processos/{$processo->id}/ficha")
             ->post("/gestao/processos/{$processo->id}/status-analise", ['status' => 'para_conclusao', 'voltar_para_caixa' => '1'])
             ->assertRedirect(route('gestao.processos.fila'))
-            ->assertSessionHas('status', fn (string $mensagem): bool => str_contains($mensagem, 'aba Para conclusão'));
+            ->assertSessionHas('status', fn (string $mensagem): bool => str_contains($mensagem, 'aba Analisados'));
 
         $processo->refresh();
         $this->assertSame(AnalysisStatus::ParaConclusao, $processo->analysis_status);
@@ -240,7 +240,7 @@ class ParaConclusaoTest extends TestCase
                 'status' => 'para_conclusao',
                 'encaminhado_para_user_id' => $chefia->id,
             ])
-            ->assertSessionHasErrors(['encaminhado_para_user_id' => 'O processo vai para a aba Para conclusão e é distribuído pelo Apoio: não escolha destinatário.']);
+            ->assertSessionHasErrors(['encaminhado_para_user_id' => 'O processo vai para a aba Analisados e é distribuído pelo Apoio: não escolha destinatário.']);
 
         $processo->refresh();
         $this->assertSame(AnalysisStatus::EmAnalise, $processo->analysis_status);
@@ -428,7 +428,7 @@ class ParaConclusaoTest extends TestCase
 
         $this->actingAs($chefia, 'gestao')
             ->post("/gestao/processos/{$processo->id}/conclusao-analise", ['resultado' => 'desativado'])
-            ->assertSessionHasErrors(['conclusao' => 'Processo em Para conclusão: distribua-o antes. Só quem o recebeu pode concluí-lo.']);
+            ->assertSessionHasErrors(['conclusao' => 'Processo na aba Analisados: distribua-o antes. Só quem o recebeu pode concluí-lo.']);
 
         $processo->refresh();
         $this->assertSame(ViabilityRequestStatus::EmAnalise, $processo->status);
@@ -442,7 +442,7 @@ class ParaConclusaoTest extends TestCase
 
         $this->actingAs($chefia, 'gestao')
             ->post("/gestao/processos/{$processo->id}/conclusao-analise", ['resultado' => 'desativado'])
-            ->assertSessionHasErrors(['conclusao' => 'Processo em Para conclusão: distribua-o antes. Só quem o recebeu pode concluí-lo.']);
+            ->assertSessionHasErrors(['conclusao' => 'Processo na aba Analisados: distribua-o antes. Só quem o recebeu pode concluí-lo.']);
 
         $this->assertSame(AnalysisStatus::ParaConclusao, $processo->fresh()->analysis_status);
     }
@@ -453,7 +453,7 @@ class ParaConclusaoTest extends TestCase
 
         $this->actingAs($chefia, 'gestao')
             ->post("/gestao/processos/{$processo->id}/decidir", ['decisao' => 'indeferida'])
-            ->assertSessionHasErrors(['decisao' => 'Processo em Para conclusão: distribua-o antes. Só quem o recebeu pode concluí-lo.']);
+            ->assertSessionHasErrors(['decisao' => 'Processo na aba Analisados: distribua-o antes. Só quem o recebeu pode concluí-lo.']);
 
         $this->assertSame(ViabilityRequestStatus::EmAnalise, $processo->fresh()->status);
     }

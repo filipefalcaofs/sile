@@ -562,7 +562,7 @@ class ProcessoController extends Controller
 
         return match ($to) {
             AnalysisStatus::Encaminhado => "Processo encaminhado para {$viabilityRequest->assignedTo?->name} ({$viabilityRequest->sector?->name}). Ele já está na Caixa de entrada dessa pessoa.",
-            AnalysisStatus::ParaConclusao => "Processo enviado para conclusão. Ele está na aba Para conclusão da Caixa do setor {$viabilityRequest->sector?->name}, aguardando distribuição.",
+            AnalysisStatus::ParaConclusao => "Processo enviado para conclusão. Ele está na aba Analisados da Caixa do setor {$viabilityRequest->sector?->name}, aguardando distribuição.",
             default => "Situação da análise atualizada para {$to->label()}.",
         };
     }

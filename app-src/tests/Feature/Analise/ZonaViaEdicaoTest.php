@@ -18,7 +18,7 @@ use Tests\TestCase;
 /**
  * Edição manual da zona e da via na ficha de análise: quem tem a permissão no
  * perfil escolhe entre as zonas e vias da LOUOS, vê o que muda antes de
- * confirmar e deixa justificativa, tramitação e log de alteração.
+ * confirmar e deixa tramitação e log de alteração.
  */
 class ZonaViaEdicaoTest extends TestCase
 {
@@ -61,44 +61,13 @@ class ZonaViaEdicaoTest extends TestCase
         return $processo;
     }
 
-    public function test_quem_nao_tem_a_permissao_nao_previsualiza_nem_altera(): void
+    public function test_quem_nao_tem_a_permissao_nao_altera(): void
     {
         $processo = $this->processo();
         $usuario = $this->analistaSemPermissao();
-        $dados = ['zona' => 'ZCMe', 'via' => 'VL', 'justificativa' => 'Ajuste.'];
+        $dados = ['zona' => 'ZCMe', 'via' => 'VL'];
 
-        $this->actingAs($usuario, 'gestao')->postJson("/gestao/processos/{$processo->id}/zona-via/previa", $dados)->assertForbidden();
         $this->actingAs($usuario, 'gestao')->patchJson("/gestao/processos/{$processo->id}/zona-via", $dados)->assertForbidden();
-
-        $this->assertNull($processo->fresh()->zona_manual);
-    }
-
-    public function test_previa_mostra_antes_e_depois_sem_gravar(): void
-    {
-        $processo = $this->processo();
-
-        $this->actingAs($this->editor(), 'gestao')
-            ->postJson("/gestao/processos/{$processo->id}/zona-via/previa", ['zona' => 'ZCMe', 'via' => 'VL'])
-            ->assertOk()
-            ->assertJsonPath('antes.zona', 'ZPR 3')
-            ->assertJsonPath('antes.via', 'VC I')
-            ->assertJsonPath('depois.zona', 'ZCMe')
-            ->assertJsonPath('depois.via', 'VL')
-            ->assertJsonStructure(['mudancas', 'motor_disponivel']);
-
-        $processo->refresh();
-        $this->assertNull($processo->zona_manual);
-        $this->assertNull($processo->via_manual);
-    }
-
-    public function test_alteracao_exige_justificativa(): void
-    {
-        $processo = $this->processo();
-
-        $this->actingAs($this->editor(), 'gestao')
-            ->patchJson("/gestao/processos/{$processo->id}/zona-via", ['zona' => 'ZCMe', 'via' => 'VL'])
-            ->assertUnprocessable()
-            ->assertJsonValidationErrors('justificativa');
 
         $this->assertNull($processo->fresh()->zona_manual);
     }
@@ -108,7 +77,7 @@ class ZonaViaEdicaoTest extends TestCase
         $processo = $this->processo();
 
         $this->actingAs($this->editor(), 'gestao')
-            ->patchJson("/gestao/processos/{$processo->id}/zona-via", ['zona' => 'XYZ', 'via' => 'VX', 'justificativa' => 'Ajuste.'])
+            ->patchJson("/gestao/processos/{$processo->id}/zona-via", ['zona' => 'XYZ', 'via' => 'VX'])
             ->assertUnprocessable()
             ->assertJsonValidationErrors(['zona', 'via']);
     }
@@ -119,7 +88,7 @@ class ZonaViaEdicaoTest extends TestCase
         $editor = $this->editor();
 
         $this->actingAs($editor, 'gestao')
-            ->patchJson("/gestao/processos/{$processo->id}/zona-via", ['zona' => 'ZCMe', 'via' => 'VL', 'justificativa' => 'Lote lindeiro à via de centralidade.'])
+            ->patchJson("/gestao/processos/{$processo->id}/zona-via", ['zona' => 'ZCMe', 'via' => 'VL'])
             ->assertOk();
 
         $processo->refresh();
@@ -132,7 +101,7 @@ class ZonaViaEdicaoTest extends TestCase
         $this->assertSame('VC I', $log->properties['antes']['via']);
         $this->assertSame('ZCMe', $log->properties['depois']['zona']);
         $this->assertSame('VL', $log->properties['depois']['via']);
-        $this->assertSame('Lote lindeiro à via de centralidade.', $log->properties['justificativa']);
+        $this->assertArrayNotHasKey('justificativa', $log->properties->toArray());
         $this->assertNotNull($log->created_at);
 
         $eventos = app(TramitacaoProcessoService::class)->eventos($processo);
@@ -142,7 +111,7 @@ class ZonaViaEdicaoTest extends TestCase
         $evento = collect($eventos)->firstWhere('to_label', 'Zona e via alteradas');
         $this->assertStringContainsString('Zona: ZPR 3 → ZCMe', $evento['reason']);
         $this->assertStringContainsString('Via: VC I → VL', $evento['reason']);
-        $this->assertStringContainsString('Lote lindeiro à via de centralidade.', $evento['reason']);
+        $this->assertStringNotContainsString('Justificativa', $evento['reason']);
     }
 
     public function test_ficha_mostra_a_zona_e_a_via_efetivas_e_as_opcoes_a_quem_pode_editar(): void

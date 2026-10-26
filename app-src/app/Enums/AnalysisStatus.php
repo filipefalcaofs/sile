@@ -30,7 +30,7 @@ enum AnalysisStatus: string
             self::Encaminhado => 'Encaminhado para',
             self::Analisar => 'Analisar',
             self::EmAnalise => 'Em análise',
-            self::ParaConclusao => 'Para conclusão',
+            self::ParaConclusao => 'Analisados',
             self::AnaliseConcluida => 'Análise concluída',
             self::EmConvite => 'Em convite',
             self::ConviteRespondido => 'Convite respondido',

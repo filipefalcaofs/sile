@@ -269,6 +269,29 @@ class VistoriaEncaminhamentoTest extends TestCase
         $this->assertContains(AnalysisStatus::Vistoriado->value, $transicoes);
     }
 
+    public function test_encaminhar_ao_setor_pode_designar_um_analista_do_setor_de_origem(): void
+    {
+        [$processo, $vistoriador, $setorAnalise] = $this->processoVistoriado();
+        $designado = $this->analista();
+        $designado->sectors()->attach($setorAnalise);
+        $deOutroSetor = $this->analista();
+        $deOutroSetor->sectors()->attach(Sector::factory()->create());
+
+        $this->actingAs($vistoriador, 'gestao')
+            ->post("/gestao/processos/{$processo->id}/vistoria/encaminhar-ao-setor", ['analista_id' => $deOutroSetor->id])
+            ->assertSessionHas('error');
+        $this->assertSame($vistoriador->id, $processo->refresh()->assigned_user_id);
+
+        $this->actingAs($vistoriador, 'gestao')
+            ->post("/gestao/processos/{$processo->id}/vistoria/encaminhar-ao-setor", ['analista_id' => $designado->id])
+            ->assertSessionMissing('error');
+
+        $fresh = $processo->refresh();
+        $this->assertSame($setorAnalise->id, $fresh->sector_id);
+        $this->assertSame($designado->id, $fresh->assigned_user_id);
+        $this->assertSame(AnalysisStatus::Vistoriado, $fresh->analysis_status);
+    }
+
     public function test_apos_a_devolucao_o_setor_distribui_o_processo_a_um_analista(): void
     {
         $setorAnalise = Sector::factory()->create();
@@ -497,5 +520,31 @@ class VistoriaEncaminhamentoTest extends TestCase
                 ->has('vistorias.data', 1)
                 ->where('vistorias.data.0.id', $processo->id)
                 ->where('vistorias.data.0.situacao', 'concluida'));
+    }
+
+    /**
+     * @return array{0: ViabilityRequest, 1: User, 2: Sector}
+     */
+    private function processoVistoriado(): array
+    {
+        $setorAnalise = Sector::factory()->create();
+        $setorVistoria = Sector::factory()->create();
+        $analista = $this->analista();
+        $analista->sectors()->attach($setorAnalise);
+        $vistoriador = $this->analista();
+
+        $processo = $this->processoEmAnalise($setorAnalise, $analista);
+        $this->actingAs($analista, 'gestao')
+            ->post("/gestao/processos/{$processo->id}/vistoria/encaminhar", [
+                'setor_vistoria_id' => $setorVistoria->id,
+                'motivo' => 'Conferir a atividade no local.',
+            ]);
+        $processo->forceFill(['assigned_user_id' => $vistoriador->id])->save();
+        $this->actingAs($vistoriador, 'gestao')->get("/gestao/processos/{$processo->id}/vistoria");
+        $this->actingAs($vistoriador, 'gestao')
+            ->postJson("/gestao/processos/{$processo->id}/vistoria/concluir", ['parecer' => 'Atividade conforme.'])
+            ->assertOk();
+
+        return [$processo, $vistoriador, $setorAnalise];
     }
 }

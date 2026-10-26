@@ -116,9 +116,10 @@ class EncaminharVistoriaService
      * para a análise continuar. Com a origem registrada, volta ao setor de
      * origem; sem ela (vistoria marcada à mão), segue no setor atual. Nos dois
      * casos fica sem responsável, para o setor distribuir a um analista. O
-     * status continua Vistoriado até a analista retomar a ficha.
+     * status continua Vistoriado até a analista retomar a ficha. Com um analista
+     * do setor indicado, o processo já volta designado a ele.
      */
-    public function encaminharAoSetor(ViabilityRequest $processo, User $ator): void
+    public function encaminharAoSetor(ViabilityRequest $processo, User $ator, ?User $analista = null): void
     {
         $ficha = Inspection::query()
             ->where('viability_request_id', $processo->id)
@@ -134,11 +135,17 @@ class EncaminharVistoriaService
             ->latest('id')
             ->first();
 
-        DB::transaction(function () use ($processo, $referral, $ator): void {
+        $setorDeRetorno = $referral?->setor_origem_id ?? $processo->sector_id;
+
+        if ($analista !== null && ! $this->analistaDoSetor($analista, $setorDeRetorno)) {
+            throw EncaminharVistoriaException::analistaForaDoSetor($analista);
+        }
+
+        DB::transaction(function () use ($processo, $referral, $ator, $analista, $setorDeRetorno): void {
             $processo->forceFill([
-                'sector_id' => $referral?->setor_origem_id ?? $processo->sector_id,
-                'assigned_user_id' => null,
-                'assigned_at' => null,
+                'sector_id' => $setorDeRetorno,
+                'assigned_user_id' => $analista?->id,
+                'assigned_at' => $analista !== null ? now() : null,
             ])->save();
 
             $this->audit->log(
@@ -151,9 +158,45 @@ class EncaminharVistoriaService
                     'setor_origem_id' => $referral?->setor_origem_id,
                     'analista_origem_user_id' => $referral?->analista_origem_user_id,
                     'ator_id' => $ator->id,
+                    'analista_designado_id' => $analista?->id,
+                    'analista_designado_nome' => $analista?->name,
                 ],
                 subject: $processo,
             );
         });
+    }
+
+    /**
+     * Analistas do setor que recebe o processo de volta (o de origem da vistoria
+     * ou, sem origem, o atual), para o encaminhamento já designar um deles.
+     *
+     * @return list<array{id: int, name: string}>
+     */
+    public function analistasDoRetorno(ViabilityRequest $processo): array
+    {
+        $referral = InspectionReferral::query()
+            ->where('viability_request_id', $processo->id)
+            ->latest('id')
+            ->first();
+        $setor = $referral?->setor_origem_id ?? $processo->sector_id;
+
+        if ($setor === null) {
+            return [];
+        }
+
+        return User::query()
+            ->permission('analisar-processos')
+            ->whereHas('sectors', fn ($setores) => $setores->where('sectors.id', $setor))
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn (User $usuario): array => ['id' => $usuario->id, 'name' => $usuario->name])
+            ->all();
+    }
+
+    private function analistaDoSetor(User $analista, ?int $setor): bool
+    {
+        return $setor !== null
+            && $analista->can('analisar-processos')
+            && $analista->sectors()->where('sectors.id', $setor)->exists();
     }
 }

@@ -10,8 +10,8 @@ namespace App\Support\Louos;
  */
 final class ViaLocalPorCentralidade
 {
-    /** @var list<string> */
-    private const ZONAS = ['zcme', 'zcmu', 'zclme', 'zclmu'];
+    /** Sigla da zona, com ou sem número, subzona ou bairro depois (ZCMu 2, ZCMe 1/01, ZCMu 1 - IPITANGA). */
+    private const PADRAO_ZONA = '/^(zcme|zcmu|zclme|zclmu)(?![a-z])/';
 
     /**
      * 9609-2/07 (alojamento de animais domésticos, inclusive hotel, creche e
@@ -27,9 +27,7 @@ final class ViaLocalPorCentralidade
             return false;
         }
 
-        $chaveDaZona = strtolower((string) preg_replace('/[\s\-_]+/', '', (string) $zona));
-
-        if (! in_array($chaveDaZona, self::ZONAS, true)) {
+        if (preg_match(self::PADRAO_ZONA, strtolower(trim((string) $zona))) !== 1) {
             return false;
         }
 

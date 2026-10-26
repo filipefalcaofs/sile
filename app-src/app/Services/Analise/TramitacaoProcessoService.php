@@ -331,14 +331,17 @@ class TramitacaoProcessoService
         $depois = (array) ($propriedades['depois'] ?? []);
         $traco = fn (mixed $valor): string => filled($valor) ? (string) $valor : '—';
 
-        return sprintf(
-            'Zona: %s → %s · Via: %s → %s. Justificativa: %s',
+        $detalhe = sprintf(
+            'Zona: %s → %s · Via: %s → %s.',
             $traco($antes['zona'] ?? null),
             $traco($depois['zona'] ?? null),
             $traco($antes['via'] ?? null),
             $traco($depois['via'] ?? null),
-            (string) ($propriedades['justificativa'] ?? ''),
         );
+
+        $justificativa = trim((string) ($propriedades['justificativa'] ?? ''));
+
+        return $justificativa !== '' ? $detalhe.' Justificativa: '.$justificativa : $detalhe;
     }
 
     /**
