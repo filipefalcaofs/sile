@@ -1,6 +1,7 @@
 import { Link, usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import AppShell from '@/components/app/app-shell';
+import LogoPortalServicos from '@/components/app/logo-portal-servicos';
 import { AlertIcon } from '@/components/icons';
 import Alert from '@/components/ui/alert';
 import { ThemeProvider } from '@/contexts/theme-context';
@@ -24,6 +25,7 @@ export default function PortalLayout({ children }: PortalLayoutProps) {
                 logoHref="/portal/painel"
                 accountHref="/portal/conta/perfil"
                 subtitle="Portal do Cidadão"
+                headerMarca={<LogoPortalServicos />}
             >
                 {actingFor && (
                     <div className="mb-6 rounded-xl border border-warning-500 bg-warning-50 p-4 dark:border-warning-500/30 dark:bg-warning-500/15">

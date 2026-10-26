@@ -70,4 +70,27 @@ describe('AppHeader', () => {
 
         expect(hrefDoLogoMobile()).toBe('/gestao');
     });
+
+    it('mostra a marca logo depois do botão de recolher o menu', () => {
+        montar(
+            <AppHeader
+                homeHref="/portal"
+                logoutHref="/portal/logout"
+                accountHref="/portal/conta/perfil"
+                marca={<span data-testid="marca">Portal de Serviços</span>}
+            />,
+        );
+
+        const toggle = host.querySelector('[aria-label="Alternar menu lateral"]');
+        const marca = host.querySelector('[data-testid="marca"]');
+
+        expect(marca).not.toBeNull();
+        expect(toggle?.compareDocumentPosition(marca as Node)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    });
+
+    it('não mostra marca no console, que não a informa', () => {
+        montar(<AppHeader homeHref="/gestao" logoutHref="/gestao/logout" accountHref="/gestao/conta" />);
+
+        expect(host.querySelector('[data-marca]')).toBeNull();
+    });
 });
