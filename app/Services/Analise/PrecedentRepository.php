@@ -29,7 +29,7 @@ interface PrecedentRepository
      * @param  array<string, mixed>  $currentGeojson  GeoJSON Polygon do imóvel atual (anel [lng,lat]); vazio força o fallback.
      * @return list<array{viability_request_id: int, protocol_number: ?string, bap: ?string, outcome: string, decided_at: ?string, service_type: ?string, analyst: ?string}>
      */
-    public function propertyPrecedents(array $currentGeojson, int $limit, ?string $fallbackStreet = null, ?string $fallbackNumber = null, ?int $exceptRequestId = null): array;
+    public function propertyPrecedents(array $currentGeojson, int $limit, ?string $fallbackStreet = null, ?string $fallbackNumber = null, ?int $exceptRequestId = null, ?string $inscricao = null): array;
 
     /**
      * Agregação das decisões do CNAE na zona desde a data (janela parametrizada):

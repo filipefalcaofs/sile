@@ -9,6 +9,7 @@ use App\Models\ViabilityRequest;
 use App\Services\Motor\EtapaMotorRegistrador;
 use App\Services\Realty\LocalizacaoInscricao;
 use App\Services\Realty\LocalizacaoInscricaoService;
+use App\Services\Regin\ReginTipoImovelApplier;
 use App\Support\Audit\AuditService;
 
 /**
@@ -31,6 +32,7 @@ class TerritorioProcessoService
         private readonly AuditService $audit,
         private readonly EtapaMotorRegistrador $etapas,
         private readonly GeoServerClassificacaoViariaClient $classificacaoViaria,
+        private readonly ReginTipoImovelApplier $tipoImovel,
     ) {}
 
     /**
@@ -223,6 +225,42 @@ class TerritorioProcessoService
             subject: $request,
             result: $localizacao->confirmacaoPonto->value,
         );
+    }
+
+    /**
+     * Processo sem tipo do imóvel (o REGIN não declarou) recebe o uso do
+     * imóvel no Cadastro Imobiliário (Utilizacao da inscrição). O tipo
+     * declarado nunca é trocado. Devolve true quando gravou.
+     */
+    public function aplicarTipoImovelDaInscricao(ViabilityRequest $request): bool
+    {
+        if (trim((string) $request->tipo_imovel) !== '') {
+            return false;
+        }
+
+        $utilizacao = $this->localizacao->localizar($request->property_registration)->utilizacao;
+
+        if ($utilizacao === null) {
+            return false;
+        }
+
+        $this->tipoImovel->apply($request, $utilizacao);
+
+        $this->audit->log(
+            logName: 'geo',
+            event: 'tipo-imovel-da-inscricao',
+            description: "Tipo do imóvel {$utilizacao} da inscrição gravado na solicitação #{$request->id}",
+            properties: [
+                'viability_request_id' => $request->id,
+                'inscricao' => $request->property_registration,
+                'tipo_imovel' => $utilizacao,
+                'tipo_imovel_normalized' => $request->tipo_imovel_normalized,
+            ],
+            subject: $request,
+            result: 'gravado',
+        );
+
+        return true;
     }
 
     /**

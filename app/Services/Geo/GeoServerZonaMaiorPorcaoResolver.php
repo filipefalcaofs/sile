@@ -16,22 +16,24 @@ use Throwable;
  * BBOX do CQL_FILTER, a camada é repetida pelo parâmetro bbox) e calcula a área de
  * cada interseção no PostGIS da aplicação. Uma camada sem resposta torna o
  * resultado indisponível: sem ela a maior porção não é verificável. Camada que
- * responde linha (centralidade linear) não disputa. Nada é persistido.
+ * responde linha (centralidade linear) não disputa a maior porção; com o lote
+ * lindeiro ligado, ela é consultada num BBOX ampliado pela distância máxima ao
+ * lote. Nada é persistido.
  */
 class GeoServerZonaMaiorPorcaoResolver implements ZonaMaiorPorcaoResolver
 {
     /** @var array<string, ZonaMaiorPorcao> */
     private array $memo = [];
 
-    public function resolver(array $poligono): ZonaMaiorPorcao
+    public function resolver(array $poligono, ?string $codLog = null): ZonaMaiorPorcao
     {
-        return $this->memo[md5((string) json_encode($poligono))] ??= $this->calcular($poligono);
+        return $this->memo[md5((string) json_encode([$poligono, $codLog]))] ??= $this->calcular($poligono, $codLog);
     }
 
     /**
      * @param  array<string, mixed>  $poligono
      */
-    private function calcular(array $poligono): ZonaMaiorPorcao
+    private function calcular(array $poligono, ?string $codLog): ZonaMaiorPorcao
     {
         if (DB::getDriverName() !== 'pgsql') {
             return ZonaMaiorPorcao::indisponivel('Cálculo da maior porção exige PostGIS.');
@@ -56,14 +58,14 @@ class GeoServerZonaMaiorPorcaoResolver implements ZonaMaiorPorcaoResolver
         }
 
         try {
-            $payloads = $this->consultarCamadas($typeNames, fn (string $typeName): string => $this->url($typeName, $bbox));
+            $payloads = $this->consultarCamadas($typeNames, fn (string $typeName): string => $this->url($typeName, $this->bboxDaCamada($typeName, $bbox)));
 
             $recusadas = array_keys(array_filter($payloads, fn (?array $payload): bool => $payload === null));
 
             if ($recusadas !== []) {
                 $payloads = array_merge(
                     $payloads,
-                    $this->consultarCamadas($recusadas, fn (string $typeName): string => $this->urlBboxParametro($typeName, $bbox)),
+                    $this->consultarCamadas($recusadas, fn (string $typeName): string => $this->urlBboxParametro($typeName, $this->bboxDaCamada($typeName, $bbox))),
                 );
             }
         } catch (Throwable $e) {
@@ -96,7 +98,11 @@ class GeoServerZonaMaiorPorcaoResolver implements ZonaMaiorPorcaoResolver
                     $zonaLinear = $this->zonaLinear($typeName);
 
                     if ($zonaLinear !== null) {
-                        $lineares[] = ['zona' => $zonaLinear, 'geometria' => $geometria];
+                        $lineares[] = [
+                            'zona' => $zonaLinear,
+                            'geometria' => $geometria,
+                            'cod_log' => $this->codLogDaFeicao(is_array($feature['properties'] ?? null) ? $feature['properties'] : []),
+                        ];
                     }
 
                     continue;
@@ -120,37 +126,65 @@ class GeoServerZonaMaiorPorcaoResolver implements ZonaMaiorPorcaoResolver
             return ZonaMaiorPorcao::indisponivel('Camada de zona sem resposta do GeoServer SEDUR: '.implode(', ', $falhas).'.', $camadas);
         }
 
-        return $this->centralidadeLinear($poligono, $lineares, $this->porcoes($poligono, $candidatas, $camadas));
+        return $this->centralidadeLinear($poligono, $lineares, $this->porcoes($poligono, $candidatas, $camadas), $codLog);
     }
 
     /**
      * Centralidade linear (HU.182): a linha da ZCLMu ou da ZCLMe que passa por
      * cima do lote, em qualquer parte, define a zona, sem olhar o percentual em
-     * outras zonas. Linha em frente ao lote, sem tocá-lo, não conta. Duas zonas
-     * lineares sobre o mesmo lote não têm vencedora.
+     * outras zonas. Também define o lote lindeiro (S7): trecho com o mesmo CODLOG
+     * do endereço do processo a até `geo.centralidade_linear.distancia_lindeiro_m`
+     * do lote. Trecho sem CODLOG só conta cruzando o lote. Duas zonas lineares
+     * no mesmo lote não têm vencedora.
      *
      * @param  array<string, mixed>  $poligono
-     * @param  list<array{zona: string, geometria: array<string, mixed>}>  $lineares
+     * @param  list<array{zona: string, geometria: array<string, mixed>, cod_log: ?string}>  $lineares
      */
-    private function centralidadeLinear(array $poligono, array $lineares, ZonaMaiorPorcao $base): ZonaMaiorPorcao
+    private function centralidadeLinear(array $poligono, array $lineares, ZonaMaiorPorcao $base, ?string $codLog): ZonaMaiorPorcao
     {
-        $cruzadas = [];
+        $codLogProcesso = $this->normalizarCodLog($codLog);
+        $lindeiroLigado = $this->lindeiroLigado();
+        $distanciaMaxima = $this->distanciaLindeiro();
+
+        /** @var array<string, string> $motivos */
+        $motivos = [];
 
         foreach ($lineares as $linear) {
             $linha = DB::selectOne(
-                'SELECT ST_Intersects(
-                    ST_MakeValid(ST_SetSRID(ST_GeomFromGeoJSON(?), 4326)),
-                    ST_SetSRID(ST_GeomFromGeoJSON(?), 4326)
-                )::int AS cruza',
+                'SELECT ST_Intersects(lote, linha)::int AS cruza, ST_Distance(lote::geography, linha::geography) AS distancia
+                FROM (SELECT
+                    ST_MakeValid(ST_SetSRID(ST_GeomFromGeoJSON(?), 4326)) AS lote,
+                    ST_SetSRID(ST_GeomFromGeoJSON(?), 4326) AS linha
+                ) AS geometrias',
                 [json_encode($poligono), json_encode($linear['geometria'])],
             );
 
-            if ($linha !== null && (int) $linha->cruza === 1) {
-                $cruzadas[] = $linear['zona'];
+            if ($linha === null) {
+                continue;
+            }
+
+            $zona = $linear['zona'];
+
+            if ((int) $linha->cruza === 1) {
+                $motivos[$zona] = "Linha da {$zona} passa por cima do lote.";
+
+                continue;
+            }
+
+            $distancia = (float) $linha->distancia;
+
+            if ($lindeiroLigado && $codLogProcesso !== null && $linear['cod_log'] === $codLogProcesso
+                && $distancia <= $distanciaMaxima && ! isset($motivos[$zona])) {
+                $motivos[$zona] = sprintf(
+                    'Lote lindeiro à via da centralidade linear %s (CODLOG %s, %s m).',
+                    $zona,
+                    $codLogProcesso,
+                    number_format($distancia, 0, ',', '.'),
+                );
             }
         }
 
-        $zonas = array_values(array_intersect(['ZCLMu', 'ZCLMe'], $cruzadas));
+        $zonas = array_values(array_intersect(['ZCLMu', 'ZCLMe'], array_keys($motivos)));
 
         if ($zonas === []) {
             return $base;
@@ -163,7 +197,72 @@ class GeoServerZonaMaiorPorcaoResolver implements ZonaMaiorPorcaoResolver
             empate: count($zonas) > 1 ? $zonas : [],
             camadas: $base->camadas,
             areaLoteM2: $base->areaLoteM2,
+            motivo: implode(' ', array_map(fn (string $zona): string => $motivos[$zona], $zonas)),
         );
+    }
+
+    private function lindeiroLigado(): bool
+    {
+        return Settings::enabled('centralidade_linear_lindeiro');
+    }
+
+    private function distanciaLindeiro(): float
+    {
+        return max(0.0, (float) Settings::get('geo.centralidade_linear.distancia_lindeiro_m', 60));
+    }
+
+    /**
+     * CODLOG da feição da camada linear (SUBZONA, LOCAL, CODLOG), com a chave em
+     * qualquer caixa. Nulo quando o trecho não tem CODLOG.
+     *
+     * @param  array<string, mixed>  $propriedades
+     */
+    private function codLogDaFeicao(array $propriedades): ?string
+    {
+        foreach ($propriedades as $chave => $valor) {
+            if (strtoupper((string) $chave) === 'CODLOG') {
+                return $this->normalizarCodLog($valor);
+            }
+        }
+
+        return null;
+    }
+
+    private function normalizarCodLog(mixed $valor): ?string
+    {
+        if (is_float($valor) && floor($valor) === $valor) {
+            $valor = (int) $valor;
+        }
+
+        if (! is_scalar($valor)) {
+            return null;
+        }
+
+        $codLog = ltrim(trim((string) $valor), '0');
+
+        return $codLog !== '' ? $codLog : null;
+    }
+
+    /**
+     * BBOX da consulta da camada: o do lote, ou, na camada linear com o lote
+     * lindeiro ligado, ampliado pela distância máxima (com folga de 10%), para
+     * trazer o trecho em frente ao lote.
+     *
+     * @param  array{0: float, 1: float, 2: float, 3: float}  $bbox
+     * @return array{0: float, 1: float, 2: float, 3: float}
+     */
+    private function bboxDaCamada(string $typeName, array $bbox): array
+    {
+        if ($this->zonaLinear($typeName) === null || ! $this->lindeiroLigado()) {
+            return $bbox;
+        }
+
+        $metros = $this->distanciaLindeiro() * 1.1;
+        $latitude = deg2rad(($bbox[1] + $bbox[3]) / 2);
+        $grausLat = $metros / 110_540;
+        $grausLng = $metros / (111_320 * max(cos($latitude), 0.01));
+
+        return [$bbox[0] - $grausLng, $bbox[1] - $grausLat, $bbox[2] + $grausLng, $bbox[3] + $grausLat];
     }
 
     private function zonaLinear(string $typeName): ?string

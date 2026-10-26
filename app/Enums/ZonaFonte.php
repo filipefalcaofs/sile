@@ -18,7 +18,7 @@ enum ZonaFonte: string
         return match ($this) {
             self::Ponto => 'Ponto da inscrição',
             self::EnderecamentoMaiorPorcao => 'Maior porção do lote',
-            self::CentralidadeLinear => 'Centralidade linear (linha sobre o lote)',
+            self::CentralidadeLinear => 'Centralidade linear (linha sobre o lote ou lote lindeiro à via)',
         };
     }
 }

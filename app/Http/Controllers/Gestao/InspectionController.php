@@ -124,18 +124,18 @@ class InspectionController extends Controller
 
     /**
      * Consulta a ficha existente, sem criar e sem editar. Sem ficha, a tela
-     * informa a ausência. A permissão preencher-ficha-vistoria segue sendo
-     * o que abre e altera a ficha.
+     * informa a ausência. Com `?ficha=`, abre aquela ficha do processo (o link
+     * da tramitação), e não a mais recente. A permissão preencher-ficha-vistoria
+     * segue sendo o que abre e altera a ficha.
      */
     public function visualizar(Request $request, ViabilityRequest $viabilityRequest): Response
     {
         abort_unless($request->user() instanceof User, 401);
         abort_unless(app(VistoriaAcesso::class)->podeConsultar($viabilityRequest, $request->user()), 403);
 
-        $ficha = Inspection::query()
-            ->where('viability_request_id', $viabilityRequest->id)
-            ->latest('id')
-            ->first();
+        $ficha = $request->filled('ficha')
+            ? Inspection::query()->where('viability_request_id', $viabilityRequest->id)->findOrFail($request->integer('ficha'))
+            : Inspection::query()->where('viability_request_id', $viabilityRequest->id)->latest('id')->first();
 
         if ($ficha === null) {
             $this->audit->log(

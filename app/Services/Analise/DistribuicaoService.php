@@ -114,6 +114,35 @@ class DistribuicaoService
     }
 
     /**
+     * Quem age no processo sem tê-lo recebido (abre convite, devolve o Para
+     * conclusão) passa a ser o responsável: aparece como analista, vê o processo
+     * na Caixa de entrada e recebe os avisos. Setor e prazo não mudam.
+     */
+    public function assumirAoAgir(ViabilityRequest $request, User $ator, string $acao): void
+    {
+        if ((int) $request->assigned_user_id === $ator->id) {
+            return;
+        }
+
+        $anterior = $request->assigned_user_id;
+
+        $request->forceFill([
+            'assigned_user_id' => $ator->id,
+            'assigned_at' => now(),
+        ])->save();
+
+        $this->audit->log('analise', 'assumir', "{$ator->name} assumiu o processo ao {$acao} (solicitação #{$request->id}).", [
+            'viability_request_id' => $request->id,
+            'protocol_number' => $request->protocol_number,
+            'sector_id' => $request->sector_id,
+            'assigned_user_id' => $ator->id,
+            'analista_anterior_id' => $anterior,
+            'analista_nome' => $ator->name,
+            'ator_id' => $ator->id,
+        ], $request);
+    }
+
+    /**
      * Redistribuição (apoio/gestor troca o responsável): em qualquer situação
      * antes da conclusão da análise e SEM recalcular o SLA — o prazo é do
      * processo, não da pessoa; trocar o responsável não zera atraso. Em vistoria,

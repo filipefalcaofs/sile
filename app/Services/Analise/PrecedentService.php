@@ -43,6 +43,7 @@ class PrecedentService
             $request?->address_street,
             $request?->address_number,
             exceptRequestId: $request?->id,
+            inscricao: $request?->property_registration,
         );
 
         $emAnalise = $this->emAnaliseNoImovel($request);

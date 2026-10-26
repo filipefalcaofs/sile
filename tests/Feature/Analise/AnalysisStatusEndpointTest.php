@@ -3,6 +3,7 @@
 namespace Tests\Feature\Analise;
 
 use App\Enums\AnalysisStatus;
+use App\Enums\ViabilityRequestStatus;
 use App\Models\Sector;
 use App\Models\User;
 use App\Models\ViabilityRequest;
@@ -177,5 +178,33 @@ class AnalysisStatusEndpointTest extends TestCase
             ->assertSessionHas('error');
 
         $this->assertSame(AnalysisStatus::Analisar, $request->refresh()->analysis_status);
+    }
+
+    /**
+     * SPEC-07: enquanto a SEDUR não define a reabertura, a análise concluída
+     * não volta nem com o override. Antes, o eixo voltava a Em análise e o
+     * processo seguia Deferido, com o TVL emitido.
+     */
+    public function test_forcar_nao_reabre_analise_concluida(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+        $coordenador = User::factory()->gestor()->create();
+
+        $request = ViabilityRequest::factory()->create();
+        $request->forceFill([
+            'status' => ViabilityRequestStatus::Deferida,
+            'analysis_status' => AnalysisStatus::AnaliseConcluida,
+        ])->save();
+
+        $this->actingAs($coordenador, 'gestao')
+            ->post("/gestao/processos/{$request->id}/status-analise", [
+                'status' => 'em_analise',
+                'force' => true,
+                'motivo' => 'Reabrir',
+            ])
+            ->assertSessionHas('error', 'A análise já foi concluída e não pode ser reaberta: a reabertura ainda depende de regra da SEDUR.');
+
+        $this->assertSame(AnalysisStatus::AnaliseConcluida, $request->refresh()->analysis_status);
+        $this->assertSame(0, $request->analysisStatusTransitions()->count());
     }
 }

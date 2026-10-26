@@ -107,6 +107,7 @@ interface Processo {
     bap: string | null;
     servicos: string[];
     empresa: string | null;
+    requerente?: string | null;
 }
 
 interface TextoPadrao {
@@ -2673,10 +2674,6 @@ export default function FichaAnaliseShow({
                 className="m-4 max-w-[480px] p-6 lg:p-8"
             >
                 <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Encaminhar para Chefia?</h4>
-                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                    O processo vai para a aba Para conclusão da Caixa do Apoio e sai da sua Caixa de entrada. Quem
-                    distribui é o Apoio.
-                </p>
                 <div className="mt-4">
                     <Label htmlFor="indicado-para-conclusao" className="mb-1.5">
                         Indicar quem deve concluir (opcional)
@@ -2690,7 +2687,6 @@ export default function FichaAnaliseShow({
                             { value: '', label: 'Sem indicação' },
                             ...usuariosIndicaveis.map((usuario) => ({ value: String(usuario.id), label: usuario.name })),
                         ]}
-                        hint="É só uma sugestão para o Apoio: o processo não vai direto para a pessoa indicada."
                     />
                 </div>
                 <div className="mt-6 flex justify-end gap-3">
@@ -3327,6 +3323,7 @@ function ResumoProcessoCard({
                         )}
                     </DescItem>
                     <DescItem label="Empresa">{valorOuTraco(processo.empresa)}</DescItem>
+                    <DescItem label="Requerente">{valorOuTraco(processo.requerente)}</DescItem>
                 </dl>
 
                 <div className="mt-5 border-t border-gray-100 pt-5 dark:border-gray-800">
@@ -3797,7 +3794,7 @@ function PrecedentesPanel({
 }) {
     return (
         <Card>
-            <CardHeader title="Precedentes" description="Histórico do imóvel e estatística do CNAE na zona (HU-132)." />
+            <CardHeader title="Precedentes" description="Processos da mesma inscrição imobiliária e resultados do CNAE em toda a zona." />
             <CardContent>
                 {carregando && (
                     <div className="space-y-2">
@@ -3875,7 +3872,7 @@ function PrecedentesPanel({
 
                         <div>
                             <p className="text-theme-xs font-medium tracking-wide text-gray-400 uppercase dark:text-gray-500">
-                                CNAE na zona
+                                CNAE na zona (todos os imóveis)
                             </p>
                             {dados.cnae_zona.disponivel ? (
                                 <p className="mt-1 text-theme-sm text-gray-600 dark:text-gray-300">

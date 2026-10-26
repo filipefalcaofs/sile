@@ -99,15 +99,20 @@ enum AnalysisStatus: string
      * Transições manuais que o perfil enxerga. Quem não conclui análise
      * (terceirizada) só pode mandar o processo em análise para conclusão ou
      * encaminhá-lo: a conclusão, o convite e a vistoria ficam com quem decide.
+     * O processo em Para conclusão também só sai pelas mãos de quem conclui.
      *
      * @return list<self>
      */
     public function proximasPara(bool $podeConcluirAnalise): array
     {
-        if ($podeConcluirAnalise || $this !== self::EmAnalise) {
+        if ($podeConcluirAnalise) {
             return $this->proximas();
         }
 
-        return [self::ParaConclusao, self::Encaminhado];
+        return match ($this) {
+            self::EmAnalise => [self::ParaConclusao, self::Encaminhado],
+            self::ParaConclusao => [],
+            default => $this->proximas(),
+        };
     }
 }

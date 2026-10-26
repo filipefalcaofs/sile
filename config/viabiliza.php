@@ -59,6 +59,10 @@ return [
         // viária da SEDUR) e busca outro ponto por endereço quando está longe.
         // Desligado, o ponto do Cadastro Imobiliário é usado sem conferência.
         'validacao_ponto_inscricao' => true,
+        // Centralidade linear pelo acesso (S7): o lote lindeiro à linha da
+        // ZCLMu/ZCLMe com o mesmo CODLOG do processo fica na centralidade.
+        // Desligado, só a linha por cima do lote conta (HU.182).
+        'centralidade_linear_lindeiro' => env('SILE_CENTRALIDADE_LINEAR_LINDEIRO', true),
         // Ingestão do benchmark federal de tempo de viabilidade (microdados da
         // REDESIM). Desligada, as telas de benchmark mostram a lacuna com o
         // motivo — nenhum número é estimado no lugar.
@@ -109,6 +113,10 @@ return [
         // Distância máxima (metros) entre o ponto da inscrição e a rua do
         // endereço para o ponto valer sem conferência por outra fonte.
         'validacao_ponto' => ['distancia_maxima_m' => 150],
+        // Distância máxima (metros) entre o lote e o trecho de centralidade
+        // linear de mesmo CODLOG para o lote contar como lindeiro (S7). 60 m
+        // foi a medida da Av. ACM; valor a confirmar com a SEDUR.
+        'centralidade_linear' => ['distancia_lindeiro_m' => (float) env('SILE_CENTRALIDADE_LINEAR_DISTANCIA_LINDEIRO_M', 60)],
         // Atributos candidatos ao nome da zona na feição — fallback do
         // parâmetro geo.zona.atributos_nome (HU-014).
         'zona' => ['atributos_nome' => ['ZONA', 'zona', 'SIGLA_ZONA', 'SUBZONA']],
@@ -217,6 +225,10 @@ return [
         'lock' => ['ttl_segundos' => 10],
         'fila' => 'default',
         'job' => ['tries' => 3, 'timeout' => 120, 'backoff' => [30, 60, 120]],
+        // Alteração de atividades da JUCEB (evento 244) sem intenção por CNAE e
+        // sem a comparação da SEFAZ: comparada com o último processo deferido
+        // da empresa; só exclusão defere sem enquadramento.
+        'exclusao_pelo_processo_anterior' => (bool) env('SILE_EXPRESSO_EXCLUSAO_PELO_PROCESSO_ANTERIOR', true),
     ],
     // Espelha os parâmetros HU-014 analise.* / features.analise_tecnica da
     // análise técnica (EP10). Settings::get lê config("viabiliza.analise.*") no

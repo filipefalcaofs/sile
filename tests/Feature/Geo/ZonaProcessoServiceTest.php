@@ -118,6 +118,17 @@ class ZonaProcessoServiceTest extends TestCase
         $this->assertSame('ZPR 3', $request->fresh()->zona_codigo);
     }
 
+    public function test_s7_passa_o_codlog_do_processo_ao_resolver(): void
+    {
+        $this->fake->para(self::LOTE, FakeZonaMaiorPorcaoResolver::identificado('ZPR 3'));
+        $request = $this->processo();
+        $request->forceFill(['cod_log' => '12345'])->save();
+
+        app(ZonaProcessoService::class)->materializar($request->fresh());
+
+        $this->assertSame('12345', $this->fake->ultimoCodLog);
+    }
+
     public function test_hu_182_materializa_a_centralidade_linear(): void
     {
         $this->fake->para(self::LOTE, FakeZonaMaiorPorcaoResolver::centralidadeLinear('ZCLMu'));

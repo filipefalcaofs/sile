@@ -15,7 +15,7 @@ export interface ZonaCamada {
 const ROTULO_FONTE: Record<string, string> = {
     ponto: 'ponto da inscrição',
     enderecamento_maior_porcao: 'maior porção do lote',
-    centralidade_linear: 'centralidade linear (linha sobre o lote)',
+    centralidade_linear: 'centralidade linear (linha sobre o lote ou lote lindeiro à via)',
 };
 
 function percentual(valor: number): string {

@@ -61,8 +61,14 @@ class ServicoNomenclaturaResolver
      */
     public function opcoesDeEvento(): array
     {
+        // Nome Para do De x Para, escrito como no cadastro, nunca é oculto, mesmo
+        // com a chave de um tipo interno retirado ("Alteração de Endereço" ×
+        // tipo "Alteração de endereço").
+        $nomesPara = ServicoNomenclatura::query()->pluck('para')->all();
+
         return $this->eventosPorNome()
-            ->reject(fn (array $grupo): bool => $this->ocultoNoFiltro($grupo['label']))
+            ->reject(fn (array $grupo): bool => $this->ocultoNoFiltro($grupo['label'])
+                && ! in_array($grupo['label'], $nomesPara, true))
             ->map(fn (array $grupo, string $chave): array => [
                 'value' => ProcessoQueryService::PREFIXO_NOME_SERVICO.$chave,
                 'label' => $grupo['label'],

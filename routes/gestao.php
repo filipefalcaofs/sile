@@ -51,6 +51,7 @@ use App\Http\Controllers\Gestao\MapaDecisaoController;
 use App\Http\Controllers\Gestao\MetadataController;
 use App\Http\Controllers\Gestao\ParameterController;
 use App\Http\Controllers\Gestao\PrecedenteController;
+use App\Http\Controllers\Gestao\ProcessoAnexoController;
 use App\Http\Controllers\Gestao\ProcessoBuscaController;
 use App\Http\Controllers\Gestao\ProcessoController;
 use App\Http\Controllers\Gestao\ProcessoDecisaoController;
@@ -691,6 +692,10 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             // canal (diagnóstico interno). Auditada (RN-002). Rota com dois
             // segmentos — não colide com o {viabilityRequest} show.
             Route::get('{viabilityRequest}/comunicacoes', [ComunicacaoHistoricoController::class, 'gestao'])->name('comunicacoes');
+
+            // Anexos do processo (documentos e fotos da vistoria) para quem consulta (SEDUR, 22/10).
+            Route::get('{viabilityRequest}/anexos/documento/{documento}', [ProcessoAnexoController::class, 'documento'])->name('anexos.documento');
+            Route::get('{viabilityRequest}/anexos/vistoria/{anexo}', [ProcessoAnexoController::class, 'vistoria'])->name('anexos.vistoria');
 
             Route::get('{viabilityRequest}', [ProcessoController::class, 'show'])->name('show');
         });

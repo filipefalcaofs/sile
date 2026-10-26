@@ -143,7 +143,7 @@ class ConviteEixoOperacionalTest extends TestCase
         $this->assertSame(ViabilityRequestStatus::Indeferida, $fresh->status);
         $this->assertSame(AnalysisStatus::ConviteExpirado, $fresh->analysis_status);
         $this->assertSame(
-            'Processo indeferido pelo não atendimento ao convite no prazo estabelecido em consonância com Lei Federal nº 11.598/2007 e Resolução CGSIM nº 61/2020. Recomenda-se a abertura de novo processo contendo toda a documentação solicitada.',
+            "Processo indeferido pelo não atendimento ao convite no prazo estabelecido em consonância com Lei Federal nº 11.598/2007 e Resolução CGSIM nº 61/2020.\n\nRecomenda-se a abertura de novo processo contendo toda a documentação/ esclarecimento solicitado(s).",
             $decision->reason,
         );
     }
