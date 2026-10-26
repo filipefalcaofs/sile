@@ -314,7 +314,7 @@ class ProcessoController extends Controller
             'analysisStatusProximas' => $viabilityRequest->analysis_status
                 ? array_map(
                     fn (AnalysisStatus $s): array => ['value' => $s->value, 'label' => $s->label()],
-                    $viabilityRequest->analysis_status->proximasPara($podeConcluir),
+                    $viabilityRequest->analysis_status->proximasPara($podeConcluir, $request->user()->can('encaminhar-para-conclusao')),
                 )
                 : [],
         ]);
@@ -422,7 +422,7 @@ class ProcessoController extends Controller
             return back()->with('error', 'Só quem conclui a análise pode tirar o processo de Para conclusão.');
         }
 
-        if (! $force && ($from === null || ! in_array($to, $from->proximasPara($podeConcluir), true))) {
+        if (! $force && ($from === null || ! in_array($to, $from->proximasPara($podeConcluir, $request->user()->can('encaminhar-para-conclusao')), true))) {
             return back()->with('error', 'Transição de situação da análise não permitida.');
         }
 

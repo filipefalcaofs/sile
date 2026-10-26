@@ -100,19 +100,25 @@ enum AnalysisStatus: string
      * (terceirizada) só pode mandar o processo em análise para conclusão ou
      * encaminhá-lo: a conclusão, o convite e a vistoria ficam com quem decide.
      * O processo em Para conclusão também só sai pelas mãos de quem conclui.
+     * Enviar para Para conclusão exige a permissão encaminhar-para-conclusao,
+     * de quem conclui ou não.
      *
      * @return list<self>
      */
-    public function proximasPara(bool $podeConcluirAnalise): array
+    public function proximasPara(bool $podeConcluirAnalise, bool $podeEncaminharParaConclusao = true): array
     {
-        if ($podeConcluirAnalise) {
-            return $this->proximas();
+        $proximas = $podeConcluirAnalise
+            ? $this->proximas()
+            : match ($this) {
+                self::EmAnalise => [self::ParaConclusao, self::Encaminhado],
+                self::ParaConclusao => [],
+                default => $this->proximas(),
+            };
+
+        if ($podeEncaminharParaConclusao) {
+            return $proximas;
         }
 
-        return match ($this) {
-            self::EmAnalise => [self::ParaConclusao, self::Encaminhado],
-            self::ParaConclusao => [],
-            default => $this->proximas(),
-        };
+        return array_values(array_filter($proximas, fn (self $s): bool => $s !== self::ParaConclusao));
     }
 }

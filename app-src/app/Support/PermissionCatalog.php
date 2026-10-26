@@ -116,6 +116,18 @@ final class PermissionCatalog
                 'group' => 'Análise técnica',
             ],
             [
+                'name' => 'concluir-analise',
+                'label' => 'Concluir análise',
+                'description' => 'Defere ou indefere o processo e conclui a análise técnica.',
+                'group' => 'Análise técnica',
+            ],
+            [
+                'name' => 'encaminhar-para-conclusao',
+                'label' => 'Encaminhar para conclusão',
+                'description' => 'Envia o processo em análise para a aba Para conclusão, para a chefia ou outro analista concluir. Quem conclui só encaminha se também tiver esta permissão.',
+                'group' => 'Análise técnica',
+            ],
+            [
                 'name' => 'forcar-transicao-analise',
                 'label' => 'Forçar transição da situação da análise',
                 'description' => 'Muda a situação da análise para qualquer estado permitido pela máquina de estados, mesmo fora das opções manuais.',
