@@ -5,6 +5,7 @@ namespace Tests\Feature\Analise;
 use App\Enums\AnalysisStage;
 use App\Enums\AnalysisStatus;
 use App\Enums\ViabilityRequestStatus;
+use App\Models\AnalysisRecord;
 use App\Models\Sector;
 use App\Models\User;
 use App\Models\ViabilityRequest;
@@ -74,6 +75,7 @@ class ParaConclusaoCaixaEntradaTest extends TestCase
         $analista = $this->analista($setor);
         $chefia = User::factory()->gestor()->withAcceptedLgpdTerm()->create();
         $processo = $this->processo($setor, $analista, AnalysisStatus::EmAnalise);
+        $this->fichaFinalizadaDe($processo, $analista);
 
         $this->actingAs($analista, 'gestao')
             ->post("/gestao/processos/{$processo->id}/status-analise", ['status' => 'para_conclusao'])
@@ -110,6 +112,7 @@ class ParaConclusaoCaixaEntradaTest extends TestCase
         $setor = Sector::factory()->create();
         $analista = $this->analista($setor);
         $processo = $this->processo($setor, $analista, AnalysisStatus::EmAnalise);
+        $this->fichaFinalizadaDe($processo, $analista);
 
         $this->actingAs($analista, 'gestao')
             ->post("/gestao/processos/{$processo->id}/status-analise", ['status' => 'para_conclusao'])
@@ -152,5 +155,17 @@ class ParaConclusaoCaixaEntradaTest extends TestCase
 
         $this->assertContains($processo->id, $this->caixaDeEntrada($analista));
         $this->assertNotContains($processo->id, $this->caixaDeEntrada($quemAnalisou));
+    }
+
+    /**
+     * Encaminhar à chefia exige a ficha finalizada de quem encaminha (SEDUR, 26/10/2026).
+     */
+    private function fichaFinalizadaDe(ViabilityRequest $processo, User $analista): void
+    {
+        AnalysisRecord::factory()->finalizada()->create([
+            'viability_request_id' => $processo->id,
+            'revision' => ((int) $processo->analysisRecords()->max('revision')) + 1,
+            'analyst_user_id' => $analista->id,
+        ]);
     }
 }

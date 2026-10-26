@@ -42,6 +42,8 @@ interface TimelineItem {
     atribuido?: string | null;
     distribuidor?: string | null;
     link?: string | null;
+    /** Com rótulo, o link sai separado do texto (fichas e pareceres da tramitação). */
+    link_label?: string | null;
 }
 
 interface SetorEncaminhamento {
@@ -609,7 +611,22 @@ export default function Show({
                                                             {formatarDataHora(evento.em)}
                                                             {evento.from_label ? ` · de ${evento.from_label}` : ''}
                                                         </p>
-                                                        {evento.reason && (
+                                                        {evento.reason && evento.link_label && (
+                                                            <p className="mt-1 whitespace-pre-line text-theme-sm text-gray-600 dark:text-gray-300">
+                                                                {evento.reason}
+                                                            </p>
+                                                        )}
+                                                        {evento.link && evento.link_label && podeAbrirFicha && (
+                                                            <a
+                                                                href={evento.link}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="mt-1 inline-block text-theme-sm text-brand-500 underline underline-offset-2 hover:text-brand-600 dark:text-brand-400"
+                                                            >
+                                                                {evento.link_label}
+                                                            </a>
+                                                        )}
+                                                        {evento.reason && !evento.link_label && (
                                                             <p className="mt-1 text-theme-sm text-gray-600 dark:text-gray-300">
                                                                 {evento.link && podeAbrirFicha ? (
                                                                     <a

@@ -8,6 +8,7 @@ use App\Models\AnalysisRecord;
 use App\Models\Inspection;
 use App\Models\User;
 use App\Models\ViabilityRequest;
+use Illuminate\Support\Collection;
 
 /**
  * Eventos da tramitação do processo que não são mudança de status: situação da
@@ -17,7 +18,12 @@ use App\Models\ViabilityRequest;
  * fechada de eventos: consulta de tela, autosave automático da ficha e demais
  * registros técnicos não entram. Os eventos das fichas são gravados com a
  * própria ficha como sujeito. Cada item tem o mesmo formato da linha do tempo
- * de status; o evento da ficha de análise traz o link para abri-la.
+ * de status; os eventos das fichas trazem o link para abri-las somente para
+ * leitura.
+ *
+ * Os pareceres ficam visíveis na própria linha: o da ficha finalizada e o da
+ * ficha encaminhada à chefia (parecer de encaminhamento), o da vistoria, o
+ * motivo do encaminhamento à vistoria e o texto da decisão na conclusão.
  *
  * Uma ação, uma linha: o espelho da situação de análise e o registro de
  * pendência/convite gravados junto com uma mudança de situação do processo
@@ -29,7 +35,7 @@ class TramitacaoProcessoService
 {
     private const ATRIBUICAO = ['distribuir', 'assumir', 'redistribuir'];
 
-    private const FICHA_ANALISE = ['ficha-salvar', 'ficha-finalizar'];
+    private const FICHA_ANALISE = ['ficha-salvar', 'ficha-finalizar', 'ficha-encaminhada'];
 
     private const PENDENCIA = ['pendencia-aberta', 'pendencia-respondida', 'convite-cancelado', 'convite-expirado-indeferido'];
 
@@ -58,6 +64,7 @@ class TramitacaoProcessoService
         'zona-via-alterada' => ['tipo' => 'analise', 'titulo' => 'Zona e via alteradas'],
         'ficha-salvar' => ['tipo' => 'analise', 'titulo' => 'Ficha de análise salva'],
         'ficha-finalizar' => ['tipo' => 'analise', 'titulo' => 'Ficha de análise finalizada'],
+        'ficha-encaminhada' => ['tipo' => 'analise', 'titulo' => 'Encaminhado à chefia'],
     ];
 
     /**
@@ -90,24 +97,43 @@ class TramitacaoProcessoService
             ->map(fn (Activity $a): ?int => $a->created_at?->getTimestamp())
             ->filter()
             ->all();
+        $encaminhamentosAChefia = $atividades
+            ->filter(fn (Activity $a): bool => $a->event === 'ficha-encaminhada')
+            ->map(fn (Activity $a): ?int => $a->created_at?->getTimestamp())
+            ->filter()
+            ->all();
+        $fichas = $processo->analysisRecords()->with('analyst')->get()->keyBy('revision');
+        $transicoes = $processo->analysisStatusTransitions()->oldest('id')->get();
+        $ultimaConclusao = $transicoes->last(fn ($t): bool => $t->to_status === AnalysisStatus::AnaliseConcluida);
         $itens = [];
 
-        foreach ($processo->analysisStatusTransitions()->oldest('id')->get() as $t) {
+        foreach ($transicoes as $t) {
             $momento = $t->created_at?->getTimestamp();
 
             if ($t->to_status === AnalysisStatus::Analisar
                 || (in_array($t->to_status, self::EIXO_DO_CONVITE, true) && $this->noMesmoMomento($momento, $mudancasDeSituacao))
-                || ($t->to_status === AnalysisStatus::Encaminhado && $this->noMesmoMomento($momento, $atribuicoes))) {
+                || ($t->to_status === AnalysisStatus::Encaminhado && $this->noMesmoMomento($momento, $atribuicoes))
+                || ($t->to_status === AnalysisStatus::ParaConclusao && $this->noMesmoMomento($momento, $encaminhamentosAChefia))) {
                 continue;
+            }
+
+            $detalhe = $t->reason;
+            $link = null;
+            $rotulo = null;
+
+            if ($ultimaConclusao !== null && $t->is($ultimaConclusao)) {
+                [$detalhe, $link, $rotulo] = $this->daConclusao($processo, (string) $t->reason);
             }
 
             $itens[] = $this->item(
                 tipo: 'analise',
                 titulo: 'Análise: '.($t->to_status?->label() ?? '—'),
-                detalhe: $t->reason,
+                detalhe: $detalhe,
                 em: $t->created_at?->toIso8601String(),
                 ator: $this->nomeDoAtor($usuarios, $t->actor_user_id),
                 de: $t->from_status?->label(),
+                link: $link,
+                rotuloDoLink: $rotulo,
             );
         }
 
@@ -116,7 +142,7 @@ class TramitacaoProcessoService
                 continue;
             }
 
-            $item = $this->deAtividade($a, $usuarios, $processo);
+            $item = $this->deAtividade($a, $usuarios, $processo, $fichas);
 
             if ($item !== null) {
                 $itens[] = $item;
@@ -145,10 +171,47 @@ class TramitacaoProcessoService
     }
 
     /**
+     * Parecer de conclusão: o texto da decisão (ou, sem ele, o parecer da ficha
+     * usada), quando o motivo gravado na conclusão ainda não o traz, e o link
+     * para a ficha em que a decisão se baseou.
+     *
+     * @return array{0: ?string, 1: ?string, 2: ?string}
+     */
+    private function daConclusao(ViabilityRequest $processo, string $motivo): array
+    {
+        $decisao = $processo->decision()->with('analysisRecord')->first();
+        $ficha = $decisao?->analysisRecord;
+        // No deferimento sem parecer no diálogo a decisão fica sem texto: vale o
+        // parecer da ficha em que ela se baseou.
+        $parecer = trim((string) ($decisao?->reason ?: $ficha?->parecer));
+        $detalhe = $motivo;
+
+        if ($parecer !== '' && ! str_contains($motivo, $parecer)) {
+            $detalhe = trim($motivo.' Parecer de conclusão: '.$parecer);
+        }
+
+        if ($ficha === null) {
+            return [$detalhe !== '' ? $detalhe : null, null, null];
+        }
+
+        return [
+            $detalhe !== '' ? $detalhe : null,
+            $this->linkDaFicha($processo, $ficha->revision),
+            "Ficha usada na decisão (revisão {$ficha->revision})",
+        ];
+    }
+
+    private function linkDaFicha(ViabilityRequest $processo, int $revisao): string
+    {
+        return route('gestao.processos.ficha.show', $processo, false).'?revisao='.$revisao.'&somente_leitura=1';
+    }
+
+    /**
      * @param  array<int, User>  $usuarios
+     * @param  Collection<int, AnalysisRecord>  $fichas
      * @return array<string, mixed>|null
      */
-    private function deAtividade(Activity $a, array $usuarios, ViabilityRequest $processo): ?array
+    private function deAtividade(Activity $a, array $usuarios, ViabilityRequest $processo, Collection $fichas): ?array
     {
         $resultado = $a->result;
 
@@ -185,9 +248,28 @@ class TramitacaoProcessoService
         }
 
         $daFicha = in_array($a->event, self::FICHA_ANALISE, true) && isset($a->properties['revision']);
+        $link = $daFicha ? $this->linkDaFicha($processo, (int) $a->properties['revision']) : null;
+        $rotulo = null;
         $detalhe = $daFicha
             ? 'Revisão '.$a->properties['revision'].' da ficha.'
             : (string) $a->description;
+
+        if ($daFicha && in_array($a->event, ['ficha-finalizar', 'ficha-encaminhada'], true)) {
+            [$detalhe, $rotulo] = $this->daFichaFinalizada($a, $fichas->get((int) $a->properties['revision']));
+        }
+
+        if ($a->event === 'ficha-conclusao') {
+            $vistoria = Inspection::query()->find($a->subject_id);
+            $link = route('gestao.processos.vistoria.visualizar', $processo, false).'?ficha='.$a->subject_id;
+            $rotulo = 'Abrir ficha de vistoria';
+            $parecer = trim((string) $vistoria?->parecer);
+            $detalhe = $parecer !== '' ? 'Parecer da vistoria: '.$parecer : $detalhe;
+        }
+
+        if ($a->event === 'vistoria-encaminhar' && filled($a->properties['motivo'] ?? null)) {
+            $detalhe = trim($detalhe.' Motivo: '.$a->properties['motivo']);
+        }
+
         if ($a->event === 'zona-via-alterada') {
             $detalhe = $this->detalheDaZonaVia($a->properties->toArray());
         }
@@ -206,8 +288,37 @@ class TramitacaoProcessoService
             detalhe: $detalhe !== '' ? $detalhe : null,
             em: $a->created_at?->toIso8601String(),
             ator: $this->nomeDoAtor($usuarios, $a->properties['ator_id'] ?? $a->causer_id),
-            link: $daFicha ? route('gestao.processos.ficha.show', $processo, false).'?revisao='.$a->properties['revision'].'&somente_leitura=1' : null,
+            link: $link,
+            rotuloDoLink: $rotulo,
         );
+    }
+
+    /**
+     * Ficha finalizada ou encaminhada à chefia: de quem é a ficha e o parecer
+     * que ela registra. A revisão finalizada é imutável, então o texto é o
+     * mesmo que o link abre.
+     *
+     * @return array{0: string, 1: string}
+     */
+    private function daFichaFinalizada(Activity $a, ?AnalysisRecord $ficha): array
+    {
+        $revisao = (int) $a->properties['revision'];
+        $partes = ["Revisão {$revisao}".($ficha?->analyst !== null ? ', de '.$ficha->analyst->name : '').'.'];
+        $parecer = trim((string) $ficha?->parecer);
+
+        if ($parecer !== '') {
+            $partes[] = ($a->event === 'ficha-encaminhada' ? 'Parecer de encaminhamento: ' : 'Parecer: ').$parecer;
+        }
+
+        if ($a->event === 'ficha-encaminhada' && filled($a->properties['indicado'] ?? null)) {
+            $partes[] = 'Indicado para concluir: '.$a->properties['indicado'].'.';
+        }
+
+        $rotulo = $a->event === 'ficha-encaminhada'
+            ? "Abrir ficha encaminhada (revisão {$revisao})"
+            : "Abrir ficha finalizada (revisão {$revisao})";
+
+        return [implode(' ', $partes), $rotulo];
     }
 
     /**
@@ -232,7 +343,7 @@ class TramitacaoProcessoService
     /**
      * @return array<string, mixed>
      */
-    private function item(string $tipo, string $titulo, ?string $detalhe, ?string $em, ?string $ator, ?string $de = null, ?string $resultado = null, ?string $link = null): array
+    private function item(string $tipo, string $titulo, ?string $detalhe, ?string $em, ?string $ator, ?string $de = null, ?string $resultado = null, ?string $link = null, ?string $rotuloDoLink = null): array
     {
         return [
             'tipo' => $tipo,
@@ -247,6 +358,7 @@ class TramitacaoProcessoService
             'distribuidor' => null,
             'resultado' => $resultado,
             'link' => $link,
+            'link_label' => $rotuloDoLink,
         ];
     }
 

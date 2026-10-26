@@ -133,8 +133,9 @@ class TramitacaoFichaTest extends TestCase
 
         $this->assertCount(1, $finalizadas);
         $this->assertSame('Lisa Sousa', $finalizadas[0]['ator']);
-        $this->assertSame('Revisão 1 da ficha.', $finalizadas[0]['reason']);
+        $this->assertSame('Revisão 1, de Lisa Sousa. Parecer: Parecer em elaboração.', $finalizadas[0]['reason']);
         $this->assertSame("/gestao/processos/{$ficha->viability_request_id}/ficha?revisao=1&somente_leitura=1", $finalizadas[0]['link']);
+        $this->assertSame('Abrir ficha finalizada (revisão 1)', $finalizadas[0]['link_label']);
     }
 
     public function test_ficha_de_outro_processo_nao_aparece(): void
