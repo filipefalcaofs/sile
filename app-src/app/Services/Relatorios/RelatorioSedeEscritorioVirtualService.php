@@ -2,6 +2,7 @@
 
 namespace App\Services\Relatorios;
 
+use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Models\VirtualOfficeInscriptionLock;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -75,7 +76,7 @@ class RelatorioSedeEscritorioVirtualService
     {
         return [
             'tipo' => $this->ehSede($r) ? 'sede' : 'abrigado',
-            'tvl' => $r->decision?->tvl_product_number,
+            'tvl' => ViabilityDecision::semPrefixo($r->decision?->tvl_product_number),
             'razao_social' => $r->company?->trade_name ?: $r->company?->legal_name,
             'data_emissao' => $r->decision?->decided_at?->toIso8601String(),
             'inscricao' => $r->property_registration,
@@ -94,7 +95,7 @@ class RelatorioSedeEscritorioVirtualService
         if (! empty($filtros['sede'])) {
             return VirtualOfficeInscriptionLock::query()
                 ->where('active', true)
-                ->whereHas('sede.decision', fn (Builder $d) => $d->where('tvl_product_number', $filtros['sede']))
+                ->whereHas('sede.decision', fn (Builder $d) => $d->whereIn('tvl_product_number', [$filtros['sede'], 'TVL-'.$filtros['sede']]))
                 ->pluck('property_registration')
                 ->unique()
                 ->values();

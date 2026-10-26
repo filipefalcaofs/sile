@@ -3,6 +3,7 @@
 namespace App\Services\Relatorios;
 
 use App\Enums\DecisionOutcome;
+use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Expresso\BusinessDeadlineCalculator;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -113,7 +114,7 @@ class RelatorioTempoEmissaoTvlService
             'dam_valor' => null,
             'solicitacao_id' => $r->id,
             'tvl_disponivel' => $tvl !== null,
-            'tvl_numero' => $tvl,
+            'tvl_numero' => ViabilityDecision::semPrefixo($tvl),
             'emissao' => $emissao?->toIso8601String(),
             'duracao_minutos' => ($abertura !== null && $emissao !== null)
                 ? $this->calculator->businessDurationBetween($abertura, $emissao)

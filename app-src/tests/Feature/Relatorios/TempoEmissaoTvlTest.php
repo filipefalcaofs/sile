@@ -122,7 +122,7 @@ class TempoEmissaoTvlTest extends TestCase
         // Nº de protocolo e Nº de TVL únicos por linha (projeção da tela/export).
         $linhaA = app(RelatorioTempoEmissaoTvlService::class)->linha($a->fresh(['decision', 'serviceType', 'cnaes']));
         $this->assertSame('VIA-2026-000001', $linhaA['processo']);
-        $this->assertSame('TVL-2026-000001', $linhaA['tvl_numero']);
+        $this->assertSame('2026-000001', $linhaA['tvl_numero']);
         $this->assertTrue($linhaA['tvl_disponivel']);
         $this->assertSame('Viabilidade', $linhaA['tipo']);
         // Duração Emissão−Abertura em minutos ÚTEIS (> 0 — cruza 3 dias corridos).
@@ -171,7 +171,7 @@ class TempoEmissaoTvlTest extends TestCase
                 ->has('relatorio.data', 1)
                 ->has('relatorio.data.0', fn (Assert $linha) => $linha
                     ->where('processo', 'VIA-2026-000001')
-                    ->where('tvl_numero', 'TVL-2026-000001')
+                    ->where('tvl_numero', '2026-000001')
                     ->where('tipo', 'Viabilidade')
                     ->etc())
                 ->has('servicos')
