@@ -4,6 +4,7 @@ namespace Tests\Feature\Regin;
 
 use App\Enums\ViabilityRequestOrigin;
 use App\Models\Activity;
+use App\Models\IntegrationCall;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Regin\ReginParecerNotifier;
@@ -124,6 +125,81 @@ class ReginReenviarPareceresCommandTest extends TestCase
         $notifier = $this->notifier(true);
 
         $this->artisan('regin:reenviar-pareceres')->assertSuccessful();
+
+        $this->assertSame([], $notifier->enviados);
+    }
+
+    private function confirmar(ViabilityRequest $processo, ?int $area): void
+    {
+        Activity::query()->create([
+            'log_name' => 'integracoes',
+            'event' => 'regin-parecer',
+            'description' => 'ok',
+            'subject_type' => $processo->getMorphClass(),
+            'subject_id' => $processo->id,
+            'result' => 'sucesso',
+        ]);
+
+        if ($area !== null) {
+            IntegrationCall::query()->create([
+                'direction' => 'saida',
+                'integration' => 'regin',
+                'method' => 'POST',
+                'url' => 'https://regin.example/recebe',
+                'outcome' => 'sucesso',
+                'request_body' => json_encode([
+                    'codFuncao' => 110,
+                    'protocolo' => $processo->external_reference,
+                    'dadosProcesso' => ['ANALISES' => ['AREA' => [['CODIGO_AREA' => $area]]]],
+                ]),
+            ]);
+        }
+    }
+
+    public function test_forcar_reenvia_o_protocolo_ja_confirmado(): void
+    {
+        $this->confirmar($this->processoDecidido('BAP2601000001'), 1);
+        $this->processoDecidido('BAP2601000002');
+        $notifier = $this->notifier(true);
+
+        $this->artisan('regin:reenviar-pareceres --forcar --protocolo=BAP2601000001')->assertSuccessful();
+
+        $this->assertSame(['BAP2601000001'], $notifier->enviados);
+    }
+
+    public function test_forcar_sem_protocolo_e_recusado(): void
+    {
+        $this->confirmar($this->processoDecidido('BAP2601000001'), 1);
+        $notifier = $this->notifier(true);
+
+        $this->artisan('regin:reenviar-pareceres --forcar')->assertFailed();
+
+        $this->assertSame([], $notifier->enviados);
+    }
+
+    public function test_area_errada_reenvia_so_quem_foi_aceito_com_area_diferente(): void
+    {
+        $this->confirmar($this->processoDecidido('BAP2601000001'), 1);
+        $this->confirmar($this->processoDecidido('BAP2601000002'), 70);
+        $this->confirmar($this->processoDecidido('BAP2601000003'), 1);
+        $notifier = $this->notifier(true);
+
+        $this->artisan('regin:reenviar-pareceres --area-errada --protocolo=BAP2601000001 --protocolo=BAP2601000002')->assertSuccessful();
+        $this->assertSame(['BAP2601000001'], $notifier->enviados);
+
+        $this->artisan('regin:reenviar-pareceres --area-errada --dry-run')
+            ->expectsOutputToContain('BAP2601000003: seria reenviado')
+            ->assertSuccessful();
+    }
+
+    public function test_area_errada_considera_o_envio_aceito_mais_recente(): void
+    {
+        $processo = $this->processoDecidido('BAP2601000001');
+        $this->confirmar($processo, 1);
+        $this->confirmar($processo, 70);
+        $notifier = $this->notifier(true);
+
+        $this->artisan('regin:reenviar-pareceres --area-errada')->assertSuccessful();
 
         $this->assertSame([], $notifier->enviados);
     }
