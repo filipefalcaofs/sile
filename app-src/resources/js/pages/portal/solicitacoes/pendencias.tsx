@@ -127,7 +127,6 @@ export default function Pendencias({ solicitacao, pendencias }: PendenciasProps)
                 title="Responder convite"
                 breadcrumbs={[
                     { label: 'Meu painel', href: '/portal/painel' },
-                    { label: 'Minhas solicitações', href: '/portal/solicitacoes' },
                     { label: titulo, href: `/portal/solicitacoes/${solicitacao.id}` },
                 ]}
                 actions={

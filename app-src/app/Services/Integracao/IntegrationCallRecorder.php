@@ -129,6 +129,8 @@ class IntegrationCallRecorder
         $alvo = $host.$path;
 
         $regras = [
+            // Antes do REGIN: a consulta do Portal de Serviços também mora em /api_integracao.
+            'portal_servicos' => ['ws-bff-portal-servicos/v1/acesso/', 'api_integracao/portal-servicos'],
             'overture' => ['overturemaps'],
             'edificacoes_microsoft' => ['minedbuildings', 'bfppub'],
             'ortofoto' => ['/imageserver/', 'mapeamento.salvador'],

@@ -3,6 +3,8 @@
 namespace App\Http\Middleware;
 
 use App\Models\User;
+use App\Services\Painel\ConvitesDoCidadao;
+use App\Services\PortalServicos\PortalServicos;
 use App\Support\Representation\CurrentRepresentation;
 use App\Support\Settings;
 use App\Support\Vocabulario;
@@ -53,6 +55,9 @@ class HandleInertiaRequests extends Middleware
             ],
             // Closure: avaliada na serialização da resposta, depois de o
             // ResolveRepresentation (middleware de rota) resolver o estado.
+            // Portal sem login, cadastro e senha próprios (HU-142): o front
+            // esconde a aba Senha de Minha conta.
+            'entradaPortalServicos' => fn () => PortalServicos::entradaDisponivel(),
             'actingFor' => fn () => app(CurrentRepresentation::class)->grantor()?->only('id', 'name'),
             // Banner do atendimento presencial assistido (HU-150): preenchido
             // pelo ResolveAssistedAttendance nas rotas do atendimento (console).
@@ -64,6 +69,11 @@ class HandleInertiaRequests extends Middleware
             'notificacoes' => [
                 'nao_lidas' => fn (): int => $user?->unreadNotifications()->count() ?? 0,
             ],
+            // Badge do item Responder convite: convites abertos e no prazo dos
+            // processos de que o usuário (efetivo) é requerente. Só no portal.
+            'convitesPendentes' => fn (): int => $guard === 'web' && $user !== null
+                ? app(ConvitesDoCidadao::class)->total(app(CurrentRepresentation::class)->effectiveUser($user))
+                : 0,
             'flash' => [
                 'status' => $request->session()->get('status'),
                 'error' => $request->session()->get('error'),

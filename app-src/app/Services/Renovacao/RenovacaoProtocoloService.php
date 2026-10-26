@@ -3,6 +3,7 @@
 namespace App\Services\Renovacao;
 
 use App\Enums\AnalysisCategory;
+use App\Enums\CompanySource;
 use App\Enums\ViabilityRequestOrigin;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\Cidadao;
@@ -14,6 +15,9 @@ use App\Models\ServiceDeclarationAcceptance;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
 use App\Services\Analise\EnviarParaAnaliseService;
+use App\Services\Cnpj\CnpjLookup;
+use App\Services\Cnpj\CnpjLookupException;
+use App\Services\Cnpj\CnpjNotFoundException;
 use App\Services\Legado\TvlLegadaDetalhe;
 use App\Services\Solicitacao\ProtocolarSolicitacaoService;
 use App\Services\Solicitacao\ProtocolNumberGenerator;
@@ -43,6 +47,7 @@ class RenovacaoProtocoloService
         private EnviarParaAnaliseService $enviarAnalise,
         private RenovacaoLegadaElegibilidadeService $elegibilidadeLegada,
         private ResolvedorEnderecoImovel $enderecoImovel,
+        private CnpjLookup $cnpjLookup,
     ) {}
 
     /**
@@ -91,14 +96,16 @@ class RenovacaoProtocoloService
      * Protocola a renovação de uma TVL do sistema legado, que não tem linha
      * local para travar: a exclusão é um lock atômico pelo número legado e a
      * elegibilidade é reavaliada dentro dele e da transação, para o segundo
-     * pedido enxergar a renovação aberta pelo primeiro.
+     * pedido enxergar a renovação aberta pelo primeiro. A empresa é a do
+     * Viabiliza com o CNPJ (a de menor id) ou é criada com os dados da TVL,
+     * dentro da mesma transação e de um lock pelo CNPJ, para não duplicar.
      *
      * @param  array{email?: string|null, phone?: string|null, mobile?: string|null}  $contato
      * @param  list<int>  $declaracaoIds
      */
-    public function protocolarLegada(TvlLegadaDetalhe $tvl, Company $empresa, Cidadao $ator, array $contato, array $declaracaoIds): ViabilityRequest
+    public function protocolarLegada(TvlLegadaDetalhe $tvl, string $cnpj, Cidadao $ator, array $contato, array $declaracaoIds): ViabilityRequest
     {
-        $avaliacao = $this->elegibilidadeLegada->avaliar($tvl, $empresa);
+        $avaliacao = $this->elegibilidadeLegada->avaliar($tvl, new Company(['cnpj' => $cnpj]));
 
         if (! $avaliacao->elegivel) {
             throw new DomainException($avaliacao->motivo ?? 'Esta viabilidade não pode ser renovada.');
@@ -107,6 +114,7 @@ class RenovacaoProtocoloService
         $endereco = $this->enderecoDoProcessoLegado($tvl);
 
         $lock = Cache::lock('renovacao-legada:'.$tvl->numero, 60);
+        $lockEmpresa = Cache::lock('renovacao-legada-empresa:'.$cnpj, 60);
 
         try {
             $lock->block(3);
@@ -115,11 +123,19 @@ class RenovacaoProtocoloService
         }
 
         try {
-            return $this->protocolarComum(
+            $lockEmpresa->block(3);
+        } catch (LockTimeoutException) {
+            $lock->release();
+
+            throw new DomainException('Já existe um protocolo em andamento para esta empresa. Aguarde alguns instantes.');
+        }
+
+        try {
+            return DB::transaction(fn (): ViabilityRequest => $this->protocolarComum(
                 atributos: [
                     'renews_legacy_tvl_number' => $tvl->numero,
                     'legacy_tvl_snapshot' => $this->snapshotLegado($tvl),
-                    'company_id' => $empresa->id,
+                    'company_id' => ($empresa = $this->empresaDaRenovacaoLegada($tvl, $cnpj, $endereco))->id,
                     'property_registration' => $tvl->inscricaoImobiliaria,
                     'address_street' => $endereco['logradouro'],
                     'address_number' => $endereco['numero'],
@@ -143,10 +159,52 @@ class RenovacaoProtocoloService
                         throw new DomainException($reavaliacao->motivo ?? 'Esta viabilidade não pode ser renovada.');
                     }
                 },
-            );
+            ));
         } finally {
+            $lockEmpresa->release();
             $lock->release();
         }
+    }
+
+    /**
+     * Empresa da renovação de TVL do sistema anterior: a do Viabiliza com o
+     * CNPJ (a mais antiga, se houver repetidas) ou uma nova, com a razão
+     * social da TVL (ou do cadastro do CNPJ) e o endereço do imóvel.
+     *
+     * @param  array{logradouro: ?string, numero: ?string, bairro: ?string, cep: ?string}  $endereco
+     *
+     * @throws DomainException
+     */
+    private function empresaDaRenovacaoLegada(TvlLegadaDetalhe $tvl, string $cnpj, array $endereco): Company
+    {
+        $existente = Company::query()->where('cnpj', $cnpj)->orderBy('id')->first();
+
+        if ($existente !== null) {
+            return $existente;
+        }
+
+        $razao = trim((string) $tvl->razaoSocial);
+
+        if ($razao === '') {
+            try {
+                $razao = $this->cnpjLookup->lookup($cnpj)->legalName;
+            } catch (CnpjNotFoundException|CnpjLookupException) {
+                throw new DomainException('Não foi possível confirmar a razão social da empresa agora. Tente novamente em instantes.');
+            }
+        }
+
+        return Company::query()->create([
+            'cnpj' => $cnpj,
+            'legal_name' => $razao,
+            'street' => $endereco['logradouro'],
+            'number' => $endereco['numero'],
+            'complement' => $tvl->complemento,
+            'neighborhood' => $endereco['bairro'],
+            'city' => 'Salvador',
+            'state' => 'BA',
+            'zip_code' => $endereco['cep'],
+            'source' => CompanySource::Legado,
+        ]);
     }
 
     /**
@@ -377,11 +435,13 @@ class RenovacaoProtocoloService
 
         $dados = [];
 
-        if (filled($contato['email'] ?? null)) {
+        // Qualquer cidadão pode renovar: o contato informado só preenche o
+        // que a empresa ainda não tem, nunca troca o contato dela.
+        if (filled($contato['email'] ?? null) && blank($empresa->email)) {
             $dados['email'] = $contato['email'];
         }
 
-        if (filled($contato['phone'] ?? null)) {
+        if (filled($contato['phone'] ?? null) && blank($empresa->phone)) {
             $dados['phone'] = $contato['phone'];
         }
 

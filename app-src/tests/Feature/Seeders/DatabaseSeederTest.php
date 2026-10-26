@@ -106,7 +106,9 @@ class DatabaseSeederTest extends TestCase
         // ortofotos 2024 e 2016/2017 e token da ortofoto — 2026-10-19).
         // + 2 da renovação de TVL do legado (renovacao.legado.janela_a_vencer_dias
         // e renovacao.legado.permite_vencida).
-        $this->assertSame(125, Parameter::query()->count());
+        // + 5 da entrada pelo Portal de Serviços (features.login_portal_servicos e
+        // integrations.portal_servicos.*).
+        $this->assertSame(130, Parameter::query()->count());
         $this->assertTrue(
             Activity::query()
                 ->where('log_name', 'cnaes')
@@ -406,7 +408,7 @@ class DatabaseSeederTest extends TestCase
         $this->assertSame(0, User::query()->where('email', 'cidadao@sile.dev')->count());
         $this->assertSame(18, Role::query()->count());
         $this->assertSame(1331, Cnae::query()->count());
-        $this->assertSame(125, Parameter::query()->count());
+        $this->assertSame(130, Parameter::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoMunicipal)->count());
         $this->assertSame(1331, RiskClassification::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoSanitario)->count());

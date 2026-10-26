@@ -86,7 +86,7 @@ class SolicitacaoController extends Controller
         $cancelableStates = $this->cancelableStates();
 
         $solicitacoes = ViabilityRequest::query()
-            ->where('requester_cidadao_id', $effectiveUser->id)
+            ->visivelPara($effectiveUser->id, $effectiveUser->cpf)
             ->with(['company', 'serviceType'])
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($inner) use ($search) {
@@ -103,10 +103,11 @@ class SolicitacaoController extends Controller
             ->through(fn (ViabilityRequest $solicitacao) => [
                 ...SolicitacaoResumoResource::make($solicitacao)->resolve(),
                 // Só rascunho pode continuar a edição no wizard (policy update).
-                'editable' => $solicitacao->status === ViabilityRequestStatus::Rascunho,
+                'editable' => $solicitacao->status === ViabilityRequestStatus::Rascunho && $solicitacao->requester_cidadao_id === $effectiveUser->id,
                 // A ação de cancelar só aparece nos estados canceláveis (HU-070,
-                // parâmetro solicitacao.cancelamento.estados_cancelaveis).
-                'cancelable' => in_array($solicitacao->status->value, $cancelableStates, true),
+                // parâmetro solicitacao.cancelamento.estados_cancelaveis) e para
+                // o requerente — quem vê pelo CPF vinculado não cancela.
+                'cancelable' => in_array($solicitacao->status->value, $cancelableStates, true) && $solicitacao->requester_cidadao_id === $effectiveUser->id,
             ]);
 
         return Inertia::render('portal/solicitacoes/index', [

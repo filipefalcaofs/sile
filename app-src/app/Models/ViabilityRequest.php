@@ -18,6 +18,7 @@ use App\Enums\ZonaFonte;
 use App\Services\Tratamento\RespostaPlanilha;
 use Database\Factories\ViabilityRequestFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -613,6 +614,49 @@ class ViabilityRequest extends Model
     public function analysisStatusTransitions(): HasMany
     {
         return $this->hasMany(AnalysisStatusTransition::class, 'viability_request_id');
+    }
+
+    /**
+     * Processos que a pessoa vê no portal: os de que é requerente ou em que o
+     * CPF dela está vinculado (sócio do REGIN, solicitante declarado). Mesma
+     * regra da política view, para lista, painel e Portal de Serviços.
+     */
+    public function scopeVisivelPara(Builder $query, ?int $cidadaoId, ?string $cpf): Builder
+    {
+        $cpf = preg_replace('/\D/', '', (string) $cpf) ?? '';
+
+        return $query->where(fn (Builder $inner) => $inner
+            ->when($cidadaoId !== null, fn (Builder $dono) => $dono->where('requester_cidadao_id', $cidadaoId))
+            ->when(strlen($cpf) === 11, fn (Builder $vinculo) => $vinculo->orWhereHas('cpfsVinculados', fn (Builder $cpfs) => $cpfs->where('cpf', $cpf)))
+            ->when($cidadaoId === null && strlen($cpf) !== 11, fn (Builder $nada) => $nada->whereRaw('1 = 0')));
+    }
+
+    /**
+     * Processos em que a pessoa responde convite: os de que é requerente ou
+     * em que o CPF dela é o do solicitante declarado do REGIN. O sócio do
+     * REGIN fica de fora: ele só consulta.
+     */
+    public function scopeRespondivelPor(Builder $query, ?int $cidadaoId, ?string $cpf): Builder
+    {
+        $cpf = preg_replace('/\D/', '', (string) $cpf) ?? '';
+
+        return $query->where(fn (Builder $inner) => $inner
+            ->when($cidadaoId !== null, fn (Builder $dono) => $dono->where('requester_cidadao_id', $cidadaoId))
+            ->when(strlen($cpf) === 11, fn (Builder $vinculo) => $vinculo->orWhereHas('cpfsVinculados', fn (Builder $cpfs) => $cpfs
+                ->where('cpf', $cpf)
+                ->where('papel', ViabilityRequestCpf::PAPEL_SOLICITANTE)))
+            ->when($cidadaoId === null && strlen($cpf) !== 11, fn (Builder $nada) => $nada->whereRaw('1 = 0')));
+    }
+
+    /**
+     * CPFs que veem o processo além do solicitante (sócios do REGIN e
+     * solicitante declarado).
+     *
+     * @return HasMany<ViabilityRequestCpf, $this>
+     */
+    public function cpfsVinculados(): HasMany
+    {
+        return $this->hasMany(ViabilityRequestCpf::class);
     }
 
     /**

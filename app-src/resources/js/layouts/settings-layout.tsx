@@ -16,7 +16,9 @@ const navItems = [
 ];
 
 export default function SettingsLayout({ children }: SettingsLayoutProps) {
-    const { auth, flash } = usePage<SharedProps>().props;
+    const { auth, flash, entradaPortalServicos } = usePage<SharedProps>().props;
+    // Entrada pelo Portal de Serviços (HU-142): o cidadão usa a senha do GOV.BR.
+    const itens = entradaPortalServicos ? navItems.filter((item) => item.href !== '/portal/conta/senha') : navItems;
     const { url } = usePage();
 
     const dashboardHref = '/portal/painel';
@@ -53,7 +55,7 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
                         <nav className="shrink-0 sm:w-56">
                             <Surface className="rounded-2xl border border-gray-200 bg-white p-3 dark:border-gray-800 dark:bg-white/[0.03]">
                                 <ul className="flex flex-row gap-1 sm:flex-col">
-                                    {navItems.map((item) => (
+                                    {itens.map((item) => (
                                         <li key={item.href} className="flex-1 sm:flex-none">
                                             <Link
                                                 href={item.href}

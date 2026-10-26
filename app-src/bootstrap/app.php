@@ -1,15 +1,19 @@
 <?php
 
+use App\Http\Middleware\BloqueiaEntradaLocalDoPortal;
 use App\Http\Middleware\ConfigureEnvironmentSession;
 use App\Http\Middleware\EnsureConsultaViabilidadeEnabled;
 use App\Http\Middleware\EnsureLgpdTermAccepted;
 use App\Http\Middleware\EnsurePortalServicosEnabled;
+use App\Http\Middleware\EnsurePortalServicosExtrasEnabled;
 use App\Http\Middleware\EnsurePortalSolicitacaoEnabled;
 use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\RedirectGestaoIfAuthenticated;
 use App\Http\Middleware\SecurityHeaders;
+use App\Services\PortalServicos\PortalServicos;
 use App\Support\Audit\AuditService;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -17,6 +21,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Exceptions\InvalidSignatureException;
 use Illuminate\Support\Facades\Log;
+use Inertia\Inertia;
 use Spatie\Permission\Exceptions\UnauthorizedException;
 use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleMiddleware;
@@ -53,6 +58,7 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleInertiaRequests::class,
             SecurityHeaders::class,
             EnsureUserIsActive::class,
+            BloqueiaEntradaLocalDoPortal::class,
         ]);
 
         $middleware->alias([
@@ -62,15 +68,21 @@ return Application::configure(basePath: dirname(__DIR__))
             'gestao.guest' => RedirectGestaoIfAuthenticated::class,
             'portal.solicitacao' => EnsurePortalSolicitacaoEnabled::class,
             'portal.servicos' => EnsurePortalServicosEnabled::class,
+            'portal.extras' => EnsurePortalServicosExtrasEnabled::class,
             'consulta.viabilidade' => EnsureConsultaViabilidadeEnabled::class,
         ]);
 
         // Logins separados por contexto: retaguarda usa /gestao/login,
         // portal público usa /portal/login (Fortify).
+        // Com a entrada pelo Portal de Serviços ligada (HU-142), o portal manda
+        // o visitante ao login do Portal de Serviços; o redirect()->guest() do
+        // Laravel guarda a página pedida em url.intended para a volta.
         $middleware->redirectGuestsTo(
-            fn (Request $request) => $request->is('gestao', 'gestao/*')
-                ? route('gestao.login')
-                : route('login'),
+            fn (Request $request) => match (true) {
+                $request->is('gestao', 'gestao/*') => route('gestao.login'),
+                PortalServicos::entradaDisponivel() => PortalServicos::urlLogin(PortalServicos::urlEntrada()),
+                default => route('login'),
+            },
         );
 
         // Autenticado no portal em rota guest volta ao painel do cidadão.
@@ -109,6 +121,21 @@ return Application::configure(basePath: dirname(__DIR__))
         // O Handler converte AuthorizationException em AccessDeniedHttpException
         // (prepareException) ANTES dos render callbacks — por isso o tipo aqui
         // é a exceção preparada, com a original em getPrevious().
+        // Visitante em navegação do Inertia no portal com a entrada pelo Portal de
+        // Serviços (HU-142): o XHR não segue redirect para outro domínio, então
+        // a ida ao login do portal é um 409 com X-Inertia-Location.
+        $exceptions->render(function (AuthenticationException $exception, Request $request) {
+            if (! $request->header('X-Inertia') || $request->is('gestao', 'gestao/*') || ! PortalServicos::entradaDisponivel()) {
+                return null;
+            }
+
+            if ($request->isMethod('GET')) {
+                $request->session()->put('url.intended', $request->fullUrl());
+            }
+
+            return Inertia::location(PortalServicos::urlLogin(PortalServicos::urlEntrada()));
+        });
+
         $exceptions->render(function (NotFoundHttpException $exception, Request $request) {
             if (! $request->expectsJson() || ! $exception->getPrevious() instanceof ModelNotFoundException) {
                 return null;

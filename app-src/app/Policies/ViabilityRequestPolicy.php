@@ -6,6 +6,7 @@ use App\Enums\ViabilityRequestStatus;
 use App\Models\Cidadao;
 use App\Models\User;
 use App\Models\ViabilityRequest;
+use App\Models\ViabilityRequestCpf;
 use App\Support\Representation\CurrentRepresentation;
 
 /**
@@ -34,12 +35,30 @@ class ViabilityRequestPolicy
     }
 
     /**
-     * Ver a solicitação: somente o dono/representado (qualquer status — o
-     * histórico continua visível ao requerente).
+     * Ver a solicitação: o dono/representado (qualquer status — o histórico
+     * continua visível ao requerente) ou o solicitante declarado do REGIN.
      */
     public function view(User|Cidadao $user, ViabilityRequest $request): bool
     {
-        return $this->owns($user, $request);
+        return $this->owns($user, $request) || $this->vinculadoPeloCpf($user, $request);
+    }
+
+    /**
+     * Solicitante declarado do REGIN: vê o processo e responde a convite (que
+     * usa esta mesma regra), sem ser o requerente. O sócio só consulta.
+     */
+    private function vinculadoPeloCpf(User|Cidadao $ator, ViabilityRequest $request): bool
+    {
+        if (! $ator instanceof Cidadao) {
+            return false;
+        }
+
+        $cpf = (string) (app(CurrentRepresentation::class)->grantor() ?? $ator)->cpf;
+
+        return strlen($cpf) === 11 && $request->cpfsVinculados()
+            ->where('cpf', $cpf)
+            ->where('papel', ViabilityRequestCpf::PAPEL_SOLICITANTE)
+            ->exists();
     }
 
     /**

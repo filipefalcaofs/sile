@@ -4,9 +4,9 @@ import {
     acoesDoPortal,
     acoesPublicas,
     assertPortalNavHealth,
-    FILTROS_SOLICITACOES,
     PORTAL_ACOES,
     PORTAL_NAV_GROUPS,
+    ROTA_CONVITES,
     type PortalAcao,
     type PortalNavGroup,
 } from './portal-nav';
@@ -23,13 +23,8 @@ describe('Catálogo de navegação do portal do cidadão', () => {
         expect(assertPortalNavHealth()).toEqual([]);
     });
 
-    it('lista todos os serviços do cidadão no menu', () => {
-        expect(hrefsDoGrupo('servicos')).toEqual([
-            '/portal/viabilidade',
-            '/portal/solicitacoes',
-            '/portal/renovacao',
-            '/portal/empresas',
-        ]);
+    it('lista só os três serviços do cidadão no menu', () => {
+        expect(hrefsDoGrupo('servicos')).toEqual(['/portal/renovacao', '/portal/consulta', '/portal/convites']);
     });
 
     it('põe painel e notificações em Início, e dados e acessos em Minha conta', () => {
@@ -48,26 +43,19 @@ describe('Catálogo de navegação do portal do cidadão', () => {
     it('mostra na landing só as ações públicas, todas com link', () => {
         const publicas = acoesPublicas();
 
-        expect(publicas.map((acao) => acao.href)).toEqual([
-            '/portal/viabilidade',
-            '/portal/solicitacoes/nova',
-            '/portal/renovacao',
-            '/portal/procuracoes',
-        ]);
+        expect(publicas.map((acao) => acao.href)).toEqual(['/portal/renovacao', '/portal/consulta', '/portal/convites']);
         expect(publicas.every((acao) => acao.href.startsWith('/portal/'))).toBe(true);
     });
 
-    it('aponta os indicadores do painel para a lista já filtrada', () => {
-        expect(FILTROS_SOLICITACOES.emAnalise).toBe('/portal/solicitacoes?status=em_analise');
-        expect(FILTROS_SOLICITACOES.convites).toBe('/portal/solicitacoes?status=em_pendencia');
-        expect(FILTROS_SOLICITACOES.todas).toBe('/portal/solicitacoes');
+    it('aponta o indicador de convites do painel para a lista de convites', () => {
+        expect(ROTA_CONVITES).toBe('/portal/convites');
     });
 
     it('acusa serviço do menu sem ação no painel', () => {
-        const semEmpresas: PortalAcao[] = PORTAL_ACOES.filter((acao) => acao.href !== '/portal/empresas');
+        const semConsulta: PortalAcao[] = PORTAL_ACOES.filter((acao) => acao.href !== '/portal/consulta');
 
-        expect(assertPortalNavHealth(PORTAL_NAV_GROUPS, semEmpresas)).toContain(
-            'Serviço "Minhas empresas" não tem ação no painel.',
+        expect(assertPortalNavHealth(PORTAL_NAV_GROUPS, semConsulta)).toContain(
+            'Serviço "Consultar processo" não tem ação no painel.',
         );
     });
 
@@ -93,31 +81,25 @@ describe('Catálogo de navegação do portal do cidadão', () => {
     });
 });
 
-describe('Interruptor da consulta prévia na navegação', () => {
-    const CONSULTA = '/portal/viabilidade';
+describe('Serviços retirados e convites na navegação', () => {
+    const retirados = ['/portal/viabilidade', '/portal/solicitacoes', '/portal/empresas', '/portal/procuracoes'];
 
-    it('mantém a consulta no menu e nas ações quando ligada', () => {
-        expect(acoesDoPortal().map((acao) => acao.href)).toContain(CONSULTA);
-        expect(acoesPublicas().map((acao) => acao.href)).toContain(CONSULTA);
-        expect(portalSidebarGroups().flatMap((group) => group.items.map((item) => item.href))).toContain(CONSULTA);
+    it('não oferece consulta prévia, solicitação, empresas nem procurações', () => {
+        const hrefs = [
+            ...acoesDoPortal().map((acao) => acao.href),
+            ...portalSidebarGroups().flatMap((group) => group.items.map((item) => item.href)),
+        ];
+
+        for (const retirado of retirados) {
+            expect(hrefs.some((href) => href.startsWith(retirado)), retirado).toBe(false);
+        }
     });
 
-    it('tira só a consulta das ações do painel e da home quando desligada', () => {
-        const painel = acoesDoPortal(false).map((acao) => acao.href);
-        const home = acoesPublicas(false).map((acao) => acao.href);
+    it('mostra a contagem de convites só no item Responder convite', () => {
+        const itens = portalSidebarGroups(true, true, 2).flatMap((group) => group.items);
 
-        expect(painel).not.toContain(CONSULTA);
-        expect(home).not.toContain(CONSULTA);
-        expect(painel).toContain('/portal/solicitacoes/nova');
-        expect(home).toContain('/portal/renovacao');
-    });
-
-    it('tira só a consulta do menu lateral quando desligada, sem mexer nos outros serviços', () => {
-        const hrefs = portalSidebarGroups(true, false).flatMap((group) => group.items.map((item) => item.href));
-
-        expect(hrefs).not.toContain(CONSULTA);
-        expect(hrefs).toContain('/portal/solicitacoes');
-        expect(hrefs).toContain('/portal/empresas');
+        expect(itens.find((item) => item.href === '/portal/convites')?.badge).toBe(2);
+        expect(itens.filter((item) => item.badge).length).toBe(1);
     });
 
     it('com os serviços do portal desligados o grupo de serviços continua fora do menu', () => {
