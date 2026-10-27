@@ -1,1 +1,0 @@
-import{t as e}from"./jsx-runtime-DsKLSDJq.js";import{n as t}from"./select-9U-4rFfG.js";var n=e();function r(e){return(0,n.jsx)(t,{searchable:!0,...e})}export{r as t};
