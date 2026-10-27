@@ -1760,21 +1760,6 @@ export default function FichaAnaliseShow({
                                                 draggable={false}
                                                 enquadrar
                                                 camadas={camadasDoMapa}
-                            {localizacao?.zona_via_alterada && (
-                                <p
-                                    className="mt-2 rounded-lg border border-blue-light-200 bg-blue-light-50 px-3 py-2 text-theme-xs text-blue-light-700 dark:border-blue-light-500/30 dark:bg-blue-light-500/10 dark:text-blue-light-400"
-                                    role="status"
-                                >
-                                    Zona e/ou via alteradas pelo analista
-                                    {localizacao.zona_via_alterada.por ? ` ${localizacao.zona_via_alterada.por}` : ''}
-                                    {localizacao.zona_via_alterada.em
-                                        ? ` em ${new Date(localizacao.zona_via_alterada.em).toLocaleString('pt-BR')}`
-                                        : ''}
-                                    . Antes: zona {valorOuTraco(localizacao.zona_via_alterada.antes.zona)}, via{' '}
-                                    {valorOuTraco(localizacao.zona_via_alterada.antes.via)}.
-                                </p>
-                            )}
-
                                             />
                                         }
                                     />
@@ -1800,6 +1785,21 @@ export default function FichaAnaliseShow({
                                 <DescItem label="Zona">{valorOuTraco(localizacao?.zona)}</DescItem>
                                 <DescItem label="Via">{valorOuTraco(localizacao?.via)}</DescItem>
                             </dl>
+
+                            {localizacao?.zona_via_alterada && (
+                                <p
+                                    className="mt-2 rounded-lg border border-blue-light-200 bg-blue-light-50 px-3 py-2 text-theme-xs text-blue-light-700 dark:border-blue-light-500/30 dark:bg-blue-light-500/10 dark:text-blue-light-400"
+                                    role="status"
+                                >
+                                    Zona e/ou via alteradas pelo analista
+                                    {localizacao.zona_via_alterada.por ? ` ${localizacao.zona_via_alterada.por}` : ''}
+                                    {localizacao.zona_via_alterada.em
+                                        ? ` em ${new Date(localizacao.zona_via_alterada.em).toLocaleString('pt-BR')}`
+                                        : ''}
+                                    . Antes: zona {valorOuTraco(localizacao.zona_via_alterada.antes.zona)}, via{' '}
+                                    {valorOuTraco(localizacao.zona_via_alterada.antes.via)}.
+                                </p>
+                            )}
 
                             {podeEditarZonaVia && !somenteLeitura && (
                                 <div className="mt-3">
@@ -1847,8 +1847,6 @@ export default function FichaAnaliseShow({
                                                     }`}
                                                 >
                                                     {opcao.label}
-                <AnexosAnaliseCard processoId={processo.id} anexos={anexosAnalise} editavel={editavel && !somenteLeitura} />
-
                                                 </button>
                                             );
                                         })}
@@ -1951,6 +1949,8 @@ export default function FichaAnaliseShow({
                         {comparacaoCnaes && (
                             <ComparacaoCnaesCard processoId={processo.id} comparacao={comparacaoCnaes} podeCorrigir={editavel} />
                         )}
+
+                        <AnexosAnaliseCard processoId={processo.id} anexos={anexosAnalise} editavel={editavel && !somenteLeitura} />
 
                         {/* Enquadramento por CNAE (espelha a ficha SAPS) */}
                         <Card>
