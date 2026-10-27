@@ -36,7 +36,6 @@ class ServicoNomenclatura extends Model
         'Alteração do nome empresarial (firma ou denominação)',
         'Alteração do tipo de unidade',
         'Alteração de atividade',
-        'Alteração de endereço',
         'Viabilidade — primeiro estabelecimento',
     ];
 

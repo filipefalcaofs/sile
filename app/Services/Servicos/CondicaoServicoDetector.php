@@ -43,10 +43,14 @@ class CondicaoServicoDetector
 
     private function pelosCnaes(ViabilityRequest $processo, ViabilityRequest $anterior): CondicaoServico
     {
-        $atuais = $processo->cnaes()->pluck('cnaes.id')->all();
-        $excluidos = $anterior->cnaes()->pluck('cnaes.id')->diff($atuais);
+        $atuais = $processo->cnaes()->pluck('cnaes.id');
+        $antes = $anterior->cnaes()->pluck('cnaes.id');
 
-        return $excluidos->isNotEmpty() ? CondicaoServico::CnaeExcluido : CondicaoServico::CnaeIncluido;
+        if ($antes->diff($atuais)->isNotEmpty()) {
+            return CondicaoServico::CnaeExcluido;
+        }
+
+        return $atuais->diff($antes)->isNotEmpty() ? CondicaoServico::CnaeIncluido : CondicaoServico::CnaeSemAlteracao;
     }
 
     private function peloEndereco(ViabilityRequest $processo, ViabilityRequest $anterior): ?CondicaoServico

@@ -77,9 +77,9 @@ class ServicoNomenclaturaTest extends TestCase
             'Inscrição de primeiro estabelecimento' => 'Viabilidade de Localização',
             'Inscrição dos demais estabelecimentos' => 'Viabilidade de Localização',
             'Alteração de atividades econômicas (principal e secundárias)' => 'Revisão de Atividade - Inclusão',
-            'Alteração de endereço dentro do mesmo município' => 'Revisão de Endereço',
-            'Alteração de endereço entre estados' => 'Revisão de Endereço',
-            'Alteração de endereço entre municípios dentro do mesmo estado' => 'Revisão de Endereço',
+            'Alteração de endereço dentro do mesmo município' => 'Alteração de Endereço',
+            'Alteração de endereço entre estados' => 'Alteração de Endereço',
+            'Alteração de endereço entre municípios dentro do mesmo estado' => 'Alteração de Endereço',
         ];
 
         foreach ($esperado as $de => $para) {

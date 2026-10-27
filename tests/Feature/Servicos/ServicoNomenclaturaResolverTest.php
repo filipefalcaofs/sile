@@ -57,7 +57,7 @@ class ServicoNomenclaturaResolverTest extends TestCase
         ServicoNomenclatura::garantir('Alteração de nome empresarial');
         $processo = $this->processoCom('Alteração de nome empresarial', 'Alteração de endereço entre estados');
 
-        $this->assertSame(['Revisão de Endereço'], $this->servicos($processo));
+        $this->assertSame(['Alteração de Endereço'], $this->servicos($processo));
     }
 
     public function test_sem_nenhum_exibir_ligado_mostra_o_para_de_todos(): void
@@ -92,21 +92,21 @@ class ServicoNomenclaturaResolverTest extends TestCase
     public function test_para_com_caixa_diferente_aparece_uma_vez_com_a_primeira_grafia(): void
     {
         ServicoNomenclatura::query()->where('chave', ServicoNomenclatura::chaveDe('Alteração de endereço entre estados'))
-            ->update(['para' => 'Revisão de endereço']);
+            ->update(['para' => 'Alteração de endereço']);
         $processo = $this->processoCom('Alteração de endereço dentro do mesmo município', 'Alteração de endereço entre estados');
 
-        $this->assertSame(['Revisão de Endereço'], $this->servicos($processo));
+        $this->assertSame(['Alteração de Endereço'], $this->servicos($processo));
     }
 
     public function test_opcoes_agrupam_para_com_caixa_diferente_e_tem_valor_estavel_pelo_nome(): void
     {
         ServicoNomenclatura::query()->where('chave', ServicoNomenclatura::chaveDe('Alteração de endereço entre estados'))
-            ->update(['para' => 'Revisão de endereço']);
+            ->update(['para' => 'Alteração de endereço']);
         $this->processoCom('Alteração de endereço dentro do mesmo município', 'Alteração de endereço entre estados');
 
         $opcoes = app(ServicoNomenclaturaResolver::class)->opcoesDeEvento();
 
-        $this->assertSame([['value' => 'nrevisao de endereco', 'label' => 'Revisão de Endereço']], $opcoes);
+        $this->assertSame([['value' => 'nalteracao de endereco', 'label' => 'Alteração de Endereço']], $opcoes);
     }
 
     public function test_carrega_a_tabela_uma_unica_vez(): void
