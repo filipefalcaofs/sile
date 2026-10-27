@@ -7,14 +7,15 @@ use App\Services\Expresso\SedeEscritorioVirtualGatilho;
 use App\Support\Audit\AuditService;
 
 /**
- * Alteração de atividades recebida da JUCEB (evento 244): consulta a viabilidade
- * vinculada ao CNPJ na SEFAZ, compara os CNAEs e grava o resultado no processo.
+ * Alteração de atividades recebida da JUCEB (evento 244): busca a viabilidade
+ * anterior da empresa (processo anterior no Viabiliza, legado ou SEFAZ), compara
+ * os CNAEs e grava o resultado no processo.
  * Pedido do portal, que traz a intenção incluir/excluir por CNAE, não passa por aqui.
  */
 class ConsultarComparacaoCnaesService
 {
     public function __construct(
-        private SefazViabilidadeConsultaGateway $sefaz,
+        private CadeiaViabilidadeAnterior $anterior,
         private ComparacaoCnaesViabilidadeService $comparacao,
         private AuditService $audit,
     ) {}
@@ -64,7 +65,8 @@ class ConsultarComparacaoCnaesService
             return ComparacaoCnaesViabilidade::fromArray($request->comparacao_cnaes);
         }
 
-        $viabilidade = $this->sefaz->consultarPorCnpj((string) $request->company->cnpj);
+        $encontrada = $this->anterior->consultar($request, (string) $request->company->cnpj);
+        $viabilidade = $encontrada['viabilidade'] ?? null;
 
         $resultado = $this->comparacao->comparar(
             $request->cnaes()->pluck('code')->all(),
@@ -77,8 +79,8 @@ class ConsultarComparacaoCnaesService
         $this->audit->log(
             'integracoes',
             'sefaz-consulta-viabilidade',
-            "Viabilidade do CNPJ consultada na SEFAZ e comparada com o pedido #{$request->id}",
-            properties: ['viability_request_id' => $request->id] + $resultado->toArray(),
+            "Viabilidade anterior do CNPJ consultada e comparada com o pedido #{$request->id}",
+            properties: ['viability_request_id' => $request->id, 'fonte' => $encontrada['fonte'] ?? null] + $resultado->toArray(),
             subject: $request,
         );
 

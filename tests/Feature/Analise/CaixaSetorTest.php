@@ -154,7 +154,7 @@ class CaixaSetorTest extends TestCase
         )->keyBy('id');
 
         $this->assertSame(
-            ['Revisão de Endereço', 'Revisão de Atividade - Inclusão'],
+            ['Alteração de Endereço', 'Revisão de Atividade - Inclusão'],
             $linhas[$daJuceb->id]['servicos'],
         );
         $this->assertSame([$servico->name], $linhas[$doPortal->id]['servicos']);
@@ -252,7 +252,6 @@ class CaixaSetorTest extends TestCase
             'Alteração do nome empresarial (firma ou denominação)',
             'Alteração do tipo de unidade',
             'Alteração de atividade',
-            'Alteração de endereço',
             'Viabilidade — primeiro estabelecimento',
         ];
 
