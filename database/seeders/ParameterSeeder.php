@@ -409,7 +409,7 @@ class ParameterSeeder extends Seeder
                 'type' => 'string',
                 'default_value' => '9609207,8011102',
                 'validation_rules' => ['required', 'string', 'max:500'],
-                'description' => 'CNAEs que a observação (a) do Quadro 11A da LOUOS mantém vedados em Via Local, mesmo nas zonas ZCMu, ZCMe, ZCLMu e ZCLMe (adestramento e hospedagem de animais de estimação). Códigos só com dígitos ou com máscara, separados por vírgula. A SEDUR valida a associação definitiva dos CNAEs',
+                'description' => 'CNAEs que a observação (a) do Quadro 11A da LOUOS mantém vedados em Via Local, mesmo em zona de centralidade (adestramento e hospedagem de animais). Só dígitos ou com máscara, separados por vírgula. A SEDUR valida a associação dos CNAEs',
             ],
             'features.geoserver_territorio' => [
                 'group' => 'features',
