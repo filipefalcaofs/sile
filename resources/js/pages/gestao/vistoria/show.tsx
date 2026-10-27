@@ -108,6 +108,8 @@ interface Processo {
     protocol_number: string | null;
     status: string;
     status_label: string;
+    /** Só em "vistoriado" o processo ainda está na vistoria e pode ser devolvido à Caixa do Setor. */
+    analysis_status: string | null;
 }
 
 interface Anexo {
@@ -515,6 +517,7 @@ function VistoriaConteudo({
     const podeEncaminharAoSetor =
         !somenteLeitura &&
         ficha.status === 'concluida' &&
+        processo.analysis_status === 'vistoriado' &&
         (ficha.vistoriador_id === auth.user?.id || auth.permissions.includes('distribuir-processos'));
     const [encaminhando, setEncaminhando] = useState(false);
 

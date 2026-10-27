@@ -125,8 +125,15 @@ class EncaminharVistoriaService
             ->latest('id')
             ->first();
 
-        if ($processo->analysis_status !== AnalysisStatus::Vistoriado || $ficha === null || ! $ficha->isConcluida()) {
+        if ($ficha === null || ! $ficha->isConcluida()) {
             throw EncaminharVistoriaException::vistoriaNaoConcluida($processo);
+        }
+
+        if ($processo->analysis_status !== AnalysisStatus::Vistoriado) {
+            throw EncaminharVistoriaException::processoForaDeVistoriado(
+                $processo,
+                InspectionReferral::query()->where('viability_request_id', $processo->id)->exists(),
+            );
         }
 
         $referral = InspectionReferral::query()
