@@ -25,6 +25,7 @@ class ApiIntegracaoCatalog
             self::geocoding(),
             self::geoserver(),
             self::arcgisSemap(),
+            self::legadoSimplifica(),
         ];
     }
 
@@ -220,6 +221,25 @@ class ApiIntegracaoCatalog
                 self::interruptor('em_producao', 'integrations.geoserver.em_producao', 'Usar produção'),
                 self::url('url_homologacao', 'integrations.geoserver.url_homologacao', 'URL de homologação'),
                 self::url('url_producao', 'integrations.geoserver.url_producao', 'URL de produção'),
+            ],
+        ];
+    }
+
+    /**
+     * @return Aba
+     */
+    private static function legadoSimplifica(): array
+    {
+        return [
+            'id' => 'legado_simplifica',
+            'nome' => 'Legado Simplifica',
+            'descricao' => 'API do legado Simplifica/SAPS. Traz a viabilidade anterior da empresa (TVL deferida e ativa e os CNAEs dela) para comparar as atividades de uma alteração.',
+            'teste' => ['url' => '/gestao/config-legado-simplifica/testar', 'erro' => 'legado_connection'],
+            'espelhar_url_ativa' => null,
+            'campos' => [
+                self::interruptor('habilitada', 'features.legado_simplifica', 'Consulta habilitada'),
+                self::url('url', 'integrations.legado_simplifica.url', 'URL da API'),
+                self::senha('token', 'integrations.legado_simplifica.token', 'Token de máquina'),
             ],
         ];
     }

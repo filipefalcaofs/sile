@@ -15,7 +15,11 @@ use App\Services\Servicos\CondicaoServicoDetector;
 use App\Services\Servicos\ServicoNomenclaturaResolver;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\Http;
 use Inertia\Testing\AssertableInertia as Assert;
+use Tests\Support\Sefaz\ConfiguraLegadoSimplifica;
 use Tests\TestCase;
 
 /**
@@ -25,6 +29,7 @@ use Tests\TestCase;
  */
 class CondicaoServicoTest extends TestCase
 {
+    use ConfiguraLegadoSimplifica;
     use LazilyRefreshDatabase;
 
     private const ATIVIDADES = 'Alteração de atividades econômicas (principal e secundárias)';
@@ -115,6 +120,60 @@ class CondicaoServicoTest extends TestCase
         $atual = $this->processo($empresa, ['4711301', '4712100']);
 
         $this->assertSame(CondicaoServico::CnaeSemAlteracao, $this->detectar($atual, self::ATIVIDADES));
+    }
+
+    /** @var list<string> */
+    private array $atividadesDoLegado = [];
+
+    /**
+     * @param  list<string>  $atividades
+     */
+    private function legadoComTvl(array $atividades): void
+    {
+        $this->atividadesDoLegado = $atividades;
+        $this->configurarLegado();
+        Http::fake(fn (Request $request) => match (true) {
+            str_contains($request->url(), '/v1/provisorias') => Http::response(['data' => [['numero' => 700, 'deferida' => true, 'ativa' => true, 'validade' => '2027-01-01T00:00:00Z']]]),
+            str_contains($request->url(), '/v1/tvls/700') => Http::response(['data' => ['atividades' => array_map(fn (string $codigo): array => ['codigo' => $codigo, 'descricao' => 'x'], $this->atividadesDoLegado)]]),
+            default => Http::response([], 404),
+        });
+    }
+
+    public function test_sem_processo_anterior_usa_a_viabilidade_do_legado_como_base(): void
+    {
+        $this->legadoComTvl(['4711-3/01', '4712-1/00']);
+        $this->assertSame(CondicaoServico::CnaeSemAlteracao, $this->detectar($this->processo(Company::factory()->create(), ['4711301', '4712100']), self::ATIVIDADES));
+
+        $this->legadoComTvl(['4711-3/01', '4712-1/00']);
+        $this->assertSame(CondicaoServico::CnaeExcluido, $this->detectar($this->processo(Company::factory()->create(), ['4711301']), self::ATIVIDADES));
+
+        $this->legadoComTvl(['4711-3/01']);
+        $this->assertSame(CondicaoServico::CnaeIncluido, $this->detectar($this->processo(Company::factory()->create(), ['4711301', '5611201']), self::ATIVIDADES));
+    }
+
+    public function test_legado_fora_do_ar_mantem_sem_condicao(): void
+    {
+        $this->legadoComTvl(['4711301']);
+        Http::fake(fn () => throw new ConnectionException('sem rota'));
+
+        $this->assertNull($this->detectar($this->processo(Company::factory()->create(), ['4711301']), self::ATIVIDADES));
+    }
+
+    public function test_legado_nao_decide_a_condicao_de_endereco(): void
+    {
+        $this->legadoComTvl(['4711301']);
+
+        $this->assertNull($this->detectar($this->processo(Company::factory()->create()), self::ENDERECO));
+    }
+
+    public function test_processo_anterior_no_viabiliza_prevalece_sobre_o_legado(): void
+    {
+        $empresa = Company::factory()->create();
+        $this->processo($empresa, ['4711301']);
+        $this->legadoComTvl(['4712100']);
+
+        $this->assertSame(CondicaoServico::CnaeSemAlteracao, $this->detectar($this->processo($empresa, ['4711301']), self::ATIVIDADES));
+        Http::assertNothingSent();
     }
 
     public function test_sem_processo_anterior_nao_ha_condicao(): void

@@ -40,6 +40,7 @@ use App\Http\Controllers\Gestao\IndeferimentoDocumentController;
 use App\Http\Controllers\Gestao\InscricaoImobiliariaIntegrationController;
 use App\Http\Controllers\Gestao\InspectionController;
 use App\Http\Controllers\Gestao\IntegrationCallController;
+use App\Http\Controllers\Gestao\LegadoSimplificaIntegrationController;
 use App\Http\Controllers\Gestao\LegalTermController;
 use App\Http\Controllers\Gestao\LgpdMonitorController;
 use App\Http\Controllers\Gestao\LoginController;
@@ -344,6 +345,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::get('config-inscricao-imobiliaria', [InscricaoImobiliariaIntegrationController::class, 'edit'])->name('config-inscricao-imobiliaria.edit');
             Route::put('config-inscricao-imobiliaria', [InscricaoImobiliariaIntegrationController::class, 'update'])->name('config-inscricao-imobiliaria.update');
             Route::post('config-inscricao-imobiliaria/testar', [InscricaoImobiliariaIntegrationController::class, 'test'])->name('config-inscricao-imobiliaria.testar');
+            Route::post('config-legado-simplifica/testar', [LegadoSimplificaIntegrationController::class, 'test'])->name('config-legado-simplifica.testar');
             Route::get('config-apis', [ApiIntegracaoController::class, 'edit'])->name('config-apis.edit');
             Route::put('config-apis/{aba}', [ApiIntegracaoController::class, 'update'])->name('config-apis.update');
         });
