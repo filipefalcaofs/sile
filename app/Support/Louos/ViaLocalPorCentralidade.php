@@ -10,29 +10,77 @@ namespace App\Support\Louos;
  */
 final class ViaLocalPorCentralidade
 {
+    /** A nota liberou o uso não residencial em Via Local. */
+    public const LIBERADA = 'liberada';
+
+    /** A observação (a) veda a atividade em Via Local, mesmo em zona da nota. */
+    public const VEDADA_PELA_OBSERVACAO = 'vedada_pela_observacao';
+
     /** @var list<string> */
     private const ZONAS = ['zcme', 'zcmu', 'zclme', 'zclmu'];
 
     /**
-     * 9609-2/07 (alojamento de animais domésticos, inclusive hotel, creche e
-     * adestramento) e 8011-1/02 (adestramento de cães de guarda).
+     * Padrão da lista, usado quando o parâmetro `louos.via_local.cnaes_vedados`
+     * não existe: 9609-2/07 (alojamento de animais domésticos, inclusive hotel,
+     * creche e adestramento) e 8011-1/02 (adestramento de cães de guarda). A SEDUR
+     * ainda valida a associação definitiva; 9609-2/08 não entra por inferência.
      *
      * @var list<string>
      */
     private const CNAES_VEDADOS_EM_VIA_LOCAL = ['9609207', '8011102'];
 
-    public static function libera(?string $zona, ?string $classeVia, string $cnae, bool $usoNaoResidencial): bool
+    /**
+     * @param  list<string>|null  $cnaesVedados  só dígitos; null usa o padrão
+     * @return self::LIBERADA|self::VEDADA_PELA_OBSERVACAO|null null quando a nota não se aplica (via, uso ou zona fora dela)
+     */
+    public static function avaliar(?string $zona, ?string $classeVia, string $cnae, bool $usoNaoResidencial, ?array $cnaesVedados = null): ?string
     {
         if (! $usoNaoResidencial || $classeVia !== 'VL') {
-            return false;
+            return null;
         }
 
         $chaveDaZona = strtolower((string) preg_replace('/[\s\-_]+/', '', (string) $zona));
 
         if (! in_array($chaveDaZona, self::ZONAS, true)) {
-            return false;
+            return null;
         }
 
-        return ! in_array((string) preg_replace('/\D/', '', $cnae), self::CNAES_VEDADOS_EM_VIA_LOCAL, true);
+        $vedados = $cnaesVedados ?? self::CNAES_VEDADOS_EM_VIA_LOCAL;
+
+        return in_array((string) preg_replace('/\D/', '', $cnae), $vedados, true)
+            ? self::VEDADA_PELA_OBSERVACAO
+            : self::LIBERADA;
+    }
+
+    /**
+     * @param  list<string>|null  $cnaesVedados
+     */
+    public static function libera(?string $zona, ?string $classeVia, string $cnae, bool $usoNaoResidencial, ?array $cnaesVedados = null): bool
+    {
+        return self::avaliar($zona, $classeVia, $cnae, $usoNaoResidencial, $cnaesVedados) === self::LIBERADA;
+    }
+
+    /**
+     * Lista de CNAEs do parâmetro: texto separado por vírgula ou ponto e vírgula,
+     * com ou sem máscara.
+     *
+     * @return list<string>
+     */
+    public static function cnaesDaConfiguracao(?string $texto): array
+    {
+        $codigos = array_map(
+            fn (string $parte): string => (string) preg_replace('/\D/', '', $parte),
+            preg_split('/[,;]/', (string) $texto) ?: [],
+        );
+
+        return array_values(array_unique(array_filter($codigos, fn (string $codigo): bool => $codigo !== '')));
+    }
+
+    /**
+     * Padrão da lista, em texto, para o parâmetro administrável.
+     */
+    public static function padraoDosCnaesVedados(): string
+    {
+        return implode(',', self::CNAES_VEDADOS_EM_VIA_LOCAL);
     }
 }

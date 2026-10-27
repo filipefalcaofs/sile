@@ -404,6 +404,13 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['nullable', 'string', 'max:2048'],
                 'description' => 'Token de máquina (lg_..., validade de 90 dias) da API do legado Simplifica, com os escopos provisorias:ler e processos:ler (armazenado criptografado, nunca reexibido)',
             ],
+            'louos.via_local.cnaes_vedados' => [
+                'group' => 'louos',
+                'type' => 'string',
+                'default_value' => '9609207,8011102',
+                'validation_rules' => ['required', 'string', 'max:500'],
+                'description' => 'CNAEs que a observação (a) do Quadro 11A da LOUOS mantém vedados em Via Local, mesmo nas zonas ZCMu, ZCMe, ZCLMu e ZCLMe (adestramento e hospedagem de animais de estimação). Códigos só com dígitos ou com máscara, separados por vírgula. A SEDUR valida a associação definitiva dos CNAEs',
+            ],
             'features.geoserver_territorio' => [
                 'group' => 'features',
                 'type' => 'boolean',
@@ -999,6 +1006,7 @@ class ParameterSeeder extends Seeder
             'analise.escritorio_virtual.cnae_gatilho_sede',
             'features.fluxo_expresso',
             'renovacao.intervalo_meses',
+            'louos.via_local.cnaes_vedados',
         ];
     }
 }
