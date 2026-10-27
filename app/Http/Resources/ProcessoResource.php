@@ -47,7 +47,7 @@ class ProcessoResource extends JsonResource
             'motivo_encaminhamento' => $this->motivoEncaminhamento(),
             'origin' => $this->origin->value,
             'origin_label' => $this->origin->label(),
-            'tipo_imovel' => $this->tipo_imovel ?? $this->tipo_imovel_cadastro,
+            'tipo_imovel' => $this->tipo_imovel,
             'contingency_reason' => $this->contingency_reason,
             'motivo_da_analise' => $this->motivoDaAnalise(),
             'empresa' => $this->nomeDaEmpresa(),

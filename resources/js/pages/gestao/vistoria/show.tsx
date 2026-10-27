@@ -110,8 +110,6 @@ interface Processo {
     status_label: string;
     /** Só em "vistoriado" o processo ainda está na vistoria e pode ser devolvido à Caixa do Setor. */
     analysis_status: string | null;
-    /** Utilização do imóvel no Cadastro Imobiliário (residencial, não residencial...). */
-    tipo_imovel_cadastro: string | null;
 }
 
 interface Anexo {
@@ -862,7 +860,7 @@ function VistoriaConteudo({
                     <div className="px-6 py-3.5">
                         <dt className="text-[11px] font-semibold tracking-[0.08em] text-gray-400 uppercase">Tipo de imóvel</dt>
                         <dd className="mt-0.5 text-sm font-semibold text-gray-800 dark:text-white/90">
-                            {tipoImovelLabel ?? (processo.tipo_imovel_cadastro ? `${processo.tipo_imovel_cadastro} (cadastro)` : 'Ainda não informado')}
+                            {tipoImovelLabel ?? 'Ainda não informado'}
                         </dd>
                     </div>
                     <div className="px-6 py-3.5">
