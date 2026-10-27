@@ -449,7 +449,7 @@ class InspectionController extends Controller
     }
 
     /**
-     * @return array{id: int, protocol_number: string|null, status: string, status_label: string, analysis_status: string|null}
+     * @return array{id: int, protocol_number: string|null, status: string, status_label: string, analysis_status: string|null, tipo_imovel_cadastro: string|null}
      */
     private function processoDaFicha(ViabilityRequest $viabilityRequest): array
     {
@@ -459,6 +459,7 @@ class InspectionController extends Controller
             'status' => $viabilityRequest->status->value,
             'status_label' => $viabilityRequest->status->label(),
             'analysis_status' => $viabilityRequest->analysis_status?->value,
+            'tipo_imovel_cadastro' => $viabilityRequest->tipo_imovel_cadastro,
         ];
     }
 

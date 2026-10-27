@@ -362,6 +362,18 @@ class FichaCadastroImobiliarioInertiaTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page->where('localizacao.tipo_imovel', null));
     }
 
+    public function test_ficha_usa_o_tipo_do_cadastro_gravado_no_processo(): void
+    {
+        $processo = $this->processoComFicha();
+        $processo->forceFill(['tipo_imovel_cadastro' => 'NÃO RESIDENCIAL VERTICAL'])->save();
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get("/gestao/processos/{$processo->id}/ficha")
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('localizacao.tipo_imovel', 'NÃO RESIDENCIAL VERTICAL')
+                ->where('dadosTvl.tipo_imovel', 'NÃO RESIDENCIAL VERTICAL'));
+    }
+
     private function fakeCadastroComBairro(string $bairro, ?string $tipoImovel = null): void
     {
         $this->app->instance(PropertyRegistryLookup::class, new class($bairro, $tipoImovel) implements PropertyRegistryLookup

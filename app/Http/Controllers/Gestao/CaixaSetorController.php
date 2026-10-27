@@ -144,7 +144,7 @@ class CaixaSetorController extends Controller
                 'cnpj' => $processo->company?->formatted_cnpj,
                 'status' => $processo->status->value,
                 'status_label' => $processo->status->label(),
-                'tipo_imovel' => $processo->tipo_imovel,
+                'tipo_imovel' => $processo->tipo_imovel ?? $processo->tipo_imovel_cadastro,
                 'status_tramitacao' => $processo->rotuloStatusTramitacao(),
                 'data_entrada' => $processo->protocoled_at?->toIso8601String(),
                 // Eixo operacional: a linha em vistoria distribui para a lista

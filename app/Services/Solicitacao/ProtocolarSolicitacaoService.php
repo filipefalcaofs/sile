@@ -96,6 +96,7 @@ class ProtocolarSolicitacaoService
         // O logradouro do endereço de Localização da inscrição é a fonte do
         // CODLOG e sobrepõe a via mais próxima.
         $status = $this->territorioProcesso->localizarPelaInscricao($request);
+        $this->territorioProcesso->gravarTipoImovelDoCadastro($request);
 
         $materializou = false;
 

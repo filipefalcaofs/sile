@@ -577,7 +577,7 @@ class AnalysisRecordController extends Controller
             'categoria_uso_lote' => $this->textoOuNulo($request->semap_use_category),
             'padrao_construtivo_lote' => $this->textoOuNulo($request->semap_construction_standard),
             // REGIN primeiro; sem ele, o uso do imóvel no Cadastro Imobiliário (campo Utilizacao).
-            'tipo_imovel' => $this->textoOuNulo($request->tipo_imovel) ?? $this->textoOuNulo($cadastro['campos']['tipo_imovel'] ?? null),
+            'tipo_imovel' => $this->textoOuNulo($request->tipo_imovel) ?? $this->textoOuNulo($request->tipo_imovel_cadastro) ?? $this->textoOuNulo($cadastro['campos']['tipo_imovel'] ?? null),
             'camadas' => $this->camadasComZonaEVia($request->camadas_incidentes, $zona, $via, $request->zona_fonte?->value),
         ];
     }
@@ -886,7 +886,7 @@ class AnalysisRecordController extends Controller
             'razao_social' => $company?->legal_name,
             'sede_escritorio_virtual' => (bool) $record->is_virtual_office_hq,
             'porte' => $company?->size,
-            'tipo_imovel' => $this->textoOuNulo($request->tipo_imovel),
+            'tipo_imovel' => $this->textoOuNulo($request->tipo_imovel) ?? $this->textoOuNulo($request->tipo_imovel_cadastro),
             'categoria_empresa' => $company?->legal_nature,
             'torre_bloco_ala' => null,
             'complemento' => $complemento !== '' ? $complemento : null,

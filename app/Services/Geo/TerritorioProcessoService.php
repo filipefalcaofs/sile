@@ -187,6 +187,25 @@ class TerritorioProcessoService
     }
 
     /**
+     * Grava no processo a Utilizacao do Cadastro Imobiliário (residencial, não
+     * residencial...). O `tipo_imovel` do REGIN não é tocado: ele decide o
+     * encaminhamento. Cadastro fora do ar, sem inscrição ou sem Utilizacao não
+     * grava nem apaga o que já existe. Devolve se gravou um valor novo.
+     */
+    public function gravarTipoImovelDoCadastro(ViabilityRequest $request): bool
+    {
+        $utilizacao = $this->localizacao->localizar($request->property_registration)->utilizacao;
+
+        if ($utilizacao === null || $utilizacao === $request->tipo_imovel_cadastro) {
+            return false;
+        }
+
+        $request->forceFill(['tipo_imovel_cadastro' => mb_substr($utilizacao, 0, 120)])->save();
+
+        return true;
+    }
+
+    /**
      * Registra a conferência do ponto da inscrição no processo (a ficha avisa
      * quando nenhuma fonte confirmou o local) e na auditoria: o ponto original
      * da SEFAZ, o ponto e a fonte finais e as distâncias até a rua do endereço.
