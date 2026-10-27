@@ -47,6 +47,7 @@ const GROUP_LABELS: Record<string, string> = {
     integracoes: 'Integrações',
     louos: 'LOUOS',
     notificacoes: 'Notificações',
+    portal: 'Portal do cidadão',
     relatorios: 'Relatórios',
     retencao: 'Retenção',
     risco: 'Risco',

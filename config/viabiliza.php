@@ -79,6 +79,11 @@ return [
         // convite (consulta prévia, solicitação, empresas, procurações). Os
         // processos começam na JUCEB; desligado, essas rotas respondem 404.
         'portal_servicos_extras' => env('SILE_PORTAL_SERVICOS_EXTRAS', false),
+        // Um interruptor por serviço do portal; o geral (portal_servicos) manda
+        // sobre todos. Em Parâmetros, aba Portal do cidadão.
+        'portal_renovacao' => true,
+        'portal_consulta_processo' => true,
+        'portal_convites' => true,
         'consulta_viabilidade' => true,
         'solicitacao_viabilidade' => true,
         'simulacao_solicitacao' => true,

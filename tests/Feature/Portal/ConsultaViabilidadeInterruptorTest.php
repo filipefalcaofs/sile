@@ -48,7 +48,7 @@ class ConsultaViabilidadeInterruptorTest extends TestCase
         $parametro = Parameter::query()->where('key', 'features.consulta_viabilidade')->first();
 
         $this->assertNotNull($parametro, 'Ambiente que só roda migrate (OKD) precisa ter o parâmetro na tela.');
-        $this->assertSame('features', $parametro->group);
+        $this->assertSame('portal', $parametro->group);
         $this->assertSame('boolean', $parametro->type);
         $this->assertSame('1', $parametro->default_value);
         $this->assertNull($parametro->value);
@@ -73,7 +73,7 @@ class ConsultaViabilidadeInterruptorTest extends TestCase
         $parametro = Parameter::query()->where('key', 'features.consulta_viabilidade')->first();
 
         $this->assertNotNull($parametro);
-        $this->assertSame('features', $parametro->group);
+        $this->assertSame('portal', $parametro->group);
         $this->assertSame('boolean', $parametro->type);
         $this->assertSame('1', $parametro->default_value);
         $this->assertNull($parametro->value);
