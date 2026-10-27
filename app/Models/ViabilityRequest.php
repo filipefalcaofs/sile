@@ -619,6 +619,14 @@ class ViabilityRequest extends Model
     }
 
     /**
+     * @return HasMany<AnalysisAttachment, $this>
+     */
+    public function analysisAttachments(): HasMany
+    {
+        return $this->hasMany(AnalysisAttachment::class);
+    }
+
+    /**
      * Último encaminhamento à vistoria: o despacho do analista.
      *
      * @return HasOne<InspectionReferral, $this>

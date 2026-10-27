@@ -4,6 +4,7 @@ use App\Http\Controllers\ComunicacaoHistoricoController;
 use App\Http\Controllers\Gestao\AbusoController;
 use App\Http\Controllers\Gestao\AccessHistoryController;
 use App\Http\Controllers\Gestao\AiConfigurationController;
+use App\Http\Controllers\Gestao\AnalysisAttachmentController;
 use App\Http\Controllers\Gestao\AnalysisRecordController;
 use App\Http\Controllers\Gestao\ApiIntegracaoController;
 use App\Http\Controllers\Gestao\AssistedAttendanceController;
@@ -782,6 +783,10 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::post('ficha/finalizar', [AnalysisRecordController::class, 'finalizar'])->name('ficha.finalizar');
             Route::post('ficha/concluir-processo', [AnalysisRecordController::class, 'concluirProcesso'])->middleware('permission:concluir-analise')->name('ficha.concluir-processo');
             Route::post('ficha/nova-revisao', [AnalysisRecordController::class, 'novaRevisao'])->name('ficha.nova-revisao');
+            // Documentos anexados pelo analista à análise (disk parametrizado, streaming autenticado).
+            Route::post('analise/anexos', [AnalysisAttachmentController::class, 'store'])->name('analise.anexos.store');
+            Route::get('analise/anexos/{attachment}', [AnalysisAttachmentController::class, 'download'])->name('analise.anexos.download');
+            Route::delete('analise/anexos/{attachment}', [AnalysisAttachmentController::class, 'destroy'])->name('analise.anexos.destroy');
             // Sugestão de minuta de parecer por IA (HU-110) — apoio, nunca decisão.
             Route::post('ficha/sugerir-parecer', [AnalysisRecordController::class, 'sugerirParecer'])->name('ficha.sugerir-parecer');
             Route::post('ficha/sugerir-justificativa', [AnalysisRecordController::class, 'sugerirJustificativa'])->name('ficha.sugerir-justificativa');

@@ -66,7 +66,7 @@ final readonly class TipoImovelCatalog
         $dirigemRegra = [];
         $ramoComum = [];
 
-        foreach (PropertyType::query()->active()->with('aliases')->get() as $tipo) {
+        foreach (PropertyType::query()->active()->where('regin_reconhece', true)->with('aliases')->get() as $tipo) {
             $mapa = $tipo->drives_rule ? 'dirigemRegra' : 'ramoComum';
             ${$mapa}[$tipo->code] = $tipo->aliases->pluck('alias')->all();
         }

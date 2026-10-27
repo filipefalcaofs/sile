@@ -329,11 +329,44 @@ class FichaCadastroImobiliarioInertiaTest extends TestCase
         ]);
     }
 
-    private function fakeCadastroComBairro(string $bairro): void
+    public function test_categoria_do_imovel_cai_para_a_utilizacao_da_inscricao_quando_o_regin_nao_trouxe(): void
     {
-        $this->app->instance(PropertyRegistryLookup::class, new class($bairro) implements PropertyRegistryLookup
+        $this->fakeCadastroComBairro('CABULA', 'NÃO RESIDENCIAL VERTICAL');
+
+        $processo = $this->processoComFicha(['property_registration' => '350940']);
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get("/gestao/processos/{$processo->id}/ficha")
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('localizacao.tipo_imovel', 'NÃO RESIDENCIAL VERTICAL'));
+    }
+
+    public function test_categoria_do_imovel_enviada_pelo_regin_prevalece_sobre_a_utilizacao(): void
+    {
+        $this->fakeCadastroComBairro('CABULA', 'NÃO RESIDENCIAL VERTICAL');
+
+        $processo = $this->processoComFicha(['property_registration' => '350940']);
+        $processo->forceFill(['tipo_imovel' => 'Sala'])->save();
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get("/gestao/processos/{$processo->id}/ficha")
+            ->assertInertia(fn (Assert $page) => $page->where('localizacao.tipo_imovel', 'Sala'));
+    }
+
+    public function test_categoria_do_imovel_fica_vazia_sem_regin_e_sem_inscricao(): void
+    {
+        $processo = $this->processoComFicha();
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get("/gestao/processos/{$processo->id}/ficha")
+            ->assertInertia(fn (Assert $page) => $page->where('localizacao.tipo_imovel', null));
+    }
+
+    private function fakeCadastroComBairro(string $bairro, ?string $tipoImovel = null): void
+    {
+        $this->app->instance(PropertyRegistryLookup::class, new class($bairro, $tipoImovel) implements PropertyRegistryLookup
         {
-            public function __construct(private string $bairro) {}
+            public function __construct(private string $bairro, private ?string $tipoImovel) {}
 
             public function resolve(string $inscricao): PropertyRegistryResult
             {
@@ -357,7 +390,7 @@ class FichaCadastroImobiliarioInertiaTest extends TestCase
                         bairro: $this->bairro,
                         cep: null,
                         area_construida_m2: null,
-                        tipo_imovel: null,
+                        tipo_imovel: $this->tipoImovel,
                         data_lancamento: null,
                         situacao_cadastral: null,
                         contribuinte: null,

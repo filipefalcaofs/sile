@@ -163,4 +163,31 @@ class ZonaViaEdicaoTest extends TestCase
             ->get("/gestao/processos/{$processo->id}/ficha")
             ->assertInertia(fn (Assert $page) => $page->where('podeEditarZonaVia', false));
     }
+
+    public function test_ficha_informa_que_zona_e_via_foram_alteradas_pelo_analista(): void
+    {
+        $processo = $this->processo();
+        $editor = $this->editor();
+
+        $this->actingAs($editor, 'gestao')
+            ->patchJson("/gestao/processos/{$processo->id}/zona-via", ['zona' => 'ZCMe', 'via' => 'VL'])
+            ->assertOk();
+
+        $this->actingAs($editor, 'gestao')
+            ->get("/gestao/processos/{$processo->id}/ficha")
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('localizacao.zona_via_alterada.por', $editor->name)
+                ->where('localizacao.zona_via_alterada.antes.zona', 'ZPR 3')
+                ->where('localizacao.zona_via_alterada.antes.via', 'VC I')
+                ->whereType('localizacao.zona_via_alterada.em', 'string'));
+    }
+
+    public function test_ficha_sem_alteracao_manual_nao_traz_o_aviso_de_alteracao(): void
+    {
+        $processo = $this->processo();
+
+        $this->actingAs($this->editor(), 'gestao')
+            ->get("/gestao/processos/{$processo->id}/ficha")
+            ->assertInertia(fn (Assert $page) => $page->where('localizacao.zona_via_alterada', null));
+    }
 }

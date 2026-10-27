@@ -13,6 +13,7 @@ use App\Http\Resources\DecisionExplanationResource;
 use App\Http\Resources\ViabilityDecisionResource;
 use App\Models\Activity;
 use App\Models\AiSuggestion;
+use App\Models\AnalysisAttachment;
 use App\Models\AnalysisRecord;
 use App\Models\RuleVersion;
 use App\Models\Sector;
@@ -167,6 +168,7 @@ class AnalysisRecordController extends Controller
             'podeEncaminharChefia' => $this->podeEncaminharChefia($viabilityRequest, $request->user()),
             'fichaSalva' => $this->fichaSalvaOuFinalizada($viabilityRequest),
             'somenteLeitura' => $somenteLeitura,
+            'anexosAnalise' => $this->anexosDaAnalise($viabilityRequest),
             'podeEditarZonaVia' => $request->user()?->can('editar-zona-via') === true,
             // Alteração de atividade da JUCEB: o que entra, o que sai e o que já existia na viabilidade da SEFAZ.
             'comparacaoCnaes' => app(ComparacaoCnaesFicha::class)->dados($viabilityRequest),
@@ -536,6 +538,7 @@ class AnalysisRecordController extends Controller
      *   ponto_referencia: string|null,
      *   zona: string|null,
      *   via: string|null,
+     *   zona_via_alterada: array{por: string|null, em: string|null, antes: array{zona: string|null, via: string|null}}|null,
      *   is_public_area: bool|null,
      *   categoria_uso_lote: string|null,
      *   padrao_construtivo_lote: string|null,
@@ -569,11 +572,70 @@ class AnalysisRecordController extends Controller
             'ponto_referencia' => $pontoReferencia,
             'zona' => $zona,
             'via' => $via,
+            'zona_via_alterada' => $this->zonaViaAlterada($request),
             'is_public_area' => $request->is_public_area,
             'categoria_uso_lote' => $this->textoOuNulo($request->semap_use_category),
             'padrao_construtivo_lote' => $this->textoOuNulo($request->semap_construction_standard),
-            'tipo_imovel' => $this->textoOuNulo($request->tipo_imovel),
+            // REGIN primeiro; sem ele, o uso do imóvel no Cadastro Imobiliário (campo Utilizacao).
+            'tipo_imovel' => $this->textoOuNulo($request->tipo_imovel) ?? $this->textoOuNulo($cadastro['campos']['tipo_imovel'] ?? null),
             'camadas' => $this->camadasComZonaEVia($request->camadas_incidentes, $zona, $via, $request->zona_fonte?->value),
+        ];
+    }
+
+    /**
+     * @return list<array{id: int, original_name: string, mime_type: string, size: int, created_at: string|null, enviado_por: string|null, download_url: string}>
+     */
+    private function anexosDaAnalise(ViabilityRequest $request): array
+    {
+        return $request->analysisAttachments()
+            ->with('uploader:id,name')
+            ->latest('id')
+            ->get()
+            ->map(fn (AnalysisAttachment $anexo): array => [
+                'id' => $anexo->id,
+                'original_name' => $anexo->original_name,
+                'mime_type' => $anexo->mime_type,
+                'size' => $anexo->size,
+                'created_at' => $anexo->created_at?->toIso8601String(),
+                'enviado_por' => $anexo->uploader?->name,
+                'download_url' => route('gestao.processos.analise.anexos.download', [
+                    'viabilityRequest' => $request->id,
+                    'attachment' => $anexo->id,
+                ]),
+            ])
+            ->all();
+    }
+
+    /**
+     * Quem alterou a zona e/ou a via na ficha, quando e o valor de antes —
+     * `null` enquanto prevalece o que o sistema calculou.
+     *
+     * @return array{por: string|null, em: string|null, antes: array{zona: string|null, via: string|null}}|null
+     */
+    private function zonaViaAlterada(ViabilityRequest $request): ?array
+    {
+        if ($this->textoOuNulo($request->zona_manual) === null && $this->textoOuNulo($request->via_manual) === null) {
+            return null;
+        }
+
+        $registro = Activity::query()
+            ->where('event', 'zona-via-alterada')
+            ->where('subject_type', $request->getMorphClass())
+            ->where('subject_id', $request->getKey())
+            ->latest('id')
+            ->first();
+
+        if ($registro === null) {
+            return ['por' => null, 'em' => null, 'antes' => ['zona' => null, 'via' => null]];
+        }
+
+        return [
+            'por' => $this->textoOuNulo($registro->properties['ator_nome'] ?? null),
+            'em' => $registro->created_at?->toIso8601String(),
+            'antes' => [
+                'zona' => $this->textoOuNulo($registro->properties['antes']['zona'] ?? null),
+                'via' => $this->textoOuNulo($registro->properties['antes']['via'] ?? null),
+            ],
         ];
     }
 
