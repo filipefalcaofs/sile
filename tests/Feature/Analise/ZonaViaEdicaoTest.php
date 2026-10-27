@@ -170,7 +170,7 @@ class ZonaViaEdicaoTest extends TestCase
         $editor = $this->editor();
 
         $this->actingAs($editor, 'gestao')
-            ->patchJson("/gestao/processos/{$processo->id}/zona-via", ['zona' => 'ZCMe', 'via' => 'VL'])
+            ->patchJson("/gestao/processos/{$processo->id}/zona-via", ['zona' => 'ZCMe', 'via' => 'VL', 'justificativa' => 'Lote lindeiro à via de centralidade.'])
             ->assertOk();
 
         $this->actingAs($editor, 'gestao')
