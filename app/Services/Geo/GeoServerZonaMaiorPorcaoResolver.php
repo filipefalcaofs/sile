@@ -25,13 +25,15 @@ class GeoServerZonaMaiorPorcaoResolver implements ZonaMaiorPorcaoResolver
 
     public function resolver(array $poligono): ZonaMaiorPorcao
     {
-        return $this->memo[md5((string) json_encode($poligono))] ??= $this->calcular($poligono);
+        $tolerancia = $this->toleranciaLinearM();
+
+        return $this->memo[md5((string) json_encode($poligono).'|'.$tolerancia)] ??= $this->calcular($poligono, $tolerancia);
     }
 
     /**
      * @param  array<string, mixed>  $poligono
      */
-    private function calcular(array $poligono): ZonaMaiorPorcao
+    private function calcular(array $poligono, float $tolerancia): ZonaMaiorPorcao
     {
         if (DB::getDriverName() !== 'pgsql') {
             return ZonaMaiorPorcao::indisponivel('Cálculo da maior porção exige PostGIS.');
@@ -45,6 +47,10 @@ class GeoServerZonaMaiorPorcaoResolver implements ZonaMaiorPorcaoResolver
 
         if ($bbox === null) {
             return ZonaMaiorPorcao::indisponivel('Polígono sem coordenadas.');
+        }
+
+        if ($tolerancia > 0) {
+            $bbox = $this->ampliar($bbox, $tolerancia);
         }
 
         $typeNames = GeoServerLayer::query()->ativos()->get()
@@ -120,30 +126,41 @@ class GeoServerZonaMaiorPorcaoResolver implements ZonaMaiorPorcaoResolver
             return ZonaMaiorPorcao::indisponivel('Camada de zona sem resposta do GeoServer SEDUR: '.implode(', ', $falhas).'.', $camadas);
         }
 
-        return $this->centralidadeLinear($poligono, $lineares, $this->porcoes($poligono, $candidatas, $camadas));
+        return $this->centralidadeLinear($poligono, $lineares, $this->porcoes($poligono, $candidatas, $camadas), $tolerancia);
     }
 
     /**
      * Centralidade linear (HU.182): a linha da ZCLMu ou da ZCLMe que passa por
      * cima do lote, em qualquer parte, define a zona, sem olhar o percentual em
-     * outras zonas. Linha em frente ao lote, sem tocá-lo, não conta. Duas zonas
-     * lineares sobre o mesmo lote não têm vencedora.
+     * outras zonas. Linha em frente ao lote, sem tocá-lo, não conta, a menos que a
+     * SEDUR configure uma tolerância em metros (parâmetro
+     * `territorio.zona_linear.tolerancia_m`): então a linha a até essa distância do
+     * lote também conta. Duas zonas lineares sobre o mesmo lote não têm vencedora.
      *
      * @param  array<string, mixed>  $poligono
      * @param  list<array{zona: string, geometria: array<string, mixed>}>  $lineares
      */
-    private function centralidadeLinear(array $poligono, array $lineares, ZonaMaiorPorcao $base): ZonaMaiorPorcao
+    private function centralidadeLinear(array $poligono, array $lineares, ZonaMaiorPorcao $base, float $tolerancia = 0.0): ZonaMaiorPorcao
     {
         $cruzadas = [];
 
         foreach ($lineares as $linear) {
-            $linha = DB::selectOne(
-                'SELECT ST_Intersects(
-                    ST_MakeValid(ST_SetSRID(ST_GeomFromGeoJSON(?), 4326)),
-                    ST_SetSRID(ST_GeomFromGeoJSON(?), 4326)
-                )::int AS cruza',
-                [json_encode($poligono), json_encode($linear['geometria'])],
-            );
+            $linha = $tolerancia > 0
+                ? DB::selectOne(
+                    'SELECT ST_DWithin(
+                        ST_MakeValid(ST_SetSRID(ST_GeomFromGeoJSON(?), 4326))::geography,
+                        ST_SetSRID(ST_GeomFromGeoJSON(?), 4326)::geography,
+                        CAST(? AS double precision)
+                    )::int AS cruza',
+                    [json_encode($poligono), json_encode($linear['geometria']), $tolerancia],
+                )
+                : DB::selectOne(
+                    'SELECT ST_Intersects(
+                        ST_MakeValid(ST_SetSRID(ST_GeomFromGeoJSON(?), 4326)),
+                        ST_SetSRID(ST_GeomFromGeoJSON(?), 4326)
+                    )::int AS cruza',
+                    [json_encode($poligono), json_encode($linear['geometria'])],
+                );
 
             if ($linha !== null && (int) $linha->cruza === 1) {
                 $cruzadas[] = $linear['zona'];
@@ -164,6 +181,31 @@ class GeoServerZonaMaiorPorcaoResolver implements ZonaMaiorPorcaoResolver
             camadas: $base->camadas,
             areaLoteM2: $base->areaLoteM2,
         );
+    }
+
+    /**
+     * Tolerância, em metros, para a linha da centralidade linear contar quando
+     * passa perto do lote. Zero (padrão) mantém a regra de passar por cima.
+     */
+    private function toleranciaLinearM(): float
+    {
+        return max(0.0, min(500.0, (float) Settings::get('territorio.zona_linear.tolerancia_m', 0)));
+    }
+
+    /**
+     * Aumenta o recorte pedido ao GeoServer para a linha próxima, que fica fora
+     * do retângulo do lote, vir na resposta.
+     *
+     * @param  array{0: float, 1: float, 2: float, 3: float}  $bbox  [lngMin, latMin, lngMax, latMax]
+     * @return array{0: float, 1: float, 2: float, 3: float}
+     */
+    private function ampliar(array $bbox, float $metros): array
+    {
+        $graus = $metros / 111320.0;
+        $latitudeMedia = ($bbox[1] + $bbox[3]) / 2;
+        $grausLng = $graus / max(0.2, cos(deg2rad($latitudeMedia)));
+
+        return [$bbox[0] - $grausLng, $bbox[1] - $graus, $bbox[2] + $grausLng, $bbox[3] + $graus];
     }
 
     private function zonaLinear(string $typeName): ?string

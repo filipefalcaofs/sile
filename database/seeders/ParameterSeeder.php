@@ -411,6 +411,13 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'string', 'max:500'],
                 'description' => 'CNAEs que a observação (a) do Quadro 11A da LOUOS mantém vedados em Via Local, mesmo em zona de centralidade (adestramento e hospedagem de animais). Só dígitos ou com máscara, separados por vírgula. A SEDUR valida a associação dos CNAEs',
             ],
+            'territorio.zona_linear.tolerancia_m' => [
+                'group' => 'geo',
+                'type' => 'decimal',
+                'default_value' => '0',
+                'validation_rules' => ['required', 'numeric', 'min:0', 'max:500'],
+                'description' => 'Distância máxima, em metros, entre a linha da centralidade linear (ZCLMu e ZCLMe) e o lote para a zona linear valer. Zero mantém a regra de a linha passar por cima do lote. A SEDUR define o valor ao validar a regra territorial',
+            ],
             'features.geoserver_territorio' => [
                 'group' => 'features',
                 'type' => 'boolean',
@@ -1007,6 +1014,7 @@ class ParameterSeeder extends Seeder
             'features.fluxo_expresso',
             'renovacao.intervalo_meses',
             'louos.via_local.cnaes_vedados',
+            'territorio.zona_linear.tolerancia_m',
         ];
     }
 }

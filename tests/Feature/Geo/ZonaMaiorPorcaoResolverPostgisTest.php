@@ -3,9 +3,11 @@
 namespace Tests\Feature\Geo;
 
 use App\Models\GeoServerLayer;
+use App\Models\Parameter;
 use App\Services\Geo\ZonaMaiorPorcao;
 use App\Services\Geo\ZonaMaiorPorcaoResolver;
 use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use PHPUnit\Framework\Attributes\Group;
 use Tests\PostgisTestCase;
@@ -270,6 +272,74 @@ class ZonaMaiorPorcaoResolverPostgisTest extends PostgisTestCase
         $this->assertSame(ZonaMaiorPorcao::CENTRALIDADE_LINEAR, $resultado->status);
         $this->assertSame('ZCLMe', $resultado->codigo);
         $this->assertGreaterThan(85.0, $resultado->porcoes[0]['percentual']);
+    }
+
+    private function toleranciaLinear(float $metros): void
+    {
+        Parameter::query()->where('key', 'territorio.zona_linear.tolerancia_m')->firstOrFail()->update(['value' => (string) $metros]);
+        Cache::flush();
+    }
+
+    public function test_hu_182_tolerancia_faz_a_linha_perto_do_lote_contar(): void
+    {
+        // Linha a ~111 m acima do lote (0,001° de latitude): sem tolerância não conta.
+        $this->camadasLineares();
+        $this->geoserver([
+            'louos_zpr3:VM_L_Z_USO_ZPR_3' => $this->retangulo(-38.5010, -38.4980, -12.9810, -12.9780),
+            'louos_zona_uso_zclmu:VM_L_Z_USO_ZCLMU' => $this->linha(-12.9780),
+        ]);
+
+        $this->toleranciaLinear(150);
+        $resultado = app(ZonaMaiorPorcaoResolver::class)->resolver($this->lote());
+
+        $this->assertSame(ZonaMaiorPorcao::CENTRALIDADE_LINEAR, $resultado->status);
+        $this->assertSame('ZCLMu', $resultado->codigo);
+    }
+
+    public function test_hu_182_tolerancia_menor_que_a_distancia_nao_conta(): void
+    {
+        $this->camadasLineares();
+        $this->geoserver([
+            'louos_zpr3:VM_L_Z_USO_ZPR_3' => $this->retangulo(-38.5010, -38.4980, -12.9810, -12.9780),
+            'louos_zona_uso_zclmu:VM_L_Z_USO_ZCLMU' => $this->linha(-12.9780),
+        ]);
+
+        $this->toleranciaLinear(50);
+        $resultado = app(ZonaMaiorPorcaoResolver::class)->resolver($this->lote());
+
+        $this->assertSame(ZonaMaiorPorcao::IDENTIFICADO, $resultado->status);
+        $this->assertSame('ZPR 3', $resultado->codigo);
+    }
+
+    public function test_hu_182_tolerancia_zero_mantem_a_regra_de_passar_por_cima(): void
+    {
+        $this->camadasLineares();
+        $this->geoserver([
+            'louos_zpr3:VM_L_Z_USO_ZPR_3' => $this->retangulo(-38.5010, -38.4980, -12.9810, -12.9780),
+            'louos_zona_uso_zclmu:VM_L_Z_USO_ZCLMU' => $this->linha(-12.9795),
+        ]);
+
+        $this->toleranciaLinear(0);
+        $resultado = app(ZonaMaiorPorcaoResolver::class)->resolver($this->lote());
+
+        $this->assertSame(ZonaMaiorPorcao::CENTRALIDADE_LINEAR, $resultado->status);
+    }
+
+    public function test_hu_182_tolerancia_amplia_o_recorte_pedido_ao_geoserver(): void
+    {
+        $this->camadasLineares();
+        $this->geoserver([]);
+
+        $this->toleranciaLinear(150);
+        app(ZonaMaiorPorcaoResolver::class)->resolver($this->lote());
+
+        // 150 m são ~0,00135° de latitude: o recorte passa de -12.9800 para ~-12.9814.
+        Http::assertSent(function (Request $request): bool {
+            parse_str((string) parse_url($request->url(), PHP_URL_QUERY), $query);
+            preg_match('/BBOX\(GEOMETRY,([-\d.]+),([-\d.]+),([-\d.]+),([-\d.]+)/', (string) ($query['CQL_FILTER'] ?? ''), $m);
+
+            return count($m) === 5 && (float) $m[2] < -12.9810 && (float) $m[4] > -12.9780;
+        });
     }
 
     public function test_hu_182_camada_linear_sem_resposta_e_indisponivel(): void
