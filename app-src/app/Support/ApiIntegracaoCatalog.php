@@ -28,6 +28,7 @@ class ApiIntegracaoCatalog
             self::arcgisSemap(),
             self::edificacoes(),
             self::legado(),
+            self::legadoSimplifica(),
         ];
     }
 
@@ -244,6 +245,25 @@ class ApiIntegracaoCatalog
                 self::url('login_url', 'integrations.portal_servicos.login_url', 'URL de entrada do Portal de Serviços'),
                 self::url('carta_url', 'integrations.portal_servicos.carta_url', 'URL da Carta de Serviços (volta ao sair)'),
                 self::texto('intervalo_checagem_sessao', 'integrations.portal_servicos.intervalo_checagem_sessao', 'Intervalo de conferência da sessão (segundos)'),
+            ],
+        ];
+    }
+
+    /**
+     * @return Aba
+     */
+    private static function legadoSimplifica(): array
+    {
+        return [
+            'id' => 'legado_simplifica',
+            'nome' => 'Legado Simplifica',
+            'descricao' => 'API do legado Simplifica/SAPS. Traz a viabilidade anterior da empresa (TVL deferida e ativa e os CNAEs dela) para comparar as atividades de uma alteração.',
+            'teste' => ['url' => '/gestao/config-legado-simplifica/testar', 'erro' => 'legado_connection'],
+            'espelhar_url_ativa' => null,
+            'campos' => [
+                self::interruptor('habilitada', 'features.legado_simplifica', 'Consulta habilitada'),
+                self::url('url', 'integrations.legado_simplifica.url', 'URL da API'),
+                self::senha('token', 'integrations.legado_simplifica.token', 'Token de máquina'),
             ],
         ];
     }

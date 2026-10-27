@@ -3,6 +3,7 @@ import { Head, Link, router, useHttp, usePage, WhenVisible } from '@inertiajs/re
 import type { GeoJsonObject } from 'geojson';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
+import AnexosAnaliseCard, { type AnexoAnalise } from '@/components/analise/anexos-analise-card';
 import ComparacaoCnaesCard, { type ComparacaoCnaes } from '@/components/analise/comparacao-cnaes-card';
 import ConclusaoAnaliseForm from '@/components/analise/conclusao-analise-form';
 import { QuadrosChecklist, type QuadroChecklist } from '@/components/analise/quadros-checklist';
@@ -130,6 +131,11 @@ interface Localizacao {
     ponto_referencia: string | null;
     zona: string | null;
     via: string | null;
+    zona_via_alterada?: {
+        por: string | null;
+        em: string | null;
+        antes: { zona: string | null; via: string | null };
+    } | null;
     is_public_area: boolean | null;
     categoria_uso_lote: string | null;
     padrao_construtivo_lote: string | null;
@@ -303,6 +309,8 @@ interface FichaAnaliseShowProps {
     somenteLeitura: boolean;
     /** Quem tem a permissão no perfil escolhe a zona e a via do imóvel na ficha. */
     podeEditarZonaVia: boolean;
+    /** Documentos que o analista anexou à análise do processo. */
+    anexosAnalise: AnexoAnalise[];
     /** Alteração de atividade da JUCEB: comparação dos CNAEs com a viabilidade da SEFAZ. */
     comparacaoCnaes: ComparacaoCnaes | null;
     zonasDisponiveis: { codigo: string; nome: string | null }[];
@@ -734,6 +742,7 @@ export default function FichaAnaliseShow({
     sugestoesIa,
     iaFicha,
     temFichaVistoria,
+    anexosAnalise,
     podeConsultarVistoria,
     podeEncaminharChefia,
     fichaSalva: fichaSalvaNoServidor,
@@ -1762,6 +1771,21 @@ export default function FichaAnaliseShow({
                                 <DescItem label="Via">{valorOuTraco(localizacao?.via)}</DescItem>
                             </dl>
 
+                            {localizacao?.zona_via_alterada && (
+                                <p
+                                    className="mt-2 rounded-lg border border-blue-light-200 bg-blue-light-50 px-3 py-2 text-theme-xs text-blue-light-700 dark:border-blue-light-500/30 dark:bg-blue-light-500/10 dark:text-blue-light-400"
+                                    role="status"
+                                >
+                                    Zona e/ou via alteradas pelo analista
+                                    {localizacao.zona_via_alterada.por ? ` ${localizacao.zona_via_alterada.por}` : ''}
+                                    {localizacao.zona_via_alterada.em
+                                        ? ` em ${new Date(localizacao.zona_via_alterada.em).toLocaleString('pt-BR')}`
+                                        : ''}
+                                    . Antes: zona {valorOuTraco(localizacao.zona_via_alterada.antes.zona)}, via{' '}
+                                    {valorOuTraco(localizacao.zona_via_alterada.antes.via)}.
+                                </p>
+                            )}
+
                             {podeEditarZonaVia && !somenteLeitura && (
                                 <div className="mt-3">
                                     <Button size="xs" variant="outline" onClick={abrirZonaVia}>
@@ -1910,6 +1934,8 @@ export default function FichaAnaliseShow({
                         {comparacaoCnaes && (
                             <ComparacaoCnaesCard processoId={processo.id} comparacao={comparacaoCnaes} podeCorrigir={editavel} />
                         )}
+
+                        <AnexosAnaliseCard processoId={processo.id} anexos={anexosAnalise} editavel={editavel && !somenteLeitura} />
 
                         {/* Enquadramento por CNAE (espelha a ficha SAPS) */}
                         <Card>

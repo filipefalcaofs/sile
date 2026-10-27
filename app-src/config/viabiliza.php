@@ -65,6 +65,7 @@ return [
         'edificacoes_microsoft' => false,
         'edificacoes_ia' => false,
         'edificacoes_importacao_agendada' => false,
+        'legado_simplifica' => (bool) env('VIABILIZA_LEGADO_ATIVO', false),
         // Confere o ponto da inscrição contra a rua do endereço (eixo da camada
         // viária da SEDUR) e busca outro ponto por endereço quando está longe.
         // Desligado, o ponto do Cadastro Imobiliário é usado sem conferência.
@@ -465,6 +466,14 @@ return [
             'timeout' => 12,
             'retries' => 3,
             'backoff_ms' => 500,
+        ],
+        // Legado Simplifica/SAPS: a TVL deferida e ativa da empresa e os CNAEs dela, base da
+        // comparação de atividades. Token de máquina (`lg_...`, 90 dias) só no .env.
+        'legado_simplifica' => [
+            'url' => env('VIABILIZA_LEGADO_URL'),
+            'token' => env('VIABILIZA_LEGADO_TOKEN'),
+            'timeout' => 6,
+            'cache_ttl' => 600,
         ],
         'geoserver' => [
             'base_url' => 'https://geoserver.sedur.salvador.ba.gov.br/geoserver',

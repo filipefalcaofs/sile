@@ -16,9 +16,10 @@ use Illuminate\Support\Facades\Cache;
  * drives_rule=true injeta o gatilho dados_do_processo e derruba o processo do
  * expresso para análise; por isso a edição é auditada (HasAuditoria, RN-002)
  * e a desativação degrada para "desconhecido" (vai à análise), nunca para
- * decisão automática.
+ * decisão automática. regin_reconhece=false mantém o tipo só nas opções da
+ * ficha de vistoria, fora do reconhecimento do que o REGIN envia.
  */
-#[Fillable(['code', 'label', 'drives_rule', 'active'])]
+#[Fillable(['code', 'label', 'drives_rule', 'regin_reconhece', 'active'])]
 class PropertyType extends Model
 {
     use HasAuditoria;
@@ -42,6 +43,7 @@ class PropertyType extends Model
     {
         return [
             'drives_rule' => 'boolean',
+            'regin_reconhece' => 'boolean',
             'active' => 'boolean',
         ];
     }

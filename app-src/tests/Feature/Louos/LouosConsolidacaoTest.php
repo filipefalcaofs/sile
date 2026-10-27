@@ -16,6 +16,7 @@ use App\Services\Louos\EnquadramentoInput;
 use App\Services\Louos\LouosEnquadramentoService;
 use App\Services\Tratamento\TratamentoRegrasImportService;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 /**
@@ -61,7 +62,7 @@ class LouosConsolidacaoTest extends TestCase
     {
         return new EnquadramentoInput(
             area: 100,
-            cnaePrincipal: '4712-1/00',
+            cnaePrincipal: $extra['cnae'] ?? '4712-1/00',
             territory: $territory,
             respostas: [11 => true],
             vagasDeclaradas: $extra['vagasDeclaradas'] ?? [],
@@ -450,6 +451,97 @@ class LouosConsolidacaoTest extends TestCase
         ));
 
         $this->assertSame(ResultadoViabilidade::NaoPermitido->value, $result->resultado());
+    }
+
+    public function test_nota_do_quadro_11a_fica_registrada_na_fundamentacao(): void
+    {
+        $this->seedTratamento();
+        $this->seedQuadro10('ZCMe', 'nR1', Quadro10Permissao::Permitido);
+        $this->seedQuadro11a('VL', 'nR1', ['Não']);
+
+        $result = $this->service()->enquadrar($this->inputMinimercado(
+            $this->territorio($this->zonaIdentificada('ZCMe'), null, $this->viaIdentificada('VL')),
+            ['usoNaoResidencial' => true],
+        ));
+
+        $this->assertSame(ResultadoViabilidade::Permitido->value, $result->resultado());
+        $this->assertTrue(
+            collect($result->consolidado['fundamentacao'])->contains(fn (string $linha): bool => str_contains($linha, 'Quadro 11A') && str_contains($linha, 'nota')),
+            'a fundamentação cita a nota que liberou a Via Local',
+        );
+    }
+
+    public function test_hospedagem_de_animais_em_via_local_nunca_e_liberada_pela_nota(): void
+    {
+        $this->seedTratamento();
+        $this->seedQuadro10('ZCMe', 'nR1', Quadro10Permissao::Permitido);
+        $this->seedQuadro11a('VL', 'nR1', ['Não']);
+
+        foreach (['9609-2/07', '8011-1/02'] as $cnae) {
+            $result = $this->service()->enquadrar($this->inputMinimercado(
+                $this->territorio($this->zonaIdentificada('ZCMe'), null, $this->viaIdentificada('VL')),
+                ['usoNaoResidencial' => true, 'cnae' => $cnae],
+            ));
+
+            $this->assertNotSame(ResultadoViabilidade::Permitido->value, $result->resultado(), $cnae);
+        }
+    }
+
+    public function test_observacao_dos_animais_registra_a_restricao_especifica(): void
+    {
+        // O CNAE do minimercado entra na lista vedada para exercitar o caminho da
+        // observação (a), já que 9609-2/07 não tem ramo na planilha de teste.
+        $this->seedTratamento();
+        $this->seedQuadro10('ZCMe', 'nR1', Quadro10Permissao::Permitido);
+        $this->seedQuadro11a('VL', 'nR1', ['Não']);
+        Parameter::query()->where('key', 'louos.via_local.cnaes_vedados')->firstOrFail()->update(['value' => '4712100']);
+        Cache::flush();
+
+        $result = $this->service()->enquadrar($this->inputMinimercado(
+            $this->territorio($this->zonaIdentificada('ZCMe'), null, $this->viaIdentificada('VL')),
+            ['usoNaoResidencial' => true],
+        ));
+
+        $this->assertSame(ResultadoViabilidade::NaoPermitido->value, $result->resultado());
+        $this->assertStringContainsString('adestramento e hospedagem de animais', mb_strtolower((string) $result->consolidado['motivo']));
+        $this->assertTrue(collect($result->consolidado['fundamentacao'])->contains(
+            fn (string $linha): bool => str_contains($linha, 'observação (a)'),
+        ));
+    }
+
+    public function test_zona_da_nota_com_atividade_proibida_na_zona_mantem_a_restricao(): void
+    {
+        $this->seedTratamento();
+        $this->seedQuadro10('ZCMu', 'nR1', Quadro10Permissao::Proibido);
+        $this->seedQuadro11a('VL', 'nR1', ['Não']);
+
+        $result = $this->service()->enquadrar($this->inputMinimercado(
+            $this->territorio($this->zonaIdentificada('ZCMu'), null, $this->viaIdentificada('VL')),
+            ['usoNaoResidencial' => true],
+        ));
+
+        $this->assertSame(ResultadoViabilidade::NaoPermitido->value, $result->resultado());
+    }
+
+    public function test_lista_de_cnaes_vedados_administravel_muda_o_resultado(): void
+    {
+        $this->seedTratamento();
+        $this->seedQuadro10('ZCMe', 'nR1', Quadro10Permissao::Permitido);
+        $this->seedQuadro11a('VL', 'nR1', ['Não']);
+        $territorio = fn () => $this->territorio($this->zonaIdentificada('ZCMe'), null, $this->viaIdentificada('VL'));
+
+        $this->assertSame(
+            ResultadoViabilidade::Permitido->value,
+            $this->service()->enquadrar($this->inputMinimercado($territorio(), ['usoNaoResidencial' => true]))->resultado(),
+        );
+
+        Parameter::query()->where('key', 'louos.via_local.cnaes_vedados')->firstOrFail()->update(['value' => '4712100']);
+        Cache::flush();
+
+        $this->assertSame(
+            ResultadoViabilidade::NaoPermitido->value,
+            $this->service()->enquadrar($this->inputMinimercado($territorio(), ['usoNaoResidencial' => true]))->resultado(),
+        );
     }
 
     public function test_uso_nao_residencial_fora_das_zonas_de_centralidade_continua_indeferindo_pela_via(): void

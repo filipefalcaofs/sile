@@ -4,6 +4,7 @@ use App\Http\Controllers\ComunicacaoHistoricoController;
 use App\Http\Controllers\Gestao\AbusoController;
 use App\Http\Controllers\Gestao\AccessHistoryController;
 use App\Http\Controllers\Gestao\AiConfigurationController;
+use App\Http\Controllers\Gestao\AnalysisAttachmentController;
 use App\Http\Controllers\Gestao\AnalysisRecordController;
 use App\Http\Controllers\Gestao\ApiIntegracaoController;
 use App\Http\Controllers\Gestao\AssistedAttendanceController;
@@ -40,6 +41,7 @@ use App\Http\Controllers\Gestao\IndeferimentoDocumentController;
 use App\Http\Controllers\Gestao\InscricaoImobiliariaIntegrationController;
 use App\Http\Controllers\Gestao\InspectionController;
 use App\Http\Controllers\Gestao\IntegrationCallController;
+use App\Http\Controllers\Gestao\LegadoSimplificaIntegrationController;
 use App\Http\Controllers\Gestao\LegalTermController;
 use App\Http\Controllers\Gestao\LgpdMonitorController;
 use App\Http\Controllers\Gestao\LoginController;
@@ -346,6 +348,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::get('config-inscricao-imobiliaria', [InscricaoImobiliariaIntegrationController::class, 'edit'])->name('config-inscricao-imobiliaria.edit');
             Route::put('config-inscricao-imobiliaria', [InscricaoImobiliariaIntegrationController::class, 'update'])->name('config-inscricao-imobiliaria.update');
             Route::post('config-inscricao-imobiliaria/testar', [InscricaoImobiliariaIntegrationController::class, 'test'])->name('config-inscricao-imobiliaria.testar');
+            Route::post('config-legado-simplifica/testar', [LegadoSimplificaIntegrationController::class, 'test'])->name('config-legado-simplifica.testar');
             Route::get('config-apis', [ApiIntegracaoController::class, 'edit'])->name('config-apis.edit');
             Route::put('config-apis/{aba}', [ApiIntegracaoController::class, 'update'])->name('config-apis.update');
             Route::post('config-apis/legado/testar', [ApiIntegracaoController::class, 'testarLegado'])->name('config-apis.legado.testar');
@@ -792,6 +795,10 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::post('ficha/finalizar', [AnalysisRecordController::class, 'finalizar'])->name('ficha.finalizar');
             Route::post('ficha/concluir-processo', [AnalysisRecordController::class, 'concluirProcesso'])->middleware('permission:concluir-analise')->name('ficha.concluir-processo');
             Route::post('ficha/nova-revisao', [AnalysisRecordController::class, 'novaRevisao'])->name('ficha.nova-revisao');
+            // Documentos anexados pelo analista à análise (disk parametrizado, streaming autenticado).
+            Route::post('analise/anexos', [AnalysisAttachmentController::class, 'store'])->name('analise.anexos.store');
+            Route::get('analise/anexos/{attachment}', [AnalysisAttachmentController::class, 'download'])->name('analise.anexos.download');
+            Route::delete('analise/anexos/{attachment}', [AnalysisAttachmentController::class, 'destroy'])->name('analise.anexos.destroy');
             // Sugestão de minuta de parecer por IA (HU-118) — apoio, nunca decisão.
             Route::post('ficha/sugerir-parecer', [AnalysisRecordController::class, 'sugerirParecer'])->name('ficha.sugerir-parecer');
             Route::post('ficha/sugerir-justificativa', [AnalysisRecordController::class, 'sugerirJustificativa'])->name('ficha.sugerir-justificativa');

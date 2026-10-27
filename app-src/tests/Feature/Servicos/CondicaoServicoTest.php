@@ -15,16 +15,21 @@ use App\Services\Servicos\CondicaoServicoDetector;
 use App\Services\Servicos\ServicoNomenclaturaResolver;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\Http;
 use Inertia\Testing\AssertableInertia as Assert;
+use Tests\Support\Sefaz\ConfiguraLegadoSimplifica;
 use Tests\TestCase;
 
 /**
  * Linhas condicionais do De x Para da SEDUR: a alteração de atividades vira
- * Inclusão ou Exclusão e a alteração de endereço no município vira Alteração
- * de Endereço ou Revisão Alteração de Espaço, comparando com o último processo da empresa.
+ * Inclusão ou Exclusão e a alteração de endereço no município vira Revisão de
+ * Endereço ou Revisão de Espaço, comparando com o último processo da empresa.
  */
 class CondicaoServicoTest extends TestCase
 {
+    use ConfiguraLegadoSimplifica;
     use LazilyRefreshDatabase;
 
     private const ATIVIDADES = 'Alteração de atividades econômicas (principal e secundárias)';
@@ -74,7 +79,8 @@ class CondicaoServicoTest extends TestCase
             ['Alteração de endereço entre estados', 'Alteração de Endereço', ''],
             ['Alteração de endereço entre municípios dentro do mesmo estado', 'Alteração de Endereço', ''],
             [self::ATIVIDADES, 'Revisão de Atividade - Exclusão', 'cnae_excluido'],
-            [self::ENDERECO, 'Revisão Alteração de Espaço', 'endereco_espaco'],
+            [self::ENDERECO, 'Revisão de Espaço', 'endereco_espaco'],
+            [self::ATIVIDADES, 'Revisão de Atividade', 'cnae_sem_alteracao'],
         ], $linhas);
     }
 
@@ -94,6 +100,80 @@ class CondicaoServicoTest extends TestCase
         $atual = $this->processo($empresa, ['4711301', '5611201']);
 
         $this->assertSame(CondicaoServico::CnaeExcluido, $this->detectar($atual, self::ATIVIDADES));
+    }
+
+    public function test_so_excluindo_cnae_e_exclusao(): void
+    {
+        $empresa = Company::factory()->create();
+        $this->processo($empresa, ['4711301', '4712100']);
+        $atual = $this->processo($empresa, ['4711301']);
+
+        $this->assertSame(CondicaoServico::CnaeExcluido, $this->detectar($atual, self::ATIVIDADES));
+    }
+
+    public function test_sem_mudar_nenhum_cnae_nao_e_inclusao(): void
+    {
+        // Pedido que só refaz o serviço (por exemplo, pendência em outro órgão):
+        // a lista de atividades é a mesma do último processo da empresa.
+        $empresa = Company::factory()->create();
+        $this->processo($empresa, ['4711301', '4712100']);
+        $atual = $this->processo($empresa, ['4711301', '4712100']);
+
+        $this->assertSame(CondicaoServico::CnaeSemAlteracao, $this->detectar($atual, self::ATIVIDADES));
+    }
+
+    /** @var list<string> */
+    private array $atividadesDoLegado = [];
+
+    /**
+     * @param  list<string>  $atividades
+     */
+    private function legadoComTvl(array $atividades): void
+    {
+        $this->atividadesDoLegado = $atividades;
+        $this->configurarLegado();
+        Http::fake(fn (Request $request) => match (true) {
+            str_contains($request->url(), '/v1/provisorias') => Http::response(['data' => [['numero' => 700, 'deferida' => true, 'ativa' => true, 'validade' => '2027-01-01T00:00:00Z']]]),
+            str_contains($request->url(), '/v1/tvls/700') => Http::response(['data' => ['atividades' => array_map(fn (string $codigo): array => ['codigo' => $codigo, 'descricao' => 'x'], $this->atividadesDoLegado)]]),
+            default => Http::response([], 404),
+        });
+    }
+
+    public function test_sem_processo_anterior_usa_a_viabilidade_do_legado_como_base(): void
+    {
+        $this->legadoComTvl(['4711-3/01', '4712-1/00']);
+        $this->assertSame(CondicaoServico::CnaeSemAlteracao, $this->detectar($this->processo(Company::factory()->create(), ['4711301', '4712100']), self::ATIVIDADES));
+
+        $this->legadoComTvl(['4711-3/01', '4712-1/00']);
+        $this->assertSame(CondicaoServico::CnaeExcluido, $this->detectar($this->processo(Company::factory()->create(), ['4711301']), self::ATIVIDADES));
+
+        $this->legadoComTvl(['4711-3/01']);
+        $this->assertSame(CondicaoServico::CnaeIncluido, $this->detectar($this->processo(Company::factory()->create(), ['4711301', '5611201']), self::ATIVIDADES));
+    }
+
+    public function test_legado_fora_do_ar_mantem_sem_condicao(): void
+    {
+        $this->legadoComTvl(['4711301']);
+        Http::fake(fn () => throw new ConnectionException('sem rota'));
+
+        $this->assertNull($this->detectar($this->processo(Company::factory()->create(), ['4711301']), self::ATIVIDADES));
+    }
+
+    public function test_legado_nao_decide_a_condicao_de_endereco(): void
+    {
+        $this->legadoComTvl(['4711301']);
+
+        $this->assertNull($this->detectar($this->processo(Company::factory()->create()), self::ENDERECO));
+    }
+
+    public function test_processo_anterior_no_viabiliza_prevalece_sobre_o_legado(): void
+    {
+        $empresa = Company::factory()->create();
+        $this->processo($empresa, ['4711301']);
+        $this->legadoComTvl(['4712100']);
+
+        $this->assertSame(CondicaoServico::CnaeSemAlteracao, $this->detectar($this->processo($empresa, ['4711301']), self::ATIVIDADES));
+        Http::assertNothingSent();
     }
 
     public function test_sem_processo_anterior_nao_ha_condicao(): void
@@ -200,7 +280,11 @@ class CondicaoServicoTest extends TestCase
 
         $this->assertSame(['Revisão de Atividade - Exclusão'], $resolver->servicos($exclusao));
         $this->assertSame(['Revisão de Atividade - Inclusão'], $resolver->servicos($semCondicao));
-        $this->assertSame(['Revisão Alteração de Espaço'], $resolver->servicos($espaco));
+        $this->assertSame(['Revisão de Espaço'], $resolver->servicos($espaco));
+
+        $semAlteracao = ViabilityRequest::factory()->create();
+        ViabilityRequestEvento::factory()->create(['viability_request_id' => $semAlteracao->id, 'codigo' => '244', 'nome' => self::ATIVIDADES, 'condicao' => 'cnae_sem_alteracao']);
+        $this->assertSame(['Revisão de Atividade'], $resolver->servicos($semAlteracao));
     }
 
     public function test_filtro_separa_inclusao_de_exclusao(): void
@@ -251,8 +335,8 @@ class CondicaoServicoTest extends TestCase
         $this->actingAs($admin, 'gestao')
             ->get('/gestao/servicos-nomenclatura?search=atividades')
             ->assertInertia(fn (Assert $page) => $page
-                ->has('nomenclaturas.data', 2)
+                ->has('nomenclaturas.data', 3)
                 ->where('nomenclaturas.data.1.condicao_label', CondicaoServico::CnaeExcluido->label())
-                ->has('condicaoOptions', 4));
+                ->has('condicaoOptions', 5));
     }
 }

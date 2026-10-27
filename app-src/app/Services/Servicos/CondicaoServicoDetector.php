@@ -5,6 +5,9 @@ namespace App\Services\Servicos;
 use App\Enums\CondicaoServico;
 use App\Models\ServicoNomenclatura;
 use App\Models\ViabilityRequest;
+use App\Services\Sefaz\CadeiaViabilidadeAnterior;
+use Illuminate\Support\Collection;
+use Throwable;
 
 /**
  * Escolhe a linha condicional do De x Para comparando o processo com o último
@@ -33,7 +36,9 @@ class CondicaoServicoDetector
             ->first();
 
         if ($anterior === null) {
-            return null;
+            return $condicoes->contains(fn (CondicaoServico $condicao): bool => $condicao->comparaCnaes())
+                ? $this->pelaViabilidadeAnterior($processo)
+                : null;
         }
 
         return $condicoes->contains(fn (CondicaoServico $condicao): bool => $condicao->comparaCnaes())
@@ -43,10 +48,55 @@ class CondicaoServicoDetector
 
     private function pelosCnaes(ViabilityRequest $processo, ViabilityRequest $anterior): CondicaoServico
     {
-        $atuais = $processo->cnaes()->pluck('cnaes.id')->all();
-        $excluidos = $anterior->cnaes()->pluck('cnaes.id')->diff($atuais);
+        $atuais = $processo->cnaes()->pluck('cnaes.id');
+        $antes = $anterior->cnaes()->pluck('cnaes.id');
 
-        return $excluidos->isNotEmpty() ? CondicaoServico::CnaeExcluido : CondicaoServico::CnaeIncluido;
+        if ($antes->diff($atuais)->isNotEmpty()) {
+            return CondicaoServico::CnaeExcluido;
+        }
+
+        return $atuais->diff($antes)->isNotEmpty() ? CondicaoServico::CnaeIncluido : CondicaoServico::CnaeSemAlteracao;
+    }
+
+    /**
+     * Sem processo anterior no Viabiliza, a base dos CNAEs é a viabilidade
+     * anterior da empresa em outra fonte (legado, SEFAZ). Sem ela ou com a fonte
+     * fora do ar, não há condição e vale a linha padrão do evento.
+     */
+    private function pelaViabilidadeAnterior(ViabilityRequest $processo): ?CondicaoServico
+    {
+        $cnpj = (string) $processo->company?->cnpj;
+
+        if ($cnpj === '') {
+            return null;
+        }
+
+        try {
+            $base = app(CadeiaViabilidadeAnterior::class)->consultar($processo, $cnpj);
+        } catch (Throwable $e) {
+            report($e);
+
+            return null;
+        }
+
+        if ($base === null) {
+            return null;
+        }
+
+        $digitos = fn (iterable $codigos): Collection => collect($codigos)
+            ->map(fn ($codigo): string => (string) preg_replace('/\D/', '', (string) $codigo))
+            ->filter()
+            ->unique()
+            ->values();
+
+        $antes = $digitos($base['viabilidade']->cnaes);
+        $atuais = $digitos($processo->cnaes()->pluck('code'));
+
+        if ($antes->diff($atuais)->isNotEmpty()) {
+            return CondicaoServico::CnaeExcluido;
+        }
+
+        return $atuais->diff($antes)->isNotEmpty() ? CondicaoServico::CnaeIncluido : CondicaoServico::CnaeSemAlteracao;
     }
 
     private function peloEndereco(ViabilityRequest $processo, ViabilityRequest $anterior): ?CondicaoServico

@@ -425,6 +425,20 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'boolean'],
                 'description' => 'Consulta o lote por inscrição imobiliária no cadastro municipal (ArcGIS, camada SEMAP — Inscrições Geo) quando o endereçamento não tem polígono para o endereço',
             ],
+            'features.legado_simplifica' => [
+                'group' => 'features',
+                'type' => 'boolean',
+                'default_value' => '0',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'Consulta a viabilidade anterior da empresa no legado Simplifica (TVL deferida e ativa e os CNAEs dela) para comparar as atividades de uma alteração. Desligado, só vale o processo anterior no Viabiliza',
+            ],
+            'features.legado_simplifica' => [
+                'group' => 'features',
+                'type' => 'boolean',
+                'default_value' => '0',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'Consulta a viabilidade anterior da empresa no legado Simplifica (TVL deferida e ativa e os CNAEs dela) para comparar as atividades de uma alteração. Desligado, só vale o processo anterior no Viabiliza',
+            ],
             'features.validacao_ponto_inscricao' => [
                 'group' => 'features',
                 'type' => 'boolean',
@@ -517,6 +531,28 @@ class ParameterSeeder extends Seeder
                 'default_value' => null,
                 'validation_rules' => ['nullable', 'string', 'max:2048'],
                 'description' => 'Token do Portal ArcGIS para a ortofoto 2024, se o serviço passar a exigir (armazenado criptografado, nunca reexibido)',
+            ],
+            'integrations.legado_simplifica.url' => [
+                'group' => 'integracoes',
+                'type' => 'string',
+                'default_value' => null,
+                'validation_rules' => ['nullable', 'url'],
+                'description' => 'Endereço da API do legado Simplifica (esquema e host, sem /v1), por exemplo http://simplifica-legado.pms.ba.gov.br',
+            ],
+            'integrations.legado_simplifica.token' => [
+                'group' => 'integracoes',
+                'type' => 'string',
+                'sensitive' => true,
+                'default_value' => null,
+                'validation_rules' => ['nullable', 'string', 'max:2048'],
+                'description' => 'Token de máquina (lg_..., validade de 90 dias) da API do legado Simplifica, com os escopos provisorias:ler e processos:ler (armazenado criptografado, nunca reexibido)',
+            ],
+            'louos.via_local.cnaes_vedados' => [
+                'group' => 'louos',
+                'type' => 'string',
+                'default_value' => '9609207,8011102',
+                'validation_rules' => ['required', 'string', 'max:500'],
+                'description' => 'CNAEs que a observação (a) do Quadro 11A da LOUOS mantém vedados em Via Local, mesmo nas zonas ZCMu, ZCMe, ZCLMu e ZCLMe (adestramento e hospedagem de animais de estimação). Códigos só com dígitos ou com máscara, separados por vírgula. A SEDUR valida a associação definitiva dos CNAEs',
             ],
             'features.geoserver_territorio' => [
                 'group' => 'features',
@@ -1129,6 +1165,7 @@ class ParameterSeeder extends Seeder
             'renovacao.intervalo_meses',
             'renovacao.legado.janela_a_vencer_dias',
             'renovacao.legado.permite_vencida',
+            'louos.via_local.cnaes_vedados',
         ];
     }
 }
