@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Regin;
 
+use App\Console\Commands\ReginCorrigirSolicitantesCommand;
 use App\Enums\ViabilityRequestOrigin;
 use App\Enums\ViabilityRequestStatus;
 use App\Jobs\DecidirFluxoExpressoJob;
@@ -274,6 +275,30 @@ class ReginProcessoProtocoladorTest extends TestCase
         $this->assertSame('GRAZIELLE DE FREITAS MUZYKANT', $processo->solicitante_nome);
         $this->assertSame('00449085040', $processo->solicitante_cpf);
         $this->assertSame('REBOREDO CONSULTORIA LTDA', $empresa->fresh()?->legal_name);
+    }
+
+    public function test_comando_corrige_todos_os_processos_mesmo_com_varios_lotes(): void
+    {
+        $this->recebimento($this->ruc([
+            'RUC_GENERAL' => ['RGE_CGC_CPF' => '00449085040', 'RGE_NOMB' => 'GRAZIELLE DE FREITAS MUZYKANT'],
+        ]));
+        $empresa = Company::factory()->create(['cnpj' => '00449085040']);
+        $processos = ViabilityRequest::factory()->count(5)->create([
+            'origin' => ViabilityRequestOrigin::Regin,
+            'company_id' => $empresa->id,
+            'external_reference' => '43747',
+        ]);
+
+        $anterior = ReginCorrigirSolicitantesCommand::$tamanhoDoLote;
+        ReginCorrigirSolicitantesCommand::$tamanhoDoLote = 2;
+
+        try {
+            $this->artisan('regin:corrigir-solicitantes')->expectsOutput('Corrigidos: 5')->assertSuccessful();
+        } finally {
+            ReginCorrigirSolicitantesCommand::$tamanhoDoLote = $anterior;
+        }
+
+        $this->assertSame(0, ViabilityRequest::query()->whereIn('id', $processos->pluck('id'))->whereNull('solicitante_cpf')->count());
     }
 
     public function test_cpf_ja_usado_nao_impede_o_solicitante_nao_identificado(): void

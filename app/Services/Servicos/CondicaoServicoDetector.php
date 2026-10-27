@@ -101,7 +101,7 @@ class CondicaoServicoDetector
 
     private function peloEndereco(ViabilityRequest $processo, ViabilityRequest $anterior): ?CondicaoServico
     {
-        if ($this->mudou($processo, $anterior, ['cod_log'], ignorarVazio: true)
+        if ($this->mudou($processo, $anterior, ['cod_log', 'address_street'], ignorarVazio: true)
             || $this->mudou($processo, $anterior, ['address_number', 'address_neighborhood'])) {
             return CondicaoServico::EnderecoLocalizacao;
         }
@@ -115,7 +115,7 @@ class CondicaoServicoDetector
 
     /**
      * Compara sem caixa, acento ou espaço extra. Com ignorarVazio, campo vazio
-     * de um dos lados não conta: o processo antigo pode não ter o codlog.
+     * de um dos lados não conta: o processo antigo pode não ter o codlog ou o logradouro.
      *
      * @param  list<string>  $campos
      */

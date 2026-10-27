@@ -8,7 +8,7 @@ import {
     CategoriaBadges,
     type ProcessoItem,
 } from '@/components/analise/processo-ui';
-import { AlertIcon, ArrowRightIcon, CheckCircleIcon, FileIcon, InfoIcon, ListIcon } from '@/components/icons';
+import { AlertIcon, ArrowRightIcon, CheckCircleIcon, FileIcon, InfoIcon, ListIcon, MailIcon, MapPinIcon } from '@/components/icons';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import DataTable from '@/components/ui/data-table/data-table';
 import PerPageSelect from '@/components/ui/data-table/per-page-select';
@@ -25,6 +25,9 @@ interface Contadores {
     em_analise: number;
     em_pendencia: number;
     vencendo_hoje: number;
+    vistoriar: number;
+    retorno_vistoria: number;
+    retorno_convite: number;
     analisados: number;
 }
 
@@ -32,7 +35,7 @@ type Visao = 'analise' | 'analisados';
 
 const ABAS: { id: Visao; rotulo: string }[] = [
     { id: 'analise', rotulo: 'Análise' },
-    { id: 'analisados', rotulo: 'Analisados' },
+    { id: 'analisados', rotulo: 'Concluídos' },
 ];
 
 interface CargaAnalista {
@@ -148,8 +151,29 @@ export default function Fila({
             tone: 'error',
         },
         {
+            key: 'vistoriar',
+            label: 'Vistoriar',
+            value: contadores.vistoriar,
+            icon: <MapPinIcon className="size-6" />,
+            tone: 'info',
+        },
+        {
+            key: 'retorno_vistoria',
+            label: 'Retorno Vistoria',
+            value: contadores.retorno_vistoria,
+            icon: <MapPinIcon className="size-6" />,
+            tone: 'brand',
+        },
+        {
+            key: 'retorno_convite',
+            label: 'Retorno Convite',
+            value: contadores.retorno_convite,
+            icon: <MailIcon className="size-6" />,
+            tone: 'warning',
+        },
+        {
             key: 'analisados',
-            label: `Analisados (${janela} dias)`,
+            label: `Concluídos (${janela} dias)`,
             value: contadores.analisados,
             icon: <CheckCircleIcon className="size-6" />,
             tone: 'success',
@@ -272,7 +296,7 @@ export default function Fila({
                 <div className="flex justify-end">
                     <JanelaDiasToggle janelas={janelas} ativa={janela} onSelecionar={(dias) => navegar({ janela: dias })} />
                 </div>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 xl:grid-cols-5">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 xl:grid-cols-4">
                     {indicadores.map((indicador) => (
                         <KpiCard
                             key={indicador.key}

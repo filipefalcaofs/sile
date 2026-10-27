@@ -10,6 +10,7 @@ interface ZonaMaiorPorcaoResolver
 {
     /**
      * @param  array<string, mixed>  $poligono  GeoJSON Polygon/MultiPolygon em EPSG:4326
+     * @param  string|null  $codLog  CODLOG do endereço do processo, para o lote lindeiro à centralidade linear
      */
-    public function resolver(array $poligono): ZonaMaiorPorcao;
+    public function resolver(array $poligono, ?string $codLog = null): ZonaMaiorPorcao;
 }

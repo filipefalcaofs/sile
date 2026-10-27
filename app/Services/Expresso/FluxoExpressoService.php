@@ -216,6 +216,17 @@ class FluxoExpressoService
             }
         }
 
+        // Sem a comparação da SEFAZ, a alteração de atividades da JUCEB é
+        // comparada com o último processo deferido da empresa: sem atividade
+        // nova e com alguma retirada, é exclusão e defere sem enquadramento.
+        if ($comparacao === null) {
+            $excluidas = $this->excluidasFrenteAoProcessoAnterior($request);
+
+            if ($excluidas !== null) {
+                return $this->deferirExclusaoPeloProcessoAnterior($request, $actor, $excluidas);
+            }
+        }
+
         // RN-AA-03/RN-AA-05: solicitação EXCLUSIVAMENTE de exclusão de
         // atividade (todos os CNAEs marcados "excluir") defere
         // automaticamente, SEM consultar o enquadramento LOUOS/risco — nada
@@ -839,6 +850,85 @@ class FluxoExpressoService
                 'motivo' => $reason,
             ]);
         }
+    }
+
+    /**
+     * Códigos (só dígitos) que saíram da alteração de atividades da JUCEB
+     * (evento 244) frente ao último processo deferido da mesma empresa. Null
+     * quando a chave está desligada, o pedido traz intenção por CNAE, não há
+     * processo anterior deferido, alguma atividade é nova ou nada saiu.
+     *
+     * @return list<string>|null
+     */
+    private function excluidasFrenteAoProcessoAnterior(ViabilityRequest $request): ?array
+    {
+        if (! (bool) config('viabiliza.expresso.exclusao_pelo_processo_anterior', true)
+            || $request->company_id === null
+            || ! $request->eventos()->where('codigo', SedeEscritorioVirtualGatilho::EVENTO_ALTERACAO_ATIVIDADES)->exists()
+            || $request->cnaes()->wherePivotNotNull('intencao')->exists()) {
+            return null;
+        }
+
+        $anterior = ViabilityRequest::query()
+            ->where('company_id', $request->company_id)
+            ->where('id', '<', $request->id)
+            ->where('status', ViabilityRequestStatus::Deferida->value)
+            ->latest('id')
+            ->first();
+
+        if ($anterior === null) {
+            return null;
+        }
+
+        $digitos = fn (string $codigo): string => preg_replace('/\D/', '', $codigo) ?? '';
+        $pedidas = $request->cnaes()->pluck('code')->map($digitos)->unique();
+        $anteriores = $anterior->cnaes()->pluck('code')->map($digitos)->unique();
+
+        if ($pedidas->isEmpty() || $pedidas->diff($anteriores)->isNotEmpty()) {
+            return null;
+        }
+
+        $excluidas = $anteriores->diff($pedidas)->values()->all();
+
+        return $excluidas === [] ? null : $excluidas;
+    }
+
+    /**
+     * Exclusão apurada pelo processo anterior. Se o CNAE gatilho saiu de uma
+     * sede ativa, segue as mesmas exigências da exclusão declarada do gatilho:
+     * só a titular do vínculo, com a perda da condição confirmada.
+     *
+     * @param  list<string>  $excluidas  só dígitos
+     */
+    private function deferirExclusaoPeloProcessoAnterior(ViabilityRequest $request, ?User $actor, array $excluidas): DecisionResult
+    {
+        $lock = in_array($this->gatilhoSede->cnaeGatilho(), $excluidas, true) && filled($request->property_registration)
+            ? VirtualOfficeInscriptionLock::sedeAtiva((string) $request->property_registration)
+            : null;
+
+        if ($lock !== null) {
+            if (! $this->gatilhoSede->titularDoVinculo($request, $lock)) {
+                return $this->encaminharAnalise(
+                    $request,
+                    $this->textos->get('expresso.motivo.exclusao_sede_nao_titular'),
+                    $actor,
+                );
+            }
+
+            if ($request->confirma_perda_condicao_sede !== true) {
+                $mensagem = str_replace(
+                    ':cnae',
+                    $this->gatilhoSede->cnaeGatilhoFormatado(),
+                    (string) config('viabiliza.analise.escritorio_virtual.mensagem_confirma_perda_sede'),
+                );
+
+                return $this->encaminharAnalise($request, $mensagem, $actor);
+            }
+        }
+
+        // Com a lista de excluídas informada, `deferirExclusao()` retira a
+        // condição de sede da titular que ficou sem o CNAE gatilho.
+        return $this->deferirExclusao($request, $actor, $excluidas);
     }
 
     /**

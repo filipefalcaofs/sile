@@ -78,6 +78,18 @@ interface ShowProps {
     conclusaoOpcoes: { value: string; label: string }[];
     /** Capa aberta pela caixa de vistoria: voltar à consulta de vistorias e permitir imprimir. */
     consultaVistoria?: boolean;
+    /** Quem vê o processo pode abrir a ficha de vistoria pelo link da tramitação. */
+    podeVerFichaVistoria?: boolean;
+    /** Documentos do processo e anexos das fichas de vistoria, para todos que o consultam. */
+    anexos?: {
+        id: number;
+        tipo: 'documento' | 'vistoria';
+        nome: string;
+        origem: string;
+        tamanho: number | null;
+        enviado_em: string | null;
+        url: string;
+    }[];
     /** Despacho do analista ao encaminhar o processo à vistoria; null sem encaminhamento. */
     despachoVistoria?: {
         orientacoes: string;
@@ -173,7 +185,9 @@ export default function Show({
     justificativaRegin = null,
     conclusaoOpcoes,
     consultaVistoria = false,
+    podeVerFichaVistoria = false,
     despachoVistoria = null,
+    anexos = [],
 }: ShowProps & {
     setoresEncaminhamento?: SetorEncaminhamento[];
     analistasEncaminhamento?: AnalistaEncaminhamento[];
@@ -611,7 +625,8 @@ export default function Show({
                                                         </p>
                                                         {evento.reason && (
                                                             <p className="mt-1 text-theme-sm text-gray-600 dark:text-gray-300">
-                                                                {evento.link && podeAbrirFicha ? (
+                                                                {evento.link &&
+                                                                (evento.tipo === 'vistoria' ? podeVerFichaVistoria : podeAbrirFicha) ? (
                                                                     <a
                                                                         href={evento.link}
                                                                         target="_blank"
@@ -681,6 +696,32 @@ export default function Show({
                                 </CardContent>
                             </Card>
                         )}
+
+                        <Card>
+                            <CardHeader title="Anexos" description="Documentos do processo e fotos e arquivos das vistorias." />
+                            <CardContent>
+                                {anexos.length === 0 ? (
+                                    <p className="text-theme-sm text-gray-500 dark:text-gray-400">Nenhum anexo no processo.</p>
+                                ) : (
+                                    <ul className="space-y-3" aria-label="Anexos do processo">
+                                        {anexos.map((anexo) => (
+                                            <li key={`${anexo.tipo}-${anexo.id}`} className="text-theme-sm">
+                                                <a
+                                                    href={anexo.url}
+                                                    className="font-medium break-all text-brand-600 hover:underline dark:text-brand-400"
+                                                >
+                                                    {anexo.nome}
+                                                </a>
+                                                <p className="text-theme-xs text-gray-500 dark:text-gray-400">
+                                                    {anexo.origem}
+                                                    {anexo.enviado_em && ` · ${new Date(anexo.enviado_em).toLocaleDateString('pt-BR')}`}
+                                                </p>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
+                            </CardContent>
+                        </Card>
 
                         <Card>
                             <CardHeader title="Localização do imóvel" />

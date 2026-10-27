@@ -79,7 +79,7 @@ class CaixaSetorController extends Controller
 
         $paraConclusao = AnalysisStatus::ParaConclusao->value;
 
-        $base = $this->naCaixaDoUsuario(ViabilityRequest::query(), $request->user())
+        $base = $this->foraDaVistoria($this->naCaixaDoUsuario(ViabilityRequest::query(), $request->user()))
             ->where('status', ViabilityRequestStatus::EmAnalise->value);
 
         $base = $this->processos->aplicarFiltros($base, $filtros);
@@ -114,7 +114,7 @@ class CaixaSetorController extends Controller
         $processos = ($visao === 'para_conclusao' ? $baseConclusao : $base)
             ->when($visao === 'para_distribuir', fn ($query) => $foraDaConclusao($query->whereNull('assigned_user_id')))
             ->when($visao === 'distribuidos', fn ($query) => $distribuidos($query))
-            ->with(['company', 'serviceType:id,name', 'eventos', 'cnaes', 'sector:id,name', 'assignedTo:id,name', 'conclusaoEncaminhadaPara:id,name', 'conclusaoIndicadaPara:id,name'])
+            ->with(['company', 'serviceType:id,name', 'eventos', 'cnaes', 'sector:id,name', 'assignedTo:id,name', 'conclusaoEncaminhadaPara:id,name', 'conclusaoIndicadaPara:id,name', 'inspectionReferral.analistaOrigem:id,name', 'inspectionReferral.encaminhadoPor:id,name'])
             ->orderBy('analysis_due_at')
             ->orderBy('id')
             ->paginate($perPage)
@@ -140,7 +140,7 @@ class CaixaSetorController extends Controller
                     ])
                     ->values()
                     ->all(),
-                'empresa' => $processo->company?->trade_name ?: $processo->company?->legal_name,
+                'empresa' => $processo->nomeDaEmpresa(),
                 'cnpj' => $processo->company?->formatted_cnpj,
                 'status' => $processo->status->value,
                 'status_label' => $processo->status->label(),
@@ -159,6 +159,10 @@ class CaixaSetorController extends Controller
                 'encaminhado_para' => $processo->conclusaoEncaminhadaPara?->name,
                 'indicado_para' => $processo->analysis_status === AnalysisStatus::ParaConclusao ? $processo->conclusaoIndicadaPara?->name : null,
                 'analysis_due_at' => $processo->analysis_due_at?->toIso8601String(),
+                // Volta da vistoria: quem mandou o processo para a vistoria (Lisa, 22/10).
+                'designacao' => $processo->analysis_status === AnalysisStatus::Vistoriado
+                    ? ($processo->inspectionReferral?->analistaOrigem?->name ?? $processo->inspectionReferral?->encaminhadoPor?->name)
+                    : null,
                 // Redistribuir só antes da conclusão (regra única do enum).
                 'pode_redistribuir' => ($processo->assigned_user_id !== null || $processo->conclusao_encaminhada_para_user_id !== null)
                     && ($processo->analysis_status?->permiteRedistribuicao() ?? false),
@@ -315,7 +319,7 @@ class CaixaSetorController extends Controller
             ->whereNull('assigned_user_id');
 
         if ($request->boolean('todos')) {
-            $consulta = $this->processos->aplicarFiltros($consulta, $this->filtrosDaCaixa($request));
+            $consulta = $this->processos->aplicarFiltros($this->foraDaVistoria($consulta), $this->filtrosDaCaixa($request));
         } else {
             $ids = collect(explode(',', (string) $request->string('ids')))
                 ->map(fn ($id): int => (int) trim($id))
@@ -646,6 +650,31 @@ class CaixaSetorController extends Controller
     {
         $query->whereNull('assigned_user_id')
             ->orWhere('analysis_status', AnalysisStatus::ParaConclusao->value);
+    }
+
+    /**
+     * Processo em vistoria fica só na Caixa de Vistoria (SPEC-05): sai daqui
+     * em Vistoriar e, já Vistoriado, enquanto segue no setor de vistoria sem
+     * ter sido encaminhado de volta ao setor de origem.
+     *
+     * @param  Builder<ViabilityRequest>  $query
+     * @return Builder<ViabilityRequest>
+     */
+    private function foraDaVistoria(Builder $query): Builder
+    {
+        return $query->where(fn (Builder $q) => $q
+            ->whereNull('analysis_status')
+            ->orWhereNotIn('analysis_status', [AnalysisStatus::Vistoriar->value, AnalysisStatus::Vistoriado->value])
+            ->orWhere(fn (Builder $vistoriado) => $vistoriado
+                ->where('analysis_status', AnalysisStatus::Vistoriado->value)
+                ->whereNotExists(fn ($naVistoria) => $naVistoria
+                    ->from('inspection_referrals')
+                    ->whereColumn('inspection_referrals.viability_request_id', 'viability_requests.id')
+                    ->whereColumn('inspection_referrals.setor_vistoria_id', 'viability_requests.sector_id')
+                    ->where(fn ($origem) => $origem
+                        ->whereNull('inspection_referrals.setor_origem_id')
+                        ->orWhereColumn('inspection_referrals.setor_origem_id', '!=', 'viability_requests.sector_id'))
+                    ->whereRaw('inspection_referrals.id = (select max(r.id) from inspection_referrals r where r.viability_request_id = viability_requests.id)'))));
     }
 
     /**

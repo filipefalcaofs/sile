@@ -50,7 +50,7 @@ class ProcessoResource extends JsonResource
             'tipo_imovel' => $this->tipo_imovel ?? $this->tipo_imovel_cadastro,
             'contingency_reason' => $this->contingency_reason,
             'motivo_da_analise' => $this->motivoDaAnalise(),
-            'empresa' => $this->company?->trade_name ?: $this->company?->legal_name,
+            'empresa' => $this->nomeDaEmpresa(),
             // Empresa a constituir não tem CNPJ: o documento de 11 dígitos é o CPF de quem pediu.
             'cnpj' => strlen((string) $this->company?->cnpj) === 14 ? $this->company?->formatted_cnpj : null,
             'solicitante' => $this->solicitante_nome,

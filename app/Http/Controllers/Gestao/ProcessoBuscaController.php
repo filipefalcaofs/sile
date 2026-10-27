@@ -31,7 +31,7 @@ class ProcessoBuscaController extends Controller
         }
 
         $resultados = ViabilityRequest::query()
-            ->with('company:id,legal_name,trade_name')
+            ->with('company:id,legal_name,trade_name,cnpj')
             ->where(function ($query) use ($termo) {
                 $query->whereLike('protocol_number', "%{$termo}%", caseSensitive: false)
                     ->orWhereLike('external_reference', "%{$termo}%", caseSensitive: false)
@@ -48,7 +48,7 @@ class ProcessoBuscaController extends Controller
             ->map(fn (ViabilityRequest $processo): array => [
                 'id' => $processo->id,
                 'protocolo' => $processo->protocol_number,
-                'empresa' => $processo->company?->trade_name ?: $processo->company?->legal_name,
+                'empresa' => $processo->nomeDaEmpresa(),
                 'link' => route('gestao.processos.show', $processo),
             ])
             ->all();

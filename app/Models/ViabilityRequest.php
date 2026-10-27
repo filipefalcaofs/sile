@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 /**
  * Solicitação de viabilidade (EP08) — aggregate root com o imóvel embutido 1:1.
@@ -346,6 +347,37 @@ class ViabilityRequest extends Model
         }
 
         return $status->label();
+    }
+
+    /**
+     * Nome do campo Empresa (SEDUR, 22/10): a razão social, nunca o nome do
+     * solicitante. Empresa a constituir do REGIN sem razão social pretendida
+     * nasce com o nome da pessoa; nesse caso o campo diz "Empresa a constituir".
+     */
+    public function nomeDaEmpresa(): ?string
+    {
+        $empresa = $this->company;
+        $nome = $empresa?->legal_name ?: $empresa?->trade_name;
+
+        if ($nome === null || $nome === '') {
+            return null;
+        }
+
+        $documento = preg_replace('/\D/', '', (string) $empresa->cnpj);
+        $solicitante = (string) $this->solicitante_nome;
+
+        if (strlen($documento) === 11 && $solicitante !== ''
+            && mb_strtolower(Str::ascii(trim($nome))) === mb_strtolower(Str::ascii(trim($solicitante)))) {
+            return 'Empresa a constituir';
+        }
+
+        return $nome;
+    }
+
+    /** Campo Requerente: quem pediu no REGIN (solicitante) ou, sem ele, o usuário requerente. */
+    public function nomeDoRequerente(): ?string
+    {
+        return $this->solicitante_nome ?: $this->requester?->name;
     }
 
     /**

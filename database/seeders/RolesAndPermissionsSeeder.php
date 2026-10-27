@@ -22,6 +22,7 @@ class RolesAndPermissionsSeeder extends Seeder
         'emitir-tvl',
         'enviar-tvl-analise',
         'preencher-ficha-vistoria',
+        'editar-zona-via',
     ];
 
     /** Acrescidas às chefias de análise. */
@@ -32,7 +33,6 @@ class RolesAndPermissionsSeeder extends Seeder
         'relatorios.produtividade.nominal',
         'forcar-transicao-analise',
         'receber-escalonamento-sla',
-        'editar-zona-via',
     ];
 
     private const array PERFIS_ANALISE = ['Analista Terceirizado', 'Analista Servidor'];

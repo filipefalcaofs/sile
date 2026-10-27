@@ -373,6 +373,69 @@ class VistoriaEncaminhamentoTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page->where('processo.analysis_status', 'vistoriado'));
     }
 
+    /**
+     * SPEC-05: em vistoria, o processo fica só na Caixa de Vistoria. Ele não
+     * aparece na Caixa do Setor nem para o apoio, que vê todos os setores, nem
+     * para quem é do setor de vistoria. Volta a uma única caixa após o retorno.
+     */
+    public function test_processo_em_vistoria_fica_so_na_caixa_de_vistoria(): void
+    {
+        $setorAnalise = Sector::factory()->create();
+        $setorVistoria = Sector::factory()->create();
+        $analista = $this->analista();
+        $analista->sectors()->attach($setorAnalise);
+        $membroDaVistoria = User::factory()->apoio()->withAcceptedLgpdTerm()->create();
+        $membroDaVistoria->sectors()->attach($setorVistoria);
+        $apoio = User::factory()->apoio()->withAcceptedLgpdTerm()->create();
+
+        $processo = $this->processoEmAnalise($setorAnalise, $analista);
+        $this->actingAs($analista, 'gestao')
+            ->post("/gestao/processos/{$processo->id}/vistoria/encaminhar", [
+                'setor_vistoria_id' => $setorVistoria->id,
+                'motivo' => 'Conferir a atividade no local.',
+            ])
+            ->assertSessionMissing('error');
+
+        foreach ([$apoio, $membroDaVistoria] as $usuario) {
+            $this->actingAs($usuario, 'gestao')
+                ->get('/gestao/caixa-setor')
+                ->assertInertia(fn (Assert $page) => $page
+                    ->where('contadores.para_distribuir', 0)
+                    ->where('contadores.distribuidos', 0)
+                    ->has('processos.data', 0));
+
+            $this->actingAs($usuario, 'gestao')
+                ->get('/gestao/vistorias')
+                ->assertInertia(fn (Assert $page) => $page->where('vistorias.data.0.id', $processo->id));
+        }
+
+        $vistoriador = $this->analista();
+        $processo->forceFill(['assigned_user_id' => $vistoriador->id])->save();
+        $this->actingAs($vistoriador, 'gestao')->get("/gestao/processos/{$processo->id}/vistoria");
+        $this->actingAs($vistoriador, 'gestao')
+            ->postJson("/gestao/processos/{$processo->id}/vistoria/concluir", ['parecer' => 'Atividade conforme.'])
+            ->assertOk();
+
+        // Ficha concluída, ainda não encaminhada: segue na vistoria.
+        $this->actingAs($apoio, 'gestao')
+            ->get('/gestao/caixa-setor?visao=distribuidos')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('contadores.para_distribuir', 0)
+                ->where('contadores.distribuidos', 0)
+                ->has('processos.data', 0));
+
+        $this->actingAs($vistoriador, 'gestao')
+            ->post("/gestao/processos/{$processo->id}/vistoria/encaminhar-ao-setor")
+            ->assertSessionMissing('error');
+
+        $this->actingAs($apoio, 'gestao')
+            ->get('/gestao/caixa-setor')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('contadores.para_distribuir', 1)
+                ->where('contadores.distribuidos', 0)
+                ->where('processos.data.0.id', $processo->id));
+    }
+
     public function test_encaminhar_ao_setor_exige_ficha_concluida(): void
     {
         $vistoriador = $this->analista();

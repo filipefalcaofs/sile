@@ -82,8 +82,8 @@ class ProtocolarSolicitacaoService
 
     /**
      * Completa o território do processo: ponto pela inscrição (Cadastro SEFAZ,
-     * quando não há polígono), zona/bairro/CODLOG, logradouro tributário e a
-     * geometria do lote. Fora de transação: a indisponibilidade da SEFAZ ou do
+     * quando não há polígono), zona/bairro/CODLOG, logradouro tributário, tipo
+     * do imóvel que o REGIN não declarou e a geometria do lote. Fora de transação: a indisponibilidade da SEFAZ ou do
      * GIS não desfaz o protocolo. Repetível — o job de decisão e o
      * reprocessamento das etapas chamam de novo enquanto o cadastro estiver
      * fora do ar. Devolve o status da localização pela inscrição
@@ -106,6 +106,7 @@ class ProtocolarSolicitacaoService
         }
 
         $trocouCodLog = $this->territorioProcesso->aplicarLogradouroDaInscricao($request);
+        $this->territorioProcesso->aplicarTipoImovelDaInscricao($request);
 
         if (! $materializou || $trocouCodLog) {
             $this->territorioProcesso->registrarClasseViaria($request);

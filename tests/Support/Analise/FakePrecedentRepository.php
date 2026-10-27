@@ -44,7 +44,7 @@ class FakePrecedentRepository implements PrecedentRepository
         $this->cnaeZoneStats[$cnae.'|'.$zona] = $stats;
     }
 
-    public function propertyPrecedents(array $currentGeojson, int $limit, ?string $fallbackStreet = null, ?string $fallbackNumber = null, ?int $exceptRequestId = null): array
+    public function propertyPrecedents(array $currentGeojson, int $limit, ?string $fallbackStreet = null, ?string $fallbackNumber = null, ?int $exceptRequestId = null, ?string $inscricao = null): array
     {
         $this->propertyCalls[] = [
             'geojson' => $currentGeojson,

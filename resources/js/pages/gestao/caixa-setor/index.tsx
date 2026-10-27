@@ -47,6 +47,7 @@ interface ProcessoItem {
   encaminhado_para: string | null;
   indicado_para: string | null;
   analysis_due_at: string | null;
+  designacao: string | null;
   pode_redistribuir: boolean;
 }
 
@@ -387,12 +388,21 @@ export default function CaixaSetorIndex({
           },
         ]
       : []),
-    {
-      id: "prazo",
-      header: "Prazo",
-      cellClassName: "whitespace-nowrap",
-      cell: (item) => formatarPrazo(item.analysis_due_at),
-    },
+    // Em Para distribuir, a designação do analista que mandou para a vistoria
+    // ocupa o lugar do prazo (Lisa, 22/10).
+    visao === "para_distribuir"
+      ? {
+          id: "designacao",
+          header: "Designação",
+          cellClassName: "whitespace-nowrap",
+          cell: (item: ProcessoItem) => item.designacao ?? "",
+        }
+      : {
+          id: "prazo",
+          header: "Prazo",
+          cellClassName: "whitespace-nowrap",
+          cell: (item: ProcessoItem) => formatarPrazo(item.analysis_due_at),
+        },
     {
       id: "actions",
       header: "Ações",

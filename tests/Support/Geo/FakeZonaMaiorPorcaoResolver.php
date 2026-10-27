@@ -9,6 +9,9 @@ class FakeZonaMaiorPorcaoResolver implements ZonaMaiorPorcaoResolver
 {
     public int $chamadas = 0;
 
+    /** CODLOG recebido na última chamada. */
+    public ?string $ultimoCodLog = null;
+
     /** @var array<string, ZonaMaiorPorcao> */
     private array $respostas = [];
 
@@ -22,9 +25,10 @@ class FakeZonaMaiorPorcaoResolver implements ZonaMaiorPorcaoResolver
         return $this;
     }
 
-    public function resolver(array $poligono): ZonaMaiorPorcao
+    public function resolver(array $poligono, ?string $codLog = null): ZonaMaiorPorcao
     {
         $this->chamadas++;
+        $this->ultimoCodLog = $codLog;
 
         return $this->respostas[md5((string) json_encode($poligono))]
             ?? ZonaMaiorPorcao::indisponivel('Fake sem resposta para o polígono.');

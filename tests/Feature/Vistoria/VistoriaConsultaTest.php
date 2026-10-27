@@ -3,6 +3,7 @@
 namespace Tests\Feature\Vistoria;
 
 use App\Enums\AnalysisStatus;
+use App\Enums\ViabilityRequestStatus;
 use App\Models\Inspection;
 use App\Models\User;
 use App\Models\ViabilityRequest;
@@ -105,6 +106,35 @@ class VistoriaConsultaTest extends TestCase
                 ->where('kpis.prazo_vencido', 1)
                 ->where('abas.1.id', 'designar')
                 ->has('filtros'));
+    }
+
+    /**
+     * Processo com resultado (caso BAP2601901235, indeferido) sai da caixa de
+     * vistoria, como já sai da Caixa do Setor e da Caixa do analista.
+     */
+    public function test_processo_finalizado_sai_da_caixa_de_vistoria(): void
+    {
+        $cenario = $this->cenario();
+        $indeferido = $this->processoEmVistoria(AnalysisStatus::Vistoriado, [
+            'protocol_number' => 'VIA-2026-000107',
+            'status' => ViabilityRequestStatus::Indeferida,
+        ]);
+        Inspection::factory()->concluida()->create([
+            'viability_request_id' => $indeferido->id,
+            'vistoriador_user_id' => $this->vistoriador->id,
+        ]);
+
+        $resposta = $this->actingAs($this->apoio(), 'gestao')
+            ->get('/gestao/vistorias')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('vistorias.data', 3)
+                ->where('kpis.encaminhadas', 3)
+                ->where('kpis.concluidas', 1));
+
+        $ids = array_column($resposta->viewData('page')['props']['vistorias']['data'], 'id');
+        $this->assertNotContains($indeferido->id, $ids);
+        $this->assertContains($cenario['concluida']->id, $ids);
     }
 
     public function test_vistoriador_ve_so_os_processos_dele(): void
