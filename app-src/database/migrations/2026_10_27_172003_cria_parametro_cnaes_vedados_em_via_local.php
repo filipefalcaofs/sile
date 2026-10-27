@@ -31,7 +31,7 @@ return new class extends Migration
             'default_value' => '9609207,8011102',
             'validation_rules' => json_encode(['required', 'string', 'max:500']),
             'sensitive' => false,
-            'description' => 'CNAEs que a observação (a) do Quadro 11A da LOUOS mantém vedados em Via Local, mesmo nas zonas ZCMu, ZCMe, ZCLMu e ZCLMe (adestramento e hospedagem de animais de estimação). Códigos só com dígitos ou com máscara, separados por vírgula. A SEDUR valida a associação definitiva dos CNAEs',
+            'description' => 'CNAEs que a observação (a) do Quadro 11A da LOUOS mantém vedados em Via Local, mesmo em zona de centralidade (adestramento e hospedagem de animais). Só dígitos ou com máscara, separados por vírgula. A SEDUR valida a associação dos CNAEs',
             'requires_connection_test' => false,
             'created_at' => now(),
             'updated_at' => now(),
