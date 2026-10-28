@@ -1,1 +1,0 @@
-import{r as e}from"./chunk-QTnfLwEv.js";import{c as t,f as n,s as r,u as i}from"./TileLayer-BtfflzOi.js";var a=e(n(),1),o=r(function({data:e,...n},r){let o=new a.GeoJSON(e,n);return t(o,i(r,{overlayContainer:o}))},function(e,t,n){t.style!==n.style&&(t.style==null?e.resetStyle():e.setStyle(t.style))});export{o as t};
