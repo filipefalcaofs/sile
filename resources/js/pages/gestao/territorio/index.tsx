@@ -504,7 +504,7 @@ export default function ConsultaTerritorial({ camadas, sobreposicaoMinima, geoco
                             )}
                             <p className="mt-4 text-xs text-gray-500 dark:text-gray-400">
                                 Zona urbanística e lote cadastral seguem indisponíveis enquanto a base estiver pendente
-                                SEDUR — nenhum valor é exibido sem dado oficial.
+                                de disponibilização pela SEDUR. Nenhum valor é exibido sem dado oficial.
                             </p>
                         </CardContent>
                     </Card>

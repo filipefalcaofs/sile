@@ -194,7 +194,7 @@ function GrupoCard({ grupo }: { grupo: CamadaGrupo }) {
                 title={grupo.label}
                 description={
                     grupo.vigente
-                        ? `Vigente: ${grupo.vigente.version} — ${grupo.vigente.feature_count} feições, desde ${grupo.vigente.valid_from ?? '—'}.`
+                        ? `Vigente: ${grupo.vigente.version}, ${grupo.vigente.feature_count === 1 ? '1 feição' : `${grupo.vigente.feature_count} feições`}, desde ${grupo.vigente.valid_from ?? 'data não informada'}.`
                         : grupo.fonte_bloqueada
                           ? 'Sem fonte vetorial pública confirmada, pendente da base oficial SEDUR/SEFAZ.'
                           : 'Nenhuma versão importada.'

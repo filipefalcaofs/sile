@@ -76,9 +76,9 @@ class PhaseFourSmokeTest extends PostgisTestCase
             // Zona e lote: base pendente SEDUR — comunicados como indisponível,
             // NUNCA inventados (HU-030/HU-032, sem fachada).
             $this->assertSame('indisponivel', $resultado['zona']['status'], "{$marco}: zona indisponível (pendente SEDUR).");
-            $this->assertSame('Base de zoneamento pendente SEDUR', $resultado['zona']['motivo']);
+            $this->assertSame('A base de zoneamento está pendente de disponibilização pela SEDUR.', $resultado['zona']['motivo']);
             $this->assertSame('indisponivel', $resultado['lote']['status'], "{$marco}: lote indisponível (pendente SEDUR).");
-            $this->assertSame('Base de lotes pendente SEDUR', $resultado['lote']['motivo']);
+            $this->assertSame('A base de lotes está pendente de disponibilização pela SEDUR.', $resultado['lote']['motivo']);
         }
 
         // RN-002: a identificação territorial é auditada.
