@@ -2,8 +2,6 @@
  * Catálogo único do portal do cidadão. Fonte de verdade da sidebar, do
  * "O que você quer fazer?" do painel e dos serviços da landing. O portal fica
  * com três serviços: os processos começam na JUCEB.
- *
- * Antes de incluir ou mover item: ler `.cursor/rules/menu-navegacao.mdc`.
  */
 
 export type PortalNavIcon = 'grid' | 'bell' | 'search' | 'file' | 'check-circle' | 'list' | 'group' | 'user' | 'shield';
