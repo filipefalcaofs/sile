@@ -269,6 +269,8 @@ class ConsultaTvlTest extends TestCase
     {
         $this->get('/api_integracao/docs')->assertOk()
             ->assertSee('swagger-ui', false)
+            ->assertSee('/swagger-ui/swagger-ui-standalone-preset.js', false)
+            ->assertSee('StandaloneLayout', false)
             ->assertSee('/api_integracao/docs/openapi.yaml', false)
             ->assertSee('/api_integracao/tvl/docs/openapi.yaml', false);
 
