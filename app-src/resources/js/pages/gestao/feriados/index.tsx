@@ -79,7 +79,7 @@ const RECORRENCIA_OPTIONS = [
 /** Formata a data ISO (YYYY-MM-DD) no padrão brasileiro dd/mm/aaaa. */
 function formatarData(iso: string | null): string {
     if (!iso) {
-        return '—';
+        return '-';
     }
 
     const partes = iso.split('-');
@@ -104,7 +104,7 @@ function CreateHolidayModal({ isOpen, onClose }: { isOpen: boolean; onClose: () 
         <Modal isOpen={isOpen} onClose={onClose} className="m-4 max-h-[90vh] max-w-[560px] overflow-y-auto p-6 lg:p-8">
             <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Novo feriado</h4>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                O feriado entra no cálculo de dias úteis. A data é única — não há feriado duplicado.
+                O feriado entra no cálculo de dias úteis. A data é única, não há feriado duplicado.
             </p>
 
             <Form action={URL_FERIADOS} method="post" resetOnSuccess onSuccess={onClose} className="mt-6">
@@ -522,7 +522,7 @@ function RessalvaListaOficial() {
             <AlertIcon className="mt-0.5 size-5 shrink-0 text-warning-600 dark:text-orange-400" />
             <p className="text-theme-sm text-warning-700 dark:text-orange-300">
                 A lista <strong>oficial</strong> de feriados municipais de Salvador ainda é pendência da SEDUR. Enquanto a carga oficial não
-                chega, o cálculo de dias úteis desconta apenas os feriados cadastrados nesta tela — nenhum feriado é presumido.
+                chega, o cálculo de dias úteis desconta apenas os feriados cadastrados nesta tela, nenhum feriado é presumido.
             </p>
         </div>
     );

@@ -67,12 +67,12 @@ const columns: ColumnDef<AccessLogItem>[] = [
         id: 'ip',
         header: 'IP',
         cellClassName: 'whitespace-nowrap',
-        cell: (log) => log.ip_address ?? '—',
+        cell: (log) => log.ip_address ?? '-',
     },
     {
         id: 'channel',
         header: 'Canal',
-        cell: (log) => log.channel ?? '—',
+        cell: (log) => log.channel ?? '-',
     },
 ];
 

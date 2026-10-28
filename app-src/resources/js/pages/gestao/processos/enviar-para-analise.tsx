@@ -206,13 +206,13 @@ export default function EnviarParaAnalise({ featureEnabled, mensagens }: EnviarP
                                     <div>
                                         <dt className="text-theme-xs text-gray-500 dark:text-gray-400">Protocolo</dt>
                                         <dd className="text-sm font-medium text-gray-800 dark:text-white/90">
-                                            {processo.protocolo ?? '—'}
+                                            {processo.protocolo ?? '-'}
                                         </dd>
                                     </div>
                                     <div>
                                         <dt className="text-theme-xs text-gray-500 dark:text-gray-400">Serviço</dt>
                                         <dd className="text-sm font-medium text-gray-800 dark:text-white/90">
-                                            {processo.servico ?? '—'}
+                                            {processo.servico ?? '-'}
                                         </dd>
                                     </div>
                                     <div>
@@ -224,7 +224,7 @@ export default function EnviarParaAnalise({ featureEnabled, mensagens }: EnviarP
                                     <div>
                                         <dt className="text-theme-xs text-gray-500 dark:text-gray-400">Requerente</dt>
                                         <dd className="text-sm font-medium text-gray-800 dark:text-white/90">
-                                            {processo.requerente ?? '—'}
+                                            {processo.requerente ?? '-'}
                                         </dd>
                                     </div>
                                 </dl>

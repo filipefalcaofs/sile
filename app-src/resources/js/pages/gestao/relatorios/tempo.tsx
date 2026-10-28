@@ -112,7 +112,7 @@ function rotuloEtapa(etapa: string): string {
  */
 function formatarDuracao(minutos: number | null): string {
     if (minutos === null) {
-        return '—';
+        return '-';
     }
 
     if (minutos < 60) {
@@ -166,7 +166,7 @@ function etapasChartOption(etapas: EtapaTempo[]): EChartsOption {
 
 /** Horas úteis numa duração legível; nulo vira travessão, jamais zero. */
 function formatarHoras(horas: number | null): string {
-    return horas === null ? '—' : formatarDuracao(Math.round(horas * 60));
+    return horas === null ? '-' : formatarDuracao(Math.round(horas * 60));
 }
 
 /** Barras horizontais da participação de cada faixa no tempo total. */
@@ -302,7 +302,7 @@ export default function TempoAnalise({
                 <Card>
                     <CardHeader
                         title="Filtros"
-                        description="Recorte por período de protocolo. Os tempos são reais sobre os processos protocolados — sem amostras no recorte, a etapa fica sem média (nunca um tempo inventado)."
+                        description="Recorte por período de protocolo. Os tempos são reais sobre os processos protocolados, sem amostras no recorte, a etapa fica sem média (nunca um tempo inventado)."
                         actions={<ExportMenu url={URL_TEMPO} params={currentParams} label="Exportar tempo por etapa" />}
                     />
                     <CardContent>
@@ -359,7 +359,7 @@ export default function TempoAnalise({
                 <Card>
                     <CardHeader
                         title="Distribuição do tempo de viabilidade"
-                        description="Horas úteis entre o protocolo e a decisão, descontando fins de semana, feriados e o tempo em que o processo fica com o cidadão — a mesma régua que o governo federal usa para publicar o tempo de viabilidade dos municípios. A média sozinha engana: poucos processos muito demorados a puxam para cima. Por isso a tela mostra também em quanto tempo saem 50%, 90% e 99% dos processos."
+                        description="Horas úteis entre o protocolo e a decisão, descontando fins de semana, feriados e o tempo em que o processo fica com o cidadão, a mesma régua que o governo federal usa para publicar o tempo de viabilidade dos municípios. A média sozinha engana: poucos processos muito demorados a puxam para cima. Por isso a tela mostra também em quanto tempo saem 50%, 90% e 99% dos processos."
                     />
                     <CardContent>
                         {percentisViabilidade.n > 0 ? (
@@ -397,7 +397,7 @@ export default function TempoAnalise({
                         ) : (
                             <EmptyState
                                 title="Sem processos decididos no período"
-                                description="A distribuição só aparece quando há decisão no recorte — nenhum valor é estimado."
+                                description="A distribuição só aparece quando há decisão no recorte, nenhum valor é estimado."
                             />
                         )}
                     </CardContent>
@@ -438,7 +438,7 @@ export default function TempoAnalise({
                 <Card>
                     <CardHeader
                         title="Tempo médio por etapa"
-                        description="Tempo útil (dias úteis, descontando fins de semana e feriados cadastrados) que o processo passa em cada etapa — isolando a espera que não é trabalho da SEDUR."
+                        description="Tempo útil (dias úteis, descontando fins de semana e feriados cadastrados) que o processo passa em cada etapa, isolando a espera que não é trabalho da SEDUR."
                     />
                     <CardContent>
                         {etapasComAmostra.length > 0 ? (
@@ -468,7 +468,7 @@ export default function TempoAnalise({
                 <Card>
                     <CardHeader
                         title="Sedes de escritório virtual"
-                        description="A relação das sedes de escritório virtual — empresa, CNPJ, protocolo e resultado — é exportada pelo relatório de escritório virtual sobre o mesmo recorte de período."
+                        description="A relação das sedes de escritório virtual, empresa, CNPJ, protocolo e resultado, é exportada pelo relatório de escritório virtual sobre o mesmo recorte de período."
                         actions={
                             <ExportMenu url={URL_ESCRITORIO_VIRTUAL} params={sedesParams} label="Exportar sedes de escritório virtual" />
                         }
@@ -520,7 +520,7 @@ function RessalvaDiasUteis({ calendarioOficial }: { calendarioOficial: boolean }
             <AlertIcon className="mt-0.5 size-5 shrink-0 text-warning-600 dark:text-orange-400" />
             <p className="text-theme-sm text-warning-700 dark:text-orange-300">
                 Os tempos são medidos em <strong>dias úteis</strong>, descontando fins de semana e os feriados cadastrados no sistema. Os
-                feriados municipais de Salvador ainda não foram carregados — até a sincronização com a FeriadosAPI ou a carga oficial da
+                feriados municipais de Salvador ainda não foram carregados, até a sincronização com a FeriadosAPI ou a carga oficial da
                 SEDUR, apenas os feriados já cadastrados em Feriados são descontados. Nenhum feriado é inventado.
             </p>
         </div>

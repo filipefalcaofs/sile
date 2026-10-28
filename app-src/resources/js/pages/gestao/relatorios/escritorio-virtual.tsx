@@ -80,12 +80,12 @@ const VALIDADE_PENDENTE = 'Depende da validade do produto (pendente)';
  */
 function formatarDataEmissao(iso: string | null): string {
     if (!iso) {
-        return '—';
+        return '-';
     }
 
     const data = new Date(iso);
 
-    return Number.isNaN(data.getTime()) ? '—' : data.toLocaleDateString('pt-BR');
+    return Number.isNaN(data.getTime()) ? '-' : data.toLocaleDateString('pt-BR');
 }
 
 /** Badge do tipo: a SEDE é enfatizada (sólida); o abrigado fica discreto. */
@@ -116,13 +116,13 @@ const colunas: ColumnDef<RelatorioRow>[] = [
         id: 'tvl',
         header: 'Nº da viabilidade',
         cellClassName: 'font-medium whitespace-nowrap text-gray-800 dark:text-white/90',
-        cell: (linha) => linha.tvl ?? '—',
+        cell: (linha) => linha.tvl ?? '-',
     },
     {
         id: 'razao_social',
         header: 'Razão Social',
         cellClassName: 'text-gray-800 dark:text-white/90',
-        cell: (linha) => linha.razao_social ?? '—',
+        cell: (linha) => linha.razao_social ?? '-',
     },
     {
         id: 'data_emissao',
@@ -135,7 +135,7 @@ const colunas: ColumnDef<RelatorioRow>[] = [
         header: 'Vencimento',
         cell: () => (
             <span className="text-gray-400 dark:text-gray-500" title={VALIDADE_PENDENTE}>
-                —
+                -
             </span>
         ),
     },
@@ -143,7 +143,7 @@ const colunas: ColumnDef<RelatorioRow>[] = [
         id: 'inscricao',
         header: 'Inscrição',
         cellClassName: 'whitespace-nowrap',
-        cell: (linha) => linha.inscricao ?? '—',
+        cell: (linha) => linha.inscricao ?? '-',
     },
 ];
 
@@ -206,9 +206,9 @@ export default function EscritorioVirtual({ relatorio, filtros, perPageOptions }
 
     return (
         <>
-            <Head title="Relatório — Sede de Escritório Virtual" />
+            <Head title="Relatório: Sede de Escritório Virtual" />
             <PageHeader
-                title="Relatório — Sede de Escritório Virtual"
+                title="Relatório: Sede de Escritório Virtual"
                 breadcrumbs={[
                     { label: 'Painel', href: '/gestao' },
                     { label: 'Relatórios' },
@@ -331,7 +331,7 @@ function RessalvaValidade() {
             <InfoIcon className="mt-0.5 size-5 shrink-0 text-warning-600 dark:text-orange-400" />
             <p className="text-theme-sm text-warning-700 dark:text-orange-300">
                 A <strong>validade</strong> do produto ainda não é modelada. Até a modelagem, a coluna <strong>Vencimento</strong> fica em
-                travessão e o filtro <strong>Exibir Expirados</strong> permanece desabilitado — nenhum vencimento é presumido.
+                travessão e o filtro <strong>Exibir Expirados</strong> permanece desabilitado, nenhum vencimento é presumido.
             </p>
         </div>
     );

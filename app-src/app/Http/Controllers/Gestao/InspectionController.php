@@ -72,7 +72,7 @@ class InspectionController extends Controller
             throw ValidationException::withMessages(['motivo' => $e->getMessage()]);
         }
 
-        return back()->with('status', "Processo encaminhado à vistoria ({$setor->name}) — aguardando distribuição ao vistoriador.");
+        return back()->with('status', "Processo encaminhado à vistoria ({$setor->name}). Aguardando distribuição ao vistoriador.");
     }
 
     /**

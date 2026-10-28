@@ -46,7 +46,7 @@ class LocationValidationService
                 status: 'indisponivel',
                 sobreposicaoPercentual: null,
                 limiar: $limiar,
-                motivo: 'Base de lotes (inscrição imobiliária) pendente SEDUR — validação de sobreposição não disponível',
+                motivo: 'A base de lotes está pendente de disponibilização pela SEDUR. A validação de sobreposição fica indisponível.',
                 alerta: false,
             );
         }

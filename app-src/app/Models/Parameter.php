@@ -90,6 +90,32 @@ class Parameter extends Model
         };
     }
 
+    /**
+     * Nome do grupo para telas e exportações, com a acentuação em português.
+     */
+    public static function groupLabel(string $group): string
+    {
+        return match ($group) {
+            'abuso' => 'Abuso',
+            'analise' => 'Análise',
+            'expresso' => 'Expresso',
+            'features' => 'Funcionalidades',
+            'geo' => 'GEO',
+            'ia' => 'IA',
+            'integracoes' => 'Integrações',
+            'louos' => 'LOUOS',
+            'notificacoes' => 'Notificações',
+            'relatorios' => 'Relatórios',
+            'retencao' => 'Retenção',
+            'risco' => 'Risco',
+            'seguranca' => 'Segurança',
+            'solicitacao' => 'Solicitação',
+            'tll' => 'TLL',
+            'ui' => 'UI',
+            default => ucfirst($group),
+        };
+    }
+
     public function isDecision(): bool
     {
         return $this->governance === ParameterGovernance::Decision;

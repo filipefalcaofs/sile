@@ -63,7 +63,7 @@ export interface TerritoriaisData {
 
 function alvoDaRegra(regra: TerritorialRegra): string {
     if (regra.cod_log) {
-        return `Logradouro ${regra.cod_log}${regra.logradouro_nome ? ` — ${regra.logradouro_nome}` : ''}`;
+        return `Logradouro ${regra.cod_log}${regra.logradouro_nome ? `, ${regra.logradouro_nome}` : ''}`;
     }
 
     if (regra.camada) {
@@ -74,7 +74,7 @@ function alvoDaRegra(regra: TerritorialRegra): string {
         return `Zona ${regra.zona_alvo}`;
     }
 
-    return '—';
+    return '-';
 }
 
 function formatarCnae(digitos: string): string {
@@ -190,10 +190,10 @@ function EditarRegraModal({
     return (
         <Modal isOpen onClose={onClose} className="m-4 max-h-[90vh] max-w-3xl overflow-y-auto p-6 lg:p-8">
             <h4 className="pr-12 text-lg font-semibold text-gray-800 dark:text-white/90">
-                Editar {regra.codigo} — {regra.titulo}
+                Editar {regra.codigo}, {regra.titulo}
             </h4>
             <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                A alteração grava no <strong>rascunho</strong> do domínio — a versão vigente não é tocada. A
+                A alteração grava no <strong>rascunho</strong> do domínio, a versão vigente não é tocada. A
                 publicação exige outro mantenedor (quatro olhos).
             </p>
 
@@ -211,7 +211,7 @@ function EditarRegraModal({
                     />
                     {rascunhoAberto && (
                         <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                            Há um rascunho aberto — a alteração entra nele.
+                            Há um rascunho aberto, a alteração entra nele.
                         </p>
                     )}
                     {errors.version && <p className="mt-1 text-xs text-error-600">{errors.version}</p>}
@@ -426,7 +426,7 @@ function EditarRegraModal({
                     onChange={(event) => setCampo('ativo', event.target.checked)}
                 />
                 <label htmlFor="rt-ativo" className="text-sm text-gray-700 dark:text-gray-300">
-                    Regra ativa (regra inativa não é avaliada pelo motor — bloqueio explícito, visível aqui)
+                    Regra ativa (regra inativa não é avaliada pelo motor, bloqueio explícito, visível aqui)
                 </label>
             </div>
 
@@ -492,7 +492,7 @@ export default function AbaTerritoriais({
             {rascunho && (
                 <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-warning-200 bg-warning-50 p-4 dark:border-warning-500/30 dark:bg-warning-500/10">
                     <p className="text-sm text-gray-700 dark:text-gray-200">
-                        Rascunho <strong>{rascunho.version}</strong> em edição — autor:{' '}
+                        Rascunho <strong>{rascunho.version}</strong> em edição, autor:{' '}
                         <strong>{rascunho.autor ?? `ID ${rascunho.autor_id}`}</strong>. A listagem abaixo mostra o
                         rascunho; a versão vigente ({territoriais.versao_vigente ?? 'nenhuma'}) segue em uso pelo
                         motor até a publicação.
@@ -521,7 +521,7 @@ export default function AbaTerritoriais({
                     title="Regras territoriais"
                     description={
                         territoriais.versao_exibida
-                            ? `Versão ${territoriais.versao_exibida}${rascunho ? ' (rascunho em edição)' : ' vigente'} — regras de lugar: logradouro × CNAE, poligonais TAC/ZEM/ZPAM/ABM/ZUE e allow-lists do Quadro 10.`
+                            ? `Versão ${territoriais.versao_exibida}${rascunho ? ' (rascunho em edição)' : ' vigente'}, regras de lugar: logradouro × CNAE, poligonais TAC/ZEM/ZPAM/ABM/ZUE e allow-lists do Quadro 10.`
                             : 'Sem versão vigente publicada.'
                     }
                 />
@@ -600,7 +600,7 @@ export default function AbaTerritoriais({
                                                         allow-list
                                                     </div>
                                                 )}
-                                                {regra.cnaes.length === 0 && regra.addresses.length === 0 && '—'}
+                                                {regra.cnaes.length === 0 && regra.addresses.length === 0 && '-'}
                                             </td>
                                             <td className="px-3 py-3">
                                                 <Badge color={regra.ativo ? 'success' : 'warning'} size="sm">
@@ -664,7 +664,7 @@ export default function AbaTerritoriais({
                                                 </Badge>
                                             </td>
                                             <td className="px-3 py-3 text-gray-500 dark:text-gray-400">
-                                                {formatarData(versao.valid_from) ?? '—'}
+                                                {formatarData(versao.valid_from) ?? '-'}
                                                 {versao.valid_to ? ` até ${formatarData(versao.valid_to)}` : ''}
                                             </td>
                                             <td className="px-3 py-3 text-gray-700 dark:text-gray-300">
@@ -676,7 +676,7 @@ export default function AbaTerritoriais({
                                                         <span className="text-theme-xs text-gray-400">Em uso</span>
                                                     ) : versao.rascunho ? (
                                                         <span className="text-theme-xs text-gray-400">
-                                                            Rascunho — publique pelo aviso acima
+                                                            Rascunho, publique pelo aviso acima
                                                         </span>
                                                     ) : (
                                                         <Button

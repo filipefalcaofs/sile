@@ -313,7 +313,7 @@ function textoOuNulo(valor: string): string | null {
 
 function formatarData(iso: string | null): string {
     if (!iso) {
-        return '—';
+        return '-';
     }
 
     return new Date(iso).toLocaleDateString('pt-BR');
@@ -336,7 +336,7 @@ function CampoReadonly({ rotulo, valor, className = '' }: { rotulo: string; valo
         <div className={className}>
             <span className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">{rotulo}</span>
             <div className={inputReadonly} aria-readonly="true">
-                {valor ?? '—'}
+                {valor ?? '-'}
             </div>
         </div>
     );
@@ -786,7 +786,7 @@ function VistoriaConteudo({
     return (
         <>
             <Head
-                title={`${somenteLeitura ? 'Visualizar ficha de vistoria' : 'Ficha de vistoria'} — ${processo.protocol_number ?? 'processo'}`}
+                title={`${somenteLeitura ? 'Visualizar ficha de vistoria' : 'Ficha de vistoria'}: ${processo.protocol_number ?? 'processo'}`}
             />
 
             <PageHeader
@@ -844,7 +844,7 @@ function VistoriaConteudo({
                         </div>
                         <div>
                             <dt className="text-[11px] font-semibold tracking-[0.08em] text-gray-400 uppercase">Vistoriador</dt>
-                            <dd className="mt-0.5 font-semibold text-gray-800 dark:text-white/90">{ficha.vistoriador ?? '—'}</dd>
+                            <dd className="mt-0.5 font-semibold text-gray-800 dark:text-white/90">{ficha.vistoriador ?? '-'}</dd>
                         </div>
                         {ficha.concluded_at && (
                             <div>
@@ -860,7 +860,7 @@ function VistoriaConteudo({
                     <div className="px-6 py-3.5">
                         <dt className="text-[11px] font-semibold tracking-[0.08em] text-gray-400 uppercase">Zona / via</dt>
                         <dd className="mt-0.5 text-sm font-semibold text-gray-800 dark:text-white/90">
-                            {[ficha.zona, ficha.via].filter(Boolean).join(' · ') || '—'}
+                            {[ficha.zona, ficha.via].filter(Boolean).join(' · ') || '-'}
                         </dd>
                     </div>
                     <div className="px-6 py-3.5">
@@ -876,7 +876,7 @@ function VistoriaConteudo({
                         <dd className="mt-0.5 text-sm font-semibold text-gray-800 tabular-nums dark:text-white/90">
                             {areaExibida !== null
                                 ? `${areaExibida.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} m²`
-                                : '—'}
+                                : '-'}
                         </dd>
                     </div>
                     <div className="px-6 py-3.5">
@@ -1127,7 +1127,7 @@ function VistoriaConteudo({
                                         <strong className="text-sm font-semibold text-brand-700 tabular-nums dark:text-brand-300">
                                             {areaTotalCalculada !== null
                                                 ? areaTotalCalculada.toLocaleString('pt-BR', { minimumFractionDigits: 2 })
-                                                : '—'}
+                                                : '-'}
                                         </strong>
                                         <span className="text-xs text-brand-500">calculado</span>
                                     </div>
@@ -1580,7 +1580,7 @@ function VistoriaConteudo({
                 <Card className="border-brand-200 dark:border-brand-500/30">
                     <CardHeader
                         title="6. Conclusão da vistoria"
-                        description="Etapa final — o parecer é obrigatório para concluir a ficha."
+                        description="Etapa final, o parecer é obrigatório para concluir a ficha."
                         actions={<SeloContagem secao={contagem('conclusao')} />}
                     />
                     <CardContent className="flex flex-col gap-6">
@@ -1645,10 +1645,10 @@ function VistoriaConteudo({
                         {saveState === 'erro' && <span className="text-error-500">{erroGeral ?? 'Falha ao salvar.'}</span>}
                         {saveState !== 'erro' && somenteLeitura && <span>Somente leitura.</span>}
                         {saveState !== 'erro' && !somenteLeitura && !editavel && ficha.status === 'concluida' && (
-                            <span>Ficha concluída — somente leitura.</span>
+                            <span>Ficha concluída, somente leitura.</span>
                         )}
                         {saveState !== 'erro' && !somenteLeitura && !editavel && ficha.status !== 'concluida' && (
-                            <span>Somente leitura — a ficha é do vistoriador {ficha.vistoriador ?? 'responsável'}.</span>
+                            <span>Somente leitura, a ficha é do vistoriador {ficha.vistoriador ?? 'responsável'}.</span>
                         )}
                         {saveState !== 'erro' && editavel && (
                             <span className={preenchimento.parecerPronto ? 'text-success-600' : 'text-gray-600 dark:text-gray-300'}>
@@ -1741,7 +1741,7 @@ function VistoriaConteudo({
 function VistoriaAusente({ processo }: { processo: Processo }) {
     return (
         <>
-            <Head title={`Visualizar ficha de vistoria — ${processo.protocol_number ?? 'processo'}`} />
+            <Head title={`Visualizar ficha de vistoria: ${processo.protocol_number ?? 'processo'}`} />
 
             <PageHeader
                 title="Visualizar ficha de vistoria"

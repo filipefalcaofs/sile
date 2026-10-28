@@ -59,7 +59,7 @@ class ParameterChangeService
         }
 
         $parameter = $proposal->parameter;
-        $old = $parameter->value;
+        $old = $parameter->value ?? $parameter->default_value;
         $parameter->update(['value' => $proposal->proposed_value]);
 
         $proposal->update([

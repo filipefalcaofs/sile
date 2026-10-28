@@ -20,6 +20,7 @@ import PageHeader from '@/components/app/page-header';
 import CamadasImovelLista, { type CamadasImovel } from '@/components/geo/camadas-imovel';
 import { centroDaGeometria, ESTILO_ENDERECAMENTO, resumoDaProcedencia, type FontePoligono } from '@/components/geo/geometria';
 import { MapaDecisaoSection } from '@/components/geo/mapa-decisao-section';
+import { MapaProtegido } from '@/components/geo/mapa-protegido';
 import { MapaSection } from '@/components/geo/mapa-section';
 import Checkbox from '@/components/form/checkbox';
 import Input from '@/components/form/input';
@@ -338,7 +339,7 @@ const MINUTA_POLL_INTERVAL_MS = 3000;
 const MINUTA_POLL_MAX = 8;
 
 function statusLabel(status: string | null | undefined): string {
-    return STATUS_OPCOES.find((opcao) => opcao.value === status)?.label ?? (status ?? '—');
+    return STATUS_OPCOES.find((opcao) => opcao.value === status)?.label ?? (status ?? '-');
 }
 
 function statusColor(status: string | null | undefined): 'success' | 'error' | 'warning' | 'light' {
@@ -359,7 +360,7 @@ function statusColor(status: string | null | undefined): 'success' | 'error' | '
 
 function formatarDataHora(iso: string | null): string {
     if (!iso) {
-        return '—';
+        return '-';
     }
 
     const data = new Date(iso);
@@ -418,8 +419,8 @@ function imprimirExtratoTramitacao(protocolo: string | null, itens: TramitacaoIt
             (item) => `
         <tr>
             <td>${escapeHtml(formatarDataHora(item.data))}</td>
-            <td>${escapeHtml(item.setor ?? '—')}</td>
-            <td>${escapeHtml(item.usuario ?? '—')}</td>
+            <td>${escapeHtml(item.setor ?? '-')}</td>
+            <td>${escapeHtml(item.usuario ?? '-')}</td>
             <td>${escapeHtml(item.status)}</td>
         </tr>`,
         )
@@ -428,7 +429,7 @@ function imprimirExtratoTramitacao(protocolo: string | null, itens: TramitacaoIt
     janela.document.write(`
         <html>
             <head>
-                <title>Extrato de tramitação — ${escapeHtml(protocolo ?? '')}</title>
+                <title>Extrato de tramitação: ${escapeHtml(protocolo ?? '')}</title>
                 <style>
                     body { font-family: sans-serif; padding: 24px; }
                     table { width: 100%; border-collapse: collapse; }
@@ -442,8 +443,8 @@ function imprimirExtratoTramitacao(protocolo: string | null, itens: TramitacaoIt
             </head>
             <body>
                 <header>
-                    <h3>Extrato de tramitação — ${escapeHtml(protocolo ?? '')}</h3>
-                    <p>Viabiliza — Sistema de Licenciamento Eletrônico · SEDUR</p>
+                    <h3>Extrato de tramitação: ${escapeHtml(protocolo ?? '')}</h3>
+                    <p>Viabiliza · Sistema de Licenciamento Eletrônico · SEDUR</p>
                     <p>Emitido em ${escapeHtml(emitidoEm)} por ${escapeHtml(emitidoPor)}</p>
                 </header>
                 <table>
@@ -463,7 +464,7 @@ function imprimirExtratoTramitacao(protocolo: string | null, itens: TramitacaoIt
 
 /** Exibe "—" para valores nulos/vazios — nunca inventa dado (anti-fachada). */
 function valorOuTraco(valor: string | null | undefined): string {
-    return valor && valor.trim() !== '' ? valor : '—';
+    return valor && valor.trim() !== '' ? valor : '-';
 }
 
 function cepMascarado(valor: string | null | undefined): string {
@@ -554,7 +555,7 @@ function CadastroImobiliarioPanel({ cadastro }: { cadastro: CadastroImobiliario 
         <div className="mt-6 border-t border-gray-100 pt-6 dark:border-gray-800">
             <h4 className="text-theme-sm font-medium text-gray-800 dark:text-white/90">Cadastro Imobiliário</h4>
             <p className="mt-1 text-theme-xs text-gray-400 dark:text-gray-500">
-                Certidão de Dados Cadastrais (SEFAZ) — inscrição {valorOuTraco(cadastro.inscricao)}
+                Certidão de Dados Cadastrais (SEFAZ), inscrição {valorOuTraco(cadastro.inscricao)}
                 {cadastro.source && ` · fonte: ${cadastro.source}`}
             </p>
 
@@ -588,7 +589,7 @@ function DescItem({ label, children }: { label: string; children: ReactNode }) {
 }
 
 function rotuloEnquadramento(opcao: EnquadramentoOpcao): string {
-    const denominacao = opcao.denominacao_louos ? ` — ${opcao.denominacao_louos}` : '';
+    const denominacao = opcao.denominacao_louos ? `, ${opcao.denominacao_louos}` : '';
     const tll = opcao.codigo_tll ? ` · TLL ${opcao.codigo_tll}` : '';
 
     return `${opcao.codigo_louos}${denominacao}${tll}`;
@@ -697,8 +698,8 @@ function TramitacaoLinha({ item }: { item: TramitacaoItem }) {
         <>
             <tr className="border-b border-gray-100 last:border-0 dark:border-gray-800">
                 <td className="py-2 pr-4 text-gray-500 dark:text-gray-400">{formatarDataHora(item.data)}</td>
-                <td className="py-2 pr-4">{item.setor ?? '—'}</td>
-                <td className="py-2 pr-4">{item.usuario ?? '—'}</td>
+                <td className="py-2 pr-4">{item.setor ?? '-'}</td>
+                <td className="py-2 pr-4">{item.usuario ?? '-'}</td>
                 <td className="py-2 pr-4 font-medium text-gray-800 dark:text-white/90">{item.status}</td>
                 <td className="py-2 text-right">
                     {item.reason && (
@@ -1645,7 +1646,7 @@ export default function FichaAnaliseShow({
                     <div className="flex items-start gap-3 rounded-xl border border-success-200 bg-success-50 p-4 dark:border-success-500/30 dark:bg-success-500/15">
                         <CheckCircleIcon className="size-5 shrink-0 fill-current text-success-500" />
                         <p className="text-theme-sm text-gray-600 dark:text-gray-300">
-                            Esta revisão está <strong>finalizada</strong> e é imutável (RN-003). Para reeditar, crie uma
+                            Esta revisão está <strong>finalizada</strong> e é imutável. Para reeditar, crie uma
                             nova revisão. {ficha.analyst && <>Responsável: {ficha.analyst}. </>}
                             {ficha.finalized_at && <>Finalizada em {formatarDataHora(ficha.finalized_at)}.</>}
                         </p>
@@ -1657,7 +1658,7 @@ export default function FichaAnaliseShow({
                         <AlertIcon className="size-5 shrink-0 fill-current text-warning-500" />
                         <p className="text-theme-sm text-gray-600 dark:text-gray-300">
                             <strong>Modo manual:</strong> o sistema não pôde pré-analisar este processo (sem dado
-                            confiável — ex.: zona urbanística pendente SEDUR). Os campos não têm sugestão automática;
+                            confiável, ex.: zona urbanística pendente SEDUR). Os campos não têm sugestão automática;
                             a análise é integralmente humana, com fundamentação própria.
                         </p>
                     </div>
@@ -1667,9 +1668,9 @@ export default function FichaAnaliseShow({
                     <div className="flex items-start gap-3 rounded-xl border border-brand-200 bg-brand-50 p-4 dark:border-brand-500/30 dark:bg-brand-500/15">
                         <AlertIcon className="size-5 shrink-0 fill-current text-brand-500" />
                         <p className="text-theme-sm text-gray-600 dark:text-gray-300">
-                            <strong>Gatilho — Sede de Escritório Virtual:</strong> o processo contém o CNAE gatilho
+                            <strong>Gatilho de Sede de Escritório Virtual:</strong> o processo contém o CNAE gatilho
                             ({escritorioVirtual.cnae_gatilho}) e o requerente pediu para ser sede (RN-EV-01).{' '}
-                            {escritorioVirtual.flag_analise_sede} Confirme o desfecho de sede no card da atividade —
+                            {escritorioVirtual.flag_analise_sede} Confirme o desfecho de sede no card da atividade,
                             ao deferir como sede, a inscrição imobiliária é travada para escritório virtual (RN-EV-03).
                         </p>
                     </div>
@@ -1728,19 +1729,21 @@ export default function FichaAnaliseShow({
                         <CardContent>
                             {temPoligono && centro ? (
                                 <>
-                                    <MapaDecisaoSection
-                                        url={`/gestao/processos/${processo.id}/mapa-decisao`}
-                                        fallback={
-                                            <MapaSection
-                                                lat={centro.lat}
-                                                lng={centro.lng}
-                                                zoom={17}
-                                                draggable={false}
-                                                enquadrar
-                                                camadas={camadasDoMapa}
-                                            />
-                                        }
-                                    />
+                                    <MapaProtegido>
+                                        <MapaDecisaoSection
+                                            url={`/gestao/processos/${processo.id}/mapa-decisao`}
+                                            fallback={
+                                                <MapaSection
+                                                    lat={centro.lat}
+                                                    lng={centro.lng}
+                                                    zoom={17}
+                                                    draggable={false}
+                                                    enquadrar
+                                                    camadas={camadasDoMapa}
+                                                />
+                                            }
+                                        />
+                                    </MapaProtegido>
                                     {localizacao?.poligono_enderecamento && localizacao.poligono_fonte ? (
                                         <p className="mt-3 text-theme-xs text-gray-500 dark:text-gray-400">
                                             {localizacao.poligono_fonte.legenda}
@@ -1803,7 +1806,7 @@ export default function FichaAnaliseShow({
                             <dl className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 <DescItem label="Atividade está estabelecida em área pública?">
                                     {localizacao?.is_public_area === null || localizacao?.is_public_area === undefined
-                                        ? '—'
+                                        ? '-'
                                         : localizacao.is_public_area
                                           ? 'Sim'
                                           : 'Não'}
@@ -2066,7 +2069,7 @@ export default function FichaAnaliseShow({
                                                                 Resposta:{' '}
                                                                 {item.pergunta_local && !item.pergunta_local.pendente
                                                                     ? item.pergunta_local.resposta
-                                                                    : 'Pendente — requerente ainda não respondeu esta pergunta no formulário de solicitação.'}
+                                                                    : 'Pendente, requerente ainda não respondeu esta pergunta no formulário de solicitação.'}
                                                             </p>
                                                         </div>
                                                         {editavel ? (
@@ -2110,7 +2113,7 @@ export default function FichaAnaliseShow({
                                                                                           item.codigo_tll
                                                                                               ? ` · TLL ${item.codigo_tll}`
                                                                                               : ''
-                                                                                      } (atual — fora da planilha vigente)`,
+                                                                                      } (atual, fora da planilha vigente)`,
                                                                                   },
                                                                               ]
                                                                             : []),
@@ -2122,14 +2125,14 @@ export default function FichaAnaliseShow({
                                                                 <DescItem label="Código LOUOS">
                                                                     {item.codigo_louos ?? (
                                                                         <span className="text-gray-400 dark:text-gray-500">
-                                                                            Pendente — tabela oficial SEDUR não entregue
+                                                                            Pendente, tabela oficial SEDUR não entregue
                                                                         </span>
                                                                     )}
                                                                 </DescItem>
                                                                 <DescItem label="Código TLL">
                                                                     {item.codigo_tll ?? (
                                                                         <span className="text-gray-400 dark:text-gray-500">
-                                                                            Pendente — tabela oficial SEDUR não entregue
+                                                                            Pendente, tabela oficial SEDUR não entregue
                                                                         </span>
                                                                     )}
                                                                 </DescItem>
@@ -2146,7 +2149,7 @@ export default function FichaAnaliseShow({
                                                         </DescItem>
                                                         <DescItem label="Risco da atividade">
                                                             {riscoDaAtividade ?? (
-                                                                <span className="text-gray-400 dark:text-gray-500">—</span>
+                                                                <span className="text-gray-400 dark:text-gray-500">-</span>
                                                             )}
                                                         </DescItem>
                                                     </div>
@@ -2219,7 +2222,7 @@ export default function FichaAnaliseShow({
                                     </ul>
                                 ) : (
                                     <p className="text-theme-sm text-gray-500 dark:text-gray-400">
-                                        Nenhuma condicionante neste processo — o motor não identificou obrigação
+                                        Nenhuma condicionante neste processo, o motor não identificou obrigação
                                         urbanística. O texto livre e a biblioteca servem só para acrescentar uma
                                         obrigação que o motor não sugeriu. Ao digitar, aparecem sugestões da
                                         biblioteca.
@@ -2445,7 +2448,7 @@ export default function FichaAnaliseShow({
                         <Card>
                             <CardHeader
                                 title="Parecer técnico"
-                                description="Em branco para o analista redigir — a fundamentação do sistema está na justificativa de cada atividade. Quando a IA está ligada, é possível pedir uma minuta para revisar."
+                                description="Em branco para o analista redigir, a fundamentação do sistema está na justificativa de cada atividade. Quando a IA está ligada, é possível pedir uma minuta para revisar."
                                 actions={
                                     <div className="flex flex-wrap items-center gap-2">
                                         {editavel && (
@@ -2500,17 +2503,17 @@ export default function FichaAnaliseShow({
                                     >
                                         {minutaStatus === 'solicitando' && 'Solicitando minuta à IA…'}
                                         {minutaStatus === 'aguardando' &&
-                                            'Minuta solicitada — aguardando o processamento da IA. Ela aparecerá no “Resumo do processo”, no topo, como sugestão a revisar.'}
+                                            'Minuta solicitada, aguardando o processamento da IA. Ela aparecerá no “Resumo do processo”, no topo, como sugestão a revisar.'}
                                         {minutaStatus === 'pronta' &&
-                                            'Minuta sugerida disponível no “Resumo do processo”, no topo — revise e use “Aplicar ao parecer”.'}
+                                            'Minuta sugerida disponível no “Resumo do processo”, no topo, revise e use “Aplicar ao parecer”.'}
                                         {minutaStatus === 'indisponivel' &&
                                             (minutaMensagem ?? 'Sugestão de minuta indisponível no momento.')}
                                     </p>
                                 )}
 
                                 <p className="mt-2 text-theme-xs text-gray-400 dark:text-gray-500">
-                                    A minuta da IA é apenas sugestão (HU-118): você a revisa, edita e valida. A IA não decide o
-                                    desfecho nem finaliza a ficha (RN-001/RN-003).
+                                    A minuta da IA é apenas sugestão: você a revisa, edita e valida. A IA não decide o
+                                    desfecho nem finaliza a ficha.
                                 </p>
                             </CardContent>
                         </Card>
@@ -2804,7 +2807,7 @@ export default function FichaAnaliseShow({
                         {processo.renovacao && (
                             <span className="mt-3 flex flex-col gap-3 text-left font-normal text-gray-700 dark:text-gray-300">
                                 <span>
-                                    Viabilidade {processo.tvl_numero ?? '—'}. A renovação não gera número novo: informe o tipo
+                                    Viabilidade {processo.tvl_numero ?? '-'}. A renovação não gera número novo: informe o tipo
                                     liberado e a nova validade.
                                 </span>
                                 <label className="flex min-h-11 items-center gap-2 text-sm">
@@ -2855,7 +2858,7 @@ export default function FichaAnaliseShow({
                     <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Conclusão de Análise</h4>
                     <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                         Deferido e indeferido seguem a ficha finalizada. Desativado, cassado e revogado encerram o
-                        processo — inclusive um já deferido. Processo finalizado aceita qualquer outro resultado.
+                        processo, inclusive um já deferido. Processo finalizado aceita qualquer outro resultado.
                     </p>
                     <div className="mt-4">
                         <ConclusaoAnaliseForm
@@ -2983,7 +2986,7 @@ export default function FichaAnaliseShow({
                     <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Encaminhar para a vistoria</h4>
                     <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                         O processo vai para a caixa do setor de vistoria, sem responsável, para o apoio distribuir a
-                        um vistoriador — e o status de análise muda para Vistoriar. Quando a ficha for concluída, o
+                        um vistoriador, e o status de análise muda para Vistoriar. Quando a ficha for concluída, o
                         processo retorna automaticamente para você. Informe o parecer (obrigatório).
                     </p>
                     <div className="mt-4">
@@ -3107,7 +3110,7 @@ export default function FichaAnaliseShow({
             <Modal isOpen={showDiff} onClose={() => setShowDiff(false)} className="m-4 max-h-[90vh] max-w-[640px] overflow-y-auto p-6 lg:p-8">
                     <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Comparar revisões</h4>
                     <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                        Mostra apenas o que mudou entre as revisões (RN-007).
+                        Mostra apenas o que mudou entre as revisões.
                     </p>
                     <div className="mt-4 flex flex-wrap items-end gap-3">
                         <div className="w-28">
@@ -3176,7 +3179,7 @@ function SugestoesIaSkeleton() {
                 </CardContent>
             </Card>
             <Card>
-                <CardHeader title="Alertas de IA (sugestão — revise)" description="Carregando sugestões da IA…" />
+                <CardHeader title="Alertas de IA (sugestão: revise)" description="Carregando sugestões da IA…" />
                 <CardContent>
                     <div className="space-y-3" aria-hidden="true">
                         <div className="h-4 w-2/3 animate-pulse rounded bg-gray-100 dark:bg-white/[0.06]" />
@@ -3258,7 +3261,7 @@ function ResumoProcessoCard({
                     <DescItem label="Processo">{valorOuTraco(processo.protocol_number)}</DescItem>
                     <DescItem label="Serviço">
                         {processo.servicos.length === 0 ? (
-                            '—'
+                            '-'
                         ) : (
                             <ul className="space-y-0.5">
                                 {processo.servicos.map((servico) => (
@@ -3330,7 +3333,7 @@ function ResumoProcessoCard({
                                     >
                                     <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-2">
                                         <Badge color="info" size="sm">
-                                            Sugestão — revise
+                                            Sugestão, revise
                                         </Badge>
                                         <Badge color={sugestao.status === 'escalada_humano' ? 'error' : 'light'} size="sm">
                                             {sugestao.status_label}
@@ -3404,7 +3407,7 @@ function ResumoProcessoCard({
                 )}
 
                 <p className="mt-4 text-theme-xs text-gray-400 dark:text-gray-500">
-                    Apoio à leitura, sempre revisável — não substitui a análise nem antecipa a decisão (RN-001/RN-004).
+                    Apoio à leitura, sempre revisável, não substitui a análise nem antecipa a decisão.
                 </p>
                 </WhenVisible>
                 </div>
@@ -3441,7 +3444,7 @@ function MinutaJustificativaCard({
     return (
         <Card>
             <CardHeader
-                title="Justificativa da atividade (IA — sugestão, revise)"
+                title="Justificativa da atividade (IA: sugestão, revise)"
                 description="Minuta de justificativa proposta pela IA conforme a SUA decisão na atividade, com base no enquadramento do motor. É apoio, não decisão: revise, edite e valide."
             />
             <CardContent>
@@ -3463,7 +3466,7 @@ function MinutaJustificativaCard({
                                 <div className="flex flex-wrap items-center justify-between gap-2">
                                     <div className="flex flex-wrap items-center gap-2">
                                         <Badge color="info" size="sm">
-                                            Sugestão — revise
+                                            Sugestão, revise
                                         </Badge>
                                         {rotuloCnae !== '' && (
                                             <Badge color="light" size="sm">
@@ -3520,8 +3523,8 @@ function MinutaJustificativaCard({
                 </ul>
 
                 <p className="mt-4 text-theme-xs text-gray-400 dark:text-gray-500">
-                    “Aplicar à justificativa” copia o texto para o campo da atividade, onde você revisa e ajusta — nada é
-                    gravado nem decidido automaticamente (RN-001).
+                    “Aplicar à justificativa” copia o texto para o campo da atividade, onde você revisa e ajusta, nada é
+                    gravado nem decidido automaticamente.
                 </p>
             </CardContent>
         </Card>
@@ -3568,7 +3571,7 @@ function AlertasIaCard({ sugestoes }: { sugestoes: SugestaoIa[] }) {
     return (
         <Card>
             <CardHeader
-                title="Alertas de IA (sugestão — revise)"
+                title="Alertas de IA (sugestão: revise)"
                 description="Divergências apontadas pela IA entre o que foi declarado e o que os documentos/foto mostram. Complementa, não substitui, as validações técnicas."
             />
             <CardContent>
@@ -3586,7 +3589,7 @@ function AlertasIaCard({ sugestoes }: { sugestoes: SugestaoIa[] }) {
                                         <span className="inline-flex items-center gap-2">
                                             <AlertIcon className="size-4 shrink-0 fill-current text-warning-500" />
                                             <Badge color="warning" size="sm">
-                                                Sugestão — revise
+                                                Sugestão, revise
                                             </Badge>
                                         </span>
                                         <Badge color={sugestao.status === 'escalada_humano' ? 'error' : 'light'} size="sm">
@@ -3651,8 +3654,8 @@ function AlertasIaCard({ sugestoes }: { sugestoes: SugestaoIa[] }) {
                     </ul>
 
                 <p className="mt-4 text-theme-xs text-gray-400 dark:text-gray-500">
-                    Sinais para revisão humana — não decidem nem penalizam (RN-004). As validações de lote (GIS) e
-                    Receita seguem pendentes SEDUR (HU-037/105) e não são supridas por estes alertas.
+                    Sinais para revisão humana, não decidem nem penalizam. As validações de lote (GIS) e
+                    Receita seguem pendentes SEDUR e não são supridas por estes alertas.
                 </p>
             </CardContent>
         </Card>
@@ -3702,14 +3705,14 @@ function AbrigadosPanel({
                                 {abrigados.map((abrigado, indice) => (
                                     <tr key={`${abrigado.tvl ?? 'sem-tvl'}-${indice}`}>
                                         <td className="py-2 pr-3 text-gray-700 dark:text-gray-300">
-                                            {abrigado.tvl ?? '—'}
+                                            {abrigado.tvl ?? '-'}
                                         </td>
                                         <td className="py-2 pr-3 text-gray-700 dark:text-gray-300">
-                                            {abrigado.razao_social ?? '—'}
+                                            {abrigado.razao_social ?? '-'}
                                         </td>
                                         {/* Validade não modelada (desfecho spec-2) — sempre "—". */}
                                         <td className="py-2 text-gray-500 dark:text-gray-400">
-                                            {abrigado.validade ?? '—'}
+                                            {abrigado.validade ?? '-'}
                                         </td>
                                     </tr>
                                 ))}
@@ -3719,8 +3722,8 @@ function AbrigadosPanel({
                 )}
 
                 <p className="mt-4 text-theme-xs text-gray-400 dark:text-gray-500">
-                    Campos SEFAZ/externos (validade do produto, integrações) pendentes da SEDUR — exibidos como
-                    "—" enquanto não modelados.
+                    Campos SEFAZ/externos (validade do produto, integrações) pendentes da SEDUR, exibidos como
+                    "-" enquanto não modelados.
                 </p>
             </CardContent>
         </Card>
@@ -3851,7 +3854,7 @@ function DiffView({ diff }: { diff: Record<string, unknown> }) {
     if (entradas.length === 0) {
         return (
             <p className="mt-4 text-theme-sm text-gray-500 dark:text-gray-400">
-                As revisões são idênticas — nenhuma diferença.
+                As revisões são idênticas, nenhuma diferença.
             </p>
         );
     }
@@ -3904,7 +3907,7 @@ function DiffLinha({ valor }: { valor: DiffValor }) {
 
 function formatarDiffValor(valor: unknown): string {
     if (valor === null || valor === undefined || valor === '') {
-        return '—';
+        return '-';
     }
 
     if (typeof valor === 'object') {

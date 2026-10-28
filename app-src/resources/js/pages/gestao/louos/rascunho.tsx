@@ -277,7 +277,7 @@ function ImportarCsvModal({
             <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Importar CSV</h4>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                 O arquivo entra como nova carga do rascunho. Marque substituir para apagar as linhas copiadas da
-                vigente e ficar só com o que veio no CSV — é o caminho para atualizar o Quadro com uma planilha
+                vigente e ficar só com o que veio no CSV, é o caminho para atualizar o Quadro com uma planilha
                 oficial.
             </p>
 
@@ -607,9 +607,9 @@ export default function LouosRascunho({
 
     return (
         <>
-            <Head title={`Rascunho — ${quadroLabel}`} />
+            <Head title={`Rascunho: ${quadroLabel}`} />
             <PageHeader
-                title={`Rascunho — ${quadroLabel}`}
+                title={`Rascunho: ${quadroLabel}`}
                 breadcrumbs={[
                     { label: 'Painel', href: '/gestao' },
                     { label: 'Quadros da LOUOS', href: '/gestao/louos' },
@@ -658,7 +658,7 @@ export default function LouosRascunho({
                         <div className="flex items-start gap-3 rounded-xl border border-blue-light-200 bg-blue-light-50 p-4 dark:border-blue-light-500/30 dark:bg-blue-light-500/15">
                             <InfoIcon className="size-5 shrink-0 fill-current text-blue-light-500" />
                             <p className="text-theme-sm text-gray-700 dark:text-gray-300">
-                                Rascunho <strong>{draft.version}</strong> em edição — autor:{' '}
+                                Rascunho <strong>{draft.version}</strong> em edição, autor:{' '}
                                 <strong>{draft.autor.name ?? `ID ${draft.autor.id}`}</strong>. A versão vigente não é
                                 alterada até a publicação.
                             </p>

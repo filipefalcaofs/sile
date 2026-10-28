@@ -296,7 +296,7 @@ class ResultadoExpressoController extends Controller
 
         [$status, $label] = match ($result) {
             'sucesso' => ['transmitido', 'Transmitido'],
-            'bloqueado' => ['pendente', 'Pendente — canal bloqueado (sem contrato/homologação)'],
+            'bloqueado' => ['pendente', 'Pendente: canal bloqueado (sem contrato/homologação)'],
             'ignorado' => ['nao_aplicavel', 'Não se aplica a este resultado'],
             default => ['aguardando', 'Aguardando processamento'],
         };

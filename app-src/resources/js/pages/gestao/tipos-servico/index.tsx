@@ -141,7 +141,7 @@ function EditServiceTypeModal({ serviceType, onClose }: { serviceType: ServiceTy
         <Modal isOpen onClose={onClose} className="m-4 max-h-[90vh] max-w-[600px] overflow-y-auto p-6 lg:p-8">
             <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Editar tipo de serviço</h4>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                {serviceType.code} — o código não pode ser alterado.
+                {serviceType.code}, o código não pode ser alterado.
             </p>
 
             <Form action={`/gestao/tipos-servico/${serviceType.id}`} method="put" onSuccess={onClose} className="mt-6">
@@ -235,7 +235,7 @@ export default function ServiceTypesIndex({ serviceTypes, filters, perPageOption
         {
             id: 'flow_hint',
             header: 'Pista de fluxo',
-            cell: (serviceType) => serviceType.flow_hint ?? '—',
+            cell: (serviceType) => serviceType.flow_hint ?? '-',
         },
         {
             id: 'active',

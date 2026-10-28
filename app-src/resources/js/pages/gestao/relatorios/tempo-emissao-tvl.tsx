@@ -96,7 +96,7 @@ const COLUNAS_DAM = ['dam_numero', 'dam_emissao', 'dam_pagamento', 'dam_valor'] 
  * Degradação honesta: a integração de Revisão (REDESIM) não é homologada. O modo
  * fica VISÍVEL mas desabilitado e NENHUM dado de revisão é simulado.
  */
-const AVISO_REVISAO = 'Revisões via REDESIM — integração não homologada';
+const AVISO_REVISAO = 'Revisões via REDESIM, integração não homologada';
 
 const RESULTADO_OPTIONS = [
     { value: 'deferida', label: 'Deferido' },
@@ -114,18 +114,18 @@ const dateTimeFormat = new Intl.DateTimeFormat('pt-BR', {
 /** Formata a data/hora ISO8601 no padrão brasileiro; null/inválida → travessão. */
 function formatarDataHora(iso: string | null): string {
     if (!iso) {
-        return '—';
+        return '-';
     }
 
     const data = new Date(iso);
 
-    return Number.isNaN(data.getTime()) ? '—' : dateTimeFormat.format(data);
+    return Number.isNaN(data.getTime()) ? '-' : dateTimeFormat.format(data);
 }
 
 /** Minutos úteis → "Xh Ym" (tempo útil, sem fim de semana/feriado); null → travessão. */
 function formatarDuracao(minutos: number | null): string {
     if (minutos === null || Number.isNaN(minutos)) {
-        return '—';
+        return '-';
     }
 
     const horas = Math.floor(minutos / 60);
@@ -260,13 +260,13 @@ export default function TempoEmissaoTvl({ relatorio, servicos, filtros, perPageO
             header: 'Processo',
             headerClassName: stickyHeader,
             cellClassName: stickyCell,
-            cell: (linha) => linha.processo ?? '—',
+            cell: (linha) => linha.processo ?? '-',
         },
         {
             id: 'servico',
             header: 'Serviço',
             cellClassName: 'whitespace-nowrap',
-            cell: (linha) => linha.servico ?? '—',
+            cell: (linha) => linha.servico ?? '-',
         },
         {
             id: 'tipo',
@@ -279,10 +279,10 @@ export default function TempoEmissaoTvl({ relatorio, servicos, filtros, perPageO
             cellClassName: 'whitespace-nowrap',
             cell: (linha) => formatarDataHora(linha.abertura),
         },
-        { id: 'dam_numero', header: 'DAM Nº', cell: (linha) => linha.dam_numero ?? '—' },
+        { id: 'dam_numero', header: 'DAM Nº', cell: (linha) => linha.dam_numero ?? '-' },
         { id: 'dam_emissao', header: 'DAM Emissão', cell: (linha) => formatarDataHora(linha.dam_emissao) },
         { id: 'dam_pagamento', header: 'DAM Pagamento', cell: (linha) => formatarDataHora(linha.dam_pagamento) },
-        { id: 'dam_valor', header: 'DAM Valor', align: 'end', cellClassName: 'text-right tabular-nums', cell: (linha) => linha.dam_valor ?? '—' },
+        { id: 'dam_valor', header: 'DAM Valor', align: 'end', cellClassName: 'text-right tabular-nums', cell: (linha) => linha.dam_valor ?? '-' },
         {
             id: 'tvl_disponivel',
             header: 'PDF disponível',
@@ -292,7 +292,7 @@ export default function TempoEmissaoTvl({ relatorio, servicos, filtros, perPageO
             id: 'tvl_numero',
             header: 'Nº da viabilidade',
             cellClassName: 'whitespace-nowrap font-medium text-gray-800 dark:text-white/90',
-            cell: (linha) => linha.tvl_numero ?? '—',
+            cell: (linha) => linha.tvl_numero ?? '-',
         },
         {
             id: 'emissao',
@@ -508,7 +508,7 @@ function AvisoRevisao() {
             <InfoIcon className="mt-0.5 size-5 shrink-0 text-warning-600 dark:text-orange-400" />
             <p className="text-theme-sm text-warning-700 dark:text-orange-300">
                 Este relatório cobre a <strong>Viabilidade</strong>. As <strong>Revisões via REDESIM</strong> dependem de uma
-                integração ainda <strong>não homologada</strong> — o modo aparece desabilitado e nenhum dado de revisão é
+                integração ainda <strong>não homologada</strong>, o modo aparece desabilitado e nenhum dado de revisão é
                 exibido. Os blocos <strong>DAM</strong> não são modelados no Viabiliza e ficam em branco (ocultos por padrão no seletor
                 de colunas).
             </p>
@@ -556,7 +556,7 @@ function SeletorColunas({
 
             <Dropdown isOpen={aberto} onClose={onClose} className="w-56 p-3">
                 <p className="mb-2 text-theme-xs font-medium text-gray-500 dark:text-gray-400">
-                    Blocos DAM (em branco — não modelados)
+                    Blocos DAM (em branco, não modelados)
                 </p>
                 <ul className="flex flex-col gap-2">
                     {colunas.map((coluna) => (

@@ -84,7 +84,7 @@ function outcomeColor(outcome: string): 'success' | 'error' | 'light' {
 /** Formata a data-hora ISO para o padrão pt-BR (dd/mm/aaaa hh:mm). */
 function formatarDataHora(iso: string | null): string {
     if (!iso) {
-        return '—';
+        return '-';
     }
 
     const data = new Date(iso);
@@ -171,14 +171,14 @@ export default function ResultadosExpressoIndex({
             id: 'protocolo',
             header: 'Protocolo',
             cellClassName: 'font-medium whitespace-nowrap text-gray-800 dark:text-white/90',
-            cell: (item) => item.protocol_number ?? '—',
+            cell: (item) => item.protocol_number ?? '-',
         },
         {
             id: 'empresa',
             header: 'Empresa',
             cell: (item) => (
                 <div className="flex flex-col">
-                    <span className="text-gray-700 dark:text-gray-300">{item.empresa ?? '—'}</span>
+                    <span className="text-gray-700 dark:text-gray-300">{item.empresa ?? '-'}</span>
                     {item.cnpj && <span className="text-theme-xs text-gray-400 dark:text-gray-500">{item.cnpj}</span>}
                 </div>
             ),
@@ -198,7 +198,7 @@ export default function ResultadosExpressoIndex({
             header: 'Viabilidade',
             cellClassName: 'whitespace-nowrap',
             cell: (item) =>
-                item.tvl_product_number ?? <span className="text-gray-400 dark:text-gray-500">—</span>,
+                item.tvl_product_number ?? <span className="text-gray-400 dark:text-gray-500">-</span>,
         },
         {
             id: 'decidido_em',
@@ -235,7 +235,7 @@ export default function ResultadosExpressoIndex({
             <Card>
                 <CardHeader
                     title="Decisões automáticas"
-                    description="Solicitações deferidas e indeferidas pelo fluxo expresso. Consulta somente leitura — a decisão é imutável e auditável."
+                    description="Solicitações deferidas e indeferidas pelo fluxo expresso. Consulta somente leitura, a decisão é imutável e auditável."
                 />
                 <CardContent>
                     <div className="space-y-5">

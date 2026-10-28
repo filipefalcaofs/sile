@@ -191,7 +191,7 @@ const DELTA: Record<TomDelta, string> = {
 };
 
 function formatarPercentual(valor: number | null): string {
-    return valor === null ? '—' : `${percentFormat.format(valor)}%`;
+    return valor === null ? '-' : `${percentFormat.format(valor)}%`;
 }
 
 function formatarSinal(valor: number, sufixo = ''): string {
@@ -221,7 +221,7 @@ function formatarVariacao(valor: number | null): string | null {
 
 function formatarDiasUteis(minutos: number | null): string {
     if (minutos === null) {
-        return '—';
+        return '-';
     }
 
     if (minutos >= 1440) {
@@ -392,7 +392,7 @@ function etapasChartOption(etapas: EtapaPainel[]): EChartsOption {
                 const etapa = etapas[indice];
 
                 if (!etapa || etapa.media_dias === null) {
-                    return `${etapa?.label ?? ''} — sem amostra`;
+                    return `${etapa?.label ?? ''}, sem amostra`;
                 }
 
                 const meta = etapa.meta_dias === null ? '' : `<br/>meta ${numberFormat.format(etapa.meta_dias)} d`;
@@ -687,7 +687,7 @@ export default function Dashboard({ kpis, acesso }: DashboardProps) {
                 <section className="flex flex-col gap-3">
                     <div className="flex flex-wrap items-baseline gap-2.5">
                         <h3 className="text-[15px] font-semibold text-gray-800 dark:text-white/90">Exige ação agora</h3>
-                        <span className="text-[13px] text-gray-500 dark:text-gray-400">posição de hoje — cada cartão abre o relatório correspondente</span>
+                        <span className="text-[13px] text-gray-500 dark:text-gray-400">posição de hoje, cada cartão abre o relatório correspondente</span>
                     </div>
                     <div className="grid grid-cols-[repeat(auto-fit,minmax(210px,1fr))] gap-4">
                         {operacao.acoes.map((acao) => (
@@ -741,7 +741,7 @@ export default function Dashboard({ kpis, acesso }: DashboardProps) {
                             <div>
                                 <h3 className="text-base font-semibold text-gray-800 dark:text-white/90">Entrada, saída e processos em andamento</h3>
                                 <p className="mt-1 text-[13px] text-gray-500 dark:text-gray-400">
-                                    O saldo só cai quando as decisões ficam acima dos protocolos. Não há série diária do estoque — a posição em andamento é a de agora.
+                                    O saldo só cai quando as decisões ficam acima dos protocolos. Não há série diária do estoque, a posição em andamento é a de agora.
                                 </p>
                             </div>
                         </div>
@@ -757,7 +757,7 @@ export default function Dashboard({ kpis, acesso }: DashboardProps) {
                                 <span className="block text-xs tracking-wide text-gray-500 uppercase dark:text-gray-400">Pico de entrada</span>
                                 <strong className="text-lg font-semibold text-gray-800 dark:text-white/90">
                                     {operacao.pico_entrada === null
-                                        ? '—'
+                                        ? '-'
                                         : `${numberFormat.format(operacao.pico_entrada)} protocolos em um dia`}
                                 </strong>
                             </div>
@@ -765,7 +765,7 @@ export default function Dashboard({ kpis, acesso }: DashboardProps) {
                                 <span className="block text-xs tracking-wide text-gray-500 uppercase dark:text-gray-400">Projeção para 30 dias</span>
                                 <strong className="text-lg font-semibold text-gray-800 dark:text-white/90">
                                     {operacao.projecao_30_dias === null
-                                        ? '—'
+                                        ? '-'
                                         : `${numberFormat.format(operacao.projecao_30_dias)} no ritmo atual`}
                                 </strong>
                             </div>
@@ -774,7 +774,7 @@ export default function Dashboard({ kpis, acesso }: DashboardProps) {
 
                     <Surface className="min-w-0 flex-[1_1_320px] rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
                         <h3 className="text-base font-semibold text-gray-800 dark:text-white/90">Automação (fluxo expresso)</h3>
-                        <p className="mt-1 text-[13px] text-gray-500 dark:text-gray-400">Quanto a LOUOS resolve sem analista — e o que está derrubando.</p>
+                        <p className="mt-1 text-[13px] text-gray-500 dark:text-gray-400">Quanto a LOUOS resolve sem analista, e o que está derrubando.</p>
                         <div className="mt-4 flex items-baseline gap-2.5">
                             <strong className="text-[40px] leading-[44px] font-bold tracking-tight text-gray-800 tabular-nums dark:text-white/90">
                                 {formatarPercentual(operacao.expresso.taxa)}
@@ -911,7 +911,7 @@ export default function Dashboard({ kpis, acesso }: DashboardProps) {
                                                     {numberFormat.format(setor.em_maos)}
                                                 </td>
                                                 <td className="px-4 py-3.5 text-right font-semibold text-gray-700 tabular-nums dark:text-gray-200">
-                                                    {setor.por_analista === null ? '—' : decimalFormat.format(setor.por_analista)}
+                                                    {setor.por_analista === null ? '-' : decimalFormat.format(setor.por_analista)}
                                                 </td>
                                                 <td
                                                     className={`px-4 py-3.5 text-right font-semibold tabular-nums ${setor.atrasados > 0 ? 'text-error-700 dark:text-error-400' : 'text-gray-700 dark:text-gray-200'}`}
@@ -975,7 +975,7 @@ export default function Dashboard({ kpis, acesso }: DashboardProps) {
                                                             <span className="font-medium text-gray-800 dark:text-white/90">{analista.rotulo}</span>
                                                         </span>
                                                     </td>
-                                                    <td className="px-4 py-3 text-gray-500 dark:text-gray-400">{analista.setor ?? '—'}</td>
+                                                    <td className="px-4 py-3 text-gray-500 dark:text-gray-400">{analista.setor ?? '-'}</td>
                                                     <td className="px-4 py-3 text-right font-semibold text-gray-800 tabular-nums dark:text-white/90">
                                                         {numberFormat.format(analista.em_maos)}
                                                     </td>
@@ -998,11 +998,11 @@ export default function Dashboard({ kpis, acesso }: DashboardProps) {
                                                                 )}
                                                             </span>
                                                             <span className="shrink-0 text-[13px] text-gray-500 dark:text-gray-400">
-                                                                {proporcao === null ? '—' : `${proporcao}% def.`}
+                                                                {proporcao === null ? '-' : `${proporcao}% def.`}
                                                             </span>
                                                         </span>
                                                     </td>
-                                                    <td className="py-3 pr-5 pl-4 text-right text-gray-500 dark:text-gray-400">—</td>
+                                                    <td className="py-3 pr-5 pl-4 text-right text-gray-500 dark:text-gray-400">-</td>
                                                 </tr>
                                             );
                                         })}
@@ -1013,14 +1013,14 @@ export default function Dashboard({ kpis, acesso }: DashboardProps) {
                                 Decisões de análise técnica no período (o expresso não entra). O tempo médio por pessoa fica no relatório de tempo de análise.
                                 {operacao.carga.nominal
                                     ? ' Os nomes aparecem porque esta conta consulta o relatório nominal.'
-                                    : ' Os nomes ficam como Analista #N — a visão nominal exige permissão própria.'}
+                                    : ' Os nomes ficam como Analista #N, a visão nominal exige permissão própria.'}
                             </p>
                         </>
                     )}
                 </Surface>
 
                 <p className="mb-2 text-[13px] text-gray-500 dark:text-gray-400">
-                    Configuração do sistema (CNAEs, usuários, perfis, parâmetros) fica no menu lateral — não ocupa mais espaço no painel.
+                    Configuração do sistema (CNAEs, usuários, perfis, parâmetros) fica no menu lateral, não ocupa mais espaço no painel.
                 </p>
             </div>
         </>
