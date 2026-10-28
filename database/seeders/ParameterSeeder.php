@@ -116,21 +116,21 @@ class ParameterSeeder extends Seeder
                 'type' => 'boolean',
                 'default_value' => '1',
                 'validation_rules' => ['required', 'boolean'],
-                'description' => 'Exigir letras maiúsculas e minúsculas na senha',
+                'description' => 'Exige letras maiúsculas e minúsculas na senha',
             ],
             'security.password.require_numbers' => [
                 'group' => 'seguranca',
                 'type' => 'boolean',
                 'default_value' => '1',
                 'validation_rules' => ['required', 'boolean'],
-                'description' => 'Exigir números na senha',
+                'description' => 'Exige números na senha',
             ],
             'security.password.require_symbols' => [
                 'group' => 'seguranca',
                 'type' => 'boolean',
                 'default_value' => '0',
                 'validation_rules' => ['required', 'boolean'],
-                'description' => 'Exigir símbolos na senha',
+                'description' => 'Exige símbolos na senha',
             ],
             'security.login.max_attempts' => [
                 'group' => 'seguranca',
@@ -524,21 +524,21 @@ class ParameterSeeder extends Seeder
                 'type' => 'json',
                 'default_value' => '{"baixo_a":"expresso","baixo_b":"expresso","alto":"analise"}',
                 'validation_rules' => ['required', 'json', 'json_fluxo_map'],
-                'description' => 'Mapa de encaminhamento por nível de risco da dimensão decisiva (expresso/analise) — Decreto 32.636/2020 não tem nível médio',
+                'description' => 'Mapa de encaminhamento por nível de risco da dimensão decisiva (expresso ou análise). O Decreto 32.636/2020 não tem nível médio',
             ],
             'risco.dimensao_tvl' => [
                 'group' => 'risco',
                 'type' => 'string',
                 'default_value' => 'municipal',
                 'validation_rules' => ['required', 'in:municipal,sanitario'],
-                'description' => 'Dimensão de risco que prevalece no encaminhamento da viabilidade locacional (default municipal; confirmar com a SEDUR)',
+                'description' => 'Dimensão de risco que prevalece no encaminhamento da viabilidade locacional (padrão municipal; confirmar com a SEDUR)',
             ],
             'louos.vagas.exigencia_por_grupo' => [
                 'group' => 'louos',
                 'type' => 'json',
                 'default_value' => '{}',
                 'validation_rules' => ['required', 'json'],
-                'description' => 'Exigência de vagas (estacionamento, carga/descarga) por grupo de uso da LOUOS — base do veredito de conformidade; vazio enquanto a SEDUR não parametriza (motor registra "não parametrizado", não bloqueia)',
+                'description' => 'Exigência de vagas (estacionamento, carga/descarga) por grupo de uso da LOUOS, base do veredito de conformidade. Vazio enquanto a SEDUR não parametriza (o motor registra "não parametrizado" e não bloqueia)',
             ],
             'solicitacao.cnaes_complementares.max' => [
                 'group' => 'solicitacao',
@@ -615,14 +615,14 @@ class ParameterSeeder extends Seeder
                 'type' => 'boolean',
                 'default_value' => '1',
                 'validation_rules' => ['required', 'boolean'],
-                'description' => 'Habilita a notificação por e-mail do resultado do fluxo expresso ao requerente (sem anexo da viabilidade locacional; canais plenos no EP11)',
+                'description' => 'Habilita a notificação por e-mail do resultado do fluxo expresso ao requerente (sem anexo da viabilidade locacional; demais canais em etapa futura)',
             ],
             'expresso.bap.prazo_horas' => [
                 'group' => 'expresso',
                 'type' => 'integer',
                 'default_value' => '48',
                 'validation_rules' => ['required', 'integer', 'min:1', 'max:720'],
-                'description' => 'Prazo (horas) sem BAP vinculado antes do indeferimento automático por prazo (ativação bloqueada até o Regin)',
+                'description' => 'Prazo (horas) sem BAP vinculado antes do indeferimento automático por prazo (ativação bloqueada até a integração com o REGIN)',
             ],
             'expresso.tvl.prefixo' => [
                 'group' => 'expresso',
@@ -699,7 +699,7 @@ class ParameterSeeder extends Seeder
                 'type' => 'string',
                 'default_value' => 'imagem',
                 'validation_rules' => ['required', 'in:imagem,nenhuma'],
-                'description' => 'Modo de assinatura do PDF da viabilidade locacional: imagem do diretor ou nenhuma; assinatura digital gov.br/ICP é gancho da SEDUR',
+                'description' => 'Modo de assinatura do PDF da viabilidade locacional: imagem do diretor ou nenhuma; assinatura digital gov.br/ICP depende da SEDUR',
             ],
             // Comunicação multicanal (EP11). Os toggles de canal nascem
             // administráveis: e-mail e in-app ligados; WhatsApp DESLIGADO
@@ -741,7 +741,7 @@ class ParameterSeeder extends Seeder
                 'type' => 'json',
                 'default_value' => '{"amarelo":"notificar_analista","vencido":"notificar_gestor"}',
                 'validation_rules' => ['required', 'json'],
-                'description' => 'Tratamento do escalonamento por SLA por faixa (default só notifica, sem decisão automática)',
+                'description' => 'Tratamento do escalonamento por SLA por faixa (padrão: só notifica, sem decisão automática)',
             ],
             'integrations.regin.em_producao' => [
                 'group' => 'integracoes',
@@ -818,7 +818,7 @@ class ParameterSeeder extends Seeder
                 'type' => 'integer',
                 'default_value' => '30',
                 'validation_rules' => ['required', 'integer', 'min:1', 'max:365'],
-                'description' => 'Janela (dias) analisada pelos detectores de abuso a cada execução do scheduler',
+                'description' => 'Janela (dias) analisada pelos detectores de abuso a cada execução da rotina agendada',
             ],
             'abuso.volume_cnpj.limite' => [
                 'group' => 'abuso',
