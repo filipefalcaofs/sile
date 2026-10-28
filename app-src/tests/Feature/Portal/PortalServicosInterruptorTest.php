@@ -115,7 +115,7 @@ class PortalServicosInterruptorTest extends TestCase
         $parametro = Parameter::query()->where('key', 'features.portal_servicos')->first();
 
         $this->assertNotNull($parametro);
-        $this->assertSame('features', $parametro->group);
+        $this->assertSame('portal', $parametro->group);
         $this->assertSame('boolean', $parametro->type);
         $this->assertSame('0', $parametro->default_value);
         $this->assertNull($parametro->value);

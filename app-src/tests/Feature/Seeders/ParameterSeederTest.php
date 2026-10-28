@@ -15,9 +15,9 @@ class ParameterSeederTest extends TestCase
     {
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(141, Parameter::query()->count());
+        $this->assertSame(144, Parameter::query()->count());
         $this->assertSame(
-            ['abuso', 'analise', 'expresso', 'features', 'geo', 'ia', 'integracoes', 'louos', 'notificacoes', 'relatorios', 'retencao', 'risco', 'seguranca', 'solicitacao', 'tll'],
+            ['abuso', 'analise', 'expresso', 'features', 'geo', 'ia', 'integracoes', 'louos', 'notificacoes', 'portal', 'relatorios', 'retencao', 'risco', 'seguranca', 'solicitacao', 'tll'],
             Parameter::query()->distinct()->orderBy('group')->pluck('group')->all(),
         );
 
@@ -74,7 +74,7 @@ class ParameterSeederTest extends TestCase
         $toggle = Parameter::query()->where('key', 'features.govbr_login')->first();
 
         $this->assertNotNull($toggle);
-        $this->assertSame('features', $toggle->group);
+        $this->assertSame('portal', $toggle->group);
         $this->assertSame('boolean', $toggle->type);
         $this->assertSame('0', $toggle->default_value);
         $this->assertFalse($toggle->sensitive);
@@ -837,6 +837,6 @@ class ParameterSeederTest extends TestCase
         $this->seed(ParameterSeeder::class);
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(141, Parameter::query()->count());
+        $this->assertSame(144, Parameter::query()->count());
     }
 }

@@ -10,7 +10,8 @@ use Carbon\CarbonImmutable;
 /**
  * Processo do sistema anterior (Simplifica) para a consulta de processo do
  * portal, no mesmo formato do processo do Viabiliza. Aceita o número do
- * processo do Simplifica ou o de uma TVL dele. Do histórico saem data e
+ * processo do Simplifica (com ou sem pontuação), o protocolo REGIN (BAP) ou o
+ * de uma TVL dele. Do histórico saem data e
  * status; o texto das mensagens não, porque pode ser dirigido ao requerente.
  */
 class ConsultaProcessoLegado
@@ -19,7 +20,36 @@ class ConsultaProcessoLegado
 
     public static function ehNumeroDoLegado(string $numero): bool
     {
-        return preg_match('/^\d{7}$/', $numero) === 1 || preg_match('/^\d{10}-\d{8}\/\d{4}$/', $numero) === 1;
+        return self::ehTvl($numero)
+            || self::numeroDoProcesso($numero) !== null
+            || self::ehProtocoloRegin($numero);
+    }
+
+    /**
+     * Número do processo do Simplifica no formato 0000000000-00000000/0000,
+     * aceitando-o também digitado só com os 22 dígitos.
+     */
+    public static function numeroDoProcesso(string $numero): ?string
+    {
+        if (preg_match('/^\d{10}-\d{8}\/\d{4}$/', $numero) === 1) {
+            return $numero;
+        }
+
+        if (preg_match('/^(\d{10})(\d{8})(\d{4})$/', $numero, $partes) === 1) {
+            return "{$partes[1]}-{$partes[2]}/{$partes[3]}";
+        }
+
+        return null;
+    }
+
+    private static function ehTvl(string $numero): bool
+    {
+        return preg_match('/^\d{6,10}$/', $numero) === 1;
+    }
+
+    private static function ehProtocoloRegin(string $numero): bool
+    {
+        return preg_match('/^BA[PB]\d{8,12}$/', strtoupper($numero)) === 1;
     }
 
     /**
@@ -33,9 +63,9 @@ class ConsultaProcessoLegado
             return null;
         }
 
-        $numeroProcesso = $numero;
+        $numeroProcesso = self::numeroDoProcesso($numero) ?? strtoupper($numero);
 
-        if (preg_match('/^\d{7}$/', $numero) === 1) {
+        if (self::ehTvl($numero)) {
             $tvl = $this->client->tvlPorNumero((int) $numero);
             $numeroProcesso = $tvl?->processoNumero;
 
@@ -67,7 +97,7 @@ class ConsultaProcessoLegado
                 'origem' => 'legado',
                 'protocol_number' => (string) ($dados['numero'] ?? ''),
                 'numero_viabilidade' => $tvls === [] ? null : implode(', ', array_map(fn (array $tvl): string => (string) ($tvl['numero'] ?? ''), $tvls)),
-                'bap' => null,
+                'bap' => is_string($dados['protocolo'] ?? null) && $dados['protocolo'] !== '' ? $dados['protocolo'] : null,
                 'servico' => 'Viabilidade de localização (sistema anterior)',
                 'empresa' => $razao === null && strlen($documento) !== 14 ? null : [
                     'razao_social' => $razao,

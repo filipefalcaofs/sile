@@ -138,6 +138,52 @@ class ConsultaProcessoLegadoTest extends TestCase
             ->where('legado_indisponivel', false));
     }
 
+    public function test_protocolo_regin_do_simplifica_mostra_o_processo_e_o_bap(): void
+    {
+        $dados = $this->processoLegado();
+        $dados['data']['protocolo'] = 'BAP2601568762';
+        Http::fake(['legado.test/api/v1/processos/BAP2601568762' => Http::response($dados)]);
+
+        $this->consultar('bap2601568762')->assertInertia(fn (Assert $page) => $page
+            ->where('encontrado', true)
+            ->where('processo.origem', 'legado')
+            ->where('processo.protocol_number', self::PROCESSO)
+            ->where('processo.bap', 'BAP2601568762'));
+
+        Http::assertSent(fn ($request) => str_ends_with($request->url(), '/processos/BAP2601568762'));
+    }
+
+    public function test_numero_do_processo_digitado_so_com_digitos_e_achado(): void
+    {
+        Http::fake(['legado.test/api/v1/processos/*' => Http::response($this->processoLegado())]);
+
+        $this->consultar('0000123456202301010001')->assertInertia(fn (Assert $page) => $page
+            ->where('encontrado', true)
+            ->where('processo.protocol_number', self::PROCESSO));
+
+        Http::assertSent(fn ($request) => str_ends_with(urldecode($request->url()), '/processos/'.self::PROCESSO));
+    }
+
+    public function test_nao_encontrado_diz_que_procurou_tambem_no_simplifica(): void
+    {
+        Http::fake(['legado.test/*' => Http::response(['mensagem' => 'Não encontrado'], 404)]);
+
+        $this->consultar(self::PROCESSO)->assertInertia(fn (Assert $page) => $page
+            ->where('encontrado', false)
+            ->where('procurado_no_legado', true));
+    }
+
+    public function test_numero_que_nao_tem_cara_do_simplifica_nao_chama_a_api(): void
+    {
+        Http::fake();
+
+        $this->consultar('2026.999999')->assertInertia(fn (Assert $page) => $page
+            ->where('encontrado', false)
+            ->where('procurado_no_legado', false));
+
+        Http::assertNothingSent();
+    }
+
     public function test_consulta_do_simplifica_e_auditada(): void
     {
         Http::fake(['legado.test/api/v1/processos/*' => Http::response($this->processoLegado())]);

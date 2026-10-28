@@ -4,6 +4,7 @@ use App\Http\Middleware\BloqueiaEntradaLocalDoPortal;
 use App\Http\Middleware\ConfigureEnvironmentSession;
 use App\Http\Middleware\EnsureConsultaViabilidadeEnabled;
 use App\Http\Middleware\EnsureLgpdTermAccepted;
+use App\Http\Middleware\EnsurePortalServicoEnabled;
 use App\Http\Middleware\EnsurePortalServicosEnabled;
 use App\Http\Middleware\EnsurePortalServicosExtrasEnabled;
 use App\Http\Middleware\EnsurePortalSolicitacaoEnabled;
@@ -69,6 +70,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'portal.solicitacao' => EnsurePortalSolicitacaoEnabled::class,
             'portal.servicos' => EnsurePortalServicosEnabled::class,
             'portal.extras' => EnsurePortalServicosExtrasEnabled::class,
+            'portal.servico' => EnsurePortalServicoEnabled::class,
             'consulta.viabilidade' => EnsureConsultaViabilidadeEnabled::class,
         ]);
 

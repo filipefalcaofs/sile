@@ -153,31 +153,34 @@ Route::middleware(['auth:web', ConfereSessaoPortalServicos::class, 'verified'])
                 // Solicitações de viabilidade (HU-061) — rotas literais; as rotas
                 // com {solicitacao} entram em 08-06/08-11. O store degrada de forma
                 // comunicada com o toggle features.solicitacao_viabilidade off.
-                Route::get('renovacao', [RenovacaoController::class, 'index'])->middleware('portal.solicitacao')
-                    ->name('renovacao.index');
-                Route::post('renovacao/consultar-cnpj', [RenovacaoController::class, 'consultarCnpj'])->middleware('portal.solicitacao')
-                    ->middleware('portal.extras')->name('renovacao.consultar-cnpj');
-                Route::post('renovacao/legado/consultar', [RenovacaoController::class, 'consultarLegado'])->middleware('portal.solicitacao')
-                    ->middleware('portal.extras')->name('renovacao.legado.consultar');
-                Route::get('renovacao/legado/{cnpj}/{numero}', [RenovacaoController::class, 'showLegado'])->middleware('portal.solicitacao')
-                    ->where('cnpj', '[0-9]{14}')->whereNumber('numero')
-                    ->name('renovacao.legado.show');
-                Route::post('renovacao/legado/{cnpj}/{numero}', [RenovacaoController::class, 'storeLegado'])->middleware('portal.solicitacao')
-                    ->where('cnpj', '[0-9]{14}')->whereNumber('numero')
-                    ->name('renovacao.legado.store');
-                Route::get('renovacao/{origem}', [RenovacaoController::class, 'show'])->middleware('portal.solicitacao')
-                    ->name('renovacao.show');
-                Route::post('renovacao/{origem}', [RenovacaoController::class, 'store'])->middleware('portal.solicitacao')
-                    ->name('renovacao.store');
+                Route::middleware('portal.servico:portal_renovacao')->group(function () {
+                    Route::get('renovacao', [RenovacaoController::class, 'index'])->middleware('portal.solicitacao')
+                        ->name('renovacao.index');
+                    Route::post('renovacao/consultar-cnpj', [RenovacaoController::class, 'consultarCnpj'])->middleware('portal.solicitacao')
+                        ->middleware('portal.extras')->name('renovacao.consultar-cnpj');
+                    Route::post('renovacao/legado/consultar', [RenovacaoController::class, 'consultarLegado'])->middleware('portal.solicitacao')
+                        ->middleware('portal.extras')->name('renovacao.legado.consultar');
+                    Route::get('renovacao/legado/{cnpj}/{numero}', [RenovacaoController::class, 'showLegado'])->middleware('portal.solicitacao')
+                        ->where('cnpj', '[0-9]{14}')->whereNumber('numero')
+                        ->name('renovacao.legado.show');
+                    Route::post('renovacao/legado/{cnpj}/{numero}', [RenovacaoController::class, 'storeLegado'])->middleware('portal.solicitacao')
+                        ->where('cnpj', '[0-9]{14}')->whereNumber('numero')
+                        ->name('renovacao.legado.store');
+                    Route::get('renovacao/{origem}', [RenovacaoController::class, 'show'])->middleware('portal.solicitacao')
+                        ->name('renovacao.show');
+                    Route::post('renovacao/{origem}', [RenovacaoController::class, 'store'])->middleware('portal.solicitacao')
+                        ->name('renovacao.store');
+                });
 
                 // Convites que o cidadão (requerente) pode responder agora.
-                Route::get('convites', [ConviteController::class, 'index'])->name('convites.index');
+                Route::get('convites', [ConviteController::class, 'index'])
+                    ->middleware('portal.servico:portal_convites')->name('convites.index');
 
                 // Consulta de processo por número (do processo, da viabilidade
                 // ou do BAP), aberta a qualquer cidadão logado, sem dados
                 // pessoais. Os processos começam na JUCEB.
                 Route::get('consulta', ConsultaProcessoController::class)
-                    ->middleware('throttle:consulta-processo')
+                    ->middleware(['portal.servico:portal_consulta_processo', 'throttle:consulta-processo'])
                     ->name('consulta');
 
                 Route::get('solicitacoes', [SolicitacaoController::class, 'index'])->middleware('portal.extras')->name('solicitacoes.index');

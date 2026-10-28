@@ -30,6 +30,7 @@ interface ConsultaProps {
     numero: string | null;
     encontrado: boolean;
     legado_indisponivel?: boolean;
+    procurado_no_legado?: boolean;
     processo: Processo | null;
     timeline: Timeline | null;
     lista?: ItemLista[] | null;
@@ -56,6 +57,7 @@ export default function ConsultaProcesso({
     numero,
     encontrado,
     legado_indisponivel: legadoIndisponivel = false,
+    procurado_no_legado: procuradoNoLegado = false,
     processo,
     timeline,
     lista = null,
@@ -86,14 +88,14 @@ export default function ConsultaProcesso({
                 <CardContent>
                     <form onSubmit={consultar} className="flex flex-col gap-3 sm:flex-row sm:items-end" role="search">
                         <div className="w-full sm:max-w-md">
-                            <Label htmlFor="numero-processo">CNPJ ou número do processo, da viabilidade ou do BAP</Label>
+                            <Label htmlFor="numero-processo">CNPJ, número do processo, da viabilidade ou protocolo BAP</Label>
                             <Input
                                 id="numero-processo"
                                 name="numero"
                                 autoComplete="off"
                                 value={termo}
                                 onChange={(event) => setTermo(event.target.value)}
-                                hint="Exemplos: CNPJ 57.461.624/0001-23 · processo 2026.000123 · viabilidade 2104040 · BAP BAP2600012345 · sistema anterior 0000123456-20230101/0001"
+                                hint="A busca vale para o Viabiliza e para o sistema anterior (Simplifica). Exemplos: CNPJ 57.461.624/0001-23 · viabilidade 2104040 · BAP BAP2601568762 · processo 0000123456-20230101/0001"
                             />
                         </div>
                         <Button type="submit" className="min-h-11" loading={buscando} disabled={termo.trim() === ''}>
@@ -117,7 +119,11 @@ export default function ConsultaProcesso({
                     <Alert
                         variant="warning"
                         title="Processo não encontrado"
-                        message="Confira o número. A consulta aceita o CNPJ da empresa, o número do processo, o da viabilidade (TVL) ou o do BAP."
+                        message={
+                            procuradoNoLegado
+                                ? 'Procuramos no Viabiliza e no sistema anterior (Simplifica). Confira o número ou tente o CNPJ da empresa, que lista os processos dos dois sistemas.'
+                                : 'Procuramos no Viabiliza. Confira o número ou tente o CNPJ da empresa. Para o sistema anterior, use o número do processo (0000000000-00000000/0000), o da viabilidade (TVL) ou o protocolo BAP.'
+                        }
                     />
                 )}
 
