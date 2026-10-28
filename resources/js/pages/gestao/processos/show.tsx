@@ -27,6 +27,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import EmptyState from '@/components/ui/empty-state';
 import GestaoLayout from '@/layouts/gestao-layout';
 import type { SharedProps } from '@/types';
+import { duracaoNaTramitacao } from './duracao-tramitacao';
 
 interface TimelineItem {
     /** status | analise | atribuicao | pendencia | vistoria | malha_fina | documento | integracao */
@@ -122,34 +123,6 @@ function centroide(poligono: Polygon | null): { lat: number; lng: number } | nul
     );
 
     return { lat: soma.lat / pontos.length, lng: soma.lng / pontos.length };
-}
-
-/** Duração humana entre dois instantes (etapas da timeline). */
-function formatarDuracao(inicioIso: string | null, fimIso: string | null): string | null {
-    if (!inicioIso) {
-        return null;
-    }
-
-    const inicio = new Date(inicioIso).getTime();
-    const fim = fimIso ? new Date(fimIso).getTime() : Date.now();
-
-    if (Number.isNaN(inicio) || Number.isNaN(fim) || fim < inicio) {
-        return null;
-    }
-
-    const minutos = Math.round((fim - inicio) / 60000);
-
-    if (minutos < 60) {
-        return `${minutos} min`;
-    }
-
-    const horas = Math.round(minutos / 60);
-
-    if (horas < 48) {
-        return `${horas} h`;
-    }
-
-    return `${Math.round(horas / 24)} dias`;
 }
 
 function DescItem({ label, children, className }: { label: string; children: ReactNode; className?: string }) {
@@ -550,7 +523,7 @@ export default function Show({
                                                 const proximoStatus = eventos
                                                     .slice(index + 1)
                                                     .find((outro) => (outro.tipo ?? 'status') === 'status');
-                                                const duracao = status ? formatarDuracao(evento.em, proximoStatus?.em ?? null) : null;
+                                                const duracao = status ? duracaoNaTramitacao(evento.to, evento.em, proximoStatus?.em ?? null) : null;
                                                 const rotuloTipo = ROTULOS_TIPO[evento.tipo ?? 'status'];
 
                                                 return (
