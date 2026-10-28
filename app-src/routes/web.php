@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Integracao\ConsultaTvlController;
 use App\Http\Controllers\Portal\ProcessosPortalServicosController;
 use App\Http\Controllers\Regin\ReginDocumentacaoController;
 use App\Http\Controllers\Regin\ReginRecebeController;
@@ -23,6 +24,11 @@ Route::get('/verificar-documento/{codigo}', [VerificacaoDocumentoController::cla
 Route::get('/api_integracao/docs', [ReginDocumentacaoController::class, 'show'])->name('regin.docs');
 Route::get('/api_integracao/docs/openapi.yaml', [ReginDocumentacaoController::class, 'spec'])->name('regin.docs.spec');
 
+// Especificação da consulta de TVL (SEFAZ/SIGS), exibida no Swagger UI único
+// acima. Declaradas antes do {numero}.
+Route::get('/api_integracao/tvl/docs', [ConsultaTvlController::class, 'documentacao'])->name('integracao.tvl.docs');
+Route::get('/api_integracao/tvl/docs/openapi.yaml', [ConsultaTvlController::class, 'especificacao'])->name('integracao.tvl.docs.spec');
+
 // Contrato JUCEB/REGIN (Guia Técnico v2.10): GET=3, POST=3 recebido / 5 duplicado.
 // Público de propósito — a JUCEB chama a URL municipal, sem sessão Laravel.
 Route::middleware(LogInboundIntegration::class)->group(function (): void {
@@ -36,6 +42,16 @@ Route::middleware(LogInboundIntegration::class)->group(function (): void {
     Route::get('/api_integracao/portal-servicos/processos', ProcessosPortalServicosController::class)
         ->middleware('throttle:portal-servicos-processos')
         ->name('portal-servicos.processos');
+
+    // Consulta de TVL pela SEFAZ/SIGS (alvará e DAM): login com usuário e
+    // senha devolve um token Bearer com validade.
+    Route::post('/api_integracao/tvl/autenticar', [ConsultaTvlController::class, 'autenticar'])
+        ->middleware('throttle:regin-recebe')
+        ->name('integracao.tvl.autenticar');
+    Route::get('/api_integracao/tvl/{numero}', [ConsultaTvlController::class, 'show'])
+        ->where('numero', '[A-Za-z0-9\\-]+')
+        ->middleware('throttle:regin-recebe')
+        ->name('integracao.tvl.show');
 });
 
 // Landing pública do portal (rota nomeada "home" — usada pelos redirects de guest do framework).
