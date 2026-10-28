@@ -135,6 +135,7 @@ class IntegrationCallRecorder
             'edificacoes_microsoft' => ['minedbuildings', 'bfppub'],
             'ortofoto' => ['/imageserver/', 'mapeamento.salvador'],
             'edificacoes_ia' => ['/segmentar', '/saude'],
+            'sefaz_tvl' => ['/api_integracao/tvl'],
             'regin' => ['api_integracao', 'juceb', 'regin'],
             'geoserver' => ['geoserver', '/wfs'],
             'geocoding' => ['nominatim'],

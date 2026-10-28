@@ -1,0 +1,278 @@
+openapi: 3.0.3
+info:
+  title: Viabiliza — consulta de TVL (api_integracao/tvl)
+  version: "1.0.0"
+  description: |
+    API que a SEFAZ/SIGS chama para consultar um TVL (liberação de alvará e geração do DAM).
+    O corpo da resposta segue o padrão do WS SIGS `buscarPorNumeroTVLRegin`.
+
+    ## Autenticação
+
+    1. `POST /api_integracao/tvl/autenticar` com `usuario` e `senha` devolve um `token`.
+    2. Envie o token em `Authorization: Bearer <token>` na consulta.
+    3. O token vale `expira_em_segundos` (60 minutos). Depois disso, autentique de novo.
+
+    ## Status do TVL (`resposta.status`)
+
+    | Código | Significado |
+    | --- | --- |
+    | `00` | TVL não encontrado (HTTP 404). |
+    | `01` | TVL concedido. |
+    | `02` | TVL inválido, não deferido (cassado, revogado ou desativado). |
+    | `99` | Erro no processamento (integração desligada ou falha interna). |
+
+    ## Formatos
+
+    - `data_vencimento` e `data_viabilidade`: `dd/MM/yyyy HH:mm:ss`.
+    - `data_ini_viabilidade` e `data_fim_viabilidade`: `yyyyMMdd HHmmss`.
+    - `area_utilizada`: vírgula decimal, por exemplo `511,00`.
+    - `condicionantes`: numeradas (`1-...`), separadas por `\r\n`.
+    - Campo que o Viabiliza não guarda sai `null`.
+  contact:
+    name: SEDUR — Viabiliza
+    url: https://www.sedur.salvador.ba.gov.br
+
+servers:
+  - url: https://viabiliza-hml.salvador.ba.gov.br
+    description: Homologação
+  - url: https://viabiliza.salvador.ba.gov.br
+    description: Produção
+
+tags:
+  - name: Autenticação
+    description: Troca de usuário e senha por token
+  - name: Consulta
+    description: Dados do TVL pelo número da viabilidade
+
+paths:
+  /api_integracao/tvl/autenticar:
+    post:
+      tags: [Autenticação]
+      operationId: autenticarTvl
+      summary: Obter token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Credenciais"
+      responses:
+        "200":
+          description: Token emitido
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Token"
+        "401":
+          description: Usuário ou senha inválidos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Mensagem"
+        "503":
+          description: Integração desligada ou sem credencial configurada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Mensagem"
+        "429":
+          $ref: "#/components/responses/LimiteExcedido"
+
+  /api_integracao/tvl/{numero}:
+    get:
+      tags: [Consulta]
+      operationId: consultarTvl
+      summary: Consultar TVL
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: numero
+          in: path
+          required: true
+          description: Número da viabilidade, com ou sem o prefixo `TVL-`.
+          schema:
+            type: string
+          example: "3000123"
+      responses:
+        "200":
+          description: TVL encontrado. `resposta.status` é `01` (concedido) ou `02` (inválido).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConsultaTvl"
+        "401":
+          description: Token ausente, inválido ou expirado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SemEmpresa"
+        "404":
+          description: TVL não encontrado (`resposta.status` `00`)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SemEmpresa"
+        "503":
+          description: Integração desligada (`resposta.status` `99`)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SemEmpresa"
+        "429":
+          $ref: "#/components/responses/LimiteExcedido"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Token devolvido por `POST /api_integracao/tvl/autenticar`.
+
+  responses:
+    LimiteExcedido:
+      description: Mais de 60 chamadas por minuto a partir do mesmo IP.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: Too Many Requests
+
+  schemas:
+    Credenciais:
+      type: object
+      required: [usuario, senha]
+      properties:
+        usuario:
+          type: string
+          example: sefaz_tvl
+        senha:
+          type: string
+          format: password
+    Token:
+      type: object
+      properties:
+        token:
+          type: string
+        tipo:
+          type: string
+          example: Bearer
+        expira_em_segundos:
+          type: integer
+          example: 3600
+    Mensagem:
+      type: object
+      properties:
+        mensagem:
+          type: string
+          example: Usuário ou senha inválidos.
+    Resposta:
+      type: object
+      properties:
+        protocolo:
+          type: string
+          description: Número da viabilidade (TVL), sem o prefixo `TVL-`.
+          example: "3000123"
+        status:
+          type: string
+          enum: ["00", "01", "02", "99"]
+        mensagem:
+          type: string
+          example: TVL concedido.
+        cnpj_instituicao:
+          type: string
+          description: CNPJ da empresa, só dígitos. Vazio quando não há resposta.
+          example: "12345678000195"
+    SemEmpresa:
+      type: object
+      properties:
+        resposta:
+          $ref: "#/components/schemas/Resposta"
+    ConsultaTvl:
+      type: object
+      properties:
+        resposta:
+          $ref: "#/components/schemas/Resposta"
+        empresa:
+          $ref: "#/components/schemas/Empresa"
+    Empresa:
+      type: object
+      properties:
+        nome_requerente: {type: string, nullable: true, example: IMPERIO DO SAMPA}
+        inscricao_imobiliaria: {type: string, nullable: true, example: "115355"}
+        area_utilizada: {type: string, nullable: true, example: "511,00"}
+        tipo_imovel: {type: string, nullable: true}
+        porte_empresa: {type: string, nullable: true, example: MICRO EMPRESA}
+        cep: {type: string, nullable: true, example: "41830050"}
+        uf: {type: string, example: BA}
+        cod_municipio: {type: string, example: "38490"}
+        municipio: {type: string, example: SALVADOR}
+        bairro: {type: string, nullable: true, example: PITUBA}
+        cod_log: {type: string, nullable: true, example: "1140"}
+        tipo_logradouro: {type: string, nullable: true, example: Avenida}
+        logradouro: {type: string, nullable: true, example: Octávio Mangabeira}
+        numero: {type: string, nullable: true, example: "184"}
+        complemento: {type: string, nullable: true}
+        processo: {type: string, nullable: true, description: Sempre null.}
+        tipoTVL:
+          type: string
+          nullable: true
+          enum: [Definitivo, Provisório, Pré-operacional]
+          description: Null quando a decisão não tem tipo (fluxo expresso).
+        zona: {type: string, nullable: true, example: ZCMe-1/02}
+        via: {type: string, nullable: true, example: VC-I}
+        hashDam: {type: string, nullable: true, description: Sempre null.}
+        observacao: {type: string, nullable: true, description: Igual a `condicionantes`.}
+        data_vencimento:
+          type: string
+          nullable: true
+          description: Validade do TVL. Null no TVL definitivo.
+          example: "13/10/2027 00:00:00"
+        data_viabilidade: {type: string, nullable: true, example: "13/10/2026 14:07:13"}
+        data_ini_viabilidade: {type: string, nullable: true, example: "20261009 170941"}
+        data_fim_viabilidade: {type: string, nullable: true, example: "20261013 140713"}
+        nome_impresso_TVL: {type: string, nullable: true}
+        tipo_viabilidade:
+          type: integer
+          nullable: true
+          description: 1 para definitivo, 2 para provisório e pré-operacional. Use `tipoTVL` para distinguir.
+        sede_escritorio_virtual:
+          type: string
+          enum: ["0", "1"]
+        grupo_cnae:
+          type: array
+          items:
+            $ref: "#/components/schemas/Cnae"
+        tvlSimplifica:
+          type: boolean
+          description: Sempre false.
+        taxas:
+          type: array
+          items:
+            $ref: "#/components/schemas/Taxa"
+        condicionantes:
+          type: string
+          nullable: true
+          description: Condicionantes gerais e por CNAE, numeradas, separadas por `\r\n`.
+        bap:
+          type: string
+          nullable: true
+          example: BAP2401445619
+    Cnae:
+      type: object
+      properties:
+        codigo_cnae: {type: string, example: "5611204"}
+        tipo_cnae: {type: string, example: "2"}
+        categoria: {type: string, example: ""}
+        descricao: {type: string}
+    Taxa:
+      type: object
+      properties:
+        documento: {type: string, nullable: true}
+        codigoTLL: {type: string}
+        valor: {type: number, format: double, example: 416.53}
+        dataTaxa: {type: string, example: "13/10/2026"}
+        servico: {type: string, example: Viabilidade de Localização}
+        codigoServico: {type: string, nullable: true}
