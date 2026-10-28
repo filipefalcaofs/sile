@@ -114,10 +114,20 @@ return [
         // Distância máxima (metros) entre o ponto da inscrição e a rua do
         // endereço para o ponto valer sem conferência por outra fonte.
         'validacao_ponto' => ['distancia_maxima_m' => 150],
-        // Distância máxima (metros) entre o lote e o trecho de centralidade
-        // linear de mesmo CODLOG para o lote contar como lindeiro (S7). 60 m
-        // foi a medida da Av. ACM; valor a confirmar com a SEDUR.
-        'centralidade_linear' => ['distancia_lindeiro_m' => (float) env('SILE_CENTRALIDADE_LINEAR_DISTANCIA_LINDEIRO_M', 60)],
+        // Centralidade linear pelo acesso (regra da SEDUR de 28/10): o imóvel só entra na zona
+        // linear quando o ponto da rua de acesso, o mais próximo do lote, está sobre um trecho
+        // efetivamente coberto por ela. Não há distância máxima do lote à linha.
+        // tolerancia_acesso_m: desalinhamento cartográfico entre o eixo da rua e a linha da
+        //   zona (medido em 3.133 vértices: mediana 0 m, 90% até 4,4 m).
+        // distancia_maxima_lote_eixo_m: guarda de consistência; CODLOG cujo eixo fica mais longe
+        //   do lote que isso não é a rua do imóvel e a regra de acesso não se aplica.
+        // margem_consulta_m: só amplia o recorte pedido ao GeoServer para trazer o trecho ao
+        //   redor do lote; não decide nada.
+        'centralidade_linear' => [
+            'tolerancia_acesso_m' => (float) env('SILE_CENTRALIDADE_LINEAR_TOLERANCIA_ACESSO_M', 15),
+            'distancia_maxima_lote_eixo_m' => (float) env('SILE_CENTRALIDADE_LINEAR_DISTANCIA_MAXIMA_LOTE_EIXO_M', 120),
+            'margem_consulta_m' => (float) env('SILE_CENTRALIDADE_LINEAR_MARGEM_CONSULTA_M', 150),
+        ],
         // Atributos candidatos ao nome da zona na feição — fallback do
         // parâmetro geo.zona.atributos_nome (HU-014).
         'zona' => ['atributos_nome' => ['ZONA', 'zona', 'SIGLA_ZONA', 'SUBZONA']],

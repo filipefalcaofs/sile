@@ -16,18 +16,22 @@ use Throwable;
  * BBOX do CQL_FILTER, a camada é repetida pelo parâmetro bbox) e calcula a área de
  * cada interseção no PostGIS da aplicação. Uma camada sem resposta torna o
  * resultado indisponível: sem ela a maior porção não é verificável. Camada que
- * responde linha (centralidade linear) não disputa a maior porção; com o lote
- * lindeiro ligado, ela é consultada num BBOX ampliado pela distância máxima ao
- * lote. Nada é persistido.
+ * responde linha (centralidade linear) não disputa a maior porção: vale quando
+ * passa por cima do lote ou quando o ponto de acesso do imóvel à sua rua está sobre
+ * o trecho coberto; para isso ela é consultada num BBOX com margem. Nada é persistido.
  */
 class GeoServerZonaMaiorPorcaoResolver implements ZonaMaiorPorcaoResolver
 {
     /** @var array<string, ZonaMaiorPorcao> */
     private array $memo = [];
 
+    public function __construct(private GeoServerEixoViarioClient $eixos) {}
+
     public function resolver(array $poligono, ?string $codLog = null): ZonaMaiorPorcao
     {
-        return $this->memo[md5((string) json_encode([$poligono, $codLog]))] ??= $this->calcular($poligono, $codLog);
+        $chave = md5((string) json_encode([$poligono, $codLog, $this->lindeiroLigado(), $this->toleranciaAcesso(), $this->distanciaMaximaLoteEixo(), $this->margemConsulta()]));
+
+        return $this->memo[$chave] ??= $this->calcular($poligono, $codLog);
     }
 
     /**
@@ -130,12 +134,16 @@ class GeoServerZonaMaiorPorcaoResolver implements ZonaMaiorPorcaoResolver
     }
 
     /**
-     * Centralidade linear (HU.182): a linha da ZCLMu ou da ZCLMe que passa por
-     * cima do lote, em qualquer parte, define a zona, sem olhar o percentual em
-     * outras zonas. Também define o lote lindeiro (S7): trecho com o mesmo CODLOG
-     * do endereço do processo a até `geo.centralidade_linear.distancia_lindeiro_m`
-     * do lote. Trecho sem CODLOG só conta cruzando o lote. Duas zonas lineares
-     * no mesmo lote não têm vencedora.
+     * Centralidade linear. Vale a zona linear (ZCLMu ou ZCLMe) quando:
+     *  - a linha passa por cima do lote, em qualquer parte (HU.182); ou
+     *  - o acesso do imóvel é por um trecho coberto por ela: o ponto do eixo da rua do
+     *    endereço (CODLOG do processo) mais próximo do centro do lote está sobre a linha,
+     *    com a tolerância cartográfica. Trecho da camada com outro CODLOG não vale; sem
+     *    CODLOG na camada, a posição decide. Não há distância máxima do lote à linha, e o
+     *    nome da via sozinho não basta: numa rua só em parte coberta, o imóvel com acesso
+     *    pelo trecho não coberto fica na zona onde está.
+     * Sem eixo da rua (camada fora do ar ou CODLOG sem linha) ou sem CODLOG, só vale a linha
+     * por cima do lote. Duas zonas lineares no mesmo lote não têm vencedora.
      *
      * @param  array<string, mixed>  $poligono
      * @param  list<array{zona: string, geometria: array<string, mixed>, cod_log: ?string}>  $lineares
@@ -143,43 +151,59 @@ class GeoServerZonaMaiorPorcaoResolver implements ZonaMaiorPorcaoResolver
     private function centralidadeLinear(array $poligono, array $lineares, ZonaMaiorPorcao $base, ?string $codLog): ZonaMaiorPorcao
     {
         $codLogProcesso = $this->normalizarCodLog($codLog);
-        $lindeiroLigado = $this->lindeiroLigado();
-        $distanciaMaxima = $this->distanciaLindeiro();
+        $eixo = $this->eixoDeAcesso($codLogProcesso);
 
         /** @var array<string, string> $motivos */
         $motivos = [];
 
         foreach ($lineares as $linear) {
-            $linha = DB::selectOne(
-                'SELECT ST_Intersects(lote, linha)::int AS cruza, ST_Distance(lote::geography, linha::geography) AS distancia
-                FROM (SELECT
-                    ST_MakeValid(ST_SetSRID(ST_GeomFromGeoJSON(?), 4326)) AS lote,
-                    ST_SetSRID(ST_GeomFromGeoJSON(?), 4326) AS linha
-                ) AS geometrias',
+            $zona = $linear['zona'];
+
+            $cruza = DB::selectOne(
+                'SELECT ST_Intersects(
+                    ST_MakeValid(ST_SetSRID(ST_GeomFromGeoJSON(?), 4326)),
+                    ST_SetSRID(ST_GeomFromGeoJSON(?), 4326)
+                )::int AS cruza',
                 [json_encode($poligono), json_encode($linear['geometria'])],
             );
 
-            if ($linha === null) {
-                continue;
-            }
-
-            $zona = $linear['zona'];
-
-            if ((int) $linha->cruza === 1) {
+            if ($cruza !== null && (int) $cruza->cruza === 1) {
                 $motivos[$zona] = "Linha da {$zona} passa por cima do lote.";
 
                 continue;
             }
 
-            $distancia = (float) $linha->distancia;
+            if ($eixo === null || isset($motivos[$zona])) {
+                continue;
+            }
 
-            if ($lindeiroLigado && $codLogProcesso !== null && $linear['cod_log'] === $codLogProcesso
-                && $distancia <= $distanciaMaxima && ! isset($motivos[$zona])) {
+            if ($linear['cod_log'] !== null && $linear['cod_log'] !== $codLogProcesso) {
+                continue;
+            }
+
+            $acesso = DB::selectOne(
+                'SELECT ST_Distance(p::geography, linha::geography) AS acesso, ST_Distance(lote::geography, eixo::geography) AS lote_eixo
+                FROM (
+                    SELECT lote, eixo, linha, ST_ClosestPoint(eixo, ST_Centroid(lote)) AS p
+                    FROM (SELECT
+                        ST_MakeValid(ST_SetSRID(ST_GeomFromGeoJSON(?), 4326)) AS lote,
+                        ST_SetSRID(ST_GeomFromGeoJSON(?), 4326) AS eixo,
+                        ST_SetSRID(ST_GeomFromGeoJSON(?), 4326) AS linha
+                    ) AS geometrias
+                ) AS pontos',
+                [json_encode($poligono), json_encode($eixo), json_encode($linear['geometria'])],
+            );
+
+            if ($acesso === null || (float) $acesso->lote_eixo > $this->distanciaMaximaLoteEixo()) {
+                continue;
+            }
+
+            if ((float) $acesso->acesso <= $this->toleranciaAcesso()) {
                 $motivos[$zona] = sprintf(
-                    'Lote lindeiro à via da centralidade linear %s (CODLOG %s, %s m).',
-                    $zona,
+                    'Acesso do imóvel pela via (CODLOG %s) em trecho coberto pela Zona de Centralidade Linear %s (ponto de acesso a %s m do trecho).',
                     $codLogProcesso,
-                    number_format($distancia, 0, ',', '.'),
+                    $zona,
+                    number_format((float) $acesso->acesso, 1, ',', '.'),
                 );
             }
         }
@@ -201,14 +225,41 @@ class GeoServerZonaMaiorPorcaoResolver implements ZonaMaiorPorcaoResolver
         );
     }
 
+    /**
+     * Eixo da rua de acesso (MultiLineString GeoJSON) pelo CODLOG do processo; nulo com a
+     * regra desligada, sem CODLOG, ou quando a camada viária não devolve a rua.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function eixoDeAcesso(?string $codLog): ?array
+    {
+        if (! $this->lindeiroLigado() || $codLog === null) {
+            return null;
+        }
+
+        $eixo = $this->eixos->consultar($codLog);
+
+        return $eixo->identificado() ? ['type' => 'MultiLineString', 'coordinates' => $eixo->linhas] : null;
+    }
+
     private function lindeiroLigado(): bool
     {
         return Settings::enabled('centralidade_linear_lindeiro');
     }
 
-    private function distanciaLindeiro(): float
+    private function toleranciaAcesso(): float
     {
-        return max(0.0, (float) Settings::get('geo.centralidade_linear.distancia_lindeiro_m', 60));
+        return max(0.0, (float) Settings::get('geo.centralidade_linear.tolerancia_acesso_m', 15));
+    }
+
+    private function distanciaMaximaLoteEixo(): float
+    {
+        return max(0.0, (float) Settings::get('geo.centralidade_linear.distancia_maxima_lote_eixo_m', 120));
+    }
+
+    private function margemConsulta(): float
+    {
+        return max(0.0, (float) Settings::get('geo.centralidade_linear.margem_consulta_m', 150));
     }
 
     /**
@@ -244,9 +295,9 @@ class GeoServerZonaMaiorPorcaoResolver implements ZonaMaiorPorcaoResolver
     }
 
     /**
-     * BBOX da consulta da camada: o do lote, ou, na camada linear com o lote
-     * lindeiro ligado, ampliado pela distância máxima (com folga de 10%), para
-     * trazer o trecho em frente ao lote.
+     * BBOX da consulta da camada: o do lote, ou, na camada linear com a regra de
+     * acesso ligada, ampliado pela margem de consulta, para trazer o trecho em frente
+     * ao lote. A margem só define o que é pedido ao GeoServer; não decide a zona.
      *
      * @param  array{0: float, 1: float, 2: float, 3: float}  $bbox
      * @return array{0: float, 1: float, 2: float, 3: float}
@@ -257,7 +308,7 @@ class GeoServerZonaMaiorPorcaoResolver implements ZonaMaiorPorcaoResolver
             return $bbox;
         }
 
-        $metros = $this->distanciaLindeiro() * 1.1;
+        $metros = $this->margemConsulta();
         $latitude = deg2rad(($bbox[1] + $bbox[3]) / 2);
         $grausLat = $metros / 110_540;
         $grausLng = $metros / (111_320 * max(cos($latitude), 0.01));
