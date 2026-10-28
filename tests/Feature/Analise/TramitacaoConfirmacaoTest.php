@@ -84,9 +84,9 @@ class TramitacaoConfirmacaoTest extends TestCase
 
         $this->actingAs($analista, 'gestao')
             ->post("/gestao/processos/{$processo->id}/status-analise", ['status' => 'para_conclusao'])
-            ->assertSessionHas('status', 'Processo enviado para conclusão. Ele está na aba Para conclusão da Caixa do setor Subcoordenadoria de Atividade, aguardando distribuição.');
+            ->assertSessionHas('status', 'Processo enviado para conclusão. Ele está na aba Analisados da Caixa do setor Subcoordenadoria de Atividade, aguardando distribuição.');
 
-        $this->assertSame('Para conclusão', $processo->refresh()->rotuloStatusTramitacao());
+        $this->assertSame('Analisados', $processo->refresh()->rotuloStatusTramitacao());
     }
 
     public function test_encaminhamento_confirma_usuario_e_setor_de_destino(): void

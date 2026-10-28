@@ -21,6 +21,8 @@ use Illuminate\Support\Carbon;
  */
 final class ContingenciaReportSource implements ReportSource
 {
+    private const FUSO_EXPORTACAO = 'America/Bahia';
+
     public function __construct(private readonly ContingenciaRelatorioService $service) {}
 
     public function definition(ReportFilters $filtros): ReportDefinition
@@ -31,7 +33,7 @@ final class ContingenciaReportSource implements ReportSource
                 ['key' => 'processo', 'label' => 'Processo'],
                 ['key' => 'motivo', 'label' => 'Motivo'],
                 ['key' => 'operador', 'label' => 'Operador'],
-                ['key' => 'protocolado_em', 'label' => 'Protocolado em'],
+                ['key' => 'protocolado_em', 'label' => 'Protocolado em (horário de Salvador, UTC-03:00)'],
                 ['key' => 'status_label', 'label' => 'Situação'],
             ],
             builder: fn (): Builder => $this->service->builder($filtros),
@@ -46,7 +48,7 @@ final class ContingenciaReportSource implements ReportSource
 
     /**
      * Linha exportada (ordem alinhada às colunas): reusa a projeção da tela e
-     * formata a data para pt-BR.
+     * formata a data para pt-BR no fuso de Salvador (o banco guarda em UTC).
      *
      * @return array<int, scalar|null>
      */
@@ -58,7 +60,7 @@ final class ContingenciaReportSource implements ReportSource
             $l['processo'],
             $l['motivo'],
             $l['operador'],
-            $l['protocolado_em'] !== null ? Carbon::parse($l['protocolado_em'])->format('d/m/Y H:i') : null,
+            $l['protocolado_em'] !== null ? Carbon::parse($l['protocolado_em'])->setTimezone(self::FUSO_EXPORTACAO)->format('d/m/Y H:i') : null,
             $l['status_label'],
         ];
     }

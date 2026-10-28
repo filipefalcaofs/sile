@@ -50,7 +50,7 @@ const colunasCapitais: ColumnDef<LinhaCapital>[] = [
         header: 'Posição',
         align: 'end',
         cellClassName: 'whitespace-nowrap tabular-nums text-gray-500 dark:text-gray-400',
-        cell: (linha) => (linha.posicao === null ? '—' : `${linha.posicao}º`),
+        cell: (linha) => (linha.posicao === null ? '-' : `${linha.posicao}º`),
     },
     {
         id: 'capital',
@@ -109,7 +109,7 @@ export default function Benchmark({ competencia, posicao, capitais, evolucao, di
                                 title="Nenhuma competência com cobertura nacional completa"
                                 description={
                                     posicao.ufs_ausentes.length > 0
-                                        ? `Faltam dados de: ${posicao.ufs_ausentes.join(', ')}. A posição no ranking só é publicada com as 27 unidades da federação importadas — um recorte parcial não representa o país.`
+                                        ? `Faltam dados de: ${posicao.ufs_ausentes.join(', ')}. A posição no ranking só é publicada com as 27 unidades da federação importadas, um recorte parcial não representa o país.`
                                         : 'Nenhuma competência foi importada ainda. Execute a importação do benchmark para que a comparação apareça.'
                                 }
                             />
@@ -120,7 +120,7 @@ export default function Benchmark({ competencia, posicao, capitais, evolucao, di
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 md:gap-6">
                             <KpiCard
                                 label="Posição nacional de Salvador"
-                                value={posicao.posicao === null ? '—' : `${posicao.posicao}º`}
+                                value={posicao.posicao === null ? '-' : `${posicao.posicao}º`}
                                 note={
                                     posicao.posicao === null
                                         ? 'cobertura incompleta'
@@ -130,7 +130,7 @@ export default function Benchmark({ competencia, posicao, capitais, evolucao, di
                             />
                             <KpiCard
                                 label="Posição entre as capitais"
-                                value={salvador?.posicao === null || salvador === null ? '—' : `${salvador.posicao}º`}
+                                value={salvador?.posicao === null || salvador === null ? '-' : `${salvador.posicao}º`}
                                 note="das 27 capitais"
                                 tone="brand"
                             />
@@ -145,7 +145,7 @@ export default function Benchmark({ competencia, posicao, capitais, evolucao, di
                         <Card>
                             <CardHeader
                                 title="Ranking das capitais"
-                                description="Tempo médio da análise de viabilidade de endereço, em horas úteis, na competência de referência. Capital sem dado aparece como lacuna — nenhuma posição é estimada."
+                                description="Tempo médio da análise de viabilidade de endereço, em horas úteis, na competência de referência. Capital sem dado aparece como lacuna, nenhuma posição é estimada."
                             />
                             <CardContent>
                                 <DataTable<LinhaCapital>
@@ -191,7 +191,7 @@ function RessalvaDeOrigem({ competencia }: { competencia: Competencia | null }) 
         <div className="flex items-start gap-3 rounded-2xl border border-brand-200 bg-brand-50 p-4 dark:border-brand-500/30 dark:bg-brand-500/10">
             <AlertIcon className="mt-0.5 size-5 shrink-0 text-brand-600 dark:text-brand-400" />
             <p className="text-theme-sm text-brand-700 dark:text-brand-300">
-                Estes números vêm dos <strong>microdados da REDESIM</strong>, não do VIABILIZA — a única exceção é a barra do mês corrente
+                Estes números vêm dos <strong>microdados da REDESIM</strong>, não do VIABILIZA, a única exceção é a barra do mês corrente
                 na evolução de Salvador, identificada no gráfico. Medem as horas úteis da análise de viabilidade de endereço, descontando
                 fins de semana, feriados e o tempo em que o processo está com o cidadão.
                 {competencia !== null && ` Competência de referência: ${rotuloCompetencia(competencia.ano, competencia.mes)}.`} O desempenho

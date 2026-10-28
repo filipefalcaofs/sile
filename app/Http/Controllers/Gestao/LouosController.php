@@ -84,7 +84,9 @@ class LouosController extends Controller
         $aba = $request->string('aba')->toString();
 
         if (! array_key_exists($aba, self::ABAS)) {
-            $aba = 'quadros';
+            // Sem aba pedida, abre na primeira que o usuário pode ver: o hub aceita
+            // consultar-cnaes sozinho e a aba padrão (quadros) exige consultar-louos.
+            $aba = collect(self::ABAS)->keys()->first(fn (string $chave): bool => $request->user()->can(self::ABAS[$chave])) ?? 'quadros';
         }
 
         // Cada aba re-checa a permissão do seu domínio — a rota aceita as duas

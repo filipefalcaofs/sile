@@ -56,7 +56,7 @@ interface LgpdIndexProps {
 /** Formata a data-hora ISO para o padrão pt-BR (dd/mm/aaaa hh:mm). */
 function formatarDataHora(iso: string | null): string {
     if (!iso) {
-        return '—';
+        return '-';
     }
 
     const data = new Date(iso);
@@ -77,7 +77,7 @@ function formatarDataHora(iso: string | null): string {
 /** Formata a data ISO (sem hora) para o padrão pt-BR. */
 function formatarData(iso: string | null): string {
     if (!iso) {
-        return '—';
+        return '-';
     }
 
     const data = new Date(iso);
@@ -92,7 +92,7 @@ function formatarData(iso: string | null): string {
 /** Número formatado em pt-BR; valor ausente vira travessão. */
 function formatarNumero(valor: number | null | undefined, casas = 0): string {
     if (typeof valor !== 'number' || Number.isNaN(valor)) {
-        return '—';
+        return '-';
     }
 
     return valor.toLocaleString('pt-BR', { maximumFractionDigits: casas });
@@ -109,14 +109,14 @@ const colunasAcessos: ColumnDef<AcessoPorEvento>[] = [
                     {rotular(linha.log_name.replaceAll('-', '_'))}
                 </Badge>
             ) : (
-                <span className="text-gray-400 dark:text-gray-500">—</span>
+                <span className="text-gray-400 dark:text-gray-500">-</span>
             ),
     },
     {
         id: 'event',
         header: 'Ação',
         cellClassName: 'text-gray-700 dark:text-gray-300',
-        cell: (linha) => (linha.event ? rotular(linha.event.replaceAll('-', '_')) : '—'),
+        cell: (linha) => (linha.event ? rotular(linha.event.replaceAll('-', '_')) : '-'),
     },
     {
         id: 'total',
@@ -153,7 +153,7 @@ export default function LgpdIndex({
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                     <KpiCard
                         label="Aceite do termo vigente"
-                        value={semTermo ? '—' : `${formatarNumero(consentimentos.percentual_aceite, 1)}%`}
+                        value={semTermo ? '-' : `${formatarNumero(consentimentos.percentual_aceite, 1)}%`}
                         icon={<CheckCircleIcon className="size-6" />}
                         tone="success"
                         note={
@@ -164,7 +164,7 @@ export default function LgpdIndex({
                     />
                     <KpiCard
                         label="Retenção de logs de acesso"
-                        value={retencao?.access_logs_dias !== null ? `${formatarNumero(retencao.access_logs_dias)} dias` : '—'}
+                        value={retencao?.access_logs_dias !== null ? `${formatarNumero(retencao.access_logs_dias)} dias` : '-'}
                         icon={<LockIcon className="size-6" />}
                         tone="info"
                         note="Decisões preservadas (compliance)"
@@ -190,7 +190,7 @@ export default function LgpdIndex({
                                 <div className="flex items-start gap-3 rounded-xl border border-warning-200 bg-warning-50 p-4 dark:border-warning-800 dark:bg-warning-900/20">
                                     <InfoIcon className="size-5 shrink-0 fill-current text-warning-500" />
                                     <p className="text-theme-sm text-gray-600 dark:text-gray-300">
-                                        Nenhum termo LGPD publicado. Sem termo vigente, não há consentimento a medir — o
+                                        Nenhum termo LGPD publicado. Sem termo vigente, não há consentimento a medir, o
                                         indicador permanece desarmado (honesto).
                                     </p>
                                 </div>
@@ -211,7 +211,7 @@ export default function LgpdIndex({
                                     />
                                     <Metrica
                                         label="Versão vigente"
-                                        value={consentimentos.versao_vigente !== null ? String(consentimentos.versao_vigente) : '—'}
+                                        value={consentimentos.versao_vigente !== null ? String(consentimentos.versao_vigente) : '-'}
                                     />
                                     <div className="col-span-2">
                                         <dt className="text-theme-xs font-medium tracking-wide text-gray-400 uppercase dark:text-gray-500">
@@ -236,11 +236,11 @@ export default function LgpdIndex({
                             <dl className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                                 <Metrica
                                     label="Retenção (logs de acesso)"
-                                    value={retencao?.access_logs_dias !== null ? `${formatarNumero(retencao.access_logs_dias)} dias` : '—'}
+                                    value={retencao?.access_logs_dias !== null ? `${formatarNumero(retencao.access_logs_dias)} dias` : '-'}
                                 />
                                 <Metrica
                                     label="Removidos no último pruning"
-                                    value={retencao?.ultimo_pruning_removidos !== null ? formatarNumero(retencao.ultimo_pruning_removidos) : '—'}
+                                    value={retencao?.ultimo_pruning_removidos !== null ? formatarNumero(retencao.ultimo_pruning_removidos) : '-'}
                                 />
                                 <div className="col-span-2">
                                     <dt className="text-theme-xs font-medium tracking-wide text-gray-400 uppercase dark:text-gray-500">
@@ -273,7 +273,7 @@ export default function LgpdIndex({
                         title="Acessos a dado pessoal"
                         description={`Contagem de acessos a dados pessoais nos últimos ${formatarNumero(acessosDadoPessoal?.janela_dias)} dias${
                             acessosDadoPessoal?.desde ? ` (desde ${formatarData(acessosDadoPessoal.desde)})` : ''
-                        }. Métrica agregada por ação — nunca o dado pessoal em si.`}
+                        }. Métrica agregada por ação, nunca o dado pessoal em si.`}
                     />
                     <CardContent>
                         <DataTable<AcessoPorEvento>
@@ -297,7 +297,7 @@ export default function LgpdIndex({
                     <CardContent>
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
                             <Badge color="warning" size="md">
-                                {direitosTitular?.status === 'pendente-dpo' ? 'Pendente — DPO/SEDUR' : (direitosTitular?.status ?? 'Pendente')}
+                                {direitosTitular?.status === 'pendente-dpo' ? 'Pendente de DPO/SEDUR' : (direitosTitular?.status ?? 'Pendente')}
                             </Badge>
                             <p className="text-theme-sm text-gray-600 dark:text-gray-300">
                                 {direitosTitular?.descricao ??

@@ -10,6 +10,7 @@ use App\Models\Company;
 use App\Models\CompanyUser;
 use App\Models\ServiceDeclaration;
 use App\Models\User;
+use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
 use App\Services\Renovacao\RenovacaoElegibilidadeService;
@@ -58,7 +59,7 @@ class RenovacaoController extends Controller
                     'id' => $origem->id,
                     'elegivel' => $avaliacao->elegivel,
                     'motivo' => $avaliacao->motivo,
-                    'numero' => $origem->decision?->tvl_product_number,
+                    'numero' => ViabilityDecision::semPrefixo($origem->decision?->tvl_product_number),
                     'validade' => $origem->decision?->tvl_valid_until?->toDateString(),
                     'tipo' => $origem->decision?->tvl_kind?->label(),
                     'empresa' => $origem->company?->legal_name,
@@ -112,7 +113,7 @@ class RenovacaoController extends Controller
 
                 return [
                     'id' => $origem->id,
-                    'numero' => $origem->decision?->tvl_product_number,
+                    'numero' => ViabilityDecision::semPrefixo($origem->decision?->tvl_product_number),
                     'elegivel' => $avaliacao->elegivel,
                     'motivo' => $avaliacao->motivo,
                 ];
@@ -147,7 +148,7 @@ class RenovacaoController extends Controller
         return Inertia::render('portal/renovacao/wizard', [
             'origem' => [
                 'id' => $origem->id,
-                'numero' => $origem->decision?->tvl_product_number,
+                'numero' => ViabilityDecision::semPrefixo($origem->decision?->tvl_product_number),
                 'empresa' => $origem->company?->legal_name,
                 'cnpj' => $origem->company?->formatted_cnpj,
                 'endereco' => collect([

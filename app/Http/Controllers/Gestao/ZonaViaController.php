@@ -15,22 +15,12 @@ class ZonaViaController extends Controller
 {
     public function __construct(private AlterarZonaViaService $service) {}
 
-    public function previa(AlterarZonaViaRequest $request, ViabilityRequest $viabilityRequest): JsonResponse
-    {
-        return response()->json($this->service->previa(
-            $viabilityRequest,
-            $request->validated('zona'),
-            $request->validated('via'),
-        ));
-    }
-
     public function alterar(AlterarZonaViaRequest $request, ViabilityRequest $viabilityRequest): JsonResponse
     {
         $this->service->alterar(
             $viabilityRequest,
             $request->validated('zona'),
             $request->validated('via'),
-            (string) $request->validated('justificativa'),
             $request->user(),
         );
 

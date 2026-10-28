@@ -81,12 +81,12 @@ const dateTimeFormat = new Intl.DateTimeFormat('pt-BR', {
 /** Formata a data/hora ISO8601 no padrão brasileiro; null/inválida → travessão. */
 function formatarDataHora(iso: string | null): string {
     if (!iso) {
-        return '—';
+        return '-';
     }
 
     const data = new Date(iso);
 
-    return Number.isNaN(data.getTime()) ? '—' : dateTimeFormat.format(data);
+    return Number.isNaN(data.getTime()) ? '-' : dateTimeFormat.format(data);
 }
 
 const colunas: ColumnDef<ContingenciaRow>[] = [
@@ -94,17 +94,17 @@ const colunas: ColumnDef<ContingenciaRow>[] = [
         id: 'processo',
         header: 'Processo',
         cellClassName: 'font-medium whitespace-nowrap text-gray-800 dark:text-white/90',
-        cell: (linha) => linha.processo ?? '—',
+        cell: (linha) => linha.processo ?? '-',
     },
     {
         id: 'motivo',
         header: 'Motivo',
-        cell: (linha) => linha.motivo ?? '—',
+        cell: (linha) => linha.motivo ?? '-',
     },
     {
         id: 'operador',
         header: 'Operador',
-        cell: (linha) => linha.operador ?? '—',
+        cell: (linha) => linha.operador ?? '-',
     },
     {
         id: 'protocolado_em',
@@ -202,7 +202,7 @@ export default function ContingenciaRelatorio({ resumo, relatorio, filtros, perP
                     />
                     <KpiCard
                         label="Participação da contingência"
-                        value={resumo.participacao === null ? '—' : `${numberFormat.format(resumo.participacao)}%`}
+                        value={resumo.participacao === null ? '-' : `${numberFormat.format(resumo.participacao)}%`}
                         note={resumo.participacao === null ? 'sem protocolos no recorte' : 'do volume protocolado no recorte'}
                         icon={<ListIcon className="size-6" />}
                         tone="warning"
@@ -250,7 +250,7 @@ export default function ContingenciaRelatorio({ resumo, relatorio, filtros, perP
 
                 {resumo.por_motivo.length > 0 && (
                     <Card>
-                        <CardHeader title="Motivos da contingência" description="Ranking do recorte — o motivo é texto livre registrado pelo operador." />
+                        <CardHeader title="Motivos da contingência" description="Ranking do recorte: o motivo é texto livre registrado pelo operador." />
                         <CardContent>
                             <ul className="flex flex-col divide-y divide-gray-100 dark:divide-white/[0.05]">
                                 {resumo.por_motivo.map((item) => (

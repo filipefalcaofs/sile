@@ -6,6 +6,7 @@ Revisado em: 2026-10-16 — cada HU foi reescrita com o código-fonte como refer
 Revisado em: 2026-10-19 — retiradas as 11 HUs sem funcionalidade no sistema e renumeradas as demais, de HU-001 a HU-176. A correspondência entre os números antigos e os novos está em docs/requisitos/hus/mapa-renumeracao-hus.md.
 Revisado em: 2026-10-19 — HUs reordenadas: retaguarda primeiro e portal depois, na ordem de uso das funcionalidades, de HU-001 a HU-177, e criada a HU-004 (Cadastrar usuário pela gestão). O de-para atualizado está no mesmo mapa.
 Revisado em: 2026-10-20 — criadas 4 HUs para funções que já existiam no sistema e nenhuma HU descrevia (HU-011 alerta de tabela TLL, HU-086 desvinculação de escritório virtual, HU-149 painel do cidadão e HU-181 central de notificações). As HUs foram renumeradas e passam de HU-001 a HU-181. O de-para está em docs/requisitos/hus/mapa-renumeracao-hus.md.
+Revisado em: 2026-10-23 — criada a HU-183 (fichas de análise por analista e histórico de tramitação), numerada fora da faixa da renumeração, para validação da SEDUR. Ainda não descreve comportamento implementado.
 
 Total: 181 HUs. O comportamento vigente é o descrito em cada arquivo, não o texto de junho de 2026.
 
@@ -135,6 +136,7 @@ Total: 181 HUs. O comportamento vigente é o descrito em cada arquivo, não o te
 - [HU-084 — Reprocessar processo](EP10-Análise-Tecnica-SEDUR/HU-084-Reprocessar-processo.md) · EP10 *(nova em 2026-10-16)*
 - [HU-085 — Forçar encaminhamento para análise](EP10-Análise-Tecnica-SEDUR/HU-085-Forcar-encaminhamento-para-analise.md) · EP10 *(nova em 2026-10-16)*
 - [HU-086 — Desvincular inscrição de escritório virtual](EP10-Análise-Tecnica-SEDUR/HU-086-Desvincular-inscricao-de-escritorio-virtual.md) · EP10 *(nova em 2026-10-20)*
+- [HU-183 — Manter fichas de análise por analista e histórico de tramitação](EP10-Análise-Tecnica-SEDUR/HU-183-Manter-fichas-de-analise-por-analista-e-historico-de-tramitacao.md) · EP10 *(nova em 2026-10-23, para validação da SEDUR)*
 
 ### Pendências e comunicação
 
@@ -210,7 +212,7 @@ Total: 181 HUs. O comportamento vigente é o descrito em cada arquivo, não o te
 
 - [HU-140 — Cadastrar usuário](EP01-Identidade-Acesso-e-Seguranca/HU-140-Cadastrar-usuario.md) · EP01
 - [HU-141 — Confirmar e-mail](EP01-Identidade-Acesso-e-Seguranca/HU-141-Confirmar-e-mail.md) · EP01
-- [HU-142 — Autenticar com GOV.BR](EP01-Identidade-Acesso-e-Seguranca/HU-142-Autenticar-com-govbr.md) · EP01
+- [HU-142 — Autenticar pelo portal de serviços da SEDUR](EP01-Identidade-Acesso-e-Seguranca/HU-142-Autenticar-com-govbr.md) · EP01
 - [HU-143 — Alterar senha](EP01-Identidade-Acesso-e-Seguranca/HU-143-Alterar-senha.md) · EP01
 - [HU-144 — Gerenciar perfil do usuário](EP01-Identidade-Acesso-e-Seguranca/HU-144-Gerenciar-perfil-do-usuario.md) · EP01
 - [HU-145 — Aceitar termo LGPD](EP01-Identidade-Acesso-e-Seguranca/HU-145-Aceitar-termo-LGPD.md) · EP01

@@ -171,7 +171,7 @@ class AnaliseTecnicaDecisionService
     {
         if ($request->analysis_status === AnalysisStatus::ParaConclusao
             && $request->conclusao_encaminhada_para_user_id !== $ator->id) {
-            throw new DomainException('Processo em Para conclusão: distribua-o antes. Só quem o recebeu pode concluí-lo.');
+            throw new DomainException('Processo na aba Analisados: distribua-o antes. Só quem o recebeu pode concluí-lo.');
         }
     }
 

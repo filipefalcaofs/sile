@@ -92,7 +92,7 @@ const tomSituacao: Record<VistoriaItem['situacao'], 'warning' | 'info' | 'succes
 /** Formata a data-hora ISO do prazo para o padrão pt-BR (dd/mm/aaaa hh:mm). */
 function formatarPrazo(iso: string | null): string {
     if (!iso) {
-        return '—';
+        return '-';
     }
 
     const data = new Date(iso);
@@ -210,7 +210,7 @@ export default function VistoriasIndex({
             cell: (item) => (
                 <div className="flex flex-col">
                     <span className="font-medium text-gray-800 tabular-nums dark:text-white/90">
-                        {item.bap ?? item.protocol_number ?? '—'}
+                        {item.bap ?? item.protocol_number ?? '-'}
                     </span>
                     <span className="text-theme-xs text-gray-400 dark:text-gray-500">
                         {item.bap ? (item.protocol_number ?? 'sem protocolo') : (item.empresa ?? '')}
@@ -226,7 +226,7 @@ export default function VistoriasIndex({
             header: 'Imóvel',
             cell: (item) => (
                 <div className="flex flex-col">
-                    <span className="text-gray-700 dark:text-gray-300">{item.imovel !== '' ? item.imovel : '—'}</span>
+                    <span className="text-gray-700 dark:text-gray-300">{item.imovel !== '' ? item.imovel : '-'}</span>
                     {(item.zona || item.setor) && (
                         <span className="text-theme-xs text-gray-400 dark:text-gray-500">
                             {[item.zona, item.setor].filter(Boolean).join(' · ')}
@@ -241,7 +241,7 @@ export default function VistoriasIndex({
             cellClassName: 'min-w-56 max-w-xs',
             cell: (item) =>
                 item.servicos.length === 0 ? (
-                    <span className="text-gray-400 dark:text-gray-500">—</span>
+                    <span className="text-gray-400 dark:text-gray-500">-</span>
                 ) : (
                     <ul className="flex flex-col gap-1">
                         {item.servicos.map((servico) => (
@@ -432,7 +432,7 @@ export default function VistoriasIndex({
                 <DistribuirModal
                     tipo="redistribuir"
                     ids={[redistribuindo.id]}
-                    descricao={`Processo ${redistribuindo.bap ?? redistribuindo.protocol_number ?? redistribuindo.id} — hoje com ${redistribuindo.vistoriador ?? redistribuindo.responsavel ?? 'vistoriador'}`}
+                    descricao={`Processo ${redistribuindo.bap ?? redistribuindo.protocol_number ?? redistribuindo.id}, hoje com ${redistribuindo.vistoriador ?? redistribuindo.responsavel ?? 'vistoriador'}`}
                     destinatarios={vistoriadores}
                     papel="Vistoriador"
                     distribuiEmQualquerSetor={distribuiEmQualquerSetor}

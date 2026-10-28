@@ -62,7 +62,7 @@ export function faixasDaLinha(linha: LinhaFaixa): FaixaLegivel[] {
 
 function textoDaFaixa(faixa: FaixaLegivel | undefined): string {
     if (!faixa) {
-        return '—';
+        return '-';
     }
 
     return faixa.limite ? `${faixa.codigo} ${faixa.limite}` : faixa.codigo;

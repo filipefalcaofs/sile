@@ -705,7 +705,7 @@ export default function ConsultaProcessos({
                     />
                     {processos.links.length <= 3 && processos.total > 0 && (
                         <p className="text-sm text-gray-500 dark:text-gray-400">
-                            Mostrando {processos.from}–{processos.to} de {processos.total}
+                            Mostrando {processos.from} a {processos.to} de {processos.total}
                         </p>
                     )}
                 </div>
@@ -716,7 +716,7 @@ export default function ConsultaProcessos({
 
 function formatarDataHora(iso: string | null): string {
     if (!iso) {
-        return '—';
+        return '-';
     }
 
     const data = new Date(iso);
@@ -758,11 +758,13 @@ function colunasProcessos(opcoes: {
             cell: (item) => (
                 <div className="flex min-w-[10rem] flex-col gap-0.5">
                     <span className="font-semibold text-gray-800 tabular-nums dark:text-white/90">
-                        {item.bap ?? item.protocol_number ?? '—'}
+                        {item.bap ?? item.protocol_number ?? '-'}
                     </span>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                        {item.empresa ?? 'Requerente não informado'}
-                    </span>
+                    {!/^empresa a constituir$/i.test(item.empresa?.trim() ?? '') && (
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                            {item.empresa ?? 'Requerente não informado'}
+                        </span>
+                    )}
                 </div>
             ),
         },
@@ -776,7 +778,7 @@ function colunasProcessos(opcoes: {
             id: 'tipo_imovel',
             header: 'Tipo do imóvel',
             cellClassName: 'min-w-32',
-            cell: (item) => item.tipo_imovel ?? <span className="text-gray-400 dark:text-gray-500">—</span>,
+            cell: (item) => item.tipo_imovel ?? <span className="text-gray-400 dark:text-gray-500">-</span>,
         },
         {
             id: 'status',
@@ -805,7 +807,7 @@ function colunasProcessos(opcoes: {
             cellClassName: 'min-w-56 max-w-xs',
             cell: (item) =>
                 item.servicos.length === 0 ? (
-                    <span className="text-gray-400 dark:text-gray-500">{item.categoria ?? '—'}</span>
+                    <span className="text-gray-400 dark:text-gray-500">{item.categoria ?? '-'}</span>
                 ) : (
                     <ul className="flex flex-col gap-1">
                         {item.servicos.map((servico) => (

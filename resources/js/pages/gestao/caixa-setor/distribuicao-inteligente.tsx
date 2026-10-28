@@ -178,7 +178,7 @@ export default function DistribuicaoInteligente({ criterio, alocacoes, naoAlocad
                             <ul className="space-y-1 text-theme-sm text-gray-700 dark:text-gray-300">
                                 {naoAlocados.map((processo) => (
                                     <li key={processo.id}>
-                                        {rotulo(processo)} — {processo.motivo}
+                                        {rotulo(processo)}, {processo.motivo}
                                     </li>
                                 ))}
                             </ul>

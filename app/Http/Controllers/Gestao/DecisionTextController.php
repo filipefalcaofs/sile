@@ -31,7 +31,7 @@ class DecisionTextController extends Controller
      */
     private const GRUPOS = [
         'base_legal' => 'Bases legais',
-        'louos' => 'LOUOS — enquadramento locacional',
+        'louos' => 'LOUOS: enquadramento locacional',
         'consulta' => 'Consulta pública de viabilidade',
         'analise' => 'Análise técnica',
         'justificativa' => 'Justificativa fundamentada',
@@ -39,8 +39,8 @@ class DecisionTextController extends Controller
         'territorial' => 'Regras territoriais',
         'localizacao' => 'Localização do imóvel',
         'zona' => 'Zona urbanística',
-        'tratamento' => 'Planilha de tratamento — ramo',
-        'expresso' => 'Fluxo expresso — encaminhamento',
+        'tratamento' => 'Planilha de tratamento: ramo',
+        'expresso' => 'Fluxo expresso: encaminhamento',
     ];
 
     /**

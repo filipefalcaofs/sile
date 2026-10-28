@@ -293,7 +293,7 @@ export default function ConsultaTerritorial({ camadas, sobreposicaoMinima, geoco
                                         hint={
                                             geocodingEnabled
                                                 ? undefined
-                                                : 'Geocodificação desativada — posicione o ponto manualmente no mapa.'
+                                                : 'Geocodificação desativada, posicione o ponto manualmente no mapa.'
                                         }
                                         onKeyDown={(event) => {
                                             if (event.key === 'Enter') {
@@ -334,7 +334,7 @@ export default function ConsultaTerritorial({ camadas, sobreposicaoMinima, geoco
                     <Card>
                         <CardHeader
                             title="Mapa do imóvel"
-                            description="Arraste o marcador ou clique no mapa para ajustar a localização — a identificação roda automaticamente."
+                            description="Arraste o marcador ou clique no mapa para ajustar a localização, a identificação roda automaticamente."
                         />
                         <CardContent>
                             <MapaSection lat={centro.lat} lng={centro.lng} zoom={mapa.zoom} onMove={moverMarcador} />
@@ -488,7 +488,7 @@ export default function ConsultaTerritorial({ camadas, sobreposicaoMinima, geoco
                                                     </p>
                                                     <p className="text-xs text-gray-500 dark:text-gray-400">
                                                         {pendente
-                                                            ? 'Sem base pública — aguardando a SEDUR.'
+                                                            ? 'Sem base pública, aguardando a SEDUR.'
                                                             : `${camada.feature_count === 1 ? '1 feição' : `${camada.feature_count} feições`}${camada.version ? ` · ${camada.version}` : ''}`}
                                                     </p>
                                                 </div>
@@ -504,7 +504,7 @@ export default function ConsultaTerritorial({ camadas, sobreposicaoMinima, geoco
                             )}
                             <p className="mt-4 text-xs text-gray-500 dark:text-gray-400">
                                 Zona urbanística e lote cadastral seguem indisponíveis enquanto a base estiver pendente
-                                SEDUR — nenhum valor é exibido sem dado oficial.
+                                de disponibilização pela SEDUR. Nenhum valor é exibido sem dado oficial.
                             </p>
                         </CardContent>
                     </Card>

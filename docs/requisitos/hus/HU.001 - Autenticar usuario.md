@@ -9,14 +9,15 @@
 |:---:|---|:---:|:---:|
 | 16/10/2026 | Texto revisto para a linguagem de quem usa o sistema | 2.1 | Sudoeste Informática |
 | 19/10/2026 | Retirada das HUs sem funcionalidade no sistema, renumeração e reordenação das demais (retaguarda primeiro, portal depois) | 2.2 | Sudoeste Informática |
+| 22/10/2026 | Portal sem login próprio: o cidadão entra pelo Portal de Serviços da SEDUR (HU-142); esta HU passa a tratar só a entrada do console | 2.3 | Sudoeste Informática |
 
 ---
 
 ## Visão Geral
 
-O cidadão entra no portal com CPF e senha da própria conta. O servidor entra no console com e-mail ou usuário da rede da SEDUR e senha. As duas entradas são independentes: sair do console não encerra a sessão do portal, e o portal nunca abre uma tela do console.
+O servidor entra no console com e-mail ou usuário da rede da SEDUR e senha. O cidadão não entra por esta tela: a entrada dele no portal do Viabiliza é sempre pelo Portal de Serviços da SEDUR, na HU-142, e o portal não tem tela de login com CPF e senha. As duas entradas são independentes: sair do console não encerra a sessão do portal, e o portal nunca abre uma tela do console.
 
-Conta da rede da SEDUR só vale a senha conferida na rede institucional. A senha local da conta não é usada nesse caso, e a senha digitada no primeiro acesso não fica guardada como senha do Viabiliza. Se a entrada pela rede estiver desligada, a conta da rede é recusada. Não há segundo fator nem acesso pela rede da SEDUR no portal. Este fluxo não consulta mapa, REDESIM, CNAE nem a LOUOS.
+Conta da rede da SEDUR só vale a senha conferida na rede institucional. A senha local da conta não é usada nesse caso, e a senha digitada no primeiro acesso não fica guardada como senha do Viabiliza. Se a entrada pela rede estiver desligada, a conta da rede é recusada. Não há segundo fator. Este fluxo não consulta mapa, REDESIM, CNAE nem a LOUOS.
 
 ---
 
@@ -33,47 +34,46 @@ Conta da rede da SEDUR só vale a senha conferida na rede institucional. A senha
 
 ## Épico: EP01 — Identidade, Acesso e Segurança
 
-**Como** a SEDUR **quero** separar a entrada do cidadão e a do servidor**, de modo que** cada um use só o ambiente e as funções da própria sessão
+**Como** a SEDUR **quero** separar a entrada do servidor da entrada do cidadão**, de modo que** cada um use só o ambiente e as funções da própria sessão
 
 ## História de Usuário: Autenticar usuário
 
-**Como** usuário com conta no Viabiliza **quero** entrar no portal ou no console com a credencial do meu ambiente**, de modo que** eu use somente o que a minha sessão permite
+**Como** servidor com conta no Viabiliza **quero** entrar no console com a credencial do meu ambiente**, de modo que** eu use somente o que a minha sessão permite
 
 ## Pré-requisitos
 
-- Portal: CPF e senha local; a pessoa ainda não está no portal
-- Console: identificador (e-mail ou usuário da rede da SEDUR) e senha, com até 255 caracteres no identificador
-- Conta ativa, e-mail confirmado no console, e permissão de uso do console quando a entrada for de servidor
-- Depois da entrada, o termo de proteção de dados vigente precisa estar aceito para seguir no ambiente
-- Tentativas incorretas repetidas bloqueiam temporariamente novas tentativas, por conta e, no console, também por endereço de rede
+- Identificador (e-mail ou usuário da rede da SEDUR) e senha, com até 255 caracteres no identificador
+- Conta ativa, e-mail confirmado e permissão de uso do console
+- Depois da entrada, o termo de proteção de dados vigente precisa estar aceito para seguir no console
+- Tentativas incorretas repetidas bloqueiam temporariamente novas tentativas, por conta e por endereço de rede
 
 ## Dependências
 
 **Passadas**
 
-- HU-140 — conta local do cidadão, quando a entrada do portal não for pela rede da SEDUR
+- HU-004 — conta local criada pela gestão, quando a entrada não for pela rede da SEDUR
 
 **Futuras**
 
-- HU-141 — e-mail confirmado para concluir a entrada no console e para usar o portal autenticado
+- HU-141 — e-mail confirmado para concluir a entrada no console
 - HU-145 — aceite do termo vigente depois da entrada
 
 ---
 
 ## Interface de Usuário
 
-### Tela 1 — Entrar no Viabiliza
+### Tela 1 — Entrar no console
 
-**Caminho no menu:** Tela de entrada do portal e tela de entrada do console, antes do menu
+**Caminho no menu:** Tela de entrada do console, antes do menu
 
 *[Print da tela](screenshots/gestao-login.png)*
 
 #### Comportamento Esperado Tela 1
 
-**Cenário 1: Cidadão entra com CPF**
-**Dado que** existe conta ativa com CPF e senha local
-**Quando** a pessoa envia a entrada do portal
-**Então** a sessão do portal é aberta, o acesso fica registrado e o destino não é uma tela do console
+**Cenário 1: Cidadão não entra por esta tela**
+**Dado que** a pessoa abre o portal do Viabiliza sem ter entrado
+**Quando** tenta usar uma tela que exige entrada
+**Então** é levada à entrada do Portal de Serviços da SEDUR, como descrito na HU-142, e não vê tela de CPF e senha do Viabiliza
 
 **Cenário 2: Credencial errada não revela a conta**
 **Dado que** o identificador não existe ou a senha está incorreta no console
@@ -97,7 +97,7 @@ Conta da rede da SEDUR só vale a senha conferida na rede institucional. A senha
 
 **Cenário 6: Conta inativa ou e-mail pendente**
 **Dado que** a credencial está correta
-**Quando** a conta está inativa, ou o e-mail do console ainda não foi confirmado
+**Quando** a conta está inativa, ou o e-mail ainda não foi confirmado
 **Então** o sistema informa conta inativa ou pede a confirmação do e-mail institucional, e não abre a sessão
 
 ---

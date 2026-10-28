@@ -9,14 +9,15 @@
 |:---:|---|:---:|:---:|
 | 16/10/2026 | Texto revisto para a linguagem de quem usa o sistema | 2.1 | Sudoeste Informática |
 | 19/10/2026 | Retirada das HUs sem funcionalidade no sistema, renumeração e reordenação das demais (retaguarda primeiro, portal depois); esclarecimento de que o administrador cadastra contas pela HU-004 | 2.2 | Sudoeste Informática |
+| 22/10/2026 | Portal sem login próprio: o cidadão entra pelo Portal de Serviços da SEDUR (HU-142); a conta do cidadão passa a nascer no primeiro acesso, sem formulário nem senha | 2.3 | Sudoeste Informática |
 
 ---
 
 ## Visão Geral
 
-O visitante cria a própria conta no portal do Viabiliza, com nome, e-mail, CPF, telefone e senha. A conta nasce somente no perfil de cidadão. As telas do portal autenticado só se abrem depois da confirmação do e-mail.
+A conta do cidadão é criada no Viabiliza no primeiro acesso pelo Portal de Serviços da SEDUR, do mesmo jeito que a conta do servidor nasce no primeiro acesso pela rede da SEDUR. O Portal de Serviços confirma quem é a pessoa; o Viabiliza guarda a conta com o nome, o CPF e o e-mail do cadastro, no perfil de cidadão. A partir daí, a conta e a sessão são do Viabiliza.
 
-A tela mostra as regras da senha e, quando o acesso pelo GOV.BR está disponível, o botão correspondente. Conta de servidor da rede da SEDUR e conta criada pelo GOV.BR não nascem neste formulário. O administrador cria contas locais pela gestão, na HU-004, em que o próprio usuário define a senha pelo link recebido por e-mail; este formulário é só o cadastro feito pelo visitante. Este cadastro não consulta mapa, REDESIM, CNAE nem as regras da LOUOS, e não busca a pessoa em base externa.
+Não há formulário de cadastro nem senha no portal do Viabiliza. A conta nasce com o e-mail já confirmado e ainda passa pelo aceite do termo vigente, quando houver. O telefone, quando o cadastro não trouxer, pode ser informado depois em Minha conta > Meus dados. O administrador cria contas do console pela gestão, na HU-004. Este cadastro não consulta mapa, REDESIM, CNAE nem as regras da LOUOS.
 
 ---
 
@@ -33,67 +34,65 @@ A tela mostra as regras da senha e, quando o acesso pelo GOV.BR está disponíve
 
 ## Épico: EP01 — Identidade, Acesso e Segurança
 
-**Como** a SEDUR **quero** que o cidadão crie a própria conta**, de modo que** ele use o portal com CPF, e-mail, telefone e senha, no perfil de cidadão
+**Como** a SEDUR **quero** que a conta do cidadão nasça no primeiro acesso pelo Portal de Serviços**, de modo que** ele use o Viabiliza sem preencher outro cadastro nem criar outra senha
 
 ## História de Usuário: Cadastrar usuário
 
-**Como** visitante **quero** me cadastrar com nome, e-mail, CPF, telefone e senha**, de modo que** eu tenha uma conta de cidadão no Viabiliza
+**Como** cidadão que chega pela primeira vez ao Viabiliza pelo Portal de Serviços **quero** que minha conta seja criada com os dados que já informei**, de modo que** eu comece a usar o portal sem outro cadastro
 
 ## Pré-requisitos
 
-- A pessoa ainda não está autenticada
-- Nome obrigatório, com até 255 caracteres
-- E-mail obrigatório, em formato válido, com até 255 caracteres e ainda não usado em outra conta
-- CPF obrigatório, com 11 dígitos, dígitos verificadores corretos, sem sequência repetida, e ainda não usado
-- Telefone obrigatório, com DDD e 8 ou 9 dígitos; a máscara não entra na contagem; o campo aceita até 20 caracteres
-- Senha obrigatória e confirmada, no tamanho mínimo exigido e, quando a SEDUR assim definir, com letras maiúsculas e minúsculas, números e símbolos
+- Entrada feita no Portal de Serviços da SEDUR com a conta GOV.BR (HU-142)
+- Nenhuma conta no Viabiliza com o mesmo CPF
+- Nome e e-mail no cadastro, sem o e-mail estar em outra conta do Viabiliza
 
 ## Dependências
 
 **Passadas**
 
-- Nenhuma
+- HU-142 — entrada pelo Portal de Serviços da SEDUR
 
 **Futuras**
 
-- HU-141 — a conta só usa as telas autenticadas do portal depois de confirmar o e-mail
+- HU-145 — aceite do termo vigente antes de seguir no portal
+- HU-144 — completar o telefone e manter os dados de contato
 
 ---
 
 ## Interface de Usuário
 
-### Tela 1 — Cadastrar usuário
+### Tela 1 — Primeiro acesso
 
-**Caminho no menu:** Tela de cadastro do portal, aberta a partir da entrada, antes do menu
+**Caminho no menu:** Portal de Serviços da SEDUR › Carta de Serviços › Viabilidade de Localização, no primeiro acesso. Não há tela de cadastro no portal do Viabiliza nem item de menu.
 
-*[Print da tela](screenshots/portal-login.png)*
+*[Print da tela](screenshots/portal-servicos-sedur.png)*
 
 #### Comportamento Esperado Tela 1
 
-**Cenário 1: Cadastro válido cria conta de cidadão**
-**Dado que** o visitante informa nome, e-mail inédito, CPF válido, telefone com DDD e senha que cumpre a política
-**Quando** envia o formulário
-**Então** o sistema grava a conta e atribui somente o perfil de cidadão
+**Cenário 1: Primeiro acesso cria a conta de cidadão**
+**Dado que** o cidadão entrou no Portal de Serviços e ainda não tem conta no Viabiliza com o seu CPF
+**Quando** chega ao Viabiliza
+**Então** a conta é criada com nome, CPF e e-mail do cadastro, somente no perfil de cidadão, com o e-mail já confirmado, e o cadastro fica registrado
 
-**Cenário 2: CPF ou e-mail já cadastrado**
-**Dado que** o CPF ou o e-mail já pertence a outra conta
-**Quando** o visitante tenta se cadastrar
-**Então** o sistema recusa o envio e nenhuma conta nova é gravada
+**Cenário 2: CPF que já tem conta**
+**Dado que** já existe conta no Viabiliza com o mesmo CPF
+**Quando** o cidadão chega ao Viabiliza
+**Então** nenhuma conta nova é criada e ele entra na conta que já existe
 
-**Cenário 3: CPF inválido**
-**Dado que** o CPF não tem 11 dígitos, é uma sequência repetida ou os dígitos verificadores não conferem
-**Quando** o visitante envia o cadastro
-**Então** o sistema recusa e informa que o CPF é inválido
+**Cenário 3: E-mail já usado por outra conta**
+**Dado que** o e-mail do cadastro já pertence a outra conta do Viabiliza
+**Quando** o cidadão chega ao Viabiliza pela primeira vez
+**Então** nenhuma conta é criada e a mensagem informa que o e-mail já está em uso
 
-**Cenário 4: Conta ainda não entra no portal**
-**Dado que** o cadastro foi concluído e o e-mail ainda não foi confirmado
-**Quando** a pessoa tenta abrir uma tela do portal que exige a confirmação
-**Então** o sistema impede o uso até a confirmação do e-mail
+**Cenário 4: Cadastro sem nome ou e-mail**
+**Dado que** o cadastro do cidadão não traz nome ou e-mail
+**Quando** ele chega ao Viabiliza pela primeira vez
+**Então** nenhuma conta é criada e a mensagem orienta a completar o cadastro no GOV.BR
 
-**Cenário 5: Senha ou telefone fora da regra**
-**Dado que** a senha não cumpre a política ou o telefone não tem DDD com 8 ou 9 dígitos
-**Quando** o visitante envia o cadastro
-**Então** o sistema recusa e não cria a conta
+**Cenário 5: Conta nova ainda passa pelo termo**
+**Dado que** a conta acabou de ser criada
+**Quando** o cidadão segue para o painel
+**Então** o Viabiliza pede o aceite do termo vigente, quando houver, antes de abrir as telas do portal
 
 ---
 

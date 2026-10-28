@@ -202,7 +202,7 @@ function ConfigCard({
 
                 <dl className="mt-4 space-y-1.5 text-sm text-gray-600 dark:text-gray-400">
                     <div>{config.model}</div>
-                    <div className="truncate">{config.base_url ?? '—'}</div>
+                    <div className="truncate">{config.base_url ?? '-'}</div>
                     <div>Chave: {config.masked_api_key ?? 'não definida'}</div>
                 </dl>
 

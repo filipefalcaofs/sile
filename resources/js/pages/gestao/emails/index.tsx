@@ -49,7 +49,7 @@ function StatusBadge({ status }: { status: EmailStatus }) {
 }
 
 function formatDate(iso: string | null): string {
-    if (!iso) return '—';
+    if (!iso) return '-';
     return new Date(iso).toLocaleString('pt-BR');
 }
 
@@ -97,7 +97,7 @@ const columns: ColumnDef<EmailLogItem>[] = [
                     {log.error_message}
                 </span>
             ) : (
-                '—'
+                '-'
             ),
     },
 ];
@@ -136,7 +136,7 @@ export default function EmailsIndex({ logs, filters, counts }: EmailsProps) {
             <Card>
                 <CardHeader
                     title="Histórico de envios"
-                    description="Todos os e-mails disparados pelo sistema — verificação, redefinição de senha e notificações."
+                    description="Todos os e-mails disparados pelo sistema, verificação, redefinição de senha e notificações."
                 />
                 <CardContent>
                     <div className="space-y-5">

@@ -148,6 +148,21 @@ class ContingenciaRelatorioTest extends TestCase
         ]);
     }
 
+    public function test_exportacao_informa_o_fuso_e_converte_o_horario_de_utc_para_salvador(): void
+    {
+        $this->protocolada('VIA-2026-000231', ViabilityRequestOrigin::Contingencia, 'Regin indisponível', '2026-06-10 10:00:00');
+
+        $response = $this->actingAs($this->consultor(), 'gestao')
+            ->get('/gestao/relatorios/contingencia?formato=csv')
+            ->assertOk();
+
+        $csv = $response->streamedContent();
+
+        $this->assertStringContainsString('Protocolado em (horário de Salvador, UTC-03:00)', $csv);
+        $this->assertStringContainsString('10/06/2026 07:00', $csv);
+        $this->assertStringNotContainsString('10/06/2026 10:00', $csv);
+    }
+
     public function test_sem_consultar_relatorios_recebe_403(): void
     {
         $semPermissao = User::factory()->analista()->withAcceptedLgpdTerm()->create();

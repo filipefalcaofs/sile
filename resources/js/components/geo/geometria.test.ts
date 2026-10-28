@@ -29,6 +29,16 @@ describe('centroDaGeometria', () => {
         expect(centroDaGeometria(null)).toBeNull();
     });
 
+    it('devolve null quando as coordenadas não são numéricas ou estão fora de faixa', () => {
+        const nulas = { type: 'Polygon', coordinates: [[[null, null], [null, null], [null, null]]] } as never;
+        const texto = { type: 'Polygon', coordinates: [[['x', 'y'], ['x', 'y'], ['x', 'y']]] } as never;
+        const fora = { type: 'Polygon', coordinates: [[[500, 500], [501, 500], [501, 501], [500, 500]]] } as never;
+
+        expect(centroDaGeometria(nulas)).toBeNull();
+        expect(centroDaGeometria(texto)).toBeNull();
+        expect(centroDaGeometria(fora)).toBeNull();
+    });
+
     it('centro de Feature com Polygon usa a geometria', () => {
         const feature = {
             type: 'Feature',

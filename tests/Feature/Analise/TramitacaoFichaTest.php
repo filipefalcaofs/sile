@@ -167,4 +167,21 @@ class TramitacaoFichaTest extends TestCase
         $this->assertCount(1, $concluidas);
         $this->assertSame('vistoria', $concluidas[0]['tipo']);
     }
+
+    public function test_conclusao_da_ficha_de_vistoria_traz_o_link_para_a_propria_ficha(): void
+    {
+        $vistoria = Inspection::factory()->concluida()->create();
+
+        app(AuditService::class)->log(
+            logName: 'vistoria',
+            event: 'ficha-conclusao',
+            description: "Conclusão da ficha de vistoria do processo #{$vistoria->viability_request_id}",
+            properties: ['viability_request_id' => $vistoria->viability_request_id, 'inspection_id' => $vistoria->id],
+            subject: $vistoria,
+        );
+
+        $concluida = collect($this->eventos($vistoria->viability_request_id))->firstWhere('to_label', 'Ficha de vistoria concluída');
+
+        $this->assertSame("/gestao/processos/{$vistoria->viability_request_id}/vistoria/visualizar?ficha={$vistoria->id}", $concluida['link']);
+    }
 }

@@ -71,6 +71,27 @@ class FichaIniciaEmAnaliseTest extends TestCase
         );
     }
 
+    public function test_processo_encaminhado_por_colega_comeca_a_analise_ao_salvar_e_libera_encaminhar_para_chefia(): void
+    {
+        $processo = $this->processoCom(AnalysisStatus::Encaminhado);
+        $terceirizada = User::factory()->analista()->withAcceptedLgpdTerm()->create();
+        $processo->forceFill(['assigned_user_id' => $terceirizada->id])->save();
+
+        $this->actingAs($terceirizada, 'gestao')
+            ->patchJson("/gestao/processos/{$processo->id}/ficha", ['parecer' => 'Análise.'])
+            ->assertOk();
+        $this->actingAs($terceirizada, 'gestao')
+            ->postJson("/gestao/processos/{$processo->id}/ficha/finalizar")
+            ->assertOk();
+
+        $this->assertSame(AnalysisStatus::EmAnalise, $processo->fresh()->analysis_status);
+        $this->assertTrue(
+            $this->actingAs($terceirizada, 'gestao')
+                ->get("/gestao/processos/{$processo->id}/ficha")
+                ->viewData('page')['props']['podeEncaminharChefia'],
+        );
+    }
+
     public function test_depois_da_vistoria_e_do_convite_a_ficha_tambem_retoma_a_analise(): void
     {
         foreach ([AnalysisStatus::Vistoriado, AnalysisStatus::ConviteRespondido, AnalysisStatus::ConviteCancelado] as $status) {

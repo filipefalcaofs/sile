@@ -43,7 +43,7 @@ final class ParametrosReportSource implements ReportSource
                 ->orderBy('group')
                 ->orderBy('key'),
             mapRow: fn (Parameter $parameter): array => [
-                $parameter->group,
+                Parameter::groupLabel($parameter->group),
                 $parameter->key,
                 $parameter->type,
                 $parameter->description,

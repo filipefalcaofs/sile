@@ -141,7 +141,7 @@ class AnalysisRecordController extends Controller
                 'status' => $viabilityRequest->status->value,
                 'status_label' => $viabilityRequest->status->label(),
                 'renovacao' => $viabilityRequest->isRenewal(),
-                'tvl_numero' => $viabilityRequest->renews?->decision?->tvl_product_number,
+                'tvl_numero' => ViabilityDecision::semPrefixo($viabilityRequest->renews?->decision?->tvl_product_number),
                 'bap' => $viabilityRequest->external_reference,
                 'servicos' => $this->servicosDoProcesso($viabilityRequest),
                 'empresa' => $viabilityRequest->company?->trade_name ?: $viabilityRequest->company?->legal_name,
@@ -333,7 +333,7 @@ class AnalysisRecordController extends Controller
         return response()->json([
             'outcome' => $result->outcome->value,
             'processo_status' => $processo?->status->value,
-            'tvl' => $result->decision->tvl_product_number,
+            'tvl' => ViabilityDecision::semPrefixo($result->decision->tvl_product_number),
             'status' => $mensagem,
         ]);
     }

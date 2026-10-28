@@ -87,7 +87,7 @@ const numberFormat = new Intl.NumberFormat('pt-BR');
 const percentFormat = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 });
 
 function formatarPercentual(valor: number | null): string {
-    return valor === null ? '—' : `${percentFormat.format(valor)}%`;
+    return valor === null ? '-' : `${percentFormat.format(valor)}%`;
 }
 
 /** Formata o código CNAE de 7 dígitos no padrão 9999-9/99; mantém o bruto se não casar. */
@@ -121,7 +121,7 @@ const colunas: ColumnDef<SaturacaoItem>[] = [
     { id: 'bairro', header: 'Bairro', cellClassName: 'text-gray-800 dark:text-white/90', cell: (l) => l.bairro },
     { id: 'cnae', header: 'CNAE', cellClassName: 'whitespace-nowrap', cell: (l) => formatarCnae(l.cnae) },
     { id: 'ativos', header: 'Deferidos', align: 'end', cellClassName: 'whitespace-nowrap font-medium text-gray-800 dark:text-white/90', cell: (l) => numberFormat.format(l.ativos) },
-    { id: 'capacidade', header: 'Capacidade', align: 'end', cellClassName: 'whitespace-nowrap', cell: (l) => (l.capacidade === null ? '—' : numberFormat.format(l.capacidade)) },
+    { id: 'capacidade', header: 'Capacidade', align: 'end', cellClassName: 'whitespace-nowrap', cell: (l) => (l.capacidade === null ? '-' : numberFormat.format(l.capacidade)) },
     { id: 'percentual', header: 'Saturação', align: 'end', cellClassName: 'whitespace-nowrap font-medium text-gray-800 dark:text-white/90', cell: (l) => formatarPercentual(l.percentual) },
     {
         id: 'situacao',

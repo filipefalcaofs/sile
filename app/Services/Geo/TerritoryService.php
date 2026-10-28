@@ -208,10 +208,10 @@ class TerritoryService
     private function motivoFor(GeoLayerType $type): string
     {
         return match ($type) {
-            GeoLayerType::Zona => 'Base de zoneamento pendente SEDUR',
-            GeoLayerType::Lote => 'Base de lotes pendente SEDUR',
-            GeoLayerType::Via => 'Base de logradouros pendente: GeoServer SEDUR (logradouro:VM_LOGRADOURO)',
-            default => 'Camada de '.$type->label().' indisponível',
+            GeoLayerType::Zona => 'A base de zoneamento está pendente de disponibilização pela SEDUR.',
+            GeoLayerType::Lote => 'A base de lotes está pendente de disponibilização pela SEDUR.',
+            GeoLayerType::Via => 'A base de logradouros está pendente de disponibilização pela SEDUR.',
+            default => 'A camada de '.$type->label().' está indisponível.',
         };
     }
 
@@ -223,7 +223,7 @@ class TerritoryService
      */
     private function nomeFromProperties(array $properties): ?string
     {
-        foreach (['NOME_BAIRRO', 'NOME_LOGRADOURO', 'NOME_VIA', 'SUBZONA', 'ZONA', 'SIGLA_ZONA', 'NOME', 'nome'] as $key) {
+        foreach (['NOME_BAIRRO', 'NOME_LOGRADOURO', 'NOME_VIA', 'SUBZONA', 'ZONA', 'SIGLA_ZONA', 'ZEISNOME', 'NOME', 'nome'] as $key) {
             $value = $properties[$key] ?? null;
 
             if (is_string($value) && $value !== '') {

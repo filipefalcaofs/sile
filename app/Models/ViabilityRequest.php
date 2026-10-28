@@ -17,6 +17,7 @@ use App\Enums\ZonaFonte;
 use App\Services\Tratamento\RespostaPlanilha;
 use Database\Factories\ViabilityRequestFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -605,6 +606,29 @@ class ViabilityRequest extends Model
     public function analysisRecords(): HasMany
     {
         return $this->hasMany(AnalysisRecord::class);
+    }
+
+    /**
+     * Processo que está na Caixa de Vistoria: em Vistoriar, ou Vistoriado ainda
+     * no setor de vistoria. Encaminhado de volta ao setor de origem, passa à
+     * Caixa do Setor e sai daqui.
+     *
+     * @param  Builder<ViabilityRequest>  $query
+     */
+    public function scopeNaCaixaDeVistoria(Builder $query): void
+    {
+        $query->where(fn (Builder $q) => $q
+            ->where('analysis_status', AnalysisStatus::Vistoriar->value)
+            ->orWhere(fn (Builder $vistoriado) => $vistoriado
+                ->where('analysis_status', AnalysisStatus::Vistoriado->value)
+                ->whereExists(fn ($naVistoria) => $naVistoria
+                    ->from('inspection_referrals')
+                    ->whereColumn('inspection_referrals.viability_request_id', 'viability_requests.id')
+                    ->whereColumn('inspection_referrals.setor_vistoria_id', 'viability_requests.sector_id')
+                    ->where(fn ($origem) => $origem
+                        ->whereNull('inspection_referrals.setor_origem_id')
+                        ->orWhereColumn('inspection_referrals.setor_origem_id', '!=', 'viability_requests.sector_id'))
+                    ->whereRaw('inspection_referrals.id = (select max(r.id) from inspection_referrals r where r.viability_request_id = viability_requests.id)'))));
     }
 
     /**

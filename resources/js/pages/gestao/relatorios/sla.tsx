@@ -123,7 +123,7 @@ const percentFormat = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 
 
 /** Percentual honesto: null (sem decisões humanas com prazo) vira travessão. */
 function formatarPercentual(valor: number | null): string {
-    return valor === null ? '—' : `${percentFormat.format(valor)}%`;
+    return valor === null ? '-' : `${percentFormat.format(valor)}%`;
 }
 
 /** Aging empilhado: uma categoria Estoque, uma barra por faixa. */
@@ -166,18 +166,18 @@ function GraficoSemDados() {
 /** Formata a data/hora ISO8601 no padrão brasileiro; null/inválida → travessão. */
 function formatarDataHora(iso: string | null): string {
     if (!iso) {
-        return '—';
+        return '-';
     }
 
     const data = new Date(iso);
 
-    return Number.isNaN(data.getTime()) ? '—' : dateTimeFormat.format(data);
+    return Number.isNaN(data.getTime()) ? '-' : dateTimeFormat.format(data);
 }
 
 /** Badge do semáforo do SLA (cores reais do backend — nunca presumidas). */
 function SituacaoBadge({ situacao, label }: { situacao: SlaRow['situacao']; label: string | null }) {
     if (situacao === null || label === null) {
-        return <span className="text-gray-400 dark:text-gray-500">—</span>;
+        return <span className="text-gray-400 dark:text-gray-500">-</span>;
     }
 
     const cor = situacao === 'vermelho' ? 'error' : situacao === 'amarelo' ? 'warning' : 'success';
@@ -194,7 +194,7 @@ const colunas: ColumnDef<SlaRow>[] = [
         id: 'processo',
         header: 'Processo',
         cellClassName: 'font-medium whitespace-nowrap text-gray-800 dark:text-white/90',
-        cell: (linha) => linha.processo ?? '—',
+        cell: (linha) => linha.processo ?? '-',
     },
     {
         id: 'etapa',
@@ -205,12 +205,12 @@ const colunas: ColumnDef<SlaRow>[] = [
     {
         id: 'setor',
         header: 'Setor',
-        cell: (linha) => linha.setor ?? '—',
+        cell: (linha) => linha.setor ?? '-',
     },
     {
         id: 'analista',
         header: 'Analista',
-        cell: (linha) => linha.analista ?? '—',
+        cell: (linha) => linha.analista ?? '-',
     },
     {
         id: 'limite_em',
@@ -227,7 +227,7 @@ const colunas: ColumnDef<SlaRow>[] = [
         id: 'restante',
         header: 'Tempo restante',
         cellClassName: 'whitespace-nowrap',
-        cell: (linha) => linha.restante ?? '—',
+        cell: (linha) => linha.restante ?? '-',
     },
 ];
 
@@ -425,7 +425,7 @@ export default function SlaVencimentos({ resumo, relatorio, setores, analistas, 
                 <Card>
                     <CardHeader
                         title="Processos em andamento"
-                        description="O mais urgente primeiro. A situação é o semáforo do SLA calculado na hora — nunca um valor gravado."
+                        description="O mais urgente primeiro. A situação é o semáforo do SLA calculado na hora, nunca um valor gravado."
                         actions={<PerPageSelect value={perPage} options={perPageOptions} onChange={alterarPerPage} />}
                     />
                     <CardContent>

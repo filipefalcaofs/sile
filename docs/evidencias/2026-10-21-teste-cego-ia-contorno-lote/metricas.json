@@ -1,0 +1,18 @@
+{
+  "area_ref": 7107.6,
+  "area_ia": 91.8,
+  "dif_abs": -7015.8,
+  "dif_pct": -98.7,
+  "intersecao": 91.8,
+  "iou": 0.0129,
+  "pct_ia_dentro_ref": 100.0,
+  "pct_ref_coberto": 1.3,
+  "hausdorff": 78.2,
+  "desloc_centroides": 1.4,
+  "perim_ref": 378.1,
+  "perim_ia": 39.5,
+  "dist_media_vertices_ia_a_divisa": 20.8,
+  "dist_media_vertices_ref_ao_contorno_ia": 64.2,
+  "dist_min": 19.5,
+  "dist_max": 25.9
+}

@@ -62,7 +62,7 @@ const decimalFormat = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 
 
 function formatarHoras(horas: number | null): string {
     if (horas === null) {
-        return '—';
+        return '-';
     }
 
     if (horas < 1) {
@@ -149,7 +149,7 @@ export default function SalaDeControle({ tempo, operacao, distancia, evolucao, g
                     <KpiCard label="9 em 10 saem em até" value={formatarHoras(tempo.p90)} note="só os 10% mais lentos passam disso" tone="brand" />
                     <KpiCard
                         label="Automáticas"
-                        value={operacao.taxa_automacao === null ? '—' : `${decimalFormat.format(operacao.taxa_automacao)}%`}
+                        value={operacao.taxa_automacao === null ? '-' : `${decimalFormat.format(operacao.taxa_automacao)}%`}
                         note={`${numberFormat.format(operacao.expresso)} pelo fluxo expresso`}
                         tone="success"
                     />

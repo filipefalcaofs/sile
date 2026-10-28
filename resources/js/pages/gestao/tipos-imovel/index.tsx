@@ -68,7 +68,7 @@ function DrivesRuleBadge({ drivesRule }: { drivesRule: boolean }) {
 
 function AliasChips({ aliases }: { aliases: string[] }) {
     if (aliases.length === 0) {
-        return <span className="text-gray-400 dark:text-gray-600">—</span>;
+        return <span className="text-gray-400 dark:text-gray-600">-</span>;
     }
     return (
         <div className="flex flex-wrap gap-1">
@@ -341,7 +341,7 @@ function EditPropertyTypeModal({ propertyType, onClose }: { propertyType: Proper
         <>
             <Modal isOpen onClose={onClose} className="m-4 max-h-[90vh] max-w-[600px] overflow-y-auto p-6 lg:p-8">
                 <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Editar tipo de imóvel</h4>
-                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{propertyType.code} — o código não pode ser alterado.</p>
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{propertyType.code}, o código não pode ser alterado.</p>
 
                 <form onSubmit={handleSubmit} className="mt-6">
                     <div className="flex flex-col gap-5">

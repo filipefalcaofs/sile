@@ -72,7 +72,7 @@ class InspectionController extends Controller
             throw ValidationException::withMessages(['motivo' => $e->getMessage()]);
         }
 
-        return back()->with('status', "Processo encaminhado à vistoria ({$setor->name}) — aguardando distribuição ao vistoriador.");
+        return back()->with('status', "Processo encaminhado à vistoria ({$setor->name}). Aguardando distribuição ao vistoriador.");
     }
 
     /**
@@ -119,23 +119,24 @@ class InspectionController extends Controller
                 ->all(),
             'opcoes' => Inspection::rotulos(),
             'anexos' => $this->anexosDa($ficha),
+            'analistasDoSetor' => $this->encaminhamento->analistasDoRetorno($viabilityRequest),
         ]);
     }
 
     /**
      * Consulta a ficha existente, sem criar e sem editar. Sem ficha, a tela
-     * informa a ausência. A permissão preencher-ficha-vistoria segue sendo
-     * o que abre e altera a ficha.
+     * informa a ausência. Com `?ficha=`, abre aquela ficha do processo (o link
+     * da tramitação), e não a mais recente. A permissão preencher-ficha-vistoria
+     * segue sendo o que abre e altera a ficha.
      */
     public function visualizar(Request $request, ViabilityRequest $viabilityRequest): Response
     {
         abort_unless($request->user() instanceof User, 401);
         abort_unless(app(VistoriaAcesso::class)->podeConsultar($viabilityRequest, $request->user()), 403);
 
-        $ficha = Inspection::query()
-            ->where('viability_request_id', $viabilityRequest->id)
-            ->latest('id')
-            ->first();
+        $ficha = $request->filled('ficha')
+            ? Inspection::query()->where('viability_request_id', $viabilityRequest->id)->findOrFail($request->integer('ficha'))
+            : Inspection::query()->where('viability_request_id', $viabilityRequest->id)->latest('id')->first();
 
         if ($ficha === null) {
             $this->audit->log(
@@ -271,8 +272,11 @@ class InspectionController extends Controller
 
         abort_unless($ficha->vistoriador_user_id === $ator->id || $ator->can('distribuir-processos'), 403);
 
+        $dados = $request->validate(['analista_id' => ['nullable', 'integer', 'exists:users,id']]);
+        $analista = isset($dados['analista_id']) ? User::query()->find($dados['analista_id']) : null;
+
         try {
-            $this->encaminhamento->encaminharAoSetor($viabilityRequest, $ator);
+            $this->encaminhamento->encaminharAoSetor($viabilityRequest, $ator, $analista);
         } catch (EncaminharVistoriaException $e) {
             return back()->with('error', $e->getMessage());
         }

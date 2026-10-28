@@ -47,7 +47,7 @@ interface IntegracoesProps {
 
 function formatarDataHora(iso: string | null): string {
     if (!iso) {
-        return '—';
+        return '-';
     }
 
     const data = new Date(iso);
@@ -114,7 +114,7 @@ const columns: ColumnDef<ChamadaRow>[] = [
     {
         id: 'duracao',
         header: 'Duração',
-        cell: (chamada) => (chamada.duracao_ms === null ? '—' : `${chamada.duracao_ms} ms`),
+        cell: (chamada) => (chamada.duracao_ms === null ? '-' : `${chamada.duracao_ms} ms`),
     },
     {
         id: 'ver',

@@ -99,7 +99,7 @@ export default function LouosSandbox({ rascunhos, amostraPadrao, simulacao = nul
 
     const rascunhoOptions = rascunhos.map((rascunho) => ({
         value: `${rascunho.quadro}${COMPOSITE_SEPARATOR}${rascunho.version}`,
-        label: `${rascunho.label} — ${rascunho.version}`,
+        label: `${rascunho.label}: ${rascunho.version}`,
     }));
 
     const selectedValue =
@@ -251,7 +251,7 @@ export default function LouosSandbox({ rascunhos, amostraPadrao, simulacao = nul
                     <span>
                         A publicação cria uma nova versão vigente do{' '}
                         <strong>{rascunhoSelecionado?.label ?? 'Quadro'}</strong> e preserva a anterior como histórico.
-                        Exige <strong>quatro olhos</strong>: o publicador deve ser diferente do autor do rascunho — caso
+                        Exige <strong>quatro olhos</strong>: o publicador deve ser diferente do autor do rascunho, caso
                         contrário a publicação é bloqueada.
                     </span>
                 }
@@ -305,7 +305,7 @@ function SimulacaoResultado({ simulacao }: { simulacao: Simulacao }) {
                 );
             },
         },
-        { id: 'motivo', header: 'Motivo (simulado)', cell: (row) => row.motivo_simulado ?? '—' },
+        { id: 'motivo', header: 'Motivo (simulado)', cell: (row) => row.motivo_simulado ?? '-' },
     ];
 
     const distribuicao = Object.entries(simulacao.distribuicao);
@@ -314,7 +314,7 @@ function SimulacaoResultado({ simulacao }: { simulacao: Simulacao }) {
         <Card>
             <CardHeader
                 title="Impacto simulado"
-                description={`Amostra de ${simulacao.amostra_usada} — ${simulacao.total} cenário(s) reprocessado(s) com o motor real.`}
+                description={`Amostra de ${simulacao.amostra_usada}: ${simulacao.total} cenário(s) reprocessado(s) com o motor real.`}
             />
             <CardContent>
                 <div className="space-y-6">

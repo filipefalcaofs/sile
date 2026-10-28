@@ -8,6 +8,7 @@
 | Data | Resumo das Alterações | Versão | Responsável |
 |:---:|---|:---:|:---:|
 | 19/10/2026 | Criação da HU, separada de Manter usuários | 2.2 | Sudoeste Informática |
+| 22/10/2026 | Portal sem login próprio: o cidadão entra pelo Portal de Serviços da SEDUR (HU-142); a conta do cidadão nasce no primeiro acesso, não em formulário do portal | 2.3 | Sudoeste Informática |
 
 ---
 
@@ -15,7 +16,7 @@
 
 O administrador cria uma conta local pelo botão Novo usuário, na lista de Administração > Usuários. Informa nome, e-mail, CPF, telefone (opcional) e papel. A conta nasce local, com o e-mail já confirmado e sem senha, e o usuário recebe por e-mail o link para definir a própria senha. O cadastro fica registrado como dado pessoal.
 
-Este cadastro é diferente do feito pelo próprio visitante no portal (HU-140), que escolhe a senha e começa no perfil de cidadão.
+Este cadastro é diferente da conta do cidadão, que nasce no primeiro acesso pelo Portal de Serviços da SEDUR (HU-140), sem senha no Viabiliza e no perfil de cidadão.
 
 ---
 

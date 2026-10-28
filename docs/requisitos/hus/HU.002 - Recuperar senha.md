@@ -9,14 +9,15 @@
 |:---:|---|:---:|:---:|
 | 16/10/2026 | Texto revisto para a linguagem de quem usa o sistema | 2.1 | Sudoeste Informática |
 | 19/10/2026 | Retirada das HUs sem funcionalidade no sistema, renumeração e reordenação das demais (retaguarda primeiro, portal depois) | 2.2 | Sudoeste Informática |
+| 22/10/2026 | Portal sem login próprio: o cidadão entra pelo Portal de Serviços da SEDUR (HU-142); a recuperação de senha passa a ser só do console | 2.3 | Sudoeste Informática |
 
 ---
 
 ## Visão Geral
 
-Quem esqueceu a senha pede um link por e-mail e define outra senha. O portal e o console têm caminhos separados, com mensagens diferentes, e nenhum dos dois aparece no menu lateral.
+Quem esqueceu a senha do console pede um link por e-mail e define outra senha. O caminho fica na tela de entrada do console e não aparece no menu lateral.
 
-No portal, a resposta é a mesma quando o e-mail não existe: o sistema diz que o link foi enviado e não revela se a conta está cadastrada. No console, a frase é sempre a de que as instruções foram enviadas se a conta tiver acesso ao console. Conta inativa, conta da rede da SEDUR e conta sem acesso ao console não recebem o link. Não há recuperação por CPF, SMS ou GOV.BR. A redefinição do console não abre a sessão: a pessoa volta para a tela de entrada.
+O cidadão não tem senha no Viabiliza: ele entra pelo Portal de Serviços da SEDUR com a conta GOV.BR, na HU-142, e a recuperação dessa senha é feita no próprio GOV.BR. No console, a frase é sempre a de que as instruções foram enviadas se a conta tiver acesso ao console, sem revelar se a conta existe. Conta inativa, conta da rede da SEDUR e conta sem acesso ao console não recebem o link. Não há recuperação por CPF ou SMS. A redefinição não abre a sessão: a pessoa volta para a tela de entrada do console.
 
 ---
 
@@ -33,24 +34,24 @@ No portal, a resposta é a mesma quando o e-mail não existe: o sistema diz que 
 
 ## Épico: EP01 — Identidade, Acesso e Segurança
 
-**Como** a SEDUR **quero** permitir a redefinição de senha por link**, de modo que** a pessoa volte a entrar sem que o sistema revele se a conta existe
+**Como** a SEDUR **quero** permitir a redefinição da senha do console por link**, de modo que** o servidor volte a entrar sem que o sistema revele se a conta existe
 
 ## História de Usuário: Recuperar senha
 
-**Como** usuário que não lembra a senha **quero** receber um link de redefinição no meu e-mail**, de modo que** eu defina outra senha sem informar a terceiros se a conta está cadastrada
+**Como** servidor que não lembra a senha do console **quero** receber um link de redefinição no meu e-mail**, de modo que** eu defina outra senha sem informar a terceiros se a conta está cadastrada
 
 ## Pré-requisitos
 
-- A pessoa ainda não está autenticada
+- A pessoa ainda não entrou no console
 - Informa um e-mail em formato válido
 - A nova senha cumpre a política do sistema e a confirmação
-- No console, o link só segue para conta ativa, local e com acesso ao console
+- O link só segue para conta ativa, local e com acesso ao console
 
 ## Dependências
 
 **Passadas**
 
-- HU-140 ou HU-001 — existir uma conta com e-mail, no portal ou no console
+- HU-004 ou HU-001 — existir conta do console com e-mail
 
 **Futuras**
 
@@ -62,16 +63,16 @@ No portal, a resposta é a mesma quando o e-mail não existe: o sistema diz que 
 
 ### Tela 1 — Esqueci a senha
 
-**Caminho no menu:** Link a partir da tela de entrada do portal ou do console, fora do menu
+**Caminho no menu:** Link a partir da tela de entrada do console, fora do menu
 
 *[Print da tela](screenshots/gestao-login.png)*
 
 #### Comportamento Esperado Tela 1
 
-**Cenário 1: E-mail desconhecido no portal**
-**Dado que** o e-mail não está cadastrado
-**Quando** o visitante pede recuperação no portal
-**Então** a resposta apresentada é a de link enviado
+**Cenário 1: Cidadão não recupera senha no Viabiliza**
+**Dado que** o cidadão entra pelo Portal de Serviços da SEDUR
+**Quando** esquece a senha da conta GOV.BR
+**Então** a recuperação é feita no GOV.BR, e o portal do Viabiliza não oferece o link de esqueci a senha
 
 **Cenário 2: Conta local do console recebe o link**
 **Dado que** a conta está ativa, é local e tem acesso ao console
@@ -88,8 +89,8 @@ No portal, a resposta é a mesma quando o e-mail não existe: o sistema diz que 
 **Quando** a nova senha cumpre a política e a confirmação
 **Então** a senha é gravada, a alteração fica registrada e a pessoa volta à entrada do console, sem sessão aberta
 
-**Cenário 5: Conta inativa ou sem acesso ao console**
-**Dado que** a conta está inativa ou não usa o console
+**Cenário 5: Conta inativa, desconhecida ou sem acesso ao console**
+**Dado que** o e-mail não está cadastrado, a conta está inativa ou não usa o console
 **Quando** a pessoa pede o link no console
 **Então** o link não é enviado e a mensagem continua a mesma frase genérica
 

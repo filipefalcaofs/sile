@@ -147,7 +147,7 @@ function CreateRequirementModal({ isOpen, onClose }: { isOpen: boolean; onClose:
                         </div>
 
                         <div>
-                            <Label htmlFor="create-validation">Instruções de validação (IA — EP14)</Label>
+                            <Label htmlFor="create-validation">Instruções de validação (IA)</Label>
                             <textarea
                                 id="create-validation"
                                 name="validation_instructions"
@@ -182,7 +182,7 @@ function EditRequirementModal({ requirement, onClose }: { requirement: Requireme
         <Modal isOpen onClose={onClose} className="m-4 max-h-[90vh] max-w-[700px] overflow-y-auto p-6 lg:p-8">
             <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Editar requisito documental</h4>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                {requirement.code} — o código não pode ser alterado.
+                {requirement.code}, o código não pode ser alterado.
             </p>
 
             <Form action={`/gestao/requisitos-documentais/${requirement.id}`} method="put" onSuccess={onClose} className="mt-6">
@@ -225,7 +225,7 @@ function EditRequirementModal({ requirement, onClose }: { requirement: Requireme
                         </div>
 
                         <div>
-                            <Label htmlFor={`edit-validation-${requirement.id}`}>Instruções de validação (IA — EP14)</Label>
+                            <Label htmlFor={`edit-validation-${requirement.id}`}>Instruções de validação (IA)</Label>
                             <textarea
                                 id={`edit-validation-${requirement.id}`}
                                 name="validation_instructions"
@@ -282,7 +282,7 @@ function ManageCnaesModal({ requirement, onClose }: { requirement: RequirementIt
         <Modal isOpen onClose={onClose} className="m-4 max-h-[90vh] max-w-[700px] overflow-y-auto p-6 lg:p-8">
             <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">CNAEs que exigem este requisito</h4>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                {requirement.code} — {requirement.name}. A lista oficial por CNAE ainda será carregada pela SEDUR.
+                {requirement.code}, {requirement.name}. A lista oficial por CNAE ainda será carregada pela SEDUR.
             </p>
 
             <div className="mt-6 flex flex-col gap-5">
@@ -440,7 +440,7 @@ export default function RequisitosDocumentaisIndex({ requirements, filters, perP
             <Card>
                 <CardHeader
                     title="Requisitos documentais"
-                    description="Documentos exigidos por atividade (modelo Requisito) — a obrigatoriedade por CNAE é administrável"
+                    description="Documentos exigidos por atividade (modelo Requisito), a obrigatoriedade por CNAE é administrável"
                     actions={
                         canMaintain ? (
                             <Button size="sm" onClick={() => setShowCreate(true)}>
@@ -545,8 +545,8 @@ export default function RequisitosDocumentaisIndex({ requirements, filters, perP
                     title={toggling.active ? 'Desativar requisito' : 'Reativar requisito'}
                     description={
                         toggling.active
-                            ? `Confirma a desativação do requisito ${toggling.code} — ${toggling.name}? O registro e o histórico são preservados.`
-                            : `Confirma a reativação do requisito ${toggling.code} — ${toggling.name}?`
+                            ? `Confirma a desativação do requisito ${toggling.code}: ${toggling.name}? O registro e o histórico são preservados.`
+                            : `Confirma a reativação do requisito ${toggling.code}: ${toggling.name}?`
                     }
                     confirmLabel={toggling.active ? 'Desativar' : 'Reativar'}
                     variant={toggling.active ? 'warning' : 'info'}

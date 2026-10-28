@@ -69,7 +69,7 @@ class ProdutoEvTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('gestao/processos/show')
                 ->where('processo.escritorio_virtual.tipo', 'abrigado')
-                ->where('processo.escritorio_virtual.tvl_sede', 'TVL-P-SEDE')
+                ->where('processo.escritorio_virtual.tvl_sede', 'P-SEDE')
                 ->where('processo.escritorio_virtual.inscricao', 'INSC-P-1')
                 ->where('processo.escritorio_virtual.validade_sede', null)
                 ->etc());
@@ -92,7 +92,7 @@ class ProdutoEvTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->where('processo.escritorio_virtual.tipo', 'sede')
-                ->where('processo.escritorio_virtual.tvl_sede', 'TVL-P-SEDE2')
+                ->where('processo.escritorio_virtual.tvl_sede', 'P-SEDE2')
                 ->where('processo.escritorio_virtual.validade_sede', null)
                 ->etc());
     }

@@ -41,7 +41,7 @@ function HistoryValue({ value }: { value: string | null }) {
         );
     }
 
-    return <>{value ?? '—'}</>;
+    return <>{value ?? '-'}</>;
 }
 
 const columns: ColumnDef<HistoryEntry>[] = [
@@ -54,7 +54,7 @@ const columns: ColumnDef<HistoryEntry>[] = [
     {
         id: 'responsavel',
         header: 'Responsável',
-        cell: (entry) => entry.responsavel ?? '—',
+        cell: (entry) => entry.responsavel ?? '-',
     },
     {
         id: 'valor_anterior',
@@ -71,9 +71,9 @@ const columns: ColumnDef<HistoryEntry>[] = [
 export default function ParameterHistory({ parameter, entries }: ParameterHistoryProps) {
     return (
         <>
-            <Head title={`Histórico — ${parameter.description}`} />
+            <Head title={`Histórico: ${parameter.description}`} />
             <PageHeader
-                title={`Histórico — ${parameter.description}`}
+                title={`Histórico: ${parameter.description}`}
                 breadcrumbs={[
                     { label: 'Painel', href: '/gestao' },
                     { label: 'Parâmetros do sistema', href: '/gestao/parametros' },

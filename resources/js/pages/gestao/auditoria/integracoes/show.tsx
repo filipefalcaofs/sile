@@ -28,7 +28,7 @@ interface ChamadaDetalhe {
 
 function formatarDataHora(iso: string | null): string {
     if (!iso) {
-        return '—';
+        return '-';
     }
 
     const data = new Date(iso);
@@ -103,9 +103,9 @@ export default function IntegracaoShow({ chamada }: { chamada: ChamadaDetalhe })
                                 </Badge>
                             }
                         />
-                        <Item termo="Duração" valor={chamada.duracao_ms === null ? '—' : `${chamada.duracao_ms} ms`} />
-                        <Item termo="IP" valor={chamada.ip ?? '—'} />
-                        <Item termo="Correlação" valor={chamada.correlacao ?? '—'} />
+                        <Item termo="Duração" valor={chamada.duracao_ms === null ? '-' : `${chamada.duracao_ms} ms`} />
+                        <Item termo="IP" valor={chamada.ip ?? '-'} />
+                        <Item termo="Correlação" valor={chamada.correlacao ?? '-'} />
                     </dl>
 
                     {chamada.erro && (

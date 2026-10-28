@@ -101,7 +101,7 @@ class RelatorioController extends Controller
                 'porPeriodo' => [],
                 'porZona' => [
                     'degradacao' => 'bairro',
-                    'rotulo' => 'Zona urbanística indisponível — agrupado por bairro',
+                    'rotulo' => 'Zona urbanística indisponível: agrupado por bairro',
                     'itens' => [],
                 ],
                 'porCnae' => [],

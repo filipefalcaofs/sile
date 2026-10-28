@@ -72,7 +72,7 @@ const numberFormat = new Intl.NumberFormat('pt-BR');
 
 function formatarDataHora(iso: string | null): string {
     if (!iso) {
-        return '—';
+        return '-';
     }
 
     const data = new Date(iso);
@@ -168,7 +168,7 @@ export default function Fila({
                             item.analysis_status === 'convite_respondido' ? 'font-bold' : 'font-medium'
                         }`}
                     >
-                        {item.bap ?? '—'}
+                        {item.bap ?? '-'}
                     </span>
                     <span className="text-theme-xs text-gray-400 dark:text-gray-500">
                         {item.protocol_number ?? 'sem protocolo'}
@@ -186,14 +186,14 @@ export default function Fila({
             id: 'endereco',
             header: 'Endereço',
             cell: (item) => (
-                <span className="text-gray-700 dark:text-gray-300">{item.imovel !== '' ? item.imovel : '—'}</span>
+                <span className="text-gray-700 dark:text-gray-300">{item.imovel !== '' ? item.imovel : '-'}</span>
             ),
         },
         {
             id: 'tipo_imovel',
             header: 'Tipo do imóvel',
             cellClassName: 'min-w-32',
-            cell: (item) => item.tipo_imovel ?? <span className="text-gray-400 dark:text-gray-500">—</span>,
+            cell: (item) => item.tipo_imovel ?? <span className="text-gray-400 dark:text-gray-500">-</span>,
         },
         {
             id: 'servico',
@@ -201,7 +201,7 @@ export default function Fila({
             cellClassName: 'min-w-56 max-w-xs',
             cell: (item) =>
                 item.servicos.length === 0 ? (
-                    <span className="text-gray-400 dark:text-gray-500">—</span>
+                    <span className="text-gray-400 dark:text-gray-500">-</span>
                 ) : (
                     <ul className="flex flex-col gap-1">
                         {item.servicos.map((servico) => (
@@ -230,7 +230,7 @@ export default function Fila({
                             {item.motivo_da_analise}
                         </span>
                     ) : (
-                        <span className="text-gray-400 dark:text-gray-500">—</span>
+                        <span className="text-gray-400 dark:text-gray-500">-</span>
                     )}
                 </div>
             ),
@@ -241,7 +241,7 @@ export default function Fila({
             cellClassName: 'whitespace-nowrap',
             cell: (item) => (
                 <span className={item.analysis_status === 'convite_respondido' ? 'font-bold text-gray-900 dark:text-white' : undefined}>
-                    {item.analysis_status_label ?? item.status_label ?? <span className="text-gray-400 dark:text-gray-500">—</span>}
+                    {item.analysis_status_label ?? item.status_label ?? <span className="text-gray-400 dark:text-gray-500">-</span>}
                 </span>
             ),
         },

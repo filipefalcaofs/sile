@@ -95,18 +95,18 @@ const dateTimeFormat = new Intl.DateTimeFormat('pt-BR', {
 /** Formata a data/hora ISO8601 no padrão brasileiro; null/inválida → travessão. */
 function formatarDataHora(iso: string | null): string {
     if (!iso) {
-        return '—';
+        return '-';
     }
 
     const data = new Date(iso);
 
-    return Number.isNaN(data.getTime()) ? '—' : dateTimeFormat.format(data);
+    return Number.isNaN(data.getTime()) ? '-' : dateTimeFormat.format(data);
 }
 
 /** Minutos corridos → "Xd Xh" legível; null → travessão (sem tempo inventado). */
 function formatarDuracao(minutos: number | null): string {
     if (minutos === null || Number.isNaN(minutos)) {
-        return '—';
+        return '-';
     }
 
     const dias = Math.floor(minutos / 1440);
@@ -135,7 +135,7 @@ const colunas: ColumnDef<PendenciaRow>[] = [
         id: 'processo',
         header: 'Processo',
         cellClassName: 'font-medium whitespace-nowrap text-gray-800 dark:text-white/90',
-        cell: (linha) => linha.processo ?? '—',
+        cell: (linha) => linha.processo ?? '-',
     },
     {
         id: 'descricao',
@@ -151,7 +151,7 @@ const colunas: ColumnDef<PendenciaRow>[] = [
     {
         id: 'analista',
         header: 'Analista',
-        cell: (linha) => linha.analista ?? '—',
+        cell: (linha) => linha.analista ?? '-',
     },
     {
         id: 'aberta_em',

@@ -120,7 +120,7 @@ function EditViaModal({ via, onClose }: { via: ViaItem; onClose: () => void }) {
         <Modal isOpen onClose={onClose} className="m-4 max-h-[90vh] max-w-[600px] overflow-y-auto p-6 lg:p-8">
             <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Editar via</h4>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                {via.codigo} — o código é fixo porque as linhas do Quadro 11A o referenciam; para trocar o código, desative esta via e
+                {via.codigo}, o código é fixo porque as linhas do Quadro 11A o referenciam; para trocar o código, desative esta via e
                 cadastre a nova.
             </p>
 
@@ -253,7 +253,7 @@ export default function ViasIndex({ vias }: ViasIndexProps) {
             <Card>
                 <CardHeader
                     title="Classes de via da LOUOS"
-                    description="Classes reconhecidas pelo Quadro 11A da Lei nº 9.148/2016. A publicação de um rascunho do Quadro 11A só é aceita quando toda classe referenciada consta aqui e está ativa — um erro de digitação vira bloqueio explícito, nunca leitura silenciosa da via."
+                    description="Classes reconhecidas pelo Quadro 11A da Lei nº 9.148/2016. A publicação de um rascunho do Quadro 11A só é aceita quando toda classe referenciada consta aqui e está ativa, um erro de digitação vira bloqueio explícito, nunca leitura silenciosa da via."
                     actions={
                         canMaintain ? (
                             <Button size="sm" onClick={() => setShowCreate(true)}>

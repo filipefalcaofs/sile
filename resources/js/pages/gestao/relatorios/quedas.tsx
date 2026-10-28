@@ -71,7 +71,7 @@ const percentFormat = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 
 
 /** Percentual honesto: null (sem base no período) vira travessão, jamais 0%. */
 function formatarPercentual(valor: number | null): string {
-    return valor === null ? '—' : `${percentFormat.format(valor)}%`;
+    return valor === null ? '-' : `${percentFormat.format(valor)}%`;
 }
 
 /** Formata o dia ISO (YYYY-MM-DD) no padrão brasileiro dd/mm. */
@@ -221,7 +221,7 @@ export default function QuedasExpresso({ taxa, serie, ranking, filtros }: Quedas
                 <Card>
                     <CardHeader
                         title="Filtros"
-                        description="Recorte por período. Os números são reais sobre o fluxo expresso — sem base no período, a taxa fica vazia (nunca um percentual inventado)."
+                        description="Recorte por período. Os números são reais sobre o fluxo expresso, sem base no período, a taxa fica vazia (nunca um percentual inventado)."
                         actions={<ExportMenu url={URL_QUEDAS} params={currentParams} label="Exportar quedas" />}
                     />
                     <CardContent>
@@ -292,7 +292,7 @@ export default function QuedasExpresso({ taxa, serie, ranking, filtros }: Quedas
                 <Card>
                     <CardHeader
                         title="Ranking de motivos da queda"
-                        description="Gatilhos que tiraram o processo do expresso. Quedas sem gatilho de contexto aparecem como “não classificado” — nunca somadas a um motivo real."
+                        description="Gatilhos que tiraram o processo do expresso. Quedas sem gatilho de contexto aparecem como “não classificado”, nunca somadas a um motivo real."
                     />
                     <CardContent>
                         <DataTable<RankingMotivo>

@@ -83,7 +83,7 @@ function NewLegalTermModal({ tipos, onClose }: { tipos: string[]; onClose: () =>
         <Modal isOpen onClose={onClose} className="m-4 max-h-[90vh] max-w-[720px] overflow-y-auto p-6 lg:p-8">
             <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Novo termo legal</h4>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                Nasce como rascunho com a próxima versão do tipo — o texto só passa a valer após a publicação.
+                Nasce como rascunho com a próxima versão do tipo, o texto só passa a valer após a publicação.
             </p>
 
             <form onSubmit={handleSubmit} className="mt-6">
@@ -177,7 +177,7 @@ function EditLegalTermModal({ termo, onClose }: { termo: LegalTermItem; onClose:
         <Modal isOpen onClose={onClose} className="m-4 max-h-[90vh] max-w-[720px] overflow-y-auto p-6 lg:p-8">
             <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Editar rascunho</h4>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                {termo.type} — versão {termo.version}. O tipo e a versão são fixos; só título e conteúdo podem mudar
+                {termo.type}, versão {termo.version}. O tipo e a versão são fixos; só título e conteúdo podem mudar
                 antes da publicação.
             </p>
 
@@ -264,7 +264,7 @@ export default function LegalTermsIndex({ termos, tipos }: LegalTermsIndexProps)
             id: 'published_at',
             header: 'Publicado em',
             cellClassName: 'whitespace-nowrap',
-            cell: (termo) => termo.published_at ?? '—',
+            cell: (termo) => termo.published_at ?? '-',
         },
         ...(canMaintain
             ? [
@@ -296,7 +296,7 @@ export default function LegalTermsIndex({ termos, tipos }: LegalTermsIndexProps)
                                   />
                               </div>
                           ) : (
-                              <span className="text-xs text-gray-400 dark:text-gray-500" title="Termos publicados são imutáveis — crie uma nova versão.">
+                              <span className="text-xs text-gray-400 dark:text-gray-500" title="Termos publicados são imutáveis: crie uma nova versão.">
                                   Imutável
                               </span>
                           ),
@@ -353,7 +353,7 @@ export default function LegalTermsIndex({ termos, tipos }: LegalTermsIndexProps)
             <Card>
                 <CardHeader
                     title="Versões dos termos"
-                    description="Termos legais aceitos pelos usuários (LGPD e futuros). O termo publicado é imutável: para alterar o texto, crie uma nova versão e publique — os aceites anteriores permanecem vinculados à versão aceita."
+                    description="Termos legais aceitos pelos usuários (LGPD e futuros). O termo publicado é imutável: para alterar o texto, crie uma nova versão e publique, os aceites anteriores permanecem vinculados à versão aceita."
                 />
                 <CardContent>
                     <DataTable

@@ -79,7 +79,7 @@ class CaixaSetorController extends Controller
 
         $paraConclusao = AnalysisStatus::ParaConclusao->value;
 
-        $base = $this->naCaixaDoUsuario(ViabilityRequest::query(), $request->user())
+        $base = $this->foraDaVistoria($this->naCaixaDoUsuario(ViabilityRequest::query(), $request->user()))
             ->where('status', ViabilityRequestStatus::EmAnalise->value);
 
         $base = $this->processos->aplicarFiltros($base, $filtros);
@@ -280,8 +280,8 @@ class CaixaSetorController extends Controller
             ->get()
             ->map(fn (Activity $a): array => [
                 'em' => $a->created_at?->toIso8601String(),
-                'ator' => (string) ($a->properties['ator_nome'] ?? optional($a->causer)->name ?? '—'),
-                'analista' => (string) ($a->properties['analista_nome'] ?? '—'),
+                'ator' => (string) ($a->properties['ator_nome'] ?? optional($a->causer)->name ?? '-'),
+                'analista' => (string) ($a->properties['analista_nome'] ?? '-'),
                 'qtd' => (int) ($a->properties['qtd'] ?? 0),
             ])
             ->all();
@@ -315,7 +315,7 @@ class CaixaSetorController extends Controller
             ->whereNull('assigned_user_id');
 
         if ($request->boolean('todos')) {
-            $consulta = $this->processos->aplicarFiltros($consulta, $this->filtrosDaCaixa($request));
+            $consulta = $this->processos->aplicarFiltros($this->foraDaVistoria($consulta), $this->filtrosDaCaixa($request));
         } else {
             $ids = collect(explode(',', (string) $request->string('ids')))
                 ->map(fn ($id): int => (int) trim($id))
@@ -420,7 +420,10 @@ class CaixaSetorController extends Controller
             return back()->with('warning', 'Nenhum processo foi distribuído. '.$motivos);
         }
 
-        $response = back()->with('status', "{$resumo['ok']} processo(s) enviado(s) para a caixa de entrada de {$analista->name}.");
+        // A central envia o retorno da caixa e volta a ela já com o aviso; o modal da
+        // caixa não envia e permanece onde está.
+        $response = ($request->has('retorno') ? redirect($this->urlDaCaixa($request)) : back())
+            ->with('status', "{$resumo['ok']} processo(s) enviado(s) para a caixa de entrada de {$analista->name}.");
 
         if ($resumo['falhas'] !== []) {
             $response->with('warning', count($resumo['falhas']).' processo(s) não distribuído(s): '.$motivos);
@@ -646,6 +649,19 @@ class CaixaSetorController extends Controller
     {
         $query->whereNull('assigned_user_id')
             ->orWhere('analysis_status', AnalysisStatus::ParaConclusao->value);
+    }
+
+    /**
+     * Processo em vistoria fica só na Caixa de Vistoria (SPEC-05): sai daqui
+     * em Vistoriar e, já Vistoriado, enquanto segue no setor de vistoria sem
+     * ter sido encaminhado de volta ao setor de origem.
+     *
+     * @param  Builder<ViabilityRequest>  $query
+     * @return Builder<ViabilityRequest>
+     */
+    private function foraDaVistoria(Builder $query): Builder
+    {
+        return $query->whereNotIn('viability_requests.id', ViabilityRequest::query()->naCaixaDeVistoria()->select('viability_requests.id'));
     }
 
     /**

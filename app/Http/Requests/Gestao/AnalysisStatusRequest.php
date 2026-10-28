@@ -52,7 +52,7 @@ class AnalysisStatusRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'encaminhado_para_user_id.prohibited' => 'O processo vai para a aba Para conclusão e é distribuído pelo Apoio: não escolha destinatário.',
+            'encaminhado_para_user_id.prohibited' => 'O processo vai para a aba Analisados e é distribuído pelo Apoio: não escolha destinatário.',
         ];
     }
 }

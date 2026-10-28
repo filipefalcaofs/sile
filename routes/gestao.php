@@ -799,7 +799,6 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::patch('cnae-invalido', [CnaeInvalidoController::class, 'corrigir'])->name('cnae-invalido.corrigir');
             // Zona e via escolhidas na ficha: prévia do que o motor decidiria e gravação com justificativa.
             Route::middleware('permission:editar-zona-via')->group(function () {
-                Route::post('zona-via/previa', [ZonaViaController::class, 'previa'])->name('zona-via.previa');
                 Route::patch('zona-via', [ZonaViaController::class, 'alterar'])->name('zona-via.alterar');
             });
             // Encaminhamento à vistoria (handoff real — não é malha fina): o

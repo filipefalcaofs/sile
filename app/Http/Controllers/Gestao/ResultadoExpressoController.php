@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\DecisionExplanationResource;
 use App\Http\Resources\ViabilityDecisionResource;
 use App\Models\Activity;
+use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Analise\ProcessoQueryService;
 use App\Services\Auditoria\DecisionExplanationService;
@@ -117,7 +118,7 @@ class ResultadoExpressoController extends Controller
                     'outcome' => $solicitacao->decision_outcome,
                     'outcome_label' => DecisionOutcome::from((string) $solicitacao->decision_outcome)->label(),
                     'consolidated_result' => $solicitacao->decision_consolidated,
-                    'tvl_product_number' => $solicitacao->decision_tvl,
+                    'tvl_product_number' => ViabilityDecision::semPrefixo($solicitacao->decision_tvl),
                     'decided_at' => $this->paraIso($solicitacao->decision_decided_at),
                 ]));
 
@@ -295,7 +296,7 @@ class ResultadoExpressoController extends Controller
 
         [$status, $label] = match ($result) {
             'sucesso' => ['transmitido', 'Transmitido'],
-            'bloqueado' => ['pendente', 'Pendente — canal bloqueado (sem contrato/homologação)'],
+            'bloqueado' => ['pendente', 'Pendente: canal bloqueado (sem contrato/homologação)'],
             'ignorado' => ['nao_aplicavel', 'Não se aplica a este resultado'],
             default => ['aguardando', 'Aguardando processamento'],
         };

@@ -1,0 +1,185 @@
+﻿grupo;função;tipo;TD;AR/TR;PF
+CNAEs;CNAEs - alterar situação;EE;3;2;3
+Requisitos documentais;Requisitos documentais - ativar ou inativar;EE;4;2;3
+Requisitos documentais;Requisitos documentais - vincular CNAEs;EE;4;3;4
+Perfis de acesso;Perfis de acesso - consultar;SE;8;3;5
+Perfis de acesso;Perfis de acesso - alterar;EE;4;3;4
+Usuários e solicitações de acesso;Usuários - consultar;SE;11;2;5
+Usuários e solicitações de acesso;Solicitações de acesso - aprovar;EE;4;3;4
+Usuários e solicitações de acesso;Solicitações de acesso - recusar;EE;4;2;3
+Tipos de imóvel;Tipos de imóvel - ativar ou inativar;EE;4;2;3
+Termos legais;Termos legais - consultar;SE;7;1;4
+Termos legais;Termos legais - incluir;EE;5;2;4
+Termos legais;Termos legais - alterar;EE;5;2;4
+Termos legais;Termos legais - publicar;EE;4;2;3
+Termos legais;Termos legais - excluir;EE;3;2;3
+Textos decisórios;Dados - Texto decisório;ALI;3;1;7
+Textos decisórios;Textos decisórios - consultar;CE;4;1;3
+Textos decisórios;Textos decisórios - alterar;EE;4;2;3
+Parâmetros do sistema;Parâmetros - aprovar alteração proposta;EE;3;2;3
+Parâmetros do sistema;Parâmetros - rejeitar alteração proposta;EE;3;2;3
+Configuração das APIs;APIs - consultar configuração REGIN;CE;10;1;3
+Configuração das APIs;APIs - consultar configuração Inscrição imobiliária;CE;8;1;3
+Configuração das APIs;APIs - consultar configuração CPF e CNPJ;CE;8;1;3
+Configuração das APIs;APIs - consultar configuração Autenticação SEDUR;CE;8;1;3
+Configuração das APIs;APIs - consultar configuração GOV.BR;CE;11;1;3
+Configuração das APIs;APIs - consultar configuração Geocodificação;CE;8;1;3
+Configuração das APIs;APIs - consultar configuração GeoServer;CE;11;1;3
+Configuração das APIs;APIs - consultar configuração Cadastro municipal (SEMAP);CE;7;1;3
+Configuração das APIs;APIs - alterar configuração REGIN;EE;8;2;4
+Configuração das APIs;APIs - alterar configuração Inscrição imobiliária;EE;6;2;4
+Configuração das APIs;APIs - alterar configuração CPF e CNPJ;EE;6;2;4
+Configuração das APIs;APIs - alterar configuração Autenticação SEDUR;EE;6;2;4
+Configuração das APIs;APIs - alterar configuração Geocodificação;EE;6;2;4
+Configuração das APIs;APIs - alterar configuração GeoServer;EE;9;2;4
+Configuração das APIs;APIs - alterar configuração Cadastro municipal (SEMAP);EE;5;2;4
+Servidores de e-mail;Dados - Servidor de e-mail;ALI;12;1;7
+Servidores de e-mail;Servidores de e-mail - consultar;CE;13;1;3
+Servidores de e-mail;Servidores de e-mail - incluir;EE;14;2;4
+Servidores de e-mail;Servidores de e-mail - alterar;EE;14;2;4
+Servidores de e-mail;Servidores de e-mail - excluir;EE;3;2;3
+Valores da TLL;Dados - Valor da TLL;ALI;10;1;7
+Valores da TLL;TLL - consultar valores;SE;15;2;5
+Valores da TLL;TLL - consultar CNAEs do valor;CE;3;2;3
+Valores da TLL;TLL - incluir valor;EE;11;2;4
+Valores da TLL;TLL - alterar valor;EE;11;2;4
+Valores da TLL;TLL - ativar ou inativar valor;EE;3;2;3
+Valores da TLL;TLL - criar exercício por fator de reajuste;EE;6;2;4
+Valores da TLL;TLL - publicar exercício;EE;3;2;3
+Gatilhos de risco;Gatilhos de risco - consultar;CE;5;1;3
+Gatilhos de risco;Gatilhos de risco - alterar;EE;4;2;3
+Gatilhos de risco;Gatilhos de risco - ativar ou inativar;EE;4;2;3
+Quadro 10 da LOUOS (permissão de uso por zona);Quadro 10 da LOUOS - consultar rascunho;SE;13;2;5
+Quadro 10 da LOUOS (permissão de uso por zona);Quadro 10 da LOUOS - abrir rascunho;EE;3;2;3
+Quadro 10 da LOUOS (permissão de uso por zona);Quadro 10 da LOUOS - incluir linha no rascunho;EE;8;2;4
+Quadro 10 da LOUOS (permissão de uso por zona);Quadro 10 da LOUOS - alterar linha do rascunho;EE;8;2;4
+Quadro 10 da LOUOS (permissão de uso por zona);Quadro 10 da LOUOS - excluir linha do rascunho;EE;3;2;3
+Quadro 10 da LOUOS (permissão de uso por zona);Quadro 10 da LOUOS - descartar rascunho;EE;3;2;3
+Quadro 11A da LOUOS (condição de instalação por via);Quadro 11A da LOUOS - consultar rascunho;SE;11;2;5
+Quadro 11A da LOUOS (condição de instalação por via);Quadro 11A da LOUOS - abrir rascunho;EE;3;2;3
+Quadro 11A da LOUOS (condição de instalação por via);Quadro 11A da LOUOS - incluir linha no rascunho;EE;6;2;4
+Quadro 11A da LOUOS (condição de instalação por via);Quadro 11A da LOUOS - alterar linha do rascunho;EE;6;2;4
+Quadro 11A da LOUOS (condição de instalação por via);Quadro 11A da LOUOS - excluir linha do rascunho;EE;3;2;3
+Quadro 11A da LOUOS (condição de instalação por via);Quadro 11A da LOUOS - importar CSV no rascunho;EE;12;2;4
+Quadro 11A da LOUOS (condição de instalação por via);Quadro 11A da LOUOS - publicar rascunho;EE;3;2;3
+Quadro 11A da LOUOS (condição de instalação por via);Quadro 11A da LOUOS - descartar rascunho;EE;3;2;3
+Quadro 11A da LOUOS (condição de instalação por via);Quadro 11A da LOUOS - ativar versão publicada;EE;3;2;3
+Planilha de enquadramento (tratamento por CNAE);Motor de regras - consultar planilha de enquadramento;SE;40;2;7
+Planilha de enquadramento (tratamento por CNAE);Enquadramento - importar planilha;EE;47;2;6
+Planilha de enquadramento (tratamento por CNAE);Enquadramento - publicar versão;EE;3;2;3
+Regras territoriais;Dados - Regra territorial;ALI;25;3;10
+Regras territoriais;Motor de regras - consultar regras territoriais;SE;25;4;7
+Regras territoriais;Regras territoriais - salvar regra no rascunho;EE;18;3;6
+Regras territoriais;Regras territoriais - publicar versão;EE;3;2;3
+Regras territoriais;Regras territoriais - descartar rascunho;EE;3;2;3
+Regras territoriais;Regras territoriais - ativar versão publicada;EE;3;2;3
+Anexos de escritório virtual;Dados - Atividade permitida em escritório virtual;ALI;11;2;7
+Anexos de escritório virtual;Anexos de escritório virtual - consultar;SE;16;2;5
+Anexos de escritório virtual;Anexos de escritório virtual - carregar rascunho;EE;7;2;4
+Anexos de escritório virtual;Anexos de escritório virtual - publicar;EE;3;2;3
+Camadas do GeoServer;Dados - Camada do GeoServer;ALI;5;1;7
+Camadas do GeoServer;Camadas do GeoServer - consultar;CE;6;1;3
+Camadas do GeoServer;Camadas do GeoServer - incluir;EE;7;2;4
+Camadas do GeoServer;Camadas do GeoServer - alterar;EE;6;2;4
+Camadas do GeoServer;Camadas do GeoServer - ativar ou inativar;EE;4;2;3
+Camadas geográficas;Camadas geográficas - consultar;CE;8;1;3
+Camadas geográficas;Camadas geográficas - incluir versão;EE;8;2;4
+Painel inicial;Painel - consultar indicadores iniciais;SE;22;8;7
+Consulta de processos;Processos - consultar lista;SE;38;6;7
+Consulta de processos;Processos - consultar informações do processo;SE;36;9;7
+Consulta de processos;Processos - consultar tramitação;SE;12;3;5
+Consulta de processos;Processos - consultar explicação da decisão;SE;7;2;5
+Consulta de processos;Processos - alterar situação da análise;EE;8;5;6
+Consulta de processos;Processos - alterar justificativa do parecer à JUCEB;EE;3;3;4
+Busca rápida de processos;Processos - busca rápida;CE;4;4;4
+Envio de processo para análise;Envio para análise - pesquisar processo;CE;8;2;4
+Envio de processo para análise;Envio para análise - enviar processo;EE;3;3;4
+Caixa do setor;Caixa do setor - consultar;SE;23;7;7
+Caixa do setor;Caixa do setor - consultar central de distribuição;SE;15;5;7
+Caixa do setor;Caixa do setor - sugerir distribuição pela carga;SE;9;5;7
+Caixa do setor;Caixa do setor - distribuir em lote;EE;7;6;6
+Caixa do setor;Caixa do setor - redistribuir processo;EE;5;5;6
+Encaminhamento à malha fina;Malha fina - consultar caixa;SE;31;6;7
+Encaminhamento à malha fina;Malha fina - concluir revisão;EE;4;7;4
+Desvinculação de escritório virtual;Dados - Bloqueio de inscrição de escritório virtual;ALI;5;1;7
+Desvinculação de escritório virtual;Escritório virtual - desvincular inscrição;EE;4;5;4
+Registro em contingência;Contingência - consultar inscrição imobiliária;SE;10;3;5
+Registro em contingência;Contingência - consultar CNPJ na base da SEDUR;SE;6;3;5
+Atendimento presencial;Atendimento presencial - consultar;CE;7;4;6
+Atendimento presencial;Atendimento presencial - abrir atendimento;EE;3;4;4
+Atendimento presencial;Atendimento presencial - encerrar atendimento;EE;2;2;3
+Atendimento presencial;Atendimento - consultar CPF na base da SEDUR;SE;5;3;4
+Ficha de análise técnica;Ficha de análise - consultar;SE;42;15;7
+Decisão e conclusão da análise;Análise - decidir o processo conforme a ficha;EE;9;8;6
+Decisão e conclusão da análise;Análise - concluir com deferimento, indeferimento, desativação, cassação ou revogação;EE;5;8;6
+Convites (pendências) do processo;Pendências - cancelar convite;EE;3;3;4
+Vistoria;Dados - Ficha de vistoria;ALI;79;3;15
+Vistoria;Vistoria - consultar ficha;SE;75;5;7
+Vistoria;Vistoria - salvar rascunho da ficha;EE;54;3;6
+Vistoria;Vistoria - concluir ficha;EE;54;3;6
+Vistoria;Vistoria - validar polígono do imóvel;EE;5;3;6
+Vistoria;Vistoria - anexar foto ou documento;EE;6;3;6
+Vistoria;Vistoria - baixar anexo;SE;4;3;4
+Vistoria;Vistoria - remover anexo;EE;3;3;4
+Vistoria;Vistoria - encaminhar processo para vistoria;EE;4;4;4
+Vistoria;Vistorias - consultar lista;SE;18;6;7
+Resultados do fluxo expresso;Ficha do expresso - consultar decisão somente leitura;SE;31;7;7
+Resultados do fluxo expresso;Processos - reprocessar etapas do motor;EE;2;18;4
+Relatórios gerenciais;Relatórios - consultar indicadores de viabilidade;SE;16;5;7
+Relatórios gerenciais;Relatórios - consultar tempo de análise;SE;22;4;7
+Relatórios gerenciais;Relatórios - consultar painel por bairro;SE;16;4;7
+Relatórios gerenciais;Relatórios - consultar saturação locacional;SE;17;5;7
+Relatórios gerenciais;Relatórios - consultar escritório virtual (sede e abrigados);SE;9;5;7
+Relatórios gerenciais;Relatórios - consultar SLA e vencimentos;SE;23;6;7
+Relatórios gerenciais;Relatórios - consultar pendências e exigências;SE;18;4;7
+Relatórios gerenciais;Relatórios - consultar atendimentos em contingência;SE;14;3;5
+Relatórios gerenciais;Relatórios - consultar falhas de comunicação;SE;15;3;5
+Relatórios gerenciais;Relatórios - consultar trilha por processo;SE;10;5;7
+Relatórios gerenciais;Relatórios - imprimir trilha por processo;SE;12;5;7
+Benchmark nacional e sala de controle;Dados - Benchmark nacional de tempo de viabilidade;ALI;18;3;7
+Benchmark nacional e sala de controle;Relatórios - consultar benchmark nacional;SE;11;2;5
+Benchmark nacional e sala de controle;Sala de controle - consultar visão executiva;SE;19;5;7
+Log de integrações;Integrações - consultar chamadas;SE;10;2;5
+Log de integrações;Integrações - consultar detalhe da chamada;SE;18;2;5
+Monitoramento de e-mails;Dados - Registro de envio de e-mail;ALI;8;1;7
+Monitoramento de e-mails;E-mails - consultar envios;SE;13;1;4
+Auditoria preditiva;Dados - Anomalia preditiva;ALI;12;1;7
+Auditoria preditiva;Auditoria preditiva - consultar anomalias;SE;19;4;7
+Auditoria preditiva;Auditoria preditiva - confirmar anomalia;EE;5;2;4
+Conta do cidadão no portal;Cadastro do cidadão - criar conta;EE;8;6;6
+Conta do cidadão no portal;Portal - entrar no sistema;EE;5;2;4
+Acesso à gestão;Gestão - entrar no sistema;EE;5;7;6
+Painel do cidadão;Painel do cidadão - consultar;SE;11;3;5
+Central de notificações;Notificações - consultar;SE;7;2;5
+Empresas do cidadão;Dados - Vínculo de usuário com empresa;ALI;6;1;7
+Procurações e representação;Representação - encerrar atuação em nome de terceiro;EE;2;1;3
+Solicitação de viabilidade no portal;Solicitações - incluir;EE;7;5;6
+Solicitação de viabilidade no portal;Solicitação - obter resumo para conferência;SE;5;5;5
+Acompanhamento do protocolo no portal;Protocolo - consultar publicamente;SE;8;3;5
+Acompanhamento do protocolo no portal;Protocolo - emitir comprovante;SE;16;4;7
+Renovação da viabilidade locacional;Renovação - consultar viabilidades renováveis;SE;8;5;7
+Renovação da viabilidade locacional;Renovação - localizar viabilidade por CNPJ;SE;10;7;7
+Renovação da viabilidade locacional;Renovação - consultar dados da renovação;CE;12;6;6
+Renovação da viabilidade locacional;Renovação - protocolar renovação;EE;6;24;6
+Verificação pública de documentos;Documentos oficiais - verificar autenticidade;SE;7;3;5
+Dados externos consultados pelo Viabiliza;Dados externos - Classificação viária dos logradouros do GeoServer da SEDUR;AIE;3;1;5
+Dados externos consultados pelo Viabiliza;Dados externos - Lotes do endereçamento do GeoServer da SEDUR;AIE;5;1;5
+Dados externos consultados pelo Viabiliza;Dados externos - Poligonais territoriais do GeoServer da SEDUR;AIE;3;1;5
+Integração com a JUCEB (REGIN);Dados - Recebimento do REGIN;ALI;11;1;7
+Rotinas automáticas de prazos e controle;Auditoria preditiva - varrer deferimentos do expresso;EE;4;6;4
+Rotinas automáticas de prazos e controle;TLL - alertar falta de tabela do exercício;SE;3;4;5
+Dados externos consultados pelo Viabiliza;Dados externos - Servidores e lotação do diretório da SEDUR;AIE;7;1;5
+Relatórios gerenciais;Relatórios - consultar quedas do expresso;SE;11;4;7
+Ficha de análise técnica;Ficha de análise - sugerir justificativa;EE;8;6;6
+Usuários e solicitações de acesso;Solicitações de acesso - consultar pendentes;CE;7;2;4
+Acompanhamento do protocolo no portal;Pendências - consultar no portal;CE;7;2;4
+Configuração das APIs;APIs - alterar configuração GOV.BR;EE;9;2;4
+Ficha de análise técnica;Ficha de análise - obter resumo do processo;EE;6;8;6
+Benchmark nacional de viabilidade;Benchmark - importar microdados mensais da REDESIM;EE;12;2;4
+Usuários e solicitações de acesso;Solicitação de acesso - solicitar perfil;EE;4;3;4
+Vistoria;Vistoria - abrir ficha de vistoria;EE;3;3;4
+Consulta de processos;Processos - consultar caixa de entrada do analista;SE;27;6;7
+Dados externos consultados pelo Viabiliza;Dados externos - Lotes por inscrição do SEMAP;AIE;4;1;5
+Usuários e solicitações de acesso;Solicitação de acesso - consultar situação do pedido;CE;6;2;4
+Quadro 10 da LOUOS (permissão de uso por zona);Quadro 10 da LOUOS - importar CSV no rascunho;EE;14;2;4
+Dados externos consultados pelo Viabiliza;Dados externos - Contato cadastral da SEDUR (CPF);AIE;2;1;5

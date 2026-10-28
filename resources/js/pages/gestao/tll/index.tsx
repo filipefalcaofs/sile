@@ -343,7 +343,7 @@ function CnaesVinculadosModal({ valor, onClose }: { valor: TllValorItem; onClose
                 CNAEs do código {valor.codigo_tll}
             </h4>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                Vinculados na versão vigente da planilha de regras. Somente leitura — o mapeamento se altera
+                Vinculados na versão vigente da planilha de regras. Somente leitura, o mapeamento se altera
                 versionando a planilha, não nesta tarifa.
             </p>
 
@@ -367,7 +367,7 @@ function CnaesVinculadosModal({ valor, onClose }: { valor: TllValorItem; onClose
                     {resposta.data.map((item) => (
                         <li key={item.cnae} className="py-2.5">
                             <p className="font-medium text-gray-800 dark:text-white/90">{item.cnae}</p>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">{item.denominacao || '—'}</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">{item.denominacao || '-'}</p>
                         </li>
                     ))}
                 </ul>
@@ -482,7 +482,7 @@ export default function TllIndex({ valores, exercicios, filters, perPageOptions 
             id: 'especificacao',
             header: 'Especificação',
             cellClassName: 'text-gray-500 dark:text-gray-400',
-            cell: (valor) => valor.especificacao || '—',
+            cell: (valor) => valor.especificacao || '-',
         },
         {
             id: 'cnaes',
@@ -522,7 +522,7 @@ export default function TllIndex({ valores, exercicios, filters, perPageOptions 
             id: 'codigo_tll_sefaz',
             header: 'Código SEDUR',
             cellClassName: 'text-gray-500 dark:text-gray-400',
-            cell: (valor) => valor.codigo_tll_sefaz ?? '—',
+            cell: (valor) => valor.codigo_tll_sefaz ?? '-',
         },
         {
             id: 'active',
@@ -622,7 +622,7 @@ export default function TllIndex({ valores, exercicios, filters, perPageOptions 
                                         <li key={item.exercicio} className="flex flex-wrap items-center justify-between gap-3">
                                             <span>
                                                 Exercício {item.exercicio}
-                                                {item.source ? ` — ${item.source}` : ''}. A publicação exige um segundo
+                                                {item.source ? `, ${item.source}` : ''}. A publicação exige um segundo
                                                 usuário.
                                             </span>
                                             {canMaintain && (

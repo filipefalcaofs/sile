@@ -23,7 +23,7 @@ use Inertia\Response;
  */
 class LegalTermController extends Controller
 {
-    private const MENSAGEM_IMUTAVEL = 'Termos publicados são imutáveis — crie uma nova versão.';
+    private const MENSAGEM_IMUTAVEL = 'Termos publicados são imutáveis. Crie uma nova versão.';
 
     /**
      * Lista completa, sem paginação: poucos tipos × poucas versões. O status
@@ -78,7 +78,7 @@ class LegalTermController extends Controller
             'published_at' => null,
         ]);
 
-        return back()->with('status', "Rascunho da versão {$proximaVersao} criado — publique para torná-lo vigente.");
+        return back()->with('status', "Rascunho da versão {$proximaVersao} criado. Publique para torná-lo vigente.");
     }
 
     /**
@@ -110,7 +110,7 @@ class LegalTermController extends Controller
 
         $legalTerm->update(['published_at' => now()]);
 
-        return back()->with('status', "Versão {$legalTerm->version} de \"{$legalTerm->title}\" publicada — vigente imediatamente para novos aceites.");
+        return back()->with('status', "Versão {$legalTerm->version} de \"{$legalTerm->title}\" publicada. Vigente imediatamente para novos aceites.");
     }
 
     /**

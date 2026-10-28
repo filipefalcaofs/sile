@@ -9,12 +9,18 @@ use App\Services\Regin\ReginProcessoProtocolador;
 use Illuminate\Console\Command;
 
 /**
+ * Lê por id (`lazyById`): cada correção tira o processo do filtro `solicitante_cpf` nulo, e a leitura
+ * por posição pularia os que sobram entre os lotes.
+ *
  * Separa o solicitante da empresa nos processos REGIN de empresa a constituir: o
  * REGIN manda em RUC_GENERAL o nome e o CPF de quem pediu, e o processo ainda
  * mostra isso como empresa. O envelope vem do recebimento guardado do protocolo.
  */
 class ReginCorrigirSolicitantesCommand extends Command
 {
+    /** Tamanho do lote da leitura; os testes reduzem para exercitar a troca de lote. */
+    public static int $tamanhoDoLote = 200;
+
     protected $signature = 'regin:corrigir-solicitantes {--dry-run : Mostra as contagens, sem gravar}';
 
     protected $description = 'Separa solicitante e razão social pretendida nos processos REGIN de empresa a constituir';
@@ -30,7 +36,7 @@ class ReginCorrigirSolicitantesCommand extends Command
             ->whereNull('solicitante_cpf')
             ->whereNotNull('external_reference')
             ->with('company')
-            ->orderBy('id')
+            ->lazyById(self::$tamanhoDoLote)
             ->each(function (ViabilityRequest $processo) use ($protocolador, $dryRun, &$corrigidos, &$semEnvelope): void {
                 if (strlen((string) $processo->company?->cnpj) !== 11) {
                     return;

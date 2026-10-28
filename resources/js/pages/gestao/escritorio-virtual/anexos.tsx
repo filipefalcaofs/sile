@@ -144,7 +144,7 @@ function ImportarCard({ versaoSugerida }: { versaoSugerida: string }) {
         <Card>
             <CardHeader
                 title="Importar nova versão"
-                description="Os dois CSVs (cabeçalho cnae_code,cnae_description) entram num rascunho nomeado. A versão vigente só muda quando outro mantenedor publicar — quatro olhos."
+                description="Os dois CSVs (cabeçalho cnae_code,cnae_description) entram num rascunho nomeado. A versão vigente só muda quando outro mantenedor publicar, quatro olhos."
             />
             <CardContent>
                 <form onSubmit={submit} className="grid gap-4 md:grid-cols-2">
@@ -252,7 +252,7 @@ function PublicarModal({
                     {totalAdicionados} {totalAdicionados === 1 ? 'CNAE adicionado' : 'CNAEs adicionados'} e{' '}
                     {totalRemovidos} {totalRemovidos === 1 ? 'removido' : 'removidos'}
                 </strong>{' '}
-                nos dois anexos. A versão em uso hoje é fechada e permanece no histórico — nenhuma linha é
+                nos dois anexos. A versão em uso hoje é fechada e permanece no histórico, nenhuma linha é
                 apagada.
             </p>
             {isAutor && (
@@ -260,7 +260,7 @@ function PublicarModal({
                     <AlertIcon className="size-4 shrink-0 fill-current text-warning-500" />
                     <p className="text-theme-xs text-gray-600 dark:text-gray-300">
                         <span className="font-medium text-warning-600 dark:text-orange-400">Quatro olhos.</span>{' '}
-                        Você é o autor deste rascunho — a publicação exige outro mantenedor com a permissão de
+                        Você é o autor deste rascunho, a publicação exige outro mantenedor com a permissão de
                         CNAEs.
                     </p>
                 </div>
@@ -328,7 +328,7 @@ export default function EscritorioVirtualAnexos({ vigente, rascunho, historico, 
                     <Card>
                         <CardHeader
                             title={`Rascunho ${rascunho.version}`}
-                            description={`Autor: ${rascunho.autor.name ?? '—'} · Anexo A: ${rascunho.anexo_a} CNAEs · Anexo B: ${rascunho.anexo_b} CNAEs`}
+                            description={`Autor: ${rascunho.autor.name ?? '-'} · Anexo A: ${rascunho.anexo_a} CNAEs · Anexo B: ${rascunho.anexo_b} CNAEs`}
                             actions={
                                 <Button size="sm" onClick={() => setShowPublicar(true)}>
                                     <FileIcon className="size-4 fill-current" />
@@ -394,7 +394,7 @@ export default function EscritorioVirtualAnexos({ vigente, rascunho, historico, 
                                                     </Badge>
                                                 </td>
                                                 <td className="px-3 py-3 text-gray-500 dark:text-gray-400">
-                                                    {formatarData(versao.valid_from) ?? '—'}
+                                                    {formatarData(versao.valid_from) ?? '-'}
                                                     {versao.valid_to ? ` até ${formatarData(versao.valid_to)}` : ''}
                                                 </td>
                                                 <td className="px-3 py-3 text-gray-700 dark:text-gray-300">

@@ -141,7 +141,7 @@ function CelulaFaixas({ linha }: { linha: EnquadramentoLinha }) {
     const faixas = faixasDaLinha(linha);
 
     if (faixas.length === 0) {
-        return <>—</>;
+        return <>-</>;
     }
 
     return (
@@ -194,7 +194,7 @@ const colunasEnquadramento: ColumnDef<EnquadramentoLinha>[] = [
             const classificacao = apresentacaoClassificacao(linha.classificacao);
 
             if (!classificacao) {
-                return '—';
+                return '-';
             }
 
             return (
@@ -208,7 +208,7 @@ const colunasEnquadramento: ColumnDef<EnquadramentoLinha>[] = [
         id: 'tll',
         header: 'TLL',
         cellClassName: 'font-medium tabular-nums whitespace-nowrap text-gray-800 dark:text-white/90',
-        cell: (linha) => linha.codigo_tll ?? '—',
+        cell: (linha) => linha.codigo_tll ?? '-',
     },
 ];
 
@@ -460,11 +460,11 @@ export default function AbaEnquadramento({
                                 {ramos.map((ramo, indice) => (
                                     <tr key={`${ramo.regra}-${indice}`} className="border-t border-gray-200 dark:border-gray-800">
                                         <td className="py-2 pr-3">{ramo.regra}</td>
-                                        <td className="py-2 pr-3">{ramo.pergunta ?? '—'}</td>
-                                        <td className="py-2 pr-3">{ramo.resposta === null ? '—' : ramo.resposta ? 'Sim' : 'Não'}</td>
-                                        <td className="py-2 pr-3">{ramo.faixa ?? '—'}</td>
-                                        <td className="py-2 pr-3">{ramo.tipo_dirige ? 'Dirige regra' : '—'}</td>
-                                        <td className="py-2 pr-3">{ramo.codigo_louos ?? '—'}</td>
+                                        <td className="py-2 pr-3">{ramo.pergunta ?? '-'}</td>
+                                        <td className="py-2 pr-3">{ramo.resposta === null ? '-' : ramo.resposta ? 'Sim' : 'Não'}</td>
+                                        <td className="py-2 pr-3">{ramo.faixa ?? '-'}</td>
+                                        <td className="py-2 pr-3">{ramo.tipo_dirige ? 'Dirige regra' : '-'}</td>
+                                        <td className="py-2 pr-3">{ramo.codigo_louos ?? '-'}</td>
                                         <td className="py-2 pr-3">{ramo.fluxo}</td>
                                         <td className="py-2">{ramo.bloqueia ? 'Sim' : 'Não'}</td>
                                     </tr>

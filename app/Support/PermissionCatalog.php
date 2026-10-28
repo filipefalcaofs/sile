@@ -124,7 +124,7 @@ final class PermissionCatalog
             [
                 'name' => 'encaminhar-para-conclusao',
                 'label' => 'Encaminhar para conclusão',
-                'description' => 'Envia o processo em análise para a aba Para conclusão, para a chefia ou outro analista concluir. Quem conclui só encaminha se também tiver esta permissão.',
+                'description' => 'Envia o processo em análise para a aba Analisados, para a chefia ou outro analista concluir. Quem conclui só encaminha se também tiver esta permissão.',
                 'group' => 'Análise técnica',
             ],
             [

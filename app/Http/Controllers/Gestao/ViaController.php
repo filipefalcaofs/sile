@@ -73,8 +73,8 @@ class ViaController extends Controller
         $via->update(['ativo' => ! $via->ativo]);
 
         $message = $via->ativo
-            ? 'Via reativada — novas publicações do Quadro 11A podem referenciá-la.'
-            : 'Via desativada — novas publicações do Quadro 11A que a referenciem serão bloqueadas. Os quadros vigentes são preservados.';
+            ? 'Via reativada. Novas publicações do Quadro 11A podem referenciá-la.'
+            : 'Via desativada. Novas publicações do Quadro 11A que a referenciem serão bloqueadas. Os quadros vigentes são preservados.';
 
         return back()->with('status', $message);
     }

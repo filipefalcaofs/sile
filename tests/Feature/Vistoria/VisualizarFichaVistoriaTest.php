@@ -113,6 +113,58 @@ class VisualizarFichaVistoriaTest extends TestCase
         ]);
     }
 
+    public function test_ficha_pedida_pela_tramitacao_abre_essa_ficha_e_nao_a_mais_recente(): void
+    {
+        $analista = $this->analistaConsulta();
+        $processo = ViabilityRequest::factory()->create();
+        $primeira = Inspection::factory()->concluida()->create([
+            'viability_request_id' => $processo->id,
+            'parecer' => 'Parecer da primeira vistoria.',
+        ]);
+        Inspection::factory()->create(['viability_request_id' => $processo->id]);
+        $this->encaminhadoPor($processo, $analista);
+
+        $this->actingAs($analista, 'gestao')
+            ->get("/gestao/processos/{$processo->id}/vistoria/visualizar?ficha={$primeira->id}")
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('ficha.id', $primeira->id)
+                ->where('ficha.parecer', 'Parecer da primeira vistoria.'));
+    }
+
+    public function test_ficha_de_outro_processo_nao_abre(): void
+    {
+        $analista = $this->analistaConsulta();
+        $processo = ViabilityRequest::factory()->create();
+        $this->encaminhadoPor($processo, $analista);
+        $alheia = Inspection::factory()->concluida()->create();
+
+        $this->actingAs($analista, 'gestao')
+            ->get("/gestao/processos/{$processo->id}/vistoria/visualizar?ficha={$alheia->id}")
+            ->assertNotFound();
+    }
+
+    public function test_detalhe_do_processo_libera_o_link_da_ficha_so_a_quem_pode_consultar(): void
+    {
+        $analista = $this->analistaConsulta();
+        $outro = $this->analistaConsulta();
+        $analista->givePermissionTo('consultar-solicitacoes');
+        $outro->givePermissionTo('consultar-solicitacoes');
+        $processo = ViabilityRequest::factory()->create();
+        Inspection::factory()->concluida()->create(['viability_request_id' => $processo->id]);
+        $this->encaminhadoPor($processo, $analista);
+
+        $this->actingAs($analista, 'gestao')
+            ->get("/gestao/processos/{$processo->id}")
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->where('podeVerFichaVistoria', true));
+
+        $this->actingAs($outro, 'gestao')
+            ->get("/gestao/processos/{$processo->id}")
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->where('podeVerFichaVistoria', false));
+    }
+
     public function test_quem_preenche_tambem_consulta_sem_modo_de_edicao(): void
     {
         $vistoriador = $this->vistoriador();

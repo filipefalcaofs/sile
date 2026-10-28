@@ -23,7 +23,7 @@ class LegalTermCrudTest extends TestCase
 {
     use LazilyRefreshDatabase;
 
-    private const MENSAGEM_IMUTAVEL = 'Termos publicados são imutáveis — crie uma nova versão.';
+    private const MENSAGEM_IMUTAVEL = 'Termos publicados são imutáveis. Crie uma nova versão.';
 
     protected function setUp(): void
     {

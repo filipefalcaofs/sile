@@ -120,7 +120,7 @@ const percentFormat = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 
 
 /** Percentual honesto: null (sem decisões no período) vira travessão, jamais 0% fabricado. */
 function formatarPercentual(valor: number | null): string {
-    return valor === null ? '—' : `${percentFormat.format(valor)}%`;
+    return valor === null ? '-' : `${percentFormat.format(valor)}%`;
 }
 
 /** Formata o código CNAE de 7 dígitos no padrão 9999-9/99; mantém o bruto se não casar. */

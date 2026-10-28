@@ -13,7 +13,9 @@ use App\Models\Activity;
 use App\Models\Sector;
 use App\Models\User;
 use App\Models\ViabilityRequest;
+use App\Services\Analise\AnalysisRecordService;
 use App\Services\Analise\AnalysisStatusStateMachine;
+use App\Services\Analise\DistribuicaoService;
 use App\Services\Analise\InvalidAnalysisStatusTransitionException;
 use App\Services\Analise\ProcessoQueryService;
 use App\Services\Analise\TramitacaoProcessoService;
@@ -242,6 +244,9 @@ class ProcessoController extends Controller
         return Inertia::render('gestao/processos/show', [
             'processo' => (new ProcessoResource($viabilityRequest))->resolve(),
             'consultaVistoria' => $consultaVistoria,
+            // Link da ficha de vistoria na tramitação: a consulta exige analisar-processos (rota) e VistoriaAcesso.
+            'podeVerFichaVistoria' => $request->user()->can('analisar-processos')
+                && app(VistoriaAcesso::class)->podeConsultar($viabilityRequest, $request->user()),
             // Despacho do analista ao encaminhar à vistoria: o que verificar em campo.
             'despachoVistoria' => $despacho === null ? null : [
                 'orientacoes' => $despacho->motivo,
@@ -382,7 +387,8 @@ class ProcessoController extends Controller
      * (convite_respondido/expirado) fazem parte do grafo completo da máquina,
      * mas não podem ser setados manualmente. A guarda é ignorada quando o
      * usuário tem forcar-transicao-analise E pede o override (`force`), que aí passa a valer o
-     * grafo completo validado pela state machine. `motivo` é opcional na Fase
+     * grafo completo validado pela state machine. A análise concluída não sai
+     * nem com o override (SPEC-07). `motivo` é opcional na Fase
      * 1 (a obrigatoriedade de parecer no cancelamento chega com o convite, na
      * Fase 2). Transição recusada é comunicada com flash.error — nunca
      * silenciosa.
@@ -397,6 +403,12 @@ class ProcessoController extends Controller
         $force = $request->boolean('force') && $request->user()->can('forcar-transicao-analise');
 
         $podeConcluir = $request->user()->can('concluir-analise');
+
+        // SPEC-07: a reabertura da análise concluída depende de regra da SEDUR
+        // (decisão e TVL já emitidos); nem o override reabre por enquanto.
+        if ($from === AnalysisStatus::AnaliseConcluida) {
+            return back()->with('error', 'A análise já foi concluída e não pode ser reaberta: a reabertura ainda depende de regra da SEDUR.');
+        }
 
         if (! $force && ($from === null || ! in_array($to, $from->proximasPara($podeConcluir, $request->user()->can('encaminhar-para-conclusao')), true))) {
             return back()->with('error', 'Transição de situação da análise não permitida.');
@@ -445,6 +457,14 @@ class ProcessoController extends Controller
             return back()->with('error', $e->getMessage());
         }
 
+        if ($to === AnalysisStatus::ParaConclusao) {
+            app(AnalysisRecordService::class)->guardarParaConclusao($viabilityRequest, $request->user());
+        }
+
+        if ($from === AnalysisStatus::ParaConclusao && $to !== AnalysisStatus::Encaminhado) {
+            app(DistribuicaoService::class)->assumirAoAgir($viabilityRequest, $request->user(), 'devolvê-lo para '.$to->label());
+        }
+
         $confirmacao = $this->confirmacaoDaTramitacao($viabilityRequest, $to);
 
         // "Encaminhar para Chefia" na ficha: o processo saiu da caixa de quem
@@ -466,7 +486,7 @@ class ProcessoController extends Controller
 
         return match ($to) {
             AnalysisStatus::Encaminhado => "Processo encaminhado para {$viabilityRequest->assignedTo?->name} ({$viabilityRequest->sector?->name}). Ele já está na Caixa de entrada dessa pessoa.",
-            AnalysisStatus::ParaConclusao => "Processo enviado para conclusão. Ele está na aba Para conclusão da Caixa do setor {$viabilityRequest->sector?->name}, aguardando distribuição.",
+            AnalysisStatus::ParaConclusao => "Processo enviado para conclusão. Ele está na aba Analisados da Caixa do setor {$viabilityRequest->sector?->name}, aguardando distribuição.",
             default => "Situação da análise atualizada para {$to->label()}.",
         };
     }

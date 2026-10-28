@@ -75,8 +75,8 @@ class ZonaController extends Controller
         $zona->update(['ativo' => ! $zona->ativo]);
 
         $message = $zona->ativo
-            ? 'Zona reativada — novas publicações do Quadro 10 podem referenciá-la.'
-            : 'Zona desativada — novas publicações do Quadro 10 que a referenciem serão bloqueadas. Os quadros vigentes são preservados.';
+            ? 'Zona reativada. Novas publicações do Quadro 10 podem referenciá-la.'
+            : 'Zona desativada. Novas publicações do Quadro 10 que a referenciem serão bloqueadas. Os quadros vigentes são preservados.';
 
         return back()->with('status', $message);
     }

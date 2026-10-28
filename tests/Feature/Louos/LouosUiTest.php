@@ -135,4 +135,18 @@ class LouosUiTest extends TestCase
                 ->component('gestao/louos/rascunho')
                 ->where('urlManual', '/gestao/louos/manual?quadro=quadro11a'));
     }
+
+    public function test_hub_abre_na_aba_permitida_para_quem_so_consulta_cnaes(): void
+    {
+        $usuario = User::factory()->analista()->withAcceptedLgpdTerm()->create();
+        $usuario->syncRoles([]);
+        $usuario->syncPermissions(['acessar-gestao', 'consultar-cnaes']);
+
+        $this->actingAs($usuario, 'gestao')
+            ->get('/gestao/louos')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('gestao/louos/index')
+                ->where('aba', 'enquadramento'));
+    }
 }

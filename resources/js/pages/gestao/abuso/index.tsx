@@ -125,6 +125,8 @@ interface AbusoIndexProps {
         total: number;
     };
     efetividade: Efetividade;
+    /** Recurso features.deteccao_abuso: false = detecção desativada pela administração. */
+    deteccaoAtiva?: boolean;
     filtros: Filtros;
     perPageOptions: number[];
     ruleKeyOptions: string[];
@@ -140,7 +142,7 @@ const URL_PAINEL = '/gestao/abuso';
 /** Formata a data-hora ISO para o padrão pt-BR (dd/mm/aaaa hh:mm). */
 function formatarDataHora(iso: string | null): string {
     if (!iso) {
-        return '—';
+        return '-';
     }
 
     const data = new Date(iso);
@@ -161,7 +163,7 @@ function formatarDataHora(iso: string | null): string {
 /** Número inteiro formatado em pt-BR. */
 function formatarNumero(valor: number | null | undefined): string {
     if (typeof valor !== 'number' || Number.isNaN(valor)) {
-        return '—';
+        return '-';
     }
 
     return valor.toLocaleString('pt-BR');
@@ -173,7 +175,7 @@ function formatarNumero(valor: number | null | undefined): string {
  */
 function formatarTaxa(taxa: number | null): string {
     if (taxa === null || typeof taxa !== 'number' || Number.isNaN(taxa)) {
-        return '—';
+        return '-';
     }
 
     return `${taxa.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%`;
@@ -293,6 +295,7 @@ const colunasEfetividade: ColumnDef<EfetividadeRegra>[] = [
 export default function AbusoIndex({
     alertas,
     efetividade,
+    deteccaoAtiva = true,
     filtros,
     perPageOptions,
     ruleKeyOptions,
@@ -432,7 +435,7 @@ export default function AbusoIndex({
                             {alerta.processo.protocol_number ?? `#${alerta.processo.id}`}
                         </Link>
                     ) : (
-                        <span className="text-gray-400 dark:text-gray-500">—</span>
+                        <span className="text-gray-400 dark:text-gray-500">-</span>
                     )}
                     {alerta.encaminhado_malha_fina && (
                         <Badge color="warning" size="sm">
@@ -449,7 +452,7 @@ export default function AbusoIndex({
                 const itens = resumoEvidencia(alerta.evidence);
 
                 if (itens.length === 0) {
-                    return <span className="text-gray-400 dark:text-gray-500">—</span>;
+                    return <span className="text-gray-400 dark:text-gray-500">-</span>;
                 }
 
                 return (
@@ -527,11 +530,11 @@ export default function AbusoIndex({
                 <div className="flex items-start gap-3 rounded-xl border border-blue-light-200 bg-blue-light-50 p-4 dark:border-blue-light-500/30 dark:bg-blue-light-500/15">
                     <ShieldIcon className="size-5 shrink-0 text-blue-light-500" />
                     <div className="text-theme-sm text-gray-600 dark:text-gray-300">
-                        <p className="font-medium text-gray-800 dark:text-white/90">Revisão humana — nunca punição automática</p>
+                        <p className="font-medium text-gray-800 dark:text-white/90">Revisão humana, nunca punição automática</p>
                         <p className="mt-1">
                             Confirmar ou descartar é a triagem humana do próprio alerta. Não altera, não indefere e
-                            não pune o processo, e não mexe no encaminhamento à malha fina — que é ortogonal e decidido pelo
-                            motor. A detecção nasce desligada e gera apenas insumo para análise.
+                            não pune o processo, e não mexe no encaminhamento à malha fina, que é decidido pelo
+                            motor. A detecção gera apenas insumo para análise.
                         </p>
                     </div>
                 </div>
@@ -660,7 +663,7 @@ export default function AbusoIndex({
                                 loading={processing}
                                 skeletonRows={8}
                                 density="compact"
-                                emptyState={<AlertasVazio filtrando={filtrando} />}
+                                emptyState={<AlertasVazio filtrando={filtrando} deteccaoAtiva={deteccaoAtiva} />}
                             />
 
                             <Pagination
@@ -685,7 +688,7 @@ export default function AbusoIndex({
                             <ShieldIcon className="size-5 shrink-0 text-blue-light-500" />
                             <p className="text-theme-xs text-gray-600 dark:text-gray-300">
                                 Esta decisão registra a revisão humana do <strong>alerta</strong>. Ela não altera o status do
-                                processo, não o pune e não mexe na malha fina — que é ortogonal.
+                                processo, não o pune e não mexe na malha fina, que segue regra própria.
                             </p>
                         </div>
 
@@ -732,19 +735,28 @@ function FiltroCampo({ label, children }: { label: string; children: ReactNode }
 }
 
 /**
- * Estado vazio honesto: distingue "sem resultado de busca" de "sem alertas", e
- * nesse caso explica que a detecção nasce desligada —
- * a ausência pode ser desativação OU nada sinalizado, nunca um estado fingido.
+ * Estado vazio honesto: distingue "sem resultado de busca" de "detecção
+ * desativada" e de "nada sinalizado", sem deixar o recurso inativo parecer
+ * ausência de ocorrências.
  */
-function AlertasVazio({ filtrando }: { filtrando: boolean }) {
+function AlertasVazio({ filtrando, deteccaoAtiva }: { filtrando: boolean; deteccaoAtiva: boolean }) {
+    if (filtrando) {
+        return <EmptyState title="Nenhum alerta para os filtros" description="Ajuste os filtros e tente novamente." />;
+    }
+
+    if (!deteccaoAtiva) {
+        return (
+            <EmptyState
+                title="Detecção de abuso desativada"
+                description="O recurso está inativo, por isso nenhum alerta novo é gerado. A ausência de alertas aqui não significa que não houve ocorrências. A administração pode ativá-lo nos parâmetros do sistema."
+            />
+        );
+    }
+
     return (
         <EmptyState
-            title={filtrando ? 'Nenhum alerta para os filtros' : 'Nenhum alerta de abuso registrado'}
-            description={
-                filtrando
-                    ? 'Ajuste os filtros e tente novamente.'
-                    : 'A detecção de abuso roda como tarefa agendada e nasce desligada. Sem alertas, ou a detecção está desativada, ou nada foi sinalizado no período.'
-            }
+            title="Nenhum alerta de abuso registrado"
+            description="A detecção está ativa e nada foi sinalizado no período."
         />
     );
 }

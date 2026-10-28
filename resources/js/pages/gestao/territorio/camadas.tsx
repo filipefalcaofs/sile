@@ -118,7 +118,7 @@ function ImportarModal({ tipos, uploadMaxMb, onClose }: { tipos: CamadasIndexPro
                             id="import-origem"
                             type="text"
                             name="origem"
-                            placeholder="Ex.: GeoSalvador — ArcGIS REST Bairros"
+                            placeholder="Ex.: GeoSalvador, ArcGIS REST Bairros"
                             value={form.data.origem}
                             onChange={(e) => form.setData('origem', e.target.value)}
                             error={!!form.errors.origem}
@@ -178,13 +178,13 @@ function GrupoCard({ grupo }: { grupo: CamadaGrupo }) {
             id: 'valid_from',
             header: 'Vigente de',
             cellClassName: 'whitespace-nowrap',
-            cell: (versao) => versao.valid_from ?? '—',
+            cell: (versao) => versao.valid_from ?? '-',
         },
         {
             id: 'valid_to',
             header: 'Vigente até',
             cellClassName: 'whitespace-nowrap',
-            cell: (versao) => versao.valid_to ?? '—',
+            cell: (versao) => versao.valid_to ?? '-',
         },
     ];
 
@@ -194,9 +194,9 @@ function GrupoCard({ grupo }: { grupo: CamadaGrupo }) {
                 title={grupo.label}
                 description={
                     grupo.vigente
-                        ? `Vigente: ${grupo.vigente.version} — ${grupo.vigente.feature_count} feições, desde ${grupo.vigente.valid_from ?? '—'}.`
+                        ? `Vigente: ${grupo.vigente.version}, ${grupo.vigente.feature_count === 1 ? '1 feição' : `${grupo.vigente.feature_count} feições`}, desde ${grupo.vigente.valid_from ?? 'data não informada'}.`
                         : grupo.fonte_bloqueada
-                          ? 'Sem fonte vetorial pública confirmada — pendente da base oficial SEDUR/SEFAZ.'
+                          ? 'Sem fonte vetorial pública confirmada, pendente da base oficial SEDUR/SEFAZ.'
                           : 'Nenhuma versão importada.'
                 }
                 actions={
@@ -250,7 +250,7 @@ export default function CamadasIndex({ grupos, tipos, uploadMaxMb }: CamadasInde
             <div className="mb-6 flex items-center justify-between gap-4">
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                     Versões oficiais das camadas usadas na validação territorial. A importação abre uma nova versão vigente e fecha a
-                    anterior — o histórico é preservado para reprodução de decisões.
+                    anterior, o histórico é preservado para reprodução de decisões.
                 </p>
                 {canMaintain && (
                     <Button size="sm" onClick={() => setShowImport(true)}>

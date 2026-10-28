@@ -2,6 +2,8 @@
 
 Em 19/10/2026 foram retiradas 11 HUs que o sistema não oferece e as demais foram reordenadas: primeiro a retaguarda e depois o portal, na ordem de uso das funcionalidades, com a nova HU-004. Em 20/10/2026 foram criadas mais 4 HUs para funções que existiam no sistema e nenhuma HU descrevia: HU-011 (Alertar falta de tabela TLL do exercício), HU-086 (Desvincular inscrição de escritório virtual), HU-149 (Consultar painel do cidadão) e HU-181 (Consultar central de notificações), e as HUs foram renumeradas. As 181 HUs (176 mantidas e 5 novas) vão de HU-001 a HU-181. A Retaguarda vai de HU-001 a HU-139 e o Portal, de HU-140 a HU-181.
 
+Em 23/10/2026 foi criada a HU-183 (fichas de análise por analista e histórico de tramitação), numerada depois da HU-182 e fora das faixas acima; não altera a numeração das demais.
+
 Há três numerações:
 
 - **Até 18/10/2026:** usada em `.planning`, especificações e planos datados, ofícios, atas e nas contagens anteriores.
@@ -168,7 +170,7 @@ Há três numerações:
 | HU-139 | HU-172 | HU-183 | Relatório de falhas de comunicação | Retaguarda — Relatórios e indicadores |
 | HU-140 | HU-001 | HU-001 | Cadastrar usuário | Portal — Conta do cidadão |
 | HU-141 | HU-005 | HU-005 | Confirmar e-mail | Portal — Conta do cidadão |
-| HU-142 | HU-140 | HU-151 | Autenticar com GOV.BR | Portal — Conta do cidadão |
+| HU-142 | HU-140 | HU-151 | Autenticar pelo portal de serviços da SEDUR (até 21/10/2026: Autenticar com GOV.BR) | Portal — Conta do cidadão |
 | HU-143 | HU-004 | HU-004 | Alterar senha | Portal — Conta do cidadão |
 | HU-144 | HU-007 | HU-007 | Gerenciar perfil do usuário | Portal — Conta do cidadão |
 | HU-145 | HU-006 | HU-006 | Aceitar termo LGPD | Portal — Conta do cidadão |
@@ -208,3 +210,4 @@ Há três numerações:
 | HU-179 | HU-108 | HU-116 | Gerar resumo da solicitação | Portal — Acompanhamento e resposta |
 | HU-180 | HU-175 | HU-186 | Verificar autenticidade de documento | Portal — Acompanhamento e resposta |
 | HU-181 | — | — | Consultar central de notificações (nova em 20/10) | Portal — Acompanhamento e resposta |
+| HU-183 | — | — | Manter fichas de análise por analista e histórico de tramitação (nova em 23/10, para validação da SEDUR) | Retaguarda — Análise técnica dos processos |

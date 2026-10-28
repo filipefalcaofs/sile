@@ -79,7 +79,7 @@ class EnviarParaAnaliseController extends Controller
         $enviado = $this->service->enviar($processo, $request->user());
 
         if (! $enviado) {
-            return back()->with('status', "O processo {$processo->protocol_number} já está em análise — nada foi duplicado.");
+            return back()->with('status', "O processo {$processo->protocol_number} já está em análise. Nada foi duplicado.");
         }
 
         return back()->with('status', "Processo {$processo->protocol_number} enviado para análise.");

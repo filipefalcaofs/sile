@@ -86,14 +86,9 @@ class VistoriaConsultaController extends Controller
             ? $perPage
             : (int) Settings::get('ui.cnaes.per_page', 15);
 
-        // Universo: processos no eixo de vistoria OU com ficha de vistoria —
-        // a ficha concluída e devolvida à análise (retorno automático) continua
-        // visível em "Concluídas" mesmo fora do eixo.
-        $universo = ViabilityRequest::query()
-            ->where(function (Builder $q): void {
-                $q->whereIn('analysis_status', [AnalysisStatus::Vistoriar->value, AnalysisStatus::Vistoriado->value])
-                    ->orWhereHas('inspection');
-            });
+        // Universo: só o que está na Caixa de Vistoria. Encaminhado de volta à
+        // Caixa do Setor, o processo sai daqui, com a ficha concluída ou não.
+        $universo = ViabilityRequest::query()->naCaixaDeVistoria();
 
         // Quem não distribui vê só os processos dele, como na Caixa de entrada.
         $universo = $this->acesso->escopar($universo, $request->user());

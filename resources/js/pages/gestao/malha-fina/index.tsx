@@ -82,7 +82,7 @@ interface MalhaFinaIndexProps {
 /** Formata a data-hora ISO para o padrão pt-BR (dd/mm/aaaa hh:mm). */
 function formatarDataHora(iso: string | null): string {
     if (!iso) {
-        return '—';
+        return '-';
     }
 
     const data = new Date(iso);
@@ -156,7 +156,7 @@ export default function MalhaFinaIndex({
             cell: (item) => (
                 <div className="flex flex-col">
                     <span className="font-medium text-gray-800 tabular-nums dark:text-white/90">
-                        {item.protocol_number ?? '—'}
+                        {item.protocol_number ?? '-'}
                     </span>
                     <span className="text-theme-xs text-gray-400 dark:text-gray-500">
                         {item.bap ? `BAP ${item.bap}` : 'sem BAP'}
@@ -172,7 +172,7 @@ export default function MalhaFinaIndex({
             header: 'Requerente',
             cell: (item) => (
                 <div className="flex flex-col">
-                    <span className="text-gray-700 dark:text-gray-300">{item.empresa ?? item.requerente ?? '—'}</span>
+                    <span className="text-gray-700 dark:text-gray-300">{item.empresa ?? item.requerente ?? '-'}</span>
                     {item.empresa && item.requerente && (
                         <span className="text-theme-xs text-gray-400 dark:text-gray-500">{item.requerente}</span>
                     )}
@@ -212,7 +212,7 @@ export default function MalhaFinaIndex({
                     {aba === 'concluidas' ? (
                         <>
                             <span className="text-gray-700 dark:text-gray-300">
-                                {item.concluido_por ?? '—'} · {formatarDataHora(item.concluido_em)}
+                                {item.concluido_por ?? '-'} · {formatarDataHora(item.concluido_em)}
                             </span>
                             {item.resultado_label && (
                                 <span className="text-theme-xs font-medium text-gray-700 dark:text-gray-300">
@@ -332,7 +332,7 @@ export default function MalhaFinaIndex({
                                     description={
                                         aba === 'concluidas'
                                             ? 'Processos concluídos na malha fina aparecem aqui.'
-                                            : 'Processos entram aqui quando encaminhados à malha fina — pela ficha, em lote na consulta ou pela detecção de abuso.'
+                                            : 'Processos entram aqui quando encaminhados à malha fina, pela ficha, em lote na consulta ou pela detecção de abuso.'
                                     }
                                 />
                             }
@@ -350,7 +350,7 @@ export default function MalhaFinaIndex({
                 <h2 className="text-lg font-semibold text-gray-800 dark:text-white/90">Conclusão de Análise</h2>
                 <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
                     O processo {concluindo?.protocol_number ?? ''} sai da malha fina com o resultado escolhido. Deferido
-                    e indeferido seguem a ficha finalizada. Desativado, cassado e revogado encerram o processo —
+                    e indeferido seguem a ficha finalizada. Desativado, cassado e revogado encerram o processo,
                     inclusive um já deferido.
                 </p>
                 <div className="mt-4">

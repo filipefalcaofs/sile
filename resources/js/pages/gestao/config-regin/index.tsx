@@ -137,7 +137,7 @@ export default function ConfigRegin({ config }: Props) {
                 <Card>
                     <CardHeader
                         title="Teste de conexão"
-                        description="Autentica de verdade na URL ativa. Falha aparece como falha — sem resultado simulado."
+                        description="Autentica de verdade na URL ativa. Falha aparece como falha, sem resultado simulado."
                     />
                     <CardContent>
                         <Form action="/gestao/config-regin/testar" method="post">

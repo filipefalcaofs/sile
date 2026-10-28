@@ -64,8 +64,8 @@ class RiskTriggerController extends Controller
         $riskTrigger->update(['ativo' => ! $riskTrigger->ativo]);
 
         $message = $riskTrigger->ativo
-            ? 'Gatilho reativado — processos voltam a ser encaminhados à análise técnica.'
-            : 'Gatilho desativado — processos passam a concluir automaticamente no fluxo expresso.';
+            ? 'Gatilho reativado. Processos voltam a ser encaminhados à análise técnica.'
+            : 'Gatilho desativado. Processos passam a concluir automaticamente no fluxo expresso.';
 
         return back()->with('status', $message);
     }

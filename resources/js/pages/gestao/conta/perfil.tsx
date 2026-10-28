@@ -20,7 +20,7 @@ interface PerfilProps {
 export default function Perfil({ user }: PerfilProps) {
     return (
         <>
-            <Head title="Meu perfil — Gestão SEDUR" />
+            <Head title="Meu perfil: Gestão SEDUR" />
             <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] lg:p-6">
                 <div className="mb-6">
                     <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">

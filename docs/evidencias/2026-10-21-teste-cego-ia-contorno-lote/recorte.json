@@ -1,0 +1,23 @@
+{
+  "ponto": {
+    "lat": -12.996143,
+    "lng": -38.465385
+  },
+  "caixa_4326": [
+    -38.4656615778369,
+    -12.996414311519887,
+    -38.4651084221631,
+    -12.995871688480113
+  ],
+  "lado_m": 60.0,
+  "pixels": 800,
+  "servico": "https://geo.salvador.ba.gov.br/imageserver/rest/services/Ortofotos/2024/ImageServer",
+  "ano": "2024",
+  "content_type": "image/png",
+  "bytes": 921278,
+  "pixel_do_ponto": [
+    400,
+    400
+  ],
+  "baixado_em": "2026-10-22T00:37:35.830068+00:00"
+}

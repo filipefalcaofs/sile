@@ -3,7 +3,6 @@ import type { MultiPolygon, Polygon } from 'geojson';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import ConclusaoAnaliseForm from '@/components/analise/conclusao-analise-form';
-import BaixarTvl from '@/components/analise/baixar-tvl';
 import JustificativaReginCard, { type JustificativaRegin } from '@/components/analise/justificativa-regin-card';
 import {
     CategoriaBadges,
@@ -79,6 +78,8 @@ interface ShowProps {
     conclusaoOpcoes: { value: string; label: string }[];
     /** Capa aberta pela caixa de vistoria: voltar à consulta de vistorias e permitir imprimir. */
     consultaVistoria?: boolean;
+    /** Quem vê o processo pode abrir a ficha de vistoria pelo link da tramitação. */
+    podeVerFichaVistoria?: boolean;
     /** Despacho do analista ao encaminhar o processo à vistoria; null sem encaminhamento. */
     despachoVistoria?: {
         orientacoes: string;
@@ -146,6 +147,7 @@ export default function Show({
     justificativaRegin = null,
     conclusaoOpcoes,
     consultaVistoria = false,
+    podeVerFichaVistoria = false,
     despachoVistoria = null,
 }: ShowProps & {
     setoresEncaminhamento?: SetorEncaminhamento[];
@@ -268,7 +270,7 @@ export default function Show({
                                         <AlertIcon className="mt-0.5 size-4 shrink-0 fill-current text-warning-500" />
                                         <p className="text-theme-sm text-gray-700 dark:text-gray-200">
                                             {processo.motivo_encaminhamento
-                                                ? `Sem decisão automática — ${processo.motivo_encaminhamento}`
+                                                ? `Sem decisão automática, ${processo.motivo_encaminhamento}`
                                                 : 'Sem decisão automática. O motor não deferiu nem indeferiu; o processo foi encaminhado à análise técnica.'}
                                         </p>
                                     </div>
@@ -286,17 +288,14 @@ export default function Show({
 
                             <dl className="grid shrink-0 grid-cols-1 gap-4 sm:text-right">
                                 <DescItem label="Nº do processo">
-                                    <span className="font-medium">{processo.protocol_number ?? '—'}</span>
+                                    <span className="font-medium">{processo.protocol_number ?? '-'}</span>
                                 </DescItem>
-                                <DescItem label="Protocolo BAP">{processo.bap ?? '—'}</DescItem>
+                                <DescItem label="Protocolo BAP">{processo.bap ?? '-'}</DescItem>
                                 <DescItem label="Nº da viabilidade">
                                     {processo.tvl_product_number ? (
-                                        <span className="inline-flex flex-wrap items-center justify-end gap-2">
-                                            <span>{processo.tvl_product_number}</span>
-                                            <BaixarTvl solicitacaoId={processo.id} />
-                                        </span>
+                                        <span>{processo.tvl_product_number.replace(/^TVL-/i, '')}</span>
                                     ) : (
-                                        '—'
+                                        '-'
                                     )}
                                 </DescItem>
                                 <DescItem label="Data de entrada">
@@ -415,16 +414,16 @@ export default function Show({
                                 <CardHeader title="Informações do processo" />
                                 <CardContent>
                                     <dl className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                                        <DescItem label="Empresa">{processo.empresa ?? '—'}</DescItem>
-                                        <DescItem label="CNPJ">{processo.cnpj ?? '—'}</DescItem>
-                                        <DescItem label="Solicitante">{processo.solicitante ?? '—'}</DescItem>
-                                        <DescItem label="CPF do solicitante">{processo.solicitante_cpf ?? '—'}</DescItem>
+                                        <DescItem label="Empresa">{processo.empresa ?? '-'}</DescItem>
+                                        <DescItem label="CNPJ">{processo.cnpj ?? '-'}</DescItem>
+                                        <DescItem label="Solicitante">{processo.solicitante ?? '-'}</DescItem>
+                                        <DescItem label="CPF do solicitante">{processo.solicitante_cpf ?? '-'}</DescItem>
                                         <DescItem label="CNAE" className="sm:col-span-2">
                                             <CnaesDoProcesso cnaes={processo.cnaes_detalhe ?? []} exibirTodos />
                                         </DescItem>
-                                        <DescItem label="Imóvel">{processo.endereco_completo || processo.imovel || '—'}</DescItem>
-                                        <DescItem label="Inscrição imobiliária">{processo.inscricao ?? '—'}</DescItem>
-                                        <DescItem label="Tipo de imóvel">{processo.tipo_imovel ?? '—'}</DescItem>
+                                        <DescItem label="Imóvel">{processo.endereco_completo || processo.imovel || '-'}</DescItem>
+                                        <DescItem label="Inscrição imobiliária">{processo.inscricao ?? '-'}</DescItem>
+                                        <DescItem label="Tipo de imóvel">{processo.tipo_imovel ?? '-'}</DescItem>
                                         {processo.recepcao && <RecepcaoRecebida recepcao={processo.recepcao} />}
                                         <DescItem label="Origem">{processo.origin_label}</DescItem>
                                         {processo.motivo_da_analise ? (
@@ -436,7 +435,7 @@ export default function Show({
                                         )}
                                         <DescItem label="Status">{processo.status_label}</DescItem>
                                         <DescItem label="Situação da análise">
-                                            {processo.analysis_status_label ?? '—'}
+                                            {processo.analysis_status_label ?? '-'}
                                         </DescItem>
                                         {podeAnalisar && podeConcluirAnalise && (
                                             <DescItem label="Conclusão de Análise">
@@ -486,9 +485,9 @@ export default function Show({
                                         <DescItem label="Analista responsável">
                                             {processo.analista ?? 'Não atribuído'}
                                         </DescItem>
-                                        <DescItem label="Setor">{processo.setor ?? '—'}</DescItem>
+                                        <DescItem label="Setor">{processo.setor ?? '-'}</DescItem>
                                         <DescItem label="Etapa da análise">
-                                            {processo.analysis_stage_label ?? '—'}
+                                            {processo.analysis_stage_label ?? '-'}
                                         </DescItem>
                                         <DescItem label="Prazo (SLA)">
                                             <div className="flex flex-col gap-1">
@@ -584,7 +583,8 @@ export default function Show({
                                                         </p>
                                                         {evento.reason && (
                                                             <p className="mt-1 text-theme-sm text-gray-600 dark:text-gray-300">
-                                                                {evento.link && podeAbrirFicha ? (
+                                                                {evento.link &&
+                                                                (evento.tipo === 'vistoria' ? podeVerFichaVistoria : podeAbrirFicha) ? (
                                                                     <a
                                                                         href={evento.link}
                                                                         target="_blank"
@@ -611,7 +611,7 @@ export default function Show({
                             <Card>
                                 <CardHeader
                                     title="Explicabilidade da decisão"
-                                    description="Passo a passo de como a viabilidade foi decidida — projeção do que foi registrado, sem reexecutar o motor."
+                                    description="Passo a passo de como a viabilidade foi decidida, projeção do que foi registrado, sem reexecutar o motor."
                                 />
                                 <CardContent>
                                     <DecisionExplanation explicacao={explicacao} />
@@ -636,19 +636,19 @@ export default function Show({
                                             </Badge>
                                         </DescItem>
                                         <DescItem
-                                            label={processo.escritorio_virtual.tipo === 'abrigado' ? 'End. Virtual — Viabilidade da sede' : 'Viabilidade da sede'}
+                                            label={processo.escritorio_virtual.tipo === 'abrigado' ? 'End. Virtual: Viabilidade da sede' : 'Viabilidade da sede'}
                                         >
-                                            {processo.escritorio_virtual.tvl_sede ?? '—'}
+                                            {processo.escritorio_virtual.tvl_sede ?? '-'}
                                         </DescItem>
                                         <DescItem label="Inscrição imobiliária">
-                                            {processo.escritorio_virtual.inscricao ?? '—'}
+                                            {processo.escritorio_virtual.inscricao ?? '-'}
                                         </DescItem>
                                         <DescItem label="Validade da sede">
                                             {/* Não modelada (desfecho spec-2) — degradação honesta. */}
-                                            {processo.escritorio_virtual.validade_sede ?? '—'}
+                                            {processo.escritorio_virtual.validade_sede ?? '-'}
                                         </DescItem>
                                         <DescItem label="Status do produto">
-                                            {processo.escritorio_virtual.status_produto ?? '—'}
+                                            {processo.escritorio_virtual.status_produto ?? '-'}
                                         </DescItem>
                                     </dl>
                                 </CardContent>

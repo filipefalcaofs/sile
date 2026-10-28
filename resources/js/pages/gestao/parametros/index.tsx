@@ -178,7 +178,7 @@ function ParameterSection({ item }: { item: ParameterItem }) {
                         {item.governance === 'decision' && <Badge size="sm">Decisório</Badge>}
                     </div>
                     <p className="mt-1 text-theme-xs text-gray-500 dark:text-gray-400">
-                        Padrão: {item.default_value ?? '—'}
+                        Padrão: {item.default_value ?? '-'}
                     </p>
                     {item.governance === 'decision' && (
                         <p className="mt-1 text-theme-xs text-gray-500 dark:text-gray-400">
@@ -242,7 +242,7 @@ function ParameterSection({ item }: { item: ParameterItem }) {
 
             {item.requires_connection_test && (
                 <p className="mt-3 text-theme-xs text-gray-400 dark:text-gray-500">
-                    Teste de conexão disponível quando a integração for configurada (Fase 13).
+                    Teste de conexão disponível quando a integração for configurada.
                 </p>
             )}
         </div>

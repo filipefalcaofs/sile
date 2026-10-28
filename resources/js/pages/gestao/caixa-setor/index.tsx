@@ -95,7 +95,7 @@ function emVistoria(item: ProcessoItem): boolean {
 /** Formata a data-hora ISO do prazo para o padrão pt-BR (dd/mm/aaaa hh:mm). */
 function formatarPrazo(iso: string | null): string {
   if (!iso) {
-    return "—";
+    return "-";
   }
 
   const data = new Date(iso);
@@ -116,7 +116,7 @@ function formatarPrazo(iso: string | null): string {
 const ABAS: { id: Visao; rotulo: string }[] = [
   { id: "para_distribuir", rotulo: "Para distribuir" },
   { id: "distribuidos", rotulo: "Distribuídos" },
-  { id: "para_conclusao", rotulo: "Para conclusão" },
+  { id: "para_conclusao", rotulo: "Analisados" },
 ];
 
 export default function CaixaSetorIndex({
@@ -188,7 +188,7 @@ export default function CaixaSetorIndex({
     setSelecionados(todosSelecionados ? [] : linhas.map((item) => item.id));
   }
 
-  // Em "Para conclusão" o analista pega o processo mesmo com o responsável anterior.
+  // Em "Analisados" o analista pega o processo mesmo com o responsável anterior.
   function podeAssumirItem(item: ProcessoItem): boolean {
     if (item.assigned_user_id === null) {
       return true;
@@ -287,7 +287,7 @@ export default function CaixaSetorIndex({
       cell: (item) => (
         <div className="flex flex-col">
           <span className="font-medium text-gray-800 dark:text-white/90">
-            {item.bap ?? "—"}
+            {item.bap ?? "-"}
           </span>
           <span className="text-theme-xs text-gray-400 dark:text-gray-500">
             {item.protocol_number ?? "sem protocolo"}
@@ -306,7 +306,7 @@ export default function CaixaSetorIndex({
       header: "Endereço",
       cell: (item) => (
         <span className="text-gray-700 dark:text-gray-300">
-          {item.imovel !== "" ? item.imovel : "—"}
+          {item.imovel !== "" ? item.imovel : "-"}
         </span>
       ),
     },
@@ -316,7 +316,7 @@ export default function CaixaSetorIndex({
       cellClassName: "min-w-32",
       cell: (item) =>
         item.tipo_imovel ?? (
-          <span className="text-gray-400 dark:text-gray-500">—</span>
+          <span className="text-gray-400 dark:text-gray-500">-</span>
         ),
     },
     {
@@ -325,7 +325,7 @@ export default function CaixaSetorIndex({
       cellClassName: "min-w-56 max-w-xs",
       cell: (item) =>
         item.servicos.length === 0 ? (
-          <span className="text-gray-400 dark:text-gray-500">—</span>
+          <span className="text-gray-400 dark:text-gray-500">-</span>
         ) : (
           <ul className="flex flex-col gap-1">
             {item.servicos.map((servico) => (
@@ -349,7 +349,7 @@ export default function CaixaSetorIndex({
       id: "etapa",
       header: "Etapa",
       cellClassName: "whitespace-nowrap",
-      cell: (item) => item.analysis_stage_label ?? "—",
+      cell: (item) => item.analysis_stage_label ?? "-",
     },
     {
       id: "responsavel",
@@ -373,7 +373,7 @@ export default function CaixaSetorIndex({
             cellClassName: "whitespace-nowrap",
             cell: (item: ProcessoItem) =>
               item.status_tramitacao ?? (
-                <span className="text-gray-400 dark:text-gray-500">—</span>
+                <span className="text-gray-400 dark:text-gray-500">-</span>
               ),
           },
         ]),
@@ -418,7 +418,7 @@ export default function CaixaSetorIndex({
                 abrirModal({
                   tipo: "redistribuir",
                   ids: [item.id],
-                  descricao: `Processo ${item.bap ?? item.protocol_number ?? item.id} — hoje com ${item.encaminhado_para ?? item.assigned_to ?? "analista"}`,
+                  descricao: `Processo ${item.bap ?? item.protocol_number ?? item.id}, hoje com ${item.encaminhado_para ?? item.assigned_to ?? "analista"}`,
                 })
               }
               icon={<GroupIcon className="size-4.5" />}
@@ -450,7 +450,7 @@ export default function CaixaSetorIndex({
           description={
             distribuiEmQualquerSetor
               ? "Processos em análise de todos os setores, priorizados por prazo. Você tramita para qualquer analista, e o processo passa para o setor dele."
-              : "Processos em análise dos seus setores, priorizados por prazo. O gestor seleciona os processos e tramita para um analista do setor; o analista assume um processo. Assumir ou distribuir fixa o responsável — não retira o processo do setor."
+              : "Processos em análise dos seus setores, priorizados por prazo. O gestor seleciona os processos e tramita para um analista do setor; o analista assume um processo. Assumir ou distribuir fixa o responsável, não retira o processo do setor."
           }
         />
         <CardContent>
@@ -565,7 +565,7 @@ export default function CaixaSetorIndex({
                     visao === "para_distribuir"
                       ? "Nenhum processo para distribuir"
                       : visao === "para_conclusao"
-                        ? "Nenhum processo para conclusão"
+                        ? "Nenhum processo analisado"
                         : "Nenhum processo distribuído"
                   }
                   description={

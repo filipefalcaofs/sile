@@ -13,7 +13,7 @@ export function getColumns(quadro: string): ColumnDef<QuadroItem>[] {
                 cell: (row) => (row as Quadro10Item).zona,
             },
             { id: 'grupo_uso', header: 'Grupo de uso', cell: (row) => (row as Quadro10Item).grupo_uso },
-            { id: 'subgrupo', header: 'Subgrupo', cell: (row) => (row as Quadro10Item).subgrupo ?? '—' },
+            { id: 'subgrupo', header: 'Subgrupo', cell: (row) => (row as Quadro10Item).subgrupo ?? '-' },
             {
                 id: 'permissao',
                 header: 'Permissão',
@@ -27,9 +27,9 @@ export function getColumns(quadro: string): ColumnDef<QuadroItem>[] {
             {
                 id: 'condicionante',
                 header: 'Condicionante',
-                cell: (row) => (row as Quadro10Item).condicionante_ref ?? '—',
+                cell: (row) => (row as Quadro10Item).condicionante_ref ?? '-',
             },
-            { id: 'base_legal', header: 'Base legal', cell: (row) => (row as Quadro10Item).base_legal ?? '—' },
+            { id: 'base_legal', header: 'Base legal', cell: (row) => (row as Quadro10Item).base_legal ?? '-' },
         ];
     }
 
@@ -40,16 +40,16 @@ export function getColumns(quadro: string): ColumnDef<QuadroItem>[] {
             cellClassName: 'font-medium whitespace-nowrap text-gray-800 dark:text-white/90',
             cell: (row) => (row as Quadro11Item).classe_via,
         },
-        { id: 'grupo_uso', header: 'Grupo de uso', cell: (row) => (row as Quadro11Item).grupo_uso ?? '—' },
+        { id: 'grupo_uso', header: 'Grupo de uso', cell: (row) => (row as Quadro11Item).grupo_uso ?? '-' },
         {
             id: 'condicoes',
             header: 'Condições',
             cell: (row) => {
                 const condicoes = (row as Quadro11Item).condicoes;
 
-                return Array.isArray(condicoes) && condicoes.length > 0 ? condicoes.join('; ') : '—';
+                return Array.isArray(condicoes) && condicoes.length > 0 ? condicoes.join('; ') : '-';
             },
         },
-        { id: 'base_legal', header: 'Base legal', cell: (row) => (row as Quadro11Item).base_legal ?? '—' },
+        { id: 'base_legal', header: 'Base legal', cell: (row) => (row as Quadro11Item).base_legal ?? '-' },
     ];
 }

@@ -240,6 +240,50 @@ class FichaPorAnalistaTest extends TestCase
             ->assertJsonPath('ficha.parecer', null);
     }
 
+    public function test_ficha_abre_na_nova_revisao_depois_de_criada_pela_rota(): void
+    {
+        $processo = $this->processoComBaseDoMotor();
+        $a = $this->terceirizado();
+
+        $daA = $this->fichas()->autosave($this->fichas()->current($processo, $a), ['parecer' => 'Parecer de A'], $a);
+        $this->fichas()->finalizar($daA, $a);
+
+        $this->actingAs($a, 'gestao')
+            ->get("/gestao/processos/{$processo->id}/ficha")
+            ->assertInertia(fn (Assert $page) => $page->where('ficha.status', 'finalizada')->where('ficha.editavel', false));
+
+        $this->actingAs($a, 'gestao')
+            ->postJson("/gestao/processos/{$processo->id}/ficha/nova-revisao")
+            ->assertOk()
+            ->assertJsonPath('ficha.revision', 2);
+
+        $this->actingAs($a, 'gestao')
+            ->get("/gestao/processos/{$processo->id}/ficha")
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('ficha.revision', 2)
+                ->where('ficha.status', 'rascunho')
+                ->where('ficha.editavel', true));
+    }
+
+    public function test_quem_nao_tem_ficha_propria_abre_na_nova_revisao_que_criou(): void
+    {
+        $processo = $this->processoComBaseDoMotor();
+        $a = $this->terceirizado();
+        $b = $this->terceirizado();
+
+        $daA = $this->fichas()->autosave($this->fichas()->current($processo, $a), ['parecer' => 'Parecer de A'], $a);
+        $this->fichas()->finalizar($daA, $a);
+
+        $this->actingAs($b, 'gestao')->postJson("/gestao/processos/{$processo->id}/ficha/nova-revisao")->assertOk();
+
+        $this->actingAs($b, 'gestao')
+            ->get("/gestao/processos/{$processo->id}/ficha")
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('ficha.revision', 2)
+                ->where('ficha.status', 'rascunho')
+                ->where('ficha.editavel', true));
+    }
+
     public function test_ir_para_conclusao_deixa_copia_sem_dono_para_quem_conclui(): void
     {
         $processo = $this->processoComBaseDoMotor();

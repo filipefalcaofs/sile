@@ -118,6 +118,18 @@ class TerritoryServiceTest extends TestCase
         $this->assertSame('ZEIS Centro', $result->restricoes['itens'][0]['nome']);
     }
 
+    public function test_restricao_zeis_usa_o_atributo_zeisnome_como_nome(): void
+    {
+        $this->seedVigente(GeoLayerType::Restricao);
+        $this->fake->setIntersecting(GeoLayerType::Restricao, [
+            ['id' => 1, 'properties' => ['ZEISNOME' => 'Campinas de Brotas', 'TIPOZEIS' => 1]],
+        ]);
+
+        $result = $this->service()->identify(-12.97, -38.51);
+
+        $this->assertSame('Campinas de Brotas', $result->restricoes['itens'][0]['nome']);
+    }
+
     public function test_zona_com_base_pendente_retorna_indisponivel_sem_consulta_espacial(): void
     {
         $this->seedPendente(GeoLayerType::Zona);
@@ -125,7 +137,7 @@ class TerritoryServiceTest extends TestCase
         $result = $this->service()->identify(-12.97, -38.51);
 
         $this->assertSame('indisponivel', $result->zona['status']);
-        $this->assertStringContainsString('pendente SEDUR', (string) $result->zona['motivo']);
+        $this->assertStringContainsString('pendente de disponibilização pela SEDUR', (string) $result->zona['motivo']);
         $this->assertSame('zona-pendente', $result->zona['versao_camada']);
         // Sem fachada: NENHUMA consulta espacial disparada para zona.
         $this->assertNotContains('zona', $this->fake->containingCalls);
@@ -192,7 +204,7 @@ class TerritoryServiceTest extends TestCase
         $result = $this->service()->identify(-12.97, -38.51);
 
         $this->assertSame('indisponivel', $result->lote['status']);
-        $this->assertStringContainsString('pendente SEDUR', (string) $result->lote['motivo']);
+        $this->assertStringContainsString('pendente de disponibilização pela SEDUR', (string) $result->lote['motivo']);
         $this->assertNotContains('lote', $this->fake->containingCalls);
     }
 

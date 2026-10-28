@@ -16,8 +16,8 @@ final class ViaLocalPorCentralidade
     /** A observação (a) veda a atividade em Via Local, mesmo em zona da nota. */
     public const VEDADA_PELA_OBSERVACAO = 'vedada_pela_observacao';
 
-    /** @var list<string> */
-    private const ZONAS = ['zcme', 'zcmu', 'zclme', 'zclmu'];
+    /** Sigla da zona, com ou sem número, subzona ou bairro depois (ZCMu 2, ZCMe 1/01, ZCMu 1 - IPITANGA). */
+    private const PADRAO_ZONA = '/^(zcme|zcmu|zclme|zclmu)(?![a-z])/';
 
     /**
      * Padrão da lista, usado quando o parâmetro `louos.via_local.cnaes_vedados`
@@ -39,9 +39,7 @@ final class ViaLocalPorCentralidade
             return null;
         }
 
-        $chaveDaZona = strtolower((string) preg_replace('/[\s\-_]+/', '', (string) $zona));
-
-        if (! in_array($chaveDaZona, self::ZONAS, true)) {
+        if (preg_match(self::PADRAO_ZONA, strtolower(trim((string) $zona))) !== 1) {
             return null;
         }
 

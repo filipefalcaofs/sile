@@ -97,7 +97,7 @@ const percentFormat = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 
 
 /** Percentual honesto: null (sem decisões no bairro) vira travessão, jamais 0% fabricado. */
 function formatarPercentual(valor: number | null): string {
-    return valor === null ? '—' : `${percentFormat.format(valor)}%`;
+    return valor === null ? '-' : `${percentFormat.format(valor)}%`;
 }
 
 /** Top bairros por volume (barras horizontais) — maior no topo. */
@@ -398,7 +398,7 @@ export default function GeoBairroPainel({ resumo, porBairro, porZona, filtros }:
                 </Card>
 
                 <Card>
-                    <CardHeader title="Detalhamento por bairro" description="Solicitações, decisões e taxa de deferimento por bairro — oficial (identificação territorial) com o informado no endereço como fallback." />
+                    <CardHeader title="Detalhamento por bairro" description="Solicitações, decisões e taxa de deferimento por bairro: oficial (identificação territorial) com o informado no endereço como fallback." />
                     <CardContent>
                         <DataTable<BairroItem>
                             columns={colunasBairro}

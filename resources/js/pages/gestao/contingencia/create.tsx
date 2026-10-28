@@ -297,7 +297,7 @@ export default function RegistrarContingencia({ serviceTypes, documentRequiremen
         consultaCnpj.post('/gestao/contingencia/consultar-cnpj', {
             onSuccess: (response: unknown) => {
                 const payload = response as { razao_social: string | null; nome_fantasia: string | null; cadastrado: boolean };
-                const nome = [payload.razao_social, payload.nome_fantasia].filter(texto).join(' — ');
+                const nome = [payload.razao_social, payload.nome_fantasia].filter(texto).join(': ');
                 setCnpjResumo(resumoSedur(nome || null, payload.cadastrado, 'CNPJ'));
             },
             onError: (erros: { cnpj?: string }) => {
@@ -314,7 +314,7 @@ export default function RegistrarContingencia({ serviceTypes, documentRequiremen
 
     function selecionarPrincipal(cnae: CnaeOption) {
         setData('principal_cnae_id', cnae.id);
-        setPrincipalLabel(`${cnae.formatted_code} — ${cnae.description}`);
+        setPrincipalLabel(`${cnae.formatted_code}: ${cnae.description}`);
     }
 
     function adicionarComplementar(cnae: CnaeOption) {
@@ -366,7 +366,7 @@ export default function RegistrarContingencia({ serviceTypes, documentRequiremen
                 <Alert
                     variant="warning"
                     title="Registro em contingência"
-                    message="Use quando o REGIN estiver indisponível. Informe os mesmos dados que o integrador enviaria — tipo de imóvel, inscrição, CNAE e imóvel. O processo nasce com origem “contingência”, é protocolado e submetido ao motor no mesmo tramitação do canal oficial."
+                    message="Use quando o REGIN estiver indisponível. Informe os mesmos dados que o integrador enviaria, tipo de imóvel, inscrição, CNAE e imóvel. O processo nasce com origem “contingência”, é protocolado e submetido ao motor no mesmo tramitação do canal oficial."
                 />
             </div>
 
@@ -659,7 +659,7 @@ export default function RegistrarContingencia({ serviceTypes, documentRequiremen
                 </Card>
 
                 <Card>
-                    <CardHeader title="Atividades" description="Atividade principal (obrigatória) e CNAEs complementares — somente CNAEs ativos da tabela oficial." />
+                    <CardHeader title="Atividades" description="Atividade principal (obrigatória) e CNAEs complementares: somente CNAEs ativos da tabela oficial." />
                     <CardContent>
                         <div className="flex flex-col gap-5">
                             <div>
@@ -722,7 +722,7 @@ export default function RegistrarContingencia({ serviceTypes, documentRequiremen
                     <CardContent>
                         {documentRequirements.length === 0 ? (
                             <p className="text-sm text-gray-500 dark:text-gray-400">
-                                Nenhum requisito documental cadastrado no momento — a carga oficial dos requisitos por CNAE é pendente SEDUR.
+                                Nenhum requisito documental cadastrado no momento, a carga oficial dos requisitos por CNAE é pendente SEDUR.
                             </p>
                         ) : (
                             <div className="flex flex-col gap-4">

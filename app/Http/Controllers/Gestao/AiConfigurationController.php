@@ -105,7 +105,7 @@ class AiConfigurationController extends Controller
         );
 
         if (! $result->ok) {
-            return back()->withErrors(['ai_connection' => 'Falha na conexão: '.$result->mensagem]);
+            return back()->with('error', 'Falha na conexão: '.$result->mensagem);
         }
 
         return back()->with('status', $result->mensagem);

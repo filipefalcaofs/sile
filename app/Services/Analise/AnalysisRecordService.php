@@ -46,6 +46,7 @@ class AnalysisRecordService
 
     /** Estados em que salvar a ficha é começar (ou retomar) a análise: o status passa a "Em análise". */
     private const ESTADOS_QUE_INICIAM_ANALISE = [
+        AnalysisStatus::Encaminhado,
         AnalysisStatus::Analisar,
         AnalysisStatus::Vistoriado,
         AnalysisStatus::ConviteRespondido,
@@ -190,7 +191,7 @@ class AnalysisRecordService
 
     /**
      * Quem salva a ficha começa a análise: o processo que estava só distribuído
-     * (ou voltou da vistoria ou do convite) passa a "Em análise" sem ação manual.
+     * ou encaminhado por um colega (ou voltou da vistoria ou do convite) passa a "Em análise" sem ação manual.
      */
     private function iniciarAnaliseSePreciso(AnalysisRecord $record, User $ator): void
     {
@@ -198,6 +199,10 @@ class AnalysisRecordService
 
         if ($request === null || ! in_array($request->analysis_status, self::ESTADOS_QUE_INICIAM_ANALISE, true)) {
             return;
+        }
+
+        if ($request->analysis_status === AnalysisStatus::Encaminhado) {
+            $this->status->transition($request, AnalysisStatus::Analisar, $ator, 'Na caixa de entrada de '.$ator->name.'.');
         }
 
         if (! $this->status->canTransition($request->analysis_status, AnalysisStatus::EmAnalise)) {
@@ -222,7 +227,7 @@ class AnalysisRecordService
 
         $this->exigirDono($record, $ator);
 
-        return DB::transaction(function () use ($record, $ator): AnalysisRecord {
+        $finalizada = DB::transaction(function () use ($record, $ator): AnalysisRecord {
             $divergencias = $this->registrarDivergencias($record);
 
             $record->status = AnalysisRecordStatus::Finalizada;
@@ -250,6 +255,12 @@ class AnalysisRecordService
 
             return $record;
         });
+
+        if ($ator !== null) {
+            $this->iniciarAnaliseSePreciso($finalizada, $ator);
+        }
+
+        return $finalizada;
     }
 
     /**

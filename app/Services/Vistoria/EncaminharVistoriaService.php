@@ -4,7 +4,6 @@ namespace App\Services\Vistoria;
 
 use App\Enums\AnalysisStatus;
 use App\Enums\ViabilityRequestStatus;
-use App\Models\Inspection;
 use App\Models\InspectionReferral;
 use App\Models\Sector;
 use App\Models\User;
@@ -112,24 +111,16 @@ class EncaminharVistoriaService
     }
 
     /**
-     * Encaminha à Caixa do Setor o processo cuja ficha de vistoria foi concluída,
-     * para a análise continuar. Com a origem registrada, volta ao setor de
-     * origem; sem ela (vistoria marcada à mão), segue no setor atual. Nos dois
-     * casos fica sem responsável, para o setor distribuir a um analista. O
-     * status continua Vistoriado até a analista retomar a ficha.
+     * Encaminha o processo da vistoria à Caixa do Setor a qualquer momento, com
+     * a ficha concluída ou não, e ele sai da Caixa de Vistoria. Com a origem
+     * registrada, volta ao setor de origem; sem ela (vistoria marcada à mão),
+     * segue no setor atual. Fica sem responsável, para o setor distribuir a um
+     * analista, ou já designado ao analista do setor indicado. Concluída a
+     * ficha, o status continua Vistoriado até a analista retomar a análise.
      */
-    public function encaminharAoSetor(ViabilityRequest $processo, User $ator): void
+    public function encaminharAoSetor(ViabilityRequest $processo, User $ator, ?User $analista = null): void
     {
-        $ficha = Inspection::query()
-            ->where('viability_request_id', $processo->id)
-            ->latest('id')
-            ->first();
-
-        if ($ficha === null || ! $ficha->isConcluida()) {
-            throw EncaminharVistoriaException::vistoriaNaoConcluida($processo);
-        }
-
-        if ($processo->analysis_status !== AnalysisStatus::Vistoriado) {
+        if (! in_array($processo->analysis_status, [AnalysisStatus::Vistoriar, AnalysisStatus::Vistoriado], true)) {
             throw EncaminharVistoriaException::processoForaDeVistoriado(
                 $processo,
                 InspectionReferral::query()->where('viability_request_id', $processo->id)->exists(),
@@ -141,12 +132,22 @@ class EncaminharVistoriaService
             ->latest('id')
             ->first();
 
-        DB::transaction(function () use ($processo, $referral, $ator): void {
+        $setorDeRetorno = $referral?->setor_origem_id ?? $processo->sector_id;
+
+        if ($analista !== null && ! $this->analistaDoSetor($analista, $setorDeRetorno)) {
+            throw EncaminharVistoriaException::analistaForaDoSetor($analista);
+        }
+
+        DB::transaction(function () use ($processo, $referral, $ator, $analista, $setorDeRetorno): void {
             $processo->forceFill([
-                'sector_id' => $referral?->setor_origem_id ?? $processo->sector_id,
-                'assigned_user_id' => null,
-                'assigned_at' => null,
+                'sector_id' => $setorDeRetorno,
+                'assigned_user_id' => $analista?->id,
+                'assigned_at' => $analista !== null ? now() : null,
             ])->save();
+
+            if ($processo->analysis_status === AnalysisStatus::Vistoriar) {
+                $this->retornarDaVistoriaAberta($processo, $ator, $analista);
+            }
 
             $this->audit->log(
                 logName: 'vistoria',
@@ -158,9 +159,60 @@ class EncaminharVistoriaService
                     'setor_origem_id' => $referral?->setor_origem_id,
                     'analista_origem_user_id' => $referral?->analista_origem_user_id,
                     'ator_id' => $ator->id,
+                    'analista_designado_id' => $analista?->id,
+                    'analista_designado_nome' => $analista?->name,
                 ],
                 subject: $processo,
             );
         });
+    }
+
+    /**
+     * Vistoria ainda aberta: o processo sai de Vistoriar para a fila do setor
+     * (Para distribuir, ou Encaminhado ao analista indicado).
+     */
+    private function retornarDaVistoriaAberta(ViabilityRequest $processo, User $ator, ?User $analista): void
+    {
+        $this->statusMachine->transition(
+            $processo,
+            $analista !== null ? AnalysisStatus::Encaminhado : AnalysisStatus::ParaDistribuir,
+            $ator,
+            'Encaminhado de volta à Caixa do Setor antes de concluir a vistoria.',
+            true,
+        );
+    }
+
+    /**
+     * Analistas do setor que recebe o processo de volta (o de origem da vistoria
+     * ou, sem origem, o atual), para o encaminhamento já designar um deles.
+     *
+     * @return list<array{id: int, name: string}>
+     */
+    public function analistasDoRetorno(ViabilityRequest $processo): array
+    {
+        $referral = InspectionReferral::query()
+            ->where('viability_request_id', $processo->id)
+            ->latest('id')
+            ->first();
+        $setor = $referral?->setor_origem_id ?? $processo->sector_id;
+
+        if ($setor === null) {
+            return [];
+        }
+
+        return User::query()
+            ->permission('analisar-processos')
+            ->whereHas('sectors', fn ($setores) => $setores->where('sectors.id', $setor))
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn (User $usuario): array => ['id' => $usuario->id, 'name' => $usuario->name])
+            ->all();
+    }
+
+    private function analistaDoSetor(User $analista, ?int $setor): bool
+    {
+        return $setor !== null
+            && $analista->can('analisar-processos')
+            && $analista->sectors()->where('sectors.id', $setor)->exists();
     }
 }

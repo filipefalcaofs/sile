@@ -39,7 +39,7 @@ class EncaminharVistoriaRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'setor_vistoria_id.required' => 'Selecione o setor de vistoria — sem ele o processo não chega à fila de distribuição.',
+            'setor_vistoria_id.required' => 'Selecione o setor de vistoria, sem ele o processo não chega à fila de distribuição.',
             'setor_vistoria_id.exists' => 'O setor de vistoria informado não existe ou está inativo.',
             'motivo.required' => 'Informe o motivo do encaminhamento à vistoria.',
             'motivo.min' => 'O motivo precisa de ao menos 3 caracteres.',

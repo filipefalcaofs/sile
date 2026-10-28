@@ -157,20 +157,20 @@ export default function CnaesIndex({ cnaes, filters, perPageOptions }: CnaesInde
             ? {
                   variant: 'danger' as const,
                   title: 'Excluir CNAE',
-                  description: `Confirma a exclusão do CNAE ${pendingAction.cnae.formatted_code} — ${pendingAction.cnae.description}? Esta ação não pode ser desfeita.`,
+                  description: `Confirma a exclusão do CNAE ${pendingAction.cnae.formatted_code}: ${pendingAction.cnae.description}? Esta ação não pode ser desfeita.`,
                   confirmLabel: 'Excluir',
               }
             : pendingAction.cnae.active
               ? {
                     variant: 'warning' as const,
                     title: 'Desativar CNAE',
-                    description: `Confirma a desativação do CNAE ${pendingAction.cnae.formatted_code} — ${pendingAction.cnae.description}?`,
+                    description: `Confirma a desativação do CNAE ${pendingAction.cnae.formatted_code}: ${pendingAction.cnae.description}?`,
                     confirmLabel: 'Desativar',
                 }
               : {
                     variant: 'info' as const,
                     title: 'Reativar CNAE',
-                    description: `Confirma a reativação do CNAE ${pendingAction.cnae.formatted_code} — ${pendingAction.cnae.description}?`,
+                    description: `Confirma a reativação do CNAE ${pendingAction.cnae.formatted_code}: ${pendingAction.cnae.description}?`,
                     confirmLabel: 'Reativar',
                 }
         : null;

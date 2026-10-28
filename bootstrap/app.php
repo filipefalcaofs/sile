@@ -126,16 +126,14 @@ return Application::configure(basePath: dirname(__DIR__))
             return null;
         });
 
-        // Separado de propósito: UnauthorizedException do spatie estende
-        // HttpException, não AuthorizationException.
-        $exceptions->render(function (UnauthorizedException $e, Request $request) {
-            app(AuditService::class)->logBlocked('seguranca', 'Tentativa de acesso sem permissão', [
-                'rota' => $request->path(),
-                'metodo' => $request->method(),
-            ]);
-
-            return null;
-        });
+        // UnauthorizedException do spatie estende HttpException, não
+        // AuthorizationException, e traz mensagem técnica em inglês. Vira um 403
+        // comum com aviso em português e a orientação do que fazer; o callback
+        // de AccessDeniedHttpException acima audita a tentativa.
+        $exceptions->map(UnauthorizedException::class, fn (UnauthorizedException $e) => new AccessDeniedHttpException(
+            'Você não tem permissão para acessar esta tela. Se precisa dela no seu trabalho, peça ao administrador do Viabiliza para incluir a permissão no seu perfil.',
+            $e,
+        ));
 
         // Link assinado de verificação de e-mail inválido/expirado: em vez do
         // 403 cru, volta ao aviso de verificação, onde o reenvio está a um

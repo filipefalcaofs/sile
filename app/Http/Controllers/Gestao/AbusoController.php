@@ -88,6 +88,7 @@ class AbusoController extends Controller
         return Inertia::render('gestao/abuso/index', [
             'alertas' => $alertas,
             'efetividade' => $this->efetividade(),
+            'deteccaoAtiva' => Settings::enabled('deteccao_abuso'),
             'filtros' => [
                 'rule_key' => $ruleKey,
                 'severity' => $severityFiltro,

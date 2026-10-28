@@ -56,7 +56,7 @@ class LocationValidationServiceTest extends TestCase
         $this->assertSame('indisponivel', $result->status);
         $this->assertNull($result->sobreposicaoPercentual);
         $this->assertFalse($result->alerta);
-        $this->assertStringContainsString('pendente SEDUR', (string) $result->motivo);
+        $this->assertStringContainsString('pendente de disponibilização pela SEDUR', (string) $result->motivo);
     }
 
     public function test_sem_camada_de_lote_retorna_indisponivel(): void
@@ -65,7 +65,7 @@ class LocationValidationServiceTest extends TestCase
         $result = $this->service()->validate($this->poligono());
 
         $this->assertSame('indisponivel', $result->status);
-        $this->assertStringContainsString('pendente SEDUR', (string) $result->motivo);
+        $this->assertStringContainsString('pendente de disponibilização pela SEDUR', (string) $result->motivo);
     }
 
     public function test_limiar_segue_o_parametro_administravel(): void

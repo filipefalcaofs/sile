@@ -19,6 +19,11 @@ class ViaLocalPorCentralidadeTest extends TestCase
             'ZCLMe' => ['ZCLMe'],
             'ZCLMu' => ['ZCLMu'],
             'caixa e espaços diferentes' => [' zclmu '],
+            'ZCMu 2' => ['ZCMu 2'],
+            'ZCMu com bairro' => ['ZCMu 1 - IPITANGA'],
+            'ZCMu com hífen' => ['ZCMu-2'],
+            'ZCMe numerada' => ['ZCMe 1/01'],
+            'ZCMe CA' => ['ZCMe - CA'],
         ];
     }
 
@@ -31,6 +36,7 @@ class ViaLocalPorCentralidadeTest extends TestCase
     public function test_nao_libera_fora_das_zonas_de_centralidade(): void
     {
         $this->assertFalse(ViaLocalPorCentralidade::libera('ZR-1', 'VL', '4712-1/00', true));
+        $this->assertFalse(ViaLocalPorCentralidade::libera('ZCMx 2', 'VL', '4712-1/00', true));
         $this->assertFalse(ViaLocalPorCentralidade::libera(null, 'VL', '4712-1/00', true));
     }
 
