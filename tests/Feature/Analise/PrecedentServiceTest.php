@@ -4,6 +4,7 @@ namespace Tests\Feature\Analise;
 
 use App\Enums\AnalysisStatus;
 use App\Models\AnalysisRecord;
+use App\Models\Cnae;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Analise\PrecedentRepository;
@@ -262,6 +263,26 @@ class PrecedentServiceTest extends TestCase
         $this->assertSame(2, $payload['cnae_zona']['indeferidos']);
         $this->assertSame(16, $payload['cnae_zona']['total']);
         $this->assertSame(12, $payload['cnae_zona']['janela_meses']);
+    }
+
+    public function test_estatistica_usa_zona_e_cnae_do_processo_sem_snapshot(): void
+    {
+        $ficha = $this->fichaComSnapshot(null);
+        $request = $ficha->viabilityRequest;
+        $request->forceFill(['zona_codigo' => 'ZR-1', 'zona_manual' => null])->save();
+        $request->cnaes()->attach(Cnae::factory()->create(['code' => '4712100'])->id, ['is_primary' => true]);
+
+        $fake = new FakePrecedentRepository;
+        $fake->setCnaeZoneStats('4712100', 'ZR-1', ['deferidos' => 3, 'indeferidos' => 1, 'total' => 4]);
+        $this->app->instance(PrecedentRepository::class, $fake);
+
+        $payload = $this->service()->forRecord($ficha->fresh());
+
+        $this->assertTrue($payload['cnae_zona']['disponivel']);
+        $this->assertSame('4712100', $payload['cnae_zona']['cnae']);
+        $this->assertSame('4712-1/00', $payload['cnae_zona']['cnae_formatado']);
+        $this->assertSame('ZR-1', $payload['cnae_zona']['zona']);
+        $this->assertSame(4, $payload['cnae_zona']['total']);
     }
 
     public function test_degrada_honesto_sem_zona_no_snapshot(): void

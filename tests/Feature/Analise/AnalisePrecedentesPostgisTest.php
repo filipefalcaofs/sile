@@ -4,6 +4,7 @@ namespace Tests\Feature\Analise;
 
 use App\Enums\ViabilityRequestStatus;
 use App\Models\AnalysisRecord;
+use App\Models\Cnae;
 use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
@@ -23,8 +24,8 @@ use Tests\PostgisTestCase;
  *
  * - imovel: decisões anteriores que INTERCEPTAM o polígono atual, ordenadas por
  *   decided_at desc, SEM dados pessoais (LGPD, RN-004).
- * - cnae_zona: agrega por desfecho na janela, resolvendo a zona do engine_snapshot
- *   da ficha vigente.
+ * - cnae_zona: agrega por desfecho na janela, pela zona gravada no processo
+ *   e pelos CNAEs da solicitação.
  *
  * #[Group('postgis')] explícito (além de herdar de PostgisTestCase) para que
  * `--group=postgis` descubra a classe; skip HONESTO só sem container.
@@ -61,7 +62,7 @@ class AnalisePrecedentesPostgisTest extends PostgisTestCase
 
         // LGPD (RN-004): a projeção tem EXATAMENTE as chaves do contrato (sem CPF).
         $this->assertSame(
-            ['viability_request_id', 'protocol_number', 'outcome', 'decided_at', 'service_type', 'analyst'],
+            ['viability_request_id', 'protocol_number', 'bap', 'outcome', 'decided_at', 'service_type', 'analyst'],
             array_keys($painel['imovel'][0]),
         );
 
@@ -89,8 +90,8 @@ class AnalisePrecedentesPostgisTest extends PostgisTestCase
 
     /**
      * Solicitação decidida com geometry derivada (driver-aware), uma
-     * ViabilityDecision na data informada e a ficha com zona ZR-1 / CNAE 4712100
-     * no snapshot (insumo do cnaeZoneStats).
+     * ViabilityDecision na data informada, a zona gravada no processo (ZR-1) e o
+     * CNAE 4712100 vinculado (insumo do cnaeZoneStats).
      *
      * @param  array<string, mixed>  $geojson
      */
@@ -105,16 +106,11 @@ class AnalisePrecedentesPostgisTest extends PostgisTestCase
 
         app(PropertyGeometryWriter::class)->write($request);
 
-        AnalysisRecord::factory()->create([
-            'viability_request_id' => $request->id,
-            'engine_snapshot' => [
-                'por_cnae' => [[
-                    'cnae' => '4712100',
-                    'is_primary' => true,
-                    'consulta' => ['territorio' => ['zona' => ['status' => 'identificado', 'nome' => $zona]]],
-                ]],
-            ],
-        ]);
+        $request->forceFill(['zona_codigo' => $zona])->save();
+        $request->cnaes()->attach(
+            Cnae::query()->firstOrCreate(['code' => '4712100'], Cnae::factory()->make(['code' => '4712100'])->getAttributes())->id,
+            ['is_primary' => true],
+        );
 
         $factory = $deferida ? ViabilityDecision::factory() : ViabilityDecision::factory()->indeferida();
         $factory->create([

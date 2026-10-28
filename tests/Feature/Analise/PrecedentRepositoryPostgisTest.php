@@ -4,6 +4,7 @@ namespace Tests\Feature\Analise;
 
 use App\Enums\ViabilityRequestStatus;
 use App\Models\AnalysisRecord;
+use App\Models\Cnae;
 use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
@@ -22,9 +23,9 @@ use Tests\PostgisTestCase;
  * - propertyPrecedents: ST_Intersects entre a geometry derivada property_polygon
  *   (Fase 8) e o GeoJSON atual — só os imóveis que INTERCEPTAM, ordenados por
  *   decided_at desc, sem dados pessoais (LGPD, RN-004).
- * - cnaeZoneStats: agrega viability_decisions por desfecho na janela, resolvendo
- *   a ZONA pela ficha vigente (engine_snapshot.por_cnae[].consulta.territorio.zona,
- *   status 'identificado') — sem zona identificada não conta.
+ * - cnaeZoneStats: agrega viability_decisions por desfecho na janela, pela ZONA
+ *   gravada no processo (zona_manual, senão zona_codigo) e pelos CNAEs da
+ *   solicitação — sem depender da ficha/engine_snapshot.
  *
  * #[Group('postgis')] declarado explicitamente (além de herdar de PostgisTestCase)
  * para que `--group=postgis` descubra a classe: roda no pgsql_testing, com skip
@@ -126,27 +127,24 @@ class PrecedentRepositoryPostgisTest extends PostgisTestCase
     }
 
     /**
-     * Solicitação decidida com a ZONA no engine_snapshot da ficha (insumo do
-     * cnaeZoneStats) — sem geometry (a estatística não usa ST_Intersects).
+     * Solicitação decidida com a zona GRAVADA no processo (zona_codigo e, se
+     * informada, zona_manual) e o CNAE vinculado — sem ficha nem snapshot (insumo
+     * do cnaeZoneStats) e sem geometry (a estatística não usa ST_Intersects).
      */
-    private function decisaoComZonaNoSnapshot(string $protocol, string $cnae, ?string $zonaNome, string $zonaStatus, bool $deferida, Carbon $decidedAt): void
+    private function decisaoNaZona(string $protocol, string $cnae, ?string $zonaCodigo, bool $deferida, Carbon $decidedAt, ?string $zonaManual = null): void
     {
         $request = ViabilityRequest::factory()->create([
             'status' => ViabilityRequestStatus::Protocolada,
             'protocol_number' => $protocol,
             'protocoled_at' => now(),
+            'zona_codigo' => $zonaCodigo,
+            'zona_manual' => $zonaManual,
         ]);
 
-        AnalysisRecord::factory()->create([
-            'viability_request_id' => $request->id,
-            'engine_snapshot' => [
-                'por_cnae' => [[
-                    'cnae' => $cnae,
-                    'is_primary' => true,
-                    'consulta' => ['territorio' => ['zona' => ['status' => $zonaStatus, 'nome' => $zonaNome]]],
-                ]],
-            ],
-        ]);
+        $request->cnaes()->attach(
+            Cnae::query()->firstOrCreate(['code' => $cnae], Cnae::factory()->make(['code' => $cnae])->getAttributes())->id,
+            ['is_primary' => true],
+        );
 
         $factory = $deferida ? ViabilityDecision::factory() : ViabilityDecision::factory()->indeferida();
         $factory->create([
@@ -180,7 +178,7 @@ class PrecedentRepositoryPostgisTest extends PostgisTestCase
 
         // LGPD (RN-004): a projeção tem EXATAMENTE as chaves do contrato — sem CPF.
         $this->assertSame(
-            ['viability_request_id', 'protocol_number', 'outcome', 'decided_at', 'service_type', 'analyst'],
+            ['viability_request_id', 'protocol_number', 'bap', 'outcome', 'decided_at', 'service_type', 'analyst'],
             array_keys($result[0]),
         );
     }
@@ -202,14 +200,16 @@ class PrecedentRepositoryPostgisTest extends PostgisTestCase
         $since = Carbon::now()->subMonths(12);
 
         // Zona ZR-1, CNAE 4712100, dentro da janela: 1 deferida + 1 indeferida.
-        $this->decisaoComZonaNoSnapshot('VIA-2026-000301', '4712100', 'ZR-1', 'identificado', true, Carbon::now()->subMonths(1));
-        $this->decisaoComZonaNoSnapshot('VIA-2026-000302', '4712100', 'ZR-1', 'identificado', false, Carbon::now()->subMonths(2));
+        $this->decisaoNaZona('VIA-2026-000301', '4712100', 'ZR-1', true, Carbon::now()->subMonths(1));
+        $this->decisaoNaZona('VIA-2026-000302', '4712100', 'ZR-1', false, Carbon::now()->subMonths(2));
         // Zona diferente — não conta.
-        $this->decisaoComZonaNoSnapshot('VIA-2026-000303', '4712100', 'ZR-2', 'identificado', true, Carbon::now()->subMonths(1));
+        $this->decisaoNaZona('VIA-2026-000303', '4712100', 'ZR-2', true, Carbon::now()->subMonths(1));
+        // CNAE diferente na mesma zona — não conta.
+        $this->decisaoNaZona('VIA-2026-000306', '5611201', 'ZR-1', true, Carbon::now()->subMonths(1));
         // Fora da janela — não conta.
-        $this->decisaoComZonaNoSnapshot('VIA-2026-000304', '4712100', 'ZR-1', 'identificado', true, Carbon::now()->subMonths(18));
-        // Zona pendente (indisponível) — não conta (sem zona identificada).
-        $this->decisaoComZonaNoSnapshot('VIA-2026-000305', '4712100', null, 'indisponivel', true, Carbon::now()->subMonths(1));
+        $this->decisaoNaZona('VIA-2026-000304', '4712100', 'ZR-1', true, Carbon::now()->subMonths(18));
+        // Processo sem zona gravada — não conta.
+        $this->decisaoNaZona('VIA-2026-000305', '4712100', null, true, Carbon::now()->subMonths(1));
 
         $stats = $this->repository()->cnaeZoneStats('4712100', 'ZR-1', $since);
 
@@ -217,5 +217,26 @@ class PrecedentRepositoryPostgisTest extends PostgisTestCase
         $this->assertSame(1, $stats['deferidos']);
         $this->assertSame(1, $stats['indeferidos']);
         $this->assertSame(2, $stats['total']);
+    }
+
+    public function test_estatistica_conta_decisao_sem_ficha_nem_snapshot(): void
+    {
+        $this->decisaoNaZona('VIA-2026-000311', '4712100', 'ZR-1', true, Carbon::now()->subMonths(1));
+
+        $this->assertSame(0, AnalysisRecord::query()->count());
+
+        $stats = $this->repository()->cnaeZoneStats('4712100', 'ZR-1', Carbon::now()->subMonths(12));
+
+        $this->assertSame(['deferidos' => 1, 'indeferidos' => 0, 'total' => 1], $stats);
+    }
+
+    public function test_estatistica_prefere_a_zona_manual_do_analista(): void
+    {
+        $this->decisaoNaZona('VIA-2026-000321', '4712100', 'ZR-1', true, Carbon::now()->subMonths(1), zonaManual: 'ZR-2');
+
+        $since = Carbon::now()->subMonths(12);
+
+        $this->assertSame(0, $this->repository()->cnaeZoneStats('4712100', 'ZR-1', $since)['total']);
+        $this->assertSame(1, $this->repository()->cnaeZoneStats('4712100', 'ZR-2', $since)['total']);
     }
 }

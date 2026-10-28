@@ -71,11 +71,10 @@ class PostgisPrecedentRepository implements PrecedentRepository
 
     public function cnaeZoneStats(string $cnae, string $zona, DateTimeInterface $since): array
     {
-        // A zona da decisão é resolvida pela FICHA VIGENTE (maior revisão) do
-        // processo: engine_snapshot.por_cnae[].consulta.territorio.zona com
-        // status 'identificado' e nome == :zona, para o CNAE == :cnae. Sem zona
-        // identificada (caso comum: Quadro 10 pendente SEDUR) a decisão não entra
-        // na contagem — o consumidor degrada honesto, esta query só roda com zona.
+        // A zona da decisão é a GRAVADA no processo (zona_manual do analista, senão
+        // o zona_codigo materializado na identificação do imóvel) e o CNAE é um dos
+        // CNAEs da solicitação. Não depende do engine_snapshot da ficha: a maioria
+        // das decisões não tem snapshot e ficava fora da contagem.
         $row = DB::selectOne(
             <<<'SQL'
             SELECT
@@ -83,27 +82,18 @@ class PostgisPrecedentRepository implements PrecedentRepository
                 COUNT(*) FILTER (WHERE vd.outcome = 'indeferida') AS indeferidos,
                 COUNT(*)                                          AS total
             FROM viability_decisions vd
+            JOIN viability_requests vr ON vr.id = vd.viability_request_id
             WHERE vd.decided_at >= ?
+              AND COALESCE(NULLIF(vr.zona_manual, ''), vr.zona_codigo) = ?
               AND EXISTS (
                   SELECT 1
-                  FROM analysis_records ar
-                  WHERE ar.viability_request_id = vd.viability_request_id
-                    AND ar.revision = (
-                        SELECT MAX(ar2.revision)
-                        FROM analysis_records ar2
-                        WHERE ar2.viability_request_id = vd.viability_request_id
-                    )
-                    AND jsonb_typeof(ar.engine_snapshot -> 'por_cnae') = 'array'
-                    AND EXISTS (
-                        SELECT 1
-                        FROM jsonb_array_elements(ar.engine_snapshot -> 'por_cnae') AS item
-                        WHERE item ->> 'cnae' = ?
-                          AND item -> 'consulta' -> 'territorio' -> 'zona' ->> 'status' = 'identificado'
-                          AND item -> 'consulta' -> 'territorio' -> 'zona' ->> 'nome' = ?
-                    )
+                  FROM viability_request_cnaes vrc
+                  JOIN cnaes c ON c.id = vrc.cnae_id
+                  WHERE vrc.viability_request_id = vr.id
+                    AND c.code = ?
               )
             SQL,
-            [$this->sinceString($since), $cnae, $zona],
+            [$this->sinceString($since), $zona, $cnae],
         );
 
         return [

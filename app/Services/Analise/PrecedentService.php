@@ -92,8 +92,19 @@ class PrecedentService
     private function cnaeZoneSection(AnalysisRecord $record, int $janelaMeses): array
     {
         $item = $this->primaryCnaeItem($record->engine_snapshot);
+        $request = $record->viabilityRequest;
         $cnae = is_array($item) ? (string) ($item['cnae'] ?? '') : '';
         $zonaNome = $this->identifiedZoneName($item);
+
+        // Sem snapshot do motor, usa o que está gravado no processo: a zona
+        // (manual, senão a materializada) e o CNAE principal.
+        if ($zonaNome === null) {
+            $zonaNome = $this->zonaGravada($request);
+        }
+
+        if ($cnae === '' && $request !== null) {
+            $cnae = (string) ($request->primaryCnae()->value('code') ?? '');
+        }
 
         if ($cnae === '' || $zonaNome === null) {
             return [
@@ -108,13 +119,31 @@ class PrecedentService
         return [
             'disponivel' => true,
             'cnae' => $cnae,
-            'cnae_formatado' => is_array($item) ? ($item['cnae_formatado'] ?? null) : null,
+            'cnae_formatado' => is_array($item) ? ($item['cnae_formatado'] ?? null) : $this->cnaeFormatado($cnae),
             'zona' => $zonaNome,
             'janela_meses' => $janelaMeses,
             'deferidos' => (int) ($stats['deferidos'] ?? 0),
             'indeferidos' => (int) ($stats['indeferidos'] ?? 0),
             'total' => (int) ($stats['total'] ?? 0),
         ];
+    }
+
+    private function zonaGravada(?ViabilityRequest $request): ?string
+    {
+        foreach ([$request?->zona_manual, $request?->zona_codigo] as $zona) {
+            if (is_string($zona) && trim($zona) !== '') {
+                return $zona;
+            }
+        }
+
+        return null;
+    }
+
+    private function cnaeFormatado(string $cnae): ?string
+    {
+        return strlen($cnae) === 7
+            ? substr($cnae, 0, 4).'-'.substr($cnae, 4, 1).'/'.substr($cnae, 5, 2)
+            : null;
     }
 
     /**
