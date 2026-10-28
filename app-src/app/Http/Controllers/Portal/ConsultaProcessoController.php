@@ -54,6 +54,7 @@ class ConsultaProcessoController extends Controller
                 'numero' => $numero,
                 'encontrado' => $resultado['lista'] !== [],
                 'legado_indisponivel' => $resultado['legado_indisponivel'],
+                'procurado_no_legado' => true,
                 'processo' => null,
                 'timeline' => null,
                 'lista' => $resultado['lista'] === [] ? null : $resultado['lista'],
@@ -74,10 +75,13 @@ class ConsultaProcessoController extends Controller
 
         $legado = null;
         $legadoIndisponivel = false;
+        $procuradoNoLegado = false;
         $normalizado = $this->localizador->normalizar($numero);
 
         // Sem processo no Viabiliza, o número pode ser do sistema anterior.
         if ($processo === null && $normalizado !== null && ConsultaProcessoLegado::ehNumeroDoLegado($normalizado)) {
+            $procuradoNoLegado = true;
+
             try {
                 $legado = $this->legado->localizar($normalizado);
             } catch (LegadoIndisponivelException) {
@@ -98,6 +102,7 @@ class ConsultaProcessoController extends Controller
             'numero' => $numero,
             'encontrado' => $processo !== null || $legado !== null,
             'legado_indisponivel' => $legadoIndisponivel,
+            'procurado_no_legado' => $procuradoNoLegado,
             'processo' => $processo !== null ? $this->resumo($request, $processo) : $legado['processo'] ?? null,
             'timeline' => $processo !== null ? $this->timeline->build($processo, publico: true) : $legado['timeline'] ?? null,
             'lista' => null,
