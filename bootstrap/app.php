@@ -80,6 +80,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // JUCEB/REGIN não envia token CSRF do Laravel.
         $middleware->validateCsrfTokens(except: [
             'api_integracao/recebe',
+            'api_integracao/tvl/autenticar',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

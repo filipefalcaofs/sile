@@ -478,6 +478,15 @@ return [
         'log' => [
             'limite_corpo' => 500_000,
         ],
+        // Consulta de TVL que a SEFAZ/SIGS faz no Viabiliza (alvará e DAM).
+        // Desligada por padrão. A SEFAZ autentica com usuário e senha e recebe
+        // um token Bearer que vale `validade_minutos`.
+        'sefaz_tvl' => [
+            'ativo' => (bool) env('SEFAZ_TVL_ATIVO', false),
+            'usuario' => (string) env('SEFAZ_TVL_USUARIO', ''),
+            'senha' => (string) env('SEFAZ_TVL_SENHA', ''),
+            'validade_minutos' => 60,
+        ],
         'regin' => [
             'em_producao' => false,
             'url_homologacao' => 'http://10.57.247.9:8080/api_integracao',

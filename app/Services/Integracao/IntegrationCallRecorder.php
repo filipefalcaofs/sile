@@ -129,6 +129,7 @@ class IntegrationCallRecorder
         $alvo = $host.$path;
 
         $regras = [
+            'sefaz_tvl' => ['/api_integracao/tvl'],
             'regin' => ['api_integracao', 'juceb', 'regin'],
             'geoserver' => ['geoserver', '/wfs'],
             'geocoding' => ['nominatim'],
