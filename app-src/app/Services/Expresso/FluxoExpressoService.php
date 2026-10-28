@@ -300,6 +300,18 @@ class FluxoExpressoService
             return $this->indeferirTerritorial($request, $resolved, $territorial, $actor);
         }
 
+        // Pergunta da planilha necessária ao enquadramento sem resposta: sem
+        // ela não há enquadramento possível, e o processo é indeferido no
+        // expresso (decisão SEDUR 15/10/2026). O veto locacional (Quadro 10/11A)
+        // tem fundamento próprio e segue para a emissão.
+        $perguntaSemResposta = $resolved->perguntaSemResposta();
+
+        if ($perguntaSemResposta !== null
+            && $resolved->consolidado !== ResultadoViabilidade::NaoPermitido->value
+            && (bool) config('viabiliza.expresso.indeferir_pergunta_sem_resposta', true)) {
+            return $this->indeferirPerguntaSemResposta($request, $resolved, $perguntaSemResposta, $actor);
+        }
+
         // Camada territorial fora do ar: a decisão espera o motor rodar na
         // próxima tentativa do reprocessamento. Só esgotada a janela (ou em
         // processo que já está na análise) cai no encaminhamento abaixo.
@@ -325,18 +337,6 @@ class FluxoExpressoService
                 $resolved,
                 gatilho: TipoGatilho::LocalizacaoDivergente,
             );
-        }
-
-        // Pergunta da planilha necessária ao enquadramento sem resposta: sem
-        // ela não há enquadramento possível, e o processo é indeferido no
-        // expresso (decisão SEDUR 15/10/2026). O veto locacional (Quadro 10/11A)
-        // tem fundamento próprio e segue para a emissão.
-        $perguntaSemResposta = $resolved->perguntaSemResposta();
-
-        if ($perguntaSemResposta !== null
-            && $resolved->consolidado !== ResultadoViabilidade::NaoPermitido->value
-            && (bool) config('viabiliza.expresso.indeferir_pergunta_sem_resposta', true)) {
-            return $this->indeferirPerguntaSemResposta($request, $resolved, $perguntaSemResposta, $actor);
         }
 
         // Empate de porções: a lei não diz qual zona prevalece.
