@@ -43,22 +43,27 @@ export default function RenovacaoIndex({ busca, itens, indisponivel, termo_inval
 
             <Card className="mb-6">
                 <CardContent>
-                    <form onSubmit={buscar} className="flex flex-col gap-3 sm:flex-row sm:items-end" role="search">
-                        <div className="w-full sm:max-w-md">
-                            <Label htmlFor="busca-renovacao">CNPJ ou número da viabilidade</Label>
-                            <Input
-                                id="busca-renovacao"
-                                name="busca"
-                                autoComplete="off"
-                                value={termo}
-                                onChange={(event) => setTermo(event.target.value)}
-                                hint="Exemplos: CNPJ 11.222.333/0001-81 · viabilidade 2104040"
-                            />
+                    <form onSubmit={buscar} role="search">
+                        <Label htmlFor="busca-renovacao">CNPJ ou número da viabilidade</Label>
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+                            <div className="w-full sm:max-w-md">
+                                <Input
+                                    id="busca-renovacao"
+                                    name="busca"
+                                    autoComplete="off"
+                                    value={termo}
+                                    onChange={(event) => setTermo(event.target.value)}
+                                    aria-describedby="busca-renovacao-dica"
+                                />
+                            </div>
+                            <Button type="submit" className="min-h-11" loading={buscando} disabled={termo.trim() === ''}>
+                                <SearchIcon className="size-4" aria-hidden="true" />
+                                Buscar
+                            </Button>
                         </div>
-                        <Button type="submit" className="min-h-11" loading={buscando} disabled={termo.trim() === ''}>
-                            <SearchIcon className="size-4" aria-hidden="true" />
-                            Buscar
-                        </Button>
+                        <p id="busca-renovacao-dica" className="max-w-2xl pt-1.5 text-xs text-gray-500">
+                            Exemplos: CNPJ 11.222.333/0001-81 · viabilidade 2104040
+                        </p>
                     </form>
                 </CardContent>
             </Card>
