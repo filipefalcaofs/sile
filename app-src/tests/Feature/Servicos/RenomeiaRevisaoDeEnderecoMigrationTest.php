@@ -29,18 +29,8 @@ class RenomeiaRevisaoDeEnderecoMigrationTest extends TestCase
         return ServicoNomenclatura::query()->where('chave', $chave)->where('condicao', $condicao)->value('para');
     }
 
-    /**
-     * A migration de 27/10 renomeia "Revisão Alteração de Espaço" para "Revisão de
-     * Espaço"; este teste parte do nome que a migration de 26/10 deixou.
-     */
-    private function voltarAoNomeDestaMigration(): void
-    {
-        ServicoNomenclatura::query()->where('para', 'Revisão de Espaço')->update(['para' => 'Revisão Alteração de Espaço']);
-    }
-
     public function test_renomeia_os_nomes_de_fabrica_e_volta_no_down(): void
     {
-        $this->voltarAoNomeDestaMigration();
         $this->migration()->down();
 
         $this->assertSame('Revisão de Endereço', $this->para(self::ENTRE_ESTADOS));
@@ -57,7 +47,6 @@ class RenomeiaRevisaoDeEnderecoMigrationTest extends TestCase
 
     public function test_preserva_nome_editado_na_tela(): void
     {
-        $this->voltarAoNomeDestaMigration();
         $this->migration()->down();
         ServicoNomenclatura::query()->where('chave', self::ENTRE_ESTADOS)->update(['para' => 'Mudança de Estado']);
         ServicoNomenclatura::query()->where('chave', self::MESMO_MUNICIPIO)->where('condicao', 'endereco_espaco')->update(['para' => 'Troca de Sala']);

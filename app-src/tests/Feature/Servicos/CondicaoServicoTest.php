@@ -25,7 +25,7 @@ use Tests\TestCase;
 /**
  * Linhas condicionais do De x Para da SEDUR: a alteração de atividades vira
  * Inclusão ou Exclusão e a alteração de endereço no município vira Revisão de
- * Endereço ou Revisão de Espaço, comparando com o último processo da empresa.
+ * Endereço ou Revisão Alteração de Espaço, comparando com o último processo da empresa.
  */
 class CondicaoServicoTest extends TestCase
 {
@@ -79,7 +79,7 @@ class CondicaoServicoTest extends TestCase
             ['Alteração de endereço entre estados', 'Alteração de Endereço', ''],
             ['Alteração de endereço entre municípios dentro do mesmo estado', 'Alteração de Endereço', ''],
             [self::ATIVIDADES, 'Revisão de Atividade - Exclusão', 'cnae_excluido'],
-            [self::ENDERECO, 'Revisão de Espaço', 'endereco_espaco'],
+            [self::ENDERECO, 'Revisão Alteração de Espaço', 'endereco_espaco'],
             [self::ATIVIDADES, 'Revisão de Atividade', 'cnae_sem_alteracao'],
         ], $linhas);
     }
@@ -280,7 +280,7 @@ class CondicaoServicoTest extends TestCase
 
         $this->assertSame(['Revisão de Atividade - Exclusão'], $resolver->servicos($exclusao));
         $this->assertSame(['Revisão de Atividade - Inclusão'], $resolver->servicos($semCondicao));
-        $this->assertSame(['Revisão de Espaço'], $resolver->servicos($espaco));
+        $this->assertSame(['Revisão Alteração de Espaço'], $resolver->servicos($espaco));
 
         $semAlteracao = ViabilityRequest::factory()->create();
         ViabilityRequestEvento::factory()->create(['viability_request_id' => $semAlteracao->id, 'codigo' => '244', 'nome' => self::ATIVIDADES, 'condicao' => 'cnae_sem_alteracao']);
