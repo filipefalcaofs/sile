@@ -4,6 +4,7 @@ namespace Tests\Feature\Expresso;
 
 use App\Enums\AnalysisStage;
 use App\Enums\AnalysisStatus;
+use App\Enums\ConfirmacaoPonto;
 use App\Enums\DecisionOutcome;
 use App\Enums\GeoLayerType;
 use App\Enums\Quadro10Permissao;
@@ -21,6 +22,10 @@ use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Expresso\FluxoExpressoService;
 use App\Services\Geo\SpatialRepository;
+use App\Services\Realty\LocalizacaoInscricao;
+use App\Services\Realty\LocalizacaoInscricaoService;
+use App\Services\Territorial\TerritorialRuleService;
+use App\Services\Territorial\TerritorialRuleVerdict;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Tests\Support\Geo\FakeSpatialRepository;
@@ -122,6 +127,73 @@ class IndeferimentoPerguntaSemRespostaTest extends TestCase
         $this->assertSame(ViabilityRequestStatus::Indeferida, $request->status);
         $this->assertNull($request->analysis_status);
         $this->assertSame(self::MOTIVO, $request->decision->reason);
+    }
+
+    public function test_pergunta_sem_resposta_indefere_mesmo_quando_a_regra_territorial_mandaria_para_analise(): void
+    {
+        // Sem a resposta não há enquadramento possível: o território não muda isso.
+        Event::fake([ResultadoEmitido::class, EncaminhadoParaAnalise::class]);
+        $request = $this->semResposta();
+        $this->mock(TerritorialRuleService::class, fn ($mock) => $mock->shouldReceive('avaliar')->andReturn(
+            new TerritorialRuleVerdict(TerritorialRuleVerdict::ENCAMINHAR_ANALISE, motivo: 'Lote em polígono de proteção ambiental.'),
+        ));
+
+        app(FluxoExpressoService::class)->decide($request);
+
+        $request->refresh();
+        $this->assertSame(ViabilityRequestStatus::Indeferida, $request->status);
+        $this->assertSame(self::MOTIVO, $request->decision->reason);
+        Event::assertNotDispatched(EncaminhadoParaAnalise::class);
+    }
+
+    public function test_pergunta_sem_resposta_indefere_mesmo_com_camada_territorial_fora_do_ar(): void
+    {
+        Event::fake([ResultadoEmitido::class, EncaminhadoParaAnalise::class]);
+        $request = $this->semResposta();
+        $this->mock(TerritorialRuleService::class, fn ($mock) => $mock->shouldReceive('avaliar')->andReturn(
+            new TerritorialRuleVerdict(TerritorialRuleVerdict::ENCAMINHAR_ANALISE, motivo: 'Camada fora do ar.', aguardarCamada: true),
+        ));
+
+        $resultado = app(FluxoExpressoService::class)->decide($request);
+
+        $this->assertSame(ViabilityRequestStatus::Indeferida, $request->fresh()->status);
+        $this->assertTrue($resultado->emitted);
+    }
+
+    public function test_pergunta_sem_resposta_indefere_mesmo_com_o_ponto_da_inscricao_nao_confirmado(): void
+    {
+        Event::fake([ResultadoEmitido::class, EncaminhadoParaAnalise::class]);
+        $request = $this->semResposta();
+        $this->mock(LocalizacaoInscricaoService::class, fn ($mock) => $mock->shouldReceive('localizar')->andReturn(
+            new LocalizacaoInscricao(
+                status: LocalizacaoInscricao::LOCALIZADA,
+                lat: -12.97,
+                lng: -38.5,
+                confirmacaoPonto: ConfirmacaoPonto::NaoConfirmado,
+                distanciaPontoM: 420,
+            ),
+        ));
+
+        app(FluxoExpressoService::class)->decide($request);
+
+        $this->assertSame(ViabilityRequestStatus::Indeferida, $request->fresh()->status);
+        $this->assertSame(self::MOTIVO, $request->fresh()->decision->reason);
+    }
+
+    public function test_veto_legal_territorial_rt01_continua_com_o_proprio_fundamento(): void
+    {
+        // RT-01 (logradouro × CNAE proibido) indefere com o texto legal da regra.
+        Event::fake([ResultadoEmitido::class, EncaminhadoParaAnalise::class]);
+        $request = $this->semResposta();
+        $this->mock(TerritorialRuleService::class, fn ($mock) => $mock->shouldReceive('avaliar')->andReturn(
+            new TerritorialRuleVerdict(TerritorialRuleVerdict::INDEFERIR, motivo: 'Atividade vedada neste logradouro (art. 172-A).'),
+        ));
+
+        app(FluxoExpressoService::class)->decide($request);
+
+        $request->refresh();
+        $this->assertSame(ViabilityRequestStatus::Indeferida, $request->status);
+        $this->assertStringContainsString('art. 172-A', (string) $request->decision->reason);
     }
 
     public function test_analise_assumida_nao_e_indeferida(): void
