@@ -26,9 +26,21 @@ export function centroDaGeometria(entrada: GeoJsonObject | null | undefined): { 
     const primeiro = anel[0];
     const ultimo = anel[anel.length - 1];
     const vertices = anel.length > 1 && primeiro[0] === ultimo[0] && primeiro[1] === ultimo[1] ? anel.slice(0, -1) : anel;
+    if (vertices.some((vertice) => typeof vertice[0] !== 'number' || typeof vertice[1] !== 'number')) {
+        return null;
+    }
+
     const soma = vertices.reduce((acc, [lng, lat]) => ({ lat: acc.lat + lat, lng: acc.lng + lng }), { lat: 0, lng: 0 });
 
-    return { lat: soma.lat / vertices.length, lng: soma.lng / vertices.length };
+    const lat = soma.lat / vertices.length;
+    const lng = soma.lng / vertices.length;
+
+    // Coordenada nula, texto ou fora de faixa geraria "Invalid LatLng" no Leaflet e derrubaria a ficha.
+    if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) {
+        return null;
+    }
+
+    return { lat, lng };
 }
 
 /**

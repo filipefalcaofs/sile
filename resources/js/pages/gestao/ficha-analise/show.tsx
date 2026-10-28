@@ -20,6 +20,7 @@ import PageHeader from '@/components/app/page-header';
 import CamadasImovelLista, { type CamadasImovel } from '@/components/geo/camadas-imovel';
 import { centroDaGeometria, ESTILO_ENDERECAMENTO } from '@/components/geo/geometria';
 import { MapaDecisaoSection } from '@/components/geo/mapa-decisao-section';
+import { MapaProtegido } from '@/components/geo/mapa-protegido';
 import { MapaSection } from '@/components/geo/mapa-section';
 import Checkbox from '@/components/form/checkbox';
 import Input from '@/components/form/input';
@@ -1725,19 +1726,21 @@ export default function FichaAnaliseShow({
                         <CardContent>
                             {temPoligono && centro ? (
                                 <>
-                                    <MapaDecisaoSection
-                                        url={`/gestao/processos/${processo.id}/mapa-decisao`}
-                                        fallback={
-                                            <MapaSection
-                                                lat={centro.lat}
-                                                lng={centro.lng}
-                                                zoom={17}
-                                                draggable={false}
-                                                enquadrar
-                                                camadas={camadasDoMapa}
-                                            />
-                                        }
-                                    />
+                                    <MapaProtegido>
+                                        <MapaDecisaoSection
+                                            url={`/gestao/processos/${processo.id}/mapa-decisao`}
+                                            fallback={
+                                                <MapaSection
+                                                    lat={centro.lat}
+                                                    lng={centro.lng}
+                                                    zoom={17}
+                                                    draggable={false}
+                                                    enquadrar
+                                                    camadas={camadasDoMapa}
+                                                />
+                                            }
+                                        />
+                                    </MapaProtegido>
                                     {localizacao?.poligono_enderecamento ? (
                                         <p className="mt-3 text-theme-xs text-gray-500 dark:text-gray-400">
                                             Contorno tracejado: polígono do endereçamento SEDUR.
