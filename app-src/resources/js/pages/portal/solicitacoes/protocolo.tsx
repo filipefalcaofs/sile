@@ -356,7 +356,6 @@ export default function Protocolo({
                 title={titulo}
                 breadcrumbs={[
                     { label: 'Meu painel', href: '/portal/painel' },
-                    { label: 'Minhas solicitações', href: '/portal/solicitacoes' },
                 ]}
                 actions={
                     <div className="flex flex-wrap items-center gap-3">

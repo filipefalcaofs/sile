@@ -2,10 +2,8 @@
 
 namespace App\Services\Painel;
 
-use App\Enums\AnalysisPendencyStatus;
 use App\Enums\ViabilityRequestStatus;
 use App\Http\Resources\Portal\SolicitacaoResumoResource;
-use App\Models\AnalysisPendency;
 use App\Models\Cidadao;
 use App\Models\ViabilityRequest;
 
@@ -40,7 +38,7 @@ class PainelCidadaoService
     private function indicadores(Cidadao $efetivo): array
     {
         $porStatus = ViabilityRequest::query()
-            ->where('requester_cidadao_id', $efetivo->id)
+            ->visivelPara($efetivo->id, $efetivo->cpf)
             ->selectRaw('status, count(*) as total')
             ->groupBy('status')
             ->pluck('total', 'status');
@@ -64,7 +62,7 @@ class PainelCidadaoService
 
         return SolicitacaoResumoResource::collection(
             ViabilityRequest::query()
-                ->where('requester_cidadao_id', $efetivo->id)
+                ->visivelPara($efetivo->id, $efetivo->cpf)
                 ->with(['company', 'serviceType'])
                 ->orderByDesc('created_at')
                 ->orderByDesc('id')
@@ -74,43 +72,14 @@ class PainelCidadaoService
     }
 
     /**
-     * Itens que dependem de ação do efetivo: pendências ABERTAS (HU-090/091) e
-     * rascunhos a protocolar (HU-061/068).
+     * Convites que o efetivo pode responder agora (requerente ou solicitante
+     * declarado, abertos e no prazo). Pedido novo não nasce no portal: não há
+     * rascunho a retomar.
      *
-     * @return array{pendencias: list<array<string, mixed>>, rascunhos: list<array<string, mixed>>}
+     * @return array{pendencias: list<array<string, mixed>>}
      */
     private function atencao(Cidadao $efetivo): array
     {
-        $pendencias = AnalysisPendency::query()
-            ->where('status', AnalysisPendencyStatus::Aberta)
-            ->whereHas('viabilityRequest', fn ($query) => $query->where('requester_cidadao_id', $efetivo->id))
-            ->with('viabilityRequest:id,protocol_number')
-            ->latest()
-            ->get()
-            ->map(fn (AnalysisPendency $pendencia): array => [
-                'id' => $pendencia->id,
-                'solicitacao_id' => $pendencia->viability_request_id,
-                'protocol_number' => $pendencia->viabilityRequest?->protocol_number,
-                'descricao' => $pendencia->description,
-                'due_at' => $pendencia->due_at?->toDateTimeString(),
-            ])
-            ->all();
-
-        $rascunhos = ViabilityRequest::query()
-            ->where('requester_cidadao_id', $efetivo->id)
-            ->where('status', ViabilityRequestStatus::Rascunho)
-            ->with(['company:id,legal_name', 'serviceType:id,name'])
-            ->orderByDesc('created_at')
-            ->orderByDesc('id')
-            ->get()
-            ->map(fn (ViabilityRequest $rascunho): array => [
-                'id' => $rascunho->id,
-                'service_type' => $rascunho->serviceType?->name,
-                'company_legal_name' => $rascunho->company?->legal_name,
-                'created_at' => $rascunho->created_at?->toDateTimeString(),
-            ])
-            ->all();
-
-        return ['pendencias' => $pendencias, 'rascunhos' => $rascunhos];
+        return ['pendencias' => app(ConvitesDoCidadao::class)->abertos($efetivo)];
     }
 }

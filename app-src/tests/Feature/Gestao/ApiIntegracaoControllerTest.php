@@ -34,7 +34,7 @@ class ApiIntegracaoControllerTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('gestao/config-apis/index')
                 ->where('aba', 'regin')
-                ->has('abas', 9)
+                ->has('abas', 10)
                 ->where('abas.0.nome', 'REGIN')
                 ->where('abas.1.nome', 'Inscrição imobiliária')
                 ->where('abas.2.nome', 'CPF e CNPJ')
@@ -113,9 +113,9 @@ class ApiIntegracaoControllerTest extends TestCase
             ->get('/gestao/config-apis?aba=arcgis_semap')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
-                ->where('abas.7.id', 'arcgis_semap')
-                ->where('abas.7.campos.2.valor', null)
-                ->where('abas.7.campos.2.tem_valor', true))
+                ->where('abas.8.id', 'arcgis_semap')
+                ->where('abas.8.campos.2.valor', null)
+                ->where('abas.8.campos.2.tem_valor', true))
             ->assertDontSee($token);
     }
 
@@ -149,11 +149,11 @@ class ApiIntegracaoControllerTest extends TestCase
             ->get('/gestao/config-apis?aba=edificacoes')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
-                ->where('abas.8.id', 'edificacoes')
-                ->where('abas.8.nome', 'Edificações complementares')
-                ->has('abas.8.campos', 8)
-                ->where('abas.8.campos.7.valor', null)
-                ->where('abas.8.campos.7.tem_valor', true))
+                ->where('abas.9.id', 'edificacoes')
+                ->where('abas.9.nome', 'Edificações complementares')
+                ->has('abas.9.campos', 8)
+                ->where('abas.9.campos.7.valor', null)
+                ->where('abas.9.campos.7.tem_valor', true))
             ->assertDontSee($token);
     }
 

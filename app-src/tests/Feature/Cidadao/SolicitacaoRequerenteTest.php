@@ -145,8 +145,8 @@ class SolicitacaoRequerenteTest extends TestCase
                 ->where('indicadores.em_analise', 0)
                 ->where('indicadores.em_convite', 0)
                 ->has('atencao.pendencias', 0)
-                ->has('atencao.rascunhos', 1)
-                ->where('atencao.rascunhos.0.id', $propria->id)
+                // Pedido novo começa na JUCEB: o painel não lista rascunhos.
+                ->missing('atencao.rascunhos')
                 ->has('solicitacoesRecentes', 1)
                 ->where('solicitacoesRecentes.0.id', $propria->id));
     }

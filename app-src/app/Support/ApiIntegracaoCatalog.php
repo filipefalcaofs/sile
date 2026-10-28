@@ -22,6 +22,7 @@ class ApiIntegracaoCatalog
             self::sedurContato(),
             self::sedurAuth(),
             self::govbr(),
+            self::portalServicos(),
             self::geocoding(),
             self::geoserver(),
             self::arcgisSemap(),
@@ -221,6 +222,27 @@ class ApiIntegracaoCatalog
                 self::interruptor('em_producao', 'integrations.geoserver.em_producao', 'Usar produção'),
                 self::url('url_homologacao', 'integrations.geoserver.url_homologacao', 'URL de homologação'),
                 self::url('url_producao', 'integrations.geoserver.url_producao', 'URL de produção'),
+            ],
+        ];
+    }
+
+    /**
+     * @return Aba
+     */
+    private static function portalServicos(): array
+    {
+        return [
+            'id' => 'portal_servicos',
+            'nome' => 'Portal de Serviços SEDUR',
+            'descricao' => 'Entrada do cidadão pelo Portal de Serviços da SEDUR (HU-142). Ligada, o portal do Viabiliza deixa de ter login, cadastro e senha próprios; a sessão do cidadão é conferida no BFF do portal.',
+            'teste' => null,
+            'espelhar_url_ativa' => null,
+            'campos' => [
+                self::interruptor('habilitada', 'features.login_portal_servicos', 'Entrada pelo Portal de Serviços habilitada'),
+                self::url('bff_base_url', 'integrations.portal_servicos.bff_base_url', 'URL do BFF do Portal de Serviços'),
+                self::url('login_url', 'integrations.portal_servicos.login_url', 'URL de entrada do Portal de Serviços'),
+                self::url('carta_url', 'integrations.portal_servicos.carta_url', 'URL da Carta de Serviços (volta ao sair)'),
+                self::texto('intervalo_checagem_sessao', 'integrations.portal_servicos.intervalo_checagem_sessao', 'Intervalo de conferência da sessão (segundos)'),
             ],
         ];
     }

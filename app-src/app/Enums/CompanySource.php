@@ -10,12 +10,14 @@ enum CompanySource: string
 {
     case Manual = 'manual';
     case Redesim = 'redesim';
+    case Legado = 'legado';
 
     public function label(): string
     {
         return match ($this) {
             self::Manual => 'Cadastro manual',
             self::Redesim => 'REDESIM',
+            self::Legado => 'Sistema anterior',
         };
     }
 }

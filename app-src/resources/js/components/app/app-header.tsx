@@ -121,6 +121,8 @@ interface AppHeaderProps {
     logoutHref: string;
     accountHref: string;
     toolbar?: ReactNode;
+    /** Marca ao lado do botão do menu (o portal mostra a do Portal de Serviços). */
+    marca?: ReactNode;
 }
 
 /**
@@ -128,7 +130,7 @@ interface AppHeaderProps {
  * e menu do usuário. O console de gestão injeta a busca global em `toolbar`,
  * à esquerda desses controles.
  */
-export default function AppHeader({ homeHref, logoHref, logoutHref, accountHref, toolbar }: AppHeaderProps) {
+export default function AppHeader({ homeHref, logoHref, logoutHref, accountHref, toolbar, marca }: AppHeaderProps) {
     const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
 
     const { isMobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar();
@@ -161,6 +163,12 @@ export default function AppHeader({ homeHref, logoHref, logoutHref, accountHref,
                     >
                         {isMobileOpen ? <CloseIcon /> : <MenuIcon />}
                     </button>
+
+                    {marca && (
+                        <div data-marca className="hidden shrink-0 sm:block">
+                            {marca}
+                        </div>
+                    )}
 
                     {toolbar ? (
                         <div className="min-w-0 w-full max-w-xl flex-1">{toolbar}</div>

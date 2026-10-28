@@ -98,6 +98,133 @@ class ProvisoriasLegadasService
     }
 
     /**
+     * Provisórias do sistema anterior para um CNPJ, sem vínculo com quem busca.
+     * TVL gravada para outro CNPJ não aparece.
+     *
+     * @return array{itens: list<array<string, mixed>>, indisponivel: bool}
+     */
+    public function porCnpj(string $cnpj): array
+    {
+        $itens = [];
+
+        try {
+            foreach ($this->client->provisoriasPorCnpj($cnpj) as $resumo) {
+                $detalhe = $this->client->tvlPorNumero($resumo->numero);
+                $item = $detalhe === null ? null : $this->itemDaBusca($detalhe, $cnpj);
+
+                if ($item !== null) {
+                    $itens[$item['numero']] ??= $item;
+                }
+            }
+        } catch (\Throwable $e) {
+            $this->registrarFalha($e);
+
+            return ['itens' => [], 'indisponivel' => true];
+        }
+
+        return ['itens' => array_values($itens), 'indisponivel' => false];
+    }
+
+    /**
+     * Provisórias do sistema anterior pelo número da TVL (7 dígitos) ou do
+     * processo. O CNPJ da renovação é o gravado na TVL; sem ele, o da busca,
+     * se houver.
+     *
+     * @return array{itens: list<array<string, mixed>>, indisponivel: bool}
+     */
+    public function porNumero(string $numero, ?string $cnpj = null): array
+    {
+        $numero = preg_replace('/\s+/', '', trim($numero)) ?? '';
+        $itens = [];
+
+        try {
+            if (preg_match('/^\d{7}$/', $numero) === 1) {
+                $numeros = [(int) $numero];
+            } elseif (preg_match('/^\d{10}-\d{8}\/\d{4}$/', $numero) === 1) {
+                $numeros = array_map(fn ($tvl): int => $tvl->numero, $this->client->tvlsDoProcesso($numero));
+            } else {
+                $numeros = [];
+            }
+
+            foreach ($numeros as $numeroTvl) {
+                $detalhe = $this->client->tvlPorNumero($numeroTvl);
+                $item = $detalhe === null ? null : $this->itemDaBusca($detalhe, $cnpj);
+
+                if ($item !== null) {
+                    $itens[$item['numero']] ??= $item;
+                }
+            }
+        } catch (\Throwable $e) {
+            $this->registrarFalha($e);
+
+            return ['itens' => [], 'indisponivel' => true];
+        }
+
+        return ['itens' => array_values($itens), 'indisponivel' => false];
+    }
+
+    /**
+     * CNPJ de quem renova a TVL: o gravado nela ou, sem ele, o informado.
+     */
+    public static function cnpjDaRenovacao(TvlLegadaDetalhe $tvl, ?string $cnpjInformado): ?string
+    {
+        $gravado = preg_replace('/\D/', '', (string) $tvl->titularDocumento) ?? '';
+
+        if (strlen($gravado) === 14) {
+            return $gravado;
+        }
+
+        $informado = preg_replace('/\D/', '', (string) $cnpjInformado) ?? '';
+
+        return strlen($informado) === 14 ? $informado : null;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function itemDaBusca(TvlLegadaDetalhe $tvl, ?string $cnpjInformado): ?array
+    {
+        $cnpj = self::cnpjDaRenovacao($tvl, $cnpjInformado);
+        $base = [
+            'origem' => 'legado',
+            'id' => null,
+            'numero' => (string) $tvl->numero,
+            'empresa' => $tvl->razaoSocial,
+            'cnpj' => $cnpj === null ? null : (new Company(['cnpj' => $cnpj]))->formatted_cnpj,
+            'endereco' => $this->endereco($tvl),
+            'validade' => $tvl->validade?->format('Y-m-d'),
+            'situacao' => $tvl->situacao,
+            'dias_para_vencer' => $tvl->diasParaVencer,
+        ];
+
+        if ($cnpj === null) {
+            return $base + [
+                'elegivel' => false,
+                'motivo' => 'Busque pelo CNPJ da empresa para renovar esta viabilidade.',
+                'url' => null,
+            ];
+        }
+
+        $titularidade = $this->elegibilidade->titularidade($tvl, new Company(['cnpj' => $cnpj]));
+
+        if ($titularidade->consultaIndisponivel) {
+            throw new LegadoIndisponivelException('Conferência de titularidade indisponível.');
+        }
+
+        if (! $titularidade->titular) {
+            return null;
+        }
+
+        $veredito = $this->elegibilidade->avaliarAposTitularidade($tvl);
+
+        return $base + [
+            'elegivel' => $veredito->elegivel,
+            'motivo' => $veredito->motivo,
+            'url' => $veredito->elegivel ? "/portal/renovacao/legado/{$cnpj}/{$tvl->numero}" : null,
+        ];
+    }
+
+    /**
      * @return array<string, mixed>|null
      */
     private function item(TvlLegadaDetalhe $tvl, Company $empresa): ?array
