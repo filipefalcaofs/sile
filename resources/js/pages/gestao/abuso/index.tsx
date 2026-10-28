@@ -125,6 +125,8 @@ interface AbusoIndexProps {
         total: number;
     };
     efetividade: Efetividade;
+    /** Recurso features.deteccao_abuso: false = detecção desativada pela administração. */
+    deteccaoAtiva?: boolean;
     filtros: Filtros;
     perPageOptions: number[];
     ruleKeyOptions: string[];
@@ -293,6 +295,7 @@ const colunasEfetividade: ColumnDef<EfetividadeRegra>[] = [
 export default function AbusoIndex({
     alertas,
     efetividade,
+    deteccaoAtiva = true,
     filtros,
     perPageOptions,
     ruleKeyOptions,
@@ -660,7 +663,7 @@ export default function AbusoIndex({
                                 loading={processing}
                                 skeletonRows={8}
                                 density="compact"
-                                emptyState={<AlertasVazio filtrando={filtrando} />}
+                                emptyState={<AlertasVazio filtrando={filtrando} deteccaoAtiva={deteccaoAtiva} />}
                             />
 
                             <Pagination
@@ -685,7 +688,7 @@ export default function AbusoIndex({
                             <ShieldIcon className="size-5 shrink-0 text-blue-light-500" />
                             <p className="text-theme-xs text-gray-600 dark:text-gray-300">
                                 Esta decisão registra a revisão humana do <strong>alerta</strong>. Ela não altera o status do
-                                processo, não o pune e não mexe na malha fina — que é ortogonal.
+                                processo, não o pune e não mexe na malha fina, que segue regra própria.
                             </p>
                         </div>
 
@@ -732,19 +735,28 @@ function FiltroCampo({ label, children }: { label: string; children: ReactNode }
 }
 
 /**
- * Estado vazio honesto: distingue "sem resultado de busca" de "sem alertas", e
- * nesse caso explica que a detecção nasce desligada —
- * a ausência pode ser desativação OU nada sinalizado, nunca um estado fingido.
+ * Estado vazio honesto: distingue "sem resultado de busca" de "detecção
+ * desativada" e de "nada sinalizado", sem deixar o recurso inativo parecer
+ * ausência de ocorrências.
  */
-function AlertasVazio({ filtrando }: { filtrando: boolean }) {
+function AlertasVazio({ filtrando, deteccaoAtiva }: { filtrando: boolean; deteccaoAtiva: boolean }) {
+    if (filtrando) {
+        return <EmptyState title="Nenhum alerta para os filtros" description="Ajuste os filtros e tente novamente." />;
+    }
+
+    if (!deteccaoAtiva) {
+        return (
+            <EmptyState
+                title="Detecção de abuso desativada"
+                description="O recurso está inativo, por isso nenhum alerta novo é gerado. A ausência de alertas aqui não significa que não houve ocorrências. A administração pode ativá-lo nos parâmetros do sistema."
+            />
+        );
+    }
+
     return (
         <EmptyState
-            title={filtrando ? 'Nenhum alerta para os filtros' : 'Nenhum alerta de abuso registrado'}
-            description={
-                filtrando
-                    ? 'Ajuste os filtros e tente novamente.'
-                    : 'A detecção de abuso roda como tarefa agendada e nasce desligada. Sem alertas, ou a detecção está desativada, ou nada foi sinalizado no período.'
-            }
+            title="Nenhum alerta de abuso registrado"
+            description="A detecção está ativa e nada foi sinalizado no período."
         />
     );
 }
