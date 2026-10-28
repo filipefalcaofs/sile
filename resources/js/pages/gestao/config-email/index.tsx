@@ -227,7 +227,7 @@ function ServerCard({
                         {server.host}:{server.port}
                     </div>
                     <div>{server.from_address}</div>
-                    <div>{server.username ?? '—'}</div>
+                    <div>{server.username ?? '-'}</div>
                     <div>
                         <EncryptionLabel value={server.encryption} />
                     </div>

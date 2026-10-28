@@ -91,12 +91,12 @@ const STATUS_COLOR: Record<string, 'info' | 'success' | 'light'> = {
 };
 
 function formatarPercentual(valor: number | null): string {
-    return valor === null ? '—' : `${percentFormat.format(valor)}%`;
+    return valor === null ? '-' : `${percentFormat.format(valor)}%`;
 }
 
 function dataCurta(iso: string | null): string {
     if (!iso) {
-        return '—';
+        return '-';
     }
 
     return new Date(iso).toLocaleDateString('pt-BR');
@@ -163,13 +163,13 @@ export default function AuditoriaPreditiva({ anomalias, efetividade, ligado, fil
             id: 'fatores',
             header: 'Fatores',
             cell: (a) => (
-                <span className="text-theme-xs text-gray-500 dark:text-gray-400">{a.factors.map((f) => f.chave).join(', ') || '—'}</span>
+                <span className="text-theme-xs text-gray-500 dark:text-gray-400">{a.factors.map((f) => f.chave).join(', ') || '-'}</span>
             ),
         },
         {
             id: 'malha_fina',
             header: 'Malha fina',
-            cell: (a) => (a.encaminhado_malha_fina ? <Badge color="warning" size="sm">Encaminhado</Badge> : <span className="text-gray-400">—</span>),
+            cell: (a) => (a.encaminhado_malha_fina ? <Badge color="warning" size="sm">Encaminhado</Badge> : <span className="text-gray-400">-</span>),
         },
         {
             id: 'status',
@@ -195,7 +195,7 @@ export default function AuditoriaPreditiva({ anomalias, efetividade, ligado, fil
                         </button>
                     </span>
                 ) : (
-                    <span className="text-theme-xs text-gray-400">{a.resolvido_por ?? '—'}</span>
+                    <span className="text-theme-xs text-gray-400">{a.resolvido_por ?? '-'}</span>
                 ),
         },
     ];
@@ -213,7 +213,7 @@ export default function AuditoriaPreditiva({ anomalias, efetividade, ligado, fil
                     <Card>
                         <CardContent>
                             <p className="text-theme-sm text-warning-600 dark:text-warning-400">
-                                A varredura de auditoria preditiva está <strong>desligada</strong> (governança do DPO — LGPD art. 20). O painel exibe as anomalias já registradas; nenhuma nova é gerada até a ativação em Parâmetros. A auditoria nunca pune: apenas alerta e encaminha à malha fina.
+                                A varredura de auditoria preditiva está <strong>desligada</strong> (governança do DPO, LGPD art. 20). O painel exibe as anomalias já registradas; nenhuma nova é gerada até a ativação em Parâmetros. A auditoria nunca pune: apenas alerta e encaminha à malha fina.
                             </p>
                         </CardContent>
                     </Card>
@@ -227,7 +227,7 @@ export default function AuditoriaPreditiva({ anomalias, efetividade, ligado, fil
                 </div>
 
                 <Card>
-                    <CardHeader title="Filtros" description="Anomalias preditivas dos deferimentos do fluxo expresso. Confirmar/descartar muda só o status da anomalia — nunca pune o processo." />
+                    <CardHeader title="Filtros" description="Anomalias preditivas dos deferimentos do fluxo expresso. Confirmar/descartar muda só o status da anomalia: nunca pune o processo." />
                     <CardContent>
                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                             <FiltroCampo label="Severidade">

@@ -289,7 +289,7 @@ export default function CnaesEditar({
                                 />
                                 <CardContent>
                                     {semVersaoMunicipal && (
-                                        <AvisoSemVersao mensagem="Não há versão vigente de risco municipal — o grau de risco não poderá ser salvo até que uma versão seja carregada." />
+                                        <AvisoSemVersao mensagem="Não há versão vigente de risco municipal, o grau de risco não poderá ser salvo até que uma versão seja carregada." />
                                     )}
                                     <RiscoMunicipalFields
                                         niveisMunicipais={niveisMunicipais}

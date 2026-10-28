@@ -85,7 +85,7 @@ function resultadoColor(tendencia: string | undefined): 'success' | 'error' | 'w
 
 function formatarDataHora(iso: string | null): string {
     if (!iso) {
-        return '—';
+        return '-';
     }
 
     const data = new Date(iso);
@@ -243,12 +243,12 @@ export default function FichaExpressoShow({
                     <CardHeader title="Localização" description="Endereço e enquadramento territorial usados na decisão." />
                     <CardContent>
                         <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                            <DescItem label="Logradouro">{localizacao?.logradouro ?? '—'}</DescItem>
-                            <DescItem label="Número">{localizacao?.numero_metrico ?? '—'}</DescItem>
-                            <DescItem label="Bairro">{localizacao?.bairro ?? '—'}</DescItem>
-                            <DescItem label="CEP">{localizacao?.cep ?? '—'}</DescItem>
-                            <DescItem label="Zona">{localizacao?.zona ?? '—'}</DescItem>
-                            <DescItem label="Via">{localizacao?.via ?? '—'}</DescItem>
+                            <DescItem label="Logradouro">{localizacao?.logradouro ?? '-'}</DescItem>
+                            <DescItem label="Número">{localizacao?.numero_metrico ?? '-'}</DescItem>
+                            <DescItem label="Bairro">{localizacao?.bairro ?? '-'}</DescItem>
+                            <DescItem label="CEP">{localizacao?.cep ?? '-'}</DescItem>
+                            <DescItem label="Zona">{localizacao?.zona ?? '-'}</DescItem>
+                            <DescItem label="Via">{localizacao?.via ?? '-'}</DescItem>
                         </dl>
                     </CardContent>
                 </Card>

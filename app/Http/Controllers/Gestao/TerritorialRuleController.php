@@ -129,7 +129,7 @@ class TerritorialRuleController extends Controller
         }
 
         if (! $rascunho && $ehRascunho) {
-            return 'Rascunho não pode ser ativado — publique-o antes.';
+            return 'Rascunho não pode ser ativado. Publique-o antes.';
         }
 
         return null;

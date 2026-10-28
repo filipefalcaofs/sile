@@ -141,7 +141,7 @@ function AttendingBanner({ attending }: { attending: AttendingCitizen }) {
                         <AlertIcon className="size-6 fill-current" />
                     </span>
                     <p className="text-sm font-semibold text-gray-800 dark:text-white/90">
-                        Atendendo: {attending.citizen.name} — CPF {attending.citizen.cpf_masked}
+                        Atendendo: {attending.citizen.name}. CPF {attending.citizen.cpf_masked}
                     </p>
                 </div>
                 <Button
@@ -208,7 +208,7 @@ function OpenRequestCard({ companies, serviceTypes }: { companies: CompanyOption
                                     placeholder="Selecione a empresa"
                                     options={companies.map((company) => ({
                                         value: String(company.id),
-                                        label: `${company.legal_name} — ${company.formatted_cnpj}`,
+                                        label: `${company.legal_name}: ${company.formatted_cnpj}`,
                                     }))}
                                 />
                                 {errors.company_id && (

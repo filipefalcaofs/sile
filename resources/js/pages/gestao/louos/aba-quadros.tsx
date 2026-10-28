@@ -165,7 +165,7 @@ function AtivarVersaoModal({
             <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Ativar versão</h4>
             <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
                 A versão <strong>{versao.version}</strong> ({versao.total} registros) passará a ser a vigente. A
-                versão em uso hoje é fechada e permanece no histórico — nenhuma linha é apagada.
+                versão em uso hoje é fechada e permanece no histórico, nenhuma linha é apagada.
             </p>
             <div className="mt-6 flex items-center justify-end gap-3">
                 <Button size="sm" variant="outline" onClick={onClose} disabled={processing}>
@@ -338,7 +338,7 @@ export default function AbaQuadros({
                                                 </Badge>
                                             </td>
                                             <td className="px-3 py-3 text-gray-500 dark:text-gray-400">
-                                                {formatarData(versao.valid_from) ?? '—'}
+                                                {formatarData(versao.valid_from) ?? '-'}
                                                 {versao.valid_to ? ` até ${formatarData(versao.valid_to)}` : ''}
                                             </td>
                                             <td className="px-3 py-3 text-gray-700 dark:text-gray-300">

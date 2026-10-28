@@ -22,7 +22,7 @@ export default function TermoLgpd({ term }: TermoLgpdProps) {
         <ThemeProvider>
             <MotionProvider>
             <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-8 dark:bg-gray-900">
-                <Head title="Termo de Consentimento LGPD — Gestão SEDUR" />
+                <Head title="Termo de Consentimento LGPD: Gestão SEDUR" />
                 <RevealScope>
                 <Surface className="w-full max-w-2xl rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03] sm:p-8">
                     <header className="mb-6">
@@ -30,7 +30,7 @@ export default function TermoLgpd({ term }: TermoLgpdProps) {
                             {term.title}
                         </h1>
                         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                            Versão {term.version} — leia com atenção antes de continuar.
+                            Versão {term.version}, leia com atenção antes de continuar.
                         </p>
                     </header>
 

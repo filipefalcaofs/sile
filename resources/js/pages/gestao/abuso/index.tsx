@@ -140,7 +140,7 @@ const URL_PAINEL = '/gestao/abuso';
 /** Formata a data-hora ISO para o padrão pt-BR (dd/mm/aaaa hh:mm). */
 function formatarDataHora(iso: string | null): string {
     if (!iso) {
-        return '—';
+        return '-';
     }
 
     const data = new Date(iso);
@@ -161,7 +161,7 @@ function formatarDataHora(iso: string | null): string {
 /** Número inteiro formatado em pt-BR. */
 function formatarNumero(valor: number | null | undefined): string {
     if (typeof valor !== 'number' || Number.isNaN(valor)) {
-        return '—';
+        return '-';
     }
 
     return valor.toLocaleString('pt-BR');
@@ -173,7 +173,7 @@ function formatarNumero(valor: number | null | undefined): string {
  */
 function formatarTaxa(taxa: number | null): string {
     if (taxa === null || typeof taxa !== 'number' || Number.isNaN(taxa)) {
-        return '—';
+        return '-';
     }
 
     return `${taxa.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%`;
@@ -432,7 +432,7 @@ export default function AbusoIndex({
                             {alerta.processo.protocol_number ?? `#${alerta.processo.id}`}
                         </Link>
                     ) : (
-                        <span className="text-gray-400 dark:text-gray-500">—</span>
+                        <span className="text-gray-400 dark:text-gray-500">-</span>
                     )}
                     {alerta.encaminhado_malha_fina && (
                         <Badge color="warning" size="sm">
@@ -449,7 +449,7 @@ export default function AbusoIndex({
                 const itens = resumoEvidencia(alerta.evidence);
 
                 if (itens.length === 0) {
-                    return <span className="text-gray-400 dark:text-gray-500">—</span>;
+                    return <span className="text-gray-400 dark:text-gray-500">-</span>;
                 }
 
                 return (
@@ -527,11 +527,11 @@ export default function AbusoIndex({
                 <div className="flex items-start gap-3 rounded-xl border border-blue-light-200 bg-blue-light-50 p-4 dark:border-blue-light-500/30 dark:bg-blue-light-500/15">
                     <ShieldIcon className="size-5 shrink-0 text-blue-light-500" />
                     <div className="text-theme-sm text-gray-600 dark:text-gray-300">
-                        <p className="font-medium text-gray-800 dark:text-white/90">Revisão humana — nunca punição automática</p>
+                        <p className="font-medium text-gray-800 dark:text-white/90">Revisão humana, nunca punição automática</p>
                         <p className="mt-1">
                             Confirmar ou descartar é a triagem humana do próprio alerta. Não altera, não indefere e
-                            não pune o processo, e não mexe no encaminhamento à malha fina — que é ortogonal e decidido pelo
-                            motor. A detecção nasce desligada e gera apenas insumo para análise.
+                            não pune o processo, e não mexe no encaminhamento à malha fina, que é decidido pelo
+                            motor. A detecção gera apenas insumo para análise.
                         </p>
                     </div>
                 </div>

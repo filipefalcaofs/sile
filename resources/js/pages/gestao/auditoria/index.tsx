@@ -127,7 +127,7 @@ const URL_TRILHA = '/gestao/auditoria';
 /** Formata a data-hora ISO para o padrão pt-BR (dd/mm/aaaa hh:mm). */
 function formatarDataHora(iso: string | null): string {
     if (!iso) {
-        return '—';
+        return '-';
     }
 
     const data = new Date(iso);
@@ -187,7 +187,7 @@ function valorLegivel(valor: unknown): string {
     try {
         return JSON.stringify(valor);
     } catch {
-        return '—';
+        return '-';
     }
 }
 
@@ -578,7 +578,7 @@ function AcaoCell({ linha }: { linha: AtividadeRow }) {
                     </Badge>
                 )}
                 <span className="text-theme-sm font-medium text-gray-700 dark:text-gray-200">
-                    {linha.event ? rotuloCodigo(linha.event) : '—'}
+                    {linha.event ? rotuloCodigo(linha.event) : '-'}
                 </span>
                 {linha.personal_data && (
                     <Badge color="warning" size="sm">
@@ -610,14 +610,14 @@ function UsuarioCell({ causer, actingFor }: { causer: UsuarioResumo | null; acti
 /** Entidade auditada (tipo legível + rótulo/ID quando há). */
 function EntidadeCell({ subject }: { subject: AtividadeRow['subject'] }) {
     if (!subject) {
-        return <span className="text-gray-400 dark:text-gray-500">—</span>;
+        return <span className="text-gray-400 dark:text-gray-500">-</span>;
     }
 
     return (
         <div className="flex flex-col">
             <span className="text-gray-700 dark:text-gray-300">{subject.type}</span>
             <span className="text-theme-xs text-gray-400 dark:text-gray-500">
-                {subject.label ?? (subject.id !== null ? `#${subject.id}` : '—')}
+                {subject.label ?? (subject.id !== null ? `#${subject.id}` : '-')}
             </span>
         </div>
     );
@@ -626,7 +626,7 @@ function EntidadeCell({ subject }: { subject: AtividadeRow['subject'] }) {
 /** Diff estruturado da alteração (HU-094): campo: antigo → novo. */
 function DiffCell({ changes }: { changes: AttributeChanges | null }) {
     if (!changes || typeof changes !== 'object') {
-        return <span className="text-gray-400 dark:text-gray-500">—</span>;
+        return <span className="text-gray-400 dark:text-gray-500">-</span>;
     }
 
     const novos = changes.attributes && typeof changes.attributes === 'object' ? changes.attributes : {};
@@ -634,7 +634,7 @@ function DiffCell({ changes }: { changes: AttributeChanges | null }) {
     const campos = Object.keys(novos);
 
     if (campos.length === 0) {
-        return <span className="text-gray-400 dark:text-gray-500">—</span>;
+        return <span className="text-gray-400 dark:text-gray-500">-</span>;
     }
 
     return (
@@ -686,7 +686,7 @@ const colunaResultado: ColumnDef<AtividadeRow> = {
                 {rotuloCodigo(linha.result)}
             </Badge>
         ) : (
-            <span className="text-gray-400 dark:text-gray-500">—</span>
+            <span className="text-gray-400 dark:text-gray-500">-</span>
         ),
 };
 
@@ -694,7 +694,7 @@ const colunaVersao: ColumnDef<AtividadeRow> = {
     id: 'versao',
     header: 'Versão de regra',
     cellClassName: 'whitespace-nowrap text-gray-600 dark:text-gray-400',
-    cell: (linha) => linha.rules_version ?? <span className="text-gray-400 dark:text-gray-500">—</span>,
+    cell: (linha) => linha.rules_version ?? <span className="text-gray-400 dark:text-gray-500">-</span>,
 };
 
 const colunaAlteracoes: ColumnDef<AtividadeRow> = {
@@ -707,14 +707,14 @@ const colunaIp: ColumnDef<AtividadeRow> = {
     id: 'ip',
     header: 'IP',
     cellClassName: 'whitespace-nowrap text-gray-600 dark:text-gray-400',
-    cell: (linha) => linha.ip_address ?? '—',
+    cell: (linha) => linha.ip_address ?? '-',
 };
 
 const colunaCanal: ColumnDef<AtividadeRow> = {
     id: 'canal',
     header: 'Canal',
     cellClassName: 'whitespace-nowrap text-gray-600 dark:text-gray-400',
-    cell: (linha) => linha.channel ?? '—',
+    cell: (linha) => linha.channel ?? '-',
 };
 
 const colunasAtividade: ColumnDef<AtividadeRow>[] = [
@@ -753,7 +753,7 @@ const colunasAcessos: ColumnDef<AcessoRow>[] = [
                     {rotuloCodigo(linha.event)}
                 </Badge>
             ) : (
-                <span className="text-gray-400 dark:text-gray-500">—</span>
+                <span className="text-gray-400 dark:text-gray-500">-</span>
             ),
     },
     {
@@ -762,7 +762,7 @@ const colunasAcessos: ColumnDef<AcessoRow>[] = [
         cell: (linha) => (
             <div className="flex flex-col">
                 <span className="text-gray-700 dark:text-gray-300">
-                    {linha.usuario ?? <span className="text-gray-400 dark:text-gray-500">—</span>}
+                    {linha.usuario ?? <span className="text-gray-400 dark:text-gray-500">-</span>}
                 </span>
                 {linha.email && (
                     <span className="text-theme-xs text-gray-400 dark:text-gray-500">{linha.email}</span>
@@ -774,13 +774,13 @@ const colunasAcessos: ColumnDef<AcessoRow>[] = [
         id: 'ip',
         header: 'IP',
         cellClassName: 'whitespace-nowrap text-gray-600 dark:text-gray-400',
-        cell: (linha) => linha.ip_address ?? '—',
+        cell: (linha) => linha.ip_address ?? '-',
     },
     {
         id: 'canal',
         header: 'Canal',
         cellClassName: 'whitespace-nowrap text-gray-600 dark:text-gray-400',
-        cell: (linha) => linha.channel ?? '—',
+        cell: (linha) => linha.channel ?? '-',
     },
 ];
 

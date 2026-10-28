@@ -166,7 +166,7 @@ class SectorController extends Controller
             : 'Setor inativado.');
 
         if (! $sector->active && $openCount > 0) {
-            $response->with('warning', "Setor inativado com {$openCount} processo(s) em aberto. Redistribua-os pela distribuição — o histórico foi preservado.");
+            $response->with('warning', "Setor inativado com {$openCount} processo(s) em aberto. Redistribua-os pela distribuição. O histórico foi preservado.");
         }
 
         return $response;

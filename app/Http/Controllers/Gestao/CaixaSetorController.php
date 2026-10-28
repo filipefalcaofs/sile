@@ -284,8 +284,8 @@ class CaixaSetorController extends Controller
             ->get()
             ->map(fn (Activity $a): array => [
                 'em' => $a->created_at?->toIso8601String(),
-                'ator' => (string) ($a->properties['ator_nome'] ?? optional($a->causer)->name ?? '—'),
-                'analista' => (string) ($a->properties['analista_nome'] ?? '—'),
+                'ator' => (string) ($a->properties['ator_nome'] ?? optional($a->causer)->name ?? '-'),
+                'analista' => (string) ($a->properties['analista_nome'] ?? '-'),
                 'qtd' => (int) ($a->properties['qtd'] ?? 0),
             ])
             ->all();

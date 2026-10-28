@@ -344,7 +344,7 @@ class ParameterSeeder extends Seeder
                 'type' => 'boolean',
                 'default_value' => '1',
                 'validation_rules' => ['required', 'boolean'],
-                'description' => 'Consulta o lote por inscrição imobiliária no cadastro municipal (ArcGIS, camada SEMAP — Inscrições Geo) quando o endereçamento não tem polígono para o endereço',
+                'description' => 'Consulta o lote por inscrição imobiliária no cadastro municipal (ArcGIS, camada SEMAP Inscrições Geo) quando o endereçamento não tem polígono para o endereço',
             ],
             'features.legado_simplifica' => [
                 'group' => 'features',
@@ -365,7 +365,7 @@ class ParameterSeeder extends Seeder
                 'type' => 'boolean',
                 'default_value' => '1',
                 'validation_rules' => ['required', 'boolean'],
-                'description' => 'Importa o benchmark nacional de tempo de viabilidade a partir dos microdados da REDESIM. Desligado, as telas de benchmark mostram a lacuna da competência — nenhum valor é estimado',
+                'description' => 'Importa o benchmark nacional de tempo de viabilidade a partir dos microdados da REDESIM. Desligado, as telas de benchmark mostram a lacuna da competência; nenhum valor é estimado',
             ],
             'integrations.redesim_estatistica.base_url' => [
                 'group' => 'integracoes',
@@ -552,7 +552,7 @@ class ParameterSeeder extends Seeder
                 'type' => 'string',
                 'default_value' => 'VIA',
                 'validation_rules' => ['required', 'string', 'max:10'],
-                'description' => 'Prefixo do número de protocolo da viabilidade ({prefixo}-AAAA-NNNNNN) — formato oficial a confirmar SEDUR',
+                'description' => 'Prefixo do número de protocolo da viabilidade ({prefixo}-AAAA-NNNNNN). Formato oficial a confirmar com a SEDUR',
             ],
             'solicitacao.anexos.max_mb' => [
                 'group' => 'solicitacao',
@@ -573,7 +573,7 @@ class ParameterSeeder extends Seeder
                 'type' => 'integer',
                 'default_value' => '30',
                 'validation_rules' => ['required', 'integer', 'min:1', 'max:365'],
-                'description' => 'Prazo estimado (dias) exibido na consulta de protocolo — ressalva de estimativa; a medição real por etapa ainda será implementada',
+                'description' => 'Prazo estimado (dias) exibido na consulta de protocolo. É uma estimativa; a medição real por etapa ainda será implementada',
             ],
             'solicitacao.atendimento.expiracao_minutos' => [
                 'group' => 'solicitacao',
@@ -587,14 +587,14 @@ class ParameterSeeder extends Seeder
                 'type' => 'json',
                 'default_value' => '["rascunho","protocolada"]',
                 'validation_rules' => ['required', 'json'],
-                'description' => 'Estados em que a solicitação pode ser cancelada pelo requerente (antes da decisão) — definição fina pendente SEDUR',
+                'description' => 'Estados em que a solicitação pode ser cancelada pelo requerente (antes da decisão). Definição fina pendente da SEDUR',
             ],
             'solicitacao.duplicidade.janela_dias' => [
                 'group' => 'solicitacao',
                 'type' => 'integer',
                 'default_value' => '180',
                 'validation_rules' => ['required', 'integer', 'min:1', 'max:3650'],
-                'description' => 'Janela (dias) da detecção de reincidência por CNPJ — alerta com link ao processo anterior, nunca bloqueia (direito de petição). Definição oficial pendente SEDUR',
+                'description' => 'Janela (dias) da detecção de reincidência por CNPJ. Gera alerta com link ao processo anterior e nunca bloqueia (direito de petição). Definição oficial pendente da SEDUR',
             ],
             'renovacao.intervalo_meses' => [
                 'group' => 'solicitacao',
@@ -664,7 +664,7 @@ class ParameterSeeder extends Seeder
                 'type' => 'decimal',
                 'default_value' => '1.0',
                 'validation_rules' => ['required', 'numeric', 'min:0'],
-                'description' => 'Fator multiplicador aplicado ao valor do DAM da TLL quando o CNAE de maior valor exige fator multiplicador (HU-145); 1.0 é neutro',
+                'description' => 'Fator multiplicador aplicado ao valor do DAM da TLL quando o CNAE de maior valor exige fator multiplicador; 1.0 é neutro',
             ],
             'analise.pendencia.prazo_resposta_dias' => [
                 'group' => 'analise',
@@ -809,7 +809,7 @@ class ParameterSeeder extends Seeder
                 'type' => 'boolean',
                 'default_value' => '0',
                 'validation_rules' => ['required', 'boolean'],
-                'description' => 'Habilita a detecção de padrões de abuso/fraude; nasce desligada e NUNCA pune — apenas registra alerta e encaminha à malha fina',
+                'description' => 'Habilita a detecção de padrões de abuso/fraude; nasce desligada e nunca pune; apenas registra alerta e encaminha à malha fina',
             ],
             // Limiares dos detectores determinísticos (HU-138) — grupo 'abuso'.
             // Defaults conservadores; a SEDUR ajusta sem deploy (HU-014).
@@ -890,7 +890,7 @@ class ParameterSeeder extends Seeder
                 'type' => 'boolean',
                 'default_value' => '0',
                 'validation_rules' => ['required', 'boolean'],
-                'description' => 'Habilita a varredura de auditoria preditiva dos processos deferidos no fluxo expresso (Módulo 3); desligada por padrão (aval do DPO), nunca pune — só gera alerta e encaminha à malha fina',
+                'description' => 'Habilita a varredura de auditoria preditiva dos processos deferidos no fluxo expresso; desligada por padrão (aval do DPO) e nunca pune; só gera alerta e encaminha à malha fina',
             ],
             'ia.auditoria_preditiva.janela_dias' => [
                 'group' => 'ia',
