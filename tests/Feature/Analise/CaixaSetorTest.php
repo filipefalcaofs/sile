@@ -455,7 +455,7 @@ class CaixaSetorTest extends TestCase
         $this->assertNull($processo->fresh()->assigned_user_id);
     }
 
-    public function test_index_expoe_vistoriadores_do_setor_e_status_operacional_da_linha(): void
+    public function test_index_expoe_vistoriadores_do_setor_e_deixa_o_processo_em_vistoria_fora_da_caixa(): void
     {
         // A caixa alimenta o seletor da distribuição: processos em vistoria
         // distribuem para a lista de vistoriadores (preencher-ficha-vistoria),
@@ -471,6 +471,7 @@ class CaixaSetorTest extends TestCase
         $administrador->removeRole('Vistoriador');
         $administrador->assignRole(Role::firstOrCreate(['name' => 'administrador', 'guard_name' => 'web']));
         $processo = $this->processoEmVistoria($setor);
+        $comum = $this->processoNaCaixa($setor);
 
         $response = $this->actingAs($gestor, 'gestao')
             ->get('/gestao/caixa-setor')
@@ -484,8 +485,13 @@ class CaixaSetorTest extends TestCase
         $this->assertNotContains($analistaComPermissaoDeVistoria->id, $vistoriadoresIds);
         $this->assertContains($administrador->id, $vistoriadoresIds);
 
-        $linha = collect($props['processos']['data'])->firstWhere('id', $processo->id);
-        $this->assertSame('vistoriar', $linha['analysis_status']);
+        // SPEC-05: processo em vistoria fica só na Caixa de Vistoria, fora desta caixa.
+        $idsNaCaixa = collect($props['processos']['data'])->pluck('id')->all();
+        $this->assertNotContains($processo->id, $idsNaCaixa);
+
+        $linha = collect($props['processos']['data'])->firstWhere('id', $comum->id);
+        $this->assertNotNull($linha);
+        $this->assertArrayHasKey('analysis_status', $linha);
     }
 
     public function test_apoio_nao_pode_assumir_processo(): void
