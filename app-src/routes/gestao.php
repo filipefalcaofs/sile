@@ -346,6 +346,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::post('config-inscricao-imobiliaria/testar', [InscricaoImobiliariaIntegrationController::class, 'test'])->name('config-inscricao-imobiliaria.testar');
             Route::get('config-apis', [ApiIntegracaoController::class, 'edit'])->name('config-apis.edit');
             Route::put('config-apis/{aba}', [ApiIntegracaoController::class, 'update'])->name('config-apis.update');
+            Route::post('config-apis/legado/testar', [ApiIntegracaoController::class, 'testarLegado'])->name('config-apis.legado.testar');
         });
 
         // Território (HU-029+): consulta territorial, geocodificação e validação
