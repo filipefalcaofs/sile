@@ -86,22 +86,27 @@ export default function ConsultaProcesso({
 
             <Card className="mb-6">
                 <CardContent>
-                    <form onSubmit={consultar} className="flex flex-col gap-3 sm:flex-row sm:items-end" role="search">
-                        <div className="w-full sm:max-w-md">
-                            <Label htmlFor="numero-processo">CNPJ, número do processo, da viabilidade ou protocolo BAP</Label>
-                            <Input
-                                id="numero-processo"
-                                name="numero"
-                                autoComplete="off"
-                                value={termo}
-                                onChange={(event) => setTermo(event.target.value)}
-                                hint="A busca vale para o Viabiliza e para o sistema anterior (Simplifica). Exemplos: CNPJ 57.461.624/0001-23 · viabilidade 2104040 · BAP BAP2601568762 · processo 0000123456-20230101/0001"
-                            />
+                    <form onSubmit={consultar} role="search">
+                        <Label htmlFor="numero-processo">CNPJ, número do processo, da viabilidade ou protocolo BAP</Label>
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+                            <div className="w-full sm:max-w-md">
+                                <Input
+                                    id="numero-processo"
+                                    name="numero"
+                                    autoComplete="off"
+                                    value={termo}
+                                    onChange={(event) => setTermo(event.target.value)}
+                                    aria-describedby="numero-processo-dica"
+                                />
+                            </div>
+                            <Button type="submit" className="min-h-11" loading={buscando} disabled={termo.trim() === ''}>
+                                <SearchIcon className="size-4" aria-hidden="true" />
+                                Consultar
+                            </Button>
                         </div>
-                        <Button type="submit" className="min-h-11" loading={buscando} disabled={termo.trim() === ''}>
-                            <SearchIcon className="size-4" aria-hidden="true" />
-                            Consultar
-                        </Button>
+                        <p id="numero-processo-dica" className="max-w-2xl pt-1.5 text-xs text-gray-500">
+                            A busca vale para o Viabiliza e para o sistema anterior (Simplifica). Exemplos: CNPJ 57.461.624/0001-23 · viabilidade 2104040 · BAP BAP2601568762 · processo 0000123456-20230101/0001
+                        </p>
                     </form>
                 </CardContent>
             </Card>
