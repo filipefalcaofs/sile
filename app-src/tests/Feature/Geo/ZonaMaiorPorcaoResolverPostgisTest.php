@@ -21,7 +21,7 @@ class ZonaMaiorPorcaoResolverPostgisTest extends PostgisTestCase
     {
         parent::setUp();
 
-        config(['viabiliza.features.geoserver_zona' => true, 'viabiliza.features.geoserver_enderecamento' => true]);
+        config(['viabiliza.features.geoserver_zona' => true, 'viabiliza.features.geoserver_enderecamento' => true, 'viabiliza.features.geoserver_via_classe' => true]);
 
         GeoServerLayer::factory()->create(['workspace' => 'louos_zpr3', 'type_name' => 'VM_L_Z_USO_ZPR_3', 'ordem' => 1]);
         GeoServerLayer::factory()->create(['workspace' => 'louos_zeis', 'type_name' => 'VM_L_Z_USO_ZEIS', 'ordem' => 2]);
@@ -303,44 +303,121 @@ class ZonaMaiorPorcaoResolverPostgisTest extends PostgisTestCase
 
     private const ZCLME = 'louos_zona_uso_zclme:VM_L_Z_USO_ZCLME';
 
-    public function test_s7_lote_lindeiro_com_o_mesmo_codlog_a_ate_60_m_fica_na_zclmu(): void
+    private const EIXO = 'logradouros:VM_LOGRADOURO';
+
+    /**
+     * Eixo da rua de acesso: linha leste-oeste a ~22 m acima da borda norte do lote
+     * (lat -12,9788), de ponta a ponta da área de teste.
+     *
+     * @return array<string, mixed>
+     */
+    private function eixoDeAcesso(): array
+    {
+        return ['type' => 'LineString', 'coordinates' => [[-38.5010, -12.9788], [-38.4980, -12.9788]]];
+    }
+
+    /**
+     * Trecho da zona linear sobre o eixo, de $lngDe a $lngAte, deslocado $metros ao norte.
+     *
+     * @return array<string, mixed>
+     */
+    private function trecho(float $lngDe, float $lngAte, float $metros = 0.0): array
+    {
+        $lat = -12.9788 + $metros / 110_590;
+
+        return ['type' => 'LineString', 'coordinates' => [[$lngDe, $lat], [$lngAte, $lat]]];
+    }
+
+    private function acessoPelaVia(array $trecho, array $propriedades = ['CODLOG' => '12345'], string $camada = self::ZCLMU): void
     {
         $this->camadasLineares();
         $this->geoserver([
             self::ZPR3 => $this->retangulo(-38.5010, -38.4980, -12.9810, -12.9780),
-            self::ZCLMU => $this->linhaAcima(40),
-        ], [self::ZCLMU => ['SUBZONA' => 'ZCLMu', 'LOCAL' => 'Av. São Rafael', 'CODLOG' => 12345]]);
+            self::EIXO => $this->eixoDeAcesso(),
+            $camada => $trecho,
+        ], [$camada => $propriedades]);
+    }
+
+    public function test_acesso_pelo_trecho_coberto_pela_zona_linear_fica_na_zclmu(): void
+    {
+        // O ponto da rua em frente ao lote (lng -38,4995) está dentro do trecho.
+        $this->acessoPelaVia($this->trecho(-38.5010, -38.4990), ['SUBZONA' => 'ZCLMu', 'LOCAL' => 'Av. ACM', 'CODLOG' => 12345]);
 
         $resultado = app(ZonaMaiorPorcaoResolver::class)->resolver($this->lote(), '12345');
 
         $this->assertSame(ZonaMaiorPorcao::CENTRALIDADE_LINEAR, $resultado->status);
         $this->assertSame('ZCLMu', $resultado->codigo);
         $this->assertSame('ZPR 3', $resultado->porcoes[0]['zona']);
-        $this->assertStringContainsString('lindeiro', (string) $resultado->motivo);
-        $this->assertStringContainsString('CODLOG 12345', (string) $resultado->motivo);
-        $this->assertMatchesRegularExpression('/\b(39|40|41) m\b/', (string) $resultado->motivo);
+        $this->assertStringContainsString('acesso', mb_strtolower((string) $resultado->motivo));
+        $this->assertStringContainsString('ZCLMu', (string) $resultado->motivo);
     }
 
-    public function test_s7_codlog_com_zeros_a_esquerda_e_chave_minuscula_tambem_casa(): void
+    public function test_acesso_pelo_trecho_nao_coberto_da_mesma_via_mantem_a_zona_do_imovel(): void
     {
-        $this->camadasLineares();
-        $this->geoserver([
-            self::ZPR3 => $this->retangulo(-38.5010, -38.4980, -12.9810, -12.9780),
-            self::ZCLMU => $this->linhaAcima(40),
-        ], [self::ZCLMU => ['subzona' => 'ZCLMu', 'codlog' => '0012345']]);
+        // Mesmo CODLOG e linha a poucos metros do eixo, mas o trecho coberto
+        // termina antes do ponto de acesso do lote (Av. ACM: só parte da rua).
+        $this->acessoPelaVia($this->trecho(-38.4975, -38.4960), ['CODLOG' => 12345]);
+
+        $resultado = app(ZonaMaiorPorcaoResolver::class)->resolver($this->lote(), '12345');
+
+        $this->assertSame(ZonaMaiorPorcao::IDENTIFICADO, $resultado->status);
+        $this->assertSame('ZPR 3', $resultado->codigo);
+    }
+
+    public function test_so_o_nome_da_via_nao_basta(): void
+    {
+        // Trecho de outra via cobre o ponto de acesso: CODLOG diferente, não vale.
+        $this->acessoPelaVia($this->trecho(-38.5010, -38.4980), ['CODLOG' => '99999']);
+
+        $resultado = app(ZonaMaiorPorcaoResolver::class)->resolver($this->lote(), '12345');
+
+        $this->assertSame('ZPR 3', $resultado->codigo);
+    }
+
+    public function test_codlog_com_zeros_a_esquerda_e_chave_minuscula_tambem_casa(): void
+    {
+        $this->acessoPelaVia($this->trecho(-38.5010, -38.4980), ['subzona' => 'ZCLMu', 'codlog' => '0012345']);
 
         $resultado = app(ZonaMaiorPorcaoResolver::class)->resolver($this->lote(), '12345');
 
         $this->assertSame(ZonaMaiorPorcao::CENTRALIDADE_LINEAR, $resultado->status);
-        $this->assertSame('ZCLMu', $resultado->codigo);
     }
 
-    public function test_s7_mesmo_codlog_a_80_m_fica_na_maior_porcao(): void
+    public function test_trecho_sem_codlog_na_camada_vale_pela_posicao(): void
+    {
+        // ZCLMe e vias de vários nomes vêm sem CODLOG: a posição decide.
+        $this->acessoPelaVia($this->trecho(-38.5010, -38.4980), ['SUBZONA' => 'ZCLMe'], self::ZCLME);
+
+        $resultado = app(ZonaMaiorPorcaoResolver::class)->resolver($this->lote(), '12345');
+
+        $this->assertSame(ZonaMaiorPorcao::CENTRALIDADE_LINEAR, $resultado->status);
+        $this->assertSame('ZCLMe', $resultado->codigo);
+    }
+
+    public function test_linha_a_20_m_do_eixo_passa_da_tolerancia_padrao_de_15_m(): void
+    {
+        $this->acessoPelaVia($this->trecho(-38.5010, -38.4980, 20), ['CODLOG' => '12345']);
+
+        $this->assertSame('ZPR 3', app(ZonaMaiorPorcaoResolver::class)->resolver($this->lote(), '12345')->codigo);
+    }
+
+    public function test_tolerancia_cartografica_vem_da_configuracao(): void
+    {
+        config(['viabiliza.geo.centralidade_linear.tolerancia_acesso_m' => 25]);
+        $this->acessoPelaVia($this->trecho(-38.5010, -38.4980, 20), ['CODLOG' => '12345']);
+
+        $this->assertSame(
+            ZonaMaiorPorcao::CENTRALIDADE_LINEAR,
+            app(ZonaMaiorPorcaoResolver::class)->resolver($this->lote(), '12345')->status,
+        );
+    }
+
+    public function test_sem_eixo_da_via_vale_so_a_linha_por_cima_do_lote(): void
     {
         $this->camadasLineares();
         $this->geoserver([
             self::ZPR3 => $this->retangulo(-38.5010, -38.4980, -12.9810, -12.9780),
-            self::ZCLMU => $this->linhaAcima(80),
+            self::ZCLMU => $this->trecho(-38.5010, -38.4980),
         ], [self::ZCLMU => ['CODLOG' => '12345']]);
 
         $resultado = app(ZonaMaiorPorcaoResolver::class)->resolver($this->lote(), '12345');
@@ -349,124 +426,78 @@ class ZonaMaiorPorcaoResolverPostgisTest extends PostgisTestCase
         $this->assertSame('ZPR 3', $resultado->codigo);
     }
 
-    public function test_s7_outro_codlog_a_10_m_fica_na_maior_porcao(): void
+    public function test_processo_sem_codlog_nao_usa_a_regra_de_acesso(): void
     {
-        $this->camadasLineares();
-        $this->geoserver([
-            self::ZPR3 => $this->retangulo(-38.5010, -38.4980, -12.9810, -12.9780),
-            self::ZCLMU => $this->linhaAcima(10),
-        ], [self::ZCLMU => ['CODLOG' => '99999']]);
+        $this->acessoPelaVia($this->trecho(-38.5010, -38.4980));
 
-        $resultado = app(ZonaMaiorPorcaoResolver::class)->resolver($this->lote(), '12345');
-
-        $this->assertSame(ZonaMaiorPorcao::IDENTIFICADO, $resultado->status);
-        $this->assertSame('ZPR 3', $resultado->codigo);
+        $this->assertSame('ZPR 3', app(ZonaMaiorPorcaoResolver::class)->resolver($this->lote())->codigo);
     }
 
-    public function test_s7_trecho_sem_codlog_nao_entra_pela_regra_de_acesso(): void
+    public function test_via_do_codlog_longe_do_lote_e_dado_inconsistente_e_nao_vale(): void
     {
+        // Eixo a ~330 m do lote: o CODLOG do processo não é a rua do imóvel.
         $this->camadasLineares();
+        $longe = ['type' => 'LineString', 'coordinates' => [[-38.5010, -12.9760], [-38.4980, -12.9760]]];
         $this->geoserver([
             self::ZPR3 => $this->retangulo(-38.5010, -38.4980, -12.9810, -12.9780),
-            self::ZCLMU => $this->linhaAcima(10),
-        ], [self::ZCLMU => ['CODLOG' => null]]);
-
-        $resultado = app(ZonaMaiorPorcaoResolver::class)->resolver($this->lote(), '12345');
-
-        $this->assertSame(ZonaMaiorPorcao::IDENTIFICADO, $resultado->status);
-    }
-
-    public function test_s7_processo_sem_codlog_fica_na_maior_porcao(): void
-    {
-        $this->camadasLineares();
-        $this->geoserver([
-            self::ZPR3 => $this->retangulo(-38.5010, -38.4980, -12.9810, -12.9780),
-            self::ZCLMU => $this->linhaAcima(10),
+            self::EIXO => $longe,
+            self::ZCLMU => ['type' => 'LineString', 'coordinates' => [[-38.5010, -12.9760], [-38.4980, -12.9760]]],
         ], [self::ZCLMU => ['CODLOG' => '12345']]);
 
-        $resultado = app(ZonaMaiorPorcaoResolver::class)->resolver($this->lote());
-
-        $this->assertSame(ZonaMaiorPorcao::IDENTIFICADO, $resultado->status);
+        $this->assertSame('ZPR 3', app(ZonaMaiorPorcaoResolver::class)->resolver($this->lote(), '12345')->codigo);
     }
 
-    public function test_s7_chave_desligada_volta_a_valer_so_a_linha_por_cima(): void
+    public function test_chave_desligada_volta_a_valer_so_a_linha_por_cima(): void
     {
         config(['viabiliza.features.centralidade_linear_lindeiro' => false]);
+        $this->acessoPelaVia($this->trecho(-38.5010, -38.4980));
+
+        $this->assertSame('ZPR 3', app(ZonaMaiorPorcaoResolver::class)->resolver($this->lote(), '12345')->codigo);
+    }
+
+    public function test_camada_linear_e_consultada_com_o_bbox_ampliado_pela_margem(): void
+    {
         $this->camadasLineares();
-        $this->geoserver([
-            self::ZPR3 => $this->retangulo(-38.5010, -38.4980, -12.9810, -12.9780),
-            self::ZCLMU => $this->linhaAcima(10),
-        ], [self::ZCLMU => ['CODLOG' => '12345']]);
+        $this->geoserver([self::ZPR3 => $this->retangulo(-38.5010, -38.4980, -12.9810, -12.9780)]);
 
-        $resultado = app(ZonaMaiorPorcaoResolver::class)->resolver($this->lote(), '12345');
+        app(ZonaMaiorPorcaoResolver::class)->resolver($this->lote(), '12345');
 
-        $this->assertSame(ZonaMaiorPorcao::IDENTIFICADO, $resultado->status);
-        $this->assertSame('ZPR 3', $resultado->codigo);
+        // A margem de consulta (150 m padrão) só traz o trecho ao redor do lote; não decide.
+        Http::assertSent(function (Request $request): bool {
+            parse_str((string) parse_url($request->url(), PHP_URL_QUERY), $query);
+            preg_match('/BBOX\(GEOMETRY,([-\d.]+),([-\d.]+),([-\d.]+),([-\d.]+)/', (string) ($query['CQL_FILTER'] ?? ''), $m);
+
+            return ($query['typeName'] ?? '') === self::ZCLMU && count($m) === 5 && (float) $m[2] < -12.9812 && (float) $m[4] > -12.9778;
+        });
         Http::assertSent(function (Request $request): bool {
             parse_str((string) parse_url($request->url(), PHP_URL_QUERY), $query);
 
-            return ($query['typeName'] ?? '') === self::ZCLMU
+            return ($query['typeName'] ?? '') === self::ZPR3
                 && $query['CQL_FILTER'] === "BBOX(GEOMETRY,-38.5000000,-12.9800000,-38.4990000,-12.9790000,'EPSG:4326')";
         });
     }
 
-    public function test_s7_distancia_maxima_vem_da_configuracao(): void
-    {
-        config(['viabiliza.geo.centralidade_linear.distancia_lindeiro_m' => 30]);
-        $this->camadasLineares();
-        $this->geoserver([
-            self::ZPR3 => $this->retangulo(-38.5010, -38.4980, -12.9810, -12.9780),
-            self::ZCLMU => $this->linhaAcima(40),
-        ], [self::ZCLMU => ['CODLOG' => '12345']]);
-
-        $this->assertSame(ZonaMaiorPorcao::IDENTIFICADO, app(ZonaMaiorPorcaoResolver::class)->resolver($this->lote(), '12345')->status);
-    }
-
-    public function test_s7_camada_linear_e_consultada_com_o_bbox_ampliado_pela_distancia(): void
-    {
-        $this->camadasLineares();
-        $this->geoserver([
-            self::ZPR3 => $this->retangulo(-38.5010, -38.4980, -12.9810, -12.9780),
-        ]);
-
-        app(ZonaMaiorPorcaoResolver::class)->resolver($this->lote(), '12345');
-
-        $bboxes = [];
-        Http::assertSent(function (Request $request) use (&$bboxes): bool {
-            parse_str((string) parse_url($request->url(), PHP_URL_QUERY), $query);
-            preg_match_all('/-?\d+\.\d+/', (string) ($query['CQL_FILTER'] ?? ''), $numeros);
-            $bboxes[$query['typeName'] ?? ''] = array_map('floatval', $numeros[0]);
-
-            return true;
-        });
-
-        $this->assertSame([-38.5, -12.98, -38.499, -12.979], $bboxes[self::ZPR3]);
-        $this->assertLessThan(-12.9800 - 0.0005, $bboxes[self::ZCLMU][1]);
-        $this->assertGreaterThan(-12.9790 + 0.0005, $bboxes[self::ZCLMU][3]);
-        $this->assertLessThan(-38.5000 - 0.0005, $bboxes[self::ZCLMU][0]);
-        $this->assertGreaterThan(-38.4990 + 0.0005, $bboxes[self::ZCLMU][2]);
-    }
-
-    public function test_s7_linha_por_cima_continua_valendo_e_o_motivo_diz_que_cruza(): void
+    public function test_linha_por_cima_continua_valendo_e_o_motivo_diz_que_cruza(): void
     {
         $this->camadasLineares();
         $this->geoserver([
             self::ZPR3 => $this->retangulo(-38.5010, -38.4980, -12.9810, -12.9780),
             self::ZCLMU => $this->linha(-12.9795),
-        ], [self::ZCLMU => ['CODLOG' => '99999']]);
+        ], [self::ZCLMU => ['CODLOG' => '777']]);
 
         $resultado = app(ZonaMaiorPorcaoResolver::class)->resolver($this->lote(), '12345');
 
         $this->assertSame(ZonaMaiorPorcao::CENTRALIDADE_LINEAR, $resultado->status);
-        $this->assertStringContainsString('passa por cima do lote', (string) $resultado->motivo);
+        $this->assertStringContainsString('por cima do lote', (string) $resultado->motivo);
     }
 
-    public function test_s7_zclmu_lindeira_e_zclme_por_cima_dao_conflito(): void
+    public function test_zclmu_pelo_acesso_e_zclme_por_cima_dao_conflito(): void
     {
         $this->camadasLineares();
         $this->geoserver([
             self::ZPR3 => $this->retangulo(-38.5010, -38.4980, -12.9810, -12.9780),
-            self::ZCLMU => $this->linhaAcima(20),
+            self::EIXO => $this->eixoDeAcesso(),
+            self::ZCLMU => $this->trecho(-38.5010, -38.4980),
             self::ZCLME => $this->linha(-12.9795),
         ], [self::ZCLMU => ['CODLOG' => '12345']]);
 
