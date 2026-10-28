@@ -2,6 +2,7 @@
 
 namespace App\Services\Vistoria;
 
+use App\Models\User;
 use App\Models\ViabilityRequest;
 use DomainException;
 
@@ -23,6 +24,11 @@ class EncaminharVistoriaException extends DomainException
         $atual = $processo->analysis_status?->label() ?? 'não iniciado';
 
         return new self("O processo #{$processo->id} está em \"{$atual}\" — o encaminhamento à vistoria só vale enquanto a análise ainda está aberta.");
+    }
+
+    public static function analistaForaDoSetor(User $analista): self
+    {
+        return new self("{$analista->name} não faz parte do setor que recebe o processo ou não pode analisar processos.");
     }
 
     public static function vistoriaNaoConcluida(ViabilityRequest $processo): self

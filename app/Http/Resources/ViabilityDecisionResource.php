@@ -37,7 +37,7 @@ class ViabilityDecisionResource extends JsonResource
             'outcome_label' => $this->outcome->label(),
             'consolidated_result' => $this->consolidated_result,
             'consolidated_result_label' => $this->consolidatedResultLabel(),
-            'tvl_product_number' => $this->tvl_product_number,
+            'tvl_product_number' => ViabilityDecision::semPrefixo($this->tvl_product_number),
             'per_cnae' => array_values((array) ($this->per_cnae ?? [])),
             'rules_versions' => $this->rules_versions ?? [],
             // Sempre uma LISTA (array_values): a tela de detalhe itera a

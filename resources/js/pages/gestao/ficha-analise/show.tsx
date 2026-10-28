@@ -316,13 +316,6 @@ interface FichaAnaliseShowProps {
     viasDisponiveis: string[];
 }
 
-interface PreviaZonaVia {
-    antes: { zona: string | null; via: string | null };
-    depois: { zona: string | null; via: string | null };
-    motor_disponivel: boolean;
-    mudancas: { cnae: string; antes: string | null; depois: string; motivo: string | null; mudou: boolean }[];
-}
-
 interface IaFicha {
     resumo_disponivel: boolean;
     resumo_motivo: string | null;
@@ -748,7 +741,6 @@ export default function FichaAnaliseShow({
     sugestoesIa,
     iaFicha,
     temFichaVistoria,
-    anexosAnalise,
     podeConsultarVistoria,
     podeEncaminharChefia,
     fichaSalva: fichaSalvaNoServidor,
@@ -756,6 +748,7 @@ export default function FichaAnaliseShow({
     somenteLeitura,
     podeEditarZonaVia,
     comparacaoCnaes,
+    anexosAnalise,
     zonasDisponiveis,
     viasDisponiveis,
 }: FichaAnaliseShowProps) {
@@ -879,50 +872,31 @@ export default function FichaAnaliseShow({
     const [parecerExpandido, setParecerExpandido] = useState(false);
     const [encaminhandoChefia, setEncaminhandoChefia] = useState(false);
     const [indicadoParaConclusao, setIndicadoParaConclusao] = useState('');
-    const zonaViaHttp = useHttp<Record<string, string>, PreviaZonaVia>({});
+    const zonaViaHttp = useHttp<Record<string, string>>({});
     const [showZonaVia, setShowZonaVia] = useState(false);
     const [zonaEscolhida, setZonaEscolhida] = useState('');
     const [viaEscolhida, setViaEscolhida] = useState('');
-    const [justificativaZonaVia, setJustificativaZonaVia] = useState('');
-    const [previaZonaVia, setPreviaZonaVia] = useState<PreviaZonaVia | null>(null);
     const [erroZonaVia, setErroZonaVia] = useState<string | null>(null);
 
     function abrirZonaVia() {
         setZonaEscolhida(localizacao?.zona ?? '');
         setViaEscolhida(localizacao?.via ?? '');
-        setJustificativaZonaVia('');
-        setPreviaZonaVia(null);
         setErroZonaVia(null);
         setShowZonaVia(true);
     }
 
     function fecharZonaVia() {
         setShowZonaVia(false);
-        setPreviaZonaVia(null);
     }
 
-    function enviarZonaVia(acao: 'previa' | 'alterar') {
+    function enviarZonaVia() {
         setErroZonaVia(null);
-        zonaViaHttp.transform(() => ({ zona: zonaEscolhida, via: viaEscolhida, justificativa: justificativaZonaVia }));
+        zonaViaHttp.transform(() => ({ zona: zonaEscolhida, via: viaEscolhida }));
 
         const aoFalhar = (erros: Record<string, string | string[]>) => {
             const primeiro = Object.values(erros)[0];
             setErroZonaVia(Array.isArray(primeiro) ? primeiro[0] : (primeiro ?? 'Não foi possível concluir. Tente novamente.'));
         };
-
-        if (acao === 'previa') {
-            zonaViaHttp.post(`/gestao/processos/${processo.id}/zona-via/previa`, {
-                onSuccess: (resposta) => setPreviaZonaVia(resposta),
-                onError: aoFalhar,
-                onHttpException: () => {
-                    setErroZonaVia('Não foi possível simular a alteração.');
-
-                    return false;
-                },
-            });
-
-            return;
-        }
 
         zonaViaHttp.patch(`/gestao/processos/${processo.id}/zona-via`, {
             onSuccess: () => {
@@ -2551,11 +2525,6 @@ export default function FichaAnaliseShow({
                                             </>
                                         ) : (
                                             <>
-                                                {podeConcluir && ficha.status === 'finalizada' && (
-                                                    <Button onClick={() => setShowDecidir(true)} size="sm">
-                                                        Decidir processo (conforme ficha)
-                                                    </Button>
-                                                )}
                                                 <Button onClick={novaRevisao} variant="outline" size="sm" loading={acao.processing}>
                                                     {ficha.de_outro_analista ? 'Abrir minha ficha' : 'Criar nova ficha'}
                                                 </Button>
@@ -2732,122 +2701,48 @@ export default function FichaAnaliseShow({
                 className="m-4 max-w-[560px] p-6 lg:p-8"
             >
                 <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Editar zona e via</h4>
-                {previaZonaVia === null ? (
-                    <>
-                        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                            Escolha a zona e a classe de via da LOUOS. Antes de gravar, o sistema mostra o que o motor
-                            vai recalcular.
-                        </p>
-                        <div className="mt-4 grid gap-4">
-                            <div>
-                                <Label htmlFor="zona-manual" className="mb-1.5">
-                                    Zona
-                                </Label>
-                                <OptionSelect
-                                    id="zona-manual"
-                                    placeholder="Selecione a zona"
-                                    value={zonaEscolhida}
-                                    onChange={setZonaEscolhida}
-                                    options={zonasDisponiveis.map((zona) => ({
-                                        value: zona.codigo,
-                                        label: zona.nome ? `${zona.codigo} — ${zona.nome}` : zona.codigo,
-                                    }))}
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="via-manual" className="mb-1.5">
-                                    Via
-                                </Label>
-                                <OptionSelect
-                                    id="via-manual"
-                                    placeholder="Selecione a classe da via"
-                                    value={viaEscolhida}
-                                    onChange={setViaEscolhida}
-                                    options={viasDisponiveis.map((via) => ({ value: via, label: via }))}
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="justificativa-zona-via" className="mb-1.5" required>
-                                    Justificativa
-                                </Label>
-                                <Textarea
-                                    id="justificativa-zona-via"
-                                    rows={3}
-                                    value={justificativaZonaVia}
-                                    onChange={setJustificativaZonaVia}
-                                    placeholder="Por que a zona ou a via precisa ser alterada?"
-                                />
-                            </div>
-                        </div>
-                        {erroZonaVia && <p className="mt-3 text-sm text-error-600 dark:text-error-500">{erroZonaVia}</p>}
-                        <div className="mt-6 flex justify-end gap-3">
-                            <Button size="sm" variant="outline" onClick={fecharZonaVia}>
-                                Cancelar
-                            </Button>
-                            <Button
-                                size="sm"
-                                onClick={() => enviarZonaVia('previa')}
-                                loading={zonaViaHttp.processing}
-                                disabled={justificativaZonaVia.trim().length < 5}
-                            >
-                                Ver o que muda
-                            </Button>
-                        </div>
-                    </>
-                ) : (
-                    <>
-                        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                            Ao confirmar, o enquadramento e a decisão do motor desta ficha são recalculados. A
-                            justificativa, quem alterou e a data e hora ficam registrados na Tramitação e no log.
-                        </p>
-                        <dl className="mt-4 grid grid-cols-2 gap-4">
-                            <DescItem label="Zona">
-                                {valorOuTraco(previaZonaVia.antes.zona)} → {valorOuTraco(previaZonaVia.depois.zona)}
-                            </DescItem>
-                            <DescItem label="Via">
-                                {valorOuTraco(previaZonaVia.antes.via)} → {valorOuTraco(previaZonaVia.depois.via)}
-                            </DescItem>
-                        </dl>
-                        <div className="mt-4">
-                            <p className="text-theme-xs font-medium tracking-wide text-gray-400 uppercase dark:text-gray-500">
-                                Decisão do motor por atividade
-                            </p>
-                            {!previaZonaVia.motor_disponivel ? (
-                                <p className="mt-2 text-sm text-warning-600 dark:text-warning-500">
-                                    O motor não respondeu agora; não foi possível simular. A alteração ainda pode ser gravada.
-                                </p>
-                            ) : (
-                                <ul className="mt-2 space-y-2">
-                                    {previaZonaVia.mudancas.map((mudanca) => (
-                                        <li
-                                            key={mudanca.cnae}
-                                            className="rounded-lg border border-gray-200 p-3 text-sm dark:border-gray-800"
-                                        >
-                                            <span className="font-medium text-gray-800 dark:text-white/90">{mudanca.cnae}</span>
-                                            <span className="ml-2 text-gray-600 dark:text-gray-300">
-                                                {mudanca.mudou
-                                                    ? `${mudanca.antes ?? '—'} → ${mudanca.depois}`
-                                                    : `sem mudança (${mudanca.depois})`}
-                                            </span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            )}
-                        </div>
-                        {erroZonaVia && <p className="mt-3 text-sm text-error-600 dark:text-error-500">{erroZonaVia}</p>}
-                        <div className="mt-6 flex justify-end gap-3">
-                            <Button size="sm" variant="outline" onClick={() => setPreviaZonaVia(null)}>
-                                Voltar
-                            </Button>
-                            <Button size="sm" onClick={() => enviarZonaVia('alterar')} loading={zonaViaHttp.processing}>
-                                Confirmar alteração
-                            </Button>
-                            <Button size="sm" variant="ghost" onClick={fecharZonaVia}>
-                                Cancelar
-                            </Button>
-                        </div>
-                    </>
-                )}
+                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                    Escolha a zona e a classe de via da LOUOS. A alteração fica registrada como feita pelo analista, com
+                    data e hora, na Tramitação e no log.
+                </p>
+                <div className="mt-4 grid gap-4">
+                    <div>
+                        <Label htmlFor="zona-manual" className="mb-1.5">
+                            Zona
+                        </Label>
+                        <OptionSelect
+                            id="zona-manual"
+                            placeholder="Selecione a zona"
+                            value={zonaEscolhida}
+                            onChange={setZonaEscolhida}
+                            options={zonasDisponiveis.map((zona) => ({
+                                value: zona.codigo,
+                                label: zona.nome ? `${zona.codigo}: ${zona.nome}` : zona.codigo,
+                            }))}
+                        />
+                    </div>
+                    <div>
+                        <Label htmlFor="via-manual" className="mb-1.5">
+                            Via
+                        </Label>
+                        <OptionSelect
+                            id="via-manual"
+                            placeholder="Selecione a classe da via"
+                            value={viaEscolhida}
+                            onChange={setViaEscolhida}
+                            options={viasDisponiveis.map((via) => ({ value: via, label: via }))}
+                        />
+                    </div>
+                </div>
+                {erroZonaVia && <p className="mt-3 text-sm text-error-600 dark:text-error-500">{erroZonaVia}</p>}
+                <div className="mt-6 flex justify-end gap-3">
+                    <Button size="sm" variant="outline" onClick={fecharZonaVia}>
+                        Cancelar
+                    </Button>
+                    <Button size="sm" onClick={enviarZonaVia} loading={zonaViaHttp.processing}>
+                        Salvar alteração
+                    </Button>
+                </div>
             </Modal>
 
             <ConfirmDialog

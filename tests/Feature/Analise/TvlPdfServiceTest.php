@@ -215,7 +215,7 @@ class TvlPdfServiceTest extends TestCase
 
         $this->assertStringContainsString('Viabilidade locacional', $html);
         $this->assertStringContainsString('Viabiliza', $html);
-        $this->assertStringContainsString((string) $decision->tvl_product_number, $html);
+        $this->assertStringContainsString((string) preg_replace('/^TVL-/', '', (string) $decision->tvl_product_number), $html);
         $this->assertStringContainsString('4712-1/00', $html);
         $this->assertStringContainsString('Comércio varejista de mercadorias em geral', $html);
         $this->assertStringContainsString('Manter acesso independente para o público.', $html);

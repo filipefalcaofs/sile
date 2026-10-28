@@ -4,21 +4,17 @@ namespace App\Services\Analise;
 
 use App\Models\User;
 use App\Models\ViabilityRequest;
-use App\Services\Solicitacao\SolicitacaoViabilityResolver;
 use App\Support\Audit\AuditService;
 use Illuminate\Support\Facades\DB;
-use Throwable;
 
 /**
- * Alteração manual da zona e da via do imóvel na ficha de análise. A prévia
- * mostra o que o motor decidiria com os novos valores, sem gravar; a alteração
- * grava a escolha, recalcula a ficha em edição e registra justificativa, quem
- * alterou e o antes e o depois no log e na Tramitação.
+ * Alteração manual da zona e da via do imóvel na ficha de análise: grava a
+ * escolha do analista, recalcula a ficha em edição e registra quem alterou e o
+ * antes e o depois no log e na Tramitação.
  */
 class AlterarZonaViaService
 {
     public function __construct(
-        private SolicitacaoViabilityResolver $resolver,
         private PreAnaliseService $preAnalise,
         private AnalysisRecordService $fichas,
         private AuditService $audit,
@@ -37,47 +33,12 @@ class AlterarZonaViaService
         ];
     }
 
-    /**
-     * @return array{antes: array{zona: ?string, via: ?string}, depois: array{zona: ?string, via: ?string}, motor_disponivel: bool, mudancas: list<array<string, mixed>>}
-     */
-    public function previa(ViabilityRequest $processo, ?string $zona, ?string $via): array
+    public function alterar(ViabilityRequest $processo, ?string $zona, ?string $via, User $ator): void
     {
         $antes = $this->atuais($processo);
         $depois = ['zona' => $this->texto($zona) ?? $antes['zona'], 'via' => $this->texto($via) ?? $antes['via']];
 
-        try {
-            $atual = $this->resolver->resolve($processo);
-            $novo = $this->resolver->resolveComTerritorioManual($processo, $depois['zona'], $depois['via']);
-        } catch (Throwable) {
-            return ['antes' => $antes, 'depois' => $depois, 'motor_disponivel' => false, 'mudancas' => []];
-        }
-
-        $anteriores = collect($atual->por_cnae)->keyBy('cnae');
-
-        $mudancas = collect($novo->por_cnae)
-            ->map(function (array $item) use ($anteriores): array {
-                $antigo = $anteriores->get($item['cnae']);
-
-                return [
-                    'cnae' => $item['cnae_formatado'],
-                    'antes' => $antigo['tendencia_label'] ?? null,
-                    'depois' => $item['tendencia_label'],
-                    'motivo' => $item['veredito_motivo'] ?? null,
-                    'mudou' => ($antigo['tendencia'] ?? null) !== $item['tendencia'],
-                ];
-            })
-            ->values()
-            ->all();
-
-        return ['antes' => $antes, 'depois' => $depois, 'motor_disponivel' => true, 'mudancas' => $mudancas];
-    }
-
-    public function alterar(ViabilityRequest $processo, ?string $zona, ?string $via, string $justificativa, User $ator): void
-    {
-        $antes = $this->atuais($processo);
-        $depois = ['zona' => $this->texto($zona) ?? $antes['zona'], 'via' => $this->texto($via) ?? $antes['via']];
-
-        DB::transaction(function () use ($processo, $antes, $depois, $justificativa, $ator): void {
+        DB::transaction(function () use ($processo, $antes, $depois, $ator): void {
             $processo->forceFill(['zona_manual' => $depois['zona'], 'via_manual' => $depois['via']])->save();
 
             $this->audit->log(
@@ -89,7 +50,6 @@ class AlterarZonaViaService
                     'protocol_number' => $processo->protocol_number,
                     'antes' => $antes,
                     'depois' => $depois,
-                    'justificativa' => $justificativa,
                     'ator_id' => $ator->id,
                     'ator_nome' => $ator->name,
                     'tela' => 'ficha-analise',

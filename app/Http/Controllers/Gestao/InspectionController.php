@@ -119,6 +119,7 @@ class InspectionController extends Controller
                 ->all(),
             'opcoes' => Inspection::rotulos(),
             'anexos' => $this->anexosDa($ficha),
+            'analistasDoSetor' => $this->encaminhamento->analistasDoRetorno($viabilityRequest),
         ]);
     }
 
@@ -271,8 +272,11 @@ class InspectionController extends Controller
 
         abort_unless($ficha->vistoriador_user_id === $ator->id || $ator->can('distribuir-processos'), 403);
 
+        $dados = $request->validate(['analista_id' => ['nullable', 'integer', 'exists:users,id']]);
+        $analista = isset($dados['analista_id']) ? User::query()->find($dados['analista_id']) : null;
+
         try {
-            $this->encaminhamento->encaminharAoSetor($viabilityRequest, $ator);
+            $this->encaminhamento->encaminharAoSetor($viabilityRequest, $ator, $analista);
         } catch (EncaminharVistoriaException $e) {
             return back()->with('error', $e->getMessage());
         }

@@ -117,7 +117,7 @@ function formatarPrazo(iso: string | null): string {
 const ABAS: { id: Visao; rotulo: string }[] = [
   { id: "para_distribuir", rotulo: "Para distribuir" },
   { id: "distribuidos", rotulo: "Distribuídos" },
-  { id: "para_conclusao", rotulo: "Para conclusão" },
+  { id: "para_conclusao", rotulo: "Analisados" },
 ];
 
 export default function CaixaSetorIndex({
@@ -189,7 +189,7 @@ export default function CaixaSetorIndex({
     setSelecionados(todosSelecionados ? [] : linhas.map((item) => item.id));
   }
 
-  // Em "Para conclusão" o analista pega o processo mesmo com o responsável anterior.
+  // Em "Analisados" o analista pega o processo mesmo com o responsável anterior.
   function podeAssumirItem(item: ProcessoItem): boolean {
     if (item.assigned_user_id === null) {
       return true;
@@ -575,7 +575,7 @@ export default function CaixaSetorIndex({
                     visao === "para_distribuir"
                       ? "Nenhum processo para distribuir"
                       : visao === "para_conclusao"
-                        ? "Nenhum processo para conclusão"
+                        ? "Nenhum processo analisado"
                         : "Nenhum processo distribuído"
                   }
                   description={

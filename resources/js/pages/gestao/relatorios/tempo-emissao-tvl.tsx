@@ -1,7 +1,6 @@
 import { Head, router } from '@inertiajs/react';
 import { useCallback, useMemo, useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
-import BaixarTvl from '@/components/analise/baixar-tvl';
 import PageHeader from '@/components/app/page-header';
 import Checkbox from '@/components/form/checkbox';
 import Input from '@/components/form/input';
@@ -287,12 +286,7 @@ export default function TempoEmissaoTvl({ relatorio, servicos, filtros, perPageO
         {
             id: 'tvl_disponivel',
             header: 'PDF disponível',
-            cell: (linha) => (
-                <span className="inline-flex flex-wrap items-center gap-2">
-                    <DisponivelBadge disponivel={linha.tvl_disponivel} />
-                    {linha.tvl_disponivel && <BaixarTvl solicitacaoId={linha.solicitacao_id} />}
-                </span>
-            ),
+            cell: (linha) => <DisponivelBadge disponivel={linha.tvl_disponivel} />,
         },
         {
             id: 'tvl_numero',
