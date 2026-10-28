@@ -3,8 +3,10 @@
 namespace Tests\Feature\Analise;
 
 use App\Enums\AnalysisStage;
+use App\Enums\AnalysisStatus;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\AnalysisRecord;
+use App\Models\InspectionReferral;
 use App\Models\Sector;
 use App\Models\User;
 use App\Models\ViabilityRequest;
@@ -364,5 +366,49 @@ class ProcessoFilaTest extends TestCase
 
         $this->assertContains($deHoje->id, $ids);
         $this->assertNotContains($antigo->id, $ids);
+    }
+
+    /**
+     * Documento de 23/10: cards Vistoriar, Retorno Vistoria e Retorno Convite
+     * na Caixa de entrada, todos do próprio analista.
+     */
+    public function test_contadores_de_vistoria_e_convite_sao_do_analista(): void
+    {
+        $setor = Sector::factory()->create();
+        $setorVistoria = Sector::factory()->create();
+        $analista = $this->analistaDoSetor($setor);
+        $outro = $this->analistaDoSetor($setor);
+
+        $encaminhar = function (User $quem, AnalysisStatus $status, ?User $responsavel, int $setorAtual) use ($setor, $setorVistoria): ViabilityRequest {
+            $processo = $this->processo([
+                'analysis_status' => $status,
+                'sector_id' => $setorAtual,
+                'assigned_user_id' => $responsavel?->id,
+            ]);
+            InspectionReferral::query()->create([
+                'viability_request_id' => $processo->id,
+                'encaminhado_por_user_id' => $quem->id,
+                'analista_origem_user_id' => $quem->id,
+                'setor_origem_id' => $setor->id,
+                'setor_vistoria_id' => $setorVistoria->id,
+                'motivo' => 'Conferir no local.',
+            ]);
+
+            return $processo;
+        };
+
+        $encaminhar($analista, AnalysisStatus::Vistoriar, null, $setorVistoria->id);
+        $encaminhar($outro, AnalysisStatus::Vistoriar, null, $setorVistoria->id);
+        $encaminhar($analista, AnalysisStatus::Vistoriado, null, $setor->id);
+        $encaminhar($outro, AnalysisStatus::Vistoriado, $analista, $setor->id);
+        $encaminhar($outro, AnalysisStatus::Vistoriado, null, $setor->id);
+        $this->processo(['analysis_status' => AnalysisStatus::ConviteRespondido, 'assigned_user_id' => $analista->id]);
+        $this->processo(['analysis_status' => AnalysisStatus::ConviteRespondido, 'assigned_user_id' => $outro->id]);
+
+        $contadores = $this->filaProps($analista, 'meus')['contadores'];
+
+        $this->assertSame(1, $contadores['vistoriar']);
+        $this->assertSame(2, $contadores['retorno_vistoria']);
+        $this->assertSame(1, $contadores['retorno_convite']);
     }
 }

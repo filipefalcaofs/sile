@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Gestao;
 
+use App\Enums\AnalysisRecordStatus;
 use App\Enums\AnalysisStatus;
 use App\Enums\ConclusionOutcome;
 use App\Enums\ViabilityRequestStatus;
@@ -22,6 +23,8 @@ use App\Services\Analise\TramitacaoProcessoService;
 use App\Services\Auditoria\DecisionExplanationService;
 use App\Services\Geo\DivergenciaLogradouroInscricao;
 use App\Services\Geo\ProcedenciaPoligono;
+use App\Services\Legado\BuscaProcessosLegado;
+use App\Services\Legado\LegadoIndisponivelException;
 use App\Services\Regin\HttpReginParecerNotifier;
 use App\Services\Regin\JustificativaReginService;
 use App\Services\Relatorios\Export\ReportExporter;
@@ -33,6 +36,7 @@ use App\Services\Vistoria\VistoriaAcesso;
 use App\Support\Audit\AuditService;
 use App\Support\ParecerDecisao;
 use App\Support\Settings;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -127,6 +131,58 @@ class ProcessoController extends Controller
             'categoriaOptions' => $this->categoriaOptions(),
             'analistaOptions' => $this->processos->analistasParaFiltro($request->user()),
         ]);
+    }
+
+    /**
+     * Processos do Simplifica para o mesmo filtro da tela, consultados só na API
+     * do legado (nada é gravado). Falha da API não derruba a tela: volta o aviso.
+     */
+    public function legado(Request $request, BuscaProcessosLegado $legado): JsonResponse
+    {
+        $filtros = $this->filtros($request);
+
+        try {
+            $resultado = $legado->buscar($filtros);
+            $erro = null;
+        } catch (LegadoIndisponivelException) {
+            $resultado = ['consultado' => true, 'processos' => []];
+            $erro = 'Não foi possível consultar o Simplifica agora.';
+        }
+
+        if ($resultado['consultado']) {
+            $this->audit->log('analise', 'consulta-processos-legado', 'Consulta de processos do Simplifica', [
+                'filtros' => $this->filtrosPreenchidos($filtros),
+                'encontrados' => count($resultado['processos']),
+                'erro' => $erro !== null,
+            ]);
+        }
+
+        return response()->json($resultado + ['erro' => $erro]);
+    }
+
+    /**
+     * Ficha completa de um processo do Simplifica (número interno ou protocolo
+     * REGIN), lida só na API do legado. Auditada; falha da API volta como aviso.
+     */
+    public function legadoDetalhe(Request $request, BuscaProcessosLegado $legado): JsonResponse
+    {
+        $numero = trim($request->string('numero')->toString());
+
+        try {
+            $processo = $legado->detalhe($numero);
+            $erro = null;
+        } catch (LegadoIndisponivelException) {
+            $processo = null;
+            $erro = 'Não foi possível consultar o Simplifica agora.';
+        }
+
+        $this->audit->log('analise', 'consulta-ficha-legado', 'Consulta da ficha de processo do Simplifica', [
+            'numero' => $numero,
+            'encontrado' => $processo !== null,
+            'erro' => $erro !== null,
+        ]);
+
+        return response()->json(['processo' => $processo, 'erro' => $erro]);
     }
 
     /**
@@ -245,6 +301,11 @@ class ProcessoController extends Controller
         return Inertia::render('gestao/processos/show', [
             'processo' => (new ProcessoResource($viabilityRequest))->resolve(),
             'consultaVistoria' => $consultaVistoria,
+            // Anexos do processo, visíveis para todos que o consultam (SEDUR, 22/10).
+            'anexos' => ProcessoAnexoController::lista($viabilityRequest),
+            // Link da ficha de vistoria na tramitação: a consulta exige analisar-processos (rota) e VistoriaAcesso.
+            'podeVerFichaVistoria' => $request->user()->can('analisar-processos')
+                && app(VistoriaAcesso::class)->podeConsultar($viabilityRequest, $request->user()),
             // Despacho do analista ao encaminhar à vistoria: o que verificar em campo.
             'despachoVistoria' => $despacho === null ? null : [
                 'orientacoes' => $despacho->motivo,
@@ -308,7 +369,7 @@ class ProcessoController extends Controller
             'analysisStatusProximas' => $viabilityRequest->analysis_status
                 ? array_map(
                     fn (AnalysisStatus $s): array => ['value' => $s->value, 'label' => $s->label()],
-                    $viabilityRequest->analysis_status->proximasPara($podeConcluir),
+                    $viabilityRequest->analysis_status->proximasPara($podeConcluir, $request->user()->can('encaminhar-para-conclusao')),
                 )
                 : [],
         ]);
@@ -388,7 +449,8 @@ class ProcessoController extends Controller
      * (convite_respondido/expirado) fazem parte do grafo completo da máquina,
      * mas não podem ser setados manualmente. A guarda é ignorada quando o
      * usuário tem forcar-transicao-analise E pede o override (`force`), que aí passa a valer o
-     * grafo completo validado pela state machine. `motivo` é opcional na Fase
+     * grafo completo validado pela state machine. A análise concluída não sai
+     * nem com o override (SPEC-07). `motivo` é opcional na Fase
      * 1 (a obrigatoriedade de parecer no cancelamento chega com o convite, na
      * Fase 2). Transição recusada é comunicada com flash.error — nunca
      * silenciosa.
@@ -404,8 +466,26 @@ class ProcessoController extends Controller
 
         $podeConcluir = $request->user()->can('concluir-analise');
 
-        if (! $force && ($from === null || ! in_array($to, $from->proximasPara($podeConcluir), true))) {
+        // SPEC-07: a reabertura da análise concluída depende de regra da SEDUR
+        // (decisão e TVL já emitidos); nem o override reabre por enquanto.
+        if ($from === AnalysisStatus::AnaliseConcluida) {
+            return back()->with('error', 'A análise já foi concluída e não pode ser reaberta: a reabertura ainda depende de regra da SEDUR.');
+        }
+
+        // Item 8 (SEDUR, 22/10): o processo em Para conclusão só sai pelas mãos de quem conclui.
+        if ($from === AnalysisStatus::ParaConclusao && ! $podeConcluir) {
+            return back()->with('error', 'Só quem conclui a análise pode tirar o processo de Para conclusão.');
+        }
+
+        if (! $force && ($from === null || ! in_array($to, $from->proximasPara($podeConcluir, $request->user()->can('encaminhar-para-conclusao')), true))) {
             return back()->with('error', 'Transição de situação da análise não permitida.');
+        }
+
+        // Encaminhar à chefia só com a ficha de quem encaminha finalizada (regra
+        // confirmada pela SEDUR em 26/10/2026). Forçar a transição é correção
+        // administrativa e não passa por aqui.
+        if ($to === AnalysisStatus::ParaConclusao && ! $force && ! $this->fichaFinalizadaPor($viabilityRequest, $request->user())) {
+            return back()->with('error', 'Finalize a sua ficha de análise antes de encaminhar à chefia.');
         }
 
         if ($to === AnalysisStatus::Encaminhado) {
@@ -433,10 +513,12 @@ class ProcessoController extends Controller
         }
 
         $motivo = $request->string('motivo')->toString() ?: null;
+        $indicadoNome = $to === AnalysisStatus::ParaConclusao && $request->integer('indicado_user_id') > 0
+            ? User::query()->find($request->integer('indicado_user_id'))?->name
+            : null;
 
-        if ($to === AnalysisStatus::ParaConclusao && $motivo === null && $request->integer('indicado_user_id') > 0) {
-            $indicado = User::query()->find($request->integer('indicado_user_id'));
-            $motivo = $indicado !== null ? "Indicado para concluir: {$indicado->name}" : null;
+        if ($motivo === null && $indicadoNome !== null) {
+            $motivo = "Indicado para concluir: {$indicadoNome}";
         }
 
         try {
@@ -451,8 +533,8 @@ class ProcessoController extends Controller
             return back()->with('error', $e->getMessage());
         }
 
-        if ($to === AnalysisStatus::ParaConclusao) {
-            app(AnalysisRecordService::class)->guardarParaConclusao($viabilityRequest, $request->user());
+        if ($to === AnalysisStatus::ParaConclusao && $this->fichaFinalizadaPor($viabilityRequest, $request->user())) {
+            app(AnalysisRecordService::class)->guardarParaConclusao($viabilityRequest, $request->user(), $indicadoNome);
         }
 
         if ($from === AnalysisStatus::ParaConclusao && $to !== AnalysisStatus::Encaminhado) {
@@ -480,7 +562,7 @@ class ProcessoController extends Controller
 
         return match ($to) {
             AnalysisStatus::Encaminhado => "Processo encaminhado para {$viabilityRequest->assignedTo?->name} ({$viabilityRequest->sector?->name}). Ele já está na Caixa de entrada dessa pessoa.",
-            AnalysisStatus::ParaConclusao => "Processo enviado para conclusão. Ele está na aba Para conclusão da Caixa do setor {$viabilityRequest->sector?->name}, aguardando distribuição.",
+            AnalysisStatus::ParaConclusao => "Processo enviado para conclusão. Ele está na aba Analisados da Caixa do setor {$viabilityRequest->sector?->name}, aguardando distribuição.",
             default => "Situação da análise atualizada para {$to->label()}.",
         };
     }
@@ -595,5 +677,17 @@ class ProcessoController extends Controller
     private function servicoOptions(): array
     {
         return app(ServicoNomenclaturaResolver::class)->opcoesDeTipo();
+    }
+
+    /**
+     * A última ficha de análise do usuário no processo está finalizada.
+     */
+    private function fichaFinalizadaPor(ViabilityRequest $viabilityRequest, User $usuario): bool
+    {
+        return $viabilityRequest->analysisRecords()
+            ->where('analyst_user_id', $usuario->id)
+            ->where('status', '!=', AnalysisRecordStatus::Substituida->value)
+            ->orderByDesc('revision')
+            ->first()?->status === AnalysisRecordStatus::Finalizada;
     }
 }

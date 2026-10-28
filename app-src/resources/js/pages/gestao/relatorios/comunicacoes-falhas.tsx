@@ -93,12 +93,12 @@ const dateTimeFormat = new Intl.DateTimeFormat('pt-BR', {
 /** Formata a data/hora ISO8601 no padrão brasileiro; null/inválida → travessão. */
 function formatarDataHora(iso: string | null): string {
     if (!iso) {
-        return '—';
+        return '-';
     }
 
     const data = new Date(iso);
 
-    return Number.isNaN(data.getTime()) ? '—' : dateTimeFormat.format(data);
+    return Number.isNaN(data.getTime()) ? '-' : dateTimeFormat.format(data);
 }
 
 const colunas: ColumnDef<ComunicacaoRow>[] = [
@@ -106,7 +106,7 @@ const colunas: ColumnDef<ComunicacaoRow>[] = [
         id: 'processo',
         header: 'Processo',
         cellClassName: 'font-medium whitespace-nowrap text-gray-800 dark:text-white/90',
-        cell: (linha) => linha.processo ?? '—',
+        cell: (linha) => linha.processo ?? '-',
     },
     {
         id: 'canal',
@@ -124,7 +124,7 @@ const colunas: ColumnDef<ComunicacaoRow>[] = [
         id: 'titulo',
         header: 'Título',
         cellClassName: 'max-w-xs truncate',
-        cell: (linha) => <span title={linha.titulo ?? undefined}>{linha.titulo ?? '—'}</span>,
+        cell: (linha) => <span title={linha.titulo ?? undefined}>{linha.titulo ?? '-'}</span>,
     },
     {
         id: 'status',
@@ -139,7 +139,7 @@ const colunas: ColumnDef<ComunicacaoRow>[] = [
         id: 'erro',
         header: 'Erro',
         cellClassName: 'max-w-xs truncate',
-        cell: (linha) => <span title={linha.erro ?? undefined}>{linha.erro ?? '—'}</span>,
+        cell: (linha) => <span title={linha.erro ?? undefined}>{linha.erro ?? '-'}</span>,
     },
     {
         id: 'em',
@@ -261,7 +261,7 @@ export default function ComunicacoesFalhas({ resumo, relatorio, filtros, perPage
                 <Card>
                     <CardHeader
                         title="Filtros"
-                        description="Recorte por período e canal. A exportação (CSV/Excel/PDF) entrega exatamente o recorte aplicado — sem dados do destinatário."
+                        description="Recorte por período e canal. A exportação (CSV/Excel/PDF) entrega exatamente o recorte aplicado, sem dados do destinatário."
                         actions={<ExportMenu url={URL_FALHAS} params={exportParams} />}
                     />
                     <CardContent>
@@ -310,7 +310,7 @@ export default function ComunicacoesFalhas({ resumo, relatorio, filtros, perPage
                 <Card>
                     <CardHeader
                         title="Não entregues"
-                        description="As mais recentes primeiro. Cada linha é uma pendência operacional — o requerente pode não ter sido avisado."
+                        description="As mais recentes primeiro. Cada linha é uma pendência operacional, o requerente pode não ter sido avisado."
                         actions={<PerPageSelect value={perPage} options={perPageOptions} onChange={alterarPerPage} />}
                     />
                     <CardContent>

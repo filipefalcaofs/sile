@@ -5,6 +5,7 @@ namespace Tests\Feature\Analise;
 use App\Enums\AnalysisStage;
 use App\Enums\AnalysisStatus;
 use App\Enums\ViabilityRequestStatus;
+use App\Models\AnalysisRecord;
 use App\Models\Sector;
 use App\Models\User;
 use App\Models\ViabilityRequest;
@@ -81,12 +82,13 @@ class TramitacaoConfirmacaoTest extends TestCase
         $setor = Sector::factory()->create(['name' => 'Subcoordenadoria de Atividade']);
         $analista = $this->analista($setor);
         $processo = $this->processoEmAnalise($setor, $analista);
+        $this->fichaFinalizadaDe($processo, $analista);
 
         $this->actingAs($analista, 'gestao')
             ->post("/gestao/processos/{$processo->id}/status-analise", ['status' => 'para_conclusao'])
-            ->assertSessionHas('status', 'Processo enviado para conclusão. Ele está na aba Para conclusão da Caixa do setor Subcoordenadoria de Atividade, aguardando distribuição.');
+            ->assertSessionHas('status', 'Processo enviado para conclusão. Ele está na aba Analisados da Caixa do setor Subcoordenadoria de Atividade, aguardando distribuição.');
 
-        $this->assertSame('Para conclusão', $processo->refresh()->rotuloStatusTramitacao());
+        $this->assertSame('Analisados', $processo->refresh()->rotuloStatusTramitacao());
     }
 
     public function test_encaminhamento_confirma_usuario_e_setor_de_destino(): void
@@ -117,5 +119,17 @@ class TramitacaoConfirmacaoTest extends TestCase
         $this->actingAs($analista, 'gestao')
             ->post("/gestao/processos/{$processo->id}/status-analise", ['status' => 'em_analise'])
             ->assertSessionHas('status', 'Situação da análise atualizada para Em análise.');
+    }
+
+    /**
+     * Encaminhar à chefia exige a ficha finalizada de quem encaminha (SEDUR, 26/10/2026).
+     */
+    private function fichaFinalizadaDe(ViabilityRequest $processo, User $analista): void
+    {
+        AnalysisRecord::factory()->finalizada()->create([
+            'viability_request_id' => $processo->id,
+            'revision' => ((int) $processo->analysisRecords()->max('revision')) + 1,
+            'analyst_user_id' => $analista->id,
+        ]);
     }
 }

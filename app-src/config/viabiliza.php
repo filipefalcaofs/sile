@@ -65,10 +65,15 @@ return [
         'edificacoes_microsoft' => false,
         'edificacoes_ia' => false,
         'edificacoes_importacao_agendada' => false,
+        'legado_simplifica' => (bool) env('VIABILIZA_LEGADO_ATIVO', false),
         // Confere o ponto da inscrição contra a rua do endereço (eixo da camada
         // viária da SEDUR) e busca outro ponto por endereço quando está longe.
         // Desligado, o ponto do Cadastro Imobiliário é usado sem conferência.
         'validacao_ponto_inscricao' => true,
+        // Centralidade linear pelo acesso (S7): o lote lindeiro à linha da
+        // ZCLMu/ZCLMe com o mesmo CODLOG do processo fica na centralidade.
+        // Desligado, só a linha por cima do lote conta (HU.182).
+        'centralidade_linear_lindeiro' => env('SILE_CENTRALIDADE_LINEAR_LINDEIRO', true),
         // Ingestão do benchmark federal de tempo de viabilidade (microdados da
         // REDESIM). Desligada, as telas de benchmark mostram a lacuna com o
         // motivo — nenhum número é estimado no lugar.
@@ -128,6 +133,20 @@ return [
         // Distância máxima (metros) entre o ponto da inscrição e a rua do
         // endereço para o ponto valer sem conferência por outra fonte.
         'validacao_ponto' => ['distancia_maxima_m' => 150],
+        // Centralidade linear pelo acesso (regra da SEDUR de 28/10): o imóvel só entra na zona
+        // linear quando o ponto da rua de acesso, o mais próximo do lote, está sobre um trecho
+        // efetivamente coberto por ela. Não há distância máxima do lote à linha.
+        // tolerancia_acesso_m: desalinhamento cartográfico entre o eixo da rua e a linha da
+        //   zona (medido em 3.133 vértices: mediana 0 m, 90% até 4,4 m).
+        // distancia_maxima_lote_eixo_m: guarda de consistência; CODLOG cujo eixo fica mais longe
+        //   do lote que isso não é a rua do imóvel e a regra de acesso não se aplica.
+        // margem_consulta_m: só amplia o recorte pedido ao GeoServer para trazer o trecho ao
+        //   redor do lote; não decide nada.
+        'centralidade_linear' => [
+            'tolerancia_acesso_m' => (float) env('SILE_CENTRALIDADE_LINEAR_TOLERANCIA_ACESSO_M', 15),
+            'distancia_maxima_lote_eixo_m' => (float) env('SILE_CENTRALIDADE_LINEAR_DISTANCIA_MAXIMA_LOTE_EIXO_M', 120),
+            'margem_consulta_m' => (float) env('SILE_CENTRALIDADE_LINEAR_MARGEM_CONSULTA_M', 150),
+        ],
         // Atributos candidatos ao nome da zona na feição — fallback do
         // parâmetro geo.zona.atributos_nome (HU-014).
         'zona' => ['atributos_nome' => ['ZONA', 'zona', 'SIGLA_ZONA', 'SUBZONA']],
@@ -260,6 +279,17 @@ return [
     'vistoria' => [
         'anexos' => ['max_mb' => 10, 'mime_permitidos' => ['application/pdf', 'image/jpeg', 'image/png', 'image/webp']],
     ],
+    // Consulta da viabilidade vinculada ao CNPJ na SEFAZ (alteração de atividade).
+    // `ativa` liga a comparação dos CNAEs da JUCEB (evento 244); desligada, o pedido
+    // é enquadrado inteiro como antes.
+    // A consulta só funciona quando existir um provider real da SEFAZ no binding de
+    // SefazViabilidadeConsultaGateway; até lá ela degrada como indisponível.
+    'sefaz' => [
+        'consulta' => [
+            'ativa' => (bool) env('VIABILIZA_SEFAZ_CONSULTA_ATIVA', false),
+        ],
+    ],
+
     // Espelha os parâmetros HU-014 expresso.* / features.* do fluxo expresso
     // (EP09). Settings::get lê config("viabiliza.expresso.*") no fallback (banco
     // indisponível). Os valores de negócio (prazo BAP, assuntos de e-mail,
@@ -279,6 +309,10 @@ return [
         'lock' => ['ttl_segundos' => 10],
         'fila' => 'default',
         'job' => ['tries' => 3, 'timeout' => 120, 'backoff' => [30, 60, 120]],
+        // Alteração de atividades da JUCEB (evento 244) sem intenção por CNAE e
+        // sem a comparação da SEFAZ: comparada com o último processo deferido
+        // da empresa; só exclusão defere sem enquadramento.
+        'exclusao_pelo_processo_anterior' => (bool) env('SILE_EXPRESSO_EXCLUSAO_PELO_PROCESSO_ANTERIOR', true),
     ],
     // Espelha os parâmetros HU-014 analise.* / features.analise_tecnica da
     // análise técnica (EP10). Settings::get lê config("viabiliza.analise.*") no
@@ -447,6 +481,14 @@ return [
             'timeout' => 12,
             'retries' => 3,
             'backoff_ms' => 500,
+        ],
+        // Legado Simplifica/SAPS: a TVL deferida e ativa da empresa e os CNAEs dela, base da
+        // comparação de atividades. Token de máquina (`lg_...`, 90 dias) só no .env.
+        'legado_simplifica' => [
+            'url' => env('VIABILIZA_LEGADO_URL'),
+            'token' => env('VIABILIZA_LEGADO_TOKEN'),
+            'timeout' => 6,
+            'cache_ttl' => 600,
         ],
         'geoserver' => [
             'base_url' => 'https://geoserver.sedur.salvador.ba.gov.br/geoserver',

@@ -160,7 +160,6 @@ export default function CentralDistribuicao({
         form.transform((data) => ({ ...data, retorno, analista_id: String(selecionado), sector_id: setorDestino || null }));
         form.post('/gestao/caixa-setor/distribuir', {
             preserveScroll: true,
-            onSuccess: () => router.visit(urlDaCaixa),
         });
     }
 
@@ -205,7 +204,7 @@ export default function CentralDistribuicao({
                         description={
                             modo === 'varios'
                                 ? 'Diga quantos processos cada analista recebe. A soma tem que fechar com o total. Quem está no topo da lista recebe primeiro os de prazo mais curto.'
-                                : 'A carga atual apoia a decisão. A escolha do destinatário é sua — o sistema não distribui automaticamente.'
+                                : 'A carga atual apoia a decisão. A escolha do destinatário é sua, o sistema não distribui automaticamente.'
                         }
                         actions={
                             <Button
@@ -539,7 +538,7 @@ export default function CentralDistribuicao({
                                     {historico.map((h, i) => (
                                         <li key={i} className="flex flex-wrap items-center justify-between gap-2 py-2 text-theme-sm">
                                             <span className="text-gray-700 dark:text-gray-300">
-                                                {h.em ? new Date(h.em).toLocaleString('pt-BR') : '—'}
+                                                {h.em ? new Date(h.em).toLocaleString('pt-BR') : '-'}
                                             </span>
                                             <span className="text-gray-600 dark:text-gray-400">{h.ator}</span>
                                             <span className="font-medium text-gray-800 dark:text-white/90">
@@ -568,7 +567,7 @@ function rotuloProcesso(processo: ProcessoSelecionado | undefined, id: number): 
 
     const codigo = processo.bap ?? processo.protocol_number ?? `#${processo.id}`;
 
-    return processo.imovel !== '' ? `${codigo} — ${processo.imovel}` : codigo;
+    return processo.imovel !== '' ? `${codigo}: ${processo.imovel}` : codigo;
 }
 
 function ResumoItem({ rotulo, valor }: { rotulo: string; valor: number }) {

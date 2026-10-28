@@ -163,5 +163,5 @@ export function formatarData(iso: string | null): string | null {
 export function faixaArea(min: number, max: number | null): string {
     const fmt = (valor: number) => valor.toLocaleString('pt-BR');
 
-    return max === null ? `≥ ${fmt(min)} m²` : `${fmt(min)} – ${fmt(max)} m²`;
+    return max === null ? `≥ ${fmt(min)} m²` : `${fmt(min)} a ${fmt(max)} m²`;
 }

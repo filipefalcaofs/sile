@@ -7,6 +7,7 @@ use App\Enums\ViabilityRequestStatus;
 use App\Http\Resources\AbuseAlertResource;
 use App\Models\AbuseAlert;
 use App\Models\FineMeshReferral;
+use App\Models\Parameter;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -63,6 +64,27 @@ class AbusoPainelTest extends TestCase
             'protocol_number' => $protocolo,
             'protocoled_at' => now(),
         ])->fresh();
+    }
+
+    public function test_painel_informa_quando_a_deteccao_esta_desativada_e_quando_esta_ativa(): void
+    {
+        $gestor = $this->administrador();
+
+        $desligada = $this->actingAs($gestor, 'gestao')->get('/gestao/abuso')->assertOk()->viewData('page');
+        $this->assertFalse($desligada['props']['deteccaoAtiva']);
+
+        Parameter::query()->create([
+            'key' => 'features.deteccao_abuso',
+            'group' => 'features',
+            'type' => 'boolean',
+            'value' => '1',
+            'default_value' => '0',
+            'validation_rules' => ['required', 'boolean'],
+            'description' => 'Toggle de teste da detecção de abuso.',
+        ]);
+
+        $ligada = $this->actingAs($gestor, 'gestao')->get('/gestao/abuso')->assertOk()->viewData('page');
+        $this->assertTrue($ligada['props']['deteccaoAtiva']);
     }
 
     public function test_sem_permissao_gerenciar_alertas_abuso_recebe_403_auditado(): void

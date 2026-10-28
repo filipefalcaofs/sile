@@ -33,8 +33,8 @@ class LouosDraftController extends Controller
     private const PER_PAGE_OPTIONS = [10, 15, 25, 50];
 
     private const QUADRO_LABELS = [
-        'quadro10' => 'Quadro 10 — Permissões por zona',
-        'quadro11a' => 'Quadro 11A — Condições por classe de via',
+        'quadro10' => 'Quadro 10: Permissões por zona',
+        'quadro11a' => 'Quadro 11A: Condições por classe de via',
     ];
 
     private const CSV_HEADERS = [

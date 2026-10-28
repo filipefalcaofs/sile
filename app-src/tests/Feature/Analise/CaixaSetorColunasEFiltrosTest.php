@@ -5,6 +5,7 @@ namespace Tests\Feature\Analise;
 use App\Enums\AnalysisStage;
 use App\Enums\AnalysisStatus;
 use App\Enums\ViabilityRequestStatus;
+use App\Models\InspectionReferral;
 use App\Models\Sector;
 use App\Models\User;
 use App\Models\ViabilityRequest;
@@ -109,5 +110,37 @@ class CaixaSetorColunasEFiltrosTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->has('processos.data', 1)
                 ->where('processos.data.0.id', $daBeatriz->id));
+    }
+
+    /**
+     * Retorno da vistoria (Lisa, 22/10): o processo Vistoriado volta a Para
+     * distribuir com a designação do analista que o mandou para a vistoria.
+     */
+    public function test_vistoriado_em_para_distribuir_traz_a_designacao_do_analista_que_encaminhou(): void
+    {
+        $setor = Sector::factory()->create();
+        $setorVistoria = Sector::factory()->create();
+        $chefia = $this->chefia($setor);
+        $beatriz = $this->analista($setor, 'Beatriz Analista');
+        $processo = $this->processo($setor);
+        $processo->forceFill(['analysis_status' => AnalysisStatus::Vistoriado])->save();
+        InspectionReferral::query()->create([
+            'viability_request_id' => $processo->id,
+            'encaminhado_por_user_id' => $beatriz->id,
+            'analista_origem_user_id' => $beatriz->id,
+            'setor_origem_id' => $setor->id,
+            'setor_vistoria_id' => $setorVistoria->id,
+            'motivo' => 'Conferir o uso do imóvel.',
+        ]);
+        $comum = $this->processo($setor);
+
+        $resposta = $this->actingAs($chefia, 'gestao')
+            ->get('/gestao/caixa-setor')
+            ->assertOk();
+
+        $linhas = collect($resposta->viewData('page')['props']['processos']['data'])->keyBy('id');
+        $this->assertSame('Beatriz Analista', $linhas[$processo->id]['designacao']);
+        $this->assertSame('Vistoriado', $linhas[$processo->id]['status_tramitacao']);
+        $this->assertNull($linhas[$comum->id]['designacao']);
     }
 }

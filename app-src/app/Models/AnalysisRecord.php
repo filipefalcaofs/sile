@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'revision',
     'status',
     'analyst_user_id',
+    'based_on_record_id',
     'engine_snapshot',
     'engine_rules_versions',
     'engine_available',
@@ -88,6 +89,17 @@ class AnalysisRecord extends Model
     public function analyst(): BelongsTo
     {
         return $this->belongsTo(User::class, 'analyst_user_id');
+    }
+
+    /**
+     * Ficha de onde esta revisão foi copiada: a própria ficha anterior do
+     * analista ou, na conclusão, a ficha de quem encaminhou.
+     *
+     * @return BelongsTo<AnalysisRecord, $this>
+     */
+    public function basedOn(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'based_on_record_id');
     }
 
     /**

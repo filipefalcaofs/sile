@@ -8,8 +8,10 @@ use App\Services\Decisao\DecisionTextCatalog;
 use App\Support\Audit\AuditService;
 
 /**
- * Zona do processo pela maior porção do polígono do endereçamento (art. 18,
- * § 2º, da Lei 9.148/2016). Sem polígono, ou com o cálculo indisponível, a
+ * Zona do processo pela centralidade linear (linha da ZCLMu/ZCLMe por cima do
+ * lote, HU.182, ou lote lindeiro ao trecho com o mesmo CODLOG do endereço, S7) e,
+ * na falta dela, pela maior porção do polígono do endereçamento
+ * (art. 18, § 2º, da Lei 9.148/2016). Sem polígono, ou com o cálculo indisponível, a
  * zona continua a do ponto e `zona_fonte` diz qual regra decidiu. Empate não
  * grava zona vencedora: o fluxo expresso encaminha à análise.
  */
@@ -25,7 +27,13 @@ class ZonaProcessoService
     {
         $poligono = $request->address_polygon_geojson;
 
-        return is_array($poligono) && $poligono !== [] ? $this->maiorPorcao->resolver($poligono) : null;
+        if (! is_array($poligono) || $poligono === []) {
+            return null;
+        }
+
+        $codLog = trim((string) $request->cod_log);
+
+        return $this->maiorPorcao->resolver($poligono, $codLog !== '' ? $codLog : null);
     }
 
     public function materializar(ViabilityRequest $request): ?ZonaMaiorPorcao
@@ -43,13 +51,15 @@ class ZonaProcessoService
         if ($resultado->identificado()) {
             $request->forceFill([
                 'zona_codigo' => $resultado->codigo,
-                'zona_fonte' => ZonaFonte::EnderecamentoMaiorPorcao,
+                'zona_fonte' => $resultado->status === ZonaMaiorPorcao::CENTRALIDADE_LINEAR
+                    ? ZonaFonte::CentralidadeLinear
+                    : ZonaFonte::EnderecamentoMaiorPorcao,
             ])->save();
 
             return $resultado;
         }
 
-        if ($request->zona_fonte !== ZonaFonte::EnderecamentoMaiorPorcao) {
+        if (! in_array($request->zona_fonte, [ZonaFonte::EnderecamentoMaiorPorcao, ZonaFonte::CentralidadeLinear], true)) {
             $this->marcarPonto($request);
         }
 
@@ -59,6 +69,14 @@ class ZonaProcessoService
     public function motivoEmpate(ZonaMaiorPorcao $resultado): string
     {
         return $this->textos->render('zona.motivo.empate_maior_porcao', [
+            ':zona_a' => $resultado->empate[0] ?? '—',
+            ':zona_b' => $resultado->empate[1] ?? '—',
+        ]);
+    }
+
+    public function motivoConflito(ZonaMaiorPorcao $resultado): string
+    {
+        return $this->textos->render('zona.motivo.conflito_centralidade_linear', [
             ':zona_a' => $resultado->empate[0] ?? '—',
             ':zona_b' => $resultado->empate[1] ?? '—',
         ]);
@@ -89,7 +107,9 @@ class ZonaProcessoService
             ],
             subject: $request,
             result: $resultado->status,
-            rulesVersion: 'lei-9148-2016-art18',
+            rulesVersion: in_array($resultado->status, [ZonaMaiorPorcao::CENTRALIDADE_LINEAR, ZonaMaiorPorcao::CONFLITO_LINEAR], true)
+                ? 'hu-182-centralidade-linear'
+                : 'lei-9148-2016-art18',
         );
     }
 }

@@ -76,8 +76,8 @@ class GeoServerLayerController extends Controller
         $geoServerLayer->update(['ativo' => ! $geoServerLayer->ativo]);
 
         $message = $geoServerLayer->ativo
-            ? 'Camada reativada — volta a ser consultada na identificação da zona.'
-            : 'Camada desativada — deixa de ser consultada na identificação da zona.';
+            ? 'Camada reativada. Volta a ser consultada na identificação da zona.'
+            : 'Camada desativada. Deixa de ser consultada na identificação da zona.';
 
         return back()->with('status', $message);
     }

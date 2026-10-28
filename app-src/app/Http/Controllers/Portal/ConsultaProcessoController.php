@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Portal;
 
 use App\Enums\AnalysisPendencyStatus;
 use App\Http\Controllers\Controller;
+use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Legado\LegadoIndisponivelException;
 use App\Services\Solicitacao\ConsultaProcessoLegado;
@@ -131,7 +132,7 @@ class ConsultaProcessoController extends Controller
         return [
             'origem' => 'viabiliza',
             'protocol_number' => $processo->protocol_number,
-            'numero_viabilidade' => $processo->decision?->tvl_product_number,
+            'numero_viabilidade' => ViabilityDecision::semPrefixo($processo->decision?->tvl_product_number),
             'bap' => $processo->external_reference,
             'servico' => $processo->serviceType?->name,
             'empresa' => $processo->company === null ? null : [

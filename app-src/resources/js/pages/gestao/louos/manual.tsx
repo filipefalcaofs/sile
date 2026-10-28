@@ -143,7 +143,7 @@ export default function LouosManual({ quadro, urlModeloCsv, urlRascunho }: Manua
                         />
                         <p className="text-theme-sm text-gray-700 dark:text-gray-300">
                             O enquadramento de uso (grupo, subgrupo, código LOUOS) vem da planilha de
-                            tratamento, no grupo Regras — não destes Quadros.
+                            tratamento, no grupo Regras, não destes Quadros.
                         </p>
                     </CardContent>
                 </Card>
@@ -159,19 +159,19 @@ export default function LouosManual({ quadro, urlModeloCsv, urlRascunho }: Manua
                                 Importe com <strong>substituir</strong> marcado quando for a carga completa da lei nova.
                             </li>
                             <li>Leia o relatório (lidos, importados, atualizados, rejeitados).</li>
-                            <li>Outro usuário publica — o autor do rascunho não publica.</li>
+                            <li>Outro usuário publica, o autor do rascunho não publica.</li>
                         </ol>
                         <p className="mt-4 text-theme-sm text-gray-600 dark:text-gray-400">
                             Arquivo CSV ou TXT, no máximo 5 MB, UTF-8, separador vírgula. O Excel em português costuma
-                            gravar ponto e vírgula — o importador recusa o cabeçalho. Números com ponto decimal
+                            gravar ponto e vírgula, o importador recusa o cabeçalho. Números com ponto decimal
                             (350.01), não vírgula.
                         </p>
                     </CardContent>
                 </Card>
 
-                <section id="secao-quadro10" className="scroll-mt-24" aria-label="Quadro 10 — permissão por zona">
+                <section id="secao-quadro10" className="scroll-mt-24" aria-label="Quadro 10: permissão por zona">
                     <Card>
-                        <CardHeader title="Quadro 10 — permissão por zona" />
+                        <CardHeader title="Quadro 10: permissão por zona" />
                         <CardContent className="space-y-4">
                             <p className="text-theme-sm text-gray-700 dark:text-gray-300">
                                 Cada célula da matriz (zona × uso) vira uma linha. Não cole a matriz larga do PDF.
@@ -200,9 +200,9 @@ ZPR 1,R1,,S,,"art. 116, I, e Quadro 10 do Anexo 01 da Lei nº 9.148/2016"`}
                     </Card>
                 </section>
 
-                <section id="secao-quadro11a" className="scroll-mt-24" aria-label="Quadro 11A — condições pela via">
+                <section id="secao-quadro11a" className="scroll-mt-24" aria-label="Quadro 11A: condições pela via">
                     <Card>
-                        <CardHeader title="Quadro 11A — condições pela via" />
+                        <CardHeader title="Quadro 11A: condições pela via" />
                         <CardContent className="space-y-4">
                             <p className="text-theme-sm text-gray-700 dark:text-gray-300">
                                 Mesma lógica de formato longo. Classes atuais: VP, VL, VC II, VC I, VA II, VA I, VE.
@@ -217,7 +217,7 @@ VA I,ID2-05,Objeto de análise particularizada pela CNLU,"art. 116, II, e Quadro
                                 Várias condições na mesma célula: separe com ponto e vírgula. Na carga vigente, R da
                                 matriz foi gravado como “Objeto de análise particularizada pela CNLU”. Conferência: 7
                                 vias × usos = total (hoje 525). Sem a classe de via no território, o motor degrada para
-                                análise técnica — o CSV mesmo assim precisa estar correto.
+                                análise técnica, o CSV mesmo assim precisa estar correto.
                             </p>
                         </CardContent>
                     </Card>
@@ -227,7 +227,7 @@ VA I,ID2-05,Objeto de análise particularizada pela CNLU,"art. 116, II, e Quadro
                     <CardHeader title="Checklist e o que não fazer" />
                     <CardContent className="space-y-4">
                         <ul className="list-disc space-y-2 pl-5 text-theme-sm text-gray-700 dark:text-gray-300">
-                            <li>Quadro certo na tela — arquivo de um Quadro no rascunho de outro quebra o cabeçalho.</li>
+                            <li>Quadro certo na tela, arquivo de um Quadro no rascunho de outro quebra o cabeçalho.</li>
                             <li>Primeira linha = cabeçalho exato do modelo baixado.</li>
                             <li>Vírgula, UTF-8, até 5 MB. Amostra de 5 a 10 linhas confrontada com o PDF.</li>
                             <li>Rejeitados vazios, ou cada motivo corrigido num segundo arquivo.</li>

@@ -133,8 +133,9 @@ class TramitacaoFichaTest extends TestCase
 
         $this->assertCount(1, $finalizadas);
         $this->assertSame('Lisa Sousa', $finalizadas[0]['ator']);
-        $this->assertSame('Revisão 1 da ficha.', $finalizadas[0]['reason']);
+        $this->assertSame('Revisão 1, de Lisa Sousa. Parecer: Parecer em elaboração.', $finalizadas[0]['reason']);
         $this->assertSame("/gestao/processos/{$ficha->viability_request_id}/ficha?revisao=1&somente_leitura=1", $finalizadas[0]['link']);
+        $this->assertSame('Abrir ficha finalizada (revisão 1)', $finalizadas[0]['link_label']);
     }
 
     public function test_ficha_de_outro_processo_nao_aparece(): void
@@ -166,5 +167,22 @@ class TramitacaoFichaTest extends TestCase
 
         $this->assertCount(1, $concluidas);
         $this->assertSame('vistoria', $concluidas[0]['tipo']);
+    }
+
+    public function test_conclusao_da_ficha_de_vistoria_traz_o_link_para_a_propria_ficha(): void
+    {
+        $vistoria = Inspection::factory()->concluida()->create();
+
+        app(AuditService::class)->log(
+            logName: 'vistoria',
+            event: 'ficha-conclusao',
+            description: "Conclusão da ficha de vistoria do processo #{$vistoria->viability_request_id}",
+            properties: ['viability_request_id' => $vistoria->viability_request_id, 'inspection_id' => $vistoria->id],
+            subject: $vistoria,
+        );
+
+        $concluida = collect($this->eventos($vistoria->viability_request_id))->firstWhere('to_label', 'Ficha de vistoria concluída');
+
+        $this->assertSame("/gestao/processos/{$vistoria->viability_request_id}/vistoria/visualizar?ficha={$vistoria->id}", $concluida['link']);
     }
 }

@@ -8,7 +8,7 @@ import {
     CategoriaBadges,
     type ProcessoItem,
 } from '@/components/analise/processo-ui';
-import { AlertIcon, ArrowRightIcon, CheckCircleIcon, FileIcon, InfoIcon, ListIcon } from '@/components/icons';
+import { AlertIcon, ArrowRightIcon, CheckCircleIcon, FileIcon, InfoIcon, ListIcon, MailIcon, MapPinIcon } from '@/components/icons';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import DataTable from '@/components/ui/data-table/data-table';
 import PerPageSelect from '@/components/ui/data-table/per-page-select';
@@ -25,6 +25,9 @@ interface Contadores {
     em_analise: number;
     em_pendencia: number;
     vencendo_hoje: number;
+    vistoriar: number;
+    retorno_vistoria: number;
+    retorno_convite: number;
     analisados: number;
 }
 
@@ -32,7 +35,7 @@ type Visao = 'analise' | 'analisados';
 
 const ABAS: { id: Visao; rotulo: string }[] = [
     { id: 'analise', rotulo: 'Análise' },
-    { id: 'analisados', rotulo: 'Analisados' },
+    { id: 'analisados', rotulo: 'Concluídos' },
 ];
 
 interface CargaAnalista {
@@ -72,7 +75,7 @@ const numberFormat = new Intl.NumberFormat('pt-BR');
 
 function formatarDataHora(iso: string | null): string {
     if (!iso) {
-        return '—';
+        return '-';
     }
 
     const data = new Date(iso);
@@ -148,8 +151,29 @@ export default function Fila({
             tone: 'error',
         },
         {
+            key: 'vistoriar',
+            label: 'Vistoriar',
+            value: contadores.vistoriar,
+            icon: <MapPinIcon className="size-6" />,
+            tone: 'info',
+        },
+        {
+            key: 'retorno_vistoria',
+            label: 'Retorno Vistoria',
+            value: contadores.retorno_vistoria,
+            icon: <MapPinIcon className="size-6" />,
+            tone: 'brand',
+        },
+        {
+            key: 'retorno_convite',
+            label: 'Retorno Convite',
+            value: contadores.retorno_convite,
+            icon: <MailIcon className="size-6" />,
+            tone: 'warning',
+        },
+        {
             key: 'analisados',
-            label: `Analisados (${janela} dias)`,
+            label: `Concluídos (${janela} dias)`,
             value: contadores.analisados,
             icon: <CheckCircleIcon className="size-6" />,
             tone: 'success',
@@ -168,7 +192,7 @@ export default function Fila({
                             item.analysis_status === 'convite_respondido' ? 'font-bold' : 'font-medium'
                         }`}
                     >
-                        {item.bap ?? '—'}
+                        {item.bap ?? '-'}
                     </span>
                     <span className="text-theme-xs text-gray-400 dark:text-gray-500">
                         {item.protocol_number ?? 'sem protocolo'}
@@ -186,14 +210,14 @@ export default function Fila({
             id: 'endereco',
             header: 'Endereço',
             cell: (item) => (
-                <span className="text-gray-700 dark:text-gray-300">{item.imovel !== '' ? item.imovel : '—'}</span>
+                <span className="text-gray-700 dark:text-gray-300">{item.imovel !== '' ? item.imovel : '-'}</span>
             ),
         },
         {
             id: 'tipo_imovel',
             header: 'Tipo do imóvel',
             cellClassName: 'min-w-32',
-            cell: (item) => item.tipo_imovel ?? <span className="text-gray-400 dark:text-gray-500">—</span>,
+            cell: (item) => item.tipo_imovel ?? <span className="text-gray-400 dark:text-gray-500">-</span>,
         },
         {
             id: 'servico',
@@ -201,7 +225,7 @@ export default function Fila({
             cellClassName: 'min-w-56 max-w-xs',
             cell: (item) =>
                 item.servicos.length === 0 ? (
-                    <span className="text-gray-400 dark:text-gray-500">—</span>
+                    <span className="text-gray-400 dark:text-gray-500">-</span>
                 ) : (
                     <ul className="flex flex-col gap-1">
                         {item.servicos.map((servico) => (
@@ -230,7 +254,7 @@ export default function Fila({
                             {item.motivo_da_analise}
                         </span>
                     ) : (
-                        <span className="text-gray-400 dark:text-gray-500">—</span>
+                        <span className="text-gray-400 dark:text-gray-500">-</span>
                     )}
                 </div>
             ),
@@ -241,7 +265,7 @@ export default function Fila({
             cellClassName: 'whitespace-nowrap',
             cell: (item) => (
                 <span className={item.analysis_status === 'convite_respondido' ? 'font-bold text-gray-900 dark:text-white' : undefined}>
-                    {item.analysis_status_label ?? item.status_label ?? <span className="text-gray-400 dark:text-gray-500">—</span>}
+                    {item.analysis_status_label ?? item.status_label ?? <span className="text-gray-400 dark:text-gray-500">-</span>}
                 </span>
             ),
         },
@@ -272,7 +296,7 @@ export default function Fila({
                 <div className="flex justify-end">
                     <JanelaDiasToggle janelas={janelas} ativa={janela} onSelecionar={(dias) => navegar({ janela: dias })} />
                 </div>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 xl:grid-cols-5">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 xl:grid-cols-4">
                     {indicadores.map((indicador) => (
                         <KpiCard
                             key={indicador.key}

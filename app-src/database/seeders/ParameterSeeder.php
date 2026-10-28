@@ -116,21 +116,21 @@ class ParameterSeeder extends Seeder
                 'type' => 'boolean',
                 'default_value' => '1',
                 'validation_rules' => ['required', 'boolean'],
-                'description' => 'Exigir letras maiúsculas e minúsculas na senha',
+                'description' => 'Exige letras maiúsculas e minúsculas na senha',
             ],
             'security.password.require_numbers' => [
                 'group' => 'seguranca',
                 'type' => 'boolean',
                 'default_value' => '1',
                 'validation_rules' => ['required', 'boolean'],
-                'description' => 'Exigir números na senha',
+                'description' => 'Exige números na senha',
             ],
             'security.password.require_symbols' => [
                 'group' => 'seguranca',
                 'type' => 'boolean',
                 'default_value' => '0',
                 'validation_rules' => ['required', 'boolean'],
-                'description' => 'Exigir símbolos na senha',
+                'description' => 'Exige símbolos na senha',
             ],
             'security.login.max_attempts' => [
                 'group' => 'seguranca',
@@ -444,7 +444,21 @@ class ParameterSeeder extends Seeder
                 'type' => 'boolean',
                 'default_value' => '1',
                 'validation_rules' => ['required', 'boolean'],
-                'description' => 'Consulta o lote por inscrição imobiliária no cadastro municipal (ArcGIS, camada SEMAP — Inscrições Geo) quando o endereçamento não tem polígono para o endereço',
+                'description' => 'Consulta o lote por inscrição imobiliária no cadastro municipal (ArcGIS, camada SEMAP Inscrições Geo) quando o endereçamento não tem polígono para o endereço',
+            ],
+            'features.legado_simplifica' => [
+                'group' => 'features',
+                'type' => 'boolean',
+                'default_value' => '0',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'Consulta a viabilidade anterior da empresa no legado Simplifica (TVL deferida e ativa e os CNAEs dela) para comparar as atividades de uma alteração. Desligado, só vale o processo anterior no Viabiliza',
+            ],
+            'features.legado_simplifica' => [
+                'group' => 'features',
+                'type' => 'boolean',
+                'default_value' => '0',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'Consulta a viabilidade anterior da empresa no legado Simplifica (TVL deferida e ativa e os CNAEs dela) para comparar as atividades de uma alteração. Desligado, só vale o processo anterior no Viabiliza',
             ],
             'features.validacao_ponto_inscricao' => [
                 'group' => 'features',
@@ -458,7 +472,7 @@ class ParameterSeeder extends Seeder
                 'type' => 'boolean',
                 'default_value' => '1',
                 'validation_rules' => ['required', 'boolean'],
-                'description' => 'Importa o benchmark nacional de tempo de viabilidade a partir dos microdados da REDESIM. Desligado, as telas de benchmark mostram a lacuna da competência — nenhum valor é estimado',
+                'description' => 'Importa o benchmark nacional de tempo de viabilidade a partir dos microdados da REDESIM. Desligado, as telas de benchmark mostram a lacuna da competência; nenhum valor é estimado',
             ],
             'integrations.redesim_estatistica.base_url' => [
                 'group' => 'integracoes',
@@ -538,6 +552,28 @@ class ParameterSeeder extends Seeder
                 'default_value' => null,
                 'validation_rules' => ['nullable', 'string', 'max:2048'],
                 'description' => 'Token do Portal ArcGIS para a ortofoto 2024, se o serviço passar a exigir (armazenado criptografado, nunca reexibido)',
+            ],
+            'integrations.legado_simplifica.url' => [
+                'group' => 'integracoes',
+                'type' => 'string',
+                'default_value' => null,
+                'validation_rules' => ['nullable', 'url'],
+                'description' => 'Endereço da API do legado Simplifica (esquema e host, sem /v1), por exemplo http://simplifica-legado.pms.ba.gov.br',
+            ],
+            'integrations.legado_simplifica.token' => [
+                'group' => 'integracoes',
+                'type' => 'string',
+                'sensitive' => true,
+                'default_value' => null,
+                'validation_rules' => ['nullable', 'string', 'max:2048'],
+                'description' => 'Token de máquina (lg_..., validade de 90 dias) da API do legado Simplifica, com os escopos provisorias:ler e processos:ler (armazenado criptografado, nunca reexibido)',
+            ],
+            'louos.via_local.cnaes_vedados' => [
+                'group' => 'louos',
+                'type' => 'string',
+                'default_value' => '9609207,8011102',
+                'validation_rules' => ['required', 'string', 'max:500'],
+                'description' => 'CNAEs que a observação (a) do Quadro 11A da LOUOS mantém vedados em Via Local, mesmo em zona de centralidade (adestramento e hospedagem de animais). Só dígitos ou com máscara, separados por vírgula. A SEDUR valida a associação dos CNAEs',
             ],
             'features.geoserver_territorio' => [
                 'group' => 'features',
@@ -652,21 +688,21 @@ class ParameterSeeder extends Seeder
                 'type' => 'json',
                 'default_value' => '{"baixo_a":"expresso","baixo_b":"expresso","alto":"analise"}',
                 'validation_rules' => ['required', 'json', 'json_fluxo_map'],
-                'description' => 'Mapa de encaminhamento por nível de risco da dimensão decisiva (expresso/analise) — Decreto 32.636/2020 não tem nível médio',
+                'description' => 'Mapa de encaminhamento por nível de risco da dimensão decisiva (expresso ou análise). O Decreto 32.636/2020 não tem nível médio',
             ],
             'risco.dimensao_tvl' => [
                 'group' => 'risco',
                 'type' => 'string',
                 'default_value' => 'municipal',
                 'validation_rules' => ['required', 'in:municipal,sanitario'],
-                'description' => 'Dimensão de risco que prevalece no encaminhamento da viabilidade locacional (default municipal; confirmar com a SEDUR)',
+                'description' => 'Dimensão de risco que prevalece no encaminhamento da viabilidade locacional (padrão municipal; confirmar com a SEDUR)',
             ],
             'louos.vagas.exigencia_por_grupo' => [
                 'group' => 'louos',
                 'type' => 'json',
                 'default_value' => '{}',
                 'validation_rules' => ['required', 'json'],
-                'description' => 'Exigência de vagas (estacionamento, carga/descarga) por grupo de uso da LOUOS — base do veredito de conformidade; vazio enquanto a SEDUR não parametriza (motor registra "não parametrizado", não bloqueia)',
+                'description' => 'Exigência de vagas (estacionamento, carga/descarga) por grupo de uso da LOUOS, base do veredito de conformidade. Vazio enquanto a SEDUR não parametriza (o motor registra "não parametrizado" e não bloqueia)',
             ],
             'solicitacao.cnaes_complementares.max' => [
                 'group' => 'solicitacao',
@@ -680,7 +716,7 @@ class ParameterSeeder extends Seeder
                 'type' => 'string',
                 'default_value' => 'VIA',
                 'validation_rules' => ['required', 'string', 'max:10'],
-                'description' => 'Prefixo do número de protocolo da viabilidade ({prefixo}-AAAA-NNNNNN) — formato oficial a confirmar SEDUR',
+                'description' => 'Prefixo do número de protocolo da viabilidade ({prefixo}-AAAA-NNNNNN). Formato oficial a confirmar com a SEDUR',
             ],
             'solicitacao.anexos.max_mb' => [
                 'group' => 'solicitacao',
@@ -701,7 +737,7 @@ class ParameterSeeder extends Seeder
                 'type' => 'integer',
                 'default_value' => '30',
                 'validation_rules' => ['required', 'integer', 'min:1', 'max:365'],
-                'description' => 'Prazo estimado (dias) exibido na consulta de protocolo — ressalva de estimativa; a medição real por etapa ainda será implementada',
+                'description' => 'Prazo estimado (dias) exibido na consulta de protocolo. É uma estimativa; a medição real por etapa ainda será implementada',
             ],
             'solicitacao.atendimento.expiracao_minutos' => [
                 'group' => 'solicitacao',
@@ -715,14 +751,14 @@ class ParameterSeeder extends Seeder
                 'type' => 'json',
                 'default_value' => '["rascunho","protocolada"]',
                 'validation_rules' => ['required', 'json'],
-                'description' => 'Estados em que a solicitação pode ser cancelada pelo requerente (antes da decisão) — definição fina pendente SEDUR',
+                'description' => 'Estados em que a solicitação pode ser cancelada pelo requerente (antes da decisão). Definição fina pendente da SEDUR',
             ],
             'solicitacao.duplicidade.janela_dias' => [
                 'group' => 'solicitacao',
                 'type' => 'integer',
                 'default_value' => '180',
                 'validation_rules' => ['required', 'integer', 'min:1', 'max:3650'],
-                'description' => 'Janela (dias) da detecção de reincidência por CNPJ — alerta com link ao processo anterior, nunca bloqueia (direito de petição). Definição oficial pendente SEDUR',
+                'description' => 'Janela (dias) da detecção de reincidência por CNPJ. Gera alerta com link ao processo anterior e nunca bloqueia (direito de petição). Definição oficial pendente da SEDUR',
             ],
             'renovacao.intervalo_meses' => [
                 'group' => 'portal',
@@ -757,14 +793,14 @@ class ParameterSeeder extends Seeder
                 'type' => 'boolean',
                 'default_value' => '1',
                 'validation_rules' => ['required', 'boolean'],
-                'description' => 'Habilita a notificação por e-mail do resultado do fluxo expresso ao requerente (sem anexo da viabilidade locacional; canais plenos no EP11)',
+                'description' => 'Habilita a notificação por e-mail do resultado do fluxo expresso ao requerente (sem anexo da viabilidade locacional; demais canais em etapa futura)',
             ],
             'expresso.bap.prazo_horas' => [
                 'group' => 'expresso',
                 'type' => 'integer',
                 'default_value' => '48',
                 'validation_rules' => ['required', 'integer', 'min:1', 'max:720'],
-                'description' => 'Prazo (horas) sem BAP vinculado antes do indeferimento automático por prazo (ativação bloqueada até o Regin)',
+                'description' => 'Prazo (horas) sem BAP vinculado antes do indeferimento automático por prazo (ativação bloqueada até a integração com o REGIN)',
             ],
             'expresso.tvl.prefixo' => [
                 'group' => 'expresso',
@@ -806,7 +842,7 @@ class ParameterSeeder extends Seeder
                 'type' => 'decimal',
                 'default_value' => '1.0',
                 'validation_rules' => ['required', 'numeric', 'min:0'],
-                'description' => 'Fator multiplicador aplicado ao valor do DAM da TLL quando o CNAE de maior valor exige fator multiplicador (HU-071 RN-004); 1.0 é neutro',
+                'description' => 'Fator multiplicador aplicado ao valor do DAM da TLL quando o CNAE de maior valor exige fator multiplicador; 1.0 é neutro',
             ],
             'analise.pendencia.prazo_resposta_dias' => [
                 'group' => 'analise',
@@ -841,7 +877,7 @@ class ParameterSeeder extends Seeder
                 'type' => 'string',
                 'default_value' => 'imagem',
                 'validation_rules' => ['required', 'in:imagem,nenhuma'],
-                'description' => 'Modo de assinatura do PDF da viabilidade locacional: imagem do diretor ou nenhuma; assinatura digital gov.br/ICP é gancho da SEDUR',
+                'description' => 'Modo de assinatura do PDF da viabilidade locacional: imagem do diretor ou nenhuma; assinatura digital gov.br/ICP depende da SEDUR',
             ],
             // Comunicação multicanal (EP11). Os toggles de canal nascem
             // administráveis: e-mail e in-app ligados; WhatsApp DESLIGADO
@@ -883,7 +919,7 @@ class ParameterSeeder extends Seeder
                 'type' => 'json',
                 'default_value' => '{"amarelo":"notificar_analista","vencido":"notificar_gestor"}',
                 'validation_rules' => ['required', 'json'],
-                'description' => 'Tratamento do escalonamento por SLA por faixa (default só notifica, sem decisão automática)',
+                'description' => 'Tratamento do escalonamento por SLA por faixa (padrão: só notifica, sem decisão automática)',
             ],
             'integrations.regin.em_producao' => [
                 'group' => 'integracoes',
@@ -951,7 +987,7 @@ class ParameterSeeder extends Seeder
                 'type' => 'boolean',
                 'default_value' => '0',
                 'validation_rules' => ['required', 'boolean'],
-                'description' => 'Habilita a detecção de padrões de abuso/fraude; nasce desligada e NUNCA pune — apenas registra alerta e encaminha à malha fina',
+                'description' => 'Habilita a detecção de padrões de abuso/fraude; nasce desligada e nunca pune; apenas registra alerta e encaminha à malha fina',
             ],
             // Limiares dos detectores determinísticos (HU-149) — grupo 'abuso'.
             // Defaults conservadores; a SEDUR ajusta sem deploy (HU-014).
@@ -960,7 +996,7 @@ class ParameterSeeder extends Seeder
                 'type' => 'integer',
                 'default_value' => '30',
                 'validation_rules' => ['required', 'integer', 'min:1', 'max:365'],
-                'description' => 'Janela (dias) analisada pelos detectores de abuso a cada execução do scheduler',
+                'description' => 'Janela (dias) analisada pelos detectores de abuso a cada execução da rotina agendada',
             ],
             'abuso.volume_cnpj.limite' => [
                 'group' => 'abuso',
@@ -1032,7 +1068,7 @@ class ParameterSeeder extends Seeder
                 'type' => 'boolean',
                 'default_value' => '0',
                 'validation_rules' => ['required', 'boolean'],
-                'description' => 'Habilita a varredura de auditoria preditiva dos processos deferidos no fluxo expresso (Módulo 3); desligada por padrão (aval do DPO), nunca pune — só gera alerta e encaminha à malha fina',
+                'description' => 'Habilita a varredura de auditoria preditiva dos processos deferidos no fluxo expresso; desligada por padrão (aval do DPO) e nunca pune; só gera alerta e encaminha à malha fina',
             ],
             'ia.auditoria_preditiva.janela_dias' => [
                 'group' => 'ia',
@@ -1150,6 +1186,7 @@ class ParameterSeeder extends Seeder
             'renovacao.intervalo_meses',
             'renovacao.legado.janela_a_vencer_dias',
             'renovacao.legado.permite_vencida',
+            'louos.via_local.cnaes_vedados',
         ];
     }
 }

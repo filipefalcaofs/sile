@@ -31,8 +31,8 @@ describe('faixas do enquadramento', () => {
     });
 
     it('omite a faixa quando a banda não existe', () => {
-        expect(textoFaixa2({ ...escritorio, enquadramento2: null, ate_m2_2: null })).toBe('—');
-        expect(textoFaixa3(escritorio)).toBe('—');
+        expect(textoFaixa2({ ...escritorio, enquadramento2: null, ate_m2_2: null })).toBe('-');
+        expect(textoFaixa3(escritorio)).toBe('-');
     });
 
     it('empilha as bandas com o corte ao lado do uso', () => {

@@ -153,7 +153,7 @@ function EditLayerModal({ camada, onClose }: { camada: GeoServerLayerItem; onClo
         <Modal isOpen onClose={onClose} className="m-4 max-h-[90vh] max-w-[600px] overflow-y-auto p-6 lg:p-8">
             <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Editar camada do GeoServer</h4>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                {camada.nome_completo} — o workspace e o nome da camada são fixos; para trocar a FeatureType, desative esta camada e
+                {camada.nome_completo}, o workspace e o nome da camada são fixos; para trocar a FeatureType, desative esta camada e
                 cadastre a nova.
             </p>
 
@@ -234,7 +234,7 @@ export default function GeoServerLayersIndex({ camadas }: GeoServerLayersIndexPr
         {
             id: 'label',
             header: 'Rótulo',
-            cell: (camada) => camada.label ?? '—',
+            cell: (camada) => camada.label ?? '-',
         },
         {
             id: 'ativo',

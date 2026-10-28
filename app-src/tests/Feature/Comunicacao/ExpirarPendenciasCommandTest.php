@@ -9,6 +9,7 @@ use App\Models\Activity;
 use App\Models\AnalysisPendency;
 use App\Models\Communication;
 use App\Models\User;
+use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Notifications\PendenciaExpiradaNotification;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -145,5 +146,32 @@ class ExpirarPendenciasCommandTest extends TestCase
         $this->assertSame(0, Communication::query()->count());
         $this->assertSame(0, Activity::query()->where('event', 'pendencia-expirada')->count());
         NotificationFacade::assertNothingSent();
+    }
+
+    /**
+     * Lisa, 22/10: convites sem resposta não indeferidos. Um processo com
+     * problema (aqui, já com decisão gravada) não pode interromper a passada:
+     * os demais convites vencidos continuam sendo indeferidos.
+     */
+    public function test_falha_em_um_processo_nao_impede_o_indeferimento_dos_demais(): void
+    {
+        NotificationFacade::fake();
+        $analista = User::factory()->analista()->create();
+        $comDecisao = $this->processoComAnalista($analista);
+        ViabilityDecision::factory()->create(['viability_request_id' => $comDecisao->id]);
+        $normal = $this->processoComAnalista($analista);
+
+        foreach ([$comDecisao, $normal] as $processo) {
+            AnalysisPendency::factory()->create([
+                'viability_request_id' => $processo->id,
+                'requested_by_user_id' => $analista->id,
+                'status' => AnalysisPendencyStatus::Aberta,
+                'due_at' => now()->subDay(),
+            ]);
+        }
+
+        $this->artisan('pendencias:expirar')->assertSuccessful();
+
+        $this->assertSame(ViabilityRequestStatus::Indeferida, $normal->refresh()->status);
     }
 }

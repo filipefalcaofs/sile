@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityRequestEvento;
 use App\Services\Servicos\ServicoNomenclaturaResolver;
+use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
@@ -224,7 +225,11 @@ class ProcessoQueryService
      * ficha aberta por alguém — a pré-análise do motor nasce sem analista e não
      * conta), em pendência e vencendo hoje (prazo <= fim do dia).
      *
-     * @return array{aguardando_analise: int, em_analise: int, em_pendencia: int, vencendo_hoje: int}
+     * Também os cards do documento SEDUR de 23/10: Vistoriar (o que ele mandou
+     * para a vistoria e ainda está lá), Retorno Vistoria (vistoriados com ele ou
+     * de volta ao setor de origem sem responsável) e Retorno Convite.
+     *
+     * @return array{aguardando_analise: int, em_analise: int, em_pendencia: int, vencendo_hoje: int, vistoriar: int, retorno_vistoria: int, retorno_convite: int}
      */
     public function contadores(User $user): array
     {
@@ -242,7 +247,40 @@ class ProcessoQueryService
                 ->whereNotNull('analysis_due_at')
                 ->where('analysis_due_at', '<=', now()->endOfDay())
                 ->count(),
+            'vistoriar' => ViabilityRequest::query()
+                ->where('analysis_status', AnalysisStatus::Vistoriar->value)
+                ->whereExists($this->ultimoEncaminhamentoAVistoriaDe($user))
+                ->count(),
+            'retorno_vistoria' => ViabilityRequest::query()
+                ->where('analysis_status', AnalysisStatus::Vistoriado->value)
+                ->where(fn (Builder $retorno) => $retorno
+                    ->where('assigned_user_id', $user->id)
+                    ->orWhere(fn (Builder $noSetor) => $noSetor
+                        ->whereNull('assigned_user_id')
+                        ->whereExists($this->ultimoEncaminhamentoAVistoriaDe($user, noSetorDeOrigem: true))))
+                ->count(),
+            'retorno_convite' => $this->escopo($user)
+                ->where('analysis_status', AnalysisStatus::ConviteRespondido->value)
+                ->count(),
         ];
+    }
+
+    /**
+     * O último encaminhamento à vistoria do processo foi feito por este
+     * analista (o analista de origem ou, sem ele, quem encaminhou).
+     */
+    private function ultimoEncaminhamentoAVistoriaDe(User $user, bool $noSetorDeOrigem = false): Closure
+    {
+        return function ($query) use ($user, $noSetorDeOrigem): void {
+            $query->from('inspection_referrals')
+                ->whereColumn('inspection_referrals.viability_request_id', 'viability_requests.id')
+                ->whereRaw('inspection_referrals.id = (select max(r.id) from inspection_referrals r where r.viability_request_id = viability_requests.id)')
+                ->whereRaw('coalesce(inspection_referrals.analista_origem_user_id, inspection_referrals.encaminhado_por_user_id) = ?', [$user->id]);
+
+            if ($noSetorDeOrigem) {
+                $query->whereColumn('inspection_referrals.setor_origem_id', 'viability_requests.sector_id');
+            }
+        };
     }
 
     /**

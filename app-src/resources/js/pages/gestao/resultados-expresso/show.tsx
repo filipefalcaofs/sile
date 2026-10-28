@@ -94,7 +94,7 @@ function transmissaoColor(status: CanalTransmissao['status']): 'success' | 'warn
 
 function formatarDataHora(iso: string | null): string {
     if (!iso) {
-        return '—';
+        return '-';
     }
 
     const data = new Date(iso);
@@ -127,10 +127,10 @@ function flattenRegras(rules: RulesVersions): { label: string; value: string }[]
 
         if (valor !== null && typeof valor === 'object') {
             for (const [sub, versao] of Object.entries(valor)) {
-                linhas.push({ label: `${rotuloGrupo} · ${sub}`, value: versao ?? '—' });
+                linhas.push({ label: `${rotuloGrupo} · ${sub}`, value: versao ?? '-' });
             }
         } else {
-            linhas.push({ label: rotuloGrupo, value: valor ?? '—' });
+            linhas.push({ label: rotuloGrupo, value: valor ?? '-' });
         }
     }
 
@@ -198,7 +198,7 @@ export default function ResultadoExpressoShow({ decisao, transmissao, explicacao
                                         </p>
                                         <p className="text-theme-sm text-gray-500 dark:text-gray-400">
                                             {solicitacao.cnpj && <span>{solicitacao.cnpj} · </span>}
-                                            Protocolo {solicitacao.protocol_number ?? '—'}
+                                            Protocolo {solicitacao.protocol_number ?? '-'}
                                         </p>
                                         {solicitacao.endereco !== '' && (
                                             <p className="mt-1 text-theme-sm text-gray-500 dark:text-gray-400">
@@ -217,7 +217,7 @@ export default function ResultadoExpressoShow({ decisao, transmissao, explicacao
                                 )}
                                 <DescItem label="Decidido em">{formatarDataHora(decisao.decided_at)}</DescItem>
                                 <DescItem label="Decidido por">
-                                    {decisao.is_sistema ? 'Sistema (fluxo automático)' : (decisao.decided_by ?? '—')}
+                                    {decisao.is_sistema ? 'Sistema (fluxo automático)' : (decisao.decided_by ?? '-')}
                                 </DescItem>
                             </dl>
                         </div>
@@ -233,7 +233,7 @@ export default function ResultadoExpressoShow({ decisao, transmissao, explicacao
                     <CardContent>
                         <div className="flex flex-wrap items-center gap-2">
                             <Badge color={outcomeColor(decisao.outcome)} size="sm">
-                                {decisao.consolidated_result_label ?? decisao.consolidated_result ?? '—'}
+                                {decisao.consolidated_result_label ?? decisao.consolidated_result ?? '-'}
                             </Badge>
                         </div>
                         {decisao.reason && (
@@ -301,7 +301,7 @@ export default function ResultadoExpressoShow({ decisao, transmissao, explicacao
                     <Card>
                         <CardHeader
                             title="Versões de regra aplicadas"
-                            description="As versões vigentes na data da decisão — fundam a explicabilidade."
+                            description="As versões vigentes na data da decisão, fundam a explicabilidade."
                         />
                         <CardContent>
                             {regras.length === 0 ? (
@@ -352,7 +352,7 @@ export default function ResultadoExpressoShow({ decisao, transmissao, explicacao
                     <Card>
                         <CardHeader
                             title="Explicabilidade da decisão"
-                            description="Passo a passo de como a viabilidade foi decidida — projeção do que foi registrado, sem reexecutar o motor."
+                            description="Passo a passo de como a viabilidade foi decidida, projeção do que foi registrado, sem reexecutar o motor."
                         />
                         <CardContent>
                             <DecisionExplanation explicacao={explicacao} />

@@ -136,7 +136,7 @@ function EditZonaModal({ zona, onClose }: { zona: ZonaItem; onClose: () => void 
         <Modal isOpen onClose={onClose} className="m-4 max-h-[90vh] max-w-[600px] overflow-y-auto p-6 lg:p-8">
             <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Editar zona</h4>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                {zona.codigo} — o código é fixo porque as linhas do Quadro 10 o referenciam; para trocar o código, desative esta zona e
+                {zona.codigo}, o código é fixo porque as linhas do Quadro 10 o referenciam; para trocar o código, desative esta zona e
                 cadastre a nova.
             </p>
 
@@ -210,7 +210,7 @@ export default function ZonasIndex({ zonas }: ZonasIndexProps) {
         {
             id: 'macrozona',
             header: 'Macrozona',
-            cell: (zona) => zona.macrozona ?? '—',
+            cell: (zona) => zona.macrozona ?? '-',
         },
         {
             id: 'ativo',
@@ -286,7 +286,7 @@ export default function ZonasIndex({ zonas }: ZonasIndexProps) {
             <Card>
                 <CardHeader
                     title="Zonas urbanísticas da LOUOS"
-                    description="Zonas reconhecidas pelo Quadro 10 da Lei nº 9.148/2016. A publicação de um rascunho do Quadro 10 só é aceita quando toda zona referenciada consta aqui e está ativa — um erro de digitação vira bloqueio explícito, nunca processo pendente silencioso."
+                    description="Zonas reconhecidas pelo Quadro 10 da Lei nº 9.148/2016. A publicação de um rascunho do Quadro 10 só é aceita quando toda zona referenciada consta aqui e está ativa, um erro de digitação vira bloqueio explícito, nunca processo pendente silencioso."
                     actions={
                         canMaintain ? (
                             <Button size="sm" onClick={() => setShowCreate(true)}>

@@ -13,6 +13,7 @@ use App\Http\Resources\DecisionExplanationResource;
 use App\Http\Resources\ViabilityDecisionResource;
 use App\Models\Activity;
 use App\Models\AiSuggestion;
+use App\Models\AnalysisAttachment;
 use App\Models\AnalysisRecord;
 use App\Models\RuleVersion;
 use App\Models\Sector;
@@ -33,11 +34,13 @@ use App\Services\Analise\AnalysisRecordDiff;
 use App\Services\Analise\AnalysisRecordImutavelException;
 use App\Services\Analise\AnalysisRecordService;
 use App\Services\Analise\CadastroImobiliarioFichaService;
+use App\Services\Analise\FichaDeOutroAnalistaException;
 use App\Services\Analise\QuadrosFichaChecklist;
 use App\Services\Auditoria\DecisionExplanationService;
 use App\Services\Expresso\SedeEscritorioVirtualGatilho;
 use App\Services\Geo\ProcedenciaPoligono;
 use App\Services\Relatorios\RelatorioSedeEscritorioVirtualService;
+use App\Services\Sefaz\ComparacaoCnaesFicha;
 use App\Services\Servicos\ServicoNomenclaturaResolver;
 use App\Services\Vistoria\VistoriaAcesso;
 use App\Support\Audit\AuditService;
@@ -90,7 +93,7 @@ class AnalysisRecordController extends Controller
 
         abort_unless($request->user()?->can('analisar-processos'), 403);
 
-        $record = $this->records->current($viabilityRequest);
+        $record = $this->records->current($viabilityRequest, $request->user());
 
         // Link da Tramitação: a revisão pedida, só para consulta, sem editar nem agir.
         $somenteLeitura = $request->boolean('somente_leitura');
@@ -142,7 +145,8 @@ class AnalysisRecordController extends Controller
                 'tvl_numero' => ViabilityDecision::semPrefixo($viabilityRequest->renews?->decision?->tvl_product_number),
                 'bap' => $viabilityRequest->external_reference,
                 'servicos' => $this->servicosDoProcesso($viabilityRequest),
-                'empresa' => $viabilityRequest->company?->trade_name ?: $viabilityRequest->company?->legal_name,
+                'empresa' => $viabilityRequest->nomeDaEmpresa(),
+                'requerente' => $viabilityRequest->nomeDoRequerente(),
             ],
             'localizacao' => $this->localizacaoDoImovel($viabilityRequest, $cadastro),
             'dadosTvl' => $this->dadosTvl($viabilityRequest, $record),
@@ -166,7 +170,10 @@ class AnalysisRecordController extends Controller
             'podeEncaminharChefia' => $this->podeEncaminharChefia($viabilityRequest, $request->user()),
             'fichaSalva' => $this->fichaSalvaOuFinalizada($viabilityRequest),
             'somenteLeitura' => $somenteLeitura,
+            'anexosAnalise' => $this->anexosDaAnalise($viabilityRequest),
             'podeEditarZonaVia' => $request->user()?->can('editar-zona-via') === true,
+            // Alteração de atividade da JUCEB: o que entra, o que sai e o que já existia na viabilidade da SEFAZ.
+            'comparacaoCnaes' => app(ComparacaoCnaesFicha::class)->dados($viabilityRequest),
             'zonasDisponiveis' => $this->zonasDisponiveis(),
             'viasDisponiveis' => Quadro11aClasseVia::oficiais(),
             'usuariosIndicaveis' => $this->usuariosIndicaveisParaConclusao(),
@@ -222,7 +229,8 @@ class AnalysisRecordController extends Controller
                 'protocol_number' => $viabilityRequest->protocol_number,
                 'status' => $viabilityRequest->status->value,
                 'status_label' => $viabilityRequest->status->label(),
-                'empresa' => $viabilityRequest->company?->trade_name ?: $viabilityRequest->company?->legal_name,
+                'empresa' => $viabilityRequest->nomeDaEmpresa(),
+                'requerente' => $viabilityRequest->nomeDoRequerente(),
                 'cnpj' => $viabilityRequest->company?->formatted_cnpj,
             ],
             'decisao' => $decisaoPayload,
@@ -239,12 +247,14 @@ class AnalysisRecordController extends Controller
      */
     public function autosave(AnalysisRecordRequest $request, ViabilityRequest $viabilityRequest): JsonResponse
     {
-        $record = $this->records->current($viabilityRequest);
+        $record = $this->records->current($viabilityRequest, $request->user());
 
         try {
             $record = $this->records->autosave($record, $request->validated(), $request->user());
         } catch (AnalysisRecordImutavelException $e) {
             throw ValidationException::withMessages(['ficha' => $e->getMessage()]);
+        } catch (FichaDeOutroAnalistaException $e) {
+            abort(403, $e->getMessage());
         }
 
         $manual = $request->boolean('manual');
@@ -274,12 +284,14 @@ class AnalysisRecordController extends Controller
      */
     public function finalizar(Request $request, ViabilityRequest $viabilityRequest): JsonResponse
     {
-        $record = $this->records->current($viabilityRequest);
+        $record = $this->records->current($viabilityRequest, $request->user());
 
         try {
             $record = $this->records->finalizar($record, $request->user());
         } catch (AnalysisRecordImutavelException $e) {
             throw ValidationException::withMessages(['ficha' => $e->getMessage()]);
+        } catch (FichaDeOutroAnalistaException $e) {
+            abort(403, $e->getMessage());
         }
 
         return response()->json([
@@ -296,11 +308,11 @@ class AnalysisRecordController extends Controller
      */
     public function concluirProcesso(Request $request, ViabilityRequest $viabilityRequest): JsonResponse
     {
-        $record = $this->records->current($viabilityRequest);
+        $record = $this->records->current($viabilityRequest, $request->user());
 
         if (! $record->isFinalizada()) {
             try {
-                $record = $this->records->finalizar($record, $request->user());
+                $record = $this->records->finalizarParaConcluir($record, $request->user());
             } catch (AnalysisRecordImutavelException $e) {
                 throw ValidationException::withMessages(['ficha' => $e->getMessage()]);
             }
@@ -354,7 +366,7 @@ class AnalysisRecordController extends Controller
      */
     public function sugerirParecer(Request $request, ViabilityRequest $viabilityRequest, SugestaoParecerService $parecer): JsonResponse
     {
-        $record = $this->records->current($viabilityRequest);
+        $record = $this->records->current($viabilityRequest, $request->user());
 
         if ($record->isFinalizada()) {
             abort(422, 'A revisão está finalizada (RN-003): crie uma nova revisão para trabalhar uma minuta.');
@@ -396,7 +408,7 @@ class AnalysisRecordController extends Controller
      */
     public function sugerirJustificativa(Request $request, ViabilityRequest $viabilityRequest, SugestaoJustificativaService $justificativa): JsonResponse
     {
-        $record = $this->records->current($viabilityRequest);
+        $record = $this->records->current($viabilityRequest, $request->user());
 
         if ($record->isFinalizada()) {
             abort(422, 'A revisão está finalizada (RN-003): crie uma nova revisão para trabalhar uma minuta.');
@@ -530,6 +542,7 @@ class AnalysisRecordController extends Controller
      *   ponto_referencia: string|null,
      *   zona: string|null,
      *   via: string|null,
+     *   zona_via_alterada: array{por: string|null, em: string|null, antes: array{zona: string|null, via: string|null}}|null,
      *   is_public_area: bool|null,
      *   categoria_uso_lote: string|null,
      *   padrao_construtivo_lote: string|null,
@@ -564,11 +577,70 @@ class AnalysisRecordController extends Controller
             'ponto_referencia' => $pontoReferencia,
             'zona' => $zona,
             'via' => $via,
+            'zona_via_alterada' => $this->zonaViaAlterada($request),
             'is_public_area' => $request->is_public_area,
             'categoria_uso_lote' => $this->textoOuNulo($request->semap_use_category),
             'padrao_construtivo_lote' => $this->textoOuNulo($request->semap_construction_standard),
-            'tipo_imovel' => $this->textoOuNulo($request->tipo_imovel),
+            // REGIN primeiro; sem ele, o uso do imóvel no Cadastro Imobiliário (campo Utilizacao).
+            'tipo_imovel' => $this->textoOuNulo($request->tipo_imovel) ?? $this->textoOuNulo($cadastro['campos']['tipo_imovel'] ?? null),
             'camadas' => $this->camadasComZonaEVia($request->camadas_incidentes, $zona, $via, $request->zona_fonte?->value),
+        ];
+    }
+
+    /**
+     * @return list<array{id: int, original_name: string, mime_type: string, size: int, created_at: string|null, enviado_por: string|null, download_url: string}>
+     */
+    private function anexosDaAnalise(ViabilityRequest $request): array
+    {
+        return $request->analysisAttachments()
+            ->with('uploader:id,name')
+            ->latest('id')
+            ->get()
+            ->map(fn (AnalysisAttachment $anexo): array => [
+                'id' => $anexo->id,
+                'original_name' => $anexo->original_name,
+                'mime_type' => $anexo->mime_type,
+                'size' => $anexo->size,
+                'created_at' => $anexo->created_at?->toIso8601String(),
+                'enviado_por' => $anexo->uploader?->name,
+                'download_url' => route('gestao.processos.analise.anexos.download', [
+                    'viabilityRequest' => $request->id,
+                    'attachment' => $anexo->id,
+                ]),
+            ])
+            ->all();
+    }
+
+    /**
+     * Quem alterou a zona e/ou a via na ficha, quando e o valor de antes —
+     * `null` enquanto prevalece o que o sistema calculou.
+     *
+     * @return array{por: string|null, em: string|null, antes: array{zona: string|null, via: string|null}}|null
+     */
+    private function zonaViaAlterada(ViabilityRequest $request): ?array
+    {
+        if ($this->textoOuNulo($request->zona_manual) === null && $this->textoOuNulo($request->via_manual) === null) {
+            return null;
+        }
+
+        $registro = Activity::query()
+            ->where('event', 'zona-via-alterada')
+            ->where('subject_type', $request->getMorphClass())
+            ->where('subject_id', $request->getKey())
+            ->latest('id')
+            ->first();
+
+        if ($registro === null) {
+            return ['por' => null, 'em' => null, 'antes' => ['zona' => null, 'via' => null]];
+        }
+
+        return [
+            'por' => $this->textoOuNulo($registro->properties['ator_nome'] ?? null),
+            'em' => $registro->created_at?->toIso8601String(),
+            'antes' => [
+                'zona' => $this->textoOuNulo($registro->properties['antes']['zona'] ?? null),
+                'via' => $this->textoOuNulo($registro->properties['antes']['via'] ?? null),
+            ],
         ];
     }
 
@@ -984,17 +1056,18 @@ class AnalysisRecordController extends Controller
     }
 
     /**
-     * "Encaminhar para Chefia" (Para conclusão sem destinatário) é de quem não
-     * conclui a análise e só aparece quando a tramitação permite sair do estado
-     * atual para Para conclusão. A tela ainda exige a ficha salva ou finalizada.
+     * "Encaminhar para Chefia" (Para conclusão sem destinatário) é de quem tem a
+     * permissão encaminhar-para-conclusao (conclua ou não a análise) e só aparece
+     * quando a tramitação permite sair do estado atual para Para conclusão. A
+     * tela ainda exige a ficha salva ou finalizada.
      */
     private function podeEncaminharChefia(ViabilityRequest $viabilityRequest, ?User $user): bool
     {
-        if ($user === null || ! $user->can('analisar-processos') || $user->can('concluir-analise')) {
+        if ($user === null || ! $user->can('analisar-processos') || ! $user->can('encaminhar-para-conclusao')) {
             return false;
         }
 
-        $proximas = $viabilityRequest->analysis_status?->proximasPara(false) ?? [];
+        $proximas = $viabilityRequest->analysis_status?->proximasPara($user->can('concluir-analise')) ?? [];
 
         return in_array(AnalysisStatus::ParaConclusao, $proximas, true);
     }

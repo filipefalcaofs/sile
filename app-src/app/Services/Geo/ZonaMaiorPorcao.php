@@ -5,6 +5,8 @@ namespace App\Services\Geo;
 /**
  * Zona do terreno pela maior porção (art. 18, § 2º, da Lei 9.148/2016): área
  * da interseção do polígono com cada zona candidata, da maior para a menor.
+ * A centralidade linear (linha por cima do lote) vem antes da maior porção; nesse
+ * caso `porcoes` continua trazendo a maior porção, para o mapa.
  */
 final readonly class ZonaMaiorPorcao
 {
@@ -15,6 +17,12 @@ final readonly class ZonaMaiorPorcao
     public const SEM_INTERSECAO = 'sem_intersecao';
 
     public const INDISPONIVEL = 'indisponivel';
+
+    /** Linha da ZCLMu ou da ZCLMe passa por cima do lote (HU.182, RN-01 e RN-02). */
+    public const CENTRALIDADE_LINEAR = 'centralidade_linear';
+
+    /** As linhas da ZCLMu e da ZCLMe passam por cima do mesmo lote (HU.182, RN-07). */
+    public const CONFLITO_LINEAR = 'conflito_linear';
 
     /** Diferença de área abaixo da qual duas porções empatam (ruído de ponto flutuante). */
     public const TOLERANCIA_EMPATE_M2 = 0.01;
@@ -44,7 +52,7 @@ final readonly class ZonaMaiorPorcao
 
     public function identificado(): bool
     {
-        return $this->status === self::IDENTIFICADO && $this->codigo !== null;
+        return in_array($this->status, [self::IDENTIFICADO, self::CENTRALIDADE_LINEAR], true) && $this->codigo !== null;
     }
 
     /**

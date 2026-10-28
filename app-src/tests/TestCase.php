@@ -6,7 +6,9 @@ use App\Jobs\DecidirFluxoExpressoJob;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Schema;
 
 abstract class TestCase extends BaseTestCase
 {
@@ -65,6 +67,12 @@ abstract class TestCase extends BaseTestCase
         Cache::forget('viabiliza.parameters.features.portal_servicos');
         config(['viabiliza.features.portal_servicos_extras' => true]);
         Cache::forget('viabiliza.parameters.features.portal_servicos_extras');
+
+        // A migration cria a linha do interruptor com padrão desligado; sem ela
+        // a suíte cai no config acima. Testes que semeiam o catálogo recriam a linha.
+        if (Schema::hasTable('parameters')) {
+            DB::table('parameters')->where('key', 'features.portal_servicos')->delete();
+        }
 
         // O gatilho do fluxo expresso (listener auto-descoberto AvaliarFluxoExpresso)
         // despacha o DecidirFluxoExpressoJob a CADA protocolo (SolicitacaoProtocolada,

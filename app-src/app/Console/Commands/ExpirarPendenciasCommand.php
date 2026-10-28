@@ -11,6 +11,7 @@ use App\Services\Comunicacao\NotificationDispatcher;
 use App\Support\Audit\AuditService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Throwable;
 
 /**
  * pendencias:expirar (relatório SEDUR 2026-07-09, Fase 2a): expira os convites
@@ -52,6 +53,8 @@ class ExpirarPendenciasCommand extends Command
             return self::SUCCESS;
         }
 
+        $indeferidos = 0;
+
         foreach ($pendencias as $pendencia) {
             $request = $pendencia->viabilityRequest;
 
@@ -77,8 +80,16 @@ class ExpirarPendenciasCommand extends Command
             // Indefere o processo automaticamente (convite sem resposta no prazo).
             // O serviço abre a própria transação e dispara ResultadoEmitido após o
             // commit. Guarda de estado: só indefere quando ainda em em_pendencia.
+            // Falha num processo não interrompe a passada: os demais convites
+            // vencidos seguem sendo indeferidos e a falha fica registrada.
             if ($request !== null && $request->status === ViabilityRequestStatus::EmPendencia) {
-                $indeferidor->indeferir($request, $pendencia);
+                try {
+                    $indeferidor->indeferir($request, $pendencia);
+                    $indeferidos++;
+                } catch (Throwable $e) {
+                    report($e);
+                    $this->warn("Processo #{$request->id} ({$request->protocol_number}) não foi indeferido: {$e->getMessage()}");
+                }
             }
 
             // Notifica o analista responsável (atual; senão quem abriu) APÓS os efeitos.
@@ -94,7 +105,7 @@ class ExpirarPendenciasCommand extends Command
             }
         }
 
-        $this->info("Expirado(s) {$pendencias->count()} convite(s) vencido(s) sem resposta — processo(s) indeferido(s).");
+        $this->info("Expirado(s) {$pendencias->count()} convite(s) vencido(s) sem resposta; {$indeferidos} processo(s) indeferido(s).");
 
         return self::SUCCESS;
     }

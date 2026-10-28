@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Gestao;
 
 use App\Enums\AnalysisStatus;
 use App\Enums\InspectionStatus;
+use App\Enums\ViabilityRequestStatus;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\ViabilityRequest;
@@ -35,6 +36,16 @@ class VistoriaConsultaController extends Controller
 {
     /** Itens por página aceitos — padrão do console (ui.cnaes.per_page). */
     private const PER_PAGE_OPTIONS = [10, 15, 25, 50];
+
+    /** Situações com resultado: o processo não fica mais na caixa de vistoria. */
+    private const SITUACOES_ENCERRADAS = [
+        ViabilityRequestStatus::Deferida,
+        ViabilityRequestStatus::Indeferida,
+        ViabilityRequestStatus::Cancelada,
+        ViabilityRequestStatus::Desativado,
+        ViabilityRequestStatus::Cassado,
+        ViabilityRequestStatus::Revogado,
+    ];
 
     public function __construct(
         private AuditService $audit,
@@ -88,12 +99,15 @@ class VistoriaConsultaController extends Controller
 
         // Universo: processos no eixo de vistoria OU com ficha de vistoria —
         // a ficha concluída e devolvida à análise (retorno automático) continua
-        // visível em "Concluídas" mesmo fora do eixo.
+        // visível em "Concluídas" mesmo fora do eixo. Processo com resultado
+        // (deferido, indeferido, cancelado...) sai da caixa, como sai da Caixa
+        // do Setor e da Caixa de entrada.
         $universo = ViabilityRequest::query()
             ->where(function (Builder $q): void {
                 $q->whereIn('analysis_status', [AnalysisStatus::Vistoriar->value, AnalysisStatus::Vistoriado->value])
                     ->orWhereHas('inspection');
-            });
+            })
+            ->whereNotIn('status', array_map(fn (ViabilityRequestStatus $s): string => $s->value, self::SITUACOES_ENCERRADAS));
 
         // Quem não distribui vê só os processos dele, como na Caixa de entrada.
         $universo = $this->acesso->escopar($universo, $request->user());
@@ -349,7 +363,7 @@ class VistoriaConsultaController extends Controller
             'id' => $processo->id,
             'protocol_number' => $processo->protocol_number,
             'bap' => $processo->external_reference,
-            'empresa' => $processo->company?->trade_name ?: $processo->company?->legal_name,
+            'empresa' => $processo->nomeDaEmpresa(),
             'imovel' => implode(' - ', array_filter([
                 trim(implode(', ', array_filter([$processo->address_street, $processo->address_number]))),
                 $processo->address_neighborhood,

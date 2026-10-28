@@ -99,7 +99,7 @@ export default function ConfigInscricaoImobiliaria({ config }: Props) {
                 <Card>
                     <CardHeader
                         title="Teste de conexão"
-                        description="Consulta de verdade a URL ativa. Falha aparece como falha — sem resultado simulado."
+                        description="Consulta de verdade a URL ativa. Falha aparece como falha, sem resultado simulado."
                     />
                     <CardContent>
                         <Form action="/gestao/config-inscricao-imobiliaria/testar" method="post">

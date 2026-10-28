@@ -240,7 +240,9 @@ class CamadasIncidentesService
             return [
                 'status' => 'identificado',
                 'nome' => $porArea->codigo,
-                'fonte' => ZonaFonte::EnderecamentoMaiorPorcao->value,
+                'fonte' => $porArea->status === ZonaMaiorPorcao::CENTRALIDADE_LINEAR
+                    ? ZonaFonte::CentralidadeLinear->value
+                    : ZonaFonte::EnderecamentoMaiorPorcao->value,
                 'porcoes' => $porArea->porcoes,
                 'maior_porcao' => ['status' => $porArea->status, 'motivo' => null, 'empate' => []],
             ];

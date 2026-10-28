@@ -66,9 +66,13 @@ class ParaConclusaoQuemAgeTest extends TestCase
         $analista = $this->servidor($setor);
         $processo = $this->processoEmAnalise($setor, $analista);
 
+        // Encaminhar à chefia exige a ficha finalizada (SEDUR, 26/10/2026).
+        $this->actingAs($analista, 'gestao')->postJson("/gestao/processos/{$processo->id}/ficha/finalizar")->assertOk();
+
         $this->actingAs($analista, 'gestao')
             ->post("/gestao/processos/{$processo->id}/status-analise", ['status' => 'para_conclusao'])
-            ->assertSessionHasNoErrors();
+            ->assertSessionHasNoErrors()
+            ->assertSessionMissing('error');
 
         $revisoes = $processo->analysisRecords()->orderBy('revision')->get();
         $this->assertCount(2, $revisoes);
@@ -85,8 +89,10 @@ class ParaConclusaoQuemAgeTest extends TestCase
         $chefe = $this->servidor($setor);
         $processo = $this->processoEmAnalise($setor, $analista);
 
+        $this->actingAs($analista, 'gestao')->postJson("/gestao/processos/{$processo->id}/ficha/finalizar")->assertOk();
         $this->actingAs($analista, 'gestao')
-            ->post("/gestao/processos/{$processo->id}/status-analise", ['status' => 'para_conclusao']);
+            ->post("/gestao/processos/{$processo->id}/status-analise", ['status' => 'para_conclusao'])
+            ->assertSessionMissing('error');
 
         $this->actingAs($chefe, 'gestao')
             ->patchJson("/gestao/processos/{$processo->id}/ficha", ['parecer' => 'Sugiro vistoria.'])
@@ -149,5 +155,68 @@ class ParaConclusaoQuemAgeTest extends TestCase
 
         $this->assertSame($analista->id, $processo->fresh()->assigned_user_id);
         $this->assertDatabaseMissing('activity_log', ['event' => 'assumir', 'subject_id' => $processo->id]);
+    }
+
+    /**
+     * Lisa, 23/10: com o processo em Para conclusão, a chefia precisa conseguir
+     * fazer convite e mandar para a vistoria.
+     */
+    public function test_chefia_em_para_conclusao_abre_convite(): void
+    {
+        $setor = Sector::factory()->create();
+        $analista = $this->servidor($setor);
+        $chefe = $this->servidor($setor);
+        $processo = $this->processoEmAnalise($setor, $analista);
+        $processo->forceFill(['analysis_status' => AnalysisStatus::ParaConclusao])->save();
+
+        $this->actingAs($chefe, 'gestao')
+            ->post("/gestao/processos/{$processo->id}/pendencias", ['descricao' => 'Enviar o contrato de locação.'])
+            ->assertSessionHasNoErrors();
+
+        $processo->refresh();
+        $this->assertSame(ViabilityRequestStatus::EmPendencia, $processo->status);
+        $this->assertSame(AnalysisStatus::EmConvite, $processo->analysis_status);
+        $this->assertSame($chefe->id, $processo->assigned_user_id);
+    }
+
+    public function test_chefia_em_para_conclusao_encaminha_a_vistoria(): void
+    {
+        $setor = Sector::factory()->create();
+        $setorVistoria = Sector::factory()->create();
+        $analista = $this->servidor($setor);
+        $chefe = $this->servidor($setor);
+        $processo = $this->processoEmAnalise($setor, $analista);
+        $processo->forceFill(['analysis_status' => AnalysisStatus::ParaConclusao])->save();
+
+        $this->actingAs($chefe, 'gestao')
+            ->post("/gestao/processos/{$processo->id}/vistoria/encaminhar", [
+                'setor_vistoria_id' => $setorVistoria->id,
+                'motivo' => 'Conferir a área utilizada.',
+            ])
+            ->assertSessionHasNoErrors();
+
+        $processo->refresh();
+        $this->assertSame(AnalysisStatus::Vistoriar, $processo->analysis_status);
+        $this->assertSame($setorVistoria->id, $processo->sector_id);
+    }
+
+    /**
+     * Item 8 (Lisa, 22/10): só quem conclui tira o processo de Para conclusão;
+     * o analista terceirizado não devolve para Em análise.
+     */
+    public function test_terceirizado_nao_devolve_o_para_conclusao_para_em_analise(): void
+    {
+        $setor = Sector::factory()->create();
+        $analista = $this->servidor($setor);
+        $terceirizado = User::factory()->analista()->withAcceptedLgpdTerm()->create();
+        $terceirizado->sectors()->attach($setor);
+        $processo = $this->processoEmAnalise($setor, $analista);
+        $processo->forceFill(['analysis_status' => AnalysisStatus::ParaConclusao])->save();
+
+        $this->actingAs($terceirizado, 'gestao')
+            ->post("/gestao/processos/{$processo->id}/status-analise", ['status' => 'em_analise', 'force' => true])
+            ->assertSessionHas('error');
+
+        $this->assertSame(AnalysisStatus::ParaConclusao, $processo->refresh()->analysis_status);
     }
 }

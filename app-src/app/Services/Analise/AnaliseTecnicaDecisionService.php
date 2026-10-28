@@ -171,7 +171,7 @@ class AnaliseTecnicaDecisionService
     {
         if ($request->analysis_status === AnalysisStatus::ParaConclusao
             && $request->conclusao_encaminhada_para_user_id !== $ator->id) {
-            throw new DomainException('Processo em Para conclusão: distribua-o antes. Só quem o recebeu pode concluí-lo.');
+            throw new DomainException('Processo na aba Analisados: distribua-o antes. Só quem o recebeu pode concluí-lo.');
         }
     }
 
@@ -233,6 +233,7 @@ class AnaliseTecnicaDecisionService
 
         $decision = ViabilityDecision::create([
             'viability_request_id' => $request->id,
+            'analysis_record_id' => $record->id,
             'flow' => 'analise_tecnica',
             'outcome' => $outcome,
             'consolidated_result' => $consolidated,
@@ -240,7 +241,7 @@ class AnaliseTecnicaDecisionService
             'is_virtual_office_tenant' => $abrigado !== null,
             'virtual_office_hq_tvl_number' => $abrigado['hq_tvl_number'] ?? null,
             'tvl_product_number' => $outcome === DecisionOutcome::Deferida && ! $request->isRenewal()
-                ? $this->tvl->generate()
+                ? $this->tvl->paraProcesso($request)
                 : null,
             'tvl_kind' => $outcome === DecisionOutcome::Deferida ? $tvlKind : null,
             'tvl_valid_until' => $outcome === DecisionOutcome::Deferida ? $tvlValidUntil : null,

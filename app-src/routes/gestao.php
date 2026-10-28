@@ -4,6 +4,7 @@ use App\Http\Controllers\ComunicacaoHistoricoController;
 use App\Http\Controllers\Gestao\AbusoController;
 use App\Http\Controllers\Gestao\AccessHistoryController;
 use App\Http\Controllers\Gestao\AiConfigurationController;
+use App\Http\Controllers\Gestao\AnalysisAttachmentController;
 use App\Http\Controllers\Gestao\AnalysisRecordController;
 use App\Http\Controllers\Gestao\ApiIntegracaoController;
 use App\Http\Controllers\Gestao\AssistedAttendanceController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\Gestao\BenchmarkController;
 use App\Http\Controllers\Gestao\CaixaSetorController;
 use App\Http\Controllers\Gestao\CidadaoManagementController;
 use App\Http\Controllers\Gestao\CnaeController;
+use App\Http\Controllers\Gestao\CnaeInvalidoController;
 use App\Http\Controllers\Gestao\ConclusaoAnaliseController;
 use App\Http\Controllers\Gestao\ConsultarCpfSedurController;
 use App\Http\Controllers\Gestao\ConsultarDocumentoContingenciaController;
@@ -39,6 +41,7 @@ use App\Http\Controllers\Gestao\IndeferimentoDocumentController;
 use App\Http\Controllers\Gestao\InscricaoImobiliariaIntegrationController;
 use App\Http\Controllers\Gestao\InspectionController;
 use App\Http\Controllers\Gestao\IntegrationCallController;
+use App\Http\Controllers\Gestao\LegadoSimplificaIntegrationController;
 use App\Http\Controllers\Gestao\LegalTermController;
 use App\Http\Controllers\Gestao\LgpdMonitorController;
 use App\Http\Controllers\Gestao\LoginController;
@@ -51,6 +54,7 @@ use App\Http\Controllers\Gestao\MapaDecisaoController;
 use App\Http\Controllers\Gestao\MetadataController;
 use App\Http\Controllers\Gestao\ParameterController;
 use App\Http\Controllers\Gestao\PrecedenteController;
+use App\Http\Controllers\Gestao\ProcessoAnexoController;
 use App\Http\Controllers\Gestao\ProcessoBuscaController;
 use App\Http\Controllers\Gestao\ProcessoController;
 use App\Http\Controllers\Gestao\ProcessoDecisaoController;
@@ -344,6 +348,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::get('config-inscricao-imobiliaria', [InscricaoImobiliariaIntegrationController::class, 'edit'])->name('config-inscricao-imobiliaria.edit');
             Route::put('config-inscricao-imobiliaria', [InscricaoImobiliariaIntegrationController::class, 'update'])->name('config-inscricao-imobiliaria.update');
             Route::post('config-inscricao-imobiliaria/testar', [InscricaoImobiliariaIntegrationController::class, 'test'])->name('config-inscricao-imobiliaria.testar');
+            Route::post('config-legado-simplifica/testar', [LegadoSimplificaIntegrationController::class, 'test'])->name('config-legado-simplifica.testar');
             Route::get('config-apis', [ApiIntegracaoController::class, 'edit'])->name('config-apis.edit');
             Route::put('config-apis/{aba}', [ApiIntegracaoController::class, 'update'])->name('config-apis.update');
             Route::post('config-apis/legado/testar', [ApiIntegracaoController::class, 'testarLegado'])->name('config-apis.legado.testar');
@@ -685,6 +690,8 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::get('/', [ProcessoController::class, 'index'])->name('index');
             Route::get('fila', [ProcessoController::class, 'fila'])->name('fila');
             Route::get('busca', ProcessoBuscaController::class)->name('busca');
+            Route::get('legado', [ProcessoController::class, 'legado'])->name('legado');
+            Route::get('legado/detalhe', [ProcessoController::class, 'legadoDetalhe'])->name('legado.detalhe');
 
             // Histórico unificado de comunicações do processo (HU-096): fonte
             // ÚNICA (ledger communications, todos os canais/tipos), REUSO da
@@ -693,6 +700,10 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             // canal (diagnóstico interno). Auditada (RN-002). Rota com dois
             // segmentos — não colide com o {viabilityRequest} show.
             Route::get('{viabilityRequest}/comunicacoes', [ComunicacaoHistoricoController::class, 'gestao'])->name('comunicacoes');
+
+            // Anexos do processo (documentos e fotos da vistoria) para quem consulta (SEDUR, 22/10).
+            Route::get('{viabilityRequest}/anexos/documento/{documento}', [ProcessoAnexoController::class, 'documento'])->name('anexos.documento');
+            Route::get('{viabilityRequest}/anexos/vistoria/{anexo}', [ProcessoAnexoController::class, 'vistoria'])->name('anexos.vistoria');
 
             Route::get('{viabilityRequest}', [ProcessoController::class, 'show'])->name('show');
         });
@@ -784,15 +795,20 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::post('ficha/finalizar', [AnalysisRecordController::class, 'finalizar'])->name('ficha.finalizar');
             Route::post('ficha/concluir-processo', [AnalysisRecordController::class, 'concluirProcesso'])->middleware('permission:concluir-analise')->name('ficha.concluir-processo');
             Route::post('ficha/nova-revisao', [AnalysisRecordController::class, 'novaRevisao'])->name('ficha.nova-revisao');
+            // Documentos anexados pelo analista à análise (disk parametrizado, streaming autenticado).
+            Route::post('analise/anexos', [AnalysisAttachmentController::class, 'store'])->name('analise.anexos.store');
+            Route::get('analise/anexos/{attachment}', [AnalysisAttachmentController::class, 'download'])->name('analise.anexos.download');
+            Route::delete('analise/anexos/{attachment}', [AnalysisAttachmentController::class, 'destroy'])->name('analise.anexos.destroy');
             // Sugestão de minuta de parecer por IA (HU-118) — apoio, nunca decisão.
             Route::post('ficha/sugerir-parecer', [AnalysisRecordController::class, 'sugerirParecer'])->name('ficha.sugerir-parecer');
             Route::post('ficha/sugerir-justificativa', [AnalysisRecordController::class, 'sugerirJustificativa'])->name('ficha.sugerir-justificativa');
             Route::post('ficha/gerar-resumo', [AnalysisRecordController::class, 'gerarResumo'])->name('ficha.gerar-resumo');
             Route::get('ficha/diff', [AnalysisRecordController::class, 'diff'])->name('ficha.diff');
             Route::get('precedentes', [PrecedenteController::class, 'show'])->name('precedentes');
+            // Código CNAE fora da lista oficial na alteração de atividade: o analista troca por um oficial.
+            Route::patch('cnae-invalido', [CnaeInvalidoController::class, 'corrigir'])->name('cnae-invalido.corrigir');
             // Zona e via escolhidas na ficha: prévia do que o motor decidiria e gravação com justificativa.
             Route::middleware('permission:editar-zona-via')->group(function () {
-                Route::post('zona-via/previa', [ZonaViaController::class, 'previa'])->name('zona-via.previa');
                 Route::patch('zona-via', [ZonaViaController::class, 'alterar'])->name('zona-via.alterar');
             });
             // Encaminhamento à vistoria (handoff real — não é malha fina): o

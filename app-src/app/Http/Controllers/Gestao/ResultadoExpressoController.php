@@ -113,7 +113,7 @@ class ResultadoExpressoController extends Controller
                     'protocol_number' => $solicitacao->protocol_number,
                     'status' => $solicitacao->status->value,
                     'status_label' => $solicitacao->status->label(),
-                    'empresa' => $solicitacao->company?->trade_name ?: $solicitacao->company?->legal_name,
+                    'empresa' => $solicitacao->nomeDaEmpresa(),
                     'cnpj' => $solicitacao->company?->formatted_cnpj,
                     'outcome' => $solicitacao->decision_outcome,
                     'outcome_label' => DecisionOutcome::from((string) $solicitacao->decision_outcome)->label(),
@@ -296,7 +296,7 @@ class ResultadoExpressoController extends Controller
 
         [$status, $label] = match ($result) {
             'sucesso' => ['transmitido', 'Transmitido'],
-            'bloqueado' => ['pendente', 'Pendente — canal bloqueado (sem contrato/homologação)'],
+            'bloqueado' => ['pendente', 'Pendente: canal bloqueado (sem contrato/homologação)'],
             'ignorado' => ['nao_aplicavel', 'Não se aplica a este resultado'],
             default => ['aguardando', 'Aguardando processamento'],
         };

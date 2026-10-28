@@ -100,7 +100,7 @@ class ParameterController extends Controller
             return back()->with('status', __('Proposta registrada. A alteração só vale após aprovação de um segundo usuário.'));
         }
 
-        $old = $parameter->value;
+        $old = $parameter->value ?? $parameter->default_value;
         $parameter->update(['value' => $input]);
 
         app(AuditService::class)->log(

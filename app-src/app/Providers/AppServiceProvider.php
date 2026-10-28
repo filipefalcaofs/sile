@@ -45,7 +45,9 @@ use App\Services\Regin\HttpReginParecerNotifier;
 use App\Services\Regin\ReginParecerNotifier;
 use App\Services\Regin\UnavailableBapRegistry;
 use App\Services\Renovacao\ResolvedorEnderecoImovel;
+use App\Services\Sefaz\SefazViabilidadeConsultaGateway;
 use App\Services\Sefaz\SefazViabilidadeGateway;
+use App\Services\Sefaz\UnavailableSefazViabilidadeConsultaGateway;
 use App\Services\Sefaz\UnavailableSefazViabilidadeGateway;
 use App\Services\Servicos\ServicoNomenclaturaResolver;
 use App\Services\Whatsapp\UnavailableWhatsAppGateway;
@@ -135,6 +137,7 @@ class AppServiceProvider extends ServiceProvider
         // listener audita pendência; nunca simula sucesso.
         $this->app->bind(ReginParecerNotifier::class, HttpReginParecerNotifier::class);
         $this->app->bind(SefazViabilidadeGateway::class, UnavailableSefazViabilidadeGateway::class);
+        $this->app->bind(SefazViabilidadeConsultaGateway::class, UnavailableSefazViabilidadeConsultaGateway::class);
         $this->app->bind(BapRegistry::class, UnavailableBapRegistry::class);
 
         // Canal de notificação por WhatsApp (HU-095) BLOQUEADO honesto: não há

@@ -9,6 +9,9 @@ class FakeZonaMaiorPorcaoResolver implements ZonaMaiorPorcaoResolver
 {
     public int $chamadas = 0;
 
+    /** CODLOG recebido na última chamada. */
+    public ?string $ultimoCodLog = null;
+
     /** @var array<string, ZonaMaiorPorcao> */
     private array $respostas = [];
 
@@ -22,9 +25,10 @@ class FakeZonaMaiorPorcaoResolver implements ZonaMaiorPorcaoResolver
         return $this;
     }
 
-    public function resolver(array $poligono): ZonaMaiorPorcao
+    public function resolver(array $poligono, ?string $codLog = null): ZonaMaiorPorcao
     {
         $this->chamadas++;
+        $this->ultimoCodLog = $codLog;
 
         return $this->respostas[md5((string) json_encode($poligono))]
             ?? ZonaMaiorPorcao::indisponivel('Fake sem resposta para o polígono.');
@@ -50,6 +54,27 @@ class FakeZonaMaiorPorcaoResolver implements ZonaMaiorPorcaoResolver
             ZonaMaiorPorcao::EMPATE,
             porcoes: [['zona' => $a, 'area_m2' => 50.0, 'percentual' => 50.0], ['zona' => $b, 'area_m2' => 50.0, 'percentual' => 50.0]],
             empate: [$a, $b],
+            areaLoteM2: 100.0,
+        );
+    }
+
+    public static function centralidadeLinear(string $zona, string $zonaPoligonal = 'ZPR 3'): ZonaMaiorPorcao
+    {
+        return new ZonaMaiorPorcao(
+            ZonaMaiorPorcao::CENTRALIDADE_LINEAR,
+            codigo: $zona,
+            porcoes: [['zona' => $zonaPoligonal, 'area_m2' => 100.0, 'percentual' => 100.0]],
+            camadas: [['type_name' => 'louos_zona_uso_zclmu:VM_L_Z_USO_ZCLMU', 'geometria' => 'linear', 'status' => 'ok']],
+            areaLoteM2: 100.0,
+        );
+    }
+
+    public static function conflitoLinear(): ZonaMaiorPorcao
+    {
+        return new ZonaMaiorPorcao(
+            ZonaMaiorPorcao::CONFLITO_LINEAR,
+            porcoes: [['zona' => 'ZPR 3', 'area_m2' => 100.0, 'percentual' => 100.0]],
+            empate: ['ZCLMu', 'ZCLMe'],
             areaLoteM2: 100.0,
         );
     }

@@ -126,10 +126,13 @@ class AnalysisRecordFinalizeTest extends TestCase
     public function test_nova_revisao_cria_revision_2_rascunho_copiando_a_finalizada(): void
     {
         $request = ViabilityRequest::factory()->protocoled()->create();
+        // HU.183: a nova revisão copia a ficha do PRÓPRIO analista.
+        $analista = $this->analista();
 
         $finalizada = AnalysisRecord::factory()->finalizada()->create([
             'viability_request_id' => $request->id,
             'revision' => 1,
+            'analyst_user_id' => $analista->id,
             'parecer' => 'Parecer técnico finalizado.',
             'analysis_reasons' => ['Motivo original'],
             'address_confirmed' => true,
@@ -138,7 +141,7 @@ class AnalysisRecordFinalizeTest extends TestCase
             ],
         ]);
 
-        $this->actingAs($this->analista(), 'gestao')
+        $this->actingAs($analista, 'gestao')
             ->postJson("/gestao/processos/{$request->id}/ficha/nova-revisao")
             ->assertOk();
 
@@ -158,15 +161,17 @@ class AnalysisRecordFinalizeTest extends TestCase
     public function test_nova_revisao_traz_todos_os_campos_da_ficha_anterior_inclusive_sede_condicionantes_e_vagas(): void
     {
         $request = ViabilityRequest::factory()->protocoled()->create();
+        $analista = $this->analista();
         AnalysisRecord::factory()->finalizada()->create([
             'viability_request_id' => $request->id,
             'revision' => 1,
+            'analyst_user_id' => $analista->id,
             'is_virtual_office_hq' => true,
             'conditions' => ['Instalar sinalização.'],
             'parking' => ['vagas' => ['requerido' => 2]],
         ]);
 
-        $this->actingAs($this->analista(), 'gestao')
+        $this->actingAs($analista, 'gestao')
             ->postJson("/gestao/processos/{$request->id}/ficha/nova-revisao")
             ->assertOk();
 
@@ -179,8 +184,8 @@ class AnalysisRecordFinalizeTest extends TestCase
     public function test_ficha_abre_na_revisao_mais_recente_depois_de_criar_outra(): void
     {
         $request = ViabilityRequest::factory()->protocoled()->create();
-        AnalysisRecord::factory()->finalizada()->create(['viability_request_id' => $request->id, 'revision' => 1, 'parecer' => 'Primeira.']);
         $analista = $this->analista();
+        AnalysisRecord::factory()->finalizada()->create(['viability_request_id' => $request->id, 'revision' => 1, 'analyst_user_id' => $analista->id, 'parecer' => 'Primeira.']);
 
         $this->actingAs($analista, 'gestao')->postJson("/gestao/processos/{$request->id}/ficha/nova-revisao")->assertOk();
 

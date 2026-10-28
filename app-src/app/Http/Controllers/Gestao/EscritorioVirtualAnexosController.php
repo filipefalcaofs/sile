@@ -145,7 +145,7 @@ class EscritorioVirtualAnexosController extends Controller
         return back()->with(
             'status',
             "Rascunho {$resultado['versao']->version} importado: {$resultado['anexo_a']} CNAEs no Anexo A e "
-                ."{$resultado['anexo_b']} no Anexo B. A versão vigente não foi alterada — revise o diff e publique.",
+                ."{$resultado['anexo_b']} no Anexo B. A versão vigente não foi alterada. Revise o diff e publique.",
         );
     }
 
@@ -166,6 +166,6 @@ class EscritorioVirtualAnexosController extends Controller
         }
 
         return redirect()->route('gestao.escritorio-virtual.anexos.index')
-            ->with('status', "Versão {$publicada->version} publicada — os Anexos A/B vigentes foram atualizados.");
+            ->with('status', "Versão {$publicada->version} publicada. Os Anexos A/B vigentes foram atualizados.");
     }
 }

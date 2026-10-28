@@ -54,12 +54,12 @@ const dateTimeFormat = new Intl.DateTimeFormat('pt-BR', {
 /** Formata a data/hora ISO8601 no padrão brasileiro; null/inválida → travessão. */
 function formatarDataHora(iso: string | null): string {
     if (!iso) {
-        return '—';
+        return '-';
     }
 
     const data = new Date(iso);
 
-    return Number.isNaN(data.getTime()) ? '—' : dateTimeFormat.format(data);
+    return Number.isNaN(data.getTime()) ? '-' : dateTimeFormat.format(data);
 }
 
 /** Cor do badge por eixo da trilha. */
@@ -180,7 +180,7 @@ export default function TrilhaProcesso({ trilha, protocolo }: TrilhaProps) {
                                                 {evento.descricao}
                                             </span>
                                             <span className="shrink-0 text-theme-xs text-gray-500 dark:text-gray-400">
-                                                {evento.usuario ?? '—'}
+                                                {evento.usuario ?? '-'}
                                             </span>
                                         </li>
                                     ))}

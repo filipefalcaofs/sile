@@ -13,7 +13,7 @@ interface SenhaProps {
 export default function Senha({ passwordRules }: SenhaProps) {
     return (
         <>
-            <Head title="Alterar senha — Gestão SEDUR" />
+            <Head title="Alterar senha: Gestão SEDUR" />
             <Surface className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] lg:p-6">
                 <div className="mb-6">
                     <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">

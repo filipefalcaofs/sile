@@ -269,6 +269,29 @@ class VistoriaEncaminhamentoTest extends TestCase
         $this->assertContains(AnalysisStatus::Vistoriado->value, $transicoes);
     }
 
+    public function test_encaminhar_ao_setor_pode_designar_um_analista_do_setor_de_origem(): void
+    {
+        [$processo, $vistoriador, $setorAnalise] = $this->processoVistoriado();
+        $designado = $this->analista();
+        $designado->sectors()->attach($setorAnalise);
+        $deOutroSetor = $this->analista();
+        $deOutroSetor->sectors()->attach(Sector::factory()->create());
+
+        $this->actingAs($vistoriador, 'gestao')
+            ->post("/gestao/processos/{$processo->id}/vistoria/encaminhar-ao-setor", ['analista_id' => $deOutroSetor->id])
+            ->assertSessionHas('error');
+        $this->assertSame($vistoriador->id, $processo->refresh()->assigned_user_id);
+
+        $this->actingAs($vistoriador, 'gestao')
+            ->post("/gestao/processos/{$processo->id}/vistoria/encaminhar-ao-setor", ['analista_id' => $designado->id])
+            ->assertSessionMissing('error');
+
+        $fresh = $processo->refresh();
+        $this->assertSame($setorAnalise->id, $fresh->sector_id);
+        $this->assertSame($designado->id, $fresh->assigned_user_id);
+        $this->assertSame(AnalysisStatus::Vistoriado, $fresh->analysis_status);
+    }
+
     public function test_apos_a_devolucao_o_setor_distribui_o_processo_a_um_analista(): void
     {
         $setorAnalise = Sector::factory()->create();
@@ -313,6 +336,127 @@ class VistoriaEncaminhamentoTest extends TestCase
         $this->assertSame($setorAnalise->id, $fresh->sector_id);
         $this->assertSame(AnalysisStatus::Vistoriado, $fresh->analysis_status);
         $this->assertSame(InspectionStatus::Concluida, Inspection::query()->sole()->status);
+    }
+
+    /**
+     * SPEC-05: em vistoria, o processo fica só na Caixa de Vistoria. Ele não
+     * aparece na Caixa do Setor nem para o apoio, que vê todos os setores, nem
+     * para quem é do setor de vistoria. Volta a uma única caixa após o retorno.
+     */
+    public function test_processo_em_vistoria_fica_so_na_caixa_de_vistoria(): void
+    {
+        $setorAnalise = Sector::factory()->create();
+        $setorVistoria = Sector::factory()->create();
+        $analista = $this->analista();
+        $analista->sectors()->attach($setorAnalise);
+        $membroDaVistoria = User::factory()->apoio()->withAcceptedLgpdTerm()->create();
+        $membroDaVistoria->sectors()->attach($setorVistoria);
+        $apoio = User::factory()->apoio()->withAcceptedLgpdTerm()->create();
+
+        $processo = $this->processoEmAnalise($setorAnalise, $analista);
+        $this->actingAs($analista, 'gestao')
+            ->post("/gestao/processos/{$processo->id}/vistoria/encaminhar", [
+                'setor_vistoria_id' => $setorVistoria->id,
+                'motivo' => 'Conferir a atividade no local.',
+            ])
+            ->assertSessionMissing('error');
+
+        foreach ([$apoio, $membroDaVistoria] as $usuario) {
+            $this->actingAs($usuario, 'gestao')
+                ->get('/gestao/caixa-setor')
+                ->assertInertia(fn (Assert $page) => $page
+                    ->where('contadores.para_distribuir', 0)
+                    ->where('contadores.distribuidos', 0)
+                    ->has('processos.data', 0));
+
+            $this->actingAs($usuario, 'gestao')
+                ->get('/gestao/vistorias')
+                ->assertInertia(fn (Assert $page) => $page->where('vistorias.data.0.id', $processo->id));
+        }
+
+        $vistoriador = $this->analista();
+        $processo->forceFill(['assigned_user_id' => $vistoriador->id])->save();
+        $this->actingAs($vistoriador, 'gestao')->get("/gestao/processos/{$processo->id}/vistoria");
+        $this->actingAs($vistoriador, 'gestao')
+            ->postJson("/gestao/processos/{$processo->id}/vistoria/concluir", ['parecer' => 'Atividade conforme.'])
+            ->assertOk();
+
+        // Ficha concluída, ainda não encaminhada: segue na vistoria.
+        $this->actingAs($apoio, 'gestao')
+            ->get('/gestao/caixa-setor?visao=distribuidos')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('contadores.para_distribuir', 0)
+                ->where('contadores.distribuidos', 0)
+                ->has('processos.data', 0));
+
+        $this->actingAs($vistoriador, 'gestao')
+            ->post("/gestao/processos/{$processo->id}/vistoria/encaminhar-ao-setor")
+            ->assertSessionMissing('error');
+
+        $this->actingAs($apoio, 'gestao')
+            ->get('/gestao/caixa-setor')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('contadores.para_distribuir', 1)
+                ->where('contadores.distribuidos', 0)
+                ->where('processos.data.0.id', $processo->id));
+    }
+
+    public function test_bloqueio_do_encaminhamento_informa_a_situacao_real_do_processo(): void
+    {
+        $vistoriador = $this->analista();
+        $processo = $this->processoEmAnalise(Sector::factory()->create(), $vistoriador);
+        Inspection::factory()->create([
+            'viability_request_id' => $processo->id,
+            'vistoriador_user_id' => $vistoriador->id,
+            'status' => InspectionStatus::Concluida,
+            'concluded_at' => now(),
+        ]);
+
+        $this->actingAs($vistoriador, 'gestao')
+            ->post("/gestao/processos/{$processo->id}/vistoria/encaminhar-ao-setor")
+            ->assertSessionHas('error', fn (string $mensagem): bool => str_contains($mensagem, 'Em análise')
+                && ! str_contains($mensagem, 'depois que a ficha de vistoria é concluída'));
+    }
+
+    public function test_processo_que_ja_voltou_a_caixa_do_setor_informa_que_foi_devolvido(): void
+    {
+        // Caso real da homologação (processo #17): a ficha segue concluída, o
+        // processo já voltou ao setor de origem e a análise foi retomada.
+        $setor = Sector::factory()->create();
+        $vistoriador = $this->analista();
+        $processo = $this->processoEmAnalise($setor, null);
+        InspectionReferral::query()->forceCreate([
+            'viability_request_id' => $processo->id,
+            'encaminhado_por_user_id' => $vistoriador->id,
+            'setor_origem_id' => $setor->id,
+            'analista_origem_user_id' => $vistoriador->id,
+            'setor_vistoria_id' => Sector::factory()->create()->id,
+            'motivo' => 'Conferir a atividade no local.',
+        ]);
+        Inspection::factory()->concluida()->create([
+            'viability_request_id' => $processo->id,
+            'vistoriador_user_id' => $vistoriador->id,
+        ]);
+
+        $this->actingAs($vistoriador, 'gestao')
+            ->post("/gestao/processos/{$processo->id}/vistoria/encaminhar-ao-setor")
+            ->assertSessionHas('error', fn (string $mensagem): bool => str_contains($mensagem, 'já foi devolvido à Caixa do Setor')
+                && str_contains($mensagem, 'Em análise'));
+    }
+
+    public function test_ficha_expoe_a_situacao_de_analise_para_a_tela_so_oferecer_o_encaminhamento_em_vistoriado(): void
+    {
+        $vistoriador = $this->analista();
+        $processo = $this->processoEmAnalise(Sector::factory()->create(), $vistoriador);
+        $processo->forceFill(['analysis_status' => AnalysisStatus::Vistoriado])->save();
+        Inspection::factory()->concluida()->create([
+            'viability_request_id' => $processo->id,
+            'vistoriador_user_id' => $vistoriador->id,
+        ]);
+
+        $this->actingAs($vistoriador, 'gestao')
+            ->get("/gestao/processos/{$processo->id}/vistoria")
+            ->assertInertia(fn (Assert $page) => $page->where('processo.analysis_status', 'vistoriado'));
     }
 
     public function test_encaminhar_ao_setor_exige_ficha_concluida(): void
@@ -434,5 +578,31 @@ class VistoriaEncaminhamentoTest extends TestCase
                 ->has('vistorias.data', 1)
                 ->where('vistorias.data.0.id', $processo->id)
                 ->where('vistorias.data.0.situacao', 'concluida'));
+    }
+
+    /**
+     * @return array{0: ViabilityRequest, 1: User, 2: Sector}
+     */
+    private function processoVistoriado(): array
+    {
+        $setorAnalise = Sector::factory()->create();
+        $setorVistoria = Sector::factory()->create();
+        $analista = $this->analista();
+        $analista->sectors()->attach($setorAnalise);
+        $vistoriador = $this->analista();
+
+        $processo = $this->processoEmAnalise($setorAnalise, $analista);
+        $this->actingAs($analista, 'gestao')
+            ->post("/gestao/processos/{$processo->id}/vistoria/encaminhar", [
+                'setor_vistoria_id' => $setorVistoria->id,
+                'motivo' => 'Conferir a atividade no local.',
+            ]);
+        $processo->forceFill(['assigned_user_id' => $vistoriador->id])->save();
+        $this->actingAs($vistoriador, 'gestao')->get("/gestao/processos/{$processo->id}/vistoria");
+        $this->actingAs($vistoriador, 'gestao')
+            ->postJson("/gestao/processos/{$processo->id}/vistoria/concluir", ['parecer' => 'Atividade conforme.'])
+            ->assertOk();
+
+        return [$processo, $vistoriador, $setorAnalise];
     }
 }

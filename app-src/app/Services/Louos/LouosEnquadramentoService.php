@@ -232,17 +232,22 @@ class LouosEnquadramentoService
         }
 
         $vereditoVia = $this->vereditoQuadro11a($quadro11a);
+        $notaVia = $vereditoVia !== null ? $this->notaDaViaLocal($quadro11a, $input) : null;
 
-        if ($vereditoVia !== null && $this->viaLocalLiberadaPelaNota($quadro11a, $input)) {
+        if ($notaVia === ViaLocalPorCentralidade::LIBERADA) {
             $vereditoVia = null;
         }
 
         if ($vereditoVia === ResultadoViabilidade::NaoPermitido) {
             $motivo = $this->textos->get('louos.motivo.via_vedada');
 
+            if ($notaVia === ViaLocalPorCentralidade::VEDADA_PELA_OBSERVACAO) {
+                $motivo .= '. Adestramento e hospedagem de animais de estimação não são permitidos em Via Local (observação (a) do Quadro 11A, mantida mesmo em zona da nota)';
+            }
+
             return [
                 'resultado' => ResultadoViabilidade::NaoPermitido->value,
-                'fundamentacao' => $this->buildFundamentacao($enquadramento, $quadro10, $quadro11a),
+                'fundamentacao' => $this->buildFundamentacao($enquadramento, $quadro10, $quadro11a, notaVia: $notaVia),
                 'condicionantes' => [],
                 'motivo' => $motivo,
             ];
@@ -253,7 +258,7 @@ class LouosEnquadramentoService
 
             return $this->consolidadoPendente(
                 $motivo,
-                $this->buildFundamentacao($enquadramento, $quadro10, $quadro11a, $motivo),
+                $this->buildFundamentacao($enquadramento, $quadro10, $quadro11a, $motivo, $notaVia),
             );
         }
 
@@ -265,7 +270,7 @@ class LouosEnquadramentoService
 
         return [
             'resultado' => $resultado->value,
-            'fundamentacao' => $this->buildFundamentacao($enquadramento, $quadro10, $quadro11a),
+            'fundamentacao' => $this->buildFundamentacao($enquadramento, $quadro10, $quadro11a, notaVia: $notaVia),
             'condicionantes' => $condicionantes,
             'motivo' => $this->motivoPermitido(
                 $enquadramento,
@@ -306,7 +311,7 @@ class LouosEnquadramentoService
      * @param  array<string, mixed>  $quadro11a
      * @return list<string>
      */
-    private function buildFundamentacao(array $enquadramento, array $quadro10, array $quadro11a, ?string $motivoPendencia = null): array
+    private function buildFundamentacao(array $enquadramento, array $quadro10, array $quadro11a, ?string $motivoPendencia = null, ?string $notaVia = null): array
     {
         $referencias = [];
         $fundamentoLouos = $this->textos->get('base_legal.louos');
@@ -326,6 +331,14 @@ class LouosEnquadramentoService
         if (($quadro11a['status'] ?? null) === EnquadramentoResult::STATUS_IDENTIFICADO) {
             $referencias = [...$referencias, ...$this->baseLegal($quadro11a)];
             $referencias[] = $fundamentoLouos.' — Quadro 11A';
+        }
+
+        if ($notaVia === ViaLocalPorCentralidade::LIBERADA) {
+            $referencias[] = $fundamentoLouos.' — Quadro 11A, nota: usos não residenciais admitidos em Via Local nas zonas ZCMu, ZCMe, ZCLMu e ZCLMe';
+        }
+
+        if ($notaVia === ViaLocalPorCentralidade::VEDADA_PELA_OBSERVACAO) {
+            $referencias[] = $fundamentoLouos.' — Quadro 11A, observação (a): adestramento e hospedagem de animais de estimação não são permitidos em Via Local';
         }
 
         if ($motivoPendencia !== null) {
@@ -556,19 +569,25 @@ class LouosEnquadramentoService
 
     /**
      * Nota do Quadro 11A: uso não residencial em Via Local, em zona de
-     * centralidade e permitido na zona, não é indeferido pela via.
+     * centralidade e permitido na zona, não é indeferido pela via. A observação
+     * (a) mantém vedados os CNAEs da lista administrável (parâmetro
+     * `louos.via_local.cnaes_vedados`). Devolve LIBERADA, VEDADA_PELA_OBSERVACAO
+     * ou null, quando a nota não se aplica.
      *
      * @param  array<string, mixed>  $quadro11a
      */
-    private function viaLocalLiberadaPelaNota(array $quadro11a, EnquadramentoInput $input): bool
+    private function notaDaViaLocal(array $quadro11a, EnquadramentoInput $input): ?string
     {
         $zona = $input->territory?->zona;
 
-        return ViaLocalPorCentralidade::libera(
+        return ViaLocalPorCentralidade::avaliar(
             is_array($zona) ? $this->zonaNome($zona) : null,
             is_string($quadro11a['classe_via'] ?? null) ? $quadro11a['classe_via'] : null,
             $input->cnaePrincipal,
             $input->usoNaoResidencial === true,
+            ViaLocalPorCentralidade::cnaesDaConfiguracao(
+                (string) Settings::get('louos.via_local.cnaes_vedados', ViaLocalPorCentralidade::padraoDosCnaesVedados()),
+            ),
         );
     }
 
