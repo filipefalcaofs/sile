@@ -160,7 +160,6 @@ export default function CentralDistribuicao({
         form.transform((data) => ({ ...data, retorno, analista_id: String(selecionado), sector_id: setorDestino || null }));
         form.post('/gestao/caixa-setor/distribuir', {
             preserveScroll: true,
-            onSuccess: () => router.visit(urlDaCaixa),
         });
     }
 

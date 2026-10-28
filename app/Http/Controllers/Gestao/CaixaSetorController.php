@@ -424,7 +424,10 @@ class CaixaSetorController extends Controller
             return back()->with('warning', 'Nenhum processo foi distribuído. '.$motivos);
         }
 
-        $response = back()->with('status', "{$resumo['ok']} processo(s) enviado(s) para a caixa de entrada de {$analista->name}.");
+        // A central envia o retorno da caixa e volta a ela já com o aviso; o modal da
+        // caixa não envia e permanece onde está.
+        $response = ($request->has('retorno') ? redirect($this->urlDaCaixa($request)) : back())
+            ->with('status', "{$resumo['ok']} processo(s) enviado(s) para a caixa de entrada de {$analista->name}.");
 
         if ($resumo['falhas'] !== []) {
             $response->with('warning', count($resumo['falhas']).' processo(s) não distribuído(s): '.$motivos);

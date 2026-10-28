@@ -1004,6 +1004,25 @@ class CaixaSetorTest extends TestCase
             ->assertSessionHas('status');
     }
 
+    public function test_distribuir_pela_central_volta_a_caixa_com_a_mensagem_de_sucesso(): void
+    {
+        $setor = Sector::factory()->create();
+        $apoio = $this->apoioDoSetor($setor);
+        $analista = $this->analistaDoSetor($setor);
+        $processo = $this->processoNaCaixa($setor);
+
+        $this->actingAs($apoio, 'gestao')
+            ->post('/gestao/caixa-setor/distribuir', [
+                'retorno' => 'visao=para_distribuir&campo_alheio=x',
+                'request_ids' => [$processo->id],
+                'analista_id' => $analista->id,
+            ])
+            ->assertRedirect('/gestao/caixa-setor?visao=para_distribuir')
+            ->assertSessionHas('status');
+
+        $this->assertSame($analista->id, $processo->fresh()->assigned_user_id);
+    }
+
     public function test_central_devolve_o_retorno_somente_com_chaves_conhecidas(): void
     {
         $setor = Sector::factory()->create();
