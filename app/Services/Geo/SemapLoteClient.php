@@ -54,13 +54,14 @@ class SemapLoteClient
                 ->timeout((int) config('viabiliza.integrations.arcgis_semap.timeout', 20))
                 ->connectTimeout(5)
                 ->acceptJson()
-                ->get($this->url(), [
+                ->get($this->url(), array_filter([
                     'where' => "INSCRICAO='{$inscricao}'",
                     'returnGeometry' => 'true',
                     'outSR' => '4326',
                     'outFields' => 'INSCRICAO,CODLOG,PORTA,CAT_DE_USO,PADRAOCONS',
                     'f' => 'geojson',
-                ]);
+                    'token' => $this->token(),
+                ]));
         } catch (Throwable $e) {
             return new EnderecamentoHit(
                 EnderecamentoHit::INDISPONIVEL,
@@ -141,23 +142,21 @@ class SemapLoteClient
     }
 
     /**
-     * O token vai no cabeçalho, não na URL, para não aparecer em log de acesso.
-     *
      * @return array<string, string>
      */
     private function cabecalhos(): array
     {
-        $cabecalhos = [
+        return [
             'User-Agent' => (string) config('viabiliza.integrations.arcgis_semap.user_agent', 'Viabiliza-SEDUR-Salvador/1.0'),
         ];
+    }
 
-        $token = trim((string) Settings::get('integrations.arcgis_semap.token'));
-
-        if ($token !== '') {
-            $cabecalhos['X-Esri-Authorization'] = 'Bearer '.$token;
-        }
-
-        return $cabecalhos;
+    /**
+     * A SEDUR consulta a camada com o token no parâmetro `token` da URL.
+     */
+    private function token(): string
+    {
+        return trim((string) Settings::get('integrations.arcgis_semap.token'));
     }
 
     /**
