@@ -14,24 +14,44 @@ export interface ProcessoSimplifica {
   tvls: number[];
 }
 
+interface MetaSimplifica {
+  total: number;
+  pagina: number;
+  por_pagina: number;
+  paginas: number;
+}
+
 interface RespostaSimplifica {
   consultado: boolean;
   processos: ProcessoSimplifica[];
+  meta: MetaSimplifica | null;
   erro: string | null;
 }
 
 type Estado =
   | { fase: "inativo" }
   | { fase: "carregando" }
-  | { fase: "pronto"; processos: ProcessoSimplifica[] }
+  | { fase: "pronto"; processos: ProcessoSimplifica[]; meta: MetaSimplifica | null }
   | { fase: "erro"; mensagem: string };
 
-const CHAVES_CONSULTADAS = [
+/** Filtros da tela que o Simplifica entende (os demais dependem de listas do Viabiliza). */
+export const CHAVES_CONSULTADAS = [
   "busca",
+  "protocolo",
+  "bap",
+  "produto_tvl",
   "cnpj",
   "inscricao",
-  "produto_tvl",
-  "protocolo",
+  "nome",
+  "cnae",
+  "complemento",
+  "logradouro",
+  "bairro",
+  "cep",
+  "analysis_status",
+  "fluxo",
+  "data_de",
+  "data_ate",
 ] as const;
 
 function formatarData(iso: string | null): string {
@@ -103,17 +123,20 @@ function colunasSimplifica(
 }
 
 /**
- * Processos do Simplifica (sistema anterior) para a busca da tela de processos.
- * Consulta só a API do legado, sem trazer nada para a base do Viabiliza; some
- * quando a busca não é uma chave que o Simplifica entenda.
+ * Processos do Simplifica (sistema anterior) com os mesmos filtros da tela de
+ * processos. Consulta só a API do legado, sem trazer nada para a base do
+ * Viabiliza; é sempre somente leitura e deixa isso explícito.
  */
 export default function ProcessosSimplifica({
   filtros,
+  porPagina = 15,
 }: {
   filtros: Partial<Record<(typeof CHAVES_CONSULTADAS)[number], string>>;
+  porPagina?: number;
 }) {
   const [estado, setEstado] = useState<Estado>({ fase: "inativo" });
   const [aberto, setAberto] = useState<string | null>(null);
+  const [pagina, setPagina] = useState(1);
   const consulta = new URLSearchParams(
     CHAVES_CONSULTADAS.flatMap((chave) => {
       const valor = (filtros[chave] ?? "").trim();
@@ -121,6 +144,10 @@ export default function ProcessosSimplifica({
       return valor === "" ? [] : [[chave, valor] as [string, string]];
     }),
   ).toString();
+
+  useEffect(() => {
+    setPagina(1);
+  }, [consulta, porPagina]);
 
   useEffect(() => {
     if (consulta === "") {
@@ -132,7 +159,7 @@ export default function ProcessosSimplifica({
     const controle = new AbortController();
     setEstado({ fase: "carregando" });
 
-    fetch(`/gestao/processos/legado?${consulta}`, {
+    fetch(`/gestao/processos/legado?${consulta}&pagina=${pagina}&per_page=${porPagina}`, {
       headers: {
         Accept: "application/json",
         "X-Requested-With": "XMLHttpRequest",
@@ -151,7 +178,7 @@ export default function ProcessosSimplifica({
         } else if (dados.erro) {
           setEstado({ fase: "erro", mensagem: dados.erro });
         } else {
-          setEstado({ fase: "pronto", processos: dados.processos });
+          setEstado({ fase: "pronto", processos: dados.processos, meta: dados.meta });
         }
       })
       .catch(() => {
@@ -164,31 +191,26 @@ export default function ProcessosSimplifica({
       });
 
     return () => controle.abort();
-  }, [consulta]);
-
-  if (estado.fase === "inativo") {
-    return null;
-  }
+  }, [consulta, pagina, porPagina]);
 
   return (
-    <section
-      aria-label="Processos do Simplifica"
-      className="mt-6 rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
-    >
-      <div className="px-5 py-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <h2 className="text-base font-semibold text-gray-800 dark:text-white/90">
-            Processos do Simplifica (sistema legado)
-          </h2>
-          <Badge color="warning" size="sm">
-            Somente leitura
-          </Badge>
-        </div>
-        <p className="mt-1 text-theme-sm text-gray-500 dark:text-gray-400">
-          Dados do Simplifica, consultados na hora. Não fazem parte da base do
-          Viabiliza e não podem ser alterados aqui.
-        </p>
+    <section aria-label="Processos do Simplifica">
+      <div className="flex flex-wrap items-center gap-3 px-5 py-4">
+        <h2 className="text-base font-semibold text-gray-800 dark:text-white/90">
+          Processos do Simplifica (sistema legado)
+        </h2>
+        <Badge color="warning" size="sm">
+          Somente leitura
+        </Badge>
       </div>
+
+      {estado.fase === "inativo" && (
+        <p className="border-t border-gray-100 px-5 py-4 text-sm text-gray-500 dark:border-gray-800 dark:text-gray-400">
+          Informe ao menos um filtro para consultar o Simplifica: texto com 3 ou
+          mais caracteres, CNPJ/CPF, inscrição, número do processo ou da
+          viabilidade, CEP, situação, fluxo ou período.
+        </p>
+      )}
 
       {estado.fase === "carregando" && (
         <p className="border-t border-gray-100 px-5 py-4 text-sm text-gray-500 dark:border-gray-800 dark:text-gray-400">
@@ -211,14 +233,46 @@ export default function ProcessosSimplifica({
             Nenhum processo do Simplifica para esta busca.
           </p>
         ) : (
-          <div className="border-t border-gray-100 dark:border-gray-800">
-            <DataTable
-              columns={colunasSimplifica(setAberto)}
-              rows={estado.processos}
-              rowKey={(item) => item.numero}
-              density="compact"
-            />
-          </div>
+          <>
+            <div className="border-t border-gray-100 dark:border-gray-800">
+              <DataTable
+                columns={colunasSimplifica(setAberto)}
+                rows={estado.processos}
+                rowKey={(item) => item.numero}
+                density="compact"
+              />
+            </div>
+            {estado.meta && (
+              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 px-5 py-4 dark:border-gray-800">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {estado.meta.total === 1
+                    ? "1 processo encontrado"
+                    : `${estado.meta.total} processos encontrados`}
+                  {" · "}página {estado.meta.pagina} de {Math.max(1, estado.meta.paginas)}
+                </p>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={estado.meta.pagina <= 1}
+                    onClick={() => setPagina((atual) => Math.max(1, atual - 1))}
+                  >
+                    Anterior
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={estado.meta.pagina >= estado.meta.paginas}
+                    onClick={() => setPagina((atual) => atual + 1)}
+                  >
+                    Próxima
+                  </Button>
+                </div>
+              </div>
+            )}
+          </>
         ))}
       {aberto !== null && (
         <FichaSimplifica numero={aberto} onClose={() => setAberto(null)} />

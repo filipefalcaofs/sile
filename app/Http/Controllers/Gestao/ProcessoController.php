@@ -77,8 +77,9 @@ class ProcessoController extends Controller
         $ordem = $this->ordem($request);
         $consulta = $filtros + ['ordem' => $ordem];
         $periodoInvertido = $this->periodoInvertido($filtros);
+        $fonte = $request->string('fonte')->toString() === 'simplifica' ? 'simplifica' : 'viabiliza';
 
-        if (! $periodoInvertido && in_array($request->string('formato')->lower()->toString(), ['csv', 'xlsx', 'pdf'], true)) {
+        if ($fonte === 'viabiliza' && ! $periodoInvertido && in_array($request->string('formato')->lower()->toString(), ['csv', 'xlsx', 'pdf'], true)) {
             return app(ReportExporter::class)->export(
                 app(ProcessosReportSource::class),
                 ReportFilters::fromArray($consulta),
@@ -89,7 +90,7 @@ class ProcessoController extends Controller
 
         $perPage = $this->perPage($request);
 
-        if ($periodoInvertido) {
+        if ($periodoInvertido || $fonte === 'simplifica') {
             $processos = new LengthAwarePaginator([], 0, $perPage, 1, [
                 'path' => $request->url(),
                 'query' => $request->query(),
@@ -112,11 +113,12 @@ class ProcessoController extends Controller
         $this->audit->log('analise', 'consulta-processos', 'Consulta de processos da análise técnica', [
             'filtros' => $this->filtrosPreenchidos($filtros),
             'periodo_invertido' => $periodoInvertido,
+            'fonte' => $fonte,
         ]);
 
         return Inertia::render('gestao/processos/index', [
             'processos' => $processos,
-            'filtros' => $consulta + ['per_page' => $perPage],
+            'filtros' => $consulta + ['per_page' => $perPage, 'fonte' => $fonte],
             'erroPeriodo' => $periodoInvertido
                 ? 'A data inicial não pode ser posterior à data final.'
                 : null,
@@ -138,10 +140,10 @@ class ProcessoController extends Controller
         $filtros = $this->filtros($request);
 
         try {
-            $resultado = $legado->buscar($filtros);
+            $resultado = $legado->buscar($filtros, max(1, $request->integer('pagina', 1)), $this->perPage($request));
             $erro = null;
         } catch (LegadoIndisponivelException) {
-            $resultado = ['consultado' => true, 'processos' => []];
+            $resultado = ['consultado' => true, 'processos' => [], 'meta' => null];
             $erro = 'Não foi possível consultar o Simplifica agora.';
         }
 
