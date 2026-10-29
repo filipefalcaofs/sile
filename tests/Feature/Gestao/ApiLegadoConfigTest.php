@@ -57,6 +57,7 @@ class ApiLegadoConfigTest extends TestCase
                 'token' => '',
                 'usuario' => '',
                 'senha_acesso' => '',
+                'comparacao' => '0',
             ]])
             ->assertRedirect(route('gestao.config-apis.edit', ['aba' => 'legado']));
     }
@@ -128,7 +129,7 @@ class ApiLegadoConfigTest extends TestCase
     public function test_cliente_usa_a_url_e_o_token_configurados_na_tela(): void
     {
         $this->salvar(['token' => 'lg_token_da_tela']);
-        Http::fake([self::HML.'/processos*' => Http::response(['data' => []])]);
+        Http::fake([self::HML.'/provisorias*' => Http::response(['data' => []]), self::HML.'/processos*' => Http::response(['data' => []])]);
 
         app(LegadoViabilidadeClient::class)->processosPorChave('numero_tvl', '2104040');
 
@@ -171,7 +172,7 @@ class ApiLegadoConfigTest extends TestCase
     public function test_testar_conexao_informa_sucesso(): void
     {
         $this->salvar(['token' => 'lg_token_da_tela']);
-        Http::fake([self::HML.'/processos*' => Http::response(['data' => []])]);
+        Http::fake([self::HML.'/provisorias*' => Http::response(['data' => []]), self::HML.'/processos*' => Http::response(['data' => []])]);
 
         $this->actingAs($this->admin(), 'gestao')
             ->post('/gestao/config-apis/legado/testar')
@@ -183,7 +184,7 @@ class ApiLegadoConfigTest extends TestCase
     public function test_testar_conexao_informa_falha(): void
     {
         $this->salvar(['token' => 'lg_token_ruim']);
-        Http::fake([self::HML.'/processos*' => Http::response(['mensagem' => 'Token inválido.'], 401)]);
+        Http::fake([self::HML.'/*' => Http::response(['mensagem' => 'Token inválido.'], 401)]);
 
         $this->actingAs($this->admin(), 'gestao')
             ->post('/gestao/config-apis/legado/testar')
@@ -196,5 +197,18 @@ class ApiLegadoConfigTest extends TestCase
         $this->actingAs(User::factory()->analista()->withAcceptedLgpdTerm()->create(), 'gestao')
             ->post('/gestao/config-apis/legado/testar')
             ->assertForbidden();
+    }
+
+    public function test_testar_conexao_confere_as_provisorias_da_comparacao_e_os_processos(): void
+    {
+        $this->salvar(['token' => 'lg_token_da_tela']);
+        Http::fake([
+            self::HML.'/provisorias*' => Http::response(['mensagem' => 'Sem escopo provisorias:ler.'], 403),
+            self::HML.'/processos*' => Http::response(['data' => []]),
+        ]);
+
+        $this->actingAs($this->admin(), 'gestao')
+            ->post('/gestao/config-apis/legado/testar')
+            ->assertSessionHasErrors('legado_connection');
     }
 }

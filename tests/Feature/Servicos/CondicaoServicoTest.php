@@ -134,7 +134,7 @@ class CondicaoServicoTest extends TestCase
         $this->configurarLegado();
         Http::fake(fn (Request $request) => match (true) {
             str_contains($request->url(), '/v1/provisorias') => Http::response(['data' => [['numero' => 700, 'deferida' => true, 'ativa' => true, 'validade' => '2027-01-01T00:00:00Z']]]),
-            str_contains($request->url(), '/v1/tvls/700') => Http::response(['data' => ['atividades' => array_map(fn (string $codigo): array => ['codigo' => $codigo, 'descricao' => 'x'], $this->atividadesDoLegado)]]),
+            str_contains($request->url(), '/v1/tvls/700') => Http::response(['data' => ['numero' => 700, 'atividades' => array_map(fn (string $codigo): array => ['codigo' => $codigo, 'descricao' => 'x'], $this->atividadesDoLegado)]]),
             default => Http::response([], 404),
         });
     }

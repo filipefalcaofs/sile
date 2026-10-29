@@ -4,10 +4,12 @@ namespace Tests\Feature\Gestao;
 
 use App\Models\Parameter;
 use App\Models\User;
+use App\Services\Sefaz\LegadoViabilidadeFonte;
 use App\Support\Settings;
 use Database\Seeders\ParameterSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -117,6 +119,61 @@ class ApiIntegracaoControllerTest extends TestCase
                 ->where('abas.8.campos.2.valor', null)
                 ->where('abas.8.campos.2.tem_valor', true))
             ->assertDontSee($token);
+    }
+
+    public function test_legado_simplifica_tem_uma_aba_so_com_o_interruptor_da_comparacao(): void
+    {
+        $this->actingAs($this->admin(), 'gestao')
+            ->get('/gestao/config-apis?aba=legado')
+            ->assertOk()
+            ->assertInertia(function (Assert $page) {
+                $abas = collect($page->toArray()['props']['abas']);
+
+                $this->assertCount(1, $abas->filter(fn (array $aba): bool => str_contains(strtolower($aba['nome']), 'simplifica')));
+                $this->assertNull($abas->firstWhere('id', 'legado_simplifica'));
+
+                $campo = collect($abas->firstWhere('id', 'legado')['campos'])->firstWhere('id', 'comparacao');
+                $this->assertSame('interruptor', $campo['tipo']);
+                $this->assertFalse($campo['valor']);
+            });
+    }
+
+    public function test_comparacao_do_legado_usa_a_conexao_da_aba_unica(): void
+    {
+        $this->actingAs($this->admin(), 'gestao')
+            ->put('/gestao/config-apis/legado', ['campos' => [
+                'em_producao' => '0',
+                'url_homologacao' => 'https://legado-hml.test/v1',
+                'url_producao' => '',
+                'token' => 'lg_token_da_aba_unica',
+                'usuario' => '',
+                'senha_acesso' => '',
+                'comparacao' => '1',
+            ]])
+            ->assertRedirect(route('gestao.config-apis.edit', ['aba' => 'legado']));
+
+        $this->assertTrue(app(LegadoViabilidadeFonte::class)->disponivel());
+
+        $this->actingAs($this->admin(), 'gestao')
+            ->put('/gestao/config-apis/legado', ['campos' => [
+                'em_producao' => '0',
+                'url_homologacao' => 'https://legado-hml.test/v1',
+                'url_producao' => '',
+                'token' => '',
+                'usuario' => '',
+                'senha_acesso' => '',
+                'comparacao' => '0',
+            ]]);
+
+        $this->assertFalse(app(LegadoViabilidadeFonte::class)->disponivel());
+    }
+
+    public function test_comparacao_fica_indisponivel_sem_conexao_configurada(): void
+    {
+        Parameter::query()->where('key', 'features.legado_simplifica')->update(['value' => '1']);
+        Cache::flush();
+
+        $this->assertFalse(app(LegadoViabilidadeFonte::class)->disponivel());
     }
 
     public function test_url_invalida_e_rejeitada(): void

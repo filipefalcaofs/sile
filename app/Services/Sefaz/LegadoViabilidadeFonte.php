@@ -3,8 +3,9 @@
 namespace App\Services\Sefaz;
 
 use App\Models\ViabilityRequest;
+use App\Services\Legado\LegadoViabilidadeClient;
+use App\Services\Legado\TvlLegada;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Http;
 use Throwable;
 
 /**
@@ -18,7 +19,10 @@ use Throwable;
  */
 class LegadoViabilidadeFonte implements FonteViabilidadeAnterior
 {
-    public function __construct(private LegadoSimplificaAjustes $ajustes) {}
+    public function __construct(
+        private LegadoSimplificaAjustes $ajustes,
+        private LegadoViabilidadeClient $client,
+    ) {}
 
     public function nome(): string
     {
@@ -62,38 +66,21 @@ class LegadoViabilidadeFonte implements FonteViabilidadeAnterior
      */
     private function buscar(string $cnpj): ?ViabilidadeVinculada
     {
-        $lista = $this->get('/v1/provisorias', ['cnpj' => $cnpj])['data'] ?? [];
-
-        $vigente = collect($lista)
-            ->filter(fn (array $tvl): bool => ($tvl['deferida'] ?? false) === true && ($tvl['ativa'] ?? false) === true)
-            ->sortByDesc(fn (array $tvl): string => sprintf('%s|%018d', (string) ($tvl['validade'] ?? ''), (int) ($tvl['numero'] ?? 0)))
+        $vigente = collect($this->client->provisoriasPorCnpj($cnpj))
+            ->filter(fn (TvlLegada $tvl): bool => $tvl->deferida && $tvl->ativa)
+            ->sortByDesc(fn (TvlLegada $tvl): string => sprintf('%s|%018d', $tvl->validade?->toIso8601String() ?? '', $tvl->numero))
             ->first();
 
         if ($vigente === null) {
             return null;
         }
 
-        $detalhe = $this->get('/v1/tvls/'.$vigente['numero'])['data'] ?? [];
-        $cnaes = collect($detalhe['atividades'] ?? [])
+        $cnaes = collect($this->client->tvlPorNumero($vigente->numero)?->atividades ?? [])
             ->pluck('codigo')
             ->filter(fn ($codigo): bool => is_string($codigo) && $codigo !== '')
             ->values()
             ->all();
 
-        return $cnaes === [] ? null : new ViabilidadeVinculada((string) $vigente['numero'], $cnaes);
-    }
-
-    /**
-     * @param  array<string, string>  $consulta
-     * @return array<string, mixed>
-     */
-    private function get(string $caminho, array $consulta = []): array
-    {
-        return Http::withToken($this->ajustes->token())
-            ->acceptJson()
-            ->timeout($this->ajustes->timeout())
-            ->get($this->ajustes->url().$caminho, $consulta)
-            ->throw()
-            ->json() ?? [];
+        return $cnaes === [] ? null : new ViabilidadeVinculada((string) $vigente->numero, $cnaes);
     }
 }

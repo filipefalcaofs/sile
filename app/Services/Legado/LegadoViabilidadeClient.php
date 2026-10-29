@@ -176,6 +176,7 @@ class LegadoViabilidadeClient
      */
     public function testarConexao(): void
     {
+        $this->provisoriasPorCnpj('00000000000000');
         $this->processosPorChave('numero_tvl', '0');
     }
 

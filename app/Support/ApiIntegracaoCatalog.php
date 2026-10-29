@@ -274,7 +274,7 @@ class ApiIntegracaoCatalog
         return [
             'id' => 'legado',
             'nome' => 'Simplifica (legado)',
-            'descricao' => 'API de consulta do sistema anterior (somente leitura): usada na consulta de processos da gestão e na renovação. Informe o token OU usuário e senha (o token tem prioridade). O interruptor escolhe a URL ativa.',
+            'descricao' => 'API de consulta do sistema anterior (somente leitura): usada na consulta de processos da gestão, na renovação e na comparação de atividades de uma alteração (viabilidade anterior da empresa). Informe o token OU usuário e senha (o token tem prioridade). O interruptor escolhe a URL ativa.',
             'teste' => ['url' => '/gestao/config-apis/legado/testar', 'erro' => 'legado_connection'],
             'espelhar_url_ativa' => [
                 'destino' => 'integrations.legado_api.base_url',
@@ -289,6 +289,7 @@ class ApiIntegracaoCatalog
                 self::senha('token', 'integrations.legado_api.token', 'Token'),
                 self::texto('usuario', 'integrations.legado_api.usuario', 'Usuário'),
                 self::senha('senha_acesso', 'integrations.legado_api.senha', 'Senha'),
+                self::interruptor('comparacao', 'features.legado_simplifica', 'Comparar atividades da alteração com a viabilidade anterior'),
             ],
         ];
     }
