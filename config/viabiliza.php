@@ -495,6 +495,16 @@ return [
             'senha' => '',
             'cnpj_prefeitura' => '13927801000149',
             'caminho_resposta' => '/recebe',
+            // Proteção do POST /api_integracao/recebe (chamado pela JUCEB).
+            // Segredo e lista de IPs só valem quando preenchidos.
+            'recebe' => [
+                'segredo' => (string) env('REGIN_RECEBE_SEGREDO', ''),
+                'ips_permitidos' => array_values(array_filter(array_map(
+                    'trim',
+                    explode(',', (string) env('REGIN_RECEBE_IPS', '')),
+                ))),
+                'limite_corpo' => 2_000_000,
+            ],
             'codigo_area' => 70,
             'timeout' => 8,
             // Resiliência do job que abre o processo a partir do envelope
