@@ -175,7 +175,6 @@ export default function RenovacaoWizard({
                                 </span>
                                 <p className="text-sm text-gray-700 dark:text-gray-300">
                                     Confira se é esta a viabilidade que você quer renovar. Endereço e atividades não podem ser alterados na renovação.
-                                    {origem.legado && ' Esta viabilidade foi emitida no sistema anterior.'}
                                 </p>
                             </div>
 
