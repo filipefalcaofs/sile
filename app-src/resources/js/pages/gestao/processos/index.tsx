@@ -1,7 +1,7 @@
 import FieldError from '@/components/form/field-error';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import type { FormEvent, ReactNode } from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import ProcessosSimplifica from '@/components/analise/processos-simplifica';
 import { mascararDocumento } from '@/components/analise/processo-filtros';
 import { rotuloSemSla, type ProcessoItem } from '@/components/analise/processo-ui';
@@ -300,6 +300,8 @@ export default function ConsultaProcessos({
     });
     const [perPage, setPerPage] = useState(filtros.per_page);
     const [ordem, setOrdem] = useState(filtros.ordem || 'recentes');
+    const filtrosPorFonte = useRef<Partial<Record<Fonte, FiltrosTexto>>>({});
+    const trocouDeFonte = useRef(false);
     const [selecionados, setSelecionados] = useState<number[]>([]);
     const [motivo, setMotivo] = useState('');
     const [erroMotivo, setErroMotivo] = useState<string | null>(null);
@@ -343,6 +345,13 @@ export default function ConsultaProcessos({
     }
 
     useEffect(() => {
+        // Trocar de fonte já visita com os filtros da outra; a busca não dispara de novo.
+        if (trocouDeFonte.current) {
+            trocouDeFonte.current = false;
+
+            return;
+        }
+
         const atual = (filtros.busca ?? '').trim();
         const proximo = form.busca.trim();
 
@@ -379,14 +388,12 @@ export default function ConsultaProcessos({
             return;
         }
 
-        // Status, setor, serviço etc. e os vocabulários de situação e fluxo
-        // são de cada sistema: não atravessam a troca.
-        const proximo = { ...form, analysis_status: '', fluxo: '' };
+        // Cada fonte guarda os próprios filtros: voltar a ela devolve o que
+        // estava preenchido, e nada de uma fonte vale na outra.
+        filtrosPorFonte.current[filtros.fonte] = form;
+        const proximo = filtrosPorFonte.current[fonte] ?? filtrosVazios();
 
-        for (const chave of CHAVES_SO_VIABILIZA) {
-            proximo[chave] = '';
-        }
-
+        trocouDeFonte.current = proximo.busca !== form.busca;
         setForm(proximo);
         visitar(proximo, perPage, ordem, fonte);
     }
