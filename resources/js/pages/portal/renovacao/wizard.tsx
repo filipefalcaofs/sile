@@ -342,7 +342,7 @@ export default function RenovacaoWizard({
                     )}
                     </StepTransition>
 
-                    <div className="sticky bottom-0 -mx-1 flex flex-col-reverse gap-3 bg-white py-2 sm:flex-row sm:justify-between dark:bg-gray-900">
+                    <div className="flex flex-col-reverse gap-3 border-t border-gray-100 pt-5 sm:flex-row sm:justify-between dark:border-gray-800">
                         {passo > 0 ? (
                             <Button variant="outline" className="min-h-11" onClick={() => setPasso((atual) => atual - 1)}>
                                 Voltar
