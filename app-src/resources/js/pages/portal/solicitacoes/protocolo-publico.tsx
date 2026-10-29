@@ -91,14 +91,9 @@ export default function ProtocoloPublico({ solicitacao, timeline }: ProtocoloPub
                                                 <span className="mt-0.5 text-blue-light-500">
                                                     <InfoIcon className="size-5 fill-current" />
                                                 </span>
-                                                <div>
-                                                    <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                                                        Prazo estimado: {timeline.prazo_estimado.dias} dias
-                                                    </p>
-                                                    <p className="mt-0.5 text-theme-xs text-gray-500 dark:text-gray-400">
-                                                        {timeline.prazo_estimado.ressalva}
-                                                    </p>
-                                                </div>
+                                                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                                                    Prazo estimado: {timeline.prazo_estimado.dias} dias
+                                                </p>
                                             </div>
                                         )}
                                     </div>
