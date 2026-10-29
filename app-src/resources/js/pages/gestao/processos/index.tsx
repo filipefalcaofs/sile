@@ -890,9 +890,11 @@ function colunasProcessos(opcoes: {
                     <span className="font-semibold text-gray-800 tabular-nums dark:text-white/90">
                         {item.bap ?? item.protocol_number ?? '-'}
                     </span>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                        {item.empresa ?? 'Requerente não informado'}
-                    </span>
+                    {!/^empresa a constituir$/i.test(item.empresa?.trim() ?? '') && (
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                            {item.empresa ?? 'Requerente não informado'}
+                        </span>
+                    )}
                 </div>
             ),
         },
