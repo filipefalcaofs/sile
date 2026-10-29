@@ -40,6 +40,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
@@ -146,9 +147,12 @@ class ProcessoController extends Controller
         try {
             $resultado = $legado->buscar($filtros, max(1, $request->integer('pagina', 1)), $this->perPage($request));
             $erro = null;
-        } catch (LegadoIndisponivelException) {
+            $motivo = null;
+        } catch (LegadoIndisponivelException $e) {
             $resultado = ['consultado' => true, 'processos' => [], 'meta' => null];
             $erro = 'Não foi possível consultar o Simplifica agora.';
+            $motivo = $e->getMessage();
+            Log::warning('Consulta de processos do Simplifica falhou', ['motivo' => $motivo]);
         }
 
         if ($resultado['consultado']) {
@@ -159,7 +163,7 @@ class ProcessoController extends Controller
             ]);
         }
 
-        return response()->json($resultado + ['erro' => $erro]);
+        return response()->json($resultado + ['erro' => $erro, 'motivo' => $motivo]);
     }
 
     /**

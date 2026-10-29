@@ -26,6 +26,7 @@ interface RespostaSimplifica {
   processos: ProcessoSimplifica[];
   meta: MetaSimplifica | null;
   erro: string | null;
+  motivo?: string | null;
 }
 
 type Estado =
@@ -176,7 +177,10 @@ export default function ProcessosSimplifica({
         if (!dados.consultado) {
           setEstado({ fase: "inativo" });
         } else if (dados.erro) {
-          setEstado({ fase: "erro", mensagem: dados.erro });
+          setEstado({
+            fase: "erro",
+            mensagem: dados.motivo ? `${dados.erro} ${dados.motivo}` : dados.erro,
+          });
         } else {
           setEstado({ fase: "pronto", processos: dados.processos, meta: dados.meta });
         }
