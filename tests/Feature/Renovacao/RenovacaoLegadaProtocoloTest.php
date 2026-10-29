@@ -640,6 +640,18 @@ class RenovacaoLegadaProtocoloTest extends TestCase
         $this->assertSame(1, ViabilityRequest::query()->where('renews_legacy_tvl_number', 1234567)->count());
     }
 
+    public function test_empresa_nova_guarda_o_cep_do_imovel_so_com_digitos(): void
+    {
+        $ator = User::factory()->create();
+        $this->cadastroImobiliario('RUA BERNADETE DIAS, 45', '45', '41710-040');
+        $tvl = $this->detalhe(['inscricao_imobiliaria' => '1452150']);
+
+        $renovacao = $this->servico()->protocolarLegada($tvl, self::CNPJ, $ator, [], [$this->declaracao->id]);
+
+        $this->assertSame('41710040', $renovacao->company->zip_code);
+        $this->assertSame(CompanySource::Legado, $renovacao->company->source);
+    }
+
     private function servico(): RenovacaoProtocoloService
     {
         return app(RenovacaoProtocoloService::class);

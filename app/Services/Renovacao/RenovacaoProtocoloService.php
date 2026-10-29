@@ -211,7 +211,7 @@ class RenovacaoProtocoloService
             'neighborhood' => $endereco['bairro'],
             'city' => 'Salvador',
             'state' => 'BA',
-            'zip_code' => $endereco['cep'],
+            'zip_code' => preg_replace('/\D+/', '', (string) $endereco['cep']) ?: null,
             'source' => CompanySource::Legado,
         ]);
     }
