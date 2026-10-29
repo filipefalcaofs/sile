@@ -1938,8 +1938,6 @@ export default function FichaAnaliseShow({
                             <ComparacaoCnaesCard processoId={processo.id} comparacao={comparacaoCnaes} podeCorrigir={editavel} />
                         )}
 
-                        <AnexosAnaliseCard processoId={processo.id} anexos={anexosAnalise} editavel={editavel && !somenteLeitura} />
-
                         {/* Enquadramento por CNAE (espelha a ficha SAPS) */}
                         <Card>
                             <CardHeader
@@ -2517,6 +2515,8 @@ export default function FichaAnaliseShow({
                                 </p>
                             </CardContent>
                         </Card>
+
+                        <AnexosAnaliseCard processoId={processo.id} anexos={anexosAnalise} editavel={editavel && !somenteLeitura} />
                     </div>
 
                     {/* Coluna lateral: ações da ficha (acompanham o scroll), abrigados e
