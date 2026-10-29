@@ -270,7 +270,7 @@ components:
     Taxa:
       type: object
       properties:
-        documento: {type: string, nullable: true}
+        documento: {type: string, nullable: true, description: Número do processo no Viabiliza., example: VIA-2026-000123}
         codigoTLL: {type: string}
         valor: {type: number, format: double, description: Valor da taxa com duas casas decimais., example: 416.50}
         dataTaxa: {type: string, example: "13/10/2026"}

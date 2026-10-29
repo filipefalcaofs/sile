@@ -190,6 +190,10 @@ class ConsultaTvlTest extends TestCase
 
         $conteudo = $this->consultar('3000123')->assertOk()->getContent();
         $this->assertStringContainsString('"valor":206.10,', $conteudo);
+        $this->assertSame(
+            ViabilityDecision::query()->first()->viabilityRequest->protocol_number,
+            json_decode($conteudo, true)['empresa']['taxas'][0]['documento'],
+        );
 
         TllValor::query()->update(['valor' => 300, 'taxa_servico' => 0]);
         $this->assertStringContainsString('"valor":300.00,', $this->consultar('3000123')->getContent());

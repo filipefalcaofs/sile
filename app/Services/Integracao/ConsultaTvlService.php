@@ -277,7 +277,7 @@ class ConsultaTvlService
         $tll = TllValor::resolver($calculo->codigo_tll, $exercicio, null);
 
         return [[
-            'documento' => null,
+            'documento' => $decisao->viabilityRequest?->protocol_number,
             'codigoTLL' => $tll?->codigo_tll_sefaz ?? $calculo->codigo_tll,
             'valor' => self::MARCA_DECIMAL.number_format((float) $calculo->valor, 2, '.', '').'@@',
             'dataTaxa' => $decisao->decided_at?->format('d/m/Y'),
