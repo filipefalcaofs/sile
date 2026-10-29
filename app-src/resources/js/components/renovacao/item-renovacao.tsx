@@ -47,9 +47,6 @@ export default function ItemRenovacaoCard({ item }: { item: ItemRenovacao }) {
                         {item.cnpj && <p className="text-theme-xs text-gray-500 dark:text-gray-400">{item.cnpj}</p>}
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
-                        <Badge color={item.origem === 'legado' ? 'info' : 'primary'} variant="light">
-                            {item.origem === 'legado' ? 'Sistema anterior' : 'Viabiliza'}
-                        </Badge>
                         {selo && (
                             <Badge color={selo.cor} variant="light">
                                 {selo.texto}
