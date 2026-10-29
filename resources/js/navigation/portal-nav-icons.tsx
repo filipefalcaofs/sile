@@ -11,7 +11,7 @@ import {
     ShieldIcon,
     UserCircleIcon,
 } from '@/components/icons';
-import { PORTAL_NAV_GROUPS, ROTA_CONSULTA_VIABILIDADE, ROTA_CONVITES, type PortalNavIcon } from '@/navigation/portal-nav';
+import { PORTAL_NAV_GROUPS, ROTA_CONSULTA_VIABILIDADE, ROTA_CONVITES, ROTA_SOLICITACOES, type PortalNavIcon } from '@/navigation/portal-nav';
 
 export const PORTAL_NAV_ICONS: Record<PortalNavIcon, ComponentType<SVGProps<SVGSVGElement>>> = {
     grid: GridIcon,
@@ -39,6 +39,7 @@ export function portalSidebarGroups(servicosHabilitados = true, consultaHabilita
         label: group.label,
         items: group.items
             .filter((item) => consultaHabilitada || item.href !== ROTA_CONSULTA_VIABILIDADE)
+            .filter((item) => servicosHabilitados || item.href !== ROTA_SOLICITACOES)
             .map((item) => {
                 const Icon = PORTAL_NAV_ICONS[item.icon];
 

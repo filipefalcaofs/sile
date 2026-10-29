@@ -27,8 +27,8 @@ describe('Catálogo de navegação do portal do cidadão', () => {
         expect(hrefsDoGrupo('servicos')).toEqual(['/portal/renovacao', '/portal/consulta', '/portal/convites']);
     });
 
-    it('põe painel e notificações em Início, e dados e acessos em Minha conta', () => {
-        expect(hrefsDoGrupo('inicio')).toEqual(['/portal/painel', '/portal/notificacoes']);
+    it('põe painel, solicitações e notificações em Início, e dados e acessos em Minha conta', () => {
+        expect(hrefsDoGrupo('inicio')).toEqual(['/portal/painel', '/portal/solicitacoes', '/portal/notificacoes']);
         expect(hrefsDoGrupo('conta')).toEqual(['/portal/conta/perfil', '/portal/acessos']);
     });
 
@@ -82,9 +82,9 @@ describe('Catálogo de navegação do portal do cidadão', () => {
 });
 
 describe('Serviços retirados e convites na navegação', () => {
-    const retirados = ['/portal/viabilidade', '/portal/solicitacoes', '/portal/empresas', '/portal/procuracoes'];
+    const retirados = ['/portal/viabilidade', '/portal/empresas', '/portal/procuracoes'];
 
-    it('não oferece consulta prévia, solicitação, empresas nem procurações', () => {
+    it('não oferece consulta prévia, empresas nem procurações', () => {
         const hrefs = [
             ...acoesDoPortal().map((acao) => acao.href),
             ...portalSidebarGroups().flatMap((group) => group.items.map((item) => item.href)),
@@ -106,5 +106,13 @@ describe('Serviços retirados e convites na navegação', () => {
         const rotulos = portalSidebarGroups(false, true).map((group) => group.label);
 
         expect(rotulos).not.toContain('Serviços');
+    });
+
+    it('mostra Minhas solicitações no menu e a tira com os serviços do portal desligados', () => {
+        const hrefs = (servicos: boolean) =>
+            portalSidebarGroups(servicos, true).flatMap((group) => group.items.map((item) => item.href));
+
+        expect(hrefs(true)).toContain('/portal/solicitacoes');
+        expect(hrefs(false)).not.toContain('/portal/solicitacoes');
     });
 });

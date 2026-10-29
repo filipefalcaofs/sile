@@ -247,8 +247,8 @@ export default function SolicitacoesIndex({
                 <div className="mb-6">
                     <Alert
                         variant="info"
-                        title="Novas solicitações temporariamente indisponíveis"
-                        message="A abertura de novas solicitações de viabilidade está desativada no momento. Você ainda pode consultar e acompanhar as suas solicitações."
+                        title="Os processos começam na JUCEB"
+                        message="A abertura de solicitações de viabilidade é feita pela JUCEB. Aqui você acompanha os processos ligados ao seu CPF."
                     />
                 </div>
             )}
@@ -281,7 +281,11 @@ export default function SolicitacoesIndex({
             <Card>
                 <CardHeader
                     title="Solicitações de viabilidade"
-                    description="Acompanhe, continue o preenchimento e protocole suas solicitações de viabilidade locacional."
+                    description={
+                        solicitacaoEnabled
+                            ? 'Acompanhe, continue o preenchimento e protocole suas solicitações de viabilidade locacional.'
+                            : 'Acompanhe as solicitações de viabilidade locacional em que você é requerente ou está vinculado pelo CPF.'
+                    }
                     actions={
                         solicitacaoEnabled ? (
                             <Link href="/portal/solicitacoes/nova">
@@ -322,7 +326,9 @@ export default function SolicitacoesIndex({
                                     description={
                                         filtering
                                             ? 'Ajuste o termo da busca e tente novamente.'
-                                            : 'Inicie uma nova solicitação de viabilidade para a sua empresa.'
+                                            : solicitacaoEnabled
+                                              ? 'Inicie uma nova solicitação de viabilidade para a sua empresa.'
+                                              : 'Os processos de viabilidade começam na JUCEB. Quando houver um processo ligado ao seu CPF, ele aparece aqui.'
                                     }
                                     action={
                                         !filtering && solicitacaoEnabled ? (
