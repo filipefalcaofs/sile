@@ -289,6 +289,7 @@ class ApiIntegracaoCatalog
                 self::senha('token', 'integrations.legado_api.token', 'Token'),
                 self::texto('usuario', 'integrations.legado_api.usuario', 'Usuário'),
                 self::senha('senha_acesso', 'integrations.legado_api.senha', 'Senha'),
+                self::texto('host', 'integrations.legado_api.host', 'Cabeçalho Host (opcional, para usar a URL por IP sem DNS)'),
                 self::interruptor('comparacao', 'features.legado_simplifica', 'Comparar atividades da alteração com a viabilidade anterior'),
             ],
         ];

@@ -57,6 +57,7 @@ class ApiLegadoConfigTest extends TestCase
                 'token' => '',
                 'usuario' => '',
                 'senha_acesso' => '',
+                'host' => '',
                 'comparacao' => '0',
             ]])
             ->assertRedirect(route('gestao.config-apis.edit', ['aba' => 'legado']));
@@ -210,5 +211,36 @@ class ApiLegadoConfigTest extends TestCase
         $this->actingAs($this->admin(), 'gestao')
             ->post('/gestao/config-apis/legado/testar')
             ->assertSessionHasErrors('legado_connection');
+    }
+
+    public function test_cabecalho_host_configurado_vai_junto_com_a_url_por_ip(): void
+    {
+        $this->salvar(['token' => 'lg_token_da_tela', 'url_homologacao' => 'http://172.22.0.132', 'host' => 'simplifica-legado.pms.ba.gov.br']);
+        Http::fake(['172.22.0.132/*' => Http::response(['data' => []])]);
+
+        app(LegadoViabilidadeClient::class)->processosPorChave('numero_tvl', '2104040');
+
+        Http::assertSent(fn (Request $request): bool => $request->hasHeader('Host', 'simplifica-legado.pms.ba.gov.br')
+            && $request->hasHeader('Authorization', 'Bearer lg_token_da_tela'));
+    }
+
+    public function test_sem_cabecalho_host_configurado_nao_envia_host_proprio(): void
+    {
+        $this->salvar(['token' => 'lg_token_da_tela', 'url_homologacao' => 'http://172.22.0.132']);
+        Http::fake(['172.22.0.132/*' => Http::response(['data' => []])]);
+
+        app(LegadoViabilidadeClient::class)->processosPorChave('numero_tvl', '2104040');
+
+        Http::assertSent(fn (Request $request): bool => ! in_array('simplifica-legado.pms.ba.gov.br', $request->header('Host'), true));
+    }
+
+    public function test_host_invalido_e_rejeitado(): void
+    {
+        $this->actingAs($this->admin(), 'gestao')
+            ->put('/gestao/config-apis/legado', ['campos' => [
+                'em_producao' => '0', 'url_homologacao' => self::HML, 'url_producao' => self::PRD,
+                'token' => '', 'usuario' => '', 'senha_acesso' => '', 'host' => 'http://com-esquema/', 'comparacao' => '0',
+            ]])
+            ->assertSessionHasErrors('campos.host');
     }
 }
