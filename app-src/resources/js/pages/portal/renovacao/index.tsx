@@ -97,8 +97,19 @@ export default function RenovacaoIndex({ busca, itens, indisponivel, termo_inval
             ) : (
                 <ul className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     {itens.map((item) => (
-                        <li key={`${item.origem}-${item.id ?? item.numero}`}>
-                            <ItemRenovacaoCard item={item} />
+                        <li
+                            key={`${item.origem}-${item.id ?? item.numero}`}
+                            className={item.elegivel && item.url ? undefined : 'md:col-span-2'}
+                        >
+                            {item.elegivel && item.url ? (
+                                <ItemRenovacaoCard item={item} />
+                            ) : (
+                                <Alert
+                                    variant="warning"
+                                    title={`A viabilidade ${item.numero}${item.empresa ? ` (${item.empresa})` : ''} não pode ser renovada`}
+                                    message={item.motivo ?? 'Procure a SEDUR para mais informações.'}
+                                />
+                            )}
                         </li>
                     ))}
                 </ul>
