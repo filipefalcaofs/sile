@@ -1,4 +1,5 @@
 import { Link } from '@inertiajs/react';
+import Alert from '@/components/ui/alert';
 import Badge from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -91,7 +92,13 @@ export default function LegadoItemCard({ item }: { item: LegadoItem }) {
                         Renovar
                     </Link>
                 ) : (
-                    <p className="mt-auto text-sm text-gray-600 dark:text-gray-300">{item.motivo}</p>
+                    <div className="mt-auto">
+                        <Alert
+                            variant="warning"
+                            title="Esta viabilidade não pode ser renovada"
+                            message={item.motivo ?? 'Procure a SEDUR para mais informações.'}
+                        />
+                    </div>
                 )}
             </CardContent>
         </Card>
