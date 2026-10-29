@@ -74,7 +74,9 @@ export default function RenovacaoWizard({
     function protocolar() {
         form.post(
             origem.legado
-                ? `/portal/renovacao/legado/${origem.cnpj_digitos}/${origem.numero}`
+                ? origem.cnpj_digitos
+                    ? `/portal/renovacao/legado/${origem.cnpj_digitos}/${origem.numero}`
+                    : `/portal/renovacao/legado/${origem.numero}`
                 : `/portal/renovacao/${origem.id}`,
         );
     }
@@ -118,7 +120,7 @@ export default function RenovacaoWizard({
                                 <div>
                                     <dt className="text-gray-500">Empresa</dt>
                                     <dd className="font-medium text-gray-800 dark:text-white/90">{origem.empresa}</dd>
-                                    <dd className="text-gray-500">{origem.cnpj}</dd>
+                                    {origem.cnpj && <dd className="text-gray-500">{origem.cnpj}</dd>}
                                 </div>
                                 <div>
                                     <dt className="text-gray-500">Validade atual</dt>
