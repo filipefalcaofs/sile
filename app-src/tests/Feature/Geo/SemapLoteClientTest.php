@@ -74,24 +74,29 @@ class SemapLoteClientTest extends TestCase
             && str_contains(urldecode($request->url()), 'PADRAOCONS'));
     }
 
-    public function test_token_configurado_vai_no_cabecalho_e_nao_na_url(): void
+    public function test_token_configurado_vai_no_parametro_token_da_url(): void
     {
         config(['viabiliza.integrations.arcgis_semap.token' => 'token-semap-123']);
         Http::fake(['*' => Http::response($this->colecao([$this->feicao()]))]);
 
         $this->assertTrue(app(SemapLoteClient::class)->consultar('344672')->encontrado());
 
-        Http::assertSent(fn ($request): bool => $request->header('X-Esri-Authorization') === ['Bearer token-semap-123']
-            && ! str_contains($request->url(), 'token-semap-123'));
+        Http::assertSent(function ($request): bool {
+            parse_str((string) parse_url($request->url(), PHP_URL_QUERY), $query);
+
+            return ($query['token'] ?? null) === 'token-semap-123'
+                && ! $request->hasHeader('X-Esri-Authorization');
+        });
     }
 
-    public function test_sem_token_nao_envia_cabecalho(): void
+    public function test_sem_token_nao_envia_parametro_nem_cabecalho(): void
     {
         Http::fake(['*' => Http::response($this->colecao([$this->feicao()]))]);
 
         app(SemapLoteClient::class)->consultar('344672');
 
-        Http::assertSent(fn ($request): bool => ! $request->hasHeader('X-Esri-Authorization'));
+        Http::assertSent(fn ($request): bool => ! str_contains($request->url(), 'token=')
+            && ! $request->hasHeader('X-Esri-Authorization'));
     }
 
     public function test_erro_do_arcgis_aparece_no_motivo(): void
