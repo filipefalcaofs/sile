@@ -1,0 +1,1 @@
+import"./app-DyGE-4Ny.js";import{t as e}from"./jsx-runtime-DsKLSDJq.js";import"./alert-C0akA3hx.js";import"./badge-6IGglFyG.js";import"./card-DmbnXa3u.js";e();function t(e){if(!e)return`—`;let t=e.match(/^(\d{4})-(\d{2})-(\d{2})/);return t?`${t[3]}/${t[2]}/${t[1]}`:e}export{t};
