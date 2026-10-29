@@ -625,6 +625,7 @@ class ViabilityRequest extends Model
                     ->from('inspection_referrals')
                     ->whereColumn('inspection_referrals.viability_request_id', 'viability_requests.id')
                     ->whereColumn('inspection_referrals.setor_vistoria_id', 'viability_requests.sector_id')
+                    ->whereNull('inspection_referrals.devolvido_em')
                     ->where(fn ($origem) => $origem
                         ->whereNull('inspection_referrals.setor_origem_id')
                         ->orWhereColumn('inspection_referrals.setor_origem_id', '!=', 'viability_requests.sector_id'))

@@ -536,6 +536,37 @@ class VistoriaEncaminhamentoTest extends TestCase
         $this->assertSame(AnalysisStatus::Vistoriado, $fresh->analysis_status);
     }
 
+    public function test_vistoriado_com_referral_sem_origem_sai_da_caixa_de_vistoria_ao_ir_para_a_caixa_do_setor(): void
+    {
+        $setor = Sector::factory()->create();
+        $vistoriador = $this->analista();
+        $vistoriador->sectors()->attach($setor);
+        $processo = ViabilityRequest::factory()->create();
+        $processo->forceFill([
+            'status' => ViabilityRequestStatus::EmAnalise,
+            'analysis_status' => AnalysisStatus::Vistoriar,
+            'sector_id' => $setor->id,
+            'assigned_user_id' => $vistoriador->id,
+        ])->save();
+        InspectionReferral::create([
+            'viability_request_id' => $processo->id,
+            'encaminhado_por_user_id' => $vistoriador->id,
+            'setor_origem_id' => null,
+            'setor_vistoria_id' => $setor->id,
+            'motivo' => 'Conferir no local.',
+        ]);
+        $this->actingAs($vistoriador, 'gestao')->get("/gestao/processos/{$processo->id}/vistoria");
+        $this->actingAs($vistoriador, 'gestao')
+            ->postJson("/gestao/processos/{$processo->id}/vistoria/concluir", ['parecer' => 'Parecer da vistoria.'])
+            ->assertOk();
+
+        $this->actingAs($vistoriador, 'gestao')
+            ->post("/gestao/processos/{$processo->id}/vistoria/encaminhar-ao-setor")
+            ->assertSessionMissing('error');
+
+        $this->assertFalse(ViabilityRequest::query()->naCaixaDeVistoria()->whereKey($processo->id)->exists());
+    }
+
     public function test_processo_vistoriado_na_caixa_do_setor_vai_a_analista_e_nao_a_vistoriador(): void
     {
         $setor = Sector::factory()->create();

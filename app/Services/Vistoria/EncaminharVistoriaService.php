@@ -145,6 +145,8 @@ class EncaminharVistoriaService
                 'assigned_at' => $analista !== null ? now() : null,
             ])->save();
 
+            $referral?->forceFill(['devolvido_em' => now()])->save();
+
             if ($processo->analysis_status === AnalysisStatus::Vistoriar) {
                 $this->retornarDaVistoriaAberta($processo, $ator, $analista);
             }
