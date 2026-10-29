@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Pendência da análise (HU-083/084 — ciclo interno): o analista solicita
@@ -73,5 +74,15 @@ class AnalysisPendency extends Model
     public function cancelledBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'cancelled_by_user_id');
+    }
+
+    /**
+     * Documentos anexados pelo requerente na resposta do convite.
+     *
+     * @return HasMany<AnalysisPendencyAttachment, $this>
+     */
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(AnalysisPendencyAttachment::class);
     }
 }

@@ -14,7 +14,9 @@ use App\Services\Expresso\BusinessDeadlineCalculator;
 use App\Services\Solicitacao\ViabilityRequestStateMachine;
 use App\Support\Audit\AuditService;
 use App\Support\Settings;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Ciclo de pendência interno da análise técnica (HU-079/080 — PARCIAL).
@@ -145,7 +147,7 @@ class PendenciaService
      * em_analise). Exige a pendência aberta e o processo em em_pendencia; caso
      * contrário lança PendenciaInvalidaException sem gravar nada.
      */
-    public function responder(AnalysisPendency $pendency, string $resposta): void
+    public function responder(AnalysisPendency $pendency, string $resposta, ?UploadedFile $anexo = null): void
     {
         $request = $pendency->viabilityRequest;
 
@@ -154,40 +156,78 @@ class PendenciaService
             throw PendenciaInvalidaException::naoRespondivel($pendency);
         }
 
-        DB::transaction(function () use ($pendency, $request, $resposta): void {
-            $pendency->update([
-                'response' => $resposta,
-                'responded_at' => now(),
-                'status' => AnalysisPendencyStatus::Respondida,
-            ]);
+        $arquivo = $anexo === null ? null : $this->guardarAnexo($pendency, $anexo);
 
-            $this->stateMachine->transition(
-                $request,
-                ViabilityRequestStatus::EmAnalise,
-                actor: auth()->user(),
-                reason: 'Convite respondido pelo requerente',
-                publicLabel: ViabilityRequestStatus::EmAnalise->publicLabel(),
-            );
+        try {
+            DB::transaction(function () use ($pendency, $request, $resposta, $arquivo): void {
+                if ($arquivo !== null) {
+                    $pendency->attachments()->create($arquivo);
+                }
 
-            $this->moverEixo($request, AnalysisStatus::ConviteRespondido, null, 'Convite respondido pelo requerente.');
+                $pendency->update([
+                    'response' => $resposta,
+                    'responded_at' => now(),
+                    'status' => AnalysisPendencyStatus::Respondida,
+                ]);
 
-            $this->audit->log(
-                'analise',
-                'pendencia-respondida',
-                "Pendência #{$pendency->id} respondida na solicitação #{$request->id} — análise reaberta.",
-                properties: [
-                    'viability_request_id' => $request->id,
-                    'analysis_pendency_id' => $pendency->id,
-                    'protocol_number' => $request->protocol_number,
-                ],
-                subject: $request,
-            );
-        });
+                $this->stateMachine->transition(
+                    $request,
+                    ViabilityRequestStatus::EmAnalise,
+                    actor: auth()->user(),
+                    reason: 'Convite respondido pelo requerente',
+                    publicLabel: ViabilityRequestStatus::EmAnalise->publicLabel(),
+                );
+
+                $this->moverEixo($request, AnalysisStatus::ConviteRespondido, null, 'Convite respondido pelo requerente.');
+
+                $this->audit->log(
+                    'analise',
+                    'pendencia-respondida',
+                    "Pendência #{$pendency->id} respondida na solicitação #{$request->id} — análise reaberta.",
+                    properties: [
+                        'viability_request_id' => $request->id,
+                        'analysis_pendency_id' => $pendency->id,
+                        'protocol_number' => $request->protocol_number,
+                    ],
+                    subject: $request,
+                );
+            });
+        } catch (\Throwable $falha) {
+            if ($arquivo !== null) {
+                Storage::disk($arquivo['disk'])->delete($arquivo['path']);
+            }
+
+            throw $falha;
+        }
 
         // APÓS o commit: o evento gancho (EP11). O listener auto-descoberto
         // NotificarRespostaPendencia avisa o analista responsável que a análise
         // reabriu. Efeito só de uma resposta efetivada.
         PendenciaRespondida::dispatch($request, $pendency);
+    }
+
+    /**
+     * Grava o arquivo no disk parametrizado (nunca público) e devolve os
+     * metadados da linha. Metadados e hash saem antes do store(), que move o
+     * arquivo temporário.
+     *
+     * @return array{disk: string, path: string, original_name: string, mime_type: ?string, size: int, sha256: string}
+     */
+    private function guardarAnexo(AnalysisPendency $pendency, UploadedFile $anexo): array
+    {
+        $disk = (string) Settings::get(
+            'storage.documentos.disk',
+            config('viabiliza.storage.documentos.disk', 'local'),
+        );
+
+        $metadados = [
+            'original_name' => $anexo->getClientOriginalName(),
+            'mime_type' => $anexo->getMimeType(),
+            'size' => (int) $anexo->getSize(),
+            'sha256' => hash_file('sha256', $anexo->getRealPath()),
+        ];
+
+        return ['disk' => $disk, 'path' => $anexo->store('convites/'.$pendency->id, $disk), ...$metadados];
     }
 
     /**
