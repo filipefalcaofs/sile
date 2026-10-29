@@ -6,7 +6,7 @@ use App\Models\Parameter;
 use Illuminate\Support\Facades\Cache;
 
 /**
- * Liga a API do legado Simplifica pelos parâmetros, como a tela de APIs faz.
+ * Liga a comparação com o legado Simplifica pelos parâmetros da aba Simplifica (legado), como a tela de APIs faz.
  */
 trait ConfiguraLegadoSimplifica
 {
@@ -14,8 +14,8 @@ trait ConfiguraLegadoSimplifica
     {
         $valores = [
             'features.legado_simplifica' => $habilitada ? '1' : '0',
-            'integrations.legado_simplifica.url' => $url,
-            'integrations.legado_simplifica.token' => $token,
+            'integrations.legado_api.base_url' => $url,
+            'integrations.legado_api.token' => $token,
         ];
 
         foreach ($valores as $chave => $valor) {

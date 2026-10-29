@@ -482,12 +482,9 @@ return [
             'retries' => 3,
             'backoff_ms' => 500,
         ],
-        // Legado Simplifica/SAPS: a TVL deferida e ativa da empresa e os CNAEs dela, base da
-        // comparação de atividades. Token de máquina (`lg_...`, 90 dias) só no .env.
+        // Comparação de atividades com a viabilidade anterior no legado Simplifica/SAPS.
+        // A conexão é a de `legado_api`, configurada na aba Simplifica (legado) da tela de APIs.
         'legado_simplifica' => [
-            'url' => env('VIABILIZA_LEGADO_URL'),
-            'token' => env('VIABILIZA_LEGADO_TOKEN'),
-            'timeout' => 6,
             'cache_ttl' => 600,
         ],
         'geoserver' => [

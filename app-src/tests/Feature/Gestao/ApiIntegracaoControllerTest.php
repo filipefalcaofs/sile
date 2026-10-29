@@ -9,8 +9,7 @@ use App\Support\Settings;
 use Database\Seeders\ParameterSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
-use Illuminate\Http\Client\ConnectionException;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -37,7 +36,7 @@ class ApiIntegracaoControllerTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('gestao/config-apis/index')
                 ->where('aba', 'regin')
-                ->has('abas', 12)
+                ->has('abas', 11)
                 ->where('abas.0.nome', 'REGIN')
                 ->where('abas.1.nome', 'Inscrição imobiliária')
                 ->where('abas.2.nome', 'CPF e CNPJ')
@@ -160,103 +159,59 @@ class ApiIntegracaoControllerTest extends TestCase
             ->assertDontSee($token);
     }
 
-    public function test_legado_simplifica_tem_aba_propria_com_interruptor_url_e_token(): void
+    public function test_legado_simplifica_tem_uma_aba_so_com_o_interruptor_da_comparacao(): void
     {
         $this->actingAs($this->admin(), 'gestao')
-            ->get('/gestao/config-apis?aba=legado_simplifica')
+            ->get('/gestao/config-apis?aba=legado')
             ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page
-                ->where('aba', 'legado_simplifica')
-                ->where('abas.11.id', 'legado_simplifica')
-                ->where('abas.11.nome', 'Legado Simplifica')
-                ->where('abas.11.campos.0.id', 'habilitada')
-                ->where('abas.11.campos.0.valor', false)
-                ->where('abas.11.campos.1.id', 'url')
-                ->where('abas.11.campos.2.id', 'token')
-                ->where('abas.11.campos.2.tipo', 'senha'));
+            ->assertInertia(function (Assert $page) {
+                $abas = collect($page->toArray()['props']['abas']);
+
+                $this->assertCount(1, $abas->filter(fn (array $aba): bool => str_contains(strtolower($aba['nome']), 'simplifica')));
+                $this->assertNull($abas->firstWhere('id', 'legado_simplifica'));
+
+                $campo = collect($abas->firstWhere('id', 'legado')['campos'])->firstWhere('id', 'comparacao');
+                $this->assertSame('interruptor', $campo['tipo']);
+                $this->assertFalse($campo['valor']);
+            });
     }
 
-    public function test_token_do_legado_e_gravado_criptografado_e_a_fonte_passa_a_valer(): void
+    public function test_comparacao_do_legado_usa_a_conexao_da_aba_unica(): void
     {
-        $token = 'lg_'.str_repeat('a1B2c3D4', 8);
-
         $this->actingAs($this->admin(), 'gestao')
-            ->put('/gestao/config-apis/legado_simplifica', [
-                'campos' => ['habilitada' => '1', 'url' => 'http://simplifica-legado.pms.ba.gov.br', 'token' => $token],
-            ])
-            ->assertRedirect(route('gestao.config-apis.edit', ['aba' => 'legado_simplifica']));
+            ->put('/gestao/config-apis/legado', ['campos' => [
+                'em_producao' => '0',
+                'url_homologacao' => 'https://legado-hml.test/v1',
+                'url_producao' => '',
+                'token' => 'lg_token_da_aba_unica',
+                'usuario' => '',
+                'senha_acesso' => '',
+                'comparacao' => '1',
+            ]])
+            ->assertRedirect(route('gestao.config-apis.edit', ['aba' => 'legado']));
 
-        $parameter = Parameter::query()->where('key', 'integrations.legado_simplifica.token')->first();
-
-        $this->assertTrue($parameter->sensitive);
-        $this->assertSame($token, $parameter->value);
-        $this->assertNotSame($token, $parameter->getRawOriginal('value'));
         $this->assertTrue(app(LegadoViabilidadeFonte::class)->disponivel());
 
         $this->actingAs($this->admin(), 'gestao')
-            ->get('/gestao/config-apis?aba=legado_simplifica')
-            ->assertInertia(fn (Assert $page) => $page
-                ->where('abas.11.campos.2.valor', null)
-                ->where('abas.11.campos.2.tem_valor', true))
-            ->assertDontSee($token);
-    }
-
-    public function test_fonte_do_legado_fica_indisponivel_com_o_interruptor_desligado(): void
-    {
-        $this->actingAs($this->admin(), 'gestao')
-            ->put('/gestao/config-apis/legado_simplifica', [
-                'campos' => ['habilitada' => '0', 'url' => 'http://simplifica-legado.pms.ba.gov.br', 'token' => 'lg_abc'],
-            ]);
+            ->put('/gestao/config-apis/legado', ['campos' => [
+                'em_producao' => '0',
+                'url_homologacao' => 'https://legado-hml.test/v1',
+                'url_producao' => '',
+                'token' => '',
+                'usuario' => '',
+                'senha_acesso' => '',
+                'comparacao' => '0',
+            ]]);
 
         $this->assertFalse(app(LegadoViabilidadeFonte::class)->disponivel());
     }
 
-    public function test_url_do_legado_invalida_e_rejeitada(): void
+    public function test_comparacao_fica_indisponivel_sem_conexao_configurada(): void
     {
-        $this->actingAs($this->admin(), 'gestao')
-            ->put('/gestao/config-apis/legado_simplifica', ['campos' => ['habilitada' => '1', 'url' => 'nao-e-url']])
-            ->assertSessionHasErrors('campos.url');
-    }
+        Parameter::query()->where('key', 'features.legado_simplifica')->update(['value' => '1']);
+        Cache::flush();
 
-    public function test_teste_de_conexao_do_legado(): void
-    {
-        $this->actingAs($this->admin(), 'gestao')->put('/gestao/config-apis/legado_simplifica', [
-            'campos' => ['habilitada' => '1', 'url' => 'http://legado.test', 'token' => 'lg_teste'],
-        ]);
-
-        $status = 200;
-        Http::fake(function () use (&$status) {
-            if ($status === 0) {
-                throw new ConnectionException('sem rota');
-            }
-
-            return Http::response($status === 200 ? ['data' => []] : ['mensagem' => 'x'], $status);
-        });
-
-        $this->actingAs($this->admin(), 'gestao')
-            ->post('/gestao/config-legado-simplifica/testar')
-            ->assertSessionHas('status')
-            ->assertSessionHasNoErrors();
-        Http::assertSent(fn ($r): bool => $r->hasHeader('Authorization', 'Bearer lg_teste'));
-
-        foreach ([401 => 'token', 403 => 'escopo', 500 => 'falha', 0 => 'indisponível'] as $codigo => $trecho) {
-            $status = $codigo;
-            $this->actingAs($this->admin(), 'gestao')
-                ->post('/gestao/config-legado-simplifica/testar')
-                ->assertSessionHasErrors('legado_connection');
-            $this->assertStringContainsStringIgnoringCase($trecho, session('errors')->first('legado_connection'), "caso {$codigo}");
-        }
-    }
-
-    public function test_teste_de_conexao_do_legado_sem_url_ou_token_orienta_a_configurar(): void
-    {
-        Http::fake();
-
-        $this->actingAs($this->admin(), 'gestao')
-            ->post('/gestao/config-legado-simplifica/testar')
-            ->assertSessionHasErrors('legado_connection');
-
-        Http::assertNothingSent();
+        $this->assertFalse(app(LegadoViabilidadeFonte::class)->disponivel());
     }
 
     public function test_url_invalida_e_rejeitada(): void
