@@ -62,4 +62,15 @@ enum ViabilityRequestStatus: string
             self::Revogado => 'Revogado',
         };
     }
+
+    /**
+     * Situações em que o processo segue na Caixa do Setor: em análise e em
+     * convite (em_pendencia). Só a conclusão definitiva o tira da caixa.
+     *
+     * @return list<string>
+     */
+    public static function naCaixaDoSetor(): array
+    {
+        return [self::EmAnalise->value, self::EmPendencia->value];
+    }
 }
