@@ -32,6 +32,7 @@ interface Pendencia {
 interface PendenciasProps {
     solicitacao: Solicitacao;
     pendencias: Pendencia[];
+    anexo_max_mb: number;
 }
 
 /** Formata ISO 8601 como 'DD/MM/YYYY' sem depender do fuso do navegador. */
@@ -55,15 +56,16 @@ function formatDate(value: string | null): string {
  * Formulário de resposta de UMA pendência (cada pendência tem o seu, com estado
  * de submissão isolado). Submete pelo portal e reabre a análise no servidor.
  */
-function PendenciaForm({ solicitacaoId, pendencia }: { solicitacaoId: number; pendencia: Pendencia }) {
-    const { data, setData, post, processing, errors, reset } = useForm({ response: '' });
+function PendenciaForm({ solicitacaoId, pendencia, anexoMaxMb }: { solicitacaoId: number; pendencia: Pendencia; anexoMaxMb: number }) {
+    const { data, setData, post, processing, errors, reset } = useForm<{ response: string; attachment: File | null }>({ response: '', attachment: null });
     const errorId = `pendencia-${pendencia.id}-erro`;
 
     function submit(event: FormEvent) {
         event.preventDefault();
         post(`/portal/solicitacoes/${solicitacaoId}/pendencias/${pendencia.id}/responder`, {
             preserveScroll: true,
-            onSuccess: () => reset('response'),
+            forceFormData: true,
+            onSuccess: () => reset('response', 'attachment'),
         });
     }
 
@@ -105,6 +107,28 @@ function PendenciaForm({ solicitacaoId, pendencia }: { solicitacaoId: number; pe
                                 {errors.response}
                             </FieldError>
                         )}
+                        <div className="flex flex-col gap-2">
+                            <label
+                                htmlFor={`pendencia-${pendencia.id}-anexo`}
+                                className="text-sm font-medium text-gray-700 dark:text-gray-300"
+                            >
+                                Anexar documento <span className="font-normal text-gray-500">(opcional)</span>
+                            </label>
+                            <input
+                                id={`pendencia-${pendencia.id}-anexo`}
+                                key={data.attachment === null ? 'vazio' : 'com-arquivo'}
+                                type="file"
+                                accept="application/pdf,image/jpeg,image/png"
+                                onChange={(event) => setData('attachment', event.target.files?.[0] ?? null)}
+                                aria-invalid={errors.attachment ? true : undefined}
+                                aria-describedby={errors.attachment ? `${errorId}-anexo` : `${errorId}-ajuda`}
+                                className="block w-full cursor-pointer rounded-lg border border-gray-200 bg-white text-sm text-gray-700 file:mr-4 file:cursor-pointer file:border-0 file:bg-gray-100 file:px-4 file:py-3 file:text-sm file:font-medium file:text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:file:bg-gray-800 dark:file:text-gray-300"
+                            />
+                            <p id={`${errorId}-ajuda`} className="text-theme-xs text-gray-500 dark:text-gray-400">
+                                PDF, JPG ou PNG, até {anexoMaxMb} MB.
+                            </p>
+                            {errors.attachment && <FieldError id={`${errorId}-anexo`}>{errors.attachment}</FieldError>}
+                        </div>
                         <div className="flex justify-end">
                             <Button type="submit" loading={processing}>
                                 Enviar resposta
@@ -117,7 +141,7 @@ function PendenciaForm({ solicitacaoId, pendencia }: { solicitacaoId: number; pe
     );
 }
 
-export default function Pendencias({ solicitacao, pendencias }: PendenciasProps) {
+export default function Pendencias({ solicitacao, pendencias, anexo_max_mb: anexoMaxMb }: PendenciasProps) {
     const titulo = solicitacao.protocol_number ?? 'Solicitação de viabilidade';
 
     return (
@@ -156,7 +180,7 @@ export default function Pendencias({ solicitacao, pendencias }: PendenciasProps)
                     </Card>
                 ) : (
                     pendencias.map((pendencia) => (
-                        <PendenciaForm key={pendencia.id} solicitacaoId={solicitacao.id} pendencia={pendencia} />
+                        <PendenciaForm key={pendencia.id} solicitacaoId={solicitacao.id} pendencia={pendencia} anexoMaxMb={anexoMaxMb} />
                     ))
                 )}
             </div>
