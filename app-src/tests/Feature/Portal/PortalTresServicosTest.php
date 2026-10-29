@@ -6,6 +6,7 @@ use App\Models\Cidadao;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Cache;
+use Inertia\Testing\AssertableInertia;
 use Tests\TestCase;
 
 /**
@@ -46,7 +47,6 @@ class PortalTresServicosTest extends TestCase
             '/portal/empresas',
             '/portal/empresas/cadastrar',
             '/portal/procuracoes',
-            '/portal/solicitacoes',
             '/portal/solicitacoes/nova',
             '/portal/cnaes',
         ] as $url) {
@@ -65,12 +65,31 @@ class PortalTresServicosTest extends TestCase
         foreach ([
             '/portal/painel',
             '/portal/renovacao',
+            '/portal/solicitacoes',
             '/portal/notificacoes',
             '/portal/conta/perfil',
             '/portal/acessos',
         ] as $url) {
             $this->actingAs($user)->get($url)->assertOk();
         }
+    }
+
+    public function test_minhas_solicitacoes_abre_sem_oferecer_nova_solicitacao_enquanto_os_extras_estao_desligados(): void
+    {
+        $this->actingAs($this->cidadao())->get('/portal/solicitacoes')
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->component('portal/solicitacoes/index')
+                ->where('solicitacaoEnabled', false));
+    }
+
+    public function test_minhas_solicitacoes_oferece_nova_solicitacao_com_os_extras_ligados(): void
+    {
+        $this->chaveExtras(true);
+
+        $this->actingAs($this->cidadao())->get('/portal/solicitacoes')
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page->where('solicitacaoEnabled', true));
     }
 
     public function test_chave_ligada_religa_os_retirados(): void

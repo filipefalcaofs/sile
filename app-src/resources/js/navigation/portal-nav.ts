@@ -27,6 +27,9 @@ export interface PortalAcao {
     publica: boolean;
 }
 
+/** Lista dos processos do cidadão; sai do menu com os serviços do portal desligados. */
+export const ROTA_SOLICITACOES = '/portal/solicitacoes';
+
 /** Lista de convites que o cidadão pode responder (badge no menu). */
 export const ROTA_CONVITES = '/portal/convites';
 
@@ -36,6 +39,7 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
         label: 'Início',
         items: [
             { name: 'Meu painel', href: '/portal/painel', icon: 'grid' },
+            { name: 'Minhas solicitações', href: ROTA_SOLICITACOES, icon: 'list' },
             { name: 'Notificações', href: '/portal/notificacoes', icon: 'bell' },
         ],
     },
