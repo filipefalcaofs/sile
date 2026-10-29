@@ -76,28 +76,63 @@ class ProcessosLegadoTest extends TestCase
         Http::assertNothingSent();
     }
 
-    public function test_texto_que_nao_e_chave_do_legado_nao_consulta_a_api(): void
+    public function test_texto_curto_demais_nao_consulta_a_api(): void
     {
         Http::fake();
 
         $this->actingAs($this->analista(), 'gestao')
-            ->getJson('/gestao/processos/legado?busca=padaria')
+            ->getJson('/gestao/processos/legado?busca=ab&nome=xy')
+            ->assertOk()
+            ->assertJson(['consultado' => false, 'meta' => null]);
+
+        Http::assertNothingSent();
+    }
+
+    public function test_filtros_que_dependem_de_listas_do_viabiliza_nao_viram_consulta(): void
+    {
+        Http::fake();
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->getJson('/gestao/processos/legado?status=em_analise&grupo=concluido&setor=3&servico=5&analista=9&categoria=x')
             ->assertOk()
             ->assertJson(['consultado' => false]);
 
         Http::assertNothingSent();
     }
 
-    public function test_cnpj_consulta_por_documento_e_devolve_os_processos(): void
+    public function test_pesquisa_combina_os_filtros_da_tela_na_api_do_legado(): void
     {
-        Http::fake([self::BASE.'/processos*' => Http::response(['data' => [$this->processoLegado()]])]);
+        Http::fake([self::BASE.'/processos/pesquisa*' => Http::response([
+            'data' => [$this->processoLegado()],
+            'meta' => ['total' => 31, 'pagina' => 2, 'por_pagina' => 15, 'paginas' => 3],
+        ])]);
 
         $this->actingAs($this->analista(), 'gestao')
-            ->getJson('/gestao/processos/legado?busca='.urlencode('12.345.678/0001-95'))
+            ->getJson('/gestao/processos/legado?'.http_build_query([
+                'busca' => 'padaria',
+                'protocolo' => '0000012345-00067890/2024',
+                'bap' => 'BAP26',
+                'produto_tvl' => '2104040',
+                'cnpj' => '12.345.678/0001-95',
+                'inscricao' => '100.200.300',
+                'nome' => 'Empresa Teste',
+                'cnae' => '4711',
+                'complemento' => 'Sala 2',
+                'logradouro' => 'Rua A',
+                'bairro' => 'Centro',
+                'cep' => '40.000-000',
+                'analysis_status' => 'deferido',
+                'fluxo' => 'expresso',
+                'data_de' => '2026-03-01',
+                'data_ate' => '2026-03-31',
+                'pagina' => 2,
+                'per_page' => 15,
+            ]))
             ->assertOk()
             ->assertJson([
                 'consultado' => true,
                 'erro' => null,
+                'meta' => ['total' => 31, 'pagina' => 2, 'por_pagina' => 15, 'paginas' => 3],
                 'processos' => [[
                     'numero' => '0000012345-00067890/2024',
                     'situacao' => 'Em análise',
@@ -106,60 +141,47 @@ class ProcessosLegadoTest extends TestCase
                 ]],
             ]);
 
-        Http::assertSent(fn (Request $request): bool => $request['documento'] === '12345678000195');
+        Http::assertSent(fn (Request $request): bool => str_contains($request->url(), '/processos/pesquisa')
+            && $request['busca'] === 'padaria'
+            && $request['numero_processo'] === '0000012345-00067890/2024'
+            && $request['protocolo'] === 'BAP26'
+            && $request['numero_tvl'] === '2104040'
+            && $request['documento'] === '12345678000195'
+            && $request['inscricao'] === '100200300'
+            && $request['empresa'] === 'Empresa Teste'
+            && $request['cnae'] === '4711'
+            && $request['complemento'] === 'Sala 2'
+            && $request['logradouro'] === 'Rua A'
+            && $request['bairro'] === 'Centro'
+            && $request['cep'] === '40000000'
+            && $request['situacao_analise'] === 'deferido'
+            && $request['fluxo'] === 'expresso'
+            && $request['protocolado_de'] === '2026-03-01'
+            && $request['protocolado_ate'] === '2026-03-31'
+            && $request['pagina'] === '2'
+            && $request['por_pagina'] === '15');
     }
 
-    public function test_campo_cnpj_do_filtro_avancado_tem_prioridade_sobre_a_busca(): void
+    public function test_valores_fora_do_vocabulario_do_legado_nao_sao_enviados(): void
     {
-        Http::fake([self::BASE.'/processos*' => Http::response(['data' => []])]);
+        Http::fake([self::BASE.'/processos/pesquisa*' => Http::response(['data' => [], 'meta' => ['total' => 0, 'pagina' => 1, 'por_pagina' => 15, 'paginas' => 0]])]);
 
         $this->actingAs($this->analista(), 'gestao')
-            ->getJson('/gestao/processos/legado?cnpj=12345678000195&busca=2104040')
+            ->getJson('/gestao/processos/legado?cnpj=123&inscricao=abc&fluxo=em_analise&analysis_status=para_distribuir&data_de=01/03/2026&busca=padaria')
             ->assertOk()
             ->assertJson(['consultado' => true, 'processos' => []]);
 
-        Http::assertSent(fn (Request $request): bool => $request['documento'] === '12345678000195');
-    }
-
-    public function test_sete_digitos_consulta_por_numero_da_tvl(): void
-    {
-        Http::fake([self::BASE.'/processos*' => Http::response(['data' => [$this->processoLegado()]])]);
-
-        $this->actingAs($this->analista(), 'gestao')
-            ->getJson('/gestao/processos/legado?busca=2104040')
-            ->assertOk()
-            ->assertJsonCount(1, 'processos');
-
-        Http::assertSent(fn (Request $request): bool => $request['numero_tvl'] === '2104040');
-    }
-
-    public function test_numero_do_processo_do_legado_consulta_por_numero_do_processo(): void
-    {
-        Http::fake([self::BASE.'/processos*' => Http::response(['data' => [$this->processoLegado()]])]);
-
-        $this->actingAs($this->analista(), 'gestao')
-            ->getJson('/gestao/processos/legado?busca='.urlencode('0000012345-00067890/2024'))
-            ->assertOk()
-            ->assertJsonCount(1, 'processos');
-
-        Http::assertSent(fn (Request $request): bool => $request['numero_processo'] === '0000012345-00067890/2024');
-    }
-
-    public function test_inscricao_consulta_por_inscricao(): void
-    {
-        Http::fake([self::BASE.'/processos*' => Http::response(['data' => []])]);
-
-        $this->actingAs($this->analista(), 'gestao')
-            ->getJson('/gestao/processos/legado?inscricao=100200300')
-            ->assertOk()
-            ->assertJson(['consultado' => true, 'processos' => []]);
-
-        Http::assertSent(fn (Request $request): bool => $request['inscricao'] === '100200300');
+        Http::assertSent(fn (Request $request): bool => $request['busca'] === 'padaria'
+            && ! isset($request['documento'])
+            && ! isset($request['inscricao'])
+            && ! isset($request['fluxo'])
+            && ! isset($request['situacao_analise'])
+            && ! isset($request['protocolado_de']));
     }
 
     public function test_api_fora_do_ar_devolve_erro_sem_derrubar_a_tela(): void
     {
-        Http::fake([self::BASE.'/processos*' => Http::response(['mensagem' => 'falhou'], 500)]);
+        Http::fake([self::BASE.'/processos/pesquisa*' => Http::response(['mensagem' => 'falhou'], 500)]);
 
         $this->actingAs($this->analista(), 'gestao')
             ->getJson('/gestao/processos/legado?busca=12345678000195')
@@ -181,18 +203,40 @@ class ProcessosLegadoTest extends TestCase
             ->assertJson(['consultado' => true, 'erro' => 'Não foi possível consultar o Simplifica agora.']);
     }
 
-    public function test_protocolo_regin_consulta_por_numero_do_processo_e_a_lista_traz_o_protocolo(): void
+    public function test_lista_traz_o_protocolo_regin(): void
     {
-        Http::fake([self::BASE.'/processos*' => Http::response(['data' => [
+        Http::fake([self::BASE.'/processos/pesquisa*' => Http::response(['data' => [
             $this->processoLegado() + ['protocolo' => 'BAP2601568762'],
-        ]])]);
+        ], 'meta' => ['total' => 1, 'pagina' => 1, 'por_pagina' => 15, 'paginas' => 1]])]);
 
         $this->actingAs($this->analista(), 'gestao')
-            ->getJson('/gestao/processos/legado?busca=bap2601568762')
+            ->getJson('/gestao/processos/legado?bap=BAP2601568762')
             ->assertOk()
             ->assertJsonPath('processos.0.protocolo', 'BAP2601568762');
 
-        Http::assertSent(fn (Request $request): bool => $request['numero_processo'] === 'bap2601568762');
+        Http::assertSent(fn (Request $request): bool => $request['protocolo'] === 'BAP2601568762');
+    }
+
+    public function test_consulta_na_fonte_simplifica_nao_busca_na_base_do_viabiliza(): void
+    {
+        Http::fake();
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get('/gestao/processos?fonte=simplifica&busca=padaria')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('filtros.fonte', 'simplifica')
+                ->has('processos.data', 0));
+
+        Http::assertNothingSent();
+    }
+
+    public function test_consulta_sem_fonte_e_a_do_viabiliza(): void
+    {
+        $this->actingAs($this->analista(), 'gestao')
+            ->get('/gestao/processos')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page->where('filtros.fonte', 'viabiliza'));
     }
 
     /**

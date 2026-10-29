@@ -30,14 +30,15 @@ describe('ProcessosSimplifica', () => {
         vi.unstubAllGlobals();
     });
 
-    it('não consulta nem aparece sem busca', async () => {
+    it('não consulta sem filtro e orienta o que informar, já marcado como somente leitura', async () => {
         const fetchMock = vi.fn();
         vi.stubGlobal('fetch', fetchMock);
 
         await montar({ busca: '' });
 
         expect(fetchMock).not.toHaveBeenCalled();
-        expect(host.textContent).toBe('');
+        expect(host.textContent).toContain('Somente leitura');
+        expect(host.textContent).toContain('Informe ao menos um filtro');
     });
 
     it('mostra os processos do Simplifica identificados como sistema anterior', async () => {
@@ -61,13 +62,12 @@ describe('ProcessosSimplifica', () => {
         await montar({ busca: '12345678000195' });
 
         expect(fetchMock).toHaveBeenCalledWith(
-            '/gestao/processos/legado?busca=12345678000195',
+            '/gestao/processos/legado?busca=12345678000195&pagina=1&per_page=15',
             expect.objectContaining({ credentials: 'same-origin' }),
         );
         expect(host.textContent).toContain('Simplifica');
         expect(host.textContent).toContain('sistema legado');
         expect(host.textContent).toContain('Somente leitura');
-        expect(host.textContent).toContain('não podem ser alterados');
         expect(host.textContent).toContain('0000012345-00067890/2024');
         expect(host.textContent).toContain('2104040');
     });
@@ -80,12 +80,48 @@ describe('ProcessosSimplifica', () => {
         expect(host.textContent).toContain('Não foi possível consultar o Simplifica agora.');
     });
 
-    it('some quando a busca não é chave do Simplifica', async () => {
-        vi.stubGlobal('fetch', vi.fn(() => resposta({ consultado: false, processos: [], erro: null })));
+    it('orienta o que informar quando o servidor não consulta o filtro', async () => {
+        vi.stubGlobal('fetch', vi.fn(() => resposta({ consultado: false, processos: [], meta: null, erro: null })));
 
-        await montar({ busca: 'padaria' });
+        await montar({ busca: 'pa' });
 
-        expect(host.textContent).toBe('');
+        expect(host.textContent).toContain('Informe ao menos um filtro');
+    });
+
+    it('envia todos os filtros da tela e pagina os resultados', async () => {
+        const item = { numero: '1', protocolo: null, criado_em: null, situacao: 'Em análise', finalizado: false, tvls: [] };
+        const fetchMock = vi.fn((url: string) =>
+            resposta({
+                consultado: true,
+                erro: null,
+                processos: [item],
+                meta: { total: 31, pagina: url.includes('pagina=2') ? 2 : 1, por_pagina: 15, paginas: 3 },
+            }),
+        );
+        vi.stubGlobal('fetch', fetchMock);
+
+        await montar({ nome: 'Padaria', cnae: '4721', bairro: 'Centro', fluxo: 'expresso', data_de: '2026-03-01' });
+
+        const primeira = new URLSearchParams((fetchMock.mock.calls[0][0] as string).split('?')[1]);
+        expect(Object.fromEntries(primeira)).toEqual({
+            nome: 'Padaria',
+            cnae: '4721',
+            bairro: 'Centro',
+            fluxo: 'expresso',
+            data_de: '2026-03-01',
+            pagina: '1',
+            per_page: '15',
+        });
+        expect(host.textContent).toContain('31 processos encontrados');
+        expect(host.textContent).toContain('página 1 de 3');
+
+        const proxima = Array.from(host.querySelectorAll('button')).find((b) => b.textContent === 'Próxima');
+        await act(async () => {
+            proxima?.click();
+        });
+
+        expect(fetchMock).toHaveBeenLastCalledWith(expect.stringContaining('pagina=2'), expect.anything());
+        expect(host.textContent).toContain('página 2 de 3');
     });
 
     it('abre a ficha completa do processo ao clicar em Ver ficha', async () => {

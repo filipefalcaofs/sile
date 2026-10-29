@@ -73,7 +73,7 @@ interface ConsultaProps {
         to: number | null;
         total: number;
     };
-    filtros: FiltrosTexto & { per_page: number; ordem: string };
+    filtros: FiltrosTexto & { per_page: number; ordem: string; fonte: Fonte };
     abas: AbasContagem;
     perPageOptions: number[];
     statusOptions: SelectOption[];
@@ -81,6 +81,22 @@ interface ConsultaProps {
     analysisStatusOptions: SelectOption[];
     analistaOptions: SelectOption[];
 }
+
+type Fonte = 'viabiliza' | 'simplifica';
+
+/** Filtros que dependem de listas do Viabiliza; o Simplifica não os tem. */
+const CHAVES_SO_VIABILIZA: (keyof FiltrosTexto)[] = ['grupo', 'status', 'categoria', 'servico', 'setor', 'analista'];
+
+const SITUACAO_SIMPLIFICA_OPTIONS: SelectOption[] = [
+    { value: 'deferido', label: 'Deferido' },
+    { value: 'nao_deferido', label: 'Não deferido' },
+    { value: 'sem_conclusao', label: 'Sem conclusão' },
+];
+
+const FLUXO_SIMPLIFICA_OPTIONS: SelectOption[] = [
+    { value: 'expresso', label: 'Expresso' },
+    { value: 'analise', label: 'Análise' },
+];
 
 /** Grupos macro de status (espelham GRUPOS_STATUS do ProcessoQueryService). */
 const FLUXO_OPTIONS: SelectOption[] = [
@@ -271,6 +287,7 @@ export default function ConsultaProcessos({
 }: ConsultaProps) {
     const { auth } = usePage<SharedProps>().props;
     const podeMalhaFina = auth.permissions.includes('encaminhar-malha-fina');
+    const simplifica = filtros.fonte === 'simplifica';
 
     const [form, setForm] = useState<FiltrosTexto>(() => {
         const inicial = filtrosVazios();
@@ -292,14 +309,20 @@ export default function ConsultaProcessos({
         setForm((anterior) => ({ ...anterior, [chave]: valor }));
     }
 
-    function montarParams(base: FiltrosTexto, pp: number, ordemAtual: string): Record<string, string | number> {
+    function montarParams(base: FiltrosTexto, pp: number, ordemAtual: string, fonte: Fonte = filtros.fonte): Record<string, string | number> {
         const params: Record<string, string | number> = { per_page: pp };
 
-        if (ordemAtual !== '' && ordemAtual !== 'recentes') {
+        if (fonte === 'simplifica') {
+            params.fonte = fonte;
+        } else if (ordemAtual !== '' && ordemAtual !== 'recentes') {
             params.ordem = ordemAtual;
         }
 
         for (const chave of CHAVES_FILTRO) {
+            if (fonte === 'simplifica' && CHAVES_SO_VIABILIZA.includes(chave)) {
+                continue;
+            }
+
             const valor = base[chave].trim();
 
             if (valor !== '') {
@@ -310,8 +333,8 @@ export default function ConsultaProcessos({
         return params;
     }
 
-    function visitar(base: FiltrosTexto, pp: number, ordemAtual = ordem) {
-        router.get('/gestao/processos', montarParams(base, pp, ordemAtual), {
+    function visitar(base: FiltrosTexto, pp: number, ordemAtual = ordem, fonte: Fonte = filtros.fonte) {
+        router.get('/gestao/processos', montarParams(base, pp, ordemAtual, fonte), {
             preserveScroll: true,
             preserveState: true,
             replace: true,
@@ -349,6 +372,23 @@ export default function ConsultaProcessos({
         const vazio = filtrosVazios();
         setForm(vazio);
         visitar(vazio, perPage);
+    }
+
+    function trocarFonte(fonte: Fonte) {
+        if (fonte === filtros.fonte) {
+            return;
+        }
+
+        // Status, setor, serviço etc. e os vocabulários de situação e fluxo
+        // são de cada sistema: não atravessam a troca.
+        const proximo = { ...form, analysis_status: '', fluxo: '' };
+
+        for (const chave of CHAVES_SO_VIABILIZA) {
+            proximo[chave] = '';
+        }
+
+        setForm(proximo);
+        visitar(proximo, perPage, ordem, fonte);
     }
 
     function trocarPerPage(proximo: number) {
@@ -429,6 +469,11 @@ export default function ConsultaProcessos({
         analista: analistaOptions,
     };
 
+    if (simplifica) {
+        opcoesPorChave.analysis_status = SITUACAO_SIMPLIFICA_OPTIONS;
+        opcoesPorChave.fluxo = FLUXO_SIMPLIFICA_OPTIONS;
+    }
+
     const chips = CHAVES_AVANCADAS.filter((chave) => (filtros[chave] ?? '') !== '' && !chavesDaAba.includes(chave)).map(
         (chave) => {
             const valor = filtros[chave] ?? '';
@@ -465,6 +510,36 @@ export default function ConsultaProcessos({
             )}
 
             <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+                <div className="border-b border-gray-100 bg-gray-50/60 px-5 py-4 dark:border-gray-800 dark:bg-white/[0.02]">
+                    <p id="fonte-dados-rotulo" className="mb-2 text-sm font-semibold text-gray-800 dark:text-white/90">
+                        Fonte dos dados
+                    </p>
+                    <div role="radiogroup" aria-labelledby="fonte-dados-rotulo" className="grid gap-2 sm:grid-cols-2">
+                        <BotaoFonte
+                            ativo={!simplifica}
+                            titulo="Viabiliza"
+                            descricao="Processos do sistema atual (padrão)"
+                            onClick={() => trocarFonte('viabiliza')}
+                        />
+                        <BotaoFonte
+                            ativo={simplifica}
+                            titulo="Simplifica (legado)"
+                            descricao="Sistema anterior, somente leitura"
+                            onClick={() => trocarFonte('simplifica')}
+                        />
+                    </div>
+                    {simplifica && (
+                        <p
+                            role="status"
+                            className="mt-3 rounded-lg border border-warning-300 bg-warning-50 px-4 py-3 text-sm text-warning-800 dark:border-warning-500/30 dark:bg-warning-500/10 dark:text-warning-300"
+                        >
+                            <strong>Você está consultando o Simplifica, o sistema legado.</strong> Os dados são somente
+                            leitura: não fazem parte da base do Viabiliza e não podem ser alterados, distribuídos,
+                            encaminhados nem exportados por aqui. Filtros que só existem no Viabiliza (grupo, status,
+                            categoria, serviço, setor e analista) ficam indisponíveis.
+                        </p>
+                    )}
+                </div>
                 <div className="flex flex-wrap items-center gap-3 px-5 py-4">
                     <div className="relative min-w-[240px] flex-1 basis-[340px]">
                         <SearchIcon className="pointer-events-none absolute top-1/2 left-3.5 size-5 -translate-y-1/2 text-gray-400" />
@@ -472,11 +547,16 @@ export default function ConsultaProcessos({
                             id="busca-processos"
                             value={form.busca}
                             onChange={(evento) => definir('busca', evento.target.value)}
-                            placeholder="Buscar por processo, BAP, protocolo, viabilidade, CNPJ ou empresa"
+                            placeholder={
+                                simplifica
+                                    ? 'Buscar no Simplifica por processo, protocolo, CNPJ ou empresa (3 ou mais caracteres)'
+                                    : 'Buscar por processo, BAP, protocolo, viabilidade, CNPJ ou empresa'
+                            }
                             className="pl-11"
                             aria-label="Buscar processos"
                         />
                     </div>
+                    {!simplifica && (
                     <a
                         href={erroPeriodo ? undefined : csvHref}
                         aria-disabled={erroPeriodo ? true : undefined}
@@ -485,6 +565,7 @@ export default function ConsultaProcessos({
                         <FileIcon className="size-5" />
                         Exportar CSV
                     </a>
+                    )}
                 </div>
 
                 <form
@@ -511,6 +592,7 @@ export default function ConsultaProcessos({
                         <CampoTexto id="filtro-logradouro" label="Logradouro" value={form.logradouro} onChange={(valor) => definir('logradouro', valor)} />
                         <CampoTexto id="filtro-bairro" label="Bairro" value={form.bairro} onChange={(valor) => definir('bairro', valor)} />
                         <CampoMascara id="filtro-cep" label="CEP" mask="cep" value={form.cep} onChange={(valor) => definir('cep', valor)} />
+                        {!simplifica && (<>
                         <div>
                             <Label htmlFor="filtro-grupo">Grupo de status</Label>
                             <Select id="filtro-grupo" value={form.grupo} onChange={(valor) => definir('grupo', valor)} placeholder="Todos" options={GRUPO_OPTIONS} />
@@ -519,14 +601,16 @@ export default function ConsultaProcessos({
                             <Label htmlFor="filtro-status">Status</Label>
                             <Select id="filtro-status" value={form.status} onChange={(valor) => definir('status', valor)} placeholder="Todos" options={statusOptions} />
                         </div>
+                        </>)}
                         <div>
                             <Label htmlFor="filtro-analysis-status">Situação da análise</Label>
-                            <Select id="filtro-analysis-status" value={form.analysis_status} onChange={(valor) => definir('analysis_status', valor)} placeholder="Todas" options={analysisStatusOptions} />
+                            <Select id="filtro-analysis-status" value={form.analysis_status} onChange={(valor) => definir('analysis_status', valor)} placeholder="Todas" options={simplifica ? SITUACAO_SIMPLIFICA_OPTIONS : analysisStatusOptions} />
                         </div>
                         <div>
                             <Label htmlFor="filtro-fluxo">Fluxo</Label>
-                            <Select id="filtro-fluxo" value={form.fluxo} onChange={(valor) => definir('fluxo', valor)} placeholder="Todos" options={FLUXO_OPTIONS} />
+                            <Select id="filtro-fluxo" value={form.fluxo} onChange={(valor) => definir('fluxo', valor)} placeholder="Todos" options={simplifica ? FLUXO_SIMPLIFICA_OPTIONS : FLUXO_OPTIONS} />
                         </div>
+                        {!simplifica && (<>
                         <div>
                             <Label htmlFor="filtro-categoria">Categoria</Label>
                             <Select id="filtro-categoria" value={form.categoria} onChange={(valor) => definir('categoria', valor)} placeholder="Todas" options={categoriaOptions} />
@@ -537,6 +621,7 @@ export default function ConsultaProcessos({
                             <Label htmlFor="filtro-analista">Analista</Label>
                             <Select id="filtro-analista" value={form.analista} onChange={(valor) => definir('analista', valor)} placeholder="Todos" options={analistaOptions} />
                         </div>
+                        </>)}
                         <CampoData id="filtro-data-de" label="Protocolado de" value={form.data_de} onChange={(valor) => definir('data_de', valor)} />
                         <CampoData id="filtro-data-ate" label="Protocolado até" value={form.data_ate} onChange={(valor) => definir('data_ate', valor)} />
                     </div>
@@ -548,6 +633,7 @@ export default function ConsultaProcessos({
                     </div>
                 </form>
 
+                {!simplifica && (
                 <div className="flex flex-wrap items-center gap-2 border-t border-gray-100 px-5 py-3 dark:border-gray-800">
                     {ABAS.map((aba) => {
                         const ativa = abaAtiva === aba.id;
@@ -577,6 +663,7 @@ export default function ConsultaProcessos({
                         );
                     })}
                 </div>
+                )}
 
                 {chips.length > 0 && (
                     <div className="flex flex-wrap items-center gap-2 border-t border-gray-100 bg-gray-50/60 px-5 py-3 dark:border-gray-800 dark:bg-white/[0.02]">
@@ -607,6 +694,11 @@ export default function ConsultaProcessos({
                     </div>
                 )}
 
+                {simplifica ? (
+                    <div className="border-t border-gray-100 dark:border-gray-800">
+                        <ProcessosSimplifica filtros={filtros} porPagina={perPage} />
+                    </div>
+                ) : (<>
                 <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 px-5 py-3 dark:border-gray-800">
                     <div className="flex items-center gap-2.5 text-sm text-gray-500">
                         {podeMalhaFina && (
@@ -710,10 +802,38 @@ export default function ConsultaProcessos({
                         </p>
                     )}
                 </div>
+                </>)}
             </section>
-
-            <ProcessosSimplifica filtros={filtros} />
         </>
+    );
+}
+
+function BotaoFonte({
+    ativo,
+    titulo,
+    descricao,
+    onClick,
+}: {
+    ativo: boolean;
+    titulo: string;
+    descricao: string;
+    onClick: () => void;
+}) {
+    return (
+        <button
+            type="button"
+            role="radio"
+            aria-checked={ativo}
+            onClick={onClick}
+            className={`rounded-xl border px-4 py-3 text-left transition-colors ${
+                ativo
+                    ? 'border-brand-500 bg-brand-50 ring-2 ring-brand-500/20 dark:bg-brand-500/10'
+                    : 'border-gray-200 bg-white hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:hover:bg-white/[0.03]'
+            }`}
+        >
+            <span className="block text-sm font-semibold text-gray-800 dark:text-white/90">{titulo}</span>
+            <span className="block text-xs text-gray-500 dark:text-gray-400">{descricao}</span>
+        </button>
     );
 }
 
