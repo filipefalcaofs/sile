@@ -77,6 +77,8 @@ export default function RenovacaoWizard({
 
     const obrigatorias = declaracoes.filter((item) => item.required);
     const todasMarcadas = obrigatorias.every((item) => form.data.declaration_ids.includes(item.id));
+    const contatoCompleto =
+        /^\S+@\S+\.\S+$/.test(form.data.email.trim()) && form.data.phone.trim() !== '' && form.data.mobile.trim() !== '';
 
     function alternarDeclaracao(id: number, marcado: boolean) {
         const atual = form.data.declaration_ids;
@@ -238,15 +240,16 @@ export default function RenovacaoWizard({
                     {passo === 1 && (
                         <div className="flex flex-col gap-5">
                             <p className="text-sm text-gray-600 dark:text-gray-300">
-                                Informe como a SEDUR pode falar com você sobre esta renovação. O telefone é obrigatório.
+                                Informe como a SEDUR pode falar com você sobre esta renovação. Todos os campos são obrigatórios.
                             </p>
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                             <div>
-                                <Label htmlFor="email">E-mail</Label>
+                                <Label htmlFor="email" required>E-mail</Label>
                                 <Input
                                     id="email"
                                     type="email"
                                     autoComplete="email"
+                                    required
                                     value={form.data.email}
                                     error={Boolean(form.errors.email)}
                                     hint={form.errors.email}
@@ -254,7 +257,7 @@ export default function RenovacaoWizard({
                                 />
                             </div>
                             <div>
-                                <Label htmlFor="phone">Telefone</Label>
+                                <Label htmlFor="phone" required>Telefone</Label>
                                 <MaskedInput
                                     id="phone"
                                     mask="phone"
@@ -267,12 +270,15 @@ export default function RenovacaoWizard({
                                 />
                             </div>
                             <div>
-                                <Label htmlFor="mobile">Celular</Label>
+                                <Label htmlFor="mobile" required>Celular</Label>
                                 <MaskedInput
                                     id="mobile"
                                     mask="phone"
                                     autoComplete="tel"
+                                    required
                                     value={form.data.mobile}
+                                    error={Boolean(form.errors.mobile)}
+                                    hint={form.errors.mobile}
                                     onChange={(valor) => form.setData('mobile', valor)}
                                 />
                             </div>
@@ -325,10 +331,9 @@ export default function RenovacaoWizard({
                                     <p className="text-gray-500 dark:text-gray-400">{origem.empresa}</p>
                                 </ItemRevisao>
                                 <ItemRevisao titulo="Contato" onEditar={() => setPasso(1)}>
-                                    <p className="text-gray-800 dark:text-white/90">{form.data.email || 'Sem e-mail'}</p>
+                                    <p className="text-gray-800 dark:text-white/90">{form.data.email}</p>
                                     <p className="text-gray-500 dark:text-gray-400">
-                                        {form.data.phone}
-                                        {form.data.mobile && ` · ${form.data.mobile}`}
+                                        {form.data.phone} · {form.data.mobile}
                                     </p>
                                 </ItemRevisao>
                                 <ItemRevisao titulo="Declarações" onEditar={() => setPasso(2)}>
@@ -354,7 +359,7 @@ export default function RenovacaoWizard({
                             <Button
                                 className="min-h-11"
                                 onClick={avancar}
-                                disabled={(passo === 1 && form.data.phone.trim() === '') || (passo === 2 && !todasMarcadas)}
+                                disabled={(passo === 1 && !contatoCompleto) || (passo === 2 && !todasMarcadas)}
                             >
                                 Continuar
                             </Button>

@@ -158,6 +158,24 @@ class RenovacaoBuscaTest extends TestCase
         $this->assertSame(1, ViabilityRequest::query()->where('renews_legacy_tvl_number', 3333333)->count());
     }
 
+    public function test_protocolo_exige_email_telefone_e_celular(): void
+    {
+        $this->declaracaoDaRenovacao();
+        $this->mockClient(function (MockInterface $client): void {
+            $client->shouldReceive('tvlPorNumero')->with(3333333)->andReturn($this->detalhe(3333333, titular: null));
+        });
+
+        foreach (['email', 'phone', 'mobile'] as $campo) {
+            $dados = $this->formulario();
+            unset($dados[$campo]);
+
+            $this->actingAs($this->cidadao())->post('/portal/renovacao/legado/3333333', $dados)
+                ->assertSessionHasErrors($campo);
+        }
+
+        $this->assertSame(0, ViabilityRequest::query()->where('renews_legacy_tvl_number', 3333333)->count());
+    }
+
     public function test_termo_invalido_avisa_os_formatos(): void
     {
         $this->actingAs($this->cidadao())->get('/portal/renovacao?busca=abc')
