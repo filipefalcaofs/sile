@@ -5,7 +5,7 @@ info:
   description: |
     API chamada pelo REGIN para enviar o processo de viabilidade.
 
-    Não envie token nem header `JWT`.
+    O `POST` pode exigir o segredo combinado com a SEDUR, no header `X-Regin-Token` (ou `Authorization: Bearer`). Sem ele, ou com valor errado, a resposta é HTTP 401 e nada é gravado. Origem fora da lista combinada responde 403 e corpo acima de 2 MB responde 413. O `GET` de conectividade não exige segredo. Não envie header `JWT`.
 
     O `GET /api_integracao/recebe` testa a conectividade e devolve o texto `3`.
 

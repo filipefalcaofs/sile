@@ -5,6 +5,7 @@ use App\Http\Controllers\Portal\ProcessosPortalServicosController;
 use App\Http\Controllers\Regin\ReginDocumentacaoController;
 use App\Http\Controllers\Regin\ReginRecebeController;
 use App\Http\Controllers\VerificacaoDocumentoController;
+use App\Http\Middleware\AutenticaRecebeRegin;
 use App\Http\Middleware\LogInboundIntegration;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -34,7 +35,9 @@ Route::get('/api_integracao/tvl/docs/openapi.yaml', [ConsultaTvlController::clas
 Route::middleware(LogInboundIntegration::class)->group(function (): void {
     Route::middleware('throttle:regin-recebe')->group(function (): void {
         Route::get('/api_integracao/recebe', [ReginRecebeController::class, 'ping'])->name('regin.recebe.ping');
-        Route::post('/api_integracao/recebe', [ReginRecebeController::class, 'store'])->name('regin.recebe.store');
+        Route::post('/api_integracao/recebe', [ReginRecebeController::class, 'store'])
+            ->middleware(AutenticaRecebeRegin::class)
+            ->name('regin.recebe.store');
     });
 
     // Processos de viabilidade do CPF da sessão do Portal de Serviços (lista e
