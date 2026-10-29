@@ -386,6 +386,8 @@ return [
             'base_url' => env('LEGADO_API_URL', ''),
             'token' => env('LEGADO_API_TOKEN', ''),
             'timeout' => 8,
+            // A pesquisa combinada varre texto no SQL Server do legado e leva mais que as consultas por chave.
+            'timeout_pesquisa' => 30,
         ],
         'geocoding' => [
             'base_url' => 'https://nominatim-hmlg.salvador.ba.gov.br',

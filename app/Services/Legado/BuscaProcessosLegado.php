@@ -14,7 +14,6 @@ class BuscaProcessosLegado
 
     /** Filtros de texto da tela e o parâmetro da API; a API exige 3 caracteres ou mais. */
     private const TEXTOS = [
-        'busca' => 'busca',
         'bap' => 'protocolo',
         'nome' => 'empresa',
         'cnae' => 'cnae',
@@ -69,7 +68,8 @@ class BuscaProcessosLegado
         $processo = trim($filtros['protocolo'] ?? '');
 
         if ($processo !== '') {
-            $parametros['numero_processo'] = $processo;
+            [$parametro, $valor] = $this->identificador($processo) ?? ['numero_processo', $processo];
+            $parametros[$parametro] ??= $valor;
         }
 
         $tvl = $this->digitos($filtros['produto_tvl'] ?? '');
@@ -110,7 +110,61 @@ class BuscaProcessosLegado
             }
         }
 
+        $this->buscaLivre(trim($filtros['busca'] ?? ''), $parametros);
+
         return $parametros;
+    }
+
+    /**
+     * A caixa de busca vira o filtro específico quando o texto é um número que
+     * o legado procura por igualdade (rápido); o resto é nome da empresa. A
+     * busca genérica da API varre texto em várias tabelas e demora demais.
+     * Um filtro já preenchido pelo campo próprio não é sobrescrito.
+     *
+     * @param  array<string, string>  $parametros
+     */
+    private function buscaLivre(string $busca, array &$parametros): void
+    {
+        if ($busca === '') {
+            return;
+        }
+
+        $identificado = $this->identificador($busca);
+
+        if ($identificado === null && mb_strlen($busca) >= 3) {
+            $identificado = ['empresa', $busca];
+        }
+
+        if ($identificado !== null) {
+            $parametros[$identificado[0]] ??= $identificado[1];
+        }
+    }
+
+    /**
+     * @return array{0: string, 1: string}|null
+     */
+    private function identificador(string $texto): ?array
+    {
+        if (preg_match('/^[A-Za-z]{3}\d{3,}$/', $texto) === 1) {
+            return ['protocolo', $texto];
+        }
+
+        if (preg_match('/^\d{10}-\d{8}\/\d{4}$/', $texto) === 1) {
+            return ['numero_processo', $texto];
+        }
+
+        if (preg_match('/^[\d.\-\/\s]+$/', $texto) !== 1) {
+            return null;
+        }
+
+        $digitos = $this->digitos($texto);
+
+        return match (true) {
+            in_array(strlen($digitos), [11, 14], true) => ['documento', $digitos],
+            strlen($digitos) === 7 => ['numero_tvl', $digitos],
+            preg_match('/^\d{1,12}$/', $digitos) === 1 => ['inscricao', $digitos],
+            default => null,
+        };
     }
 
     /**

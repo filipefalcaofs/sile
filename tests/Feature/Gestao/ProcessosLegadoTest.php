@@ -5,8 +5,10 @@ namespace Tests\Feature\Gestao;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 /**
@@ -142,7 +144,7 @@ class ProcessosLegadoTest extends TestCase
             ]);
 
         Http::assertSent(fn (Request $request): bool => str_contains($request->url(), '/processos/pesquisa')
-            && $request['busca'] === 'padaria'
+            && ! isset($request['busca'])
             && $request['numero_processo'] === '0000012345-00067890/2024'
             && $request['protocolo'] === 'BAP26'
             && $request['numero_tvl'] === '2104040'
@@ -162,6 +164,90 @@ class ProcessosLegadoTest extends TestCase
             && $request['por_pagina'] === '15');
     }
 
+    /**
+     * @return array<string, array{0: string, 1: string, 2: string}>
+     */
+    public static function buscasEstruturadas(): array
+    {
+        return [
+            'protocolo REGIN completo' => ['BAP2680139693', 'protocolo', 'BAP2680139693'],
+            'protocolo REGIN parcial' => ['bap2601', 'protocolo', 'bap2601'],
+            'número do processo' => ['5921000030-00062208/2026', 'numero_processo', '5921000030-00062208/2026'],
+            'CNPJ com máscara' => ['53.666.248/0001-52', 'documento', '53666248000152'],
+            'CPF' => ['123.456.789-09', 'documento', '12345678909'],
+            'número da TVL' => ['2104040', 'numero_tvl', '2104040'],
+            'inscrição' => ['100200300', 'inscricao', '100200300'],
+            'nome da empresa' => ['Padaria Central', 'empresa', 'Padaria Central'],
+        ];
+    }
+
+    #[DataProvider('buscasEstruturadas')]
+    public function test_caixa_de_busca_vira_o_filtro_especifico_e_nao_usa_a_busca_generica_da_api(string $busca, string $parametro, string $valor): void
+    {
+        Http::fake([self::BASE.'/processos/pesquisa*' => Http::response(['data' => [], 'meta' => ['total' => 0, 'pagina' => 1, 'por_pagina' => 15, 'paginas' => 0]])]);
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->getJson('/gestao/processos/legado?busca='.urlencode($busca))
+            ->assertOk()
+            ->assertJson(['consultado' => true]);
+
+        Http::assertSent(fn (Request $request): bool => $request[$parametro] === $valor && ! isset($request['busca']));
+    }
+
+    public function test_campo_proprio_vale_mais_que_a_caixa_de_busca(): void
+    {
+        Http::fake([self::BASE.'/processos/pesquisa*' => Http::response(['data' => [], 'meta' => ['total' => 0, 'pagina' => 1, 'por_pagina' => 15, 'paginas' => 0]])]);
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->getJson('/gestao/processos/legado?cnpj=53666248000152&busca='.urlencode('12.345.678/0001-95'))
+            ->assertOk();
+
+        Http::assertSent(fn (Request $request): bool => $request['documento'] === '53666248000152');
+    }
+
+    public function test_protocolo_digitado_no_campo_do_processo_vai_como_protocolo(): void
+    {
+        Http::fake([self::BASE.'/processos/pesquisa*' => Http::response(['data' => [], 'meta' => ['total' => 0, 'pagina' => 1, 'por_pagina' => 15, 'paginas' => 0]])]);
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->getJson('/gestao/processos/legado?protocolo=BAP2680139693')
+            ->assertOk();
+
+        Http::assertSent(fn (Request $request): bool => $request['protocolo'] === 'BAP2680139693' && ! isset($request['numero_processo']));
+    }
+
+    public function test_pesquisa_tem_tempo_proprio_nao_repete_e_informa_o_motivo_da_demora(): void
+    {
+        config(['viabiliza.integrations.legado_api.timeout_pesquisa' => 30]);
+        $tentativas = 0;
+        Http::fake(function () use (&$tentativas) {
+            $tentativas++;
+
+            throw new ConnectionException('cURL error 28: Operation timed out after 30001 milliseconds');
+        });
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->getJson('/gestao/processos/legado?cnpj=53666248000152')
+            ->assertOk()
+            ->assertJson([
+                'consultado' => true,
+                'erro' => 'Não foi possível consultar o Simplifica agora.',
+                'motivo' => 'A API do legado demorou mais de 30 s para responder.',
+            ]);
+
+        $this->assertSame(1, $tentativas);
+    }
+
+    public function test_motivo_da_api_vai_para_a_resposta(): void
+    {
+        Http::fake([self::BASE.'/processos/pesquisa*' => Http::response(['mensagem' => 'Token ausente.'], 401)]);
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->getJson('/gestao/processos/legado?cnpj=53666248000152')
+            ->assertOk()
+            ->assertJson(['erro' => 'Não foi possível consultar o Simplifica agora.', 'motivo' => 'Token ausente.']);
+    }
+
     public function test_valores_fora_do_vocabulario_do_legado_nao_sao_enviados(): void
     {
         Http::fake([self::BASE.'/processos/pesquisa*' => Http::response(['data' => [], 'meta' => ['total' => 0, 'pagina' => 1, 'por_pagina' => 15, 'paginas' => 0]])]);
@@ -171,7 +257,7 @@ class ProcessosLegadoTest extends TestCase
             ->assertOk()
             ->assertJson(['consultado' => true, 'processos' => []]);
 
-        Http::assertSent(fn (Request $request): bool => $request['busca'] === 'padaria'
+        Http::assertSent(fn (Request $request): bool => $request['empresa'] === 'padaria'
             && ! isset($request['documento'])
             && ! isset($request['inscricao'])
             && ! isset($request['fluxo'])

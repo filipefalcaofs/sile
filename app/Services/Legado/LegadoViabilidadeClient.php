@@ -110,7 +110,7 @@ class LegadoViabilidadeClient
         $response = $this->enviar('/processos/pesquisa', $filtros + [
             'pagina' => (string) $pagina,
             'por_pagina' => (string) $porPagina,
-        ]);
+        ], (int) config('viabiliza.integrations.legado_api.timeout_pesquisa', 30), 1);
 
         $this->validar($response);
 
@@ -183,15 +183,15 @@ class LegadoViabilidadeClient
     /**
      * @param  array<string, string>  $query
      */
-    private function enviar(string $caminho, array $query = []): Response
+    private function enviar(string $caminho, array $query = [], ?int $timeout = null, int $tentativas = self::TENTATIVAS): Response
     {
         $base = $this->base();
         $url = $base.$caminho;
-        $resposta = $this->tentar($url, $query, $this->credencial($base));
+        $resposta = $this->tentar($url, $query, $this->credencial($base), $timeout, $tentativas);
 
         if ($resposta->status() === 401 && $this->usaSessao()) {
             Cache::forget($this->chaveDaSessao($base));
-            $resposta = $this->tentar($url, $query, $this->credencial($base));
+            $resposta = $this->tentar($url, $query, $this->credencial($base), $timeout, $tentativas);
         }
 
         return $resposta;
@@ -295,27 +295,32 @@ class LegadoViabilidadeClient
     /**
      * @param  array<string, string>  $query
      */
-    private function tentar(string $url, array $query, string $token): Response
+    private function tentar(string $url, array $query, string $token, ?int $timeout = null, int $tentativas = self::TENTATIVAS): Response
     {
         $ultima = null;
+        $espera = $timeout ?? (int) config('viabiliza.integrations.legado_api.timeout', 8);
 
-        for ($tentativa = 1; $tentativa <= self::TENTATIVAS; $tentativa++) {
+        for ($tentativa = 1; $tentativa <= $tentativas; $tentativa++) {
             try {
-                $response = Http::timeout((int) config('viabiliza.integrations.legado_api.timeout', 8))
+                $response = Http::timeout($espera)
                     ->connectTimeout(4)
                     ->withHeaders($this->cabecalhoHost())
                     ->withToken($token)
                     ->acceptJson()
                     ->get($url, $query);
-            } catch (ConnectionException) {
-                if ($tentativa === self::TENTATIVAS) {
-                    throw new LegadoIndisponivelException('API legada de viabilidade indisponível.');
+            } catch (ConnectionException $e) {
+                if ($tentativa === $tentativas) {
+                    throw new LegadoIndisponivelException(
+                        str_contains($e->getMessage(), 'timed out') || str_contains($e->getMessage(), 'cURL error 28')
+                            ? "A API do legado demorou mais de {$espera} s para responder."
+                            : 'API legada de viabilidade indisponível.',
+                    );
                 }
 
                 continue;
             }
 
-            if (! $this->retentavel($response->status()) || $tentativa === self::TENTATIVAS) {
+            if (! $this->retentavel($response->status()) || $tentativa === $tentativas) {
                 return $response;
             }
 
