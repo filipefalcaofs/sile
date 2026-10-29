@@ -3,9 +3,13 @@
 namespace Tests\Feature\Integracao;
 
 use App\Enums\DecisionOutcome;
+use App\Enums\RuleDomain;
+use App\Enums\RuleVersionStatus;
 use App\Enums\TvlKind;
 use App\Models\AnalysisRecord;
 use App\Models\Company;
+use App\Models\RuleVersion;
+use App\Models\TllValor;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -171,6 +175,24 @@ class ConsultaTvlTest extends TestCase
         $this->decisaoDeferida();
 
         $this->consultar('3000123')->assertOk()->assertJsonPath('empresa.condicionantes', null);
+    }
+
+    public function test_valor_da_taxa_sai_com_duas_casas_decimais(): void
+    {
+        RuleVersion::factory()->create([
+            'domain' => RuleDomain::TllValores,
+            'version' => '2026',
+            'status' => RuleVersionStatus::Vigente,
+            'valid_to' => null,
+        ]);
+        TllValor::factory()->create(['codigo_tll' => '1.01', 'exercicio' => 2026, 'valor' => 200, 'taxa_servico' => 6.1]);
+        $this->decisaoDeferida(['per_cnae' => [['cnae' => '5611204', 'codigo_tll' => '1.01']]]);
+
+        $conteudo = $this->consultar('3000123')->assertOk()->getContent();
+        $this->assertStringContainsString('"valor":206.10,', $conteudo);
+
+        TllValor::query()->update(['valor' => 300, 'taxa_servico' => 0]);
+        $this->assertStringContainsString('"valor":300.00,', $this->consultar('3000123')->getContent());
     }
 
     public function test_tvl_aceita_o_numero_com_o_prefixo_gravado(): void

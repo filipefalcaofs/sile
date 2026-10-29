@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
- * Consulta de TVL pela SEFAZ/SIGS (alvará e DAM). O corpo segue o WS SIGS
+ * Consulta de Viabilidade pela SEFAZ/SIGS (alvará e DAM). O corpo segue o WS SIGS
  * `buscarPorNumeroTVLRegin`; o HTTP diz o essencial (404 não encontrado,
  * 401 sem token válido, 503 integração desligada) e `resposta.status` carrega o enum
  * SIGS (00/01/02/99). Toda chamada passa pelo registro de integrações.
@@ -78,7 +78,18 @@ class ConsultaTvlController extends Controller
             return response()->json($this->consulta->semResposta($numero, ConsultaTvlService::NAO_ENCONTRADO), 404);
         }
 
-        return response()->json($corpo);
+        return $this->json($corpo);
+    }
+
+    /**
+     * @param  array<string, mixed>  $corpo
+     */
+    private function json(array $corpo): JsonResponse
+    {
+        $json = (string) json_encode($corpo, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRESERVE_ZERO_FRACTION);
+        $json = (string) preg_replace('/"'.preg_quote(ConsultaTvlService::MARCA_DECIMAL, '/').'(\d+\.\d{2})@@"/', '$1', $json);
+
+        return JsonResponse::fromJsonString($json);
     }
 
     private function erro(string $numero, int $http): JsonResponse

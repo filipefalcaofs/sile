@@ -12,7 +12,7 @@ use App\Services\Analise\TllCalculoService;
 use Carbon\CarbonInterface;
 
 /**
- * Resposta da consulta de TVL que a SEFAZ/SIGS faz no Viabiliza (alvará e DAM),
+ * Resposta da consulta de Viabilidade que a SEFAZ/SIGS faz no Viabiliza (alvará e DAM),
  * no mesmo JSON do WS SIGS `buscarPorNumeroTVLRegin`. Só leitura: monta o
  * contrato a partir da decisão, da ficha e do cálculo da TLL já gravados.
  * Campos que o Viabiliza não guarda saem null, nunca inventados.
@@ -34,6 +34,12 @@ class ConsultaTvlService
         self::ERRO => 'Erro no processamento.',
     ];
 
+    /**
+     * Marca o valor monetário para o controller escrevê-lo no JSON como número
+     * com duas casas (206.10): o json_encode do PHP corta o zero final.
+     */
+    public const MARCA_DECIMAL = '@@decimal:';
+
     private const COD_MUNICIPIO = '38490';
 
     private const TIPOS_LOGRADOURO = [
@@ -52,7 +58,7 @@ class ConsultaTvlService
     }
 
     /**
-     * Null quando nenhuma decisão carrega esse número de TVL.
+     * Null quando nenhuma decisão carrega esse número de Viabilidade.
      *
      * @return array<string, mixed>|null
      */
@@ -273,7 +279,7 @@ class ConsultaTvlService
         return [[
             'documento' => null,
             'codigoTLL' => $tll?->codigo_tll_sefaz ?? $calculo->codigo_tll,
-            'valor' => (float) $calculo->valor,
+            'valor' => self::MARCA_DECIMAL.number_format((float) $calculo->valor, 2, '.', '').'@@',
             'dataTaxa' => $decisao->decided_at?->format('d/m/Y'),
             'servico' => $tll?->servico_sefaz ?? 'Viabilidade de Localização',
             'codigoServico' => $tll?->codigo_servico_sefaz,
