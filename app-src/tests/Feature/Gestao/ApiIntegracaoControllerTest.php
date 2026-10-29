@@ -186,6 +186,7 @@ class ApiIntegracaoControllerTest extends TestCase
                 'token' => 'lg_token_da_aba_unica',
                 'usuario' => '',
                 'senha_acesso' => '',
+                'host' => '',
                 'comparacao' => '1',
             ]])
             ->assertRedirect(route('gestao.config-apis.edit', ['aba' => 'legado']));
@@ -200,6 +201,7 @@ class ApiIntegracaoControllerTest extends TestCase
                 'token' => '',
                 'usuario' => '',
                 'senha_acesso' => '',
+                'host' => '',
                 'comparacao' => '0',
             ]]);
 

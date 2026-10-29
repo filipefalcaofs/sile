@@ -218,6 +218,18 @@ class LegadoViabilidadeClient
         return trim((string) Settings::get('integrations.legado_api.token', config('viabiliza.integrations.legado_api.token')));
     }
 
+    /**
+     * Host enviado no cabeçalho quando a URL é um IP e o gateway roteia por nome.
+     *
+     * @return array<string, string>
+     */
+    private function cabecalhoHost(): array
+    {
+        $host = trim((string) Settings::get('integrations.legado_api.host', ''));
+
+        return $host === '' ? [] : ['Host' => $host];
+    }
+
     private function usuario(): string
     {
         return trim((string) Settings::get('integrations.legado_api.usuario', ''));
@@ -262,6 +274,7 @@ class LegadoViabilidadeClient
         try {
             $response = Http::timeout((int) config('viabiliza.integrations.legado_api.timeout', 8))
                 ->connectTimeout(4)
+                ->withHeaders($this->cabecalhoHost())
                 ->acceptJson()
                 ->post($base.'/auth', ['identificador' => $this->usuario(), 'senha' => $this->senha()]);
         } catch (ConnectionException) {
@@ -290,6 +303,7 @@ class LegadoViabilidadeClient
             try {
                 $response = Http::timeout((int) config('viabiliza.integrations.legado_api.timeout', 8))
                     ->connectTimeout(4)
+                    ->withHeaders($this->cabecalhoHost())
                     ->withToken($token)
                     ->acceptJson()
                     ->get($url, $query);
