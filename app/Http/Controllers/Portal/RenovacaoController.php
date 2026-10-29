@@ -140,23 +140,41 @@ class RenovacaoController extends Controller
 
     public function showLegado(Request $request, string $cnpj, string $numero): Response|RedirectResponse
     {
+        return $this->abrirLegado($request, $cnpj, $numero);
+    }
+
+    public function showLegadoSemCnpj(Request $request, string $numero): Response|RedirectResponse
+    {
+        return $this->abrirLegado($request, null, $numero);
+    }
+
+    private function abrirLegado(Request $request, ?string $cnpjDaRota, string $numero): Response|RedirectResponse
+    {
         try {
             $tvl = $this->legadoClient->tvlPorNumero((int) $numero);
 
-            if ($tvl === null || ProvisoriasLegadasService::cnpjDaRenovacao($tvl, $cnpj) !== $cnpj) {
+            if ($tvl === null) {
                 return $this->voltarAoIndice(self::MENSAGEM_LEGADO_GENERICA);
             }
 
-            $titularidade = $this->elegibilidadeLegada->titularidade($tvl, new Company(['cnpj' => $cnpj]));
+            $cnpj = ProvisoriasLegadasService::cnpjDaRenovacao($tvl, $cnpjDaRota);
+
+            if ($cnpjDaRota !== null && $cnpj !== $cnpjDaRota) {
+                return $this->voltarAoIndice(self::MENSAGEM_LEGADO_GENERICA);
+            }
+
+            $titularidade = $cnpjDaRota === null
+                ? null
+                : $this->elegibilidadeLegada->titularidade($tvl, new Company(['cnpj' => $cnpjDaRota]));
         } catch (LegadoIndisponivelException) {
             return $this->voltarAoIndice('O serviço de consulta de viabilidades anteriores está indisponível. Tente novamente em instantes.');
         }
 
-        if ($titularidade->consultaIndisponivel) {
+        if ($titularidade?->consultaIndisponivel) {
             return $this->voltarAoIndice((string) $titularidade->motivo);
         }
 
-        if (! $titularidade->titular) {
+        if ($titularidade !== null && ! $titularidade->titular) {
             return $this->voltarAoIndice(self::MENSAGEM_LEGADO_GENERICA);
         }
 
@@ -172,7 +190,7 @@ class RenovacaoController extends Controller
             return $this->voltarAoIndice($exception->getMessage());
         }
 
-        $empresa = Company::query()->where('cnpj', $cnpj)->orderBy('id')->first();
+        $empresa = $cnpj === null ? null : Company::query()->where('cnpj', $cnpj)->orderBy('id')->first();
         $tipo = ViabilityServiceType::query()->where('code', 'renovacao-tvl')->first();
 
         return Inertia::render('portal/renovacao/wizard', [
@@ -182,7 +200,7 @@ class RenovacaoController extends Controller
                 'numero' => $tvl->numero,
                 'cnpj_digitos' => $cnpj,
                 'empresa' => $empresa?->legal_name ?? $tvl->razaoSocial,
-                'cnpj' => (new Company(['cnpj' => $cnpj]))->formatted_cnpj,
+                'cnpj' => $cnpj === null ? null : (new Company(['cnpj' => $cnpj]))->formatted_cnpj,
                 'endereco' => $enderecoTexto,
                 'atividades' => collect($tvl->atividades)
                     ->map(fn (array $atividade): string => trim($atividade['codigo'].' '.$atividade['descricao']))
@@ -255,21 +273,39 @@ class RenovacaoController extends Controller
 
     public function storeLegado(ProtocolarRenovacaoRequest $request, string $cnpj, string $numero): RedirectResponse
     {
+        return $this->protocolarLegada($request, $cnpj, $numero);
+    }
+
+    public function storeLegadoSemCnpj(ProtocolarRenovacaoRequest $request, string $numero): RedirectResponse
+    {
+        return $this->protocolarLegada($request, null, $numero);
+    }
+
+    private function protocolarLegada(ProtocolarRenovacaoRequest $request, ?string $cnpjDaRota, string $numero): RedirectResponse
+    {
         try {
             $tvl = $this->legadoClient->tvlPorNumero((int) $numero);
 
-            if ($tvl === null || ProvisoriasLegadasService::cnpjDaRenovacao($tvl, $cnpj) !== $cnpj) {
+            if ($tvl === null) {
                 return $this->voltarAoIndice(self::MENSAGEM_LEGADO_GENERICA);
             }
 
-            $titularidade = $this->elegibilidadeLegada->titularidade($tvl, new Company(['cnpj' => $cnpj]));
+            $cnpj = ProvisoriasLegadasService::cnpjDaRenovacao($tvl, $cnpjDaRota);
 
-            if ($titularidade->consultaIndisponivel) {
-                return $this->voltarAoIndice((string) $titularidade->motivo);
+            if ($cnpjDaRota !== null && $cnpj !== $cnpjDaRota) {
+                return $this->voltarAoIndice(self::MENSAGEM_LEGADO_GENERICA);
             }
 
-            if (! $titularidade->titular) {
-                return $this->voltarAoIndice(self::MENSAGEM_LEGADO_GENERICA);
+            if ($cnpjDaRota !== null) {
+                $titularidade = $this->elegibilidadeLegada->titularidade($tvl, new Company(['cnpj' => $cnpjDaRota]));
+
+                if ($titularidade->consultaIndisponivel) {
+                    return $this->voltarAoIndice((string) $titularidade->motivo);
+                }
+
+                if (! $titularidade->titular) {
+                    return $this->voltarAoIndice(self::MENSAGEM_LEGADO_GENERICA);
+                }
             }
 
             $renovacao = $this->protocolo->protocolarLegada(
