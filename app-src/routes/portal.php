@@ -160,6 +160,12 @@ Route::middleware(['auth:web', ConfereSessaoPortalServicos::class, 'verified'])
                         ->middleware('portal.extras')->name('renovacao.consultar-cnpj');
                     Route::post('renovacao/legado/consultar', [RenovacaoController::class, 'consultarLegado'])->middleware('portal.solicitacao')
                         ->middleware('portal.extras')->name('renovacao.legado.consultar');
+                    Route::get('renovacao/legado/{numero}', [RenovacaoController::class, 'showLegadoSemCnpj'])->middleware('portal.solicitacao')
+                        ->whereNumber('numero')
+                        ->name('renovacao.legado.show-sem-cnpj');
+                    Route::post('renovacao/legado/{numero}', [RenovacaoController::class, 'storeLegadoSemCnpj'])->middleware('portal.solicitacao')
+                        ->whereNumber('numero')
+                        ->name('renovacao.legado.store-sem-cnpj');
                     Route::get('renovacao/legado/{cnpj}/{numero}', [RenovacaoController::class, 'showLegado'])->middleware('portal.solicitacao')
                         ->where('cnpj', '[0-9]{14}')->whereNumber('numero')
                         ->name('renovacao.legado.show');

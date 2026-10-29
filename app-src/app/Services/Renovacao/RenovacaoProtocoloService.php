@@ -103,9 +103,11 @@ class RenovacaoProtocoloService
      * @param  array{email?: string|null, phone?: string|null, mobile?: string|null}  $contato
      * @param  list<int>  $declaracaoIds
      */
-    public function protocolarLegada(TvlLegadaDetalhe $tvl, string $cnpj, Cidadao $ator, array $contato, array $declaracaoIds): ViabilityRequest
+    public function protocolarLegada(TvlLegadaDetalhe $tvl, ?string $cnpj, Cidadao $ator, array $contato, array $declaracaoIds): ViabilityRequest
     {
-        $avaliacao = $this->elegibilidadeLegada->avaliar($tvl, new Company(['cnpj' => $cnpj]));
+        $avaliacao = $cnpj === null
+            ? $this->elegibilidadeLegada->avaliarAposTitularidade($tvl)
+            : $this->elegibilidadeLegada->avaliar($tvl, new Company(['cnpj' => $cnpj]));
 
         if (! $avaliacao->elegivel) {
             throw new DomainException($avaliacao->motivo ?? 'Esta viabilidade não pode ser renovada.');
@@ -114,7 +116,7 @@ class RenovacaoProtocoloService
         $endereco = $this->enderecoDoProcessoLegado($tvl);
 
         $lock = Cache::lock('renovacao-legada:'.$tvl->numero, 60);
-        $lockEmpresa = Cache::lock('renovacao-legada-empresa:'.$cnpj, 60);
+        $lockEmpresa = Cache::lock('renovacao-legada-empresa:'.($cnpj ?? 'tvl-'.$tvl->numero), 60);
 
         try {
             $lock->block(3);
@@ -169,21 +171,28 @@ class RenovacaoProtocoloService
     /**
      * Empresa da renovação de TVL do sistema anterior: a do Viabiliza com o
      * CNPJ (a mais antiga, se houver repetidas) ou uma nova, com a razão
-     * social da TVL (ou do cadastro do CNPJ) e o endereço do imóvel.
+     * social da TVL (ou do cadastro do CNPJ) e o endereço do imóvel. Sem CNPJ,
+     * a de uma renovação anterior da mesma TVL ou uma nova sem CNPJ.
      *
      * @param  array{logradouro: ?string, numero: ?string, bairro: ?string, cep: ?string}  $endereco
      *
      * @throws DomainException
      */
-    private function empresaDaRenovacaoLegada(TvlLegadaDetalhe $tvl, string $cnpj, array $endereco): Company
+    private function empresaDaRenovacaoLegada(TvlLegadaDetalhe $tvl, ?string $cnpj, array $endereco): Company
     {
-        $existente = Company::query()->where('cnpj', $cnpj)->orderBy('id')->first();
+        $existente = $cnpj === null
+            ? Company::query()->whereKey(ViabilityRequest::query()->where('renews_legacy_tvl_number', $tvl->numero)->orderBy('id')->value('company_id'))->first()
+            : Company::query()->where('cnpj', $cnpj)->orderBy('id')->first();
 
         if ($existente !== null) {
             return $existente;
         }
 
         $razao = trim((string) $tvl->razaoSocial);
+
+        if ($razao === '' && $cnpj === null) {
+            throw new DomainException('A viabilidade anterior não tem razão social registrada. Procure a SEDUR.');
+        }
 
         if ($razao === '') {
             try {

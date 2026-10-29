@@ -165,6 +165,7 @@ class ProvisoriasLegadasService
 
     /**
      * CNPJ de quem renova a TVL: o gravado nela ou, sem ele, o informado.
+     * Sem nenhum dos dois a renovação segue só pela viabilidade.
      */
     public static function cnpjDaRenovacao(TvlLegadaDetalhe $tvl, ?string $cnpjInformado): ?string
     {
@@ -198,10 +199,12 @@ class ProvisoriasLegadasService
         ];
 
         if ($cnpj === null) {
+            $veredito = $this->elegibilidade->avaliarAposTitularidade($tvl);
+
             return $base + [
-                'elegivel' => false,
-                'motivo' => 'Busque pelo CNPJ da empresa para renovar esta viabilidade.',
-                'url' => null,
+                'elegivel' => $veredito->elegivel,
+                'motivo' => $veredito->motivo,
+                'url' => $veredito->elegivel ? "/portal/renovacao/legado/{$tvl->numero}" : null,
             ];
         }
 

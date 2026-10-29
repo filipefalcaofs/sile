@@ -94,7 +94,7 @@ class RenovacaoBuscaTest extends TestCase
                 ->where('itens.1.cnpj', '11.222.333/0001-81'));
     }
 
-    public function test_tvl_legada_sem_cnpj_buscada_por_numero_pede_o_cnpj(): void
+    public function test_tvl_legada_sem_cnpj_buscada_por_numero_pode_ser_renovada_sem_cnpj(): void
     {
         $this->mockClient(function (MockInterface $client): void {
             $client->shouldReceive('tvlPorNumero')->with(3333333)->andReturn($this->detalhe(3333333, titular: null));
@@ -103,9 +103,59 @@ class RenovacaoBuscaTest extends TestCase
         $this->actingAs($this->cidadao())->get('/portal/renovacao?busca=3333333')
             ->assertInertia(fn (Assert $page) => $page
                 ->has('itens', 1)
-                ->where('itens.0.elegivel', false)
-                ->where('itens.0.motivo', 'Busque pelo CNPJ da empresa para renovar esta viabilidade.')
-                ->where('itens.0.url', null));
+                ->where('itens.0.elegivel', true)
+                ->where('itens.0.cnpj', null)
+                ->where('itens.0.url', '/portal/renovacao/legado/3333333'));
+    }
+
+    public function test_assistente_abre_para_tvl_legada_sem_cnpj(): void
+    {
+        $this->mockClient(function (MockInterface $client): void {
+            $client->shouldReceive('tvlPorNumero')->with(3333333)->andReturn($this->detalhe(3333333, titular: null));
+        });
+
+        $this->actingAs($this->cidadao())->get('/portal/renovacao/legado/3333333')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('portal/renovacao/wizard')
+                ->where('origem.legado', true)
+                ->where('origem.numero', 3333333)
+                ->where('origem.cnpj', null)
+                ->where('origem.empresa', self::RAZAO));
+    }
+
+    public function test_protocolo_legado_sem_cnpj_cria_empresa_sem_cnpj_com_a_razao_da_tvl(): void
+    {
+        $this->declaracaoDaRenovacao();
+        $cidadao = $this->cidadao();
+        $this->mockClient(function (MockInterface $client): void {
+            $client->shouldReceive('tvlPorNumero')->with(3333333)->andReturn($this->detalhe(3333333, titular: null));
+        });
+
+        $this->actingAs($cidadao)->post('/portal/renovacao/legado/3333333', $this->formulario())
+            ->assertSessionHasNoErrors()
+            ->assertSessionHas('status');
+
+        $renovacao = ViabilityRequest::query()->where('renews_legacy_tvl_number', 3333333)->firstOrFail();
+        $this->assertSame($cidadao->id, $renovacao->requester_cidadao_id);
+        $this->assertNull($renovacao->company->cnpj);
+        $this->assertSame(self::RAZAO, $renovacao->company->legal_name);
+        $this->assertSame(CompanySource::Legado, $renovacao->company->source);
+    }
+
+    public function test_tvl_legada_sem_cnpj_ja_em_analise_nao_e_renovada_de_novo(): void
+    {
+        $this->declaracaoDaRenovacao();
+        $this->mockClient(function (MockInterface $client): void {
+            $client->shouldReceive('tvlPorNumero')->with(3333333)->andReturn($this->detalhe(3333333, titular: null));
+        });
+
+        $this->actingAs($this->cidadao())->post('/portal/renovacao/legado/3333333', $this->formulario())
+            ->assertSessionHas('status');
+        $this->actingAs($this->cidadao())->post('/portal/renovacao/legado/3333333', $this->formulario())
+            ->assertSessionHas('error');
+
+        $this->assertSame(1, ViabilityRequest::query()->where('renews_legacy_tvl_number', 3333333)->count());
     }
 
     public function test_termo_invalido_avisa_os_formatos(): void
