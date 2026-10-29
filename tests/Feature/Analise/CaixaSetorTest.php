@@ -13,6 +13,7 @@ use App\Models\ViabilityRequestEvento;
 use App\Models\ViabilityServiceType;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -455,7 +456,7 @@ class CaixaSetorTest extends TestCase
         $this->assertNull($processo->fresh()->assigned_user_id);
     }
 
-    public function test_index_expoe_vistoriadores_do_setor_e_deixa_o_processo_em_vistoria_fora_da_caixa(): void
+    public function test_index_expoe_vistoriadores_do_setor_e_mantem_o_processo_em_vistoria_na_caixa(): void
     {
         // A caixa alimenta o seletor da distribuição: processos em vistoria
         // distribuem para a lista de vistoriadores (preencher-ficha-vistoria),
@@ -485,9 +486,9 @@ class CaixaSetorTest extends TestCase
         $this->assertNotContains($analistaComPermissaoDeVistoria->id, $vistoriadoresIds);
         $this->assertContains($administrador->id, $vistoriadoresIds);
 
-        // SPEC-05: processo em vistoria fica só na Caixa de Vistoria, fora desta caixa.
+        // O processo em vistoria segue na caixa do setor até a conclusão.
         $idsNaCaixa = collect($props['processos']['data'])->pluck('id')->all();
-        $this->assertNotContains($processo->id, $idsNaCaixa);
+        $this->assertContains($processo->id, $idsNaCaixa);
 
         $linha = collect($props['processos']['data'])->firstWhere('id', $comum->id);
         $this->assertNotNull($linha);
@@ -726,6 +727,37 @@ class CaixaSetorTest extends TestCase
             'assigned_at' => now(),
             'analysis_status' => AnalysisStatus::EmAnalise,
         ])->save();
+
+        $this->actingAs($apoio, 'gestao')
+            ->post('/gestao/caixa-setor/redistribuir', [
+                'request_ids' => [$processo->id],
+                'analista_id' => $analistaB->id,
+            ])
+            ->assertSessionHas('status');
+
+        $this->assertSame($analistaB->id, $processo->fresh()->assigned_user_id);
+    }
+
+    public function test_processo_em_convite_segue_na_caixa_e_pode_ser_redistribuido(): void
+    {
+        $setor = Sector::factory()->create();
+        $apoio = $this->apoioDoSetor($setor);
+        $analistaA = $this->analistaDoSetor($setor);
+        $analistaB = $this->analistaDoSetor($setor);
+        $processo = $this->processoNaCaixa($setor);
+        $processo->forceFill([
+            'status' => ViabilityRequestStatus::EmPendencia,
+            'assigned_user_id' => $analistaA->id,
+            'assigned_at' => now(),
+            'analysis_status' => AnalysisStatus::EmConvite,
+        ])->save();
+
+        $this->actingAs($apoio, 'gestao')
+            ->get('/gestao/caixa-setor?visao=distribuidos')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('contadores.distribuidos', 1)
+                ->where('processos.data.0.id', $processo->id)
+                ->where('processos.data.0.pode_redistribuir', true));
 
         $this->actingAs($apoio, 'gestao')
             ->post('/gestao/caixa-setor/redistribuir', [

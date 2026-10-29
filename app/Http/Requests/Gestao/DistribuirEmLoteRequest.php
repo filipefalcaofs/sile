@@ -31,7 +31,7 @@ class DistribuirEmLoteRequest extends FormRequest
             'alocacoes.*.request_ids' => ['required', 'array', 'min:1'],
             'alocacoes.*.request_ids.*' => [
                 'integer',
-                Rule::exists('viability_requests', 'id')->where('status', ViabilityRequestStatus::EmAnalise->value),
+                Rule::exists('viability_requests', 'id')->whereIn('status', ViabilityRequestStatus::naCaixaDoSetor()),
             ],
             'origem' => ['nullable', 'in:inteligente'],
             'proposta' => ['nullable', 'array'],

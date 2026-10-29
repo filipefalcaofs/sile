@@ -339,11 +339,11 @@ class VistoriaEncaminhamentoTest extends TestCase
     }
 
     /**
-     * SPEC-05: em vistoria, o processo fica só na Caixa de Vistoria. Ele não
-     * aparece na Caixa do Setor nem para o apoio, que vê todos os setores, nem
-     * para quem é do setor de vistoria. Volta a uma única caixa após o retorno.
+     * O processo segue na Caixa do Setor até a conclusão, em qualquer situação:
+     * em vistoria ele aparece também na Caixa de Vistoria, e continua disponível
+     * para redistribuição.
      */
-    public function test_processo_em_vistoria_fica_so_na_caixa_de_vistoria(): void
+    public function test_processo_em_vistoria_segue_na_caixa_do_setor(): void
     {
         $setorAnalise = Sector::factory()->create();
         $setorVistoria = Sector::factory()->create();
@@ -365,9 +365,9 @@ class VistoriaEncaminhamentoTest extends TestCase
             $this->actingAs($usuario, 'gestao')
                 ->get('/gestao/caixa-setor')
                 ->assertInertia(fn (Assert $page) => $page
-                    ->where('contadores.para_distribuir', 0)
+                    ->where('contadores.para_distribuir', 1)
                     ->where('contadores.distribuidos', 0)
-                    ->has('processos.data', 0));
+                    ->where('processos.data.0.id', $processo->id));
 
             $this->actingAs($usuario, 'gestao')
                 ->get('/gestao/vistorias')
@@ -381,13 +381,14 @@ class VistoriaEncaminhamentoTest extends TestCase
             ->postJson("/gestao/processos/{$processo->id}/vistoria/concluir", ['parecer' => 'Atividade conforme.'])
             ->assertOk();
 
-        // Ficha concluída, ainda não encaminhada: segue na vistoria.
+        // Ficha concluída, ainda não encaminhada: segue na vistoria e na caixa, redistribuível.
         $this->actingAs($apoio, 'gestao')
             ->get('/gestao/caixa-setor?visao=distribuidos')
             ->assertInertia(fn (Assert $page) => $page
                 ->where('contadores.para_distribuir', 0)
-                ->where('contadores.distribuidos', 0)
-                ->has('processos.data', 0));
+                ->where('contadores.distribuidos', 1)
+                ->where('processos.data.0.id', $processo->id)
+                ->where('processos.data.0.pode_redistribuir', true));
 
         $this->actingAs($vistoriador, 'gestao')
             ->post("/gestao/processos/{$processo->id}/vistoria/encaminhar-ao-setor")
@@ -495,7 +496,7 @@ class VistoriaEncaminhamentoTest extends TestCase
             ->get('/gestao/vistorias')
             ->assertInertia(fn (Assert $page) => $page->has('vistorias.data', 0));
 
-        // E volta à vistoria quando o setor encaminha de novo: sai da Caixa do Setor.
+        // E volta à vistoria quando o setor encaminha de novo: segue na Caixa do Setor.
         $this->actingAs($analista, 'gestao')
             ->post("/gestao/processos/{$processo->id}/vistoria/encaminhar", [
                 'setor_vistoria_id' => $setorVistoria->id,
@@ -504,7 +505,7 @@ class VistoriaEncaminhamentoTest extends TestCase
             ->assertSessionMissing('error');
         $this->actingAs($apoio, 'gestao')
             ->get('/gestao/caixa-setor')
-            ->assertInertia(fn (Assert $page) => $page->where('contadores.para_distribuir', 0));
+            ->assertInertia(fn (Assert $page) => $page->where('contadores.para_distribuir', 1));
         $this->actingAs($apoio, 'gestao')
             ->get('/gestao/vistorias')
             ->assertInertia(fn (Assert $page) => $page->has('vistorias.data', 1));

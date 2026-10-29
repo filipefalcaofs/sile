@@ -79,8 +79,8 @@ class CaixaSetorController extends Controller
 
         $paraConclusao = AnalysisStatus::ParaConclusao->value;
 
-        $base = $this->foraDaVistoria($this->naCaixaDoUsuario(ViabilityRequest::query(), $request->user()))
-            ->where('status', ViabilityRequestStatus::EmAnalise->value);
+        $base = $this->naCaixaDoUsuario(ViabilityRequest::query(), $request->user())
+            ->whereIn('status', ViabilityRequestStatus::naCaixaDoSetor());
 
         $base = $this->processos->aplicarFiltros($base, $filtros);
 
@@ -89,7 +89,7 @@ class CaixaSetorController extends Controller
         // e fica na caixa de entrada dele.
         $baseConclusao = $this->processos->aplicarFiltros(
             $this->paraConclusaoDoUsuario(ViabilityRequest::query(), $request->user())
-                ->where('status', ViabilityRequestStatus::EmAnalise->value)
+                ->whereIn('status', ViabilityRequestStatus::naCaixaDoSetor())
                 ->where('analysis_status', $paraConclusao)
                 ->whereNull('conclusao_encaminhada_para_user_id'),
             $filtros,
@@ -229,7 +229,7 @@ class CaixaSetorController extends Controller
 
         $processos = $this->naCaixaDoUsuario(ViabilityRequest::query(), $request->user())
             ->whereIn('id', $ids)
-            ->where('status', ViabilityRequestStatus::EmAnalise->value)
+            ->whereIn('status', ViabilityRequestStatus::naCaixaDoSetor())
             ->whereNull('assigned_user_id')
             ->with(['sector:id,name'])
             ->orderBy('analysis_due_at')
@@ -311,11 +311,11 @@ class CaixaSetorController extends Controller
         $qualquerSetor = $this->distribuicao->distribuiEmQualquerSetor($request->user());
 
         $consulta = $this->naCaixaDoUsuario(ViabilityRequest::query(), $request->user())
-            ->where('status', ViabilityRequestStatus::EmAnalise->value)
+            ->whereIn('status', ViabilityRequestStatus::naCaixaDoSetor())
             ->whereNull('assigned_user_id');
 
         if ($request->boolean('todos')) {
-            $consulta = $this->processos->aplicarFiltros($this->foraDaVistoria($consulta), $this->filtrosDaCaixa($request));
+            $consulta = $this->processos->aplicarFiltros($consulta, $this->filtrosDaCaixa($request));
         } else {
             $ids = collect(explode(',', (string) $request->string('ids')))
                 ->map(fn ($id): int => (int) trim($id))
@@ -396,7 +396,7 @@ class CaixaSetorController extends Controller
 
         $processos = ViabilityRequest::query()
             ->whereIn('id', $pedidos)
-            ->where('status', ViabilityRequestStatus::EmAnalise->value)
+            ->whereIn('status', ViabilityRequestStatus::naCaixaDoSetor())
             ->where(fn (Builder $q) => $q
                 ->where(fn (Builder $naCaixa) => $this->naCaixaDoUsuario($naCaixa, $request->user())
                     ->where($this->semResponsavelOuParaConclusao(...)))
@@ -456,7 +456,7 @@ class CaixaSetorController extends Controller
             $resultado = DB::transaction(function () use ($request, $qualquerSetor, $alocacoes, $todosIds): array {
                 $processos = $this->naCaixaDoUsuario(ViabilityRequest::query(), $request->user())
                     ->whereIn('id', $todosIds->unique())
-                    ->where('status', ViabilityRequestStatus::EmAnalise->value)
+                    ->whereIn('status', ViabilityRequestStatus::naCaixaDoSetor())
                     ->where($this->semResponsavelOuParaConclusao(...))
                     ->lockForUpdate()
                     ->get()
@@ -563,7 +563,7 @@ class CaixaSetorController extends Controller
 
         $processo = $this->naCaixaDoUsuario(ViabilityRequest::query(), $request->user())
             ->whereIn('id', $request->input('request_ids'))
-            ->where('status', ViabilityRequestStatus::EmAnalise->value)
+            ->whereIn('status', ViabilityRequestStatus::naCaixaDoSetor())
             ->firstOrFail();
 
         $setorEscolhido = $request->filled('sector_id') ? $request->integer('sector_id') : null;
@@ -623,7 +623,7 @@ class CaixaSetorController extends Controller
 
             $nome = $processo->external_reference ?: ($processo->protocol_number ?: "#{$id}");
 
-            if ($processo->status !== ViabilityRequestStatus::EmAnalise) {
+            if (! in_array($processo->status->value, ViabilityRequestStatus::naCaixaDoSetor(), true)) {
                 return "{$nome}: não está em análise (situação atual: {$processo->status->label()}).";
             }
 
@@ -649,19 +649,6 @@ class CaixaSetorController extends Controller
     {
         $query->whereNull('assigned_user_id')
             ->orWhere('analysis_status', AnalysisStatus::ParaConclusao->value);
-    }
-
-    /**
-     * Processo em vistoria fica só na Caixa de Vistoria (SPEC-05): sai daqui
-     * em Vistoriar e, já Vistoriado, enquanto segue no setor de vistoria sem
-     * ter sido encaminhado de volta ao setor de origem.
-     *
-     * @param  Builder<ViabilityRequest>  $query
-     * @return Builder<ViabilityRequest>
-     */
-    private function foraDaVistoria(Builder $query): Builder
-    {
-        return $query->whereNotIn('viability_requests.id', ViabilityRequest::query()->naCaixaDeVistoria()->select('viability_requests.id'));
     }
 
     /**
