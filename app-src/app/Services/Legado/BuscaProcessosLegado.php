@@ -5,34 +5,112 @@ namespace App\Services\Legado;
 use Carbon\CarbonImmutable;
 
 /**
- * Consulta de processos do Simplifica para a tela de processos da gestão.
- * Escolhe a chave da API pelo que foi informado: os campos específicos do
- * filtro avançado valem mais que a busca livre. Nada é gravado aqui.
+ * Consulta de processos do Simplifica para a tela de processos da gestão:
+ * leva à pesquisa da API os mesmos filtros da tela. Nada é gravado aqui.
  */
 class BuscaProcessosLegado
 {
     public function __construct(private readonly LegadoViabilidadeClient $client) {}
 
+    /** Filtros de texto da tela e o parâmetro da API; a API exige 3 caracteres ou mais. */
+    private const TEXTOS = [
+        'busca' => 'busca',
+        'bap' => 'protocolo',
+        'nome' => 'empresa',
+        'cnae' => 'cnae',
+        'complemento' => 'complemento',
+        'logradouro' => 'logradouro',
+        'bairro' => 'bairro',
+    ];
+
     /**
+     * Pesquisa no Simplifica com os filtros da tela que o legado entende; os
+     * que dependem de listas do Viabiliza (status, setor, serviço...) não vão.
+     * Sem nenhum filtro válido não consulta.
+     *
      * @param  array<string, string>  $filtros
-     * @return array{consultado: bool, processos: list<array<string, mixed>>}
+     * @return array{consultado: bool, processos: list<array<string, mixed>>, meta: array{total: int, pagina: int, por_pagina: int, paginas: int}|null}
      *
      * @throws LegadoIndisponivelException
      */
-    public function buscar(array $filtros): array
+    public function buscar(array $filtros, int $pagina = 1, int $porPagina = 15): array
     {
-        $chave = $this->chave($filtros);
+        $parametros = $this->parametros($filtros);
 
-        if ($chave === null) {
-            return ['consultado' => false, 'processos' => []];
+        if ($parametros === []) {
+            return ['consultado' => false, 'processos' => [], 'meta' => null];
         }
 
-        $processos = array_map(
-            fn (array $processo): array => $this->formatar($processo),
-            $this->client->processosPorChave($chave[0], $chave[1]),
-        );
+        $resultado = $this->client->pesquisarProcessos($parametros, max(1, $pagina), min(50, max(1, $porPagina)));
 
-        return ['consultado' => true, 'processos' => $processos];
+        return [
+            'consultado' => true,
+            'processos' => array_map(fn (array $processo): array => $this->formatar($processo), $resultado['data']),
+            'meta' => $resultado['meta'],
+        ];
+    }
+
+    /**
+     * @param  array<string, string>  $filtros
+     * @return array<string, string>
+     */
+    private function parametros(array $filtros): array
+    {
+        $parametros = [];
+
+        foreach (self::TEXTOS as $chave => $parametro) {
+            $texto = trim($filtros[$chave] ?? '');
+
+            if (mb_strlen($texto) >= 3) {
+                $parametros[$parametro] = $texto;
+            }
+        }
+
+        $processo = trim($filtros['protocolo'] ?? '');
+
+        if ($processo !== '') {
+            $parametros['numero_processo'] = $processo;
+        }
+
+        $tvl = $this->digitos($filtros['produto_tvl'] ?? '');
+
+        if (preg_match('/^\d{1,18}$/', $tvl) === 1) {
+            $parametros['numero_tvl'] = $tvl;
+        }
+
+        $documento = $this->digitos($filtros['cnpj'] ?? '');
+
+        if (in_array(strlen($documento), [11, 14], true)) {
+            $parametros['documento'] = $documento;
+        }
+
+        $inscricao = $this->digitos($filtros['inscricao'] ?? '');
+
+        if (preg_match('/^\d{1,12}$/', $inscricao) === 1) {
+            $parametros['inscricao'] = $inscricao;
+        }
+
+        $cep = $this->digitos($filtros['cep'] ?? '');
+
+        if ($cep !== '') {
+            $parametros['cep'] = $cep;
+        }
+
+        if (in_array($filtros['analysis_status'] ?? '', ['deferido', 'nao_deferido', 'sem_conclusao'], true)) {
+            $parametros['situacao_analise'] = $filtros['analysis_status'];
+        }
+
+        if (in_array($filtros['fluxo'] ?? '', ['expresso', 'analise'], true)) {
+            $parametros['fluxo'] = $filtros['fluxo'];
+        }
+
+        foreach (['data_de' => 'protocolado_de', 'data_ate' => 'protocolado_ate'] as $chave => $parametro) {
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $filtros[$chave] ?? '') === 1) {
+                $parametros[$parametro] = $filtros[$chave];
+            }
+        }
+
+        return $parametros;
     }
 
     /**
@@ -54,49 +132,6 @@ class BuscaProcessosLegado
         $dados = $this->client->processo($numero);
 
         return $dados === null ? null : $this->formatarDetalhe($dados);
-    }
-
-    /**
-     * @param  array<string, string>  $filtros
-     * @return array{0: string, 1: string}|null
-     */
-    private function chave(array $filtros): ?array
-    {
-        $cnpj = $this->digitos($filtros['cnpj'] ?? '');
-        $inscricao = $this->digitos($filtros['inscricao'] ?? '');
-        $tvl = $this->digitos($filtros['produto_tvl'] ?? '');
-        $protocolo = trim($filtros['protocolo'] ?? '');
-
-        return match (true) {
-            in_array(strlen($cnpj), [11, 14], true) => ['documento', $cnpj],
-            preg_match('/^\d{1,12}$/', $inscricao) === 1 => ['inscricao', $inscricao],
-            preg_match('/^\d{1,18}$/', $tvl) === 1 => ['numero_tvl', $tvl],
-            self::ehNumeroDeProcesso($protocolo) => ['numero_processo', $protocolo],
-            default => $this->chaveDaBusca(trim($filtros['busca'] ?? '')),
-        };
-    }
-
-    /**
-     * @return array{0: string, 1: string}|null
-     */
-    private function chaveDaBusca(string $busca): ?array
-    {
-        if (self::ehNumeroDeProcesso($busca)) {
-            return ['numero_processo', $busca];
-        }
-
-        if (preg_match('/^[\d.\-\/\s]+$/', $busca) !== 1) {
-            return null;
-        }
-
-        $digitos = $this->digitos($busca);
-
-        return match (true) {
-            in_array(strlen($digitos), [11, 14], true) => ['documento', $digitos],
-            strlen($digitos) === 7 => ['numero_tvl', $digitos],
-            preg_match('/^\d{1,12}$/', $digitos) === 1 => ['inscricao', $digitos],
-            default => null,
-        };
     }
 
     /**

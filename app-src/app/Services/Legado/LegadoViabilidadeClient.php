@@ -99,6 +99,37 @@ class LegadoViabilidadeClient
     }
 
     /**
+     * Pesquisa de processos do sistema anterior combinando os filtros da tela
+     * (GET /processos/pesquisa). Os filtros se somam; a página vem com o total.
+     *
+     * @param  array<string, string>  $filtros
+     * @return array{data: list<array<string, mixed>>, meta: array{total: int, pagina: int, por_pagina: int, paginas: int}}
+     */
+    public function pesquisarProcessos(array $filtros, int $pagina = 1, int $porPagina = 15): array
+    {
+        $response = $this->enviar('/processos/pesquisa', $filtros + [
+            'pagina' => (string) $pagina,
+            'por_pagina' => (string) $porPagina,
+        ]);
+
+        $this->validar($response);
+
+        $meta = $response->json('meta');
+        $meta = is_array($meta) ? $meta : [];
+        $dados = $this->lista($response);
+
+        return [
+            'data' => $dados,
+            'meta' => [
+                'total' => (int) ($meta['total'] ?? count($dados)),
+                'pagina' => (int) ($meta['pagina'] ?? $pagina),
+                'por_pagina' => (int) ($meta['por_pagina'] ?? $porPagina),
+                'paginas' => (int) ($meta['paginas'] ?? 1),
+            ],
+        ];
+    }
+
+    /**
      * Detalhe do processo do sistema anterior (número no formato
      * 0000000000-00000000/0000), com TVLs e histórico; null quando não existe.
      *
