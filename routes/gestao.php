@@ -851,6 +851,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
                 Route::post('{viabilityRequest}/conclusao-analise', ConclusaoAnaliseController::class)->middleware('permission:concluir-analise')->name('conclusao-analise');
                 Route::put('{viabilityRequest}/justificativa-regin', ProcessoJustificativaReginController::class)->middleware('permission:concluir-analise')->name('justificativa-regin');
                 Route::post('{viabilityRequest}/pendencias', [ProcessoPendenciaController::class, 'store'])->name('pendencias.store');
+                Route::get('{viabilityRequest}/pendencias/{pendency}/anexos/{anexo}', [ProcessoPendenciaController::class, 'anexo'])->name('pendencias.anexo');
                 Route::post('{viabilityRequest}/cancelar-convite', [ProcessoPendenciaController::class, 'cancelar'])->name('cancelar-convite');
                 Route::post('{viabilityRequest}/status-analise', [ProcessoController::class, 'atualizarStatusAnalise'])->name('status-analise');
             });

@@ -5,14 +5,18 @@ namespace App\Http\Controllers\Portal;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Portal\ResponderPendenciaRequest;
 use App\Models\AnalysisPendency;
+use App\Models\AnalysisPendencyAttachment;
 use App\Models\ViabilityRequest;
 use App\Services\Analise\PendenciaInvalidaException;
 use App\Services\Analise\PendenciaService;
+use App\Support\Settings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Resposta da pendência pelo portal (HU-080 — "Minhas solicitações"). Escopo do
@@ -57,6 +61,7 @@ class PendenciaRespostaController extends Controller
                 ],
             ],
             'pendencias' => $pendencias,
+            'anexo_max_mb' => (int) Settings::get('solicitacao.anexos.max_mb', config('viabiliza.solicitacao.anexos.max_mb', 10)),
         ]);
     }
 
@@ -70,7 +75,7 @@ class PendenciaRespostaController extends Controller
         abort_if($pendency->viability_request_id !== $solicitacao->id, 404);
 
         try {
-            $this->pendencias->responder($pendency, $request->validated('response'));
+            $this->pendencias->responder($pendency, $request->validated('response'), $request->file('attachment'));
         } catch (PendenciaInvalidaException $e) {
             return back()->with('error', $e->getMessage());
         }
@@ -78,5 +83,19 @@ class PendenciaRespostaController extends Controller
         return redirect()
             ->route('portal.solicitacoes.show', $solicitacao)
             ->with('status', 'Resposta enviada. Sua solicitação voltou para análise.');
+    }
+
+    public function anexo(ViabilityRequest $solicitacao, AnalysisPendency $pendency, AnalysisPendencyAttachment $anexo): StreamedResponse
+    {
+        Gate::authorize('view', $solicitacao);
+
+        abort_unless($pendency->viability_request_id === $solicitacao->id, 404);
+        abort_unless($anexo->analysis_pendency_id === $pendency->id, 404);
+
+        return response()->streamDownload(function () use ($anexo): void {
+            $stream = Storage::disk($anexo->disk)->readStream($anexo->path);
+            fpassthru($stream);
+            fclose($stream);
+        }, $anexo->original_name, ['Content-Type' => $anexo->mime_type]);
     }
 }

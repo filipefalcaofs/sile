@@ -273,6 +273,7 @@ Route::middleware(['auth:web', ConfereSessaoPortalServicos::class, 'verified'])
                 // enviado de volta ao Regin/Simplifica.
                 Route::get('solicitacoes/{solicitacao}/pendencias', [PendenciaRespostaController::class, 'show'])->name('solicitacoes.pendencias');
                 Route::post('solicitacoes/{solicitacao}/pendencias/{pendency}/responder', [PendenciaRespostaController::class, 'responder'])->name('solicitacoes.pendencias.responder');
+                Route::get('solicitacoes/{solicitacao}/pendencias/{pendency}/anexos/{anexo}', [PendenciaRespostaController::class, 'anexo'])->name('solicitacoes.pendencias.anexo');
 
                 // Histórico unificado de comunicações do processo (HU-092) — rota com
                 // {solicitacao} DEPOIS das literais. Fonte ÚNICA: o ledger

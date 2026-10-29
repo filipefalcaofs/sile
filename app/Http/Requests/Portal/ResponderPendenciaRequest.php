@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Portal;
 
+use App\Support\Settings;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
@@ -22,8 +23,17 @@ class ResponderPendenciaRequest extends FormRequest
      */
     public function rules(): array
     {
+        /** @var array<int, string> $mimes */
+        $mimes = (array) config('viabiliza.solicitacao.anexos.mime_permitidos', ['application/pdf', 'image/jpeg', 'image/png']);
+
+        $maxKb = (int) Settings::get(
+            'solicitacao.anexos.max_mb',
+            config('viabiliza.solicitacao.anexos.max_mb', 10),
+        ) * 1024;
+
         return [
             'response' => ['required', 'string', 'max:5000'],
+            'attachment' => ['nullable', 'file', 'mimetypes:'.implode(',', $mimes), "max:{$maxKb}"],
         ];
     }
 
@@ -35,6 +45,9 @@ class ResponderPendenciaRequest extends FormRequest
         return [
             'response.required' => 'Informe a resposta para o convite.',
             'response.max' => 'A resposta deve ter no máximo 5000 caracteres.',
+            'attachment.file' => 'O anexo enviado é inválido.',
+            'attachment.mimetypes' => 'O tipo do arquivo não é permitido. Envie PDF, JPG ou PNG.',
+            'attachment.max' => 'O arquivo excede o tamanho máximo permitido.',
         ];
     }
 }

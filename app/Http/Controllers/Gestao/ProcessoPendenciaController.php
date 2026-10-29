@@ -7,11 +7,14 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Gestao\AbrirPendenciaRequest;
 use App\Http\Requests\Gestao\CancelarConviteRequest;
 use App\Models\AnalysisPendency;
+use App\Models\AnalysisPendencyAttachment;
 use App\Models\ViabilityRequest;
 use App\Services\Analise\PendenciaInvalidaException;
 use App\Services\Analise\PendenciaService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Abertura e cancelamento de convite (ex-pendência) pelo analista (HU-079 +
@@ -60,5 +63,20 @@ class ProcessoPendenciaController extends Controller
         }
 
         return back()->with('status', 'Convite cancelado. A análise foi reaberta.');
+    }
+
+    /**
+     * Baixa o documento que o requerente anexou na resposta do convite.
+     */
+    public function anexo(ViabilityRequest $viabilityRequest, AnalysisPendency $pendency, AnalysisPendencyAttachment $anexo): StreamedResponse
+    {
+        abort_unless($pendency->viability_request_id === $viabilityRequest->id, 404);
+        abort_unless($anexo->analysis_pendency_id === $pendency->id, 404);
+
+        return response()->streamDownload(function () use ($anexo): void {
+            $stream = Storage::disk($anexo->disk)->readStream($anexo->path);
+            fpassthru($stream);
+            fclose($stream);
+        }, $anexo->original_name, ['Content-Type' => $anexo->mime_type]);
     }
 }
