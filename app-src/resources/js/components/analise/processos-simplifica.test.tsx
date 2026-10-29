@@ -200,4 +200,24 @@ describe('ProcessosSimplifica', () => {
         expect(modal).toContain('Comércio local');
         expect(modal).toContain('Ana Analista');
     });
+
+    it('mostra o motivo da falha quando o servidor informa', async () => {
+        vi.stubGlobal(
+            'fetch',
+            vi.fn(() =>
+                resposta({
+                    consultado: true,
+                    processos: [],
+                    meta: null,
+                    erro: 'Não foi possível consultar o Simplifica agora.',
+                    motivo: 'A API do legado demorou mais de 30 s para responder.',
+                }),
+            ),
+        );
+
+        await montar({ cnpj: '53666248000152' });
+
+        expect(host.textContent).toContain('Não foi possível consultar o Simplifica agora.');
+        expect(host.textContent).toContain('demorou mais de 30 s');
+    });
 });
