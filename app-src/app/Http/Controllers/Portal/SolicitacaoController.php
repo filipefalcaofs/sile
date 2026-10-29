@@ -121,7 +121,7 @@ class SolicitacaoController extends Controller
                 'status_label' => $status?->publicLabel(),
             ],
             'perPageOptions' => self::PER_PAGE_OPTIONS,
-            'solicitacaoEnabled' => true,
+            'solicitacaoEnabled' => config('viabiliza.features.portal_solicitacao', true) && Settings::enabled('portal_servicos_extras'),
             // Alerta de reincidência (RN-007) vindo do store — nunca bloqueia,
             // só aponta o processo anterior. Exibido uma vez após criar.
             'duplicateAlert' => $request->session()->get('duplicateAlert'),

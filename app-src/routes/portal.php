@@ -189,7 +189,7 @@ Route::middleware(['auth:web', ConfereSessaoPortalServicos::class, 'verified'])
                     ->middleware(['portal.servico:portal_consulta_processo', 'throttle:consulta-processo'])
                     ->name('consulta');
 
-                Route::get('solicitacoes', [SolicitacaoController::class, 'index'])->middleware('portal.extras')->name('solicitacoes.index');
+                Route::get('solicitacoes', [SolicitacaoController::class, 'index'])->name('solicitacoes.index');
                 Route::post('solicitacoes', [SolicitacaoController::class, 'store'])->middleware('portal.solicitacao')
                     ->middleware('portal.extras')->name('solicitacoes.store');
 

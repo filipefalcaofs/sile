@@ -251,6 +251,14 @@ export default function Dashboard({ indicadores, atencao, solicitacoesRecentes }
                         <CardHeader
                             title="Meus processos recentes"
                             description="Processos em que você é requerente ou está vinculado pelo CPF."
+                            actions={
+                                <Link
+                                    href="/portal/solicitacoes"
+                                    className="min-h-11 content-center text-sm font-medium text-brand-500 hover:underline focus-visible:outline-2 focus-visible:outline-brand-500"
+                                >
+                                    Ver todas as solicitações
+                                </Link>
+                            }
                         />
                         <CardContent flush>
                             {solicitacoesRecentes.length === 0 ? (
