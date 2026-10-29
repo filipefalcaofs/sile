@@ -617,7 +617,7 @@ class RenovacaoLegadaProtocoloTest extends TestCase
 
         $this->actingAs($cidadao)
             ->post('/portal/renovacao/legado/'.self::CNPJ.'/1234567', ['declaration_ids' => []])
-            ->assertSessionHasErrors(['phone']);
+            ->assertSessionHasErrors(['email', 'phone', 'mobile']);
 
         $this->assertSame(0, ViabilityRequest::query()->count());
     }
@@ -681,6 +681,7 @@ class RenovacaoLegadaProtocoloTest extends TestCase
         return [
             'email' => 'novo@example.com',
             'phone' => '71999990000',
+            'mobile' => '71988880000',
             'declaration_ids' => [$this->declaracao->id],
         ];
     }

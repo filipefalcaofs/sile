@@ -17,9 +17,9 @@ class ProtocolarRenovacaoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ['nullable', 'email', 'max:255'],
+            'email' => ['required', 'email', 'max:255'],
             'phone' => ['required', 'string', 'max:20'],
-            'mobile' => ['nullable', 'string', 'max:20'],
+            'mobile' => ['required', 'string', 'max:20'],
             'declaration_ids' => ['present', 'array'],
             'declaration_ids.*' => ['integer'],
         ];
@@ -31,7 +31,9 @@ class ProtocolarRenovacaoRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'email.required' => 'Informe o e-mail.',
             'phone.required' => 'Informe o telefone.',
+            'mobile.required' => 'Informe o celular.',
             'email.email' => 'Informe um e-mail válido.',
         ];
     }
