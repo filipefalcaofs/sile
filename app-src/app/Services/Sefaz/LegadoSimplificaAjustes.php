@@ -5,9 +5,10 @@ namespace App\Services\Sefaz;
 use App\Support\Settings;
 
 /**
- * Ajustes da API do legado Simplifica, lidos dos parâmetros que a tela de APIs
- * grava (com o .env como valor de partida). Timeout e tempo de cache ficam só
- * em configuração.
+ * Ajustes da comparação de atividades com a viabilidade anterior no legado
+ * Simplifica. A conexão (URL, token ou usuário e senha) é a da aba "Simplifica
+ * (legado)" da tela de APIs, a mesma da consulta de processos; aqui só fica o
+ * interruptor da comparação. Timeout e tempo de cache ficam só em configuração.
  */
 class LegadoSimplificaAjustes
 {
@@ -16,29 +17,19 @@ class LegadoSimplificaAjustes
         return Settings::enabled('legado_simplifica');
     }
 
-    public function url(): string
-    {
-        return rtrim((string) Settings::get('integrations.legado_simplifica.url'), '/');
-    }
-
-    public function token(): string
-    {
-        return (string) Settings::get('integrations.legado_simplifica.token');
-    }
-
     public function configurada(): bool
     {
-        return $this->url() !== '' && $this->token() !== '';
+        $url = trim((string) Settings::get('integrations.legado_api.base_url', config('viabiliza.integrations.legado_api.base_url')));
+        $token = trim((string) Settings::get('integrations.legado_api.token', config('viabiliza.integrations.legado_api.token')));
+        $acesso = trim((string) Settings::get('integrations.legado_api.usuario', '')) !== ''
+            && (string) Settings::get('integrations.legado_api.senha', '') !== '';
+
+        return $url !== '' && ($token !== '' || $acesso);
     }
 
     public function disponivel(): bool
     {
         return $this->habilitada() && $this->configurada();
-    }
-
-    public function timeout(): int
-    {
-        return (int) config('viabiliza.integrations.legado_simplifica.timeout', 6);
     }
 
     public function cacheTtl(): int
