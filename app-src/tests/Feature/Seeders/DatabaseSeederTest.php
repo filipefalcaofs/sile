@@ -110,7 +110,7 @@ class DatabaseSeederTest extends TestCase
         // integrations.portal_servicos.*).
         // + 4 da comparação de atividades (legado Simplifica: interruptor, URL e token;
         // louos.via_local.cnaes_vedados).
-        $this->assertSame(134, Parameter::query()->count());
+        $this->assertSame(135, Parameter::query()->count());
         $this->assertTrue(
             Activity::query()
                 ->where('log_name', 'cnaes')
@@ -410,7 +410,7 @@ class DatabaseSeederTest extends TestCase
         $this->assertSame(0, User::query()->where('email', 'cidadao@sile.dev')->count());
         $this->assertSame(18, Role::query()->count());
         $this->assertSame(1331, Cnae::query()->count());
-        $this->assertSame(134, Parameter::query()->count());
+        $this->assertSame(135, Parameter::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoMunicipal)->count());
         $this->assertSame(1331, RiskClassification::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoSanitario)->count());

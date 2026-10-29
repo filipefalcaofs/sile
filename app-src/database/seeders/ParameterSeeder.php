@@ -382,6 +382,13 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['nullable', 'string', 'max:2048'],
                 'description' => 'Token de acesso à API do Simplifica (armazenado criptografado, nunca reexibido). Tem prioridade sobre usuário e senha',
             ],
+            'integrations.legado_api.host' => [
+                'group' => 'integracoes',
+                'type' => 'string',
+                'default_value' => null,
+                'validation_rules' => ['nullable', 'string', 'max:255', 'regex:/^[A-Za-z0-9.-]+(:\d{1,5})?$/'],
+                'description' => 'Nome de host enviado no cabeçalho Host da API do Simplifica (legado), para usar a URL por IP enquanto não há DNS. Vazio: o host da própria URL',
+            ],
             'integrations.legado_api.usuario' => [
                 'group' => 'integracoes',
                 'type' => 'string',
