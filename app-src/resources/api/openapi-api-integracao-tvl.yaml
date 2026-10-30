@@ -183,7 +183,7 @@ components:
           example: TVL concedido.
         cnpj_instituicao:
           type: string
-          description: CNPJ da empresa, só dígitos. Vazio quando não há resposta.
+          description: CNPJ da empresa, só dígitos. Vazio quando não há resposta ou quando a empresa ainda vai ser constituída (sem CNPJ).
           example: "12345678000195"
     SemEmpresa:
       type: object
@@ -220,7 +220,7 @@ components:
           type: string
           nullable: true
           enum: [Definitivo, Provisório, Pré-operacional]
-          description: Null quando a decisão não tem tipo (fluxo expresso).
+          description: Deferimento automático (fluxo expresso), sem tipo gravado, sai como Definitivo. Null só em decisão não deferida sem tipo.
         zona: {type: string, nullable: true, example: ZCMe-1/02}
         via: {type: string, nullable: true, example: VC-I}
         hashDam: {type: string, nullable: true, description: Sempre null.}

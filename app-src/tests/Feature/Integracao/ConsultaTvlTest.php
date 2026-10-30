@@ -199,6 +199,38 @@ class ConsultaTvlTest extends TestCase
         $this->assertStringContainsString('"valor":300.00,', $this->consultar('3000123')->getContent());
     }
 
+    public function test_cnpj_instituicao_so_sai_com_cnpj_de_verdade(): void
+    {
+        $decisao = $this->decisaoDeferida();
+        $empresa = $decisao->viabilityRequest->company;
+
+        $this->consultar('3000123')->assertJsonPath('resposta.cnpj_instituicao', '12345678000195');
+
+        // Empresa a constituir: o REGIN manda o CPF de quem pediu, sem CNPJ.
+        $empresa->forceFill(['cnpj' => '82182590587'])->save();
+        $this->consultar('3000123')->assertOk()->assertJsonPath('resposta.cnpj_instituicao', '');
+
+        // Pedido sem documento: o Viabiliza grava 14 zeros como marcador.
+        $empresa->forceFill(['cnpj' => '00000000000000'])->save();
+        $this->consultar('3000123')->assertOk()->assertJsonPath('resposta.cnpj_instituicao', '');
+    }
+
+    public function test_deferida_sem_tipo_gravado_sai_como_definitivo_sem_vencimento(): void
+    {
+        $decisao = $this->decisaoDeferida(['tvl_kind' => null, 'tvl_valid_until' => null, 'flow' => 'expresso']);
+
+        $this->consultar('3000123')->assertOk()
+            ->assertJsonPath('empresa.tipoTVL', 'Definitivo')
+            ->assertJsonPath('empresa.tipo_viabilidade', 1)
+            ->assertJsonPath('empresa.data_vencimento', null);
+
+        $decisao->forceFill(['outcome' => DecisionOutcome::Cassado])->save();
+
+        $this->consultar('3000123')->assertOk()
+            ->assertJsonPath('empresa.tipoTVL', null)
+            ->assertJsonPath('empresa.tipo_viabilidade', null);
+    }
+
     public function test_tvl_aceita_o_numero_com_o_prefixo_gravado(): void
     {
         $this->decisaoDeferida();
