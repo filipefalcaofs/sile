@@ -30,7 +30,8 @@ interface OptionSelectProps {
 }
 
 interface PosicaoPainel {
-    top: number;
+    top?: number;
+    bottom?: number;
     left: number;
     width: number;
     maxHeight: number;
@@ -126,9 +127,11 @@ export default function OptionSelect({
             const espacoAcima = rect.top - margem;
             const abrirParaCima = espacoAbaixo < 220 && espacoAcima > espacoAbaixo;
             const maxHeight = Math.max(160, Math.min(360, abrirParaCima ? espacoAcima : espacoAbaixo));
-            const top = abrirParaCima ? Math.max(margem, rect.top - maxHeight - 4) : rect.bottom + 4;
-
-            setPosicao({ top, left, width: largura, maxHeight });
+            setPosicao(
+                abrirParaCima
+                    ? { bottom: window.innerHeight - rect.top + 4, left, width: largura, maxHeight }
+                    : { top: rect.bottom + 4, left, width: largura, maxHeight },
+            );
         }
 
         medir();
@@ -236,6 +239,7 @@ export default function OptionSelect({
                       aria-label={id ? undefined : ariaLabel}
                       style={{
                           top: posicao.top,
+                          bottom: posicao.bottom,
                           left: posicao.left,
                           width: posicao.width,
                           maxHeight: posicao.maxHeight,

@@ -120,4 +120,15 @@ describe('OptionSelect', () => {
         expect(opcoesLista).toHaveLength(1);
         expect(opcoesLista[0]?.textContent).toContain('Escritório');
     });
+
+    it('abre para cima colado no campo, sem vão, quando falta espaço embaixo', () => {
+        montar(<Campo />);
+        const gatilho = document.getElementById('enquadramento') as HTMLButtonElement;
+        gatilho.getBoundingClientRect = () => ({ top: 700, bottom: 744, left: 20, right: 320, width: 300, height: 44, x: 20, y: 700, toJSON: () => ({}) });
+        abrir();
+
+        const lista = document.querySelector('[role="listbox"]') as HTMLElement;
+        expect(lista.style.bottom).toBe(`${window.innerHeight - 700 + 4}px`);
+        expect(lista.style.top).toBe('');
+    });
 });
