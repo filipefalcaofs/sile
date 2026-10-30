@@ -75,12 +75,28 @@ class ConsultaTvlService
 
         $processo = $decisao->viabilityRequest;
         $status = $decisao->isDeferida() ? self::CONCEDIDO : self::INVALIDO;
-        $cnpj = preg_replace('/\D/', '', (string) $processo?->company?->cnpj);
+        $cnpj = $this->cnpjDaEmpresa($processo);
 
         return [
             'resposta' => $this->resposta($numero, $status, $cnpj),
             'empresa' => $this->empresa($decisao, $processo),
         ];
+    }
+
+    /**
+     * Só CNPJ de verdade. Na empresa a constituir o REGIN manda o CPF de quem
+     * pediu e a coluna `cnpj` guarda esse CPF; pedido sem documento grava 14
+     * zeros. Nos dois casos a consulta devolve vazio.
+     */
+    private function cnpjDaEmpresa(?ViabilityRequest $processo): string
+    {
+        $documento = preg_replace('/\D/', '', (string) $processo?->company?->cnpj) ?? '';
+
+        if (strlen($documento) !== 14 || trim($documento, '0') === '') {
+            return '';
+        }
+
+        return $documento;
     }
 
     /**
@@ -104,6 +120,7 @@ class ConsultaTvlService
         $company = $processo?->company;
         [$tipoLogradouro, $logradouro] = $this->separarLogradouro($processo?->address_street);
         $condicionantes = $this->condicionantes($decisao, $processo);
+        $tipo = $this->tipoEfetivo($decisao);
 
         return [
             'nome_requerente' => $company?->legal_name,
@@ -122,7 +139,7 @@ class ConsultaTvlService
             'numero' => $processo?->address_number,
             'complemento' => $processo?->address_complement,
             'processo' => null,
-            'tipoTVL' => $this->tipoTvl($decisao->tvl_kind),
+            'tipoTVL' => $this->tipoTvl($tipo),
             'zona' => $processo?->zona_manual ?? $processo?->zona_codigo,
             'via' => $processo?->via_manual ?? ($processo?->camadas_incidentes['via'] ?? null),
             'hashDam' => null,
@@ -132,7 +149,7 @@ class ConsultaTvlService
             'data_ini_viabilidade' => $processo?->protocoled_at?->format('Ymd His'),
             'data_fim_viabilidade' => $decisao->decided_at?->format('Ymd His'),
             'nome_impresso_TVL' => $company?->legal_name,
-            'tipo_viabilidade' => $this->tipoViabilidade($decisao->tvl_kind),
+            'tipo_viabilidade' => $this->tipoViabilidade($tipo),
             'sede_escritorio_virtual' => $decisao->is_virtual_office_hq ? '1' : '0',
             'grupo_cnae' => $this->grupoCnae($decisao),
             'tvlSimplifica' => false,
@@ -162,6 +179,16 @@ class ConsultaTvlService
         }
 
         return [null, $endereco];
+    }
+
+    /**
+     * O tipo só é gravado na conclusão feita por analista. A decisão deferida
+     * automaticamente (fluxo expresso) não tem tipo nem validade, e vale como
+     * definitiva.
+     */
+    private function tipoEfetivo(ViabilityDecision $decisao): ?TvlKind
+    {
+        return $decisao->tvl_kind ?? ($decisao->isDeferida() ? TvlKind::Definitiva : null);
     }
 
     private function tipoTvl(?TvlKind $tipo): ?string
