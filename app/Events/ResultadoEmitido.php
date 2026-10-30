@@ -25,9 +25,7 @@ use Illuminate\Foundation\Events\Dispatchable;
  * que duplicaria o registro) pendurados na Wave 4, sem tocar a decisão:
  *  - NotificarResultadoExpresso (HU-073) — e-mail ao cidadão, sem anexo de TVL;
  *  - ComunicarResultadoRegin (HU-100) — bloqueado (ReginParecerNotifier); o
- *    listener captura a exceção e audita a pendência de integração;
- *  - EnviarViabilidadeSefaz (HU-103) — bloqueado (SefazViabilidadeGateway), SÓ
- *    no deferimento; o listener captura a exceção e audita a pendência.
+ *    listener captura a exceção e audita a pendência de integração.
  */
 class ResultadoEmitido implements ShouldDispatchAfterCommit
 {

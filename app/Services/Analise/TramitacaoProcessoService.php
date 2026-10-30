@@ -13,7 +13,7 @@ use App\Models\ViabilityRequest;
  * Eventos da tramitação do processo que não são mudança de status: situação da
  * análise, atribuições, pendências e convites, vistoria, malha fina, anexos,
  * TVL, a ficha de análise salva pelo botão ou finalizada, a ficha de vistoria
- * concluída e os envios à JUCEB e à SEFAZ. Vêm da auditoria por uma lista
+ * concluída e o envio do parecer à JUCEB. Vêm da auditoria por uma lista
  * fechada de eventos: consulta de tela, autosave automático da ficha e demais
  * registros técnicos não entram. Os eventos das fichas são gravados com a
  * própria ficha como sujeito. Cada item tem o mesmo formato da linha do tempo
@@ -71,7 +71,7 @@ class TramitacaoProcessoService
                 ->where(fn ($q) => $q
                     ->where('subject_type', $processo->getMorphClass())
                     ->where('subject_id', $processo->getKey())
-                    ->whereIn('event', [...array_keys(self::EVENTOS), 'regin-parecer', 'sefaz-viabilidade']))
+                    ->whereIn('event', [...array_keys(self::EVENTOS), 'regin-parecer']))
                 ->orWhere(fn ($q) => $q
                     ->where('subject_type', (new AnalysisRecord)->getMorphClass())
                     ->whereIn('subject_id', $processo->analysisRecords()->select('id'))
@@ -157,21 +157,6 @@ class TramitacaoProcessoService
             return $this->item(
                 tipo: 'integracao',
                 titulo: $resultado === 'sucesso' ? 'Parecer enviado à JUCEB (REGIN)' : 'Envio do parecer à JUCEB não confirmado',
-                detalhe: $a->description,
-                em: $a->created_at?->toIso8601String(),
-                ator: $this->nomeDoAtor($usuarios, $a->causer_id),
-                resultado: $resultado,
-            );
-        }
-
-        if ($a->event === 'sefaz-viabilidade') {
-            if ($resultado === 'ignorado') {
-                return null;
-            }
-
-            return $this->item(
-                tipo: 'integracao',
-                titulo: $resultado === 'sucesso' ? 'Viabilidade enviada à SEFAZ' : 'Envio à SEFAZ pendente',
                 detalhe: $a->description,
                 em: $a->created_at?->toIso8601String(),
                 ator: $this->nomeDoAtor($usuarios, $a->causer_id),

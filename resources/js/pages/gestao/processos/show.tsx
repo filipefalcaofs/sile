@@ -507,7 +507,7 @@ export default function Show({
                             <Card>
                                 <CardHeader
                                     title="Tramitação"
-                                    description="Linha do tempo completa do processo: mudanças de situação, análise, atribuições, pendências e envios à JUCEB e à SEFAZ."
+                                    description="Linha do tempo completa do processo: mudanças de situação, análise, atribuições, pendências e envios à JUCEB."
                                 />
                                 <CardContent>
                                     {eventos.length === 0 ? (

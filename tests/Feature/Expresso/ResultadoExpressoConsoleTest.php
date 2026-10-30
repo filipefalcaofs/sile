@@ -151,13 +151,13 @@ class ResultadoExpressoConsoleTest extends TestCase
             ->assertNotFound();
     }
 
-    public function test_show_exibe_transmissao_regin_sefaz_como_pendente_da_auditoria(): void
+    public function test_show_exibe_transmissao_regin_como_pendente_da_auditoria_sem_sefaz(): void
     {
         $request = $this->deferida('VIA-'.now()->year.'-000001');
 
-        // Espelha o que os listeners 09-08/09-09 gravam quando os contratos
-        // Regin/SEFAZ estão bloqueados (indisponíveis até a Fase 13): a tela
-        // mostra PENDENTE lido da trilha, nunca "enviado".
+        // Espelha o que o listener do Regin grava com o contrato bloqueado
+        // (indisponível até a Fase 13): a tela mostra PENDENTE lido da trilha,
+        // nunca "enviado". Registros antigos da SEFAZ não aparecem mais.
         $audit = app(AuditService::class);
         $audit->log(
             logName: 'integracoes',
@@ -179,7 +179,7 @@ class ResultadoExpressoConsoleTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->where('transmissao.regin.status', 'pendente')
-                ->where('transmissao.sefaz.status', 'pendente'));
+                ->missing('transmissao.sefaz'));
     }
 
     public function test_periodo_invertido_nao_consulta_e_preserva_as_datas(): void

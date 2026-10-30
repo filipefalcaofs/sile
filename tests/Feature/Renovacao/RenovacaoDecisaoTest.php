@@ -58,10 +58,7 @@ class RenovacaoDecisaoTest extends TestCase
         $this->assertSame($numeroOrigem, $processo->renews->fresh()->decision->tvl_product_number);
         $this->assertSame(TvlKind::Definitiva, $resultado->decision->tvl_kind);
         $this->assertSame('2028-01-15', $resultado->decision->tvl_valid_until->toDateString());
-        $this->assertDatabaseHas('activity_log', [
-            'event' => 'sefaz-viabilidade',
-            'result' => 'bloqueado',
-        ]);
+        $this->assertDatabaseMissing('activity_log', ['event' => 'sefaz-viabilidade']);
     }
 
     public function test_endpoint_grava_tipo_e_validade_da_renovacao(): void

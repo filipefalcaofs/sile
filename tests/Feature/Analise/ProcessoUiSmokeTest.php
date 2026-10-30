@@ -131,7 +131,7 @@ class ProcessoUiSmokeTest extends TestCase
                 ->where('geo.ponto', null));
     }
 
-    public function test_tramitacao_inclui_os_envios_a_juceb_e_sefaz_sem_registros_tecnicos(): void
+    public function test_tramitacao_inclui_o_envio_a_juceb_sem_sefaz_nem_registros_tecnicos(): void
     {
         $processo = $this->processo(['status' => ViabilityRequestStatus::Deferida]);
         $audit = app(AuditService::class);
@@ -139,7 +139,7 @@ class ProcessoUiSmokeTest extends TestCase
         $audit->log('integracoes', 'regin-parecer', 'Parecer (deferida) comunicado ao Regin/Junta', subject: $processo, result: 'bloqueado');
         $audit->log('integracoes', 'regin-parecer', 'Parecer (deferida) comunicado ao Regin/Junta', subject: $processo, result: 'sucesso');
         $audit->log('integracoes', 'sefaz-viabilidade', 'Envio à SEFAZ pendente', subject: $processo, result: 'bloqueado');
-        $audit->log('integracoes', 'sefaz-viabilidade', 'Envio à SEFAZ não se aplica', subject: $processo, result: 'ignorado');
+        $audit->log('integracoes', 'sefaz-viabilidade', 'Viabilidade enviada à SEFAZ', subject: $processo, result: 'sucesso');
         $audit->log('analise', 'consulta-processo', 'Consulta do processo', subject: $processo);
         $audit->log('analise', 'ficha-autosave', 'Autosave da ficha', subject: $processo);
 
@@ -151,9 +151,9 @@ class ProcessoUiSmokeTest extends TestCase
 
                 $this->assertContains('Envio do parecer à JUCEB não confirmado', $titulos);
                 $this->assertContains('Parecer enviado à JUCEB (REGIN)', $titulos);
-                $this->assertContains('Envio à SEFAZ pendente', $titulos);
+                $this->assertNotContains('Envio à SEFAZ pendente', $titulos);
+                $this->assertNotContains('Viabilidade enviada à SEFAZ', $titulos);
                 $this->assertNotContains('Consulta do processo', $titulos);
-                $this->assertCount(1, array_keys($titulos, 'Envio à SEFAZ pendente'));
                 $this->assertNotContains('Autosave da ficha', $titulos);
             });
     }

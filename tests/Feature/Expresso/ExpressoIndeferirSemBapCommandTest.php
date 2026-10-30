@@ -57,17 +57,17 @@ class ExpressoIndeferirSemBapCommandTest extends TestCase
         $this->assertStringStartsWith('Indeferido sem atuação', (string) $decision->reason);
     }
 
-    public function test_indeferimento_comunica_regin_e_ignora_sefaz(): void
+    public function test_indeferimento_comunica_regin_sem_sefaz(): void
     {
         // Sem Event::fake: os listeners reais da Wave 4 rodam no ResultadoEmitido.
-        // HU-125 RN-003: comunica ao Regin (bloqueado, Fase 13) e a SEFAZ ignora
-        // o indeferimento — toda saída deixa trilha, sem simular envio.
+        // HU-125: comunica ao Regin (bloqueado, Fase 13), sem simular envio. A
+        // viabilidade não vai mais à SEFAZ.
         ViabilityRequest::factory()->awaitingBap()->create();
 
         $this->artisan('expresso:indeferir-sem-bap')->assertExitCode(0);
 
         $this->assertSame(1, $this->auditorias('regin-parecer', 'bloqueado'));
-        $this->assertSame(1, $this->auditorias('sefaz-viabilidade', 'ignorado'));
+        $this->assertDatabaseMissing('activity_log', ['event' => 'sefaz-viabilidade']);
     }
 
     private function auditorias(string $event, string $result): int

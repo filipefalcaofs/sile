@@ -84,18 +84,14 @@ class ExpressoSmokeTest extends TestCase
         // HU-073: notificação do resultado enviada ao requerente (sem anexo TVL).
         Notification::assertSentTo($requerente, ResultadoExpressoNotification::class);
 
-        // HU-100/103: Regin e SEFAZ ficam como pendência auditada (bloqueado —
-        // Fase 13), NUNCA "enviado" fictício.
+        // HU-100: o Regin fica como pendência auditada (bloqueado — Fase 13),
+        // NUNCA "enviado" fictício. A viabilidade não vai mais à SEFAZ.
         $this->assertDatabaseHas('activity_log', [
             'log_name' => 'integracoes',
             'event' => 'regin-parecer',
             'result' => 'bloqueado',
         ]);
-        $this->assertDatabaseHas('activity_log', [
-            'log_name' => 'integracoes',
-            'event' => 'sefaz-viabilidade',
-            'result' => 'bloqueado',
-        ]);
+        $this->assertDatabaseMissing('activity_log', ['event' => 'sefaz-viabilidade']);
     }
 
     public function test_protocolo_sem_zona_vai_para_analise_sem_decisao_nem_evento(): void
@@ -121,11 +117,10 @@ class ExpressoSmokeTest extends TestCase
         Notification::assertNothingSent();
     }
 
-    public function test_protocolo_com_zona_proibida_indefere_e_sefaz_ignora(): void
+    public function test_protocolo_com_zona_proibida_indefere_e_comunica_o_regin(): void
     {
         // HU-071 / RN-003: a zona PROÍBE o grupo → INDEFERE (sem TVL). O Regin
-        // também é comunicado (parecer nos dois casos), mas a SEFAZ IGNORA o
-        // indeferimento de forma auditável (não envia).
+        // também é comunicado (parecer nos dois casos).
         Notification::fake();
         $this->fakeBairroComZona('ZR-1');
         $this->classificarMunicipal('4712100', RiscoMunicipal::BaixoA);
@@ -148,12 +143,7 @@ class ExpressoSmokeTest extends TestCase
             'event' => 'regin-parecer',
             'result' => 'bloqueado',
         ]);
-        // RN-003: SEFAZ ignora o indeferimento (auditável), não envia.
-        $this->assertDatabaseHas('activity_log', [
-            'log_name' => 'integracoes',
-            'event' => 'sefaz-viabilidade',
-            'result' => 'ignorado',
-        ]);
+        $this->assertDatabaseMissing('activity_log', ['event' => 'sefaz-viabilidade']);
     }
 
     /**

@@ -125,18 +125,14 @@ class AnaliseSmokeTest extends TestCase
             'result' => 'deferida',
         ]);
 
-        // HU-100/103: Regin e SEFAZ ficam como pendência auditada (bloqueado →
-        // Fase 13), NUNCA "enviado" fictício.
+        // HU-100: o Regin fica como pendência auditada (bloqueado → Fase 13),
+        // NUNCA "enviado" fictício. A viabilidade não vai mais à SEFAZ.
         $this->assertDatabaseHas('activity_log', [
             'log_name' => 'integracoes',
             'event' => 'regin-parecer',
             'result' => 'bloqueado',
         ]);
-        $this->assertDatabaseHas('activity_log', [
-            'log_name' => 'integracoes',
-            'event' => 'sefaz-viabilidade',
-            'result' => 'bloqueado',
-        ]);
+        $this->assertDatabaseMissing('activity_log', ['event' => 'sefaz-viabilidade']);
     }
 
     public function test_fluxo_humano_indefere_sem_tvl(): void
@@ -144,8 +140,7 @@ class AnaliseSmokeTest extends TestCase
         // INDEFERIR: semi-expresso (alto risco) com a zona PERMITINDO — sem veto
         // locacional, o processo vai à análise (e-mail SEDUR 21/09: veto locacional
         // indeferiria expresso). O motor sugere deferida; o analista DIVERGE e
-        // indefere com parecer → INDEFERE sem TVL, com a divergência gravada; a
-        // SEFAZ ignora (RN-003).
+        // indefere com parecer → INDEFERE sem TVL, com a divergência gravada.
         Notification::fake();
         $this->fakeBairroComZona('ZR-1');
         $this->classificarMunicipal('4731800', RiscoMunicipal::Alto); // alto → semi-expresso
@@ -190,12 +185,7 @@ class AnaliseSmokeTest extends TestCase
         $this->assertSame(ViabilityRequestStatus::Indeferida, $request->status);
         $this->assertNull($request->decision->tvl_product_number, 'Indeferimento não gera TVL.');
 
-        // RN-003: a SEFAZ ignora o indeferimento (auditável), não envia.
-        $this->assertDatabaseHas('activity_log', [
-            'log_name' => 'integracoes',
-            'event' => 'sefaz-viabilidade',
-            'result' => 'ignorado',
-        ]);
+        $this->assertDatabaseMissing('activity_log', ['event' => 'sefaz-viabilidade']);
     }
 
     public function test_ciclo_de_pendencia_ida_e_volta(): void
