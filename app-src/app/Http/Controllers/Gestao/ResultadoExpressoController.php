@@ -224,7 +224,7 @@ class ResultadoExpressoController extends Controller
 
     /**
      * Detalha a decisão imutável da solicitação (ViabilityDecisionResource) e o
-     * status de transmissão Regin/SEFAZ lido da trilha de integrações. 404 se a
+     * status de transmissão ao Regin lido da trilha de integrações. 404 se a
      * solicitação ainda não tem decisão automática (em análise técnica) — sem
      * inventar desfecho.
      */
@@ -265,7 +265,7 @@ class ResultadoExpressoController extends Controller
      * auditoria de integrações: o resultado mais recente por canal vira o
      * estado exibido — NUNCA "enviado" sem registro de sucesso real.
      *
-     * @return array{regin: array<string, mixed>, sefaz: array<string, mixed>}
+     * @return array{regin: array<string, mixed>}
      */
     private function transmissao(ViabilityRequest $solicitacao): array
     {
@@ -274,13 +274,12 @@ class ResultadoExpressoController extends Controller
             ->where('log_name', 'integracoes')
             ->where('subject_type', $solicitacao->getMorphClass())
             ->where('subject_id', $solicitacao->getKey())
-            ->whereIn('event', ['regin-parecer', 'sefaz-viabilidade'])
+            ->where('event', 'regin-parecer')
             ->orderByDesc('id')
             ->get();
 
         return [
             'regin' => $this->statusCanal($activities->firstWhere('event', 'regin-parecer'), 'Regin / Junta Comercial'),
-            'sefaz' => $this->statusCanal($activities->firstWhere('event', 'sefaz-viabilidade'), 'SEFAZ municipal'),
         ];
     }
 
