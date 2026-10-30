@@ -27,8 +27,8 @@ use InvalidArgumentException;
  * o texto `justificativa.indeferimento.sem_bap` do catálogo (RN-002).
  *
  * RN-003 (sem SEFAZ): NÃO aciona o gateway da SEFAZ direto. O ResultadoEmitido
- * dispara os listeners da Wave 4 — ComunicarResultadoRegin (comunica o parecer)
- * e EnviarViabilidadeSefaz (IGNORA o indeferimento). O evento é despachado APÓS
+ * dispara os listeners da Wave 4, entre eles ComunicarResultadoRegin (comunica
+ * o parecer). O evento é despachado APÓS
  * o commit; a auditoria autoritativa é síncrona e independe dele.
  */
 class IndeferirSemBapService
