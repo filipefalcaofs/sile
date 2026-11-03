@@ -114,20 +114,23 @@ class RenovacaoLegadaElegibilidadeService
 
     private function motivoRenovadaNoLegado(TvlLegadaDetalhe $tvl): ?string
     {
-        return $this->renovadaDepoisDaEmissao($tvl) ? 'Esta viabilidade já foi renovada.' : null;
+        return $this->renovadaNaJanelaDaVigente($tvl) ? 'Esta viabilidade já foi renovada.' : null;
     }
 
     /**
-     * O legado só informa as renovações e a emissão da linha vigente; aqui se decide
-     * que conta só o pedido feito a partir dessa emissão — os anteriores já geraram a
-     * linha vigente. Sem emissão (ou sem data no pedido) vale o registro.
+     * O legado só informa a validade da linha vigente e as renovações. Como a renovação só
+     * se pede a partir da abertura da janela, um pedido anterior a ela gerou a linha vigente
+     * (ou uma anterior) e não conta; o posterior já é renovação desta vigência. Sem validade
+     * (ou sem data no pedido) vale o registro.
      */
-    private function renovadaDepoisDaEmissao(TvlLegadaDetalhe $tvl): bool
+    private function renovadaNaJanelaDaVigente(TvlLegadaDetalhe $tvl): bool
     {
+        $abertura = $tvl->validade === null ? null : RenovacaoElegibilidadeService::aberturaDaJanela($tvl->validade);
+
         foreach ($tvl->renovacoes as $renovacao) {
             $solicitadaEm = $renovacao['solicitada_em'] === null ? null : CarbonImmutable::parse($renovacao['solicitada_em']);
 
-            if ($tvl->emissao === null || $solicitadaEm === null || $solicitadaEm->greaterThanOrEqualTo($tvl->emissao)) {
+            if ($abertura === null || $solicitadaEm === null || $solicitadaEm->greaterThanOrEqualTo($abertura)) {
                 return true;
             }
         }
