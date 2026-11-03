@@ -25,6 +25,7 @@ class BiCatalogo
         private readonly TerritorialBi $territorial,
         private readonly OperacionalBi $operacional,
         private readonly AutomacaoBi $automacao,
+        private readonly GestaoBi $gestao,
     ) {}
 
     /**
@@ -35,6 +36,8 @@ class BiCatalogo
         return [
             // 1. Estratégicos
             'resumo-executivo' => $this->item('estrategico', 'Resumo executivo', 'Protocoladas, em análise, deferidas, indeferidas, taxa de deferimento, tempo médio e processos fora do prazo em um único objeto.', [], fn (BiConsulta $c) => $this->estrategico->resumoExecutivo($c)),
+            'comparativo-periodo' => $this->item('estrategico', 'Comparativo com o período anterior e com o ano passado', 'Os principais números do período ao lado do período anterior de mesmo tamanho e do mesmo período do ano passado, com a variação percentual e se subir é bom ou ruim (sem período: últimos 30 dias).', [], fn (BiConsulta $c) => $this->gestao->comparativo($c)),
+            'benchmark-redesim' => $this->item('estrategico', 'Tempo de Salvador frente à REDESIM', 'Tempo médio de viabilidade das deferidas no Viabiliza comparado com a apuração da REDESIM para Salvador, no período e no mês corrente.', [], fn (BiConsulta $c) => $this->gestao->benchmarkRedesim($c)),
             'solicitacoes-protocoladas' => $this->item('estrategico', 'Total de solicitações protocoladas', 'Demanda recebida pela SEDUR, por período. Exclui rascunhos e canceladas.', ['agrupamento'], fn (BiConsulta $c) => $this->estrategico->protocoladas($c)),
             'solicitacoes-em-analise' => $this->item('estrategico', 'Solicitações em análise', 'Estoque atual de processos ainda não concluídos, por situação. Não usa o período.', [], fn (BiConsulta $c) => $this->estrategico->emAnalise($c)),
             'decisoes' => $this->item('estrategico', 'Viabilidades deferidas e indeferidas', 'Decisões por período e desfecho, com a taxa de deferimento de cada período.', ['agrupamento'], fn (BiConsulta $c) => $this->estrategico->decisoesPorPeriodo($c)),
@@ -52,14 +55,17 @@ class BiCatalogo
             'solicitacoes-por-porte-area' => $this->item('economico', 'Solicitações por porte de área', 'Distribuição da área pretendida em faixas de m², com o desfecho das decisões.', [], fn (BiConsulta $c) => $this->economico->porPorteArea($c)),
             'atividades-maior-indeferimento' => $this->item('economico', 'Atividades com maior taxa de indeferimento', 'CNAEs com maior taxa de indeferimento, entre os que têm ao menos `min_decididas` decisões.', ['limite', 'min_decididas'], fn (BiConsulta $c) => $this->economico->maiorIndeferimento($c)),
             'atividades-por-risco' => $this->item('economico', 'Atividades por classificação de risco', 'Composição de risco por CNAE principal.', ['limite'], fn (BiConsulta $c) => $this->economico->atividadesPorRisco($c)),
+            'perfil-demanda' => $this->item('economico', 'Perfil da demanda', 'Solicitações por serviço da JUCEB, tipo de serviço, canal de entrada, porte da empresa e escritório virtual, com deferidas, indeferidas e taxa.', ['limite'], fn (BiConsulta $c) => $this->gestao->perfilDemanda($c)),
+            'impacto-economico' => $this->item('economico', 'Impacto econômico', 'Viabilidades deferidas no período: empresas viabilizadas, área liberada (m²), área média, distribuição por porte e série por período.', ['agrupamento'], fn (BiConsulta $c) => $this->gestao->impactoEconomico($c)),
             'novas-solicitacoes-por-regiao' => $this->item('economico', 'Novas solicitações por região', 'Demanda por bairro no período e no período anterior de mesmo tamanho (sem período: últimos 30 dias).', ['limite'], fn (BiConsulta $c) => $this->territorial->comparativo($c)),
 
             // 3. Inteligência territorial
             'mapa-concentracao' => $this->item('territorial', 'Mapa de concentração de solicitações', 'Células de grade com latitude, longitude e total. `precisao` = casas decimais (2 a 5; 3 ≈ 110 m).', ['precisao', 'limite'], fn (BiConsulta $c) => $this->territorial->mapaConcentracao($c)),
-            'mapa-decisoes' => $this->item('territorial', 'Mapa de deferimentos e indeferimentos', 'Células de grade com total, deferidas, indeferidas e taxa de indeferimento.', ['precisao', 'limite'], fn (BiConsulta $c) => $this->territorial->mapaDecisoes($c)),
+            'mapa-decisoes' => $this->item('territorial', 'Mapa de deferimentos e indeferimentos', 'Células de grade com total, deferidas, indeferidas, em análise e taxa de indeferimento; bairro e zona predominantes; até 3 CNAEs mais frequentes com a saturação do par bairro × CNAE e o alerta da área; até 3 fundamentos mais citados nos indeferimentos; tempo médio em horas úteis; e, com `data_de` informado, o total do período anterior de mesmo tamanho e a tendência (nova, subindo, caindo, estavel). Não identifica processo, empresa nem pessoa.', ['precisao', 'limite'], fn (BiConsulta $c) => $this->territorial->mapaDecisoes($c)),
             'solicitacoes-por-zona' => $this->item('territorial', 'Solicitações por zona urbanística', 'Demanda e decisões por zona oficial identificada no imóvel.', ['limite'], fn (BiConsulta $c) => $this->territorial->porZona($c)),
             'cnaes-predominantes-por-bairro' => $this->item('territorial', 'CNAEs predominantes por bairro', 'Os CNAEs mais frequentes em cada bairro (limite = quantos por bairro) e sua participação.', ['limite'], fn (BiConsulta $c) => $this->territorial->cnaesPredominantes($c)),
             'restricoes-recorrentes' => $this->item('territorial', 'Restrições urbanísticas mais recorrentes', 'Fundamentos legais mais citados nas decisões e o peso de cada um nos indeferimentos.', ['limite'], fn (BiConsulta $c) => $this->territorial->restricoes($c)),
+            'indeferimentos-zona-atividade' => $this->item('territorial', 'Onde a regra mais barra atividades', 'Zona × CNAE com decisões, indeferimentos, taxa e o fundamento mais citado nos indeferimentos. Só pares com ao menos `min_decididas` decisões e algum indeferimento.', ['limite', 'min_decididas'], fn (BiConsulta $c) => $this->gestao->indeferimentosZonaAtividade($c)),
             'saturacao-locacional' => $this->item('territorial', 'Saturação locacional por bairro e CNAE', 'Estabelecimentos deferidos contra a capacidade recomendada. `situacao`: ok, saturando, saturado ou sem_capacidade.', ['situacao', 'limite'], fn (BiConsulta $c) => $this->territorial->saturacao($c)),
             'evolucao-territorial' => $this->item('territorial', 'Evolução territorial da demanda', 'Solicitações por período nos bairros de maior demanda (limite = quantos bairros).', ['agrupamento', 'limite'], fn (BiConsulta $c) => $this->territorial->evolucao($c)),
 

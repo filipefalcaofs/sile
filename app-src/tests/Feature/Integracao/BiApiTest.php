@@ -3,11 +3,14 @@
 namespace Tests\Feature\Integracao;
 
 use App\Enums\DecisionOutcome;
+use App\Enums\ViabilityRequestOrigin;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\Cnae;
+use App\Models\Company;
 use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
+use App\Models\ViabilityRequestEvento;
 use App\Services\Relatorios\Bi\BiCatalogo;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Crypt;
@@ -107,18 +110,22 @@ class BiApiTest extends TestCase
         $a = $this->solicitacao(ViabilityRequestStatus::Deferida, [
             'address_neighborhood' => 'Pituba', 'used_area_m2' => 40,
             'property_point_lat' => -12.9811, 'property_point_lng' => -38.4521,
+            'origin' => ViabilityRequestOrigin::Regin, 'zona_codigo' => 'ZPR-1',
+            'company_id' => Company::factory()->create(['size' => 'MICRO EMPRESA'])->id,
         ]);
         $a->cnaes()->attach($varejo->id, ['is_primary' => true]);
+        ViabilityRequestEvento::create(['viability_request_id' => $a->id, 'codigo' => '101', 'nome' => 'Inscrição de empresa']);
         $this->decidir($a, DecisionOutcome::Deferida, 'expresso', 2);
 
         $b = $this->solicitacao(ViabilityRequestStatus::Indeferida, [
             'address_neighborhood' => 'Pituba', 'used_area_m2' => 120,
             'property_point_lat' => -12.9812, 'property_point_lng' => -38.4522,
+            'origin' => ViabilityRequestOrigin::Regin, 'zona_codigo' => 'ZPR-1',
         ]);
         $b->cnaes()->attach($varejo->id, ['is_primary' => true]);
         $this->decidir($b, DecisionOutcome::Indeferida, 'analise_tecnica', 4, $analista);
 
-        $c = $this->solicitacao(ViabilityRequestStatus::Deferida, ['address_neighborhood' => 'Barra', 'used_area_m2' => null]);
+        $c = $this->solicitacao(ViabilityRequestStatus::Deferida, ['address_neighborhood' => 'Barra', 'used_area_m2' => null, 'company_id' => null]);
         $c->cnaes()->attach($restaurante->id, ['is_primary' => true]);
         $this->decidir($c, DecisionOutcome::Deferida, 'expresso', 6);
 
@@ -306,6 +313,11 @@ class BiApiTest extends TestCase
         $this->assertSame(1, $celulas[0]['deferidas']);
         $this->assertSame(1, $celulas[0]['indeferidas']);
         $this->assertEquals(50.0, $celulas[0]['taxa_indeferimento']);
+        $this->assertSame(0, $celulas[0]['em_analise']);
+        $this->assertSame('Pituba', $celulas[0]['bairro']);
+        $this->assertSame('4712100', $celulas[0]['cnaes_principais'][0]['cnae']);
+        $this->assertSame(2, $celulas[0]['cnaes_principais'][0]['total']);
+        $this->assertEquals(3.0, $celulas[0]['tempo_medio_horas_uteis']);
     }
 
     public function test_restricoes_recorrentes_contam_os_fundamentos_das_decisoes(): void
@@ -360,5 +372,108 @@ class BiApiTest extends TestCase
 
         $this->assertSame(1, $this->indicador('processos-sla-vencido')->json('dados.vencidos'));
         $this->assertSame(1, $this->indicador('solicitacoes-em-analise')->json('dados.total'));
+    }
+
+    public function test_mapa_traz_motivo_saturacao_e_tendencia_da_area(): void
+    {
+        $this->cenario();
+
+        $celula = $this->indicador('mapa-decisoes')->json('dados.0');
+        $this->assertCount(2, $celula['motivos_indeferimento']);
+        $this->assertSame(1, $celula['motivos_indeferimento'][0]['indeferidas']);
+        $this->assertSame('sem_capacidade', $celula['cnaes_principais'][0]['saturacao']);
+        $this->assertFalse($celula['alerta_saturacao']);
+        $this->assertNull($celula['tendencia']);
+
+        $comPeriodo = $this->indicador('mapa-decisoes', ['data_de' => now()->subDays(10)->toDateString()])->json('dados.0');
+        $this->assertSame(0, $comPeriodo['total_periodo_anterior']);
+        $this->assertSame('nova', $comPeriodo['tendencia']);
+
+        $leve = $this->indicador('mapa-concentracao')->json('dados.0');
+        $this->assertSame(['lat', 'lng', 'total'], array_keys($leve));
+    }
+
+    public function test_comparativo_mostra_o_periodo_atual_o_anterior_e_o_ano_passado(): void
+    {
+        $this->cenario();
+
+        $antigo = $this->solicitacao(ViabilityRequestStatus::Deferida, ['protocoled_at' => now()->subYear()->subDay()]);
+        ViabilityDecision::factory()->create([
+            'viability_request_id' => $antigo->id,
+            'decided_at' => now()->subYear(),
+            'tvl_product_number' => null,
+        ]);
+
+        $dados = $this->indicador('comparativo-periodo')->json('dados');
+        $this->assertSame(['atual', 'anterior', 'ano_anterior'], array_keys($dados['periodos']));
+
+        $deferidas = collect($dados['indicadores'])->firstWhere('indicador', 'deferidas');
+        $this->assertSame(2, $deferidas['atual']);
+        $this->assertSame(0, $deferidas['anterior']);
+        $this->assertSame(1, $deferidas['ano_anterior']);
+        $this->assertNull($deferidas['variacao_anterior_percentual']);
+        $this->assertEquals(100.0, $deferidas['variacao_ano_percentual']);
+        $this->assertSame('maior', $deferidas['melhor_quando']);
+
+        $this->assertSame('menor', collect($dados['indicadores'])->firstWhere('indicador', 'tempo_medio_horas_uteis')['melhor_quando']);
+    }
+
+    public function test_impacto_economico_soma_area_e_empresas_das_deferidas(): void
+    {
+        $this->cenario();
+
+        $dados = $this->indicador('impacto-economico')->json('dados');
+        $this->assertSame(2, $dados['deferidas']);
+        $this->assertSame(1, $dados['empresas_viabilizadas']);
+        $this->assertEquals(40.0, $dados['area_liberada_m2']);
+        $this->assertEquals(40.0, $dados['area_media_m2']);
+        $this->assertSame(1, $dados['deferidas_sem_area_informada']);
+
+        $porte = collect($dados['por_porte'])->keyBy('porte');
+        $this->assertSame(1, $porte['MICRO EMPRESA']['deferidas']);
+        $this->assertSame(1, $porte['Não informado']['deferidas']);
+    }
+
+    public function test_perfil_da_demanda_por_servico_e_origem(): void
+    {
+        $this->cenario();
+
+        $dados = $this->indicador('perfil-demanda')->json('dados');
+
+        $regin = collect($dados['por_origem'])->firstWhere('origem', 'regin');
+        $this->assertSame(2, $regin['total']);
+        $this->assertSame('REDESIM/Regin', $regin['rotulo']);
+
+        $servico = collect($dados['por_servico'])->firstWhere('servico', 'Inscrição de empresa');
+        $this->assertSame(1, $servico['total']);
+        $this->assertSame(1, $servico['deferidas']);
+
+        $this->assertSame(4, array_sum(array_column($dados['escritorio_virtual'], 'total')));
+    }
+
+    public function test_indeferimentos_por_zona_e_atividade_trazem_o_fundamento(): void
+    {
+        $this->cenario();
+
+        $linhas = $this->indicador('indeferimentos-zona-atividade', ['min_decididas' => 1])->json('dados');
+
+        $this->assertCount(1, $linhas);
+        $this->assertSame('ZPR-1', $linhas[0]['zona']);
+        $this->assertSame('4712100', $linhas[0]['cnae']);
+        $this->assertSame(2, $linhas[0]['decididas']);
+        $this->assertSame(1, $linhas[0]['indeferidas']);
+        $this->assertEquals(50.0, $linhas[0]['taxa_indeferimento']);
+        $this->assertNotNull($linhas[0]['fundamento_principal']);
+
+        $this->assertSame([], $this->indicador('indeferimentos-zona-atividade', ['min_decididas' => 3])->json('dados'));
+    }
+
+    public function test_benchmark_redesim_responde_sem_competencia_importada(): void
+    {
+        $dados = $this->indicador('benchmark-redesim')->json('dados');
+
+        $this->assertNull($dados['periodo']['diferenca_horas']);
+        $this->assertNotNull($dados['periodo']['motivo']);
+        $this->assertArrayHasKey('atual', $dados['mes_corrente']);
     }
 }

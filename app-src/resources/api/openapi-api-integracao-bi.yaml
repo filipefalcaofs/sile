@@ -119,6 +119,68 @@ paths:
           description: 'Parâmetros inválidos.'
         503:
           description: 'Integração desligada.'
+  /api_integracao/bi/indicadores/comparativo-periodo:
+    get:
+      tags:
+        - 'Indicadores estratégicos'
+      operationId: indicador_comparativo_periodo
+      summary: 'Comparativo com o período anterior e com o ano passado'
+      description: 'Os principais números do período ao lado do período anterior de mesmo tamanho e do mesmo período do ano passado, com a variação percentual e se subir é bom ou ruim (sem período: últimos 30 dias).'
+      security:
+        -
+          bearerAuth: {}
+      parameters:
+        - $ref: '#/components/parameters/data_de'
+        - $ref: '#/components/parameters/data_ate'
+        - $ref: '#/components/parameters/setor'
+        - $ref: '#/components/parameters/analista'
+        - $ref: '#/components/parameters/bairro'
+        - $ref: '#/components/parameters/cnae'
+        - $ref: '#/components/parameters/categoria'
+      responses:
+        200:
+          description: Indicador.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indicador'
+        401:
+          description: 'Token ausente, inválido ou expirado.'
+        422:
+          description: 'Parâmetros inválidos.'
+        503:
+          description: 'Integração desligada.'
+  /api_integracao/bi/indicadores/benchmark-redesim:
+    get:
+      tags:
+        - 'Indicadores estratégicos'
+      operationId: indicador_benchmark_redesim
+      summary: 'Tempo de Salvador frente à REDESIM'
+      description: 'Tempo médio de viabilidade das deferidas no Viabiliza comparado com a apuração da REDESIM para Salvador, no período e no mês corrente.'
+      security:
+        -
+          bearerAuth: {}
+      parameters:
+        - $ref: '#/components/parameters/data_de'
+        - $ref: '#/components/parameters/data_ate'
+        - $ref: '#/components/parameters/setor'
+        - $ref: '#/components/parameters/analista'
+        - $ref: '#/components/parameters/bairro'
+        - $ref: '#/components/parameters/cnae'
+        - $ref: '#/components/parameters/categoria'
+      responses:
+        200:
+          description: Indicador.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indicador'
+        401:
+          description: 'Token ausente, inválido ou expirado.'
+        422:
+          description: 'Parâmetros inválidos.'
+        503:
+          description: 'Integração desligada.'
   /api_integracao/bi/indicadores/solicitacoes-protocoladas:
     get:
       tags:
@@ -595,6 +657,70 @@ paths:
           description: 'Parâmetros inválidos.'
         503:
           description: 'Integração desligada.'
+  /api_integracao/bi/indicadores/perfil-demanda:
+    get:
+      tags:
+        - 'Inteligência econômica'
+      operationId: indicador_perfil_demanda
+      summary: 'Perfil da demanda'
+      description: 'Solicitações por serviço da JUCEB, tipo de serviço, canal de entrada, porte da empresa e escritório virtual, com deferidas, indeferidas e taxa.'
+      security:
+        -
+          bearerAuth: {}
+      parameters:
+        - $ref: '#/components/parameters/data_de'
+        - $ref: '#/components/parameters/data_ate'
+        - $ref: '#/components/parameters/setor'
+        - $ref: '#/components/parameters/analista'
+        - $ref: '#/components/parameters/bairro'
+        - $ref: '#/components/parameters/cnae'
+        - $ref: '#/components/parameters/categoria'
+        - $ref: '#/components/parameters/limite'
+      responses:
+        200:
+          description: Indicador.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indicador'
+        401:
+          description: 'Token ausente, inválido ou expirado.'
+        422:
+          description: 'Parâmetros inválidos.'
+        503:
+          description: 'Integração desligada.'
+  /api_integracao/bi/indicadores/impacto-economico:
+    get:
+      tags:
+        - 'Inteligência econômica'
+      operationId: indicador_impacto_economico
+      summary: 'Impacto econômico'
+      description: 'Viabilidades deferidas no período: empresas viabilizadas, área liberada (m²), área média, distribuição por porte e série por período.'
+      security:
+        -
+          bearerAuth: {}
+      parameters:
+        - $ref: '#/components/parameters/data_de'
+        - $ref: '#/components/parameters/data_ate'
+        - $ref: '#/components/parameters/setor'
+        - $ref: '#/components/parameters/analista'
+        - $ref: '#/components/parameters/bairro'
+        - $ref: '#/components/parameters/cnae'
+        - $ref: '#/components/parameters/categoria'
+        - $ref: '#/components/parameters/agrupamento'
+      responses:
+        200:
+          description: Indicador.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indicador'
+        401:
+          description: 'Token ausente, inválido ou expirado.'
+        422:
+          description: 'Parâmetros inválidos.'
+        503:
+          description: 'Integração desligada.'
   /api_integracao/bi/indicadores/novas-solicitacoes-por-regiao:
     get:
       tags:
@@ -666,7 +792,7 @@ paths:
         - 'Inteligência territorial'
       operationId: indicador_mapa_decisoes
       summary: 'Mapa de deferimentos e indeferimentos'
-      description: 'Células de grade com total, deferidas, indeferidas e taxa de indeferimento.'
+      description: 'Células de grade com total, deferidas, indeferidas, em análise e taxa de indeferimento; bairro e zona predominantes; até 3 CNAEs mais frequentes com a saturação do par bairro × CNAE e o alerta da área; até 3 fundamentos mais citados nos indeferimentos; tempo médio em horas úteis; e, com `data_de` informado, o total do período anterior de mesmo tamanho e a tendência (nova, subindo, caindo, estavel). Não identifica processo, empresa nem pessoa.'
       security:
         -
           bearerAuth: {}
@@ -776,6 +902,39 @@ paths:
         - $ref: '#/components/parameters/cnae'
         - $ref: '#/components/parameters/categoria'
         - $ref: '#/components/parameters/limite'
+      responses:
+        200:
+          description: Indicador.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indicador'
+        401:
+          description: 'Token ausente, inválido ou expirado.'
+        422:
+          description: 'Parâmetros inválidos.'
+        503:
+          description: 'Integração desligada.'
+  /api_integracao/bi/indicadores/indeferimentos-zona-atividade:
+    get:
+      tags:
+        - 'Inteligência territorial'
+      operationId: indicador_indeferimentos_zona_atividade
+      summary: 'Onde a regra mais barra atividades'
+      description: 'Zona × CNAE com decisões, indeferimentos, taxa e o fundamento mais citado nos indeferimentos. Só pares com ao menos `min_decididas` decisões e algum indeferimento.'
+      security:
+        -
+          bearerAuth: {}
+      parameters:
+        - $ref: '#/components/parameters/data_de'
+        - $ref: '#/components/parameters/data_ate'
+        - $ref: '#/components/parameters/setor'
+        - $ref: '#/components/parameters/analista'
+        - $ref: '#/components/parameters/bairro'
+        - $ref: '#/components/parameters/cnae'
+        - $ref: '#/components/parameters/categoria'
+        - $ref: '#/components/parameters/limite'
+        - $ref: '#/components/parameters/min_decididas'
       responses:
         200:
           description: Indicador.

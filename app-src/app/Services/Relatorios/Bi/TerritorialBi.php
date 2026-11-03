@@ -35,14 +35,14 @@ class TerritorialBi
     {
         return array_map(
             fn (array $celula): array => ['lat' => $celula['lat'], 'lng' => $celula['lng'], 'total' => $celula['total']],
-            $this->celulas($c),
+            $this->celulas($c, detalhado: false),
         );
     }
 
     /**
-     * Deferimentos e indeferimentos por célula de grade.
+     * Deferimentos, indeferimentos e perfil da área por célula de grade.
      *
-     * @return list<array{lat: float, lng: float, total: int, deferidas: int, indeferidas: int, taxa_indeferimento: float|null}>
+     * @return list<array<string, mixed>>
      */
     public function mapaDecisoes(BiConsulta $c): array
     {
@@ -244,21 +244,39 @@ class TerritorialBi
     }
 
     /**
-     * @return list<array{lat: float, lng: float, total: int, deferidas: int, indeferidas: int, taxa_indeferimento: float|null}>
+     * Células de grade com o desfecho das decisões e o perfil da área: situação
+     * em aberto, bairro e zona predominantes, CNAEs mais frequentes (com a
+     * saturação do par bairro × CNAE), fundamentos mais citados nos
+     * indeferimentos, tempo médio e, com período informado, a tendência frente
+     * ao período anterior de mesmo tamanho. Não identifica processo, empresa nem
+     * pessoa. Sem `detalhado`, só as contagens.
+     *
+     * @return list<array<string, mixed>>
      */
-    private function celulas(BiConsulta $c): array
+    private function celulas(BiConsulta $c, bool $detalhado = true): array
     {
         $precisao = min(5, max(2, $c->precisao));
         $deferida = DecisionOutcome::Deferida->value;
         $indeferida = DecisionOutcome::Indeferida->value;
         $celulas = [];
+        $celulaDoProcesso = [];
 
         $pontos = $this->solicitacoes($c->filtros)
             ->whereNotNull('viability_requests.property_point_lat')
             ->whereNotNull('viability_requests.property_point_lng')
             ->leftJoin('viability_decisions as vd', 'vd.viability_request_id', '=', 'viability_requests.id')
             ->toBase()
-            ->select('viability_requests.property_point_lat as lat', 'viability_requests.property_point_lng as lng', 'vd.outcome as outcome')
+            ->select(
+                'viability_requests.id as id',
+                'viability_requests.property_point_lat as lat',
+                'viability_requests.property_point_lng as lng',
+                'viability_requests.status as status',
+                'viability_requests.zona_codigo as zona',
+                'viability_requests.viabilidade_horas_uteis as horas',
+                DB::raw(self::BAIRRO.' as bairro'),
+                'vd.outcome as outcome',
+                'vd.fundamentacao as fundamentacao',
+            )
             ->cursor();
 
         foreach ($pontos as $ponto) {
@@ -266,20 +284,162 @@ class TerritorialBi
             $lng = round((float) $ponto->lng, $precisao);
             $chave = $lat.'|'.$lng;
 
-            $celulas[$chave] ??= ['lat' => $lat, 'lng' => $lng, 'total' => 0, 'deferidas' => 0, 'indeferidas' => 0];
+            $celulas[$chave] ??= [
+                'lat' => $lat, 'lng' => $lng, 'total' => 0, 'deferidas' => 0, 'indeferidas' => 0, 'em_analise' => 0,
+                'horas_soma' => 0.0, 'horas_amostras' => 0, 'bairros' => [], 'zonas' => [], 'cnaes' => [], 'motivos' => [],
+            ];
             $celulas[$chave]['total']++;
             $celulas[$chave]['deferidas'] += $ponto->outcome === $deferida ? 1 : 0;
             $celulas[$chave]['indeferidas'] += $ponto->outcome === $indeferida ? 1 : 0;
+            $celulas[$chave]['em_analise'] += in_array($ponto->status, self::STATUS_ABERTOS, true) ? 1 : 0;
+
+            if ($ponto->horas !== null) {
+                $celulas[$chave]['horas_soma'] += (float) $ponto->horas;
+                $celulas[$chave]['horas_amostras']++;
+            }
+
+            foreach (['bairros' => $ponto->bairro, 'zonas' => $ponto->zona] as $campo => $valor) {
+                if ($valor !== null && $valor !== '') {
+                    $celulas[$chave][$campo][$valor] = ($celulas[$chave][$campo][$valor] ?? 0) + 1;
+                }
+            }
+
+            if ($ponto->outcome === $indeferida) {
+                foreach ($this->fundamentos($ponto->fundamentacao) as $fundamento) {
+                    $celulas[$chave]['motivos'][$fundamento] = ($celulas[$chave]['motivos'][$fundamento] ?? 0) + 1;
+                }
+            }
+
+            $celulaDoProcesso[(int) $ponto->id] = $chave;
+        }
+
+        if (! $detalhado) {
+            uasort($celulas, fn (array $a, array $b): int => $b['total'] <=> $a['total']);
+
+            return array_map(
+                fn (array $celula): array => ['lat' => $celula['lat'], 'lng' => $celula['lng'], 'total' => $celula['total']],
+                array_slice(array_values($celulas), 0, $c->limite(5000)),
+            );
+        }
+
+        foreach (array_chunk(array_keys($celulaDoProcesso), 1000) as $ids) {
+            $cnaes = DB::table('viability_request_cnaes as vrc')
+                ->join('cnaes as c', 'c.id', '=', 'vrc.cnae_id')
+                ->whereIn('vrc.viability_request_id', $ids)
+                ->get(['vrc.viability_request_id as id', 'c.code as codigo', 'c.description as descricao']);
+
+            foreach ($cnaes as $cnae) {
+                $chave = $celulaDoProcesso[(int) $cnae->id];
+                $atual = $celulas[$chave]['cnaes'][$cnae->codigo] ?? ['cnae' => (string) $cnae->codigo, 'descricao' => (string) $cnae->descricao, 'total' => 0];
+                $atual['total']++;
+                $celulas[$chave]['cnaes'][$cnae->codigo] = $atual;
+            }
         }
 
         uasort($celulas, fn (array $a, array $b): int => $b['total'] <=> $a['total']);
 
-        return array_map(
-            fn (array $celula): array => [
-                ...$celula,
+        $saturacao = [];
+
+        foreach ($this->saturacao->porBairroCnae($c->filtros, 100000) as $par) {
+            $saturacao[$par['bairro'].'|'.$par['cnae']] = $par['situacao'];
+        }
+
+        $anteriores = $this->totaisDoPeriodoAnterior($c, $precisao);
+
+        return array_map(function (array $celula) use ($saturacao, $anteriores): array {
+            arsort($celula['bairros']);
+            arsort($celula['zonas']);
+            arsort($celula['motivos']);
+            $bairro = array_key_first($celula['bairros']);
+            $cnaes = array_values($celula['cnaes']);
+            usort($cnaes, fn (array $a, array $b): int => [$b['total'], $a['cnae']] <=> [$a['total'], $b['cnae']]);
+            $cnaes = array_map(fn (array $cnae): array => [
+                ...$cnae,
+                'saturacao' => $bairro !== null ? ($saturacao[$bairro.'|'.$cnae['cnae']] ?? null) : null,
+            ], array_slice($cnaes, 0, 3));
+            $anterior = $anteriores === null ? null : ($anteriores[$celula['lat'].'|'.$celula['lng']] ?? 0);
+
+            return [
+                'lat' => $celula['lat'],
+                'lng' => $celula['lng'],
+                'total' => $celula['total'],
+                'deferidas' => $celula['deferidas'],
+                'indeferidas' => $celula['indeferidas'],
+                'em_analise' => $celula['em_analise'],
                 'taxa_indeferimento' => BiEstatistica::percentual($celula['indeferidas'], $celula['deferidas'] + $celula['indeferidas']),
-            ],
-            array_slice(array_values($celulas), 0, $c->limite(5000)),
-        );
+                'bairro' => $bairro,
+                'zona' => array_key_first($celula['zonas']),
+                'cnaes_principais' => $cnaes,
+                'alerta_saturacao' => collect($cnaes)->contains(fn (array $cnae): bool => in_array($cnae['saturacao'], ['saturando', 'saturado'], true)),
+                'motivos_indeferimento' => array_map(
+                    fn (string $fundamento, int $total): array => ['fundamento' => $fundamento, 'indeferidas' => $total],
+                    array_slice(array_keys($celula['motivos']), 0, 3),
+                    array_slice(array_values($celula['motivos']), 0, 3),
+                ),
+                'tempo_medio_horas_uteis' => $celula['horas_amostras'] > 0 ? round($celula['horas_soma'] / $celula['horas_amostras'], 2) : null,
+                'total_periodo_anterior' => $anterior,
+                'tendencia' => $anterior === null ? null : match (true) {
+                    $anterior === 0 => 'nova',
+                    $celula['total'] > $anterior => 'subindo',
+                    $celula['total'] < $anterior => 'caindo',
+                    default => 'estavel',
+                },
+            ];
+        }, array_slice(array_values($celulas), 0, $c->limite(5000)));
+    }
+
+    /**
+     * Total por célula no período anterior de mesmo tamanho. Sem `data_de`, não
+     * há com o que comparar e a tendência fica nula.
+     *
+     * @return array<string, int>|null
+     */
+    private function totaisDoPeriodoAnterior(BiConsulta $c, int $precisao): ?array
+    {
+        $de = $c->filtros->from();
+
+        if ($de === null) {
+            return null;
+        }
+
+        $ate = $c->filtros->to() ?? Carbon::now()->endOfDay();
+        $dias = (int) $de->copy()->startOfDay()->diffInDays($ate->copy()->startOfDay()) + 1;
+
+        $filtros = ReportFilters::fromArray([
+            ...$c->filtros->toArray(),
+            'data_de' => $de->copy()->subDays($dias)->toDateString(),
+            'data_ate' => $de->copy()->subDay()->toDateString(),
+        ]);
+
+        $totais = [];
+
+        $pontos = $this->solicitacoes($filtros)
+            ->whereNotNull('viability_requests.property_point_lat')
+            ->whereNotNull('viability_requests.property_point_lng')
+            ->toBase()
+            ->select('viability_requests.property_point_lat as lat', 'viability_requests.property_point_lng as lng')
+            ->cursor();
+
+        foreach ($pontos as $ponto) {
+            $chave = round((float) $ponto->lat, $precisao).'|'.round((float) $ponto->lng, $precisao);
+            $totais[$chave] = ($totais[$chave] ?? 0) + 1;
+        }
+
+        return $totais;
+    }
+
+    /**
+     * Fundamentos legais de uma decisão, venham como lista já decodificada ou
+     * como o JSON cru da coluna.
+     *
+     * @return list<string>
+     */
+    private function fundamentos(mixed $valor): array
+    {
+        if (is_string($valor)) {
+            $valor = json_decode($valor, true);
+        }
+
+        return is_array($valor) ? array_values(array_unique(array_filter($valor, 'is_string'))) : [];
     }
 }
