@@ -752,6 +752,13 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'integer', 'min:1', 'max:60'],
                 'description' => 'Intervalo mínimo (meses) entre renovações da mesma viabilidade locacional. Dentro do intervalo o sistema recusa um novo protocolo',
             ],
+            'renovacao.antecedencia_meses' => [
+                'group' => 'portal',
+                'type' => 'integer',
+                'default_value' => '3',
+                'validation_rules' => ['required', 'integer', 'min:1', 'max:24'],
+                'description' => 'Antecedência (meses) em relação ao vencimento a partir da qual o cidadão pode solicitar a renovação. Antes disso o sistema recusa o protocolo',
+            ],
             'renovacao.legado.janela_a_vencer_dias' => [
                 'group' => 'portal',
                 'type' => 'integer',
@@ -1169,6 +1176,7 @@ class ParameterSeeder extends Seeder
             'analise.escritorio_virtual.cnae_gatilho_sede',
             'features.fluxo_expresso',
             'renovacao.intervalo_meses',
+            'renovacao.antecedencia_meses',
             'renovacao.legado.janela_a_vencer_dias',
             'renovacao.legado.permite_vencida',
             'louos.via_local.cnaes_vedados',

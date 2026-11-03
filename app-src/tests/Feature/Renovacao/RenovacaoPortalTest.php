@@ -172,7 +172,7 @@ class RenovacaoPortalTest extends TestCase
             'viability_request_id' => $origem->id,
             'tvl_kind' => $tipo,
             'tvl_product_number' => 'TVL-'.$origem->id,
-            'tvl_valid_until' => '2027-09-28',
+            'tvl_valid_until' => now()->addMonth()->toDateString(),
         ]);
 
         return $origem->fresh();
