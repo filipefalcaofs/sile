@@ -225,6 +225,28 @@ class FichaPorAnalistaTest extends TestCase
         $this->assertSame(1, $processo->analysisRecords()->count());
     }
 
+    public function test_nova_revisao_com_rascunho_antigo_e_ficha_finalizada_mais_nova_devolve_o_rascunho(): void
+    {
+        $processo = $this->processoComBaseDoMotor();
+        $a = $this->terceirizado();
+
+        $rascunho = $this->fichas()->autosave($this->fichas()->current($processo, $a), ['parecer' => 'Parecer de A'], $a);
+        AnalysisRecord::factory()->create([
+            'viability_request_id' => $processo->id,
+            'revision' => 2,
+            'status' => AnalysisRecordStatus::Finalizada,
+            'analyst_user_id' => $a->id,
+            'finalized_at' => now(),
+        ]);
+
+        $this->actingAs($a, 'gestao')
+            ->postJson("/gestao/processos/{$processo->id}/ficha/nova-revisao")
+            ->assertOk()
+            ->assertJsonPath('ficha.id', $rascunho->id);
+
+        $this->assertSame(1, $processo->analysisRecords()->where('status', AnalysisRecordStatus::Rascunho->value)->count());
+    }
+
     public function test_nova_revisao_pela_rota_usa_a_ficha_de_quem_pede(): void
     {
         $processo = $this->processoComBaseDoMotor();

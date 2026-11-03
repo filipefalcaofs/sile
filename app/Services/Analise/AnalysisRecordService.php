@@ -73,11 +73,14 @@ class AnalysisRecordService
 
     private function ultimaDoAnalista(ViabilityRequest $request, User $usuario): ?AnalysisRecord
     {
-        return $request->analysisRecords()
+        $propriasAtivas = fn () => $request->analysisRecords()
             ->where('analyst_user_id', $usuario->id)
-            ->where('status', '!=', AnalysisRecordStatus::Substituida->value)
-            ->orderByDesc('revision')
-            ->first();
+            ->where('status', '!=', AnalysisRecordStatus::Substituida->value);
+
+        // O rascunho aberto vence a finalizada mais nova: só existe um por analista
+        // (índice único) e copiar de novo violaria esse índice.
+        return $propriasAtivas()->where('status', AnalysisRecordStatus::Rascunho->value)->orderByDesc('revision')->first()
+            ?? $propriasAtivas()->orderByDesc('revision')->first();
     }
 
     /**
