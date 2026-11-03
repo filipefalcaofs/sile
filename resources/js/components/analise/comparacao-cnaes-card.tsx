@@ -137,7 +137,7 @@ function Grupo({
               {cnae.descricao ? (
                 <span className="text-gray-500 dark:text-gray-400">
                   {" "}
-                  — {cnae.descricao}
+                  ({cnae.descricao})
                 </span>
               ) : null}
             </li>

@@ -67,7 +67,7 @@ export default function DistribuirModal({
                 {tipo === 'redistribuir' ? 'Redistribuir processo' : 'Tramitar processo(s)'}
             </h3>
             <p className="mt-1 text-theme-sm text-gray-500 dark:text-gray-400">
-                {descricao} —{' '}
+                {descricao}:{' '}
                 {emVistoria
                     ? 'processo em vistoria: selecione o vistoriador responsável pela ficha.'
                     : distribuiEmQualquerSetor

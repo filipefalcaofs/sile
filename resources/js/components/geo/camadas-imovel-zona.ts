@@ -39,5 +39,5 @@ export function textoZona(zona?: ZonaCamada | null): string {
     const porcoes = zona.porcoes ?? [];
     const detalhe = porcoes.length > 1 ? ` (${porcoes.map((p) => `${p.zona} ${percentual(p.percentual)}`).join(' · ')})` : '';
 
-    return fonte ? `${zona.nome} — ${fonte}${detalhe}` : `${zona.nome}${detalhe}`;
+    return fonte ? `${zona.nome}, ${fonte}${detalhe}` : `${zona.nome}${detalhe}`;
 }

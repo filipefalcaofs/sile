@@ -347,7 +347,7 @@ export default function MalhaFinaIndex({
             </Card>
 
             <Modal isOpen={concluindo !== null} onClose={() => setConcluindo(null)} className="m-4 max-h-[90vh] max-w-lg overflow-y-auto p-6">
-                <h2 className="text-lg font-semibold text-gray-800 dark:text-white/90">Conclusão de Análise</h2>
+                <h2 className="text-lg font-semibold text-gray-800 dark:text-white/90">Conclusão de análise</h2>
                 <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
                     O processo {concluindo?.protocol_number ?? ''} sai da malha fina com o resultado escolhido. Deferido
                     e indeferido seguem a ficha finalizada. Desativado, cassado e revogado encerram o processo,

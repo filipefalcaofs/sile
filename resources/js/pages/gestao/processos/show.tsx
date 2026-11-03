@@ -438,7 +438,7 @@ export default function Show({
                                             {processo.analysis_status_label ?? '-'}
                                         </DescItem>
                                         {podeAnalisar && podeConcluirAnalise && (
-                                            <DescItem label="Conclusão de Análise">
+                                            <DescItem label="Conclusão de análise">
                                                 <ConclusaoAnaliseForm
                                                     resultadoId="resultado-conclusao"
                                                     resultado={resultadoConclusao}

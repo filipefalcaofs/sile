@@ -13,7 +13,7 @@ describe('textoZona', () => {
                     { zona: 'ZEIS', area_m2: 220, percentual: 22 },
                 ],
             }),
-        ).toBe('ZPR 3 — maior porção do lote (ZPR 3 78,0% · ZEIS 22,0%)');
+        ).toBe('ZPR 3, maior porção do lote (ZPR 3 78,0% · ZEIS 22,0%)');
     });
 
     it('omite os percentuais com uma porção só', () => {
@@ -24,11 +24,11 @@ describe('textoZona', () => {
                 fonte: 'enderecamento_maior_porcao',
                 porcoes: [{ zona: 'ZPR 3', area_m2: 1000, percentual: 100 }],
             }),
-        ).toBe('ZPR 3 — maior porção do lote');
+        ).toBe('ZPR 3, maior porção do lote');
     });
 
     it('marca a zona do ponto da inscrição', () => {
-        expect(textoZona({ status: 'identificado', nome: 'ZEIS', fonte: 'ponto', porcoes: [] })).toBe('ZEIS — ponto da inscrição');
+        expect(textoZona({ status: 'identificado', nome: 'ZEIS', fonte: 'ponto', porcoes: [] })).toBe('ZEIS, ponto da inscrição');
     });
 
     it('mantém o texto antigo sem fonte e nos estados degradados', () => {

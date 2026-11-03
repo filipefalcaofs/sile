@@ -42,7 +42,7 @@ function textoCamada(camada: CamadaPoligonal): string {
 
     const elemento = camada.elemento ?? 'Dentro da camada';
 
-    return camada.incide ? `${elemento} — regra incide` : elemento;
+    return camada.incide ? `${elemento}, regra incide` : elemento;
 }
 
 /**
@@ -63,7 +63,7 @@ export default function CamadasImovelLista({
               {
                   camada: 'Logradouro da inscrição (SEFAZ)',
                   elemento: camadas.logradouro_tributario
-                      ? `${camadas.logradouro_tributario.cod_log} — ${camadas.logradouro_tributario.nome ?? ''}`.trim()
+                      ? `${camadas.logradouro_tributario.cod_log} · ${camadas.logradouro_tributario.nome ?? ''}`.trim()
                       : '—',
               },
               { camada: 'Bairro', elemento: textoDimensao(camadas.bairro) },

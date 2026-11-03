@@ -55,7 +55,7 @@ const monoFont = gestaoLoginMonoFont;
 const footStats = [
     { label: 'Em tempo real', value: 'Viabilidade com análise imediata', mono: false },
     { label: '100% auditável', value: 'Rastreabilidade e histórico de cada decisão', mono: false },
-    { label: 'Segurança jurídica', value: 'Conformidade com a LOUOS — Lei nº 9.148/2016', mono: false },
+    { label: 'Segurança jurídica', value: 'Conformidade com a LOUOS (Lei nº 9.148/2016)', mono: false },
 ];
 
 function BrandStage({
@@ -231,7 +231,7 @@ function BrandStage({
                     <img
                         className="block h-[clamp(22px,2.1vw,30px)] w-auto max-w-none shrink-0 opacity-92"
                         src="/images/01JW9M9BYJ76Y0M06Z1XHJDKH8.png"
-                        alt="SEDUR — Secretaria de Desenvolvimento Urbano"
+                        alt="SEDUR, Secretaria de Desenvolvimento Urbano"
                     />
                 </div>
             </dl>
@@ -443,7 +443,7 @@ function GestaoLoginContent({ status }: { status?: string }) {
 
     return (
         <main className={gestaoLoginShellClasses}>
-            <Head title="Gestão SEDUR — Acesso ao console">
+            <Head title="Gestão SEDUR | Acesso ao console">
                 <link rel="preconnect" href="https://fonts.googleapis.com" />
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
                 <link

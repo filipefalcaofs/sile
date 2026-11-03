@@ -14,7 +14,7 @@ interface Props {
 export default function GestaoForgotPassword({ status }: Props) {
     return (
         <main className="grid min-h-screen place-items-center bg-[oklch(15%_0.034_255)] px-5 py-10 font-[-apple-system,BlinkMacSystemFont,'SF_Pro_Text','Segoe_UI',system-ui,sans-serif] text-[oklch(96%_0.008_250)] antialiased">
-            <Head title="Recuperar senha — Gestão SEDUR">
+            <Head title="Recuperar senha | Gestão SEDUR">
                 <link rel="preconnect" href="https://fonts.googleapis.com" />
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
                 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&display=swap" rel="stylesheet" />

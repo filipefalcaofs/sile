@@ -120,7 +120,7 @@ export default function DecisionExplanation({ explicacao }: { explicacao: Decisi
                     <InfoIcon className="size-5 shrink-0 fill-current text-warning-500" />
                     <p className="text-theme-sm text-gray-600 dark:text-gray-300">
                         Decisão anterior ao registro estruturado do passo a passo. Os passos do motor que não foram
-                        snapshotados aparecem marcados como <strong>"não registrado nesta decisão"</strong> — o sistema
+                        gravados aparecem marcados como <strong>"não registrado nesta decisão"</strong>. O sistema
                         não recomputa nem inventa valores.
                     </p>
                 </div>

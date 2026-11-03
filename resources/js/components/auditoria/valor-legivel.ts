@@ -87,7 +87,7 @@ function resumoEncaminhamento(valor: Record<string, unknown>): string | null {
     }
 
     if (fluxo !== null && motivo !== null) {
-        return `${fluxo} — ${motivo}`;
+        return `${fluxo}: ${motivo}`;
     }
 
     return fluxo ?? motivo;

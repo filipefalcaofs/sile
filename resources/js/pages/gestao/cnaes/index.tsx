@@ -12,7 +12,7 @@ import DataTable from '@/components/ui/data-table/data-table';
 import PerPageSelect from '@/components/ui/data-table/per-page-select';
 import TableToolbar from '@/components/ui/data-table/table-toolbar';
 import type { ColumnDef, SortDirection } from '@/components/ui/data-table/types';
-import { useServerTable } from '@/components/ui/data-table/use-server-table';
+import { buscaSemMascaraDeCodigo, useServerTable } from '@/components/ui/data-table/use-server-table';
 import EmptyState from '@/components/ui/empty-state';
 import Pagination, { type PaginationLink } from '@/components/ui/pagination';
 import TableAction from '@/components/ui/table-action';
@@ -66,6 +66,7 @@ export default function CnaesIndex({ cnaes, filters, perPageOptions }: CnaesInde
         initialSort: { column: filters.sort, direction: filters.direction },
         initialPerPage: filters.per_page,
         initialFilters: { active: filters.active },
+        transformSearch: buscaSemMascaraDeCodigo,
     });
 
     const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);

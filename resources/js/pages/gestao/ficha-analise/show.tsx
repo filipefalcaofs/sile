@@ -593,6 +593,9 @@ function rotuloEnquadramento(opcao: EnquadramentoOpcao): string {
     return `${opcao.codigo_louos}${denominacao}${tll}`;
 }
 
+/** Limite de caracteres dos textos livres da ficha (espelha o máximo validado no servidor). */
+const LIMITE_TEXTO_FICHA = 2000;
+
 /** Textarea no padrão visual do design system (sem componente dedicado no kit). */
 function Textarea({
     value,
@@ -630,18 +633,35 @@ function Textarea({
         el.style.overflowY = el.scrollHeight > altura ? 'auto' : 'hidden';
     }, [value, ampliavel, teto]);
 
+    const noLimite = value.length >= LIMITE_TEXTO_FICHA;
+    const perto = value.length >= LIMITE_TEXTO_FICHA * 0.9;
+
     return (
-        <textarea
-            ref={ref}
-            id={id}
-            rows={rows}
-            value={value}
-            disabled={disabled}
-            placeholder={placeholder}
-            onChange={(event) => onChange(event.target.value)}
-            maxLength={2000}
-            className={`w-full ${ampliavel ? 'resize-y' : 'max-h-40 resize-none'} rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/20 focus:outline-hidden disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800`}
-        />
+        <>
+            <textarea
+                ref={ref}
+                id={id}
+                rows={rows}
+                value={value}
+                disabled={disabled}
+                placeholder={placeholder}
+                onChange={(event) => onChange(event.target.value)}
+                maxLength={LIMITE_TEXTO_FICHA}
+                aria-describedby={id ? `${id}-contador` : undefined}
+                className={`w-full ${ampliavel ? 'resize-y' : 'max-h-40 resize-none'} rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/20 focus:outline-hidden disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800`}
+            />
+            {perto && (
+                <p
+                    id={id ? `${id}-contador` : undefined}
+                    role={noLimite ? 'alert' : undefined}
+                    className={`mt-1 text-xs ${noLimite ? 'text-error-600 dark:text-error-400' : 'text-gray-500 dark:text-gray-400'}`}
+                >
+                    {noLimite
+                        ? `Limite de ${LIMITE_TEXTO_FICHA} caracteres atingido. Resuma o texto para continuar.`
+                        : `${value.length} de ${LIMITE_TEXTO_FICHA} caracteres`}
+                </p>
+            )}
+        </>
     );
 }
 
@@ -2541,7 +2561,7 @@ export default function FichaAnaliseShow({
                                                 }}
                                                 size="sm"
                                             >
-                                                Conclusão de Análise
+                                                Conclusão de análise
                                             </Button>
                                         )}
 
@@ -2616,7 +2636,7 @@ export default function FichaAnaliseShow({
                 </div>
             </div>
 
-            <Modal isOpen={showSemFichaVistoria} onClose={() => setShowSemFichaVistoria(false)} className="m-4 max-w-[480px] p-6 lg:p-8">
+            <Modal isOpen={showSemFichaVistoria} onClose={() => setShowSemFichaVistoria(false)} className="m-4 max-h-[90vh] max-w-[480px] overflow-y-auto p-6 lg:p-8">
                     <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Sem ficha de vistoria</h4>
                     <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
                         Este processo não possui ficha de vistoria.
@@ -2668,7 +2688,7 @@ export default function FichaAnaliseShow({
                 isOpen={showEncaminharChefia}
                 onClose={() => setShowEncaminharChefia(false)}
                 ariaLabel="Encaminhar para Chefia"
-                className="m-4 max-w-[480px] p-6 lg:p-8"
+                className="m-4 max-h-[90vh] max-w-[480px] overflow-y-auto p-6 lg:p-8"
             >
                 <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Encaminhar para Chefia?</h4>
                 <div className="mt-4">
@@ -2700,7 +2720,7 @@ export default function FichaAnaliseShow({
                 isOpen={showZonaVia}
                 onClose={fecharZonaVia}
                 ariaLabel="Editar zona e via"
-                className="m-4 max-w-[560px] p-6 lg:p-8"
+                className="m-4 max-h-[90vh] max-w-[560px] overflow-y-auto p-6 lg:p-8"
             >
                 <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Editar zona e via</h4>
                 <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
@@ -2830,7 +2850,7 @@ export default function FichaAnaliseShow({
             />
 
             <Modal isOpen={showConclusao} onClose={() => setShowConclusao(false)} className="m-4 max-h-[90vh] max-w-[560px] overflow-y-auto p-6 lg:p-8">
-                    <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Conclusão de Análise</h4>
+                    <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Conclusão de análise</h4>
                     <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                         Deferido e indeferido seguem a ficha finalizada. Desativado, cassado e revogado encerram o
                         processo, inclusive um já deferido. Processo finalizado aceita qualquer outro resultado.

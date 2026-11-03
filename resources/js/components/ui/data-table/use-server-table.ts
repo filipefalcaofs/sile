@@ -9,6 +9,16 @@ interface ServerTableState {
     filters: Record<string, string>;
 }
 
+/**
+ * Busca por código com máscara (ex.: 4711-3/02, 47.11-3-02): envia só os dígitos.
+ * A máscara não muda o resultado no servidor, que compara o código por dígitos, e
+ * `-`, `/` e `.` na query são barrados por firewalls da rede da Prefeitura.
+ * Texto com letras segue como o usuário digitou.
+ */
+export function buscaSemMascaraDeCodigo(termo: string): string {
+    return /^[\d.\-/\s]+$/.test(termo) && /\d/.test(termo) ? termo.replace(/\D/g, '') : termo;
+}
+
 /** Snapshot de query enviado na navegação e reusado na exportação (?formato=). */
 export type ServerTableParams = Record<string, string | number>;
 
@@ -17,7 +27,7 @@ export type ServerTableParams = Record<string, string | number>;
  * página, busca (quando preenchida) e filtros não-vazios. Fonte única usada
  * tanto pela navegação (`visit`) quanto pelo `currentParams` da exportação.
  */
-function buildParams(state: ServerTableState): ServerTableParams {
+function buildParams(state: ServerTableState, transformSearch: (termo: string) => string = (termo) => termo): ServerTableParams {
     const params: ServerTableParams = {
         sort: state.sort.column,
         direction: state.sort.direction,
@@ -25,7 +35,7 @@ function buildParams(state: ServerTableState): ServerTableParams {
     };
 
     if (state.search.trim() !== '') {
-        params.search = state.search;
+        params.search = transformSearch(state.search);
     }
 
     for (const [key, value] of Object.entries(state.filters)) {
@@ -46,6 +56,8 @@ interface UseServerTableOptions {
     /** Filtros adicionais ecoados pelo backend (ex.: { active: '1' }). */
     initialFilters?: Record<string, string>;
     debounceMs?: number;
+    /** Ajusta o termo antes de ir para a query (ex.: tirar a máscara de código). */
+    transformSearch?: (termo: string) => string;
 }
 
 /**
@@ -61,6 +73,7 @@ export function useServerTable({
     initialPerPage,
     initialFilters = {},
     debounceMs = 350,
+    transformSearch,
 }: UseServerTableOptions) {
     const [search, setSearch] = useState(initialSearch);
     const [sort, setSortState] = useState<SortState>(initialSort);
@@ -74,7 +87,7 @@ export function useServerTable({
 
     const visit = useCallback(
         (state: ServerTableState) => {
-            const params = buildParams(state);
+            const params = buildParams(state, transformSearch);
 
             router.get(url, params, {
                 preserveState: true,
@@ -84,7 +97,7 @@ export function useServerTable({
                 onFinish: () => setProcessing(false),
             });
         },
-        [url],
+        [url, transformSearch],
     );
 
     useEffect(() => {
@@ -143,8 +156,8 @@ export function useServerTable({
     // Mesmo snapshot enviado na navegação — exposto para o ExportMenu montar a
     // URL de exportação (?formato=...) preservando os filtros atuais (RN-004).
     const currentParams = useMemo(
-        () => buildParams({ search, sort, perPage, filters }),
-        [search, sort, perPage, filters],
+        () => buildParams({ search, sort, perPage, filters }, transformSearch),
+        [search, sort, perPage, filters, transformSearch],
     );
 
     return { search, setSearch, sort, setSort, perPage, setPerPage, filters, setFilter, setFilters, processing, currentParams };
