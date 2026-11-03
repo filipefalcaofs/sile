@@ -136,6 +136,7 @@ class IntegrationCallRecorder
             'ortofoto' => ['/imageserver/', 'mapeamento.salvador'],
             'edificacoes_ia' => ['/segmentar', '/saude'],
             'sefaz_tvl' => ['/api_integracao/tvl'],
+            'bi_indicadores' => ['/api_integracao/bi'],
             'regin' => ['api_integracao', 'juceb', 'regin'],
             'geoserver' => ['geoserver', '/wfs'],
             'geocoding' => ['nominatim'],

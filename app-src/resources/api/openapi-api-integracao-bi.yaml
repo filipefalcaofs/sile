@@ -1,0 +1,1512 @@
+openapi: 3.0.3
+info:
+  title: 'Viabiliza — indicadores para o BI (api_integracao/bi)'
+  version: 1.0.0
+  description: |-
+    Indicadores agregados do Viabiliza para montar o BI da SEDUR. Não há dado pessoal: o mapa sai em células de grade e o analista, por código interno.
+
+    ## Autenticação
+
+    1. `POST /api_integracao/bi/autenticar` com `usuario` e `senha` devolve um `token`.
+    2. Envie `Authorization: Bearer <token>` nas demais chamadas.
+    3. O token vale `expira_em_segundos` (60 minutos).
+
+    ## Convenções
+
+    - Todo indicador responde `{indicador, grupo, titulo, gerado_em, filtros, dados}`; o formato de `dados` varia por indicador.
+    - Taxas e médias sem amostra saem `null`, nunca zero.
+    - Tempos em horas úteis, salvo indicação.
+    - Limite de 120 requisições por minuto por IP.
+  contact:
+    name: 'SEDUR — Viabiliza'
+    url: 'https://www.sedur.salvador.ba.gov.br'
+servers:
+  - url: 'https://viabiliza-hml.salvador.ba.gov.br'
+    description: Homologação
+  - url: 'https://viabiliza.salvador.ba.gov.br'
+    description: Produção
+tags:
+  - name: Autenticação
+  - name: Catálogo
+  - name: 'Indicadores estratégicos'
+  - name: 'Inteligência econômica'
+  - name: 'Inteligência territorial'
+  - name: 'Eficiência operacional'
+  - name: 'Automação do licenciamento'
+paths:
+  /api_integracao/bi/autenticar:
+    post:
+      tags:
+        - Autenticação
+      operationId: autenticarBi
+      summary: 'Obter token'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Credenciais'
+      responses:
+        200:
+          description: 'Token emitido.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Token'
+        401:
+          description: 'Usuário ou senha inválidos.'
+        503:
+          description: 'Integração desligada.'
+  /api_integracao/bi/indicadores:
+    get:
+      tags:
+        - Catálogo
+      operationId: catalogoBi
+      summary: 'Listar os indicadores'
+      description: 'Devolve grupos, filtros comuns e, para cada indicador, slug, título, descrição, parâmetros aceitos e URL.'
+      security:
+        -
+          bearerAuth: {}
+      parameters:
+        -
+          name: grupo
+          in: query
+          required: false
+          description: 'Filtra por grupo.'
+          schema:
+            type: string
+            enum:
+              - estrategico
+              - economico
+              - territorial
+              - operacional
+              - automacao
+      responses:
+        200:
+          description: Catálogo.
+        401:
+          description: 'Token ausente, inválido ou expirado.'
+        503:
+          description: 'Integração desligada.'
+  /api_integracao/bi/indicadores/resumo-executivo:
+    get:
+      tags:
+        - 'Indicadores estratégicos'
+      operationId: indicador_resumo_executivo
+      summary: 'Resumo executivo'
+      description: 'Protocoladas, em análise, deferidas, indeferidas, taxa de deferimento, tempo médio e processos fora do prazo em um único objeto.'
+      security:
+        -
+          bearerAuth: {}
+      parameters:
+        - $ref: '#/components/parameters/data_de'
+        - $ref: '#/components/parameters/data_ate'
+        - $ref: '#/components/parameters/setor'
+        - $ref: '#/components/parameters/analista'
+        - $ref: '#/components/parameters/bairro'
+        - $ref: '#/components/parameters/cnae'
+        - $ref: '#/components/parameters/categoria'
+      responses:
+        200:
+          description: Indicador.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indicador'
+        401:
+          description: 'Token ausente, inválido ou expirado.'
+        422:
+          description: 'Parâmetros inválidos.'
+        503:
+          description: 'Integração desligada.'
+  /api_integracao/bi/indicadores/solicitacoes-protocoladas:
+    get:
+      tags:
+        - 'Indicadores estratégicos'
+      operationId: indicador_solicitacoes_protocoladas
+      summary: 'Total de solicitações protocoladas'
+      description: 'Demanda recebida pela SEDUR, por período. Exclui rascunhos e canceladas.'
+      security:
+        -
+          bearerAuth: {}
+      parameters:
+        - $ref: '#/components/parameters/data_de'
+        - $ref: '#/components/parameters/data_ate'
+        - $ref: '#/components/parameters/setor'
+        - $ref: '#/components/parameters/analista'
+        - $ref: '#/components/parameters/bairro'
+        - $ref: '#/components/parameters/cnae'
+        - $ref: '#/components/parameters/categoria'
+        - $ref: '#/components/parameters/agrupamento'
+      responses:
+        200:
+          description: Indicador.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indicador'
+        401:
+          description: 'Token ausente, inválido ou expirado.'
+        422:
+          description: 'Parâmetros inválidos.'
+        503:
+          description: 'Integração desligada.'
+  /api_integracao/bi/indicadores/solicitacoes-em-analise:
+    get:
+      tags:
+        - 'Indicadores estratégicos'
+      operationId: indicador_solicitacoes_em_analise
+      summary: 'Solicitações em análise'
+      description: 'Estoque atual de processos ainda não concluídos, por situação. Não usa o período.'
+      security:
+        -
+          bearerAuth: {}
+      parameters:
+        - $ref: '#/components/parameters/data_de'
+        - $ref: '#/components/parameters/data_ate'
+        - $ref: '#/components/parameters/setor'
+        - $ref: '#/components/parameters/analista'
+        - $ref: '#/components/parameters/bairro'
+        - $ref: '#/components/parameters/cnae'
+        - $ref: '#/components/parameters/categoria'
+      responses:
+        200:
+          description: Indicador.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indicador'
+        401:
+          description: 'Token ausente, inválido ou expirado.'
+        422:
+          description: 'Parâmetros inválidos.'
+        503:
+          description: 'Integração desligada.'
+  /api_integracao/bi/indicadores/decisoes:
+    get:
+      tags:
+        - 'Indicadores estratégicos'
+      operationId: indicador_decisoes
+      summary: 'Viabilidades deferidas e indeferidas'
+      description: 'Decisões por período e desfecho, com a taxa de deferimento de cada período.'
+      security:
+        -
+          bearerAuth: {}
+      parameters:
+        - $ref: '#/components/parameters/data_de'
+        - $ref: '#/components/parameters/data_ate'
+        - $ref: '#/components/parameters/setor'
+        - $ref: '#/components/parameters/analista'
+        - $ref: '#/components/parameters/bairro'
+        - $ref: '#/components/parameters/cnae'
+        - $ref: '#/components/parameters/categoria'
+        - $ref: '#/components/parameters/agrupamento'
+      responses:
+        200:
+          description: Indicador.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indicador'
+        401:
+          description: 'Token ausente, inválido ou expirado.'
+        422:
+          description: 'Parâmetros inválidos.'
+        503:
+          description: 'Integração desligada.'
+  /api_integracao/bi/indicadores/taxa-deferimento:
+    get:
+      tags:
+        - 'Indicadores estratégicos'
+      operationId: indicador_taxa_deferimento
+      summary: 'Taxa de deferimento'
+      description: 'Deferidas e indeferidas sobre o total decidido no período. Taxa nula quando não há decisão.'
+      security:
+        -
+          bearerAuth: {}
+      parameters:
+        - $ref: '#/components/parameters/data_de'
+        - $ref: '#/components/parameters/data_ate'
+        - $ref: '#/components/parameters/setor'
+        - $ref: '#/components/parameters/analista'
+        - $ref: '#/components/parameters/bairro'
+        - $ref: '#/components/parameters/cnae'
+        - $ref: '#/components/parameters/categoria'
+      responses:
+        200:
+          description: Indicador.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indicador'
+        401:
+          description: 'Token ausente, inválido ou expirado.'
+        422:
+          description: 'Parâmetros inválidos.'
+        503:
+          description: 'Integração desligada.'
+  /api_integracao/bi/indicadores/tempo-medio-analise:
+    get:
+      tags:
+        - 'Indicadores estratégicos'
+      operationId: indicador_tempo_medio_analise
+      summary: 'Tempo médio de análise'
+      description: 'Tempo do protocolo à decisão, em horas úteis: média, mediana e percentil 90.'
+      security:
+        -
+          bearerAuth: {}
+      parameters:
+        - $ref: '#/components/parameters/data_de'
+        - $ref: '#/components/parameters/data_ate'
+        - $ref: '#/components/parameters/setor'
+        - $ref: '#/components/parameters/analista'
+        - $ref: '#/components/parameters/bairro'
+        - $ref: '#/components/parameters/cnae'
+        - $ref: '#/components/parameters/categoria'
+      responses:
+        200:
+          description: Indicador.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indicador'
+        401:
+          description: 'Token ausente, inválido ou expirado.'
+        422:
+          description: 'Parâmetros inválidos.'
+        503:
+          description: 'Integração desligada.'
+  /api_integracao/bi/indicadores/processos-fora-do-prazo:
+    get:
+      tags:
+        - 'Indicadores estratégicos'
+      operationId: indicador_processos_fora_do_prazo
+      summary: 'Processos fora do prazo'
+      description: 'Processos em andamento com prazo vencido, vencendo, por etapa, e decisões tomadas depois do prazo.'
+      security:
+        -
+          bearerAuth: {}
+      parameters:
+        - $ref: '#/components/parameters/data_de'
+        - $ref: '#/components/parameters/data_ate'
+        - $ref: '#/components/parameters/setor'
+        - $ref: '#/components/parameters/analista'
+        - $ref: '#/components/parameters/bairro'
+        - $ref: '#/components/parameters/cnae'
+        - $ref: '#/components/parameters/categoria'
+      responses:
+        200:
+          description: Indicador.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indicador'
+        401:
+          description: 'Token ausente, inválido ou expirado.'
+        422:
+          description: 'Parâmetros inválidos.'
+        503:
+          description: 'Integração desligada.'
+  /api_integracao/bi/indicadores/solicitacoes-por-bairro:
+    get:
+      tags:
+        - 'Indicadores estratégicos'
+      operationId: indicador_solicitacoes_por_bairro
+      summary: 'Solicitações por bairro'
+      description: 'Distribuição territorial da demanda, com deferidas, indeferidas e taxa de deferimento.'
+      security:
+        -
+          bearerAuth: {}
+      parameters:
+        - $ref: '#/components/parameters/data_de'
+        - $ref: '#/components/parameters/data_ate'
+        - $ref: '#/components/parameters/setor'
+        - $ref: '#/components/parameters/analista'
+        - $ref: '#/components/parameters/bairro'
+        - $ref: '#/components/parameters/cnae'
+        - $ref: '#/components/parameters/categoria'
+        - $ref: '#/components/parameters/limite'
+      responses:
+        200:
+          description: Indicador.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indicador'
+        401:
+          description: 'Token ausente, inválido ou expirado.'
+        422:
+          description: 'Parâmetros inválidos.'
+        503:
+          description: 'Integração desligada.'
+  /api_integracao/bi/indicadores/atividades-mais-solicitadas:
+    get:
+      tags:
+        - 'Indicadores estratégicos'
+      operationId: indicador_atividades_mais_solicitadas
+      summary: 'Atividades econômicas mais solicitadas'
+      description: 'CNAEs com maior volume de solicitações.'
+      security:
+        -
+          bearerAuth: {}
+      parameters:
+        - $ref: '#/components/parameters/data_de'
+        - $ref: '#/components/parameters/data_ate'
+        - $ref: '#/components/parameters/setor'
+        - $ref: '#/components/parameters/analista'
+        - $ref: '#/components/parameters/bairro'
+        - $ref: '#/components/parameters/cnae'
+        - $ref: '#/components/parameters/categoria'
+        - $ref: '#/components/parameters/limite'
+      responses:
+        200:
+          description: Indicador.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indicador'
+        401:
+          description: 'Token ausente, inválido ou expirado.'
+        422:
+          description: 'Parâmetros inválidos.'
+        503:
+          description: 'Integração desligada.'
+  /api_integracao/bi/indicadores/solicitacoes-por-risco:
+    get:
+      tags:
+        - 'Indicadores estratégicos'
+      operationId: indicador_solicitacoes_por_risco
+      summary: 'Solicitações por risco'
+      description: 'Distribuição por classificação de risco (nível do decreto municipal quando há; senão a categoria derivada).'
+      security:
+        -
+          bearerAuth: {}
+      parameters:
+        - $ref: '#/components/parameters/data_de'
+        - $ref: '#/components/parameters/data_ate'
+        - $ref: '#/components/parameters/setor'
+        - $ref: '#/components/parameters/analista'
+        - $ref: '#/components/parameters/bairro'
+        - $ref: '#/components/parameters/cnae'
+        - $ref: '#/components/parameters/categoria'
+      responses:
+        200:
+          description: Indicador.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indicador'
+        401:
+          description: 'Token ausente, inválido ou expirado.'
+        422:
+          description: 'Parâmetros inválidos.'
+        503:
+          description: 'Integração desligada.'
+  /api_integracao/bi/indicadores/ranking-cnaes:
+    get:
+      tags:
+        - 'Inteligência econômica'
+      operationId: indicador_ranking_cnaes
+      summary: 'Ranking dos CNAEs mais solicitados'
+      description: 'CNAEs por procura, com deferidas, indeferidas e taxas.'
+      security:
+        -
+          bearerAuth: {}
+      parameters:
+        - $ref: '#/components/parameters/data_de'
+        - $ref: '#/components/parameters/data_ate'
+        - $ref: '#/components/parameters/setor'
+        - $ref: '#/components/parameters/analista'
+        - $ref: '#/components/parameters/bairro'
+        - $ref: '#/components/parameters/cnae'
+        - $ref: '#/components/parameters/categoria'
+        - $ref: '#/components/parameters/limite'
+      responses:
+        200:
+          description: Indicador.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indicador'
+        401:
+          description: 'Token ausente, inválido ou expirado.'
+        422:
+          description: 'Parâmetros inválidos.'
+        503:
+          description: 'Integração desligada.'
+  /api_integracao/bi/indicadores/evolucao-cnaes:
+    get:
+      tags:
+        - 'Inteligência econômica'
+      operationId: indicador_evolucao_cnaes
+      summary: 'Evolução das atividades por CNAE'
+      description: 'Solicitações por período nos CNAEs mais procurados do recorte (limite = quantos CNAEs).'
+      security:
+        -
+          bearerAuth: {}
+      parameters:
+        - $ref: '#/components/parameters/data_de'
+        - $ref: '#/components/parameters/data_ate'
+        - $ref: '#/components/parameters/setor'
+        - $ref: '#/components/parameters/analista'
+        - $ref: '#/components/parameters/bairro'
+        - $ref: '#/components/parameters/cnae'
+        - $ref: '#/components/parameters/categoria'
+        - $ref: '#/components/parameters/agrupamento'
+        - $ref: '#/components/parameters/limite'
+      responses:
+        200:
+          description: Indicador.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indicador'
+        401:
+          description: 'Token ausente, inválido ou expirado.'
+        422:
+          description: 'Parâmetros inválidos.'
+        503:
+          description: 'Integração desligada.'
+  /api_integracao/bi/indicadores/cnaes-por-bairro:
+    get:
+      tags:
+        - 'Inteligência econômica'
+      operationId: indicador_cnaes_por_bairro
+      summary: 'CNAEs por bairro'
+      description: 'Quais atividades são procuradas em cada região.'
+      security:
+        -
+          bearerAuth: {}
+      parameters:
+        - $ref: '#/components/parameters/data_de'
+        - $ref: '#/components/parameters/data_ate'
+        - $ref: '#/components/parameters/setor'
+        - $ref: '#/components/parameters/analista'
+        - $ref: '#/components/parameters/bairro'
+        - $ref: '#/components/parameters/cnae'
+        - $ref: '#/components/parameters/categoria'
+        - $ref: '#/components/parameters/limite'
+      responses:
+        200:
+          description: Indicador.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indicador'
+        401:
+          description: 'Token ausente, inválido ou expirado.'
+        422:
+          description: 'Parâmetros inválidos.'
+        503:
+          description: 'Integração desligada.'
+  /api_integracao/bi/indicadores/solicitacoes-por-porte-area:
+    get:
+      tags:
+        - 'Inteligência econômica'
+      operationId: indicador_solicitacoes_por_porte_area
+      summary: 'Solicitações por porte de área'
+      description: 'Distribuição da área pretendida em faixas de m², com o desfecho das decisões.'
+      security:
+        -
+          bearerAuth: {}
+      parameters:
+        - $ref: '#/components/parameters/data_de'
+        - $ref: '#/components/parameters/data_ate'
+        - $ref: '#/components/parameters/setor'
+        - $ref: '#/components/parameters/analista'
+        - $ref: '#/components/parameters/bairro'
+        - $ref: '#/components/parameters/cnae'
+        - $ref: '#/components/parameters/categoria'
+      responses:
+        200:
+          description: Indicador.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indicador'
+        401:
+          description: 'Token ausente, inválido ou expirado.'
+        422:
+          description: 'Parâmetros inválidos.'
+        503:
+          description: 'Integração desligada.'
+  /api_integracao/bi/indicadores/atividades-maior-indeferimento:
+    get:
+      tags:
+        - 'Inteligência econômica'
+      operationId: indicador_atividades_maior_indeferimento
+      summary: 'Atividades com maior taxa de indeferimento'
+      description: 'CNAEs com maior taxa de indeferimento, entre os que têm ao menos `min_decididas` decisões.'
+      security:
+        -
+          bearerAuth: {}
+      parameters:
+        - $ref: '#/components/parameters/data_de'
+        - $ref: '#/components/parameters/data_ate'
+        - $ref: '#/components/parameters/setor'
+        - $ref: '#/components/parameters/analista'
+        - $ref: '#/components/parameters/bairro'
+        - $ref: '#/components/parameters/cnae'
+        - $ref: '#/components/parameters/categoria'
+        - $ref: '#/components/parameters/limite'
+        - $ref: '#/components/parameters/min_decididas'
+      responses:
+        200:
+          description: Indicador.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indicador'
+        401:
+          description: 'Token ausente, inválido ou expirado.'
+        422:
+          description: 'Parâmetros inválidos.'
+        503:
+          description: 'Integração desligada.'
+  /api_integracao/bi/indicadores/atividades-por-risco:
+    get:
+      tags:
+        - 'Inteligência econômica'
+      operationId: indicador_atividades_por_risco
+      summary: 'Atividades por classificação de risco'
+      description: 'Composição de risco por CNAE principal.'
+      security:
+        -
+          bearerAuth: {}
+      parameters:
+        - $ref: '#/components/parameters/data_de'
+        - $ref: '#/components/parameters/data_ate'
+        - $ref: '#/components/parameters/setor'
+        - $ref: '#/components/parameters/analista'
+        - $ref: '#/components/parameters/bairro'
+        - $ref: '#/components/parameters/cnae'
+        - $ref: '#/components/parameters/categoria'
+        - $ref: '#/components/parameters/limite'
+      responses:
+        200:
+          description: Indicador.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indicador'
+        401:
+          description: 'Token ausente, inválido ou expirado.'
+        422:
+          description: 'Parâmetros inválidos.'
+        503:
+          description: 'Integração desligada.'
+  /api_integracao/bi/indicadores/novas-solicitacoes-por-regiao:
+    get:
+      tags:
+        - 'Inteligência econômica'
+      operationId: indicador_novas_solicitacoes_por_regiao
+      summary: 'Novas solicitações por região'
+      description: 'Demanda por bairro no período e no período anterior de mesmo tamanho (sem período: últimos 30 dias).'
+      security:
+        -
+          bearerAuth: {}
+      parameters:
+        - $ref: '#/components/parameters/data_de'
+        - $ref: '#/components/parameters/data_ate'
+        - $ref: '#/components/parameters/setor'
+        - $ref: '#/components/parameters/analista'
+        - $ref: '#/components/parameters/bairro'
+        - $ref: '#/components/parameters/cnae'
+        - $ref: '#/components/parameters/categoria'
+        - $ref: '#/components/parameters/limite'
+      responses:
+        200:
+          description: Indicador.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indicador'
+        401:
+          description: 'Token ausente, inválido ou expirado.'
+        422:
+          description: 'Parâmetros inválidos.'
+        503:
+          description: 'Integração desligada.'
+  /api_integracao/bi/indicadores/mapa-concentracao:
+    get:
+      tags:
+        - 'Inteligência territorial'
+      operationId: indicador_mapa_concentracao
+      summary: 'Mapa de concentração de solicitações'
+      description: 'Células de grade com latitude, longitude e total. `precisao` = casas decimais (2 a 5; 3 ≈ 110 m).'
+      security:
+        -
+          bearerAuth: {}
+      parameters:
+        - $ref: '#/components/parameters/data_de'
+        - $ref: '#/components/parameters/data_ate'
+        - $ref: '#/components/parameters/setor'
+        - $ref: '#/components/parameters/analista'
+        - $ref: '#/components/parameters/bairro'
+        - $ref: '#/components/parameters/cnae'
+        - $ref: '#/components/parameters/categoria'
+        - $ref: '#/components/parameters/precisao'
+        - $ref: '#/components/parameters/limite'
+      responses:
+        200:
+          description: Indicador.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indicador'
+        401:
+          description: 'Token ausente, inválido ou expirado.'
+        422:
+          description: 'Parâmetros inválidos.'
+        503:
+          description: 'Integração desligada.'
+  /api_integracao/bi/indicadores/mapa-decisoes:
+    get:
+      tags:
+        - 'Inteligência territorial'
+      operationId: indicador_mapa_decisoes
+      summary: 'Mapa de deferimentos e indeferimentos'
+      description: 'Células de grade com total, deferidas, indeferidas e taxa de indeferimento.'
+      security:
+        -
+          bearerAuth: {}
+      parameters:
+        - $ref: '#/components/parameters/data_de'
+        - $ref: '#/components/parameters/data_ate'
+        - $ref: '#/components/parameters/setor'
+        - $ref: '#/components/parameters/analista'
+        - $ref: '#/components/parameters/bairro'
+        - $ref: '#/components/parameters/cnae'
+        - $ref: '#/components/parameters/categoria'
+        - $ref: '#/components/parameters/precisao'
+        - $ref: '#/components/parameters/limite'
+      responses:
+        200:
+          description: Indicador.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indicador'
+        401:
+          description: 'Token ausente, inválido ou expirado.'
+        422:
+          description: 'Parâmetros inválidos.'
+        503:
+          description: 'Integração desligada.'
+  /api_integracao/bi/indicadores/solicitacoes-por-zona:
+    get:
+      tags:
+        - 'Inteligência territorial'
+      operationId: indicador_solicitacoes_por_zona
+      summary: 'Solicitações por zona urbanística'
+      description: 'Demanda e decisões por zona oficial identificada no imóvel.'
+      security:
+        -
+          bearerAuth: {}
+      parameters:
+        - $ref: '#/components/parameters/data_de'
+        - $ref: '#/components/parameters/data_ate'
+        - $ref: '#/components/parameters/setor'
+        - $ref: '#/components/parameters/analista'
+        - $ref: '#/components/parameters/bairro'
+        - $ref: '#/components/parameters/cnae'
+        - $ref: '#/components/parameters/categoria'
+        - $ref: '#/components/parameters/limite'
+      responses:
+        200:
+          description: Indicador.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indicador'
+        401:
+          description: 'Token ausente, inválido ou expirado.'
+        422:
+          description: 'Parâmetros inválidos.'
+        503:
+          description: 'Integração desligada.'
+  /api_integracao/bi/indicadores/cnaes-predominantes-por-bairro:
+    get:
+      tags:
+        - 'Inteligência territorial'
+      operationId: indicador_cnaes_predominantes_por_bairro
+      summary: 'CNAEs predominantes por bairro'
+      description: 'Os CNAEs mais frequentes em cada bairro (limite = quantos por bairro) e sua participação.'
+      security:
+        -
+          bearerAuth: {}
+      parameters:
+        - $ref: '#/components/parameters/data_de'
+        - $ref: '#/components/parameters/data_ate'
+        - $ref: '#/components/parameters/setor'
+        - $ref: '#/components/parameters/analista'
+        - $ref: '#/components/parameters/bairro'
+        - $ref: '#/components/parameters/cnae'
+        - $ref: '#/components/parameters/categoria'
+        - $ref: '#/components/parameters/limite'
+      responses:
+        200:
+          description: Indicador.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indicador'
+        401:
+          description: 'Token ausente, inválido ou expirado.'
+        422:
+          description: 'Parâmetros inválidos.'
+        503:
+          description: 'Integração desligada.'
+  /api_integracao/bi/indicadores/restricoes-recorrentes:
+    get:
+      tags:
+        - 'Inteligência territorial'
+      operationId: indicador_restricoes_recorrentes
+      summary: 'Restrições urbanísticas mais recorrentes'
+      description: 'Fundamentos legais mais citados nas decisões e o peso de cada um nos indeferimentos.'
+      security:
+        -
+          bearerAuth: {}
+      parameters:
+        - $ref: '#/components/parameters/data_de'
+        - $ref: '#/components/parameters/data_ate'
+        - $ref: '#/components/parameters/setor'
+        - $ref: '#/components/parameters/analista'
+        - $ref: '#/components/parameters/bairro'
+        - $ref: '#/components/parameters/cnae'
+        - $ref: '#/components/parameters/categoria'
+        - $ref: '#/components/parameters/limite'
+      responses:
+        200:
+          description: Indicador.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indicador'
+        401:
+          description: 'Token ausente, inválido ou expirado.'
+        422:
+          description: 'Parâmetros inválidos.'
+        503:
+          description: 'Integração desligada.'
+  /api_integracao/bi/indicadores/saturacao-locacional:
+    get:
+      tags:
+        - 'Inteligência territorial'
+      operationId: indicador_saturacao_locacional
+      summary: 'Saturação locacional por bairro e CNAE'
+      description: 'Estabelecimentos deferidos contra a capacidade recomendada. `situacao`: ok, saturando, saturado ou sem_capacidade.'
+      security:
+        -
+          bearerAuth: {}
+      parameters:
+        - $ref: '#/components/parameters/data_de'
+        - $ref: '#/components/parameters/data_ate'
+        - $ref: '#/components/parameters/setor'
+        - $ref: '#/components/parameters/analista'
+        - $ref: '#/components/parameters/bairro'
+        - $ref: '#/components/parameters/cnae'
+        - $ref: '#/components/parameters/categoria'
+        - $ref: '#/components/parameters/situacao'
+        - $ref: '#/components/parameters/limite'
+      responses:
+        200:
+          description: Indicador.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indicador'
+        401:
+          description: 'Token ausente, inválido ou expirado.'
+        422:
+          description: 'Parâmetros inválidos.'
+        503:
+          description: 'Integração desligada.'
+  /api_integracao/bi/indicadores/evolucao-territorial:
+    get:
+      tags:
+        - 'Inteligência territorial'
+      operationId: indicador_evolucao_territorial
+      summary: 'Evolução territorial da demanda'
+      description: 'Solicitações por período nos bairros de maior demanda (limite = quantos bairros).'
+      security:
+        -
+          bearerAuth: {}
+      parameters:
+        - $ref: '#/components/parameters/data_de'
+        - $ref: '#/components/parameters/data_ate'
+        - $ref: '#/components/parameters/setor'
+        - $ref: '#/components/parameters/analista'
+        - $ref: '#/components/parameters/bairro'
+        - $ref: '#/components/parameters/cnae'
+        - $ref: '#/components/parameters/categoria'
+        - $ref: '#/components/parameters/agrupamento'
+        - $ref: '#/components/parameters/limite'
+      responses:
+        200:
+          description: Indicador.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indicador'
+        401:
+          description: 'Token ausente, inválido ou expirado.'
+        422:
+          description: 'Parâmetros inválidos.'
+        503:
+          description: 'Integração desligada.'
+  /api_integracao/bi/indicadores/tempo-conclusao:
+    get:
+      tags:
+        - 'Eficiência operacional'
+      operationId: indicador_tempo_conclusao
+      summary: 'Tempo de conclusão'
+      description: 'Média, mediana e percentil 90 em horas úteis, no geral e por modalidade (expresso e análise técnica).'
+      security:
+        -
+          bearerAuth: {}
+      parameters:
+        - $ref: '#/components/parameters/data_de'
+        - $ref: '#/components/parameters/data_ate'
+        - $ref: '#/components/parameters/setor'
+        - $ref: '#/components/parameters/analista'
+        - $ref: '#/components/parameters/bairro'
+        - $ref: '#/components/parameters/cnae'
+        - $ref: '#/components/parameters/categoria'
+      responses:
+        200:
+          description: Indicador.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indicador'
+        401:
+          description: 'Token ausente, inválido ou expirado.'
+        422:
+          description: 'Parâmetros inválidos.'
+        503:
+          description: 'Integração desligada.'
+  /api_integracao/bi/indicadores/tempo-por-etapa:
+    get:
+      tags:
+        - 'Eficiência operacional'
+      operationId: indicador_tempo_por_etapa
+      summary: 'Tempo por etapa'
+      description: 'Tempo médio em horas úteis em cada etapa do processo.'
+      security:
+        -
+          bearerAuth: {}
+      parameters:
+        - $ref: '#/components/parameters/data_de'
+        - $ref: '#/components/parameters/data_ate'
+        - $ref: '#/components/parameters/setor'
+        - $ref: '#/components/parameters/analista'
+        - $ref: '#/components/parameters/bairro'
+        - $ref: '#/components/parameters/cnae'
+        - $ref: '#/components/parameters/categoria'
+      responses:
+        200:
+          description: Indicador.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indicador'
+        401:
+          description: 'Token ausente, inválido ou expirado.'
+        422:
+          description: 'Parâmetros inválidos.'
+        503:
+          description: 'Integração desligada.'
+  /api_integracao/bi/indicadores/processos-dentro-sla:
+    get:
+      tags:
+        - 'Eficiência operacional'
+      operationId: indicador_processos_dentro_sla
+      summary: 'Processos dentro do SLA'
+      description: 'Decisões tomadas dentro do prazo sobre as que tinham prazo.'
+      security:
+        -
+          bearerAuth: {}
+      parameters:
+        - $ref: '#/components/parameters/data_de'
+        - $ref: '#/components/parameters/data_ate'
+        - $ref: '#/components/parameters/setor'
+        - $ref: '#/components/parameters/analista'
+        - $ref: '#/components/parameters/bairro'
+        - $ref: '#/components/parameters/cnae'
+        - $ref: '#/components/parameters/categoria'
+      responses:
+        200:
+          description: Indicador.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indicador'
+        401:
+          description: 'Token ausente, inválido ou expirado.'
+        422:
+          description: 'Parâmetros inválidos.'
+        503:
+          description: 'Integração desligada.'
+  /api_integracao/bi/indicadores/processos-sla-vencido:
+    get:
+      tags:
+        - 'Eficiência operacional'
+      operationId: indicador_processos_sla_vencido
+      summary: 'Processos com SLA vencido'
+      description: 'Em andamento vencidos e vencendo, por etapa.'
+      security:
+        -
+          bearerAuth: {}
+      parameters:
+        - $ref: '#/components/parameters/data_de'
+        - $ref: '#/components/parameters/data_ate'
+        - $ref: '#/components/parameters/setor'
+        - $ref: '#/components/parameters/analista'
+        - $ref: '#/components/parameters/bairro'
+        - $ref: '#/components/parameters/cnae'
+        - $ref: '#/components/parameters/categoria'
+      responses:
+        200:
+          description: Indicador.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indicador'
+        401:
+          description: 'Token ausente, inválido ou expirado.'
+        422:
+          description: 'Parâmetros inválidos.'
+        503:
+          description: 'Integração desligada.'
+  /api_integracao/bi/indicadores/envelhecimento-fila:
+    get:
+      tags:
+        - 'Eficiência operacional'
+      operationId: indicador_envelhecimento_fila
+      summary: 'Envelhecimento da fila'
+      description: 'Processos em aberto por dias desde o protocolo e por avanço sobre o prazo.'
+      security:
+        -
+          bearerAuth: {}
+      parameters:
+        - $ref: '#/components/parameters/data_de'
+        - $ref: '#/components/parameters/data_ate'
+        - $ref: '#/components/parameters/setor'
+        - $ref: '#/components/parameters/analista'
+        - $ref: '#/components/parameters/bairro'
+        - $ref: '#/components/parameters/cnae'
+        - $ref: '#/components/parameters/categoria'
+      responses:
+        200:
+          description: Indicador.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indicador'
+        401:
+          description: 'Token ausente, inválido ou expirado.'
+        422:
+          description: 'Parâmetros inválidos.'
+        503:
+          description: 'Integração desligada.'
+  /api_integracao/bi/indicadores/carga-por-analista-setor:
+    get:
+      tags:
+        - 'Eficiência operacional'
+      operationId: indicador_carga_por_analista_setor
+      summary: 'Processos por analista e setor'
+      description: 'Processos em análise ou em convite por setor e analista (analista identificado por código interno).'
+      security:
+        -
+          bearerAuth: {}
+      parameters:
+        - $ref: '#/components/parameters/data_de'
+        - $ref: '#/components/parameters/data_ate'
+        - $ref: '#/components/parameters/setor'
+        - $ref: '#/components/parameters/analista'
+        - $ref: '#/components/parameters/bairro'
+        - $ref: '#/components/parameters/cnae'
+        - $ref: '#/components/parameters/categoria'
+      responses:
+        200:
+          description: Indicador.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indicador'
+        401:
+          description: 'Token ausente, inválido ou expirado.'
+        422:
+          description: 'Parâmetros inválidos.'
+        503:
+          description: 'Integração desligada.'
+  /api_integracao/bi/indicadores/produtividade-analista:
+    get:
+      tags:
+        - 'Eficiência operacional'
+      operationId: indicador_produtividade_analista
+      summary: 'Produtividade por analista'
+      description: 'Decisões técnicas por analista no período, com desfecho e tempo médio.'
+      security:
+        -
+          bearerAuth: {}
+      parameters:
+        - $ref: '#/components/parameters/data_de'
+        - $ref: '#/components/parameters/data_ate'
+        - $ref: '#/components/parameters/setor'
+        - $ref: '#/components/parameters/analista'
+        - $ref: '#/components/parameters/bairro'
+        - $ref: '#/components/parameters/cnae'
+        - $ref: '#/components/parameters/categoria'
+      responses:
+        200:
+          description: Indicador.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indicador'
+        401:
+          description: 'Token ausente, inválido ou expirado.'
+        422:
+          description: 'Parâmetros inválidos.'
+        503:
+          description: 'Integração desligada.'
+  /api_integracao/bi/indicadores/tempo-resposta-requerente:
+    get:
+      tags:
+        - 'Eficiência operacional'
+      operationId: indicador_tempo_resposta_requerente
+      summary: 'Tempo de resposta do requerente'
+      description: 'Demora do requerente nos convites contra a demora administrativa (espera e análise).'
+      security:
+        -
+          bearerAuth: {}
+      parameters:
+        - $ref: '#/components/parameters/data_de'
+        - $ref: '#/components/parameters/data_ate'
+        - $ref: '#/components/parameters/setor'
+        - $ref: '#/components/parameters/analista'
+        - $ref: '#/components/parameters/bairro'
+        - $ref: '#/components/parameters/cnae'
+        - $ref: '#/components/parameters/categoria'
+      responses:
+        200:
+          description: Indicador.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indicador'
+        401:
+          description: 'Token ausente, inválido ou expirado.'
+        422:
+          description: 'Parâmetros inválidos.'
+        503:
+          description: 'Integração desligada.'
+  /api_integracao/bi/indicadores/ranking-gargalos:
+    get:
+      tags:
+        - 'Eficiência operacional'
+      operationId: indicador_ranking_gargalos
+      summary: 'Ranking dos maiores gargalos'
+      description: 'Etapas onde as horas úteis dos processos decididos mais se acumulam.'
+      security:
+        -
+          bearerAuth: {}
+      parameters:
+        - $ref: '#/components/parameters/data_de'
+        - $ref: '#/components/parameters/data_ate'
+        - $ref: '#/components/parameters/setor'
+        - $ref: '#/components/parameters/analista'
+        - $ref: '#/components/parameters/bairro'
+        - $ref: '#/components/parameters/cnae'
+        - $ref: '#/components/parameters/categoria'
+      responses:
+        200:
+          description: Indicador.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indicador'
+        401:
+          description: 'Token ausente, inválido ou expirado.'
+        422:
+          description: 'Parâmetros inválidos.'
+        503:
+          description: 'Integração desligada.'
+  /api_integracao/bi/indicadores/taxa-automacao:
+    get:
+      tags:
+        - 'Automação do licenciamento'
+      operationId: indicador_taxa_automacao
+      summary: 'Taxa de automação'
+      description: 'Decisões do fluxo expresso sobre o total de decisões.'
+      security:
+        -
+          bearerAuth: {}
+      parameters:
+        - $ref: '#/components/parameters/data_de'
+        - $ref: '#/components/parameters/data_ate'
+        - $ref: '#/components/parameters/setor'
+        - $ref: '#/components/parameters/analista'
+        - $ref: '#/components/parameters/bairro'
+        - $ref: '#/components/parameters/cnae'
+        - $ref: '#/components/parameters/categoria'
+      responses:
+        200:
+          description: Indicador.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indicador'
+        401:
+          description: 'Token ausente, inválido ou expirado.'
+        422:
+          description: 'Parâmetros inválidos.'
+        503:
+          description: 'Integração desligada.'
+  /api_integracao/bi/indicadores/decisoes-automaticas:
+    get:
+      tags:
+        - 'Automação do licenciamento'
+      operationId: indicador_decisoes_automaticas
+      summary: 'Decisões automáticas'
+      description: 'Decisões concluídas sem análise humana, por período e desfecho.'
+      security:
+        -
+          bearerAuth: {}
+      parameters:
+        - $ref: '#/components/parameters/data_de'
+        - $ref: '#/components/parameters/data_ate'
+        - $ref: '#/components/parameters/setor'
+        - $ref: '#/components/parameters/analista'
+        - $ref: '#/components/parameters/bairro'
+        - $ref: '#/components/parameters/cnae'
+        - $ref: '#/components/parameters/categoria'
+        - $ref: '#/components/parameters/agrupamento'
+      responses:
+        200:
+          description: Indicador.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indicador'
+        401:
+          description: 'Token ausente, inválido ou expirado.'
+        422:
+          description: 'Parâmetros inválidos.'
+        503:
+          description: 'Integração desligada.'
+  /api_integracao/bi/indicadores/decisoes-analise-tecnica:
+    get:
+      tags:
+        - 'Automação do licenciamento'
+      operationId: indicador_decisoes_analise_tecnica
+      summary: 'Decisões com análise técnica'
+      description: 'Decisões que exigiram atuação humana, por período e desfecho.'
+      security:
+        -
+          bearerAuth: {}
+      parameters:
+        - $ref: '#/components/parameters/data_de'
+        - $ref: '#/components/parameters/data_ate'
+        - $ref: '#/components/parameters/setor'
+        - $ref: '#/components/parameters/analista'
+        - $ref: '#/components/parameters/bairro'
+        - $ref: '#/components/parameters/cnae'
+        - $ref: '#/components/parameters/categoria'
+        - $ref: '#/components/parameters/agrupamento'
+      responses:
+        200:
+          description: Indicador.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indicador'
+        401:
+          description: 'Token ausente, inválido ou expirado.'
+        422:
+          description: 'Parâmetros inválidos.'
+        503:
+          description: 'Integração desligada.'
+  /api_integracao/bi/indicadores/tempo-expresso-x-tecnico:
+    get:
+      tags:
+        - 'Automação do licenciamento'
+      operationId: indicador_tempo_expresso_x_tecnico
+      summary: 'Tempo do fluxo expresso × técnico'
+      description: 'Média, mediana e percentil 90 em horas úteis de cada modalidade.'
+      security:
+        -
+          bearerAuth: {}
+      parameters:
+        - $ref: '#/components/parameters/data_de'
+        - $ref: '#/components/parameters/data_ate'
+        - $ref: '#/components/parameters/setor'
+        - $ref: '#/components/parameters/analista'
+        - $ref: '#/components/parameters/bairro'
+        - $ref: '#/components/parameters/cnae'
+        - $ref: '#/components/parameters/categoria'
+      responses:
+        200:
+          description: Indicador.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indicador'
+        401:
+          description: 'Token ausente, inválido ou expirado.'
+        422:
+          description: 'Parâmetros inválidos.'
+        503:
+          description: 'Integração desligada.'
+  /api_integracao/bi/indicadores/nao-concluidos-expresso:
+    get:
+      tags:
+        - 'Automação do licenciamento'
+      operationId: indicador_nao_concluidos_expresso
+      summary: 'Processos não concluídos pelo expresso'
+      description: 'Elegíveis ao expresso que não saíram decididos por ele, e os encaminhados à análise.'
+      security:
+        -
+          bearerAuth: {}
+      parameters:
+        - $ref: '#/components/parameters/data_de'
+        - $ref: '#/components/parameters/data_ate'
+        - $ref: '#/components/parameters/setor'
+        - $ref: '#/components/parameters/analista'
+        - $ref: '#/components/parameters/bairro'
+        - $ref: '#/components/parameters/cnae'
+        - $ref: '#/components/parameters/categoria'
+      responses:
+        200:
+          description: Indicador.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indicador'
+        401:
+          description: 'Token ausente, inválido ou expirado.'
+        422:
+          description: 'Parâmetros inválidos.'
+        503:
+          description: 'Integração desligada.'
+  /api_integracao/bi/indicadores/motivos-queda-expresso:
+    get:
+      tags:
+        - 'Automação do licenciamento'
+      operationId: indicador_motivos_queda_expresso
+      summary: 'Motivos de queda do fluxo expresso'
+      description: 'Condições que levam o processo à análise técnica.'
+      security:
+        -
+          bearerAuth: {}
+      parameters:
+        - $ref: '#/components/parameters/data_de'
+        - $ref: '#/components/parameters/data_ate'
+        - $ref: '#/components/parameters/setor'
+        - $ref: '#/components/parameters/analista'
+        - $ref: '#/components/parameters/bairro'
+        - $ref: '#/components/parameters/cnae'
+        - $ref: '#/components/parameters/categoria'
+      responses:
+        200:
+          description: Indicador.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indicador'
+        401:
+          description: 'Token ausente, inválido ou expirado.'
+        422:
+          description: 'Parâmetros inválidos.'
+        503:
+          description: 'Integração desligada.'
+  /api_integracao/bi/indicadores/evolucao-automacao:
+    get:
+      tags:
+        - 'Automação do licenciamento'
+      operationId: indicador_evolucao_automacao
+      summary: 'Evolução da automação'
+      description: 'Decisões automáticas e técnicas por período, com a taxa de automação.'
+      security:
+        -
+          bearerAuth: {}
+      parameters:
+        - $ref: '#/components/parameters/data_de'
+        - $ref: '#/components/parameters/data_ate'
+        - $ref: '#/components/parameters/setor'
+        - $ref: '#/components/parameters/analista'
+        - $ref: '#/components/parameters/bairro'
+        - $ref: '#/components/parameters/cnae'
+        - $ref: '#/components/parameters/categoria'
+        - $ref: '#/components/parameters/agrupamento'
+      responses:
+        200:
+          description: Indicador.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indicador'
+        401:
+          description: 'Token ausente, inválido ou expirado.'
+        422:
+          description: 'Parâmetros inválidos.'
+        503:
+          description: 'Integração desligada.'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  parameters:
+    data_de:
+      name: data_de
+      in: query
+      required: false
+      description: 'Início do período (AAAA-MM-DD).'
+      schema:
+        type: string
+        format: date
+    data_ate:
+      name: data_ate
+      in: query
+      required: false
+      description: 'Fim do período (AAAA-MM-DD).'
+      schema:
+        type: string
+        format: date
+    setor:
+      name: setor
+      in: query
+      required: false
+      description: 'Código do setor.'
+      schema:
+        type: integer
+        minimum: 1
+    analista:
+      name: analista
+      in: query
+      required: false
+      description: 'Código do analista.'
+      schema:
+        type: integer
+        minimum: 1
+    bairro:
+      name: bairro
+      in: query
+      required: false
+      description: 'Parte do nome do bairro.'
+      schema:
+        type: string
+        maxLength: 120
+    cnae:
+      name: cnae
+      in: query
+      required: false
+      description: 'Código do CNAE (7 dígitos).'
+      schema:
+        type: string
+        maxLength: 7
+    categoria:
+      name: categoria
+      in: query
+      required: false
+      description: 'Categoria do processo.'
+      schema:
+        type: string
+        enum:
+          - malha_fina
+          - sede_escritorio
+          - expresso
+          - semi_expresso
+    agrupamento:
+      name: agrupamento
+      in: query
+      required: false
+      description: 'Agrupamento da série.'
+      schema:
+        type: string
+        enum:
+          - dia
+          - semana
+          - mes
+        default: mes
+    limite:
+      name: limite
+      in: query
+      required: false
+      description: 'Máximo de linhas (ou de itens, conforme o indicador).'
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 5000
+    precisao:
+      name: precisao
+      in: query
+      required: false
+      description: 'Casas decimais da grade do mapa (3 ≈ 110 m).'
+      schema:
+        type: integer
+        minimum: 2
+        maximum: 5
+        default: 3
+    min_decididas:
+      name: min_decididas
+      in: query
+      required: false
+      description: 'Mínimo de decisões para entrar no ranking.'
+      schema:
+        type: integer
+        minimum: 1
+        default: 5
+    situacao:
+      name: situacao
+      in: query
+      required: false
+      description: 'Situação de saturação.'
+      schema:
+        type: string
+        enum:
+          - ok
+          - saturando
+          - saturado
+          - sem_capacidade
+  schemas:
+    Credenciais:
+      type: object
+      required:
+        - usuario
+        - senha
+      properties:
+        usuario:
+          type: string
+        senha:
+          type: string
+    Token:
+      type: object
+      properties:
+        token:
+          type: string
+        tipo:
+          type: string
+          example: Bearer
+        expira_em_segundos:
+          type: integer
+          example: 3600
+    Indicador:
+      type: object
+      properties:
+        indicador:
+          type: string
+        grupo:
+          type: string
+        titulo:
+          type: string
+        gerado_em:
+          type: string
+          format: date-time
+        filtros:
+          type: object
+        dados:
+          description: 'Objeto ou lista, conforme o indicador.'

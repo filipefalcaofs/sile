@@ -601,6 +601,16 @@ return [
             'senha' => (string) env('SEFAZ_TVL_SENHA', ''),
             'validade_minutos' => 60,
         ],
+        // API de indicadores para o BI da SEDUR: dados agregados, sem dados
+        // pessoais. `nominal` libera o nome do analista nos indicadores por analista.
+        'bi' => [
+            'ativo' => (bool) env('BI_API_ATIVO', false),
+            'usuario' => (string) env('BI_API_USUARIO', ''),
+            'senha' => (string) env('BI_API_SENHA', ''),
+            'validade_minutos' => 60,
+            'nominal' => (bool) env('BI_API_NOMINAL', false),
+            'por_minuto' => (int) env('BI_API_POR_MINUTO', 120),
+        ],
         'regin' => [
             'em_producao' => false,
             'url_homologacao' => 'http://10.57.247.9:8080/api_integracao',

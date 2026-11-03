@@ -17,6 +17,7 @@
         urls: [
             { url: '/api_integracao/docs/openapi.yaml', name: 'REGIN — recebimento do processo' },
             { url: '/api_integracao/tvl/docs/openapi.yaml', name: 'SEFAZ — consulta de TVL' },
+            { url: '/api_integracao/bi/docs/openapi.yaml', name: 'BI — indicadores' },
         ],
         'urls.primaryName': 'REGIN — recebimento do processo',
         dom_id: '#swagger-ui',
