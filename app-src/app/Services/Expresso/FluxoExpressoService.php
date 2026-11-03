@@ -165,6 +165,12 @@ class FluxoExpressoService
             return $this->encaminharAnalise($request, $this->textos->get('expresso.motivo.desativado'), $actor);
         }
 
+        // Motivos que levam o processo à análise. O fluxo roda inteiro e só no
+        // fim decide: indeferimento definitivo (inscrição inativa, RT-01,
+        // pergunta sem resposta) vale na hora; o deferimento só sai sem motivos.
+        /** @var list<array{motivo: string, gatilho: ?TipoGatilho, territorial: ?TerritorialRuleVerdict}> $pendencias */
+        $pendencias = [];
+
         // Inscrição imobiliária que não está ativa na SEFAZ Municipal: indefere.
         // Só com a situação informada pelo cadastro; cadastro indisponível ou sem
         // o dado segue o caminho normal, porque não há como afirmar a pendência.
@@ -182,11 +188,11 @@ class FluxoExpressoService
         $foraDoAnexoB = $this->abrigadoResolver->cnaesForaDoAnexoBDaAbrigada($request);
 
         if ($foraDoAnexoB !== []) {
-            return $this->encaminharAnalise(
-                $request,
-                $this->textos->render('expresso.motivo.abrigada_fora_do_anexo_b', [':cnaes' => implode(', ', $foraDoAnexoB)]),
-                $actor,
-            );
+            $pendencias[] = [
+                'motivo' => $this->textos->render('expresso.motivo.abrigada_fora_do_anexo_b', [':cnaes' => implode(', ', $foraDoAnexoB)]),
+                'gatilho' => null,
+                'territorial' => null,
+            ];
         }
 
         // Alteração de atividades da JUCEB (evento 244): compara os CNAEs do pedido
@@ -203,16 +209,17 @@ class FluxoExpressoService
 
         if ($comparacao !== null) {
             if ($comparacao->invalidas !== []) {
-                return $this->encaminharAnalise(
-                    $request,
-                    $this->textos->render('expresso.motivo.cnae_invalido', [':cnaes' => $this->cnaesFormatados($comparacao->invalidas)]),
-                    $actor,
-                    gatilho: TipoGatilho::DadosDoProcesso,
-                );
+                $pendencias[] = [
+                    'motivo' => $this->textos->render('expresso.motivo.cnae_invalido', [':cnaes' => $this->cnaesFormatados($comparacao->invalidas)]),
+                    'gatilho' => TipoGatilho::DadosDoProcesso,
+                    'territorial' => null,
+                ];
             }
 
             if ($comparacao->incluidas === []) {
-                return $this->deferirExclusao($request, $actor, $comparacao->excluidas);
+                return $pendencias !== []
+                    ? $this->encaminharPendencias($request, $pendencias, $actor)
+                    : $this->deferirExclusao($request, $actor, $comparacao->excluidas);
             }
         }
 
@@ -223,7 +230,9 @@ class FluxoExpressoService
             $excluidas = $this->excluidasFrenteAoProcessoAnterior($request);
 
             if ($excluidas !== null) {
-                return $this->deferirExclusaoPeloProcessoAnterior($request, $actor, $excluidas);
+                return $pendencias !== []
+                    ? $this->encaminharPendencias($request, $pendencias, $actor)
+                    : $this->deferirExclusaoPeloProcessoAnterior($request, $actor, $excluidas);
             }
         }
 
@@ -246,7 +255,9 @@ class FluxoExpressoService
         // para o ramo seguinte, que decide com base na INTENÇÃO de exclusão
         // do gatilho (`excluiCnaeGatilho`), inclusive nas mistas.
         if ($request->exclusivamenteExclusao() && ! $this->gatilhoSede->temCnaeGatilho($request)) {
-            return $this->deferirExclusao($request, $actor);
+            return $pendencias !== []
+                ? $this->encaminharPendencias($request, $pendencias, $actor)
+                : $this->deferirExclusao($request, $actor);
         }
 
         // RN-AA-04/RN-AA-07: exclusão do CNAE gatilho da sede, na inscrição
@@ -370,48 +381,44 @@ class FluxoExpressoService
 
         // Ponto da inscrição longe da rua do endereço e sem outra fonte que o
         // confirme: lote, zona e poligonais saíram de um local não confirmado.
-        // Depois do indeferimento territorial (RT-01 não depende do ponto).
+        // Não interrompe o fluxo: as demais etapas rodam e só no fim, quando o
+        // processo seria emitido, ele vai para a análise (a pergunta sem
+        // resposta, por exemplo, não depende do ponto e indefere antes).
         $pontoDaInscricao = $this->localizacaoInscricao->localizar($request->property_registration);
 
         if ($pontoDaInscricao->confirmacaoPonto === ConfirmacaoPonto::NaoConfirmado) {
-            return $this->encaminharAnalise(
-                $request,
-                $this->textos->render('localizacao.motivo.ponto_nao_confirmado', [
+            $pendencias[] = [
+                'motivo' => $this->textos->render('localizacao.motivo.ponto_nao_confirmado', [
                     ':distancia' => (string) (int) round((float) $pontoDaInscricao->distanciaPontoM),
                     ':logradouro' => (string) ($pontoDaInscricao->logradouroDoEndereco() ?? 'rua do endereço'),
                 ]),
-                $actor,
-                $resolved,
-                gatilho: TipoGatilho::LocalizacaoDivergente,
-            );
+                'gatilho' => TipoGatilho::LocalizacaoDivergente,
+                'territorial' => null,
+            ];
         }
 
         // Empate de porções: a lei não diz qual zona prevalece. Linhas da ZCLMu e
         // da ZCLMe sobre o mesmo lote (HU.182, RN-07): o negócio diz que não
         // ocorre, e se ocorrer quem decide é o analista.
         if (in_array($zonaPorArea?->status, [ZonaMaiorPorcao::EMPATE, ZonaMaiorPorcao::CONFLITO_LINEAR], true)) {
-            return $this->encaminharAnalise(
-                $request,
-                $zonaPorArea->status === ZonaMaiorPorcao::CONFLITO_LINEAR
+            $pendencias[] = [
+                'motivo' => $zonaPorArea->status === ZonaMaiorPorcao::CONFLITO_LINEAR
                     ? $this->zonaProcesso->motivoConflito($zonaPorArea)
                     : $this->zonaProcesso->motivoEmpate($zonaPorArea),
-                $actor,
-                $resolved,
-                gatilho: TipoGatilho::ZonaEmpate,
-            );
+                'gatilho' => TipoGatilho::ZonaEmpate,
+                'territorial' => null,
+            ];
         }
 
         // Desenho do requerente em zona diferente do endereçamento SEDUR.
         $divergenciaEnderecamento = $this->localizacaoDivergencia->avaliarEnderecamento($request, $zonaPorArea);
 
         if ($divergenciaEnderecamento !== null) {
-            return $this->encaminharAnalise(
-                $request,
-                $divergenciaEnderecamento,
-                $actor,
-                $resolved,
-                gatilho: TipoGatilho::LocalizacaoDivergente,
-            );
+            $pendencias[] = [
+                'motivo' => $divergenciaEnderecamento,
+                'gatilho' => TipoGatilho::LocalizacaoDivergente,
+                'territorial' => null,
+            ];
         }
 
         // HU-037 RN-005: polígono desenhado em zona diferente da zona da
@@ -420,32 +427,32 @@ class FluxoExpressoService
         $divergencia = $this->localizacaoDivergencia->avaliar($request);
 
         if ($divergencia !== null) {
-            return $this->encaminharAnalise(
-                $request,
-                $divergencia,
-                $actor,
-                $resolved,
-                gatilho: TipoGatilho::LocalizacaoDivergente,
-            );
+            $pendencias[] = [
+                'motivo' => $divergencia,
+                'gatilho' => TipoGatilho::LocalizacaoDivergente,
+                'territorial' => null,
+            ];
         }
 
         if ($territorial->status === TerritorialRuleVerdict::ENCAMINHAR_ANALISE) {
-            return $this->encaminharAnalise(
-                $request,
-                (string) $territorial->motivo,
-                $actor,
-                $resolved,
-                $territorial,
-            );
+            $pendencias[] = [
+                'motivo' => (string) $territorial->motivo,
+                'gatilho' => null,
+                'territorial' => $territorial,
+            ];
         }
 
         // RN-041-A: Quadro 10 ou Quadro 11A vedam o uso no local. Isso
         // independe do risco — a análise só recebe o que ainda pode deferir.
         // O veto locacional vem ANTES do gate de alto risco (e-mail SEDUR
         // 21/09/2026, item 5): a legislação impossibilita o deferimento, então
-        // o processo é indeferido expresso, nunca encaminhado à análise.
+        // o processo é indeferido expresso, nunca encaminhado à análise. Com
+        // algum motivo já acumulado (local não confirmado, zona em empate...),
+        // a zona do veto é incerta e quem decide é o analista.
         if ($resolved->consolidado === ResultadoViabilidade::NaoPermitido->value) {
-            return $this->emitir($request, $resolved, $actor);
+            return $pendencias !== []
+                ? $this->encaminharPendencias($request, $pendencias, $actor, $resolved)
+                : $this->emitir($request, $resolved, $actor);
         }
 
         // RN-041-B: alto risco — determinado pelo CNAE ou por pergunta
@@ -456,25 +463,22 @@ class FluxoExpressoService
         // expresso explícito (ex.: regra 51 — "Fluxo Expresso (ALTO RISCO)")
         // não cai neste gate — a planilha prevalece.
         if ($resolved->temAltoRiscoForaDoExpresso()) {
-            return $this->encaminharAnalise($request, $this->textos->get('expresso.motivo.alto_risco'), $actor, $resolved);
-        }
-
-        if (! $resolved->elegivelExpresso()) {
-            return $this->encaminharAnalise($request, $this->motivoForaDoExpresso($resolved), $actor, $resolved);
+            $pendencias[] = ['motivo' => $this->textos->get('expresso.motivo.alto_risco'), 'gatilho' => null, 'territorial' => null];
+        } elseif (! $resolved->elegivelExpresso()) {
+            $pendencias[] = ['motivo' => $this->motivoForaDoExpresso($resolved), 'gatilho' => null, 'territorial' => null];
         }
 
         // Sem a zona (Quadro 10), o veredito é pendente — encaminha à análise SEM
         // decidir nem emitir. Anti-fachada: jamais um deferimento/indeferimento
         // inventado (a base oficial liga o caminho de decisão).
         if ($resolved->consolidado === ResultadoViabilidade::Pendente->value) {
-            return $this->encaminharAnalise(
-                $request,
-                $this->textos->render('expresso.motivo.veredito_pendente', [
+            $pendencias[] = [
+                'motivo' => $this->textos->render('expresso.motivo.veredito_pendente', [
                     ':motivo' => $resolved->motivoPendente() ?? $this->textos->get('expresso.motivo.zona_pendente'),
                 ]),
-                $actor,
-                $resolved,
-            );
+                'gatilho' => null,
+                'territorial' => null,
+            ];
         }
 
         // RN-EV-01/RN-C-04: CNAE gatilho (default 8211-3/00) + "será sede? =
@@ -485,12 +489,43 @@ class FluxoExpressoService
         // informação de que foi o gatilho de sede já está na trilha de
         // auditoria por outros campos (resultado, consolidado, por_cnae).
         if ($this->gatilhoSede->aplica($request)) {
-            $flag = (string) config('viabiliza.analise.escritorio_virtual.flag_analise_sede');
+            $pendencias[] = [
+                'motivo' => (string) config('viabiliza.analise.escritorio_virtual.flag_analise_sede'),
+                'gatilho' => null,
+                'territorial' => null,
+            ];
+        }
 
-            return $this->encaminharAnalise($request, $flag, $actor, $resolved);
+        if ($pendencias !== []) {
+            return $this->encaminharPendencias($request, $pendencias, $actor, $resolved);
         }
 
         return $this->emitir($request, $resolved, $actor);
+    }
+
+    /**
+     * Fim do fluxo com motivos acumulados: o processo vai à análise com todos
+     * eles no motivo; o gatilho e a regra territorial registrados na queda são
+     * os do primeiro motivo que os tem.
+     *
+     * @param  list<array{motivo: string, gatilho: ?TipoGatilho, territorial: ?TerritorialRuleVerdict}>  $pendencias
+     */
+    private function encaminharPendencias(
+        ViabilityRequest $request,
+        array $pendencias,
+        ?User $actor,
+        ?ResolvedViability $resolved = null,
+    ): DecisionResult {
+        $motivos = array_values(array_unique(array_column($pendencias, 'motivo')));
+        $gatilho = null;
+        $territorial = null;
+
+        foreach ($pendencias as $pendencia) {
+            $gatilho ??= $pendencia['gatilho'];
+            $territorial ??= $pendencia['territorial'];
+        }
+
+        return $this->encaminharAnalise($request, implode(' | ', $motivos), $actor, $resolved, $territorial, $gatilho);
     }
 
     /**
@@ -1148,7 +1183,7 @@ class FluxoExpressoService
      *
      * @param  array{numero: int, enunciado: string, cnae: string}  $pergunta
      */
-    private function indeferirPerguntaSemResposta(
+    public function indeferirPerguntaSemResposta(
         ViabilityRequest $request,
         ResolvedViability $resolved,
         array $pergunta,

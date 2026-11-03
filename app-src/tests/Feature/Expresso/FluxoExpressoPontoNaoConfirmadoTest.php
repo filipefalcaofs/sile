@@ -163,6 +163,56 @@ class FluxoExpressoPontoNaoConfirmadoTest extends TestCase
         $this->assertSame(TipoGatilho::LocalizacaoDivergente->value, $queda?->tipo_gatilho);
     }
 
+    public function test_ponto_nao_confirmado_nao_impede_o_indeferimento_por_pergunta_sem_resposta(): void
+    {
+        Event::fake([ResultadoEmitido::class]);
+        $this->fakeCadastro();
+        $this->validadorDevolve(ConfirmacaoPonto::NaoConfirmado);
+
+        $request = $this->setupDeferivel();
+        $request->respostasTratamento = [];
+
+        $result = app(FluxoExpressoService::class)->decide($request);
+
+        $this->assertSame(ViabilityRequestStatus::Indeferida, $result->status);
+        $this->assertSame(DecisionOutcome::Indeferida, $request->fresh()->decision->outcome);
+        $this->assertStringContainsString('não trouxe a resposta da pergunta', (string) $request->fresh()->decision->reason);
+        $this->assertNull(ExpressoQueda::query()->where('viability_request_id', $request->id)->first());
+    }
+
+    public function test_ponto_nao_confirmado_so_encaminha_no_fim_do_fluxo_quando_defereria(): void
+    {
+        Event::fake([ResultadoEmitido::class]);
+        $this->fakeCadastro();
+        $this->validadorDevolve(ConfirmacaoPonto::NaoConfirmado);
+
+        $request = $this->setupDeferivel();
+
+        $result = app(FluxoExpressoService::class)->decide($request->fresh());
+
+        $this->assertSame(ViabilityRequestStatus::EmAnalise, $result->status);
+        $this->assertDatabaseCount('viability_decisions', 0);
+        Event::assertNotDispatched(ResultadoEmitido::class);
+    }
+
+    public function test_motivos_de_varias_etapas_vao_juntos_para_a_analise(): void
+    {
+        Event::fake([ResultadoEmitido::class]);
+        $this->fakeCadastro();
+        $this->validadorDevolve(ConfirmacaoPonto::NaoConfirmado);
+
+        $request = $this->setupDeferivel();
+        config(['viabiliza.analise.escritorio_virtual.cnae_gatilho_sede' => '4712-1/00']);
+        $request->forceFill(['wants_virtual_office_hq' => true])->save();
+
+        $result = app(FluxoExpressoService::class)->decide($request->fresh());
+
+        $this->assertSame(ViabilityRequestStatus::EmAnalise, $result->status);
+        $this->assertStringContainsString('640 m', (string) $result->reason);
+        $this->assertStringContainsString(' | ', (string) $result->reason);
+        $this->assertDatabaseCount('viability_decisions', 0);
+    }
+
     public function test_ponto_substituido_nao_gera_alerta_e_segue_o_fluxo(): void
     {
         Event::fake([ResultadoEmitido::class]);
