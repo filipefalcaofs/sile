@@ -77,13 +77,27 @@ class RenovacaoElegibilidadeService
             return null;
         }
 
-        $meses = max(1, (int) Settings::get('renovacao.antecedencia_meses', 3));
-        $abertura = $validade->copy()->startOfDay()->subMonthsNoOverflow($meses);
+        $abertura = self::aberturaDaJanela($validade);
 
         if (! now()->startOfDay()->lt($abertura)) {
             return null;
         }
 
+        $meses = self::mesesDeAntecedencia();
+
         return "A renovação só pode ser solicitada a partir de {$abertura->format('d/m/Y')}, {$meses} meses antes do vencimento.";
+    }
+
+    /**
+     * Primeiro dia em que a vigência que vence em $validade pode ser renovada.
+     */
+    public static function aberturaDaJanela(CarbonInterface $validade): CarbonInterface
+    {
+        return $validade->copy()->startOfDay()->subMonthsNoOverflow(self::mesesDeAntecedencia());
+    }
+
+    private static function mesesDeAntecedencia(): int
+    {
+        return max(1, (int) Settings::get('renovacao.antecedencia_meses', 3));
     }
 }

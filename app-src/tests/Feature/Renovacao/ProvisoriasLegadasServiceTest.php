@@ -372,7 +372,7 @@ class ProvisoriasLegadasServiceTest extends TestCase
             'situacao' => 'vigente',
             'dias_para_vencer' => 73,
             'renovada_depois' => $renovadaDepois,
-            'renovacoes' => $renovadaDepois ? [['solicitada_em' => '2026-09-10T00:00:00-03:00', 'paga_em' => null]] : [],
+            'renovacoes' => $renovadaDepois ? [['solicitada_em' => '2026-10-15T00:00:00-03:00', 'paga_em' => null]] : [],
             'titular' => ['documento' => $titular],
             'razao_social' => self::RAZAO,
             'inscricao_imobiliaria' => '0514808100',
