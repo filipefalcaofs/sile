@@ -41,7 +41,7 @@ class RenovacaoConsultaCnpjTest extends TestCase
             'viability_request_id' => $origem->id,
             'tvl_kind' => TvlKind::Provisoria,
             'tvl_product_number' => 'TVL-'.$origem->id,
-            'tvl_valid_until' => '2027-09-28',
+            'tvl_valid_until' => now()->addMonth()->toDateString(),
         ]);
 
         Http::fake([

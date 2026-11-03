@@ -198,7 +198,7 @@ class RenovacaoLegadaProtocoloTest extends TestCase
         $this->expectExceptionMessage('Esta viabilidade já foi renovada.');
 
         $this->servico()->protocolarLegada(
-            $this->detalhe(['renovada_depois' => true]),
+            $this->detalhe(['renovada_depois' => true, 'renovacoes' => [['solicitada_em' => '2026-09-10T00:00:00-03:00', 'paga_em' => null]]]),
             self::CNPJ,
             User::factory()->create(),
             ['phone' => '71999990000'],
@@ -596,7 +596,7 @@ class RenovacaoLegadaProtocoloTest extends TestCase
         [$cidadao] = $this->cidadaoComEmpresa();
         $this->mockClient(function (MockInterface $client): void {
             $client->shouldReceive('tvlPorNumero')->with(1234567)
-                ->andReturn($this->detalhe(['renovada_depois' => true]));
+                ->andReturn($this->detalhe(['renovada_depois' => true, 'renovacoes' => [['solicitada_em' => '2026-09-10T00:00:00-03:00', 'paga_em' => null]]]));
         });
 
         $this->actingAs($cidadao)

@@ -5,6 +5,7 @@ namespace App\Services\Renovacao;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\ViabilityRequest;
 use App\Support\Settings;
+use Carbon\CarbonInterface;
 
 /**
  * Diz se um TVL já deferido neste sistema pode abrir renovação. A primeira
@@ -30,6 +31,12 @@ class RenovacaoElegibilidadeService
 
         if ($decisao->tvl_kind?->renovavel() !== true) {
             return new RenovacaoElegibilidade(false, self::MOTIVO_DEFINITIVA);
+        }
+
+        $foraDaJanela = self::motivoForaDaJanela($decisao->tvl_valid_until);
+
+        if ($foraDaJanela !== null) {
+            return new RenovacaoElegibilidade(false, $foraDaJanela);
         }
 
         $meses = max(1, (int) Settings::get('renovacao.intervalo_meses', 3));
@@ -58,5 +65,25 @@ class RenovacaoElegibilidadeService
         }
 
         return new RenovacaoElegibilidade(true, null);
+    }
+
+    /**
+     * A renovação só pode ser solicitada a partir de N meses antes do vencimento
+     * (renovacao.antecedencia_meses, padrão 3); depois de vencida a regra não barra.
+     */
+    public static function motivoForaDaJanela(?CarbonInterface $validade): ?string
+    {
+        if ($validade === null) {
+            return null;
+        }
+
+        $meses = max(1, (int) Settings::get('renovacao.antecedencia_meses', 3));
+        $abertura = $validade->copy()->startOfDay()->subMonthsNoOverflow($meses);
+
+        if (! now()->startOfDay()->lt($abertura)) {
+            return null;
+        }
+
+        return "A renovação só pode ser solicitada a partir de {$abertura->format('d/m/Y')}, {$meses} meses antes do vencimento.";
     }
 }

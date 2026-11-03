@@ -4,10 +4,12 @@ namespace Tests\Feature\Renovacao;
 
 use App\Enums\TvlKind;
 use App\Enums\ViabilityRequestStatus;
+use App\Models\Parameter;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Renovacao\RenovacaoElegibilidadeService;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 class RenovacaoElegibilidadeTest extends TestCase
@@ -83,6 +85,49 @@ class RenovacaoElegibilidadeTest extends TestCase
         $this->assertNull($resultado->motivo);
     }
 
+    public function test_bloqueia_antes_da_janela_de_tres_meses_do_vencimento(): void
+    {
+        $validade = now()->addMonthsNoOverflow(3)->addDay();
+        $origem = $this->tvlDeferido(TvlKind::Provisoria, $validade->toDateString());
+
+        $resultado = app(RenovacaoElegibilidadeService::class)->avaliar($origem);
+
+        $this->assertFalse($resultado->elegivel);
+        $this->assertSame(
+            'A renovação só pode ser solicitada a partir de '.$validade->subMonthsNoOverflow(3)->format('d/m/Y').', 3 meses antes do vencimento.',
+            $resultado->motivo,
+        );
+    }
+
+    public function test_libera_no_primeiro_dia_da_janela(): void
+    {
+        $origem = $this->tvlDeferido(TvlKind::Provisoria, now()->addMonthsNoOverflow(3)->toDateString());
+
+        $this->assertTrue(app(RenovacaoElegibilidadeService::class)->avaliar($origem)->elegivel);
+    }
+
+    public function test_parametro_de_antecedencia_cadastrado_e_respeitado(): void
+    {
+        $parametro = Parameter::query()->where('key', 'renovacao.antecedencia_meses')->first();
+        $this->assertNotNull($parametro);
+        $this->assertSame('3', $parametro->default_value);
+
+        $origem = $this->tvlDeferido(TvlKind::Provisoria, now()->addMonthsNoOverflow(5)->toDateString());
+        $this->assertFalse(app(RenovacaoElegibilidadeService::class)->avaliar($origem)->elegivel);
+
+        $parametro->update(['value' => '6']);
+        Cache::forget('viabiliza.parameters.renovacao.antecedencia_meses');
+
+        $this->assertTrue(app(RenovacaoElegibilidadeService::class)->avaliar($origem)->elegivel);
+    }
+
+    public function test_libera_viabilidade_ja_vencida(): void
+    {
+        $origem = $this->tvlDeferido(TvlKind::Provisoria, now()->subDays(94)->toDateString());
+
+        $this->assertTrue(app(RenovacaoElegibilidadeService::class)->avaliar($origem)->elegivel);
+    }
+
     public function test_pre_operacional_pode_ser_renovado(): void
     {
         $origem = $this->tvlDeferido(TvlKind::PreOperacional);
@@ -93,14 +138,14 @@ class RenovacaoElegibilidadeTest extends TestCase
         $this->assertNull($resultado->motivo);
     }
 
-    private function tvlDeferido(TvlKind $tipo): ViabilityRequest
+    private function tvlDeferido(TvlKind $tipo, ?string $validade = null): ViabilityRequest
     {
         $origem = ViabilityRequest::factory()->create();
         $origem->forceFill(['status' => ViabilityRequestStatus::Deferida])->save();
         ViabilityDecision::factory()->create([
             'viability_request_id' => $origem->id,
             'tvl_kind' => $tipo,
-            'tvl_valid_until' => '2027-09-28',
+            'tvl_valid_until' => $validade ?? now()->addMonth()->toDateString(),
         ]);
 
         return $origem->fresh();

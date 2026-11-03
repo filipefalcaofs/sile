@@ -17,6 +17,7 @@ use App\Services\Renovacao\ConferenciaTitularidade;
 use App\Services\Renovacao\RenovacaoElegibilidade;
 use App\Services\Renovacao\RenovacaoLegadaElegibilidadeService;
 use App\Services\Renovacao\ResolvedorEnderecoImovel;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -287,11 +288,39 @@ class RenovacaoLegadaElegibilidadeTest extends TestCase
         $this->assertTrue($resultado->elegivel);
     }
 
-    public function test_bloqueia_quando_o_legado_ja_registra_renovacao_posterior(): void
+    public function test_bloqueia_quando_o_legado_registra_renovacao_solicitada_depois_da_emissao(): void
     {
-        $resultado = $this->avaliar($this->tvl(renovadaDepois: true));
+        $tvl = $this->tvl(
+            emissao: CarbonImmutable::parse('2024-08-01'),
+            renovacoes: [['solicitada_em' => '2026-09-10T00:00:00-03:00', 'paga_em' => null]],
+        );
 
-        $this->assertNegado('Esta viabilidade já foi renovada.', $resultado);
+        $this->assertNegado('Esta viabilidade já foi renovada.', $this->avaliar($tvl));
+    }
+
+    public function test_renovacao_anterior_a_emissao_da_vigente_nao_bloqueia(): void
+    {
+        $tvl = $this->tvl(
+            emissao: CarbonImmutable::parse('2024-08-01'),
+            renovacoes: [
+                ['solicitada_em' => '2023-06-12T00:00:00-03:00', 'paga_em' => '2023-06-13T00:00:00-03:00'],
+                ['solicitada_em' => '2024-07-31T00:00:00-03:00', 'paga_em' => '2024-08-01T00:00:00-03:00'],
+            ],
+        );
+
+        $this->assertTrue($this->avaliar($tvl)->elegivel);
+    }
+
+    public function test_sem_emissao_qualquer_renovacao_registrada_bloqueia(): void
+    {
+        $tvl = $this->tvl(renovacoes: [['solicitada_em' => '2024-07-31T00:00:00-03:00', 'paga_em' => null]]);
+
+        $this->assertNegado('Esta viabilidade já foi renovada.', $this->avaliar($tvl));
+    }
+
+    public function test_flag_renovada_depois_da_api_nao_decide_sozinho(): void
+    {
+        $this->assertTrue($this->avaliar($this->tvl(renovadaDepois: true))->elegivel);
     }
 
     public function test_bloqueia_vencida_quando_o_parametro_nao_permite(): void
@@ -301,6 +330,25 @@ class RenovacaoLegadaElegibilidadeTest extends TestCase
         $resultado = $this->avaliar($this->tvl(situacao: 'vencida'));
 
         $this->assertNegado('Viabilidade vencida não pode ser renovada.', $resultado);
+    }
+
+    public function test_bloqueia_antes_da_janela_de_tres_meses_do_vencimento(): void
+    {
+        $validade = CarbonImmutable::today()->addMonthsNoOverflow(3)->addDay();
+
+        $resultado = $this->avaliar($this->tvl(validade: $validade));
+
+        $this->assertNegado(
+            'A renovação só pode ser solicitada a partir de '.$validade->subMonthsNoOverflow(3)->format('d/m/Y').', 3 meses antes do vencimento.',
+            $resultado,
+        );
+    }
+
+    public function test_libera_dentro_da_janela_de_tres_meses(): void
+    {
+        $resultado = $this->avaliar($this->tvl(validade: CarbonImmutable::today()->addMonthsNoOverflow(3)));
+
+        $this->assertTrue($resultado->elegivel);
     }
 
     public function test_vencida_e_permitida_por_padrao(): void
@@ -491,14 +539,17 @@ class RenovacaoLegadaElegibilidadeTest extends TestCase
         ?string $situacao = 'vigente',
         ?string $inscricao = self::INSCRICAO,
         ?array $endereco = null,
+        ?CarbonImmutable $validade = null,
+        ?CarbonImmutable $emissao = null,
+        array $renovacoes = [],
     ): TvlLegadaDetalhe {
         return new TvlLegadaDetalhe(
             numero: 4321,
             tipo: $tipo,
             deferida: $deferida,
             ativa: true,
-            emissao: null,
-            validade: null,
+            emissao: $emissao,
+            validade: $validade,
             situacao: $situacao,
             diasParaVencer: null,
             renovadaDepois: $renovadaDepois,
@@ -516,7 +567,7 @@ class RenovacaoLegadaElegibilidadeTest extends TestCase
             flags: ['sede' => false, 'mei' => false, 'escritorio_virtual' => false, 'culto_religioso' => false, 'edificio_comercial' => false],
             condicionanteAdicional: null,
             atividades: $atividades ?? [['codigo' => self::CODIGO_CNAE, 'descricao' => 'Padaria']],
-            renovacoes: [],
+            renovacoes: $renovacoes,
         );
     }
 }

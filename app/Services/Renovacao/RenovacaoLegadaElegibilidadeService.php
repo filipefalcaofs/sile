@@ -11,6 +11,7 @@ use App\Services\Cnpj\CnpjLookupException;
 use App\Services\Cnpj\CnpjNotFoundException;
 use App\Services\Legado\TvlLegadaDetalhe;
 use App\Support\Settings;
+use Carbon\CarbonImmutable;
 
 /**
  * Diz se uma TVL do sistema legado pode ser renovada pela empresa informada.
@@ -46,6 +47,7 @@ class RenovacaoLegadaElegibilidadeService
             ?? $this->motivoAtividades($tvl)
             ?? $this->motivoRenovadaNoLegado($tvl)
             ?? $this->motivoVencida($tvl)
+            ?? RenovacaoElegibilidadeService::motivoForaDaJanela($tvl->validade)
             ?? $this->motivoRenovacaoNoViabiliza($tvl);
 
         return new RenovacaoElegibilidade($motivo === null, $motivo);
@@ -112,7 +114,25 @@ class RenovacaoLegadaElegibilidadeService
 
     private function motivoRenovadaNoLegado(TvlLegadaDetalhe $tvl): ?string
     {
-        return $tvl->renovadaDepois ? 'Esta viabilidade já foi renovada.' : null;
+        return $this->renovadaDepoisDaEmissao($tvl) ? 'Esta viabilidade já foi renovada.' : null;
+    }
+
+    /**
+     * O legado só informa as renovações e a emissão da linha vigente; aqui se decide
+     * que conta só o pedido feito a partir dessa emissão — os anteriores já geraram a
+     * linha vigente. Sem emissão (ou sem data no pedido) vale o registro.
+     */
+    private function renovadaDepoisDaEmissao(TvlLegadaDetalhe $tvl): bool
+    {
+        foreach ($tvl->renovacoes as $renovacao) {
+            $solicitadaEm = $renovacao['solicitada_em'] === null ? null : CarbonImmutable::parse($renovacao['solicitada_em']);
+
+            if ($tvl->emissao === null || $solicitadaEm === null || $solicitadaEm->greaterThanOrEqualTo($tvl->emissao)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function motivoVencida(TvlLegadaDetalhe $tvl): ?string
