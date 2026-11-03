@@ -268,6 +268,13 @@ class FortifyServiceProvider extends ServiceProvider
                 (int) config('viabiliza.seguranca.throttle.regin_recebe.por_minuto', 60),
             )->by($request->ip());
         });
+
+        // API de indicadores do BI: o carregamento do painel dispara várias chamadas.
+        RateLimiter::for('bi-api', function (Request $request) {
+            return Limit::perMinute(
+                (int) config('viabiliza.integrations.bi.por_minuto', 120),
+            )->by($request->ip());
+        });
     }
 
     /**

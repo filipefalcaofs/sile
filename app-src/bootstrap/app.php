@@ -95,6 +95,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
             'api_integracao/recebe',
             'api_integracao/tvl/autenticar',
+            'api_integracao/bi/autenticar',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
@@ -106,6 +107,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // genérica "Oops" em vez de erro inline (relatório SEDUR 21/09, item 07).
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*')
+                || $request->is('api_integracao/bi/*')
                 || ($request->is('portal/empresas/consultar-cnpj') && $request->expectsJson())
                 || ($request->is('portal/viabilidade/*') && $request->expectsJson())
                 || ($request->is('portal/renovacao/legado/consultar') && $request->expectsJson())
