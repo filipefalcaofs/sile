@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\Storage;
     'path',
     'filename',
     'format',
+    'source',
     'row_count',
     'filtros',
 ])]

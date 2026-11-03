@@ -4,10 +4,12 @@ namespace Tests\Feature\Relatorios;
 
 use App\Models\ExportFile;
 use App\Models\User;
+use App\Models\ViabilityRequest;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
+use Tests\Feature\Relatorios\Stubs\ProcessoBairroSource;
 use Tests\TestCase;
 
 /**
@@ -92,6 +94,31 @@ class ExportacaoDownloadTest extends TestCase
         $this->actingAs($this->gestor(), 'gestao')
             ->get(route('gestao.relatorios.exportacoes.download', $file))
             ->assertForbidden();
+    }
+
+    public function test_download_refaz_o_arquivo_ausente_neste_conteiner_a_partir_do_source(): void
+    {
+        // O worker gravou no disco do contêiner dele: o que atende o link não tem
+        // o arquivo, mas o ExportFile guarda o source e os filtros para refazê-lo.
+        ViabilityRequest::factory()->create(['address_neighborhood' => 'Pituba']);
+        ViabilityRequest::factory()->create(['address_neighborhood' => 'Itapua']);
+
+        $file = ExportFile::factory()->create([
+            'disk' => $this->disk,
+            'path' => 'relatorios/exportacoes/do-worker.csv',
+            'filename' => 'do-worker.csv',
+            'format' => 'csv',
+            'source' => ProcessoBairroSource::class,
+            'filtros' => ['bairro' => 'Pituba'],
+        ]);
+
+        $resposta = $this->actingAs($this->gestor(), 'gestao')->get($this->urlAssinada($file));
+
+        $resposta->assertOk();
+        $conteudo = $resposta->streamedContent();
+        $this->assertStringContainsString('Pituba', $conteudo);
+        $this->assertStringNotContainsString('Itapua', $conteudo);
+        Storage::disk($this->disk)->assertExists($file->path);
     }
 
     public function test_download_de_arquivo_ausente_e_404_honesto(): void

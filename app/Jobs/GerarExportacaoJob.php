@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Notifications\ExportacaoPronta;
 use App\Services\Relatorios\Export\CsvExporter;
 use App\Services\Relatorios\Export\PdfExporter;
+use App\Services\Relatorios\Export\ReportDefinition;
 use App\Services\Relatorios\Export\ReportFormatExporter;
 use App\Services\Relatorios\Export\ReportSource;
 use App\Services\Relatorios\Export\XlsxExporter;
@@ -67,26 +68,12 @@ class GerarExportacaoJob implements ShouldQueue
     public function handle(): void
     {
         $disk = $this->resolverDisco();
-        $source = app($this->sourceClass);
-        $definition = $source->definition(ReportFilters::fromArray($this->filtros));
-        $driver = $this->driver($this->formato);
+        $definition = $this->definition();
 
         $filename = $definition->fileName($this->formato);
         $relPath = 'relatorios/exportacoes/'.$filename;
-        $storage = Storage::disk($disk);
 
-        // openspout/CSV/PDF precisam de um caminho de filesystem real (Pitfall 4):
-        // disco local grava direto pelo path(); disco remoto usa arquivo temporário
-        // e depois Storage::put.
-        if (config("filesystems.disks.{$disk}.driver") === 'local') {
-            $storage->makeDirectory(dirname($relPath));
-            $driver->write($definition, $storage->path($relPath));
-        } else {
-            $temporario = tempnam(sys_get_temp_dir(), 'export');
-            $driver->write($definition, $temporario);
-            $storage->put($relPath, (string) file_get_contents($temporario));
-            @unlink($temporario);
-        }
+        $this->escreverArquivo($definition, $disk, $relPath);
 
         $export = ExportFile::create([
             'user_id' => $this->userId,
@@ -94,6 +81,7 @@ class GerarExportacaoJob implements ShouldQueue
             'path' => $relPath,
             'filename' => $filename,
             'format' => $this->formato,
+            'source' => $this->sourceClass,
             'row_count' => $definition->builder()->count(),
             'filtros' => $this->filtros,
         ]);
@@ -101,6 +89,51 @@ class GerarExportacaoJob implements ShouldQueue
         if ($this->userId !== null) {
             User::query()->find($this->userId)?->notify(new ExportacaoPronta($export));
         }
+    }
+
+    /**
+     * Refaz o arquivo de uma exportação cujo arquivo não está no disco deste
+     * contêiner (o worker grava no disco dele). Sem a classe do source, não há
+     * como reconstruir o conjunto e devolve false.
+     */
+    public static function restaurar(ExportFile $exportFile): bool
+    {
+        $source = (string) $exportFile->source;
+
+        if ($source === '' || ! is_subclass_of($source, ReportSource::class) || $exportFile->disk === 'public') {
+            return false;
+        }
+
+        $job = new self($source, (array) $exportFile->filtros, (string) $exportFile->format, $exportFile->user_id);
+        $job->escreverArquivo($job->definition(), $exportFile->disk, $exportFile->path);
+
+        return true;
+    }
+
+    private function definition(): ReportDefinition
+    {
+        return app($this->sourceClass)->definition(ReportFilters::fromArray($this->filtros));
+    }
+
+    private function escreverArquivo(ReportDefinition $definition, string $disk, string $relPath): void
+    {
+        $storage = Storage::disk($disk);
+        $driver = $this->driver($this->formato);
+
+        // openspout/CSV/PDF precisam de um caminho de filesystem real (Pitfall 4):
+        // disco local grava direto pelo path(); disco remoto usa arquivo temporário
+        // e depois Storage::put.
+        if (config("filesystems.disks.{$disk}.driver") === 'local') {
+            $storage->makeDirectory(dirname($relPath));
+            $driver->write($definition, $storage->path($relPath));
+
+            return;
+        }
+
+        $temporario = tempnam(sys_get_temp_dir(), 'export');
+        $driver->write($definition, $temporario);
+        $storage->put($relPath, (string) file_get_contents($temporario));
+        @unlink($temporario);
     }
 
     public function failed(?Throwable $exception): void

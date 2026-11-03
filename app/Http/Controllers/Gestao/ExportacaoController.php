@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Gestao;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\GerarExportacaoJob;
 use App\Models\ExportFile;
 use App\Support\Audit\AuditService;
 use Illuminate\Http\Request;
@@ -36,9 +37,12 @@ class ExportacaoController extends Controller
             403,
         );
 
-        // Arquivo ausente (retenção/pruning de 15-15) → 404 honesto, nunca um
-        // arquivo vazio fabricado.
-        abort_unless(Storage::disk($exportFile->disk)->exists($exportFile->path), 404);
+        // O worker grava no disco do contêiner dele: se este não tem o arquivo, ele
+        // é refeito a partir do source e dos filtros. Sem como refazer → 404
+        // honesto, nunca um arquivo vazio fabricado.
+        if (! Storage::disk($exportFile->disk)->exists($exportFile->path)) {
+            abort_unless(GerarExportacaoJob::restaurar($exportFile), 404);
+        }
 
         $this->audit->log(
             logName: 'relatorios',

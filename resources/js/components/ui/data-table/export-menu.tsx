@@ -85,6 +85,7 @@ export function ExportMenu({
                             <a
                                 role="menuitem"
                                 href={buildHref(url, params, formato)}
+                                {...(formato === 'pdf' ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
                                 onClick={() => setIsOpen(false)}
                                 className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-700 transition hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-white/[0.05] dark:hover:text-white"
                             >

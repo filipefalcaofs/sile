@@ -139,6 +139,27 @@ class ReportExporterTest extends TestCase
     }
 
     #[Test]
+    public function pdf_com_muitas_colunas_usa_o_layout_denso_para_nao_cortar_colunas(): void
+    {
+        $base = [
+            'titulo' => 'Relatório',
+            'linhas' => [],
+            'total' => 0,
+            'geradoEm' => now(),
+            'filtros' => [],
+            'filtrosCard' => [],
+            'responsavel' => 'Teste',
+            'limite' => null,
+        ];
+
+        $largo = view('relatorios.relatorio', $base + ['colunas' => array_map(fn (int $n): string => "Coluna {$n}", range(1, 9))])->render();
+        $estreito = view('relatorios.relatorio', $base + ['colunas' => ['A', 'B', 'C']])->render();
+
+        $this->assertStringContainsString('class="dados denso"', $largo);
+        $this->assertStringNotContainsString('class="dados denso"', $estreito);
+    }
+
+    #[Test]
     public function source_sync_only_acima_do_limiar_ainda_e_sincrono(): void
     {
         Queue::fake();

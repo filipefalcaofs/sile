@@ -97,7 +97,10 @@
         table.dados tbody tr.zebra td { background: #f9fafb; }
         table.dados .num { text-align: right; }
         table.dados tr.total td { border-top: 2px solid #1d2939; border-bottom: 0; padding-top: 6px; font-weight: bold; color: #101828; }
-        table.dados td.mono { font-family: "DejaVu Sans Mono", monospace; font-size: 8.5px; color: #344054; white-space: nowrap; }
+        table.dados td.mono { font-family: "DejaVu Sans Mono", monospace; font-size: 8.5px; color: #344054; word-break: break-all; }
+        table.dados.denso { table-layout: fixed; }
+        table.dados.denso th, table.dados.denso td { padding: 3px 4px; font-size: 7.5px; word-break: break-word; }
+        table.dados.denso td.mono { font-size: 7px; }
         table.dados td.mudo { color: #98a2b3; }
         .pilula { display: inline-block; padding: 0 6px; border: 1px solid; border-radius: 9px; font-size: 8.5px; white-space: nowrap; }
         .vazio { padding: 14px 6px; color: #475467; text-align: center; }
@@ -154,7 +157,7 @@
         <div class="aviso">ⓘ Este PDF traz os {{ number_format($total, 0, ',', '.') }} primeiros registros do recorte (teto técnico de linhas). O conjunto completo está no Excel (aba DADOS).</div>
     @endif
 
-    <table class="dados">
+    <table @class(['dados', 'denso' => count($colunas) > 7])>
         <thead>
             <tr>
                 @foreach ($colunas as $i => $coluna)
