@@ -288,30 +288,55 @@ class RenovacaoLegadaElegibilidadeTest extends TestCase
         $this->assertTrue($resultado->elegivel);
     }
 
-    public function test_bloqueia_quando_o_legado_registra_renovacao_solicitada_depois_da_emissao(): void
+    public function test_bloqueia_quando_o_legado_registra_renovacao_pedida_dentro_da_janela_da_vigente(): void
     {
-        $tvl = $this->tvl(
-            emissao: CarbonImmutable::parse('2024-08-01'),
-            renovacoes: [['solicitada_em' => '2026-09-10T00:00:00-03:00', 'paga_em' => null]],
-        );
+        $validade = CarbonImmutable::today()->addMonth();
+        $pedido = $validade->subMonths(2)->toIso8601String();
+
+        $tvl = $this->tvl(validade: $validade, renovacoes: [['solicitada_em' => $pedido, 'paga_em' => null]]);
 
         $this->assertNegado('Esta viabilidade já foi renovada.', $this->avaliar($tvl));
     }
 
-    public function test_renovacao_anterior_a_emissao_da_vigente_nao_bloqueia(): void
+    public function test_renovacao_anterior_a_janela_da_vigente_nao_bloqueia_mesmo_sem_emissao(): void
     {
         $tvl = $this->tvl(
-            emissao: CarbonImmutable::parse('2024-08-01'),
+            situacao: 'vencida',
+            validade: CarbonImmutable::parse('2026-08-01 14:06:05'),
             renovacoes: [
-                ['solicitada_em' => '2023-06-12T00:00:00-03:00', 'paga_em' => '2023-06-13T00:00:00-03:00'],
-                ['solicitada_em' => '2024-07-31T00:00:00-03:00', 'paga_em' => '2024-08-01T00:00:00-03:00'],
+                ['solicitada_em' => '2023-06-12T12:34:11-03:00', 'paga_em' => '2023-06-13T15:43:30-03:00'],
+                ['solicitada_em' => '2024-07-31T16:04:19-03:00', 'paga_em' => '2024-08-01T14:06:05-03:00'],
             ],
+            renovadaDepois: true,
         );
 
         $this->assertTrue($this->avaliar($tvl)->elegivel);
     }
 
-    public function test_sem_emissao_qualquer_renovacao_registrada_bloqueia(): void
+    public function test_renovacao_pedida_depois_do_vencimento_bloqueia(): void
+    {
+        $tvl = $this->tvl(
+            situacao: 'vencida',
+            validade: CarbonImmutable::today()->subDays(10),
+            renovacoes: [['solicitada_em' => CarbonImmutable::today()->subDays(2)->toIso8601String(), 'paga_em' => null]],
+        );
+
+        $this->assertNegado('Esta viabilidade já foi renovada.', $this->avaliar($tvl));
+    }
+
+    public function test_janela_da_vigente_segue_o_parametro_de_antecedencia(): void
+    {
+        $validade = CarbonImmutable::today()->addMonths(5);
+        $pedido = $validade->subMonths(5)->toIso8601String();
+        $tvl = $this->tvl(validade: $validade, renovacoes: [['solicitada_em' => $pedido, 'paga_em' => null]]);
+
+        $this->assertNegado(
+            'A renovação só pode ser solicitada a partir de '.$validade->subMonthsNoOverflow(3)->format('d/m/Y').', 3 meses antes do vencimento.',
+            $this->avaliar($tvl),
+        );
+    }
+
+    public function test_sem_validade_qualquer_renovacao_registrada_bloqueia(): void
     {
         $tvl = $this->tvl(renovacoes: [['solicitada_em' => '2024-07-31T00:00:00-03:00', 'paga_em' => null]]);
 
@@ -540,7 +565,6 @@ class RenovacaoLegadaElegibilidadeTest extends TestCase
         ?string $inscricao = self::INSCRICAO,
         ?array $endereco = null,
         ?CarbonImmutable $validade = null,
-        ?CarbonImmutable $emissao = null,
         array $renovacoes = [],
     ): TvlLegadaDetalhe {
         return new TvlLegadaDetalhe(
@@ -548,7 +572,7 @@ class RenovacaoLegadaElegibilidadeTest extends TestCase
             tipo: $tipo,
             deferida: $deferida,
             ativa: true,
-            emissao: $emissao,
+            emissao: null,
             validade: $validade,
             situacao: $situacao,
             diasParaVencer: null,
