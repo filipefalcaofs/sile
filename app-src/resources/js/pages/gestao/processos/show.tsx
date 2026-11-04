@@ -19,6 +19,7 @@ import { centroDaGeometria, ESTILO_ENDERECAMENTO, type FontePoligono } from '@/c
 import { MapaDecisaoSection } from '@/components/geo/mapa-decisao-section';
 import { MapaSection } from '@/components/geo/mapa-section';
 import CnaesDoProcesso from '@/components/analise/cnaes-do-processo';
+import FichaSimplifica from '@/components/analise/ficha-simplifica';
 import { AlertIcon, ArrowRightIcon, MapPinIcon } from '@/components/icons';
 import Alert from '@/components/ui/alert';
 import Badge from '@/components/ui/badge';
@@ -177,6 +178,7 @@ export default function Show({
         processo.status === 'em_analise';
 
     const [aba, setAba] = useState<Aba>('informacoes');
+    const [legadoAberto, setLegadoAberto] = useState(false);
     const [resultadoConclusao, setResultadoConclusao] = useState('');
     const [tipoDeferimento, setTipoDeferimento] = useState('');
     const [validadeMeses, setValidadeMeses] = useState('');
@@ -262,6 +264,10 @@ export default function Show({
                     {consultaVistoria ? 'Voltar às vistorias' : 'Voltar à consulta'}
                 </Link>
 
+                {legadoAberto && processo.legado && (
+                    <FichaSimplifica numero={processo.legado.processo} onClose={() => setLegadoAberto(false)} />
+                )}
+
                 {/* Cabeçalho com os três identificadores (RN-007) */}
                 <Card>
                     <CardContent className="border-t-0">
@@ -337,6 +343,15 @@ export default function Show({
                                         <ArrowRightIcon className="size-4" />
                                     </Link>
                                 )}
+                                {processo.legado && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setLegadoAberto(true)}
+                                        className="inline-flex items-center justify-center gap-2 rounded-lg px-5 py-3 text-sm font-medium text-brand-600 ring-1 ring-inset ring-brand-300 transition hover:bg-brand-50 focus:outline-hidden dark:text-brand-400 dark:ring-brand-800 dark:hover:bg-brand-500/[0.08]"
+                                    >
+                                        Consultar legado
+                                    </button>
+                                )}
                                 <Link
                                     href={`/gestao/processos/${processo.id}/comunicacoes`}
                                     className="inline-flex items-center justify-center gap-2 rounded-lg px-5 py-3 text-sm font-medium text-gray-700 ring-1 ring-inset ring-gray-300 transition hover:bg-gray-50 focus:outline-hidden dark:text-gray-300 dark:ring-gray-700 dark:hover:bg-white/[0.03]"
@@ -344,6 +359,11 @@ export default function Show({
                                     Histórico de comunicações
                                 </Link>
                             </div>
+                            {processo.legado && (
+                                <p className="mt-2 text-theme-xs text-gray-400 dark:text-gray-500">
+                                    Renovação da TVL {processo.legado.tvl}, do processo {processo.legado.processo} no Simplifica. Consultar legado abre a ficha do sistema anterior sem sair desta tela.
+                                </p>
+                            )}
                             {podeAbrirFicha && (
                                 <p className="mt-2 text-theme-xs text-gray-400 dark:text-gray-500">
                                     {fichaExpresso

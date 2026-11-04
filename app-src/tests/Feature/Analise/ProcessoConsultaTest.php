@@ -544,4 +544,41 @@ class ProcessoConsultaTest extends TestCase
 
         $this->assertNull($payload['cnaes']);
     }
+
+    public function test_renovacao_legada_expoe_o_processo_do_simplifica_no_detalhe(): void
+    {
+        $processo = $this->processo([
+            'renews_legacy_tvl_number' => 1234567,
+            'legacy_tvl_snapshot' => ['numero' => 1234567, 'processoNumero' => '2023000123-00004567/2023'],
+        ]);
+
+        $page = $this->actingAs($this->analista(), 'gestao')
+            ->get("/gestao/processos/{$processo->id}")
+            ->assertOk()
+            ->viewData('page');
+
+        $this->assertSame([
+            'processo' => '2023000123-00004567/2023',
+            'tvl' => 1234567,
+        ], $page['props']['processo']['legado']);
+    }
+
+    public function test_processo_sem_origem_no_simplifica_nao_expoe_legado(): void
+    {
+        $payload = (new ProcessoResource($this->processo()->fresh()))->resolve();
+
+        $this->assertNull($payload['legado']);
+    }
+
+    public function test_renovacao_legada_sem_numero_de_processo_valido_nao_expoe_legado(): void
+    {
+        $processo = $this->processo([
+            'renews_legacy_tvl_number' => 1234567,
+            'legacy_tvl_snapshot' => ['numero' => 1234567, 'processoNumero' => 'sem numero'],
+        ]);
+
+        $payload = (new ProcessoResource($processo->fresh()))->resolve();
+
+        $this->assertNull($payload['legado']);
+    }
 }

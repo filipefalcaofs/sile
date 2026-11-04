@@ -7,6 +7,7 @@ use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Analise\AnalysisSlaService;
 use App\Services\Analise\ProcessoQueryService;
+use App\Services\Legado\BuscaProcessosLegado;
 use App\Services\Servicos\ServicoNomenclaturaResolver;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -39,6 +40,7 @@ class ProcessoResource extends JsonResource
             'protocol_number' => $this->protocol_number,
             'bap' => $this->external_reference,
             'renovacao' => $this->isRenewal(),
+            'legado' => $this->processoNoSimplifica(),
             'tvl_product_number' => ViabilityDecision::semPrefixo($this->decision?->tvl_product_number),
             'status' => $this->status->value,
             'status_label' => $this->status->label(),
@@ -87,6 +89,26 @@ class ProcessoResource extends JsonResource
             // sede ou abrigado; null para o processo comum (a UI não renderiza o
             // card). Fonte única: a decisão imutável (RN-EV-02/05).
             'escritorio_virtual' => $this->escritorioVirtual(),
+        ];
+    }
+
+    /**
+     * Processo do Simplifica de onde veio a TVL renovada, para o analista abrir
+     * a ficha do legado sem sair do detalhe. Só existe na renovação legada.
+     *
+     * @return array{processo: string, tvl: int}|null
+     */
+    private function processoNoSimplifica(): ?array
+    {
+        $numero = trim((string) ($this->legacy_tvl_snapshot['processoNumero'] ?? ''));
+
+        if ($this->renews_legacy_tvl_number === null || ! BuscaProcessosLegado::ehNumeroDeProcesso($numero)) {
+            return null;
+        }
+
+        return [
+            'processo' => $numero,
+            'tvl' => (int) $this->renews_legacy_tvl_number,
         ];
     }
 

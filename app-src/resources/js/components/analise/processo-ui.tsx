@@ -115,6 +115,8 @@ export interface ProcessoItem {
     protocol_number: string | null;
     bap: string | null;
     renovacao?: boolean;
+    /** Processo do Simplifica de onde veio a TVL renovada (só na renovação legada). */
+    legado?: { processo: string; tvl: number } | null;
     tvl_product_number: string | null;
     status: string;
     status_label: string;
