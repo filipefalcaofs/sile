@@ -3,6 +3,7 @@
 namespace Tests\Feature\Benchmark;
 
 use App\Models\BenchmarkIngestion;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
@@ -107,5 +108,50 @@ class ImportarBenchmarkRedesimCommandTest extends TestCase
 
         // Janeiro e fevereiro: março ainda não fechou.
         $this->assertSame(2, BenchmarkIngestion::query()->where('uf', 'BA')->count());
+    }
+
+    public function test_verificar_atualizacao_baixa_de_novo_mas_nao_regrava_arquivo_igual(): void
+    {
+        $this->fingirDownloadDaFixture();
+
+        $this->artisan('benchmark:importar-redesim --ano=2026 --mes=8 --uf=BA')->assertSuccessful();
+        $antes = BenchmarkIngestion::query()->firstOrFail();
+
+        Carbon::setTestNow(now()->addDay());
+        $this->artisan('benchmark:importar-redesim --ano=2026 --mes=8 --uf=BA --verificar-atualizacao')->assertSuccessful();
+
+        Http::assertSentCount(2);
+        $this->assertTrue($antes->updated_at->equalTo(BenchmarkIngestion::query()->firstOrFail()->updated_at));
+    }
+
+    public function test_verificar_atualizacao_regrava_quando_a_origem_mudou(): void
+    {
+        BenchmarkIngestion::create([
+            'uf' => 'BA', 'ano' => 2026, 'mes' => 8, 'status' => BenchmarkIngestion::STATUS_SUCESSO,
+            'url' => 'https://exemplo', 'bytes' => 10, 'hash' => 'hash-antigo',
+            'linhas_lidas' => 5, 'linhas_descartadas' => 0, 'motivo' => null,
+        ]);
+
+        $this->fingirDownloadDaFixture();
+
+        $this->artisan('benchmark:importar-redesim --ano=2026 --mes=8 --uf=BA --verificar-atualizacao')->assertSuccessful();
+
+        $this->assertNotSame('hash-antigo', BenchmarkIngestion::query()->firstOrFail()->hash);
+    }
+
+    public function test_agendamento_roda_todo_dia_ate_o_dia_10_apenas(): void
+    {
+        $evento = collect(app(Schedule::class)->events())
+            ->first(fn ($e) => str_contains((string) $e->command, 'benchmark:importar-redesim'));
+
+        $this->assertNotNull($evento);
+        $this->assertStringContainsString('--verificar-atualizacao', (string) $evento->command);
+        $this->assertSame('0 3 * * *', $evento->expression);
+
+        Carbon::setTestNow('2026-11-10 03:00:00');
+        $this->assertTrue($evento->filtersPass($this->app));
+
+        Carbon::setTestNow('2026-11-11 03:00:00');
+        $this->assertFalse($evento->filtersPass($this->app));
     }
 }

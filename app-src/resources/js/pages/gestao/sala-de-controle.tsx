@@ -167,7 +167,7 @@ export default function SalaDeControle({ tempo, operacao, distancia, evolucao, g
                     <Card>
                         <CardHeader
                             title="Evolução de Salvador"
-                            description="REDESIM do mês anterior, VIABILIZA do mês corrente em tempo real e REDESIM do mês corrente quando for importada. Independe do período escolhido acima."
+                            description="Tempo médio de viabilidade em Salvador, mês a mês, desde que o VIABILIZA começou a operar, em horas corridas como a REDESIM publica. Independe do período escolhido acima."
                         />
                         <CardContent>
                             <EvolucaoSalvador evolucao={evolucao} />

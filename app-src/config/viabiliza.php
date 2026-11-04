@@ -425,6 +425,13 @@ return [
         'janela_horas' => 24,
     ],
 
+    // Mês em que o VIABILIZA começou a operar (AAAA-MM). É onde a série do
+    // gráfico "Evolução de Salvador" começa. Vazio, vale o mês da primeira
+    // decisão deferida registrada.
+    'operacao' => [
+        'inicio' => env('VIABILIZA_OPERACAO_INICIO', '2026-10'),
+    ],
+
     'integrations' => [
         // Constantes técnicas (timeout/retries/cache_ttl) ficam SÓ aqui,
         // nunca no registry — precedente [02-02]. base_url é parametrizável.

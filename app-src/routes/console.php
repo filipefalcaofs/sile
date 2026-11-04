@@ -79,12 +79,15 @@ Schedule::command('expresso:indeferir-sem-bap')
     ->onOneServer();
 
 // Benchmark nacional de viabilidade: importa a última competência fechada dos
-// microdados da REDESIM, nas 27 UFs. Roda no dia 10 porque a origem consolida
-// a competência ao longo dos primeiros dias do mês seguinte. Competência já
-// importada com sucesso é pulada, então reexecutar é barato; UF que falhar
-// fica registrada como lacuna e entra na próxima passagem.
-Schedule::command('benchmark:importar-redesim')
-    ->monthlyOn(10, '03:00')
+// microdados da REDESIM, nas 27 UFs. Roda todo dia do 1º ao 10º, porque a
+// REDESIM não publica o dia em que fecha a competência: assim a importação
+// entra assim que ela aparece. Competência já importada com sucesso é rebaixada
+// e só regravada se o arquivo da origem mudou (hash); sem mudança, ou com a
+// origem fora do ar, o dado atual fica como está. UF que falhar fica registrada
+// como lacuna e entra na próxima passagem. Depois do dia 10 não há mais busca.
+Schedule::command('benchmark:importar-redesim --verificar-atualizacao')
+    ->dailyAt('03:00')
+    ->when(static fn (): bool => now()->day <= 10)
     ->withoutOverlapping()
     ->onOneServer();
 

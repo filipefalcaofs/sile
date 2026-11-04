@@ -7,6 +7,7 @@ use App\Models\BenchmarkIngestion;
 use App\Models\BenchmarkMunicipalityMetric;
 use App\Services\Benchmark\BenchmarkIngestionService;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
@@ -225,5 +226,54 @@ class BenchmarkIngestionServiceTest extends TestCase
         ]);
 
         $this->assertSame(0, BenchmarkIngestion::query()->sucesso()->count());
+    }
+
+    private function conteudoDaFixture(): string
+    {
+        return (string) file_get_contents(base_path('tests/Fixtures/Benchmark/redesim-ba-202608.xlsx'));
+    }
+
+    public function test_verificacao_de_atualizacao_nao_regrava_quando_o_arquivo_e_o_mesmo(): void
+    {
+        $this->fingirDownloadDaFixture();
+
+        Carbon::setTestNow('2026-09-02 03:00:00');
+        $primeira = $this->service()->ingerir('BA', 2026, 8);
+
+        Carbon::setTestNow('2026-09-03 03:00:00');
+        $segunda = $this->service()->ingerir('BA', 2026, 8, somenteSeMudou: true);
+
+        $this->assertSame($primeira->hash, $segunda->hash);
+        $this->assertTrue($primeira->updated_at->equalTo($segunda->updated_at));
+        $this->assertSame(1, BenchmarkIngestion::query()->count());
+    }
+
+    public function test_verificacao_de_atualizacao_regrava_quando_o_arquivo_mudou(): void
+    {
+        BenchmarkIngestion::create([
+            'uf' => 'BA', 'ano' => 2026, 'mes' => 8, 'status' => BenchmarkIngestion::STATUS_SUCESSO,
+            'url' => 'https://exemplo', 'bytes' => 10, 'hash' => 'hash-antigo',
+            'linhas_lidas' => 5, 'linhas_descartadas' => 0, 'motivo' => null,
+        ]);
+
+        $this->fingirDownloadDaFixture();
+
+        $ingestao = $this->service()->ingerir('BA', 2026, 8, somenteSeMudou: true);
+
+        $this->assertSame(hash('sha256', $this->conteudoDaFixture()), $ingestao->hash);
+        $this->assertSame(3, BenchmarkMunicipalityMetric::query()->count());
+    }
+
+    public function test_verificacao_de_atualizacao_preserva_o_sucesso_quando_o_download_falha(): void
+    {
+        $this->fingirDownloadDaFixture();
+        $this->service()->ingerir('BA', 2026, 8);
+
+        Http::fake(['*' => Http::response('', 500)]);
+
+        $ingestao = $this->service()->ingerir('BA', 2026, 8, somenteSeMudou: true);
+
+        $this->assertSame(BenchmarkIngestion::STATUS_SUCESSO, $ingestao->status);
+        $this->assertSame(3, BenchmarkMunicipalityMetric::query()->count());
     }
 }

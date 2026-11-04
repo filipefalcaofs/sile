@@ -42,6 +42,35 @@ class TempoViabilidadeService
     }
 
     /**
+     * Distribuição dos deferidos na régua da REDESIM: horas corridas do
+     * protocolo à decisão, contando fins de semana e feriados e sem descontar
+     * o tempo com o cidadão. É assim que o export da REDESIM mede a etapa de
+     * viabilidade, apesar de o dicionário dela falar em horas úteis.
+     *
+     * @return array{n: int, media: ?float, p50: ?float, p75: ?float, p90: ?float, p95: ?float, p99: ?float, maximo: ?float}
+     */
+    public function horasCorridasDeferidas(ReportFilters $f): array
+    {
+        $de = $f->from();
+        $ate = $f->to();
+
+        $horas = ViabilityRequest::query()
+            ->whereNotNull('protocoled_at')
+            ->whereHas('decision', function ($query) use ($de, $ate): void {
+                $query
+                    ->whereNotNull('tvl_product_number')
+                    ->when($de !== null, fn ($q) => $q->where('decided_at', '>=', $de))
+                    ->when($ate !== null, fn ($q) => $q->where('decided_at', '<=', $ate));
+            })
+            ->with('decision:id,viability_request_id,decided_at')
+            ->get(['id', 'protocoled_at'])
+            ->map(static fn (ViabilityRequest $r): float => max(0, $r->protocoled_at->diffInSeconds($r->decision->decided_at, false)) / 3600)
+            ->all();
+
+        return Percentis::de($horas)->toArray();
+    }
+
+    /**
      * Distribuição por categoria de análise, que é onde o gargalo aparece: o
      * expresso resolve em segundos, o que vai à análise humana leva horas.
      *

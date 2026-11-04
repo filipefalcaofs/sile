@@ -158,7 +158,7 @@ paths:
         - 'Indicadores estratégicos'
       operationId: indicador_benchmark_redesim
       summary: 'Tempo de Salvador frente à REDESIM'
-      description: 'Tempo médio de viabilidade das deferidas no Viabiliza comparado com a apuração da REDESIM para Salvador, no período e no mês corrente.'
+      description: 'Tempo médio de viabilidade das deferidas no Viabiliza comparado com a apuração da REDESIM para Salvador, no período e no mês corrente, nos dois lados em horas corridas como a REDESIM publica. Traz também a série mensal desde o início da operação e a média da REDESIM antes do Viabiliza.'
       security:
         -
           bearerAuth: {}
