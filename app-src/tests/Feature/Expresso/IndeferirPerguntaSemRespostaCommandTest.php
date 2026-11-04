@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Expresso;
 
+use App\Enums\AnalysisPendencyStatus;
 use App\Enums\AnalysisStage;
 use App\Enums\AnalysisStatus;
 use App\Enums\DecisionOutcome;
@@ -11,6 +12,8 @@ use App\Enums\RiscoMunicipal;
 use App\Enums\RuleDomain;
 use App\Enums\ViabilityRequestStatus;
 use App\Events\ResultadoEmitido;
+use App\Models\AnalysisPendency;
+use App\Models\AnalysisRecord;
 use App\Models\Cnae;
 use App\Models\GeoLayer;
 use App\Models\LouosQuadro10Permissao;
@@ -120,13 +123,47 @@ class IndeferirPerguntaSemRespostaCommandTest extends TestCase
         $this->assertDatabaseCount('viability_decisions', 0);
     }
 
-    public function test_analise_ja_iniciada_nao_e_tocada(): void
+    public function test_indefere_pelo_expresso_mesmo_com_a_analise_iniciada(): void
     {
+        Event::fake([ResultadoEmitido::class]);
         $request = $this->naCaixaDaAnalista($this->semResposta(), AnalysisStatus::EmAnalise);
+        AnalysisRecord::factory()->create(['viability_request_id' => $request->id, 'analyst_user_id' => $request->assigned_user_id]);
+
+        $this->artisan('processos:indeferir-pergunta-sem-resposta')
+            ->expectsOutputToContain('sem resposta — indeferido')
+            ->assertSuccessful();
+
+        $request->refresh();
+        $this->assertSame(ViabilityRequestStatus::Indeferida, $request->status);
+        $this->assertNull($request->analysis_status);
+        $this->assertSame('expresso', $request->decision->flow);
+        $this->assertNull($request->decision->decided_by_user_id);
+    }
+
+    public function test_indefere_o_processo_em_convite_e_cancela_o_convite_aberto(): void
+    {
+        Event::fake([ResultadoEmitido::class]);
+        $request = $this->naCaixaDaAnalista($this->semResposta(), AnalysisStatus::EmConvite);
+        $request->forceFill(['status' => ViabilityRequestStatus::EmPendencia])->save();
+        $convite = AnalysisPendency::factory()->create(['viability_request_id' => $request->id]);
 
         $this->artisan('processos:indeferir-pergunta-sem-resposta')->assertSuccessful();
 
-        $this->assertSame(ViabilityRequestStatus::EmAnalise, $request->fresh()->status);
+        $request->refresh();
+        $this->assertSame(ViabilityRequestStatus::Indeferida, $request->status);
+        $this->assertSame('expresso', $request->decision->flow);
+        $this->assertSame(AnalysisPendencyStatus::Cancelada, $convite->fresh()->status);
+        $this->assertNotNull($convite->fresh()->cancelled_at);
+    }
+
+    public function test_processo_ja_decidido_nao_e_tocado(): void
+    {
+        $request = $this->naCaixaDaAnalista($this->semResposta(), AnalysisStatus::ParaConclusao);
+        $request->forceFill(['status' => ViabilityRequestStatus::Deferida])->save();
+
+        $this->artisan('processos:indeferir-pergunta-sem-resposta')->assertSuccessful();
+
+        $this->assertSame(ViabilityRequestStatus::Deferida, $request->fresh()->status);
         $this->assertDatabaseCount('viability_decisions', 0);
     }
 }
