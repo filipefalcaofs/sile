@@ -41,9 +41,11 @@ class DicasTempoAgent implements Agent, HasStructuredOutput
           vistoria alongam o processo.
         - A viabilidade integra a REDESIM, a rede nacional de simplificação do
           registro de empresas. A REDESIM publica o tempo de viabilidade de
-          endereço por município, em horas úteis, sem fins de semana, feriados
-          nem o tempo em que o processo está com o cidadão, e só considera
-          solicitações deferidas. É a régua do benchmark.
+          endereço por município em horas corridas, contando fins de semana e
+          feriados, e só considera solicitações deferidas. É a régua do
+          benchmark, e a comparação de Salvador com a REDESIM usa essa mesma
+          régua. Os demais tempos do VIABILIZA no dossiê são em horas úteis,
+          sem fins de semana, feriados nem o tempo com o cidadão.
         - Média engana: poucos processos muito lentos a puxam para cima. A
           mediana mostra o caso típico; os percentis altos mostram a cauda.
           Atacar a cauda costuma render mais que melhorar o caso típico.

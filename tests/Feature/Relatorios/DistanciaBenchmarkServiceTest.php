@@ -38,7 +38,7 @@ class DistanciaBenchmarkServiceTest extends TestCase
     {
         $request = ViabilityRequest::factory()->protocoled()->create([
             'protocol_number' => fake()->unique()->numerify('VIA-2026-######'),
-            'protocoled_at' => Carbon::parse('2026-03-02 00:00:00'),
+            'protocoled_at' => Carbon::parse('2026-03-03 00:00:00')->subSeconds((int) round($horas * 3600)),
         ]);
 
         ViabilityDecision::factory()->for($request, 'viabilityRequest')->create([
@@ -46,7 +46,9 @@ class DistanciaBenchmarkServiceTest extends TestCase
             'decided_at' => Carbon::parse('2026-03-03 00:00:00'),
         ]);
 
-        $request->forceFill(['viabilidade_horas_uteis' => $horas])->save();
+        // A comparação com a REDESIM usa horas corridas; as horas úteis
+        // gravadas são outras de propósito, para provar que não entram.
+        $request->forceFill(['viabilidade_horas_uteis' => 999.0])->save();
     }
 
     private function referenciaCom(float $media): void
@@ -143,7 +145,7 @@ class DistanciaBenchmarkServiceTest extends TestCase
     {
         $request = ViabilityRequest::factory()->protocoled()->create([
             'protocol_number' => fake()->unique()->numerify('VIA-2026-######'),
-            'protocoled_at' => Carbon::parse($decididoEm)->subDay(),
+            'protocoled_at' => Carbon::parse($decididoEm)->subSeconds((int) round($horas * 3600)),
         ]);
 
         ViabilityDecision::factory()->for($request, 'viabilityRequest')->create([
@@ -151,7 +153,7 @@ class DistanciaBenchmarkServiceTest extends TestCase
             'decided_at' => Carbon::parse($decididoEm),
         ]);
 
-        $request->forceFill(['viabilidade_horas_uteis' => $horas])->save();
+        $request->forceFill(['viabilidade_horas_uteis' => 999.0])->save();
     }
 
     private function redesimDeSalvador(int $ano, int $mes, float $media): void
@@ -264,7 +266,7 @@ class DistanciaBenchmarkServiceTest extends TestCase
     {
         $request = ViabilityRequest::factory()->protocoled()->create([
             'protocol_number' => fake()->unique()->numerify('VIA-2026-######'),
-            'protocoled_at' => Carbon::parse($decididoEm)->subDay(),
+            'protocoled_at' => Carbon::parse($decididoEm)->subSeconds((int) round($horas * 3600)),
         ]);
 
         ViabilityDecision::factory()->for($request, 'viabilityRequest')->create([
@@ -272,7 +274,7 @@ class DistanciaBenchmarkServiceTest extends TestCase
             'decided_at' => Carbon::parse($decididoEm),
         ]);
 
-        $request->forceFill(['viabilidade_horas_uteis' => $horas])->save();
+        $request->forceFill(['viabilidade_horas_uteis' => 999.0])->save();
     }
 
     public function test_evolucao_considera_so_processos_deferidos_como_a_redesim(): void
@@ -296,5 +298,204 @@ class DistanciaBenchmarkServiceTest extends TestCase
         $distancia = $this->service()->calcular($this->filtros());
 
         $this->assertEqualsWithDelta(2.0, $distancia['interno'], 0.01);
+    }
+
+    /**
+     * Processo da série: o tempo é em horas corridas, do protocolo à decisão,
+     * como a REDESIM mede. O valor em horas úteis gravado no processo é outro
+     * de propósito, para provar que a série não o usa.
+     */
+    private function processoCorrido(string $protocoladoEm, string $decididoEm, bool $deferido = true): void
+    {
+        $request = ViabilityRequest::factory()->protocoled()->create([
+            'protocol_number' => fake()->unique()->numerify('VIA-2026-######'),
+            'protocoled_at' => Carbon::parse($protocoladoEm),
+        ]);
+
+        ViabilityDecision::factory()->for($request, 'viabilityRequest')->create([
+            'tvl_product_number' => $deferido ? fake()->unique()->numerify('TVL-2026-######') : null,
+            'decided_at' => Carbon::parse($decididoEm),
+        ]);
+
+        $request->forceFill(['viabilidade_horas_uteis' => 999.0])->save();
+    }
+
+    /**
+     * @param  array<string, mixed>  $serie
+     * @return list<array{0: int, 1: int}>
+     */
+    private function meses(array $serie): array
+    {
+        return array_map(fn (array $p) => [$p['ano'], $p['mes']], $serie['pontos']);
+    }
+
+    public function test_serie_comeca_no_mes_da_primeira_decisao_deferida_e_vai_ate_o_mes_corrente(): void
+    {
+        config(['viabiliza.operacao.inicio' => null]);
+
+        $this->redesimDeSalvador(2026, 9, 21.0);
+        $this->processoCorrido('2026-09-20 10:00:00', '2026-09-21 10:00:00');
+        $this->processoCorrido('2026-10-05 10:00:00', '2026-10-05 12:00:00');
+        $this->processoCorrido('2026-10-06 10:00:00', '2026-10-06 14:00:00');
+
+        $serie = $this->service()->evolucaoMensal(Carbon::parse('2026-10-15'))['serie'];
+
+        $this->assertSame([[2026, 9], [2026, 10]], $this->meses($serie));
+        $this->assertSame(['ano' => 2026, 'mes' => 9], $serie['inicio_operacao']);
+        $this->assertEqualsWithDelta(21.0, $serie['pontos'][0]['redesim']['media'], 0.01);
+        $this->assertEqualsWithDelta(24.0, $serie['pontos'][0]['viabiliza']['media'], 0.01);
+        $this->assertFalse($serie['pontos'][0]['parcial']);
+        $this->assertEqualsWithDelta(3.0, $serie['pontos'][1]['viabiliza']['media'], 0.01);
+        $this->assertSame(2, $serie['pontos'][1]['viabiliza']['n']);
+        $this->assertNull($serie['pontos'][1]['redesim']['media']);
+        $this->assertTrue($serie['pontos'][1]['parcial']);
+    }
+
+    public function test_serie_conta_horas_corridas_com_fim_de_semana_e_feriado_como_a_redesim(): void
+    {
+        config(['viabiliza.operacao.inicio' => '2026-10']);
+
+        // Sexta 09/10 10h até terça 13/10 10h: passa pelo fim de semana e pelo
+        // feriado de 12/10. A REDESIM conta tudo: 96 horas.
+        $this->processoCorrido('2026-10-09 10:00:00', '2026-10-13 10:00:00');
+
+        $ponto = $this->service()->evolucaoMensal(Carbon::parse('2026-10-15'))['serie']['pontos'][0];
+
+        $this->assertEqualsWithDelta(96.0, $ponto['viabiliza']['media'], 0.01);
+        $this->assertEqualsWithDelta(96.0, $ponto['viabiliza']['p50'], 0.01);
+        $this->assertEqualsWithDelta(96.0, $ponto['viabiliza']['p90'], 0.01);
+    }
+
+    public function test_serie_mostra_no_maximo_os_ultimos_doze_meses(): void
+    {
+        config(['viabiliza.operacao.inicio' => null]);
+
+        $this->processoCorrido('2025-01-09 10:00:00', '2025-01-10 10:00:00');
+        $this->processoCorrido('2026-10-04 10:00:00', '2026-10-05 10:00:00');
+
+        $serie = $this->service()->evolucaoMensal(Carbon::parse('2026-10-15'))['serie'];
+
+        $this->assertCount(12, $serie['pontos']);
+        $this->assertSame([2025, 11], $this->meses($serie)[0]);
+        $this->assertSame([2026, 10], $this->meses($serie)[11]);
+        $this->assertSame(['ano' => 2025, 'mes' => 1], $serie['inicio_operacao']);
+    }
+
+    public function test_serie_usa_o_inicio_de_operacao_configurado(): void
+    {
+        config(['viabiliza.operacao.inicio' => '2026-08']);
+        $this->processoCorrido('2026-10-04 10:00:00', '2026-10-05 10:00:00');
+
+        $serie = $this->service()->evolucaoMensal(Carbon::parse('2026-10-15'))['serie'];
+
+        $this->assertSame([[2026, 8], [2026, 9], [2026, 10]], $this->meses($serie));
+        $this->assertNull($serie['pontos'][0]['viabiliza']['media']);
+        $this->assertSame(0, $serie['pontos'][0]['viabiliza']['n']);
+    }
+
+    public function test_o_inicio_da_operacao_padrao_e_outubro_de_2026(): void
+    {
+        $this->processoCorrido('2026-11-02 10:00:00', '2026-11-03 10:00:00');
+
+        $serie = $this->service()->evolucaoMensal(Carbon::parse('2026-11-04'))['serie'];
+
+        $this->assertSame(['ano' => 2026, 'mes' => 10], $serie['inicio_operacao']);
+        $this->assertSame([[2026, 10], [2026, 11]], $this->meses($serie));
+    }
+
+    public function test_serie_sem_nenhuma_decisao_mostra_so_o_mes_corrente(): void
+    {
+        config(['viabiliza.operacao.inicio' => null]);
+
+        $serie = $this->service()->evolucaoMensal(Carbon::parse('2026-10-15'))['serie'];
+
+        $this->assertNull($serie['inicio_operacao']);
+        $this->assertCount(1, $serie['pontos']);
+        $this->assertNull($serie['pontos'][0]['viabiliza']['media']);
+    }
+
+    public function test_serie_conta_so_deferidas_e_decisoes_do_proprio_mes(): void
+    {
+        config(['viabiliza.operacao.inicio' => '2026-09']);
+
+        $this->processoCorrido('2026-09-30 21:00:00', '2026-09-30 23:00:00');
+        $this->processoCorrido('2026-09-30 20:30:00', '2026-10-01 00:30:00');
+        $this->processoCorrido('2026-10-06 10:00:00', '2026-10-07 10:00:00', deferido: false);
+
+        $pontos = $this->service()->evolucaoMensal(Carbon::parse('2026-10-15'))['serie']['pontos'];
+
+        $this->assertEqualsWithDelta(2.0, $pontos[0]['viabiliza']['media'], 0.01);
+        $this->assertEqualsWithDelta(4.0, $pontos[1]['viabiliza']['media'], 0.01);
+        $this->assertSame(1, $pontos[1]['viabiliza']['n']);
+    }
+
+    public function test_linha_de_base_e_a_redesim_dos_doze_meses_antes_da_operacao_ponderada_pelas_solicitacoes(): void
+    {
+        config(['viabiliza.operacao.inicio' => '2026-10']);
+
+        // Fora da janela: antes dos 12 meses e o próprio mês de início.
+        BenchmarkMunicipalityMetric::factory()->salvador()->create(['ano' => 2025, 'mes' => 9, 'media' => 500.0, 'n' => 100]);
+        BenchmarkMunicipalityMetric::factory()->salvador()->create(['ano' => 2026, 'mes' => 10, 'media' => 500.0, 'n' => 100]);
+        // Dentro da janela (10/2025 a 09/2026).
+        BenchmarkMunicipalityMetric::factory()->salvador()->create(['ano' => 2025, 'mes' => 10, 'media' => 40.0, 'n' => 300]);
+        BenchmarkMunicipalityMetric::factory()->salvador()->create(['ano' => 2026, 'mes' => 9, 'media' => 80.0, 'n' => 100]);
+
+        $base = $this->service()->evolucaoMensal(Carbon::parse('2026-11-04'))['serie']['antes_da_operacao'];
+
+        $this->assertEqualsWithDelta(50.0, $base['media'], 0.01);
+        $this->assertSame(400, $base['n']);
+        $this->assertSame(2, $base['meses']);
+        $this->assertSame(['ano' => 2025, 'mes' => 10], $base['de']);
+        $this->assertSame(['ano' => 2026, 'mes' => 9], $base['ate']);
+    }
+
+    public function test_sem_redesim_antes_da_operacao_nao_ha_linha_de_base(): void
+    {
+        config(['viabiliza.operacao.inicio' => '2026-10']);
+
+        $serie = $this->service()->evolucaoMensal(Carbon::parse('2026-11-04'))['serie'];
+
+        $this->assertNull($serie['antes_da_operacao']);
+    }
+
+    public function test_a_serie_traz_a_ressalva_da_regua_unica(): void
+    {
+        $serie = $this->service()->evolucaoMensal(Carbon::parse('2026-11-04'))['serie'];
+
+        $this->assertSame(DistanciaBenchmarkService::RESSALVA_SERIE, $serie['ressalva']);
+        $this->assertStringContainsString('horas corridas', $serie['ressalva']);
+    }
+
+    public function test_distancia_compara_na_regua_da_redesim_em_horas_corridas(): void
+    {
+        // Sexta 06/03 18h até segunda 09/03 18h: 72 horas corridas, com o fim
+        // de semana. Em horas úteis seriam 24, mas a REDESIM conta tudo.
+        $request = ViabilityRequest::factory()->protocoled()->create([
+            'protocol_number' => fake()->unique()->numerify('VIA-2026-######'),
+            'protocoled_at' => Carbon::parse('2026-03-06 18:00:00'),
+        ]);
+        ViabilityDecision::factory()->for($request, 'viabilityRequest')->create([
+            'tvl_product_number' => fake()->unique()->numerify('TVL-2026-######'),
+            'decided_at' => Carbon::parse('2026-03-09 18:00:00'),
+        ]);
+        $request->forceFill(['viabilidade_horas_uteis' => 24.0])->save();
+        $this->referenciaCom(60.0);
+
+        $distancia = $this->service()->calcular($this->filtros());
+
+        $this->assertEqualsWithDelta(72.0, $distancia['interno'], 0.01);
+        $this->assertEqualsWithDelta(12.0, $distancia['diferenca_horas'], 0.01);
+        $this->assertStringContainsString('horas corridas', $distancia['ressalva']);
+    }
+
+    public function test_evolucao_do_mes_compara_na_regua_da_redesim_em_horas_corridas(): void
+    {
+        $this->redesimDeSalvador(2026, 9, 50.0);
+        $this->processoDecididoEm(72.0, '2026-10-05 18:00:00');
+
+        $evolucao = $this->service()->evolucaoMensal(Carbon::parse('2026-10-15'));
+
+        $this->assertEqualsWithDelta(72.0, $evolucao['atual']['media'], 0.01);
+        $this->assertEqualsWithDelta(22.0, $evolucao['diferenca_horas'], 0.01);
     }
 }

@@ -145,7 +145,7 @@ export default function Benchmark({ competencia, posicao, capitais, evolucao, di
                         <Card>
                             <CardHeader
                                 title="Ranking das capitais"
-                                description="Tempo médio da análise de viabilidade de endereço, em horas úteis, na competência de referência. Capital sem dado aparece como lacuna, nenhuma posição é estimada."
+                                description="Tempo médio da análise de viabilidade de endereço, em horas corridas, na competência de referência. Capital sem dado aparece como lacuna, nenhuma posição é estimada."
                             />
                             <CardContent>
                                 <DataTable<LinhaCapital>
@@ -168,7 +168,7 @@ export default function Benchmark({ competencia, posicao, capitais, evolucao, di
                 <Card>
                     <CardHeader
                         title="Evolução de Salvador"
-                        description="REDESIM do mês anterior, VIABILIZA do mês corrente em tempo real e REDESIM do mês corrente assim que for importada, na mesma régua: horas úteis de viabilidade, sem fins de semana, feriados nem o tempo com o cidadão."
+                        description="Tempo médio de viabilidade em Salvador, mês a mês, desde que o VIABILIZA começou a operar, comparado com antes dele. REDESIM e VIABILIZA na régua que a REDESIM publica: horas corridas."
                     />
                     <CardContent>
                         <EvolucaoSalvador evolucao={evolucao} />
@@ -191,9 +191,9 @@ function RessalvaDeOrigem({ competencia }: { competencia: Competencia | null }) 
         <div className="flex items-start gap-3 rounded-2xl border border-brand-200 bg-brand-50 p-4 dark:border-brand-500/30 dark:bg-brand-500/10">
             <AlertIcon className="mt-0.5 size-5 shrink-0 text-brand-600 dark:text-brand-400" />
             <p className="text-theme-sm text-brand-700 dark:text-brand-300">
-                Estes números vêm dos <strong>microdados da REDESIM</strong>, não do VIABILIZA, a única exceção é a barra do mês corrente
-                na evolução de Salvador, identificada no gráfico. Medem as horas úteis da análise de viabilidade de endereço, descontando
-                fins de semana, feriados e o tempo em que o processo está com o cidadão.
+                Estes números vêm dos <strong>microdados da REDESIM</strong>, não do VIABILIZA, a única exceção é a linha do VIABILIZA na
+                evolução de Salvador, identificada no gráfico. Medem as horas corridas da análise de viabilidade de endereço, contando fins
+                de semana e feriados: a REDESIM descreve a medida como horas úteis, mas os dados que ela publica contam tudo.
                 {competencia !== null && ` Competência de referência: ${rotuloCompetencia(competencia.ano, competencia.mes)}.`} O desempenho
                 em tempo real do sistema é outra medida e está em Tempo de análise.
             </p>

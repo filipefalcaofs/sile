@@ -84,7 +84,8 @@ class SalaDeControleTelaTest extends TestCase
                 ->component('gestao/sala-de-controle')
                 ->where('tempo.n', 1)
                 ->where('operacao.total', 1)
-                ->where('distancia.diferenca_horas', -18)
+                // 24 h corridas (protocolo a decisão) contra 20 h da REDESIM.
+                ->where('distancia.diferenca_horas', 4)
                 ->has('evolucao.anterior')
                 ->has('evolucao.atual')
                 ->has('evolucao.redesim_atual')
