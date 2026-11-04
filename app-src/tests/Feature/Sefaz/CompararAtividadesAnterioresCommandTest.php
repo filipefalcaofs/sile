@@ -2,11 +2,14 @@
 
 namespace Tests\Feature\Sefaz;
 
+use App\Enums\AnalysisStatus;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\Cnae;
 use App\Models\Company;
+use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityRequestEvento;
+use Database\Seeders\DecisionTextSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Tests\Support\Sefaz\ConfiguraLegadoSimplifica;
@@ -181,5 +184,71 @@ class CompararAtividadesAnterioresCommandTest extends TestCase
         $this->artisan('processos:comparar-atividades-anteriores --refazer')->assertSuccessful();
 
         $this->assertSame(['5611201'], $processo->fresh()->comparacao_cnaes['incluidas']);
+    }
+
+    private function legadoComExcluida(): void
+    {
+        Http::fake([
+            'legado.test/v1/tvls?*' => Http::response(['data' => [
+                ['numero' => 416389, 'tipo' => 'provisoria', 'deferida' => true, 'ativa' => true, 'validade' => '2027-01-01T00:00:00Z'],
+            ]]),
+            'legado.test/v1/tvls/416389' => Http::response(['data' => [
+                'numero' => 416389, 'tipo' => 'provisoria', 'deferida' => true, 'ativa' => true, 'validade' => '2027-01-01T00:00:00Z',
+                'atividades' => [['codigo' => '4711-3/02', 'descricao' => 'Comércio'], ['codigo' => '7490-1/04', 'descricao' => 'Intermediação']],
+            ]]),
+        ]);
+    }
+
+    private function naCaixaSemAnalista(ViabilityRequest $processo): ViabilityRequest
+    {
+        $processo->forceFill(['analysis_status' => AnalysisStatus::ParaDistribuir, 'assigned_user_id' => null])->save();
+
+        return $processo->fresh();
+    }
+
+    public function test_so_exclusao_na_caixa_e_deferida_sem_taxa_depois_da_comparacao(): void
+    {
+        $this->seed(DecisionTextSeeder::class);
+        $this->legadoComExcluida();
+        $processo = $this->naCaixaSemAnalista($this->processo(['4711302']));
+
+        $this->artisan('processos:comparar-atividades-anteriores')
+            ->expectsOutputToContain('deferidos 1')
+            ->assertSuccessful();
+
+        $processo->refresh();
+        $this->assertSame(ViabilityRequestStatus::Deferida, $processo->status);
+        $this->assertSame(['7490104'], array_column($processo->decision->per_cnae, 'cnae'));
+        $this->assertSame(['excluir'], array_column($processo->decision->per_cnae, 'intencao'));
+        $this->assertSame([], array_filter(array_column($processo->decision->per_cnae, 'codigo_tll')), 'exclusão não gera taxa');
+    }
+
+    public function test_dry_run_so_avisa_que_a_exclusao_seria_deferida(): void
+    {
+        $this->legadoComExcluida();
+        $processo = $this->naCaixaSemAnalista($this->processo(['4711302']));
+
+        $this->artisan('processos:comparar-atividades-anteriores --dry-run')
+            ->expectsOutputToContain('seria deferido sem taxa')
+            ->assertSuccessful();
+
+        $this->assertSame(ViabilityRequestStatus::EmAnalise, $processo->fresh()->status);
+    }
+
+    public function test_exclusao_com_analista_ou_com_mudanca_de_endereco_fica_na_analise(): void
+    {
+        $this->seed(DecisionTextSeeder::class);
+        $this->legadoComExcluida();
+        $assumido = $this->processo(['4711302']);
+        $assumido->forceFill(['analysis_status' => AnalysisStatus::Analisar, 'assigned_user_id' => User::factory()->create()->id])->save();
+        $comEndereco = $this->naCaixaSemAnalista($this->processo(['4711302']));
+        ViabilityRequestEvento::factory()->create(['viability_request_id' => $comEndereco->id, 'codigo' => '211', 'nome' => 'Alteração de endereço dentro do mesmo município']);
+
+        $this->artisan('processos:comparar-atividades-anteriores')
+            ->expectsOutputToContain('deferidos 0')
+            ->assertSuccessful();
+
+        $this->assertSame(ViabilityRequestStatus::EmAnalise, $assumido->fresh()->status);
+        $this->assertSame(ViabilityRequestStatus::EmAnalise, $comEndereco->fresh()->status);
     }
 }

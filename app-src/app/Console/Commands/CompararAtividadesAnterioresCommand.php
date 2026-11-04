@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Enums\ViabilityRequestStatus;
 use App\Models\ViabilityRequest;
+use App\Services\Expresso\FluxoExpressoService;
 use App\Services\Sefaz\ComparacaoCnaesViabilidade;
 use App\Services\Sefaz\ConsultarComparacaoCnaesService;
 use App\Services\Sefaz\LegadoViabilidadeFonte;
@@ -14,7 +15,9 @@ use Throwable;
  * Preenche, nos processos de alteração da JUCEB que já estão na análise, a
  * comparação das atividades com a viabilidade anterior da empresa (Simplifica,
  * Viabiliza ou SEFAZ): incluídas, existentes e excluídas aparecem na ficha.
- * Não decide nem muda o status do processo. Quando a consulta ao Simplifica
+ * Quando a comparação mostra que nada foi incluído e o endereço não muda (só
+ * exclusão, ou pedido igual à viabilidade), o processo que ninguém assumiu
+ * volta ao motor e é deferido no expresso, sem taxa. Quando a consulta ao Simplifica
  * falha (o limite da API é de 60 por minuto), espera e tenta de novo; se não
  * responder, não grava "sem base" e conta como erro.
  */
@@ -31,7 +34,7 @@ class CompararAtividadesAnterioresCommand extends Command
 
     protected $description = 'Compara as atividades dos processos de alteração em análise com a viabilidade anterior da empresa';
 
-    public function handle(ConsultarComparacaoCnaesService $comparacao, LegadoViabilidadeFonte $legado): int
+    public function handle(ConsultarComparacaoCnaesService $comparacao, LegadoViabilidadeFonte $legado, FluxoExpressoService $motor): int
     {
         $dryRun = (bool) $this->option('dry-run');
         $espera = max(0, (int) $this->option('espera'));
@@ -60,7 +63,7 @@ class CompararAtividadesAnterioresCommand extends Command
             $query->limit((int) $this->option('limite'));
         }
 
-        $contagem = ['comparados' => 0, 'sem_base' => 0, 'ignorados' => 0, 'erros' => 0];
+        $contagem = ['comparados' => 0, 'sem_base' => 0, 'ignorados' => 0, 'erros' => 0, 'deferidos' => 0];
 
         foreach ($query->cursor() as $processo) {
             $rotulo = $processo->protocol_number ?? "#{$processo->id}";
@@ -100,9 +103,34 @@ class CompararAtividadesAnterioresCommand extends Command
 
             $contagem['comparados']++;
             $this->line("{$rotulo}: ".$this->resumo($feita['resultado']));
+
+            if ($feita['resultado']->incluidas !== [] || $processo->alteraEndereco() || ! $motor->podeReavaliar($processo)) {
+                continue;
+            }
+
+            if ($dryRun) {
+                $this->line("{$rotulo}: sem atividade incluída, seria deferido sem taxa");
+
+                continue;
+            }
+
+            try {
+                $decidido = $motor->decide($processo);
+            } catch (Throwable $e) {
+                $this->error("{$rotulo}: motor falhou: {$e->getMessage()}");
+                $contagem['erros']++;
+
+                continue;
+            }
+
+            $this->line("{$rotulo}: motor refeito, ".$decidido->status->label());
+
+            if ($decidido->status === ViabilityRequestStatus::Deferida) {
+                $contagem['deferidos']++;
+            }
         }
 
-        $this->info(($dryRun ? '[dry-run] ' : '')."comparados {$contagem['comparados']}, sem base {$contagem['sem_base']}, fora da regra {$contagem['ignorados']}, erros {$contagem['erros']}");
+        $this->info(($dryRun ? '[dry-run] ' : '')."comparados {$contagem['comparados']}, sem base {$contagem['sem_base']}, fora da regra {$contagem['ignorados']}, erros {$contagem['erros']}, deferidos {$contagem['deferidos']}");
 
         return $contagem['erros'] > 0 ? self::FAILURE : self::SUCCESS;
     }

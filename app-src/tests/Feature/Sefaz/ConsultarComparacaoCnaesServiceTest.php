@@ -209,4 +209,17 @@ class ConsultarComparacaoCnaesServiceTest extends TestCase
             $this->assertNull($request->fresh()->comparacao_cnaes);
         }
     }
+
+    public function test_falha_do_simplifica_nao_grava_sem_base(): void
+    {
+        config(['viabiliza.sefaz.consulta.ativa' => false]);
+        $this->configurarLegado();
+        Http::fake(['legado.test/*' => Http::response(['mensagem' => 'Limite de 60 requisições por minuto excedido.'], 429)]);
+        $request = $this->pedidoDaJunta(['4711302']);
+
+        $resultado = app(ConsultarComparacaoCnaesService::class)->executar($request);
+
+        $this->assertNull($resultado);
+        $this->assertNull($request->fresh()->comparacao_cnaes);
+    }
 }

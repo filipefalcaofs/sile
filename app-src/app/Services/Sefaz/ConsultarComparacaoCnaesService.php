@@ -19,6 +19,7 @@ class ConsultarComparacaoCnaesService
         private ComparacaoCnaesViabilidadeService $comparacao,
         private AuditService $audit,
         private LegadoSimplificaAjustes $legado,
+        private LegadoViabilidadeFonte $fonteLegado,
     ) {}
 
     public function aplica(ViabilityRequest $request): bool
@@ -76,6 +77,10 @@ class ConsultarComparacaoCnaesService
     }
 
     /**
+     * Null quando não se aplica ou quando o Simplifica falhou: sem a base não há
+     * como saber o que foi incluído ou excluído, e gravar "sem base" faria a
+     * exclusão passar pelo enquadramento de todas as atividades.
+     *
      * @throws SefazConsultaIndisponivelException
      */
     public function executar(ViabilityRequest $request, bool $refazer = false): ?ComparacaoCnaesViabilidade
@@ -89,6 +94,10 @@ class ConsultarComparacaoCnaesService
         }
 
         ['resultado' => $resultado, 'fonte' => $fonte] = $this->compararSemGravar($request);
+
+        if ($this->fonteLegado->falhou()) {
+            return null;
+        }
 
         return $this->registrar($request, $resultado, $fonte);
     }
