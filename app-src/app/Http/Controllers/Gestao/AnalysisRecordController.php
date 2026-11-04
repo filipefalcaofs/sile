@@ -39,6 +39,7 @@ use App\Services\Analise\QuadrosFichaChecklist;
 use App\Services\Auditoria\DecisionExplanationService;
 use App\Services\Expresso\SedeEscritorioVirtualGatilho;
 use App\Services\Geo\ProcedenciaPoligono;
+use App\Services\Louos\LouosEnquadramentoService;
 use App\Services\Relatorios\RelatorioSedeEscritorioVirtualService;
 use App\Services\Sefaz\ComparacaoCnaesFicha;
 use App\Services\Servicos\MudancaEnderecoFicha;
@@ -155,7 +156,7 @@ class AnalysisRecordController extends Controller
             'cadastroImobiliario' => $cadastro,
             'tramitacao' => $this->tramitacao($viabilityRequest),
             'conclusaoOpcoes' => ConclusionOutcome::options(),
-            'enquadramentoOpcoes' => $this->enquadramentoOpcoes($record),
+            'enquadramentoOpcoes' => $this->enquadramentoOpcoes($record, $viabilityRequest),
             // Setores ativos para o popup de vistoria (usabilidade SEDUR item 22).
             'setores' => Sector::query()->where('active', true)->orderBy('name')->get(['id', 'name']),
             // Escritório virtual (T02): flag do gatilho (RN-EV-01), a inscrição e o
@@ -731,9 +732,17 @@ class AnalysisRecordController extends Controller
      * usabilidade SEDUR 19/09/2026, item 23). Sem versão vigente, devolve
      * vazio e a ficha mostra a pendência — nunca inventa opção.
      *
-     * @return array<string, list<array{codigo_louos: string, denominacao_louos: string|null, codigo_tll: string|null, especificacao_tll: string|null, valor_tll: string|null, risco_nivel: string|null, risco_label: string|null, fluxo: string}>>
+     * `subgrupo_area`/`grupo_area` são o que a área utilizada do processo
+     * alcança nas faixas da linha, e o risco já sai elevado pela faixa: a
+     * ficha recalcula o enquadramento na hora em que o analista troca a
+     * opção. Sem área e com faixa, `subgrupo_area` fica nulo (o motor também
+     * não fecha o subgrupo). `quadros` é o checklist dos Quadros 10 e 11-A
+     * desse subgrupo no território gravado na pré-análise; sem território
+     * gravado, fica nulo e a ficha mantém os quadros do motor.
+     *
+     * @return array<string, list<array{codigo_louos: string, denominacao_louos: string|null, subgrupo: string|null, subgrupo_faixas: list<array{codigo: string, limite: string}>, subgrupo_area: string|null, grupo_area: string|null, quadros: list<array{key: string, label: string, estado: string, detalhe: string}>|null, codigo_tll: string|null, especificacao_tll: string|null, valor_tll: string|null, risco_nivel: string|null, risco_label: string|null, fluxo: string}>>
      */
-    private function enquadramentoOpcoes(AnalysisRecord $record): array
+    private function enquadramentoOpcoes(AnalysisRecord $record, ViabilityRequest $request): array
     {
         $cnaes = collect($record->per_cnae ?? [])
             ->pluck('cnae')
@@ -757,26 +766,48 @@ class AnalysisRecordController extends Controller
 
         $linhas = TratamentoEnquadramento::query()
             ->where('rule_version_id', $versao->getKey())
-            ->get(['cnae', 'codigo_louos', 'denominacao_louos', 'codigo_tll', 'especificacao_tll', 'risco']);
+            ->get(['cnae', 'codigo_louos', 'denominacao_louos', 'subcategoria', 'grupo', 'ate_m2', 'enquadramento2', 'enquadramento3', 'acima_m2', 'codigo_tll', 'especificacao_tll', 'risco']);
 
         /** @var array<string, string> $mapaEncaminhamento */
         $mapaEncaminhamento = Settings::get('risco.mapa_encaminhamento', []);
+        $area = $request->used_area_m2 !== null ? (float) $request->used_area_m2 : null;
+        $quadrosPorUso = [];
 
         $opcoes = [];
 
         foreach ($cnaes as $cnae) {
             $mascarado = substr($cnae, 0, 4).'-'.substr($cnae, 4, 1).'/'.substr($cnae, 5, 2);
 
+            $territorio = $this->territorioDoSnapshot($record, $cnae);
+
             $lista = $linhas
                 ->where('cnae', $mascarado)
                 ->unique(fn (TratamentoEnquadramento $linha): string => $linha->codigo_louos.'|'.(string) $linha->codigo_tll)
-                ->map(fn (TratamentoEnquadramento $linha): array => [
-                    'codigo_louos' => $linha->codigo_louos,
-                    'denominacao_louos' => $linha->denominacao_louos,
-                    'codigo_tll' => $linha->codigo_tll,
-                    'especificacao_tll' => $linha->especificacao_tll,
-                    'valor_tll' => $this->valorTllVigente($linha->codigo_tll, $linha->especificacao_tll, $exercicio, $exercicioVigente),
-                ] + $this->riscoDoEnquadramento((string) $linha->risco, $mapaEncaminhamento))
+                ->map(function (TratamentoEnquadramento $linha) use ($area, $exercicio, $exercicioVigente, $mapaEncaminhamento, $territorio, &$quadrosPorUso): array {
+                    $faixa = $linha->faixaDaArea($area);
+                    $temFaixa = $linha->ate_m2 !== null && filled($linha->enquadramento2);
+                    $subgrupoArea = $area === null && $temFaixa ? null : $faixa['subgrupo'];
+                    $grupoArea = $area === null && $temFaixa ? null : $faixa['grupo'];
+                    $quadros = null;
+
+                    if ($territorio !== null) {
+                        $chaveUso = $grupoArea.'|'.$subgrupoArea;
+                        $quadros = $quadrosPorUso[$chaveUso] ??= $this->quadrosDoUso($grupoArea, $subgrupoArea, $territorio);
+                    }
+
+                    return [
+                        'codigo_louos' => $linha->codigo_louos,
+                        'denominacao_louos' => $linha->denominacao_louos,
+                        'subgrupo' => $linha->subcategoria,
+                        'subgrupo_faixas' => $this->faixasDoEnquadramento($linha),
+                        'subgrupo_area' => $subgrupoArea,
+                        'grupo_area' => $grupoArea,
+                        'quadros' => $quadros,
+                        'codigo_tll' => $linha->codigo_tll,
+                        'especificacao_tll' => $linha->especificacao_tll,
+                        'valor_tll' => $this->valorTllVigente($linha->codigo_tll, $linha->especificacao_tll, $exercicio, $exercicioVigente),
+                    ] + $this->riscoDoEnquadramento((string) $linha->risco, $mapaEncaminhamento, $faixa['faixa']);
+                })
                 ->values()
                 ->all();
 
@@ -788,14 +819,73 @@ class AnalysisRecordController extends Controller
     }
 
     /**
+     * Território que o motor gravou para o CNAE na pré-análise, ou null.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function territorioDoSnapshot(AnalysisRecord $record, string $cnae): ?array
+    {
+        foreach ((array) ($record->engine_snapshot['por_cnae'] ?? []) as $item) {
+            if (! is_array($item) || preg_replace('/\D/', '', (string) ($item['cnae'] ?? '')) !== $cnae) {
+                continue;
+            }
+
+            $territorio = $item['consulta']['territorio'] ?? null;
+
+            return is_array($territorio) && $territorio !== [] ? $territorio : null;
+        }
+
+        return null;
+    }
+
+    /**
+     * Checklist dos Quadros 10 e 11-A para o grupo/subgrupo de uma opção, no
+     * mesmo formato que a ficha já mostra para o enquadramento do motor.
+     *
+     * @param  array<string, mixed>  $territorio
+     * @return list<array{key: string, label: string, estado: string, detalhe: string}>
+     */
+    private function quadrosDoUso(?string $grupo, ?string $subgrupo, array $territorio): array
+    {
+        $resultado = app(LouosEnquadramentoService::class)->quadrosDoUso($grupo, $subgrupo, $territorio);
+
+        return app(QuadrosFichaChecklist::class)->para([
+            'enquadramento' => $resultado,
+            'territorio' => $territorio,
+        ]);
+    }
+
+    /**
+     * Subgrupos por faixa de área da linha da planilha (ex.: nR1-08 até 1.250 m²,
+     * nR2-12 acima) — a ficha mostra quando o motor não fechou o subgrupo.
+     *
+     * @return list<array{codigo: string, limite: string}>
+     */
+    private function faixasDoEnquadramento(TratamentoEnquadramento $linha): array
+    {
+        $faixas = [];
+
+        if (filled($linha->enquadramento2) && $linha->ate_m2 !== null) {
+            $faixas[] = ['codigo' => (string) $linha->enquadramento2, 'limite' => 'acima de '.number_format((float) $linha->ate_m2, 0, ',', '.').' m²'];
+        }
+
+        if (filled($linha->enquadramento3) && $linha->acima_m2 !== null) {
+            $faixas[] = ['codigo' => (string) $linha->enquadramento3, 'limite' => 'a partir de '.number_format((float) $linha->acima_m2, 0, ',', '.').' m²'];
+        }
+
+        return $faixas;
+    }
+
+    /**
      * Risco da atividade no enquadramento (linha da planilha) e o encaminhamento
      * que o mapa de risco dá a ele. CNLU não é nível de risco: não classifica e
-     * segue para análise.
+     * segue para análise. A faixa de área eleva o risco como no motor: a
+     * segunda leva o baixo a médio e a terceira leva a alto.
      *
      * @param  array<string, string>  $mapaEncaminhamento
      * @return array{risco_nivel: string|null, risco_label: string|null, fluxo: string}
      */
-    private function riscoDoEnquadramento(string $risco, array $mapaEncaminhamento): array
+    private function riscoDoEnquadramento(string $risco, array $mapaEncaminhamento, int $faixa = 1): array
     {
         $texto = mb_strtolower($risco);
 
@@ -803,9 +893,21 @@ class AnalysisRecordController extends Controller
             return ['risco_nivel' => null, 'risco_label' => null, 'fluxo' => 'analise'];
         }
 
-        [$nivel, $label, $chaveDoMapa] = match (true) {
-            str_contains($texto, 'alto') => ['alto', 'Alto Risco', 'alto'],
-            str_contains($texto, 'médio'), str_contains($texto, 'medio') => ['medio', 'Médio Risco', 'baixo_b'],
+        $nivelDaLinha = match (true) {
+            str_contains($texto, 'alto') => 'alto',
+            str_contains($texto, 'médio'), str_contains($texto, 'medio') => 'medio',
+            default => 'baixo',
+        };
+
+        $nivelFinal = match (true) {
+            $faixa === 3 => 'alto',
+            $faixa === 2 && $nivelDaLinha === 'baixo' => 'medio',
+            default => $nivelDaLinha,
+        };
+
+        [$nivel, $label, $chaveDoMapa] = match ($nivelFinal) {
+            'alto' => ['alto', 'Alto Risco', 'alto'],
+            'medio' => ['medio', 'Médio Risco', 'baixo_b'],
             default => ['baixo', 'Baixo Risco', 'baixo_a'],
         };
 

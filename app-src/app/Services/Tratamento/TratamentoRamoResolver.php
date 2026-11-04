@@ -292,7 +292,7 @@ class TratamentoRamoResolver
 
         if (is_string($subgrupoForcado) && $subgrupoForcado !== '') {
             $subgrupo = $subgrupoForcado;
-            $grupo = $this->grupoDe($subgrupoForcado);
+            $grupo = TratamentoEnquadramento::grupoDoSubgrupo($subgrupoForcado);
         }
 
         if ($this->eFamiliaId($subgrupo)) {
@@ -738,21 +738,13 @@ class TratamentoRamoResolver
      */
     private function aplicarFaixa(TratamentoEnquadramento $linha, ?float $area): array
     {
-        $sub = $linha->subcategoria;
-        $grupo = $linha->grupo;
+        ['subgrupo' => $sub, 'grupo' => $grupo, 'faixa' => $faixa] = $linha->faixaDaArea($area);
         $risco = $this->normalizarRisco($linha->risco);
 
-        if ($area !== null && $linha->enquadramento3 && $linha->acima_m2 !== null && $area >= (float) $linha->acima_m2) {
-            $sub = $linha->enquadramento3;
-            $grupo = $this->grupoDe($sub);
+        if ($faixa === 3) {
             $risco = 'alto';
-        } elseif ($area !== null && $linha->ate_m2 !== null && $area > (float) $linha->ate_m2 && $linha->enquadramento2) {
-            $sub = $linha->enquadramento2;
-            $grupo = $this->grupoDe($sub);
-
-            if ($risco === 'baixo') {
-                $risco = 'medio';
-            }
+        } elseif ($faixa === 2 && $risco === 'baixo') {
+            $risco = 'medio';
         }
 
         return [$sub, $grupo, $risco];
@@ -956,12 +948,5 @@ class TratamentoRamoResolver
         }
 
         return 'baixo';
-    }
-
-    private function grupoDe(string $subcategoria): string
-    {
-        $pos = strrpos($subcategoria, '-');
-
-        return $pos === false ? $subcategoria : substr($subcategoria, 0, $pos);
     }
 }
