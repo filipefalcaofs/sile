@@ -6,6 +6,7 @@ import type { ReactNode } from 'react';
 import AnexosAnaliseCard, { type AnexoAnalise } from '@/components/analise/anexos-analise-card';
 import ComparacaoCnaesCard, { type ComparacaoCnaes } from '@/components/analise/comparacao-cnaes-card';
 import ConclusaoAnaliseForm from '@/components/analise/conclusao-analise-form';
+import MudancaEnderecoCard, { type MudancaEndereco } from '@/components/analise/mudanca-endereco-card';
 import { QuadrosChecklist, type QuadroChecklist } from '@/components/analise/quadros-checklist';
 import { RecepcaoRecebida, type ProcessoRecepcao } from '@/components/analise/processo-ui';
 import {
@@ -315,6 +316,8 @@ interface FichaAnaliseShowProps {
     anexosAnalise: AnexoAnalise[];
     /** Alteração de atividade da JUCEB: comparação dos CNAEs com a viabilidade da SEFAZ. */
     comparacaoCnaes: ComparacaoCnaes | null;
+    /** Alteração de endereço da JUCEB: serviço identificado e o que mudou em relação ao processo anterior. */
+    mudancaEndereco: MudancaEndereco | null;
     zonasDisponiveis: { codigo: string; nome: string | null }[];
     viasDisponiveis: string[];
 }
@@ -752,6 +755,7 @@ export default function FichaAnaliseShow({
     somenteLeitura,
     podeEditarZonaVia,
     comparacaoCnaes,
+    mudancaEndereco,
     zonasDisponiveis,
     viasDisponiveis,
 }: FichaAnaliseShowProps) {
@@ -1691,6 +1695,8 @@ export default function FichaAnaliseShow({
                 />
 
                 {desfecho && <DesfechoAnaliseCard desfecho={desfecho} />}
+
+                {mudancaEndereco && <MudancaEnderecoCard mudanca={mudancaEndereco} />}
 
                 {/* Topo no padrão legado SAPS (design 2026-07-22): Localização + Cadastro
                     Imobiliário à esquerda, Polígono à direita, e a faixa Dados

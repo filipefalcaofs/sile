@@ -22,7 +22,7 @@ enum CondicaoServico: string
             self::CnaeExcluido => 'Caso sistema identifique que está sendo incluído e também excluindo algum CNAE',
             self::CnaeSemAlteracao => 'Caso o sistema identifique que o pedido não altera nenhum CNAE',
             self::EnderecoLocalizacao => 'Caso o sistema identifique que está sendo alterado o: codlog / logradouro / nº de porta ou métrico / Bairro',
-            self::EnderecoEspaco => 'Caso o sistema identifique que está sendo alterado o Complemento / Sub-unidade / nº Sub-unidade / CEP',
+            self::EnderecoEspaco => 'Caso o sistema identifique que está sendo alterado o Complemento / Sub-unidade / nº Sub-unidade / CEP / Área utilizada',
         };
     }
 
