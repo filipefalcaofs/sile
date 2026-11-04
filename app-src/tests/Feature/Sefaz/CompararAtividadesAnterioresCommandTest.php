@@ -229,18 +229,44 @@ class CompararAtividadesAnterioresCommandTest extends TestCase
         $processo = $this->naCaixaSemAnalista($this->processo(['4711302']));
 
         $this->artisan('processos:comparar-atividades-anteriores --dry-run')
-            ->expectsOutputToContain('seria deferido sem taxa')
+            ->expectsOutputToContain('só exclusão de atividade, seria deferido sem taxa')
             ->assertSuccessful();
 
         $this->assertSame(ViabilityRequestStatus::EmAnalise, $processo->fresh()->status);
     }
 
-    public function test_exclusao_com_analista_ou_com_mudanca_de_endereco_fica_na_analise(): void
+    public function test_exclusao_assumida_por_analista_tambem_e_deferida(): void
     {
         $this->seed(DecisionTextSeeder::class);
         $this->legadoComExcluida();
         $assumido = $this->processo(['4711302']);
         $assumido->forceFill(['analysis_status' => AnalysisStatus::Analisar, 'assigned_user_id' => User::factory()->create()->id])->save();
+
+        $this->artisan('processos:comparar-atividades-anteriores')
+            ->expectsOutputToContain('deferidos 1')
+            ->assertSuccessful();
+
+        $this->assertSame(ViabilityRequestStatus::Deferida, $assumido->fresh()->status);
+        $this->assertNull($assumido->fresh()->assigned_user_id);
+    }
+
+    public function test_mudanca_de_endereco_ou_pedido_sem_exclusao_fica_na_analise(): void
+    {
+        $this->seed(DecisionTextSeeder::class);
+        $this->legadoPadrao();
+        $semExclusao = $this->naCaixaSemAnalista($this->processo(['4711302']));
+
+        $this->artisan('processos:comparar-atividades-anteriores')
+            ->expectsOutputToContain('deferidos 0')
+            ->assertSuccessful();
+
+        $this->assertSame(ViabilityRequestStatus::EmAnalise, $semExclusao->fresh()->status);
+    }
+
+    public function test_exclusao_com_mudanca_de_endereco_fica_na_analise(): void
+    {
+        $this->seed(DecisionTextSeeder::class);
+        $this->legadoComExcluida();
         $comEndereco = $this->naCaixaSemAnalista($this->processo(['4711302']));
         ViabilityRequestEvento::factory()->create(['viability_request_id' => $comEndereco->id, 'codigo' => '211', 'nome' => 'Alteração de endereço dentro do mesmo município']);
 
@@ -248,7 +274,6 @@ class CompararAtividadesAnterioresCommandTest extends TestCase
             ->expectsOutputToContain('deferidos 0')
             ->assertSuccessful();
 
-        $this->assertSame(ViabilityRequestStatus::EmAnalise, $assumido->fresh()->status);
         $this->assertSame(ViabilityRequestStatus::EmAnalise, $comEndereco->fresh()->status);
     }
 }
