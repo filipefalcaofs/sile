@@ -39,6 +39,12 @@ class LegadoViabilidadeFonte implements FonteViabilidadeAnterior
         return $this->falhou;
     }
 
+    /** Esquece a falha anterior, para quem verifica uma operação que talvez nem consulte o Simplifica. */
+    public function esquecerFalha(): void
+    {
+        $this->falhou = false;
+    }
+
     public function consultar(ViabilityRequest $processo, string $cnpj): ?ViabilidadeVinculada
     {
         $this->falhou = false;
