@@ -22,7 +22,7 @@ use Tests\TestCase;
 
 /**
  * Manutenção dos textos decisórios (Fase 4, Task 5): o administrador edita
- * template/descrição dos textos emitidos em documentos oficiais (TVL,
+ * template/descrição dos textos emitidos em documentos oficiais (Viabilidade,
  * parecer, ficha do cidadão) pela retaguarda, atrás da permissão
  * manter-parametros (reuso — mesmo mantenedor dos textos-padrão). SEM
  * create/delete/toggle: a chave é ligada ao motor (call site no código) —

@@ -6,6 +6,7 @@ import type { ReactNode } from 'react';
 import AnexosAnaliseCard, { type AnexoAnalise } from '@/components/analise/anexos-analise-card';
 import ComparacaoCnaesCard, { type ComparacaoCnaes } from '@/components/analise/comparacao-cnaes-card';
 import ConclusaoAnaliseForm from '@/components/analise/conclusao-analise-form';
+import MudancaEnderecoCard, { type MudancaEndereco } from '@/components/analise/mudanca-endereco-card';
 import { QuadrosChecklist, type QuadroChecklist } from '@/components/analise/quadros-checklist';
 import { RecepcaoRecebida, type ProcessoRecepcao } from '@/components/analise/processo-ui';
 import {
@@ -37,6 +38,8 @@ import EmptyState from '@/components/ui/empty-state';
 import { Modal } from '@/components/ui/modal';
 import GestaoLayout from '@/layouts/gestao-layout';
 import type { SharedProps } from '@/types';
+import { agruparCnaes } from './agrupar-cnaes';
+import { enquadramentoExibido, quadrosExibidos, type EnquadramentoMotor } from './enquadramento-exibido';
 
 type StatusFicha = 'deferida' | 'indeferida';
 
@@ -54,6 +57,7 @@ interface PerCnae {
     valor_tll?: number | string | null;
     codigo_louos?: string | null;
     codigo_tll?: string | null;
+    enquadramento_motor?: EnquadramentoMotor | null;
     gatilhos?: string[] | null;
     motivo_fora_do_expresso?: string | null;
     fundamentacao?: string[] | null;
@@ -267,6 +271,11 @@ interface EscritorioVirtual {
 
 interface EnquadramentoOpcao {
     codigo_louos: string;
+    subgrupo?: string | null;
+    subgrupo_faixas?: { codigo: string; limite: string }[];
+    subgrupo_area?: string | null;
+    grupo_area?: string | null;
+    quadros?: QuadroChecklist[] | null;
     denominacao_louos: string | null;
     codigo_tll: string | null;
     especificacao_tll: string | null;
@@ -312,6 +321,8 @@ interface FichaAnaliseShowProps {
     anexosAnalise: AnexoAnalise[];
     /** Alteração de atividade da JUCEB: comparação dos CNAEs com a viabilidade da SEFAZ. */
     comparacaoCnaes: ComparacaoCnaes | null;
+    /** Alteração de endereço da JUCEB: serviço identificado e o que mudou em relação ao processo anterior. */
+    mudancaEndereco: MudancaEndereco | null;
     zonasDisponiveis: { codigo: string; nome: string | null }[];
     viasDisponiveis: string[];
 }
@@ -768,6 +779,7 @@ export default function FichaAnaliseShow({
     somenteLeitura,
     podeEditarZonaVia,
     comparacaoCnaes,
+    mudancaEndereco,
     anexosAnalise,
     zonasDisponiveis,
     viasDisponiveis,
@@ -1707,9 +1719,11 @@ export default function FichaAnaliseShow({
 
                 {desfecho && <DesfechoAnaliseCard desfecho={desfecho} />}
 
+                {mudancaEndereco && <MudancaEnderecoCard mudanca={mudancaEndereco} />}
+
                 {/* Topo no padrão legado SAPS (design 2026-07-22): Localização + Cadastro
                     Imobiliário à esquerda, Polígono à direita, e a faixa Dados
-                    do TVL abaixo, antes das demais seções da ficha. */}
+                    da Viabilidade abaixo, antes das demais seções da ficha. */}
                 <div className="grid gap-6 lg:grid-cols-2">
                     <Card>
                         <CardHeader
@@ -1951,6 +1965,13 @@ export default function FichaAnaliseShow({
                         <Card>
                             <CardHeader
                                 title="Enquadramento por atividade (CNAE)"
+                                description={
+                                    comparacaoCnaes && !comparacaoCnaes.sem_viabilidade
+                                        ? `Comparado com a viabilidade anterior nº ${comparacaoCnaes.numero_viabilidade ?? '—'}.`
+                                        : comparacaoCnaes?.sem_viabilidade
+                                          ? 'Sem viabilidade anterior da empresa: todas as atividades são tratadas como incluídas.'
+                                          : undefined
+                                }
                                 actions={
                                     editavel && perCnae.length > 0 ? (
                                         <Checkbox
@@ -1968,8 +1989,21 @@ export default function FichaAnaliseShow({
                                         description="Nenhuma atividade foi pré-preenchida pelo sistema para este processo."
                                     />
                                 ) : (
+                                    <div className="space-y-6">
+                                        {agruparCnaes(perCnae, comparacaoCnaes).map((grupo) => (
+                                            <section key={grupo.chave} aria-label={grupo.titulo ?? 'Atividades'}>
+                                                {grupo.titulo && (
+                                                    <h4 className="mb-3 text-theme-sm font-semibold text-gray-800 dark:text-white/90">
+                                                        {grupo.titulo} ({grupo.itens.length})
+                                                    </h4>
+                                                )}
+                                                {grupo.titulo && grupo.itens.length === 0 && (
+                                                    <p className="text-theme-xs text-gray-500 dark:text-gray-400">
+                                                        {grupo.chave === 'incluidas' ? 'Nenhuma atividade incluída.' : 'Nenhuma atividade existente.'}
+                                                    </p>
+                                                )}
                                     <ul className="space-y-5">
-                                        {perCnae.map((item, indice) => {
+                                        {grupo.itens.map(({ item, indice }) => {
                                             const escolhido = item.status_escolhido ?? null;
                                             const digitosCnae = item.cnae.replace(/\D/g, '');
                                             const opcoesCnae = enquadramentoOpcoes[item.cnae] ?? enquadramentoOpcoes[digitosCnae] ?? [];
@@ -1977,6 +2011,11 @@ export default function FichaAnaliseShow({
                                             const opcaoSelecionada = opcoesCnae.find(
                                                 (opcao) => `${opcao.codigo_louos}|${opcao.codigo_tll ?? ''}` === enquadramentoAtual,
                                             );
+                                            const enquadramento = enquadramentoExibido(item, opcaoSelecionada);
+                                            const subgrupoExibido = enquadramento.subgrupo;
+                                            const grupoExibido = enquadramento.alterado ? enquadramento.grupo : (enquadramento.grupo ?? item.grupo_uso);
+                                            const faixasPlanilha = opcaoSelecionada?.subgrupo_faixas ?? [];
+                                            const quadros = quadrosExibidos(enquadramento.alterado, item.quadros ?? [], opcaoSelecionada);
                                             const riscoDaAtividade = opcaoSelecionada?.risco_label ?? item.risco_municipal ?? null;
                                             const atualForaDaPlanilha =
                                                 item.codigo_louos != null &&
@@ -2008,12 +2047,25 @@ export default function FichaAnaliseShow({
                                                                     </span>
                                                                 )}
                                                             </div>
-                                                            {(item.subgrupo_uso || item.grupo_uso || item.codigo_louos) && (
+                                                            {(subgrupoExibido || grupoExibido || item.codigo_louos) && (
                                                                 <p className="mt-1 text-theme-xs text-gray-500 dark:text-gray-400">
                                                                     Enquadramento:{' '}
-                                                                    {[item.subgrupo_uso ?? item.grupo_uso, item.codigo_louos]
+                                                                    {[subgrupoExibido ?? grupoExibido, item.codigo_louos]
                                                                         .filter(Boolean)
                                                                         .join(' · ')}
+                                                                    {subgrupoExibido == null && faixasPlanilha.length > 0 && (
+                                                                        <span>
+                                                                            {' '}
+                                                                            ({faixasPlanilha.map((faixa) => `${faixa.codigo} ${faixa.limite}`).join('; ')})
+                                                                        </span>
+                                                                    )}
+                                                                    {enquadramento.alterado &&
+                                                                        enquadramento.subgrupoMotor &&
+                                                                        enquadramento.subgrupoMotor !== subgrupoExibido && (
+                                                                            <span className="ml-1 font-medium text-warning-600 dark:text-orange-400">
+                                                                                (alterado pelo analista, o sistema sugeriu {enquadramento.subgrupoMotor})
+                                                                            </span>
+                                                                        )}
                                                                 </p>
                                                             )}
                                                         </div>
@@ -2030,8 +2082,24 @@ export default function FichaAnaliseShow({
                                                         </div>
                                                     </div>
 
-                                                    {(item.quadros?.length ?? 0) > 0 && (
-                                                        <QuadrosChecklist quadros={item.quadros ?? []} />
+                                                    {quadros.quadros.length > 0 && (
+                                                        <>
+                                                            {quadros.recalculados ? (
+                                                                <p className="mt-3 text-theme-xs text-warning-600 dark:text-orange-400">
+                                                                    Quadros recalculados para o enquadramento escolhido
+                                                                    {subgrupoExibido ? ` (${subgrupoExibido})` : ''}.
+                                                                </p>
+                                                            ) : (
+                                                                enquadramento.alterado && (
+                                                                    <p className="mt-3 text-theme-xs text-warning-600 dark:text-orange-400">
+                                                                        Os quadros abaixo foram calculados para o enquadramento sugerido pelo sistema
+                                                                        {enquadramento.subgrupoMotor ? ` (${enquadramento.subgrupoMotor})` : ''}. Confira a
+                                                                        permissão do novo enquadramento na zona do imóvel.
+                                                                    </p>
+                                                                )
+                                                            )}
+                                                            <QuadrosChecklist quadros={quadros.quadros} />
+                                                        </>
                                                     )}
 
                                                     {item.cnae.replace(/\D/g, '') ===
@@ -2165,6 +2233,38 @@ export default function FichaAnaliseShow({
                                             );
                                         })}
                                     </ul>
+                                            </section>
+                                        ))}
+                                        {comparacaoCnaes && !comparacaoCnaes.sem_viabilidade && (
+                                            <section aria-label="Atividades excluídas">
+                                                <h4 className="mb-3 text-theme-sm font-semibold text-gray-800 dark:text-white/90">
+                                                    Atividades excluídas ({comparacaoCnaes.excluidas.length})
+                                                </h4>
+                                                {comparacaoCnaes.excluidas.length === 0 ? (
+                                                    <p className="text-theme-xs text-gray-500 dark:text-gray-400">Nenhuma atividade excluída.</p>
+                                                ) : (
+                                                    <ul className="space-y-3">
+                                                        {comparacaoCnaes.excluidas.map((cnae) => (
+                                                            <li
+                                                                key={cnae.codigo}
+                                                                className="rounded-xl border-2 border-gray-200 p-4 dark:border-gray-700"
+                                                            >
+                                                                <div className="flex flex-wrap items-center gap-2">
+                                                                    <span className="font-medium text-gray-800 dark:text-white/90">{cnae.codigo}</span>
+                                                                    <Badge color="warning" size="sm">
+                                                                        Excluída
+                                                                    </Badge>
+                                                                    {cnae.descricao && (
+                                                                        <span className="text-theme-sm text-gray-600 dark:text-gray-300">{cnae.descricao}</span>
+                                                                    )}
+                                                                </div>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                )}
+                                            </section>
+                                        )}
+                                    </div>
                                 )}
                             </CardContent>
                         </Card>
@@ -3658,7 +3758,7 @@ function AlertasIaCard({ sugestoes }: { sugestoes: SugestaoIa[] }) {
 
 /**
  * Painel de abrigados da inscrição (T02 — CA-F-03), exibido quando a ficha marca
- * a sede. Cada linha traz o nº TVL, a razão social e a VALIDADE. A validade do
+ * a sede. Cada linha traz o nº da Viabilidade, a razão social e a VALIDADE. A validade do
  * produto NÃO é modelada (desfecho spec-2) e chega null → renderizada como "—"
  * (degradação honesta, jamais inventada). Vazio quando não há abrigado.
  */

@@ -16,7 +16,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 /**
- * Tela T06 — Enviar processo de TVL para análise (gatilho manual da gestão,
+ * Tela T06 — Enviar processo de Viabilidade para análise (gatilho manual da gestão,
  * relatório de teste SEDUR). Decisões fechadas: QUALQUER status pode ser enviado
  * (OPEN-F-2 — sem trava de status); vale para sede E abrigado (OPEN-F-3 — a tela
  * não distingue tipo); o envio é IDEMPOTENTE (se já em análise, não duplica a

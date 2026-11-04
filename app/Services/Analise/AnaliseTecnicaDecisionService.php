@@ -38,7 +38,7 @@ use Illuminate\Support\Facades\DB;
  * de um veredito consolidado do motor.
  *
  * A transação espelha FluxoExpressoService::emitir: cria a ViabilityDecision
- * (per_cnae/rules_versions/fundamentação DA FICHA; número TVL só no deferimento),
+ * (per_cnae/rules_versions/fundamentação DA FICHA; número da Viabilidade só no deferimento),
  * transiciona em_analise→deferida|indeferida (= encerramento HU-085) e AUDITA
  * SÍNCRONO (HU-074) — tudo antes do commit. O ResultadoEmitido é disparado SÓ
  * após o commit (os 3 listeners da Fase 9 reusam; Regin/SEFAZ seguem bloqueados
@@ -196,7 +196,7 @@ class AnaliseTecnicaDecisionService
 
     /**
      * Grava a decisão dentro da transação: ViabilityDecision (flow analise_tecnica,
-     * decided_by analista, número TVL só no deferimento) → transição
+     * decided_by analista, número da Viabilidade só no deferimento) → transição
      * em_analise→deferida|indeferida (encerramento HU-085) → auditoria SÍNCRONA
      * (HU-074). Tudo antes do commit.
      *
@@ -228,7 +228,7 @@ class AnaliseTecnicaDecisionService
         }
 
         // Abrigado de escritório virtual (RN-EV-05): a inscrição tem sede ativa e
-        // os CNAEs estão na Lista EV — o produto referencia o nº TVL da sede.
+        // os CNAEs estão na Lista EV — o produto referencia o nº da Viabilidade da sede.
         $abrigado = $this->abrigadoResolver->resolve($request);
 
         $decision = ViabilityDecision::create([

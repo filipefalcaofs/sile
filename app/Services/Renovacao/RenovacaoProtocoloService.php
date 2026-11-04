@@ -21,7 +21,7 @@ use DomainException;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Abre e protocola a renovação de um TVL provisório. Copia endereço e
+ * Abre e protocola a renovação de uma Viabilidade provisória. Copia endereço e
  * atividades da origem (não são editáveis), completa o território como no
  * protocolo comum (inscrição, CODLOG, zona, via, endereçamento e lote) e
  * manda o processo para análise semi-expressa já com a ficha do motor.

@@ -15,7 +15,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 /**
- * Verificação PÚBLICA de autenticidade de documentos (TVL, indeferimento e
+ * Verificação PÚBLICA de autenticidade de documentos (Viabilidade, indeferimento e
  * comprovante de protocolo) pelo código de verificação — SEM login. Responde
  * SÓ tipo do documento, protocolo e data de referência (payload mínimo, LGPD:
  * nunca empresa/CNPJ/endereço). Código inexistente ou adulterado → inválido

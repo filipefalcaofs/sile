@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 /**
  * Busca global da retaguarda (HU-078 RN-009 — atalho Cmd/Ctrl+K). Endpoint LEVE:
  * casa o termo contra os identificadores e dados-chave do processo (número do
- * processo, BAP, produto TVL, CNPJ e nome da empresa/requerente) com whereLike
+ * processo, BAP, produto da Viabilidade, CNPJ e nome da empresa/requerente) com whereLike
  * caseSensitive:false (case-insensitive em PostgreSQL e SQLite) e devolve poucos
  * resultados em JSON para levar direto ao processo, sem passar pela tela de
  * filtros (HU-078 index). Gated por consultar-solicitacoes (reuso). Consulta
@@ -48,7 +48,7 @@ class ProcessoBuscaController extends Controller
             ->map(fn (ViabilityRequest $processo): array => [
                 'id' => $processo->id,
                 'protocolo' => $processo->protocol_number,
-                'empresa' => $processo->company?->trade_name ?: $processo->company?->legal_name,
+                'empresa' => $processo->company?->nomeExibido(),
                 'link' => route('gestao.processos.show', $processo),
             ])
             ->all();

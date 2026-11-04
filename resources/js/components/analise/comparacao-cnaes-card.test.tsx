@@ -53,14 +53,12 @@ describe("ComparacaoCnaesCard", () => {
     });
   }
 
-  it("lista incluídas, excluídas, já existentes e inválidas com código e descrição", () => {
+  it("mostra só os códigos inválidos; incluídas, existentes e excluídas ficam nos quadros da ficha", () => {
     montar(false);
 
-    expect(host.textContent).toContain("VIA-2026-77");
-    expect(host.textContent).toContain("5611-2/01");
-    expect(host.textContent).toContain("Minimercados");
-    expect(host.textContent).toContain("Supermercados");
     expect(host.textContent).toContain("5611-9/99");
+    expect(host.textContent).not.toContain("Supermercados");
+    expect(host.textContent).not.toContain("Minimercados");
   });
 
   it("só oferece a correção a quem pode alterar a ficha", () => {
@@ -75,16 +73,9 @@ describe("ComparacaoCnaesCard", () => {
     expect(host.textContent).toContain("Corrigir código");
   });
 
-  it("avisa quando o CNPJ não tem viabilidade vinculada", () => {
-    montar(false, {
-      ...comparacao,
-      sem_viabilidade: true,
-      numero_viabilidade: null,
-      invalidas: [],
-    });
+  it("sem código inválido não mostra nada", () => {
+    montar(false, { ...comparacao, invalidas: [] });
 
-    expect(host.textContent).toContain(
-      "todas as atividades são tratadas como incluídas",
-    );
+    expect(host.textContent).toBe("");
   });
 });

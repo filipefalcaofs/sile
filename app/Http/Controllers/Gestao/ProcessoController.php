@@ -124,6 +124,8 @@ class ProcessoController extends Controller
             'statusOptions' => $this->statusOptions(),
             'analysisStatusOptions' => AnalysisStatus::options(),
             'categoriaOptions' => $this->categoriaOptions(),
+            'servicoOptions' => app(ServicoNomenclaturaResolver::class)->opcoesDoFiltro(),
+            'setorOptions' => $this->setorOptions(),
             'analistaOptions' => $this->processos->analistasParaFiltro($request->user()),
         ]);
     }
@@ -405,7 +407,7 @@ class ProcessoController extends Controller
         $podeConcluir = $request->user()->can('concluir-analise');
 
         // SPEC-07: a reabertura da análise concluída depende de regra da SEDUR
-        // (decisão e TVL já emitidos); nem o override reabre por enquanto.
+        // (decisão e Viabilidade já emitidos); nem o override reabre por enquanto.
         if ($from === AnalysisStatus::AnaliseConcluida) {
             return back()->with('error', 'A análise já foi concluída e não pode ser reaberta: a reabertura ainda depende de regra da SEDUR.');
         }
@@ -502,7 +504,7 @@ class ProcessoController extends Controller
         $chaves = [
             'grupo', 'status', 'analysis_status', 'protocolo', 'bap', 'produto_tvl', 'servico', 'setor',
             'analista', 'categoria', 'inscricao', 'nome', 'cnpj', 'cep', 'logradouro',
-            'bairro', 'data_de', 'data_ate', 'busca', 'fluxo', 'cnae', 'complemento',
+            'bairro', 'data_de', 'data_ate', 'busca', 'fluxo', 'cnae', 'complemento', 'numero',
         ];
 
         $filtros = [];
@@ -579,6 +581,18 @@ class ProcessoController extends Controller
             fn (ViabilityRequestStatus $status): array => ['value' => $status->value, 'label' => $status->label()],
             ViabilityRequestStatus::cases(),
         );
+    }
+
+    /**
+     * @return list<array{value: string, label: string}>
+     */
+    private function setorOptions(): array
+    {
+        return Sector::query()
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn (Sector $setor): array => ['value' => (string) $setor->id, 'label' => $setor->name])
+            ->all();
     }
 
     /**

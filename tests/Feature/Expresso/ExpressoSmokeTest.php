@@ -35,10 +35,10 @@ use Tests\TestCase;
  * que o gatilho decide automaticamente no protocolo, NÃO em chamada manual.
  *
  * Três caminhos reais + a degradação honesta (anti-fachada): protocolar sobre a
- * zona → DEFERE (decisão + TVL + notificação + Regin/SEFAZ pendência auditada);
+ * zona → DEFERE (decisão + Viabilidade + notificação + Regin/SEFAZ pendência auditada);
  * protocolar SEM zona → em_analise SEM ViabilityDecision e SEM ResultadoEmitido
  * (assertNotDispatched) e sem notificação; protocolar com zona que PROÍBE →
- * INDEFERE (sem TVL, Regin comunica, SEFAZ ignora RN-003). Os motores rodam em
+ * INDEFERE (sem Viabilidade, Regin comunica, SEFAZ ignora RN-003). Os motores rodam em
  * SQLite com FakeSpatialRepository + dados versionados via factory.
  */
 class ExpressoSmokeTest extends TestCase
@@ -56,7 +56,7 @@ class ExpressoSmokeTest extends TestCase
     public function test_protocolo_sobre_zona_defere_automaticamente_e_dispara_efeitos(): void
     {
         // Caminho FELIZ (core value): a zona permite o CNAE expresso → o gatilho
-        // decide AUTOMATICAMENTE no protocolo: DEFERE com TVL, notifica o cidadão
+        // decide AUTOMATICAMENTE no protocolo: DEFERE com Viabilidade, notifica o cidadão
         // (sem anexo) e registra a pendência Regin/SEFAZ (bloqueada — Fase 13).
         Notification::fake();
         $this->fakeBairroComZona('ZR-1');
@@ -81,7 +81,7 @@ class ExpressoSmokeTest extends TestCase
             'result' => 'deferida',
         ]);
 
-        // HU-073: notificação do resultado enviada ao requerente (sem anexo TVL).
+        // HU-073: notificação do resultado enviada ao requerente (sem anexo de Viabilidade).
         Notification::assertSentTo($requerente, ResultadoExpressoNotification::class);
 
         // HU-100: o Regin fica como pendência auditada (bloqueado — Fase 13),
@@ -119,7 +119,7 @@ class ExpressoSmokeTest extends TestCase
 
     public function test_protocolo_com_zona_proibida_indefere_e_comunica_o_regin(): void
     {
-        // HU-071 / RN-003: a zona PROÍBE o grupo → INDEFERE (sem TVL). O Regin
+        // HU-071 / RN-003: a zona PROÍBE o grupo → INDEFERE (sem Viabilidade). O Regin
         // também é comunicado (parecer nos dois casos).
         Notification::fake();
         $this->fakeBairroComZona('ZR-1');
@@ -134,7 +134,7 @@ class ExpressoSmokeTest extends TestCase
 
         $decision = $solicitacao->decision;
         $this->assertNotNull($decision);
-        $this->assertNull($decision->tvl_product_number, 'Indeferimento não gera TVL.');
+        $this->assertNull($decision->tvl_product_number, 'Indeferimento não gera Viabilidade.');
 
         Notification::assertSentTo($requerente, ResultadoExpressoNotification::class);
 

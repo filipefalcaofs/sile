@@ -8,7 +8,7 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Declarações obrigatórias da renovação de TVL. Idempotente por tipo+versão.
+ * Declarações obrigatórias da renovação de Viabilidade. Idempotente por tipo+versão.
  * A gestão publica versões novas; a anterior recebe valid_to pela tela.
  */
 class ServiceDeclarationSeeder extends Seeder

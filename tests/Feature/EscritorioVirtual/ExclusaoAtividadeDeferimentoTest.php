@@ -80,7 +80,7 @@ class ExclusaoAtividadeDeferimentoTest extends TestCase
     }
 
     /**
-     * Sede deferida com produto (TVL) que trava ATIVAMENTE a inscrição
+     * Sede deferida com produto (Viabilidade) que trava ATIVAMENTE a inscrição
      * informada — mesmo arranjo de `ProdutoAbrigadoTest::test_abrigado_grava_
      * tenant_e_tvl_da_sede`.
      */
@@ -231,7 +231,7 @@ class ExclusaoAtividadeDeferimentoTest extends TestCase
      * processo na Lista EV. `deferirExclusao()` não cria esse vínculo, só o
      * REFLETE na decisão, exatamente como `emitir()` faz no caminho normal:
      * sem isso, o processo some do relatório de sede×abrigados
-     * (RelatorioSedeEscritorioVirtualService) e a tela para de mostrar o TVL
+     * (RelatorioSedeEscritorioVirtualService) e a tela para de mostrar a Viabilidade
      * da sede (ProcessoResource) — ambos leem esses campos da decisão.
      */
     public function test_exclusao_em_inscricao_abrigada_grava_tenant_e_tvl_da_sede(): void

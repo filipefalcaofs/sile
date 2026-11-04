@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\DecisionExplanationResource;
 use App\Http\Resources\ViabilityDecisionResource;
 use App\Models\Activity;
+use App\Models\Sector;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Analise\ProcessoQueryService;
@@ -27,7 +28,7 @@ use Inertia\Response;
  * Consulta do resultado do fluxo expresso na retaguarda (HU-072/HU-074): lista
  * filtrável das solicitações DECIDIDAS (deferida/indeferida) e o detalhe
  * imutável da ViabilityDecision (veredito consolidado, decisão por CNAE,
- * versões de regra, fundamentação, número TVL e motivo). SOMENTE LEITURA — a
+ * versões de regra, fundamentação, número da Viabilidade e motivo). SOMENTE LEITURA — a
  * decisão é append-only (09-02/09-05) e o cidadão é atendido pelo Regin; aqui a
  * SEDUR audita e explica a decisão automática.
  *
@@ -43,7 +44,7 @@ class ResultadoExpressoController extends Controller
     /** Filtros da Consulta de processos aceitos aqui, aplicados pelo ProcessoQueryService. */
     private const CHAVES_FILTRO_CONSULTA = [
         'grupo', 'status', 'analysis_status', 'protocolo', 'bap', 'produto_tvl', 'servico', 'setor',
-        'analista', 'categoria', 'inscricao', 'nome', 'cnpj', 'cep', 'logradouro', 'bairro', 'fluxo',
+        'analista', 'categoria', 'inscricao', 'nome', 'cnpj', 'cep', 'logradouro', 'numero', 'bairro', 'fluxo',
         'cnae', 'complemento',
     ];
 
@@ -113,7 +114,7 @@ class ResultadoExpressoController extends Controller
                     'protocol_number' => $solicitacao->protocol_number,
                     'status' => $solicitacao->status->value,
                     'status_label' => $solicitacao->status->label(),
-                    'empresa' => $solicitacao->company?->trade_name ?: $solicitacao->company?->legal_name,
+                    'empresa' => $solicitacao->company?->nomeExibido(),
                     'cnpj' => $solicitacao->company?->formatted_cnpj,
                     'outcome' => $solicitacao->decision_outcome,
                     'outcome_label' => DecisionOutcome::from((string) $solicitacao->decision_outcome)->label(),
@@ -146,6 +147,7 @@ class ResultadoExpressoController extends Controller
                 'protocolado_ate' => $request->string('protocolado_ate')->toString(),
             ] + array_diff_key($this->crusDaConsulta($request), ['data_de' => 1, 'data_ate' => 1]),
             'servicoOptions' => $this->servicoOptions(),
+            'setorOptions' => $this->setorOptions(),
             'analysisStatusOptions' => AnalysisStatus::options(),
             'categoriaOptions' => $this->categoriaOptions(),
             'statusOptions' => $this->statusOptions(),
@@ -195,6 +197,18 @@ class ResultadoExpressoController extends Controller
     private function servicoOptions(): array
     {
         return app(ServicoNomenclaturaResolver::class)->opcoesDoFiltro();
+    }
+
+    /**
+     * @return list<array{value: string, label: string}>
+     */
+    private function setorOptions(): array
+    {
+        return Sector::query()
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn (Sector $setor): array => ['value' => (string) $setor->id, 'label' => $setor->name])
+            ->all();
     }
 
     /**

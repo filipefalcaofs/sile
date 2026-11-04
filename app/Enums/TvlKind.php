@@ -3,7 +3,7 @@
 namespace App\Enums;
 
 /**
- * Tipo de validade do TVL na decisão. Provisória e pré-operacional têm
+ * Tipo de validade da Viabilidade na decisão. Provisória e pré-operacional têm
  * validade e podem ser renovadas; definitiva encerra o ciclo de prorrogação.
  */
 enum TvlKind: string

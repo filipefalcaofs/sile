@@ -11,8 +11,8 @@ use Tests\TestCase;
 /**
  * Escritório virtual — resolver da sede ativa (RN-EV-03): a partir da
  * inscrição imobiliária do abrigado, `sedeAtiva()` deve devolver o lock ATIVO
- * com a sede (ViabilityRequest) e a decisão da sede (com o TVL) já carregadas,
- * para os consumidores M2 alcançarem o TVL sem N+1.
+ * com a sede (ViabilityRequest) e a decisão da sede (com a Viabilidade) já carregadas,
+ * para os consumidores M2 alcançarem a Viabilidade sem N+1.
  */
 class SedeAtivaResolverTest extends TestCase
 {

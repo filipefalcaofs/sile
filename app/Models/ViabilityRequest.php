@@ -463,12 +463,17 @@ class ViabilityRequest extends Model
 
     /**
      * Códigos (só dígitos) das atividades incluídas segundo a comparação com a
-     * viabilidade da SEFAZ; null quando o pedido não passou por essa comparação.
+     * viabilidade anterior; null quando o pedido não passou por essa comparação
+     * ou muda de endereço (no endereço novo todas as atividades são enquadradas).
      *
      * @return list<string>|null
      */
     public function codigosIncluidosNaComparacao(): ?array
     {
+        if ($this->alteraEndereco()) {
+            return null;
+        }
+
         $comparacao = $this->comparacao_cnaes;
 
         return is_array($comparacao) ? array_values($comparacao['incluidas'] ?? []) : null;
@@ -499,6 +504,22 @@ class ViabilityRequest extends Model
     public function documents(): HasMany
     {
         return $this->hasMany(ViabilityRequestDocument::class);
+    }
+
+    /**
+     * Pedido da JUCEB que altera empresa já existente (endereço, atividade,
+     * nome etc.): algum evento recebido é uma "Alteração ..." ou o 244.
+     */
+    public function eAlteracaoDaJunta(): bool
+    {
+        return $this->eventos->contains(fn (ViabilityRequestEvento $evento): bool => $evento->codigo === '244'
+            || str_starts_with(ServicoNomenclatura::chaveDe((string) $evento->nome), 'alteracao'));
+    }
+
+    /** Pedido da JUCEB com evento de alteração de endereço. */
+    public function alteraEndereco(): bool
+    {
+        return $this->eventos->contains(fn (ViabilityRequestEvento $evento): bool => str_starts_with(ServicoNomenclatura::chaveDe((string) $evento->nome), 'alteracao de endereco'));
     }
 
     /**

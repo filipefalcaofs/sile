@@ -202,7 +202,7 @@ return [
     // Espelha os parâmetros HU-014 expresso.* / features.* do fluxo expresso
     // (EP09). Settings::get lê config("viabiliza.expresso.*") no fallback (banco
     // indisponível). Os valores de negócio (prazo BAP, assuntos de e-mail,
-    // formato do número TVL) nascem administráveis no ParameterSeeder; aqui é
+    // formato do número da Viabilidade) nascem administráveis no ParameterSeeder; aqui é
     // só o espelho de fallback.
     'expresso' => [
         'bap' => ['prazo_horas' => 48],
@@ -223,7 +223,7 @@ return [
     // análise técnica (EP10). Settings::get lê config("viabiliza.analise.*") no
     // fallback (banco indisponível). Os valores de NEGÓCIO (SLA por etapa,
     // limiar do semáforo, prazo de pendência, janela/itens de precedentes e o
-    // TVL PDF) nascem administráveis no ParameterSeeder; aqui é só o espelho.
+    // Viabilidade PDF) nascem administráveis no ParameterSeeder; aqui é só o espelho.
     'analise' => [
         // HU.183: ao ir para conclusão, quem conclui recebe uma cópia da ficha de
         // quem analisou (true, comportamento anterior) ou começa da base do
@@ -385,7 +385,7 @@ return [
             'retries' => 3,
             'backoff_ms' => 500,
         ],
-        // Legado Simplifica/SAPS: a TVL deferida e ativa da empresa e os CNAEs dela, base da
+        // Legado Simplifica/SAPS: a Viabilidade deferida e ativa da empresa e os CNAEs dela, base da
         // comparação de atividades. Token de máquina (`lg_...`, 90 dias) só no .env.
         'legado_simplifica' => [
             'url' => env('VIABILIZA_LEGADO_URL'),
@@ -485,7 +485,7 @@ return [
         'log' => [
             'limite_corpo' => 500_000,
         ],
-        // Consulta de TVL que a SEFAZ/SIGS faz no Viabiliza (alvará e DAM).
+        // Consulta de Viabilidade que a SEFAZ/SIGS faz no Viabiliza (alvará e DAM).
         // Desligada por padrão. A SEFAZ autentica com usuário e senha e recebe
         // um token Bearer que vale `validade_minutos`.
         'sefaz_tvl' => [
@@ -493,6 +493,16 @@ return [
             'usuario' => (string) env('SEFAZ_TVL_USUARIO', ''),
             'senha' => (string) env('SEFAZ_TVL_SENHA', ''),
             'validade_minutos' => 60,
+        ],
+        // API do BI da SEDUR, atrás de login. `nominal` mostra o nome dos analistas
+        // nos indicadores por analista.
+        'bi' => [
+            'ativo' => (bool) env('BI_API_ATIVO', false),
+            'usuario' => (string) env('BI_API_USUARIO', ''),
+            'senha' => (string) env('BI_API_SENHA', ''),
+            'validade_minutos' => 60,
+            'nominal' => (bool) env('BI_API_NOMINAL', true),
+            'por_minuto' => (int) env('BI_API_POR_MINUTO', 120),
         ],
         'regin' => [
             'em_producao' => false,

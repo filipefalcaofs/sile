@@ -18,7 +18,7 @@ use Tests\PostgisTestCase;
  * Prova @group postgis do DEFERIMENTO NAVEGÁVEL do fluxo expresso sobre a ZONA
  * FICTÍCIA real (PostGIS): o seed de dev carrega a feição de zona (Centro) e,
  * com a LÓGICA REAL (motores LOUOS/risco + FluxoExpressoService), DEFERE de
- * verdade a solicitação dentro dela (com número TVL), enquanto a solicitação
+ * verdade a solicitação dentro dela (com número da Viabilidade), enquanto a solicitação
  * FORA da zona degrada honestamente para em_analise.
  *
  * É a contraparte PostGIS do DatabaseSeederTest (SQLite, onde a geometria e a
@@ -54,7 +54,7 @@ class ExpressoSeedPostgisTest extends PostgisTestCase
 
         // DEFERIMENTO navegável: a solicitação sobre a zona fictícia (Centro) com
         // o minimercado (risco baixo → expresso) é DEFERIDA pelo motor real, com
-        // número TVL — o core value, sem fachada.
+        // número da Viabilidade — o core value, sem fachada.
         $deferimento = ViabilityRequest::query()
             ->where('requester_user_id', $cidadao->id)
             ->where('address_reference', ExpressoDevSeeder::MARK_DEFERIDA)
@@ -68,7 +68,7 @@ class ExpressoSeedPostgisTest extends PostgisTestCase
         $this->assertStringStartsWith('TVL-', (string) $decision->tvl_product_number);
 
         // EM ANÁLISE honesto: a solicitação FORA da zona fictícia (Pituba) não
-        // tem zona — o motor degrada para em_analise, SEM decisão e SEM TVL.
+        // tem zona — o motor degrada para em_analise, SEM decisão e SEM Viabilidade.
         $emAnalise = ViabilityRequest::query()
             ->where('requester_user_id', $cidadao->id)
             ->where('address_reference', ExpressoDevSeeder::MARK_EM_ANALISE)

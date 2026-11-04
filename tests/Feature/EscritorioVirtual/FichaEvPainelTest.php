@@ -102,7 +102,7 @@ class FichaEvPainelTest extends TestCase
     {
         $sede = $this->criarSedeAtiva('INSC-EV-1', 'VIA-EV-SEDE1', 'TVL-EV-SEDE1');
 
-        // Dois abrigados da MESMA inscrição, cada um com empresa e TVL próprios.
+        // Dois abrigados da MESMA inscrição, cada um com empresa e Viabilidade próprios.
         foreach (['AB1', 'AB2'] as $sufixo) {
             $company = Company::factory()->create(['legal_name' => "Abrigado {$sufixo} ME"]);
             $abrigado = ViabilityRequest::factory()->protocoled()->create([

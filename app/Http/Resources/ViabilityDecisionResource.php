@@ -10,7 +10,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * Payload de leitura da ViabilityDecision para a retaguarda (HU-072/HU-074):
- * expõe o desfecho (+rótulo), o veredito consolidado (+rótulo), o número TVL
+ * expõe o desfecho (+rótulo), o veredito consolidado (+rótulo), o número da Viabilidade
  * (só no deferimento — RN-007), a decisão por CNAE, as versões de regra da
  * época (RN-005), a fundamentação legal, o motivo (ex.: 'indeferido sem
  * atuação', HU-125) e um resumo honesto da solicitação. SOMENTE LEITURA — a
@@ -52,7 +52,7 @@ class ViabilityDecisionResource extends JsonResource
                 'protocol_number' => $solicitacao->protocol_number,
                 'status' => $solicitacao->status->value,
                 'status_label' => $solicitacao->status->label(),
-                'empresa' => $solicitacao->company?->trade_name ?: $solicitacao->company?->legal_name,
+                'empresa' => $solicitacao->company?->nomeExibido(),
                 'cnpj' => $solicitacao->company?->formatted_cnpj,
                 'endereco' => $this->enderecoResumo($solicitacao),
             ],

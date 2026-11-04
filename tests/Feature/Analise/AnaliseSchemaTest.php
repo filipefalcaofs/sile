@@ -9,10 +9,10 @@ use Tests\TestCase;
 /**
  * Fundação de dados da Fase 10 (análise técnica SEDUR): as 8 tabelas novas
  * (setores+pivot, ficha versionada, divergências, pendências, malha fina,
- * textos-padrão, documentos TVL) e as colunas de análise aditadas em
+ * textos-padrão, documentos Viabilidade) e as colunas de análise aditadas em
  * viability_requests (atribuição/SLA/categoria/malha fina). Tudo portável
  * (json, sem geometria própria) — a suíte roda em SQLite. A unicidade da
- * revisão da ficha e do verification_code do TVL é provada no AnaliseModelsTest.
+ * revisão da ficha e do verification_code da Viabilidade é provada no AnaliseModelsTest.
  */
 class AnaliseSchemaTest extends TestCase
 {

@@ -19,7 +19,7 @@ use Tests\TestCase;
 /**
  * Tramitação "Conclusão de Análise": o analista escolhe Deferido, Indeferido,
  * Desativado, Cassado ou Revogado. Deferido e indeferido nascem da ficha
- * finalizada. Os outros três encerram sem TVL, inclusive a partir de um
+ * finalizada. Os outros três encerram sem Viabilidade, inclusive a partir de um
  * processo já deferido.
  */
 class ConclusaoAnaliseTest extends TestCase

@@ -28,7 +28,7 @@ interface RelatorioRow {
     tipo: 'sede' | 'abrigado';
     tvl: string | null;
     razao_social: string | null;
-    /** ISO8601 da emissão do TVL (decided_at) ou null quando não emitido. */
+    /** ISO8601 da emissão da Viabilidade (decided_at) ou null quando não emitido. */
     data_emissao: string | null;
     inscricao: string | null;
     protocolo: string | null;
@@ -321,7 +321,7 @@ export default function EscritorioVirtual({ relatorio, filtros, perPageOptions }
 }
 
 /**
- * Ressalva honesta (Plano R1): a validade/vencimento do produto (TVL) ainda não
+ * Ressalva honesta (Plano R1): a validade/vencimento do produto (Viabilidade) ainda não
  * é modelada. Enquanto a modelagem não chega, a coluna Vencimento fica em
  * travessão e o filtro de expirados fica desabilitado — nada é presumido.
  */

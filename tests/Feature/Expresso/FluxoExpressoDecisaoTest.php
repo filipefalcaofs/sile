@@ -31,7 +31,7 @@ use Tests\TestCase;
  * Decisão automática do fluxo expresso (HU-070/071/072, RN-009): com a zona
  * oficial disponível e todos os CNAEs encaminhados ao expresso, o
  * FluxoExpressoService DEFERE (todos permitido/permitido_com_condicoes) gerando
- * o número TVL, ou INDEFERE (algum nao_permitido) sem TVL — sempre criando a
+ * o número da Viabilidade, ou INDEFERE (algum nao_permitido) sem Viabilidade — sempre criando a
  * ViabilityDecision imutável (per_cnae/rules_versions/fundamentacao),
  * transicionando a solicitação e disparando ResultadoEmitido após o commit.
  *
@@ -142,7 +142,7 @@ class FluxoExpressoDecisaoTest extends TestCase
     public function test_todos_permitido_defere_com_tvl_e_dispara_evento(): void
     {
         // HU-070 / RN-009: CNAE expresso permitido na zona → DEFERE. Cria a
-        // ViabilityDecision (outcome deferida) com número TVL, transiciona para
+        // ViabilityDecision (outcome deferida) com número da Viabilidade, transiciona para
         // deferida e dispara ResultadoEmitido após o commit.
         Event::fake([ResultadoEmitido::class]);
         $request = $this->setupDeferivel();
@@ -189,7 +189,7 @@ class FluxoExpressoDecisaoTest extends TestCase
     public function test_um_cnae_nao_permitido_indefere_sem_tvl(): void
     {
         // HU-071 / RN-009: dois CNAEs expressos, um proibido na zona → o pior
-        // caso governa: INDEFERE o processo inteiro, sem número TVL.
+        // caso governa: INDEFERE o processo inteiro, sem número da Viabilidade.
         Event::fake([ResultadoEmitido::class]);
         $this->fakeBairroComZona('ZR-1');
         $this->classificarMunicipal('4712100', RiscoMunicipal::BaixoA);
@@ -382,7 +382,7 @@ class FluxoExpressoDecisaoTest extends TestCase
     {
         // Decisão SEDUR 22/09/2026: a planilha prevalece sobre a RN-041-B.
         // Regra 51 — "Fluxo Expresso (ALTO RISCO)": P2=NÃO ≤ 1.250 m² defere
-        // expresso com TVL mesmo com o CNAE alto (990018/2026).
+        // expresso com Viabilidade mesmo com o CNAE alto (990018/2026).
         Event::fake([ResultadoEmitido::class]);
         $this->seed([RiskTriggerSeeder::class, PropertyTypeSeeder::class]);
         $this->fakeBairroComZona('ZR-1');
@@ -418,7 +418,7 @@ class FluxoExpressoDecisaoTest extends TestCase
     public function test_permitido_com_condicoes_defere(): void
     {
         // HU-070 / RN-006/009: permitido condicionado na zona → permitido_com_
-        // condicoes → DEFERE (com condicionantes na fundamentação), com TVL.
+        // condicoes → DEFERE (com condicionantes na fundamentação), com Viabilidade.
         Event::fake([ResultadoEmitido::class]);
         $this->fakeBairroComZona('ZR-1');
         $this->classificarMunicipal('4712100', RiscoMunicipal::BaixoA);

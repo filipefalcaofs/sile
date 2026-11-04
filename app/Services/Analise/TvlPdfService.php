@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 /**
- * Emissão do TVL (Termo de Viabilidade de Localização) em PDF no backoffice
+ * Emissão da Viabilidade (Termo de Viabilidade de Localização) em PDF no backoffice
  * (HU-123). O documento deixou de ir ao cidadão (canal oficial é Regin/SEFAZ) e
  * virou relatório administrativo interno emitível sob demanda APÓS o deferimento
  * (fluxo expresso OU análise humana).
@@ -38,7 +38,7 @@ class TvlPdfService
     public function __construct(private readonly AuditService $audit) {}
 
     /**
-     * Gera o TVL em PDF de uma decisão DEFERIDA: renderiza o Blade com o dompdf,
+     * Gera a Viabilidade em PDF de uma decisão DEFERIDA: renderiza o Blade com o dompdf,
      * grava no disco parametrizado (não público) e registra a emissão auditada em
      * tvl_documents. Decisão não deferida → DomainException (FA-01). Cada chamada
      * (emissão/reimpressão) é uma nova linha com verification_code/arquivo próprios.
@@ -143,7 +143,7 @@ class TvlPdfService
      * pelo FluxoExpressoService) já distingue o caso: item marcado
      * `IntencaoAtividade::Excluir` some da lista; sem a chave (fluxo comum),
      * segue sendo tratado como deferido. Escopo deliberadamente limitado —
-     * como o TVL deve APRESENTAR uma exclusão é pergunta em aberto para a
+     * como a Viabilidade deve APRESENTAR uma exclusão é pergunta em aberto para a
      * SEDUR, não decidida aqui; a seção pode ficar vazia e o Blade já lida
      * com isso.
      *

@@ -39,8 +39,8 @@ class VirtualOfficeInscriptionLock extends Model
     }
 
     /**
-     * Resolve o lock ATIVO da inscrição, com a sede e a decisão da sede (TVL)
-     * já carregadas — para os consumidores M2 alcançarem o TVL do abrigado
+     * Resolve o lock ATIVO da inscrição, com a sede e a decisão da sede (Viabilidade)
+     * já carregadas — para os consumidores M2 alcançarem a Viabilidade do abrigado
      * sem N+1.
      */
     public static function sedeAtiva(string $propertyRegistration): ?self

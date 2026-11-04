@@ -12,10 +12,10 @@ use Illuminate\Support\Collection;
 /**
  * Relatório sede × abrigados de escritório virtual (Plano R1 — Task 1). Para uma
  * inscrição imobiliária travada por uma sede ativa (RN-EV-03), agrupa a SEDE (o
- * alvo do lock ativo — sua decisão carrega o nº TVL da sede) e os ABRIGADOS
+ * alvo do lock ativo — sua decisão carrega o nº da Viabilidade da sede) e os ABRIGADOS
  * daquela inscrição (decisões com is_virtual_office_tenant=true — RN-EV-05).
  *
- * A consulta aceita o nº do produto TVL da sede OU a inscrição; sem filtro,
+ * A consulta aceita o nº do produto da Viabilidade da sede OU a inscrição; sem filtro,
  * varre todas as inscrições com lock ativo. O vencimento fica FORA do escopo
  * (depende de validade do produto, ainda não modelada).
  */
@@ -23,8 +23,8 @@ class RelatorioSedeEscritorioVirtualService
 {
     /**
      * Linhas da sede + abrigados das inscrições-alvo, paginadas. Filtros:
-     * `sede` (nº TVL da sede) → inscrições dos locks ativos cuja sede tem esse
-     * TVL; senão `inscricao` → aquela inscrição; senão → todas as travadas.
+     * `sede` (nº da Viabilidade da sede) → inscrições dos locks ativos cuja sede tem esse
+     * Viabilidade; senão `inscricao` → aquela inscrição; senão → todas as travadas.
      *
      * @param  array<string, mixed>  $filtros
      * @return LengthAwarePaginator<int, ViabilityRequest>
@@ -77,7 +77,7 @@ class RelatorioSedeEscritorioVirtualService
         return [
             'tipo' => $this->ehSede($r) ? 'sede' : 'abrigado',
             'tvl' => ViabilityDecision::semPrefixo($r->decision?->tvl_product_number),
-            'razao_social' => $r->company?->trade_name ?: $r->company?->legal_name,
+            'razao_social' => $r->company?->nomeExibido(),
             'data_emissao' => $r->decision?->decided_at?->toIso8601String(),
             'inscricao' => $r->property_registration,
             'protocolo' => $r->protocol_number,

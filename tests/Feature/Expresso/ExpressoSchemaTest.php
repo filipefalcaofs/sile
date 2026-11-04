@@ -11,7 +11,7 @@ use Tests\TestCase;
  * viability_decisions (1:1 com a solicitação), o contador tvl_sequences
  * (espelha protocol_sequences) e as colunas dormentes do relógio do BAP
  * (HU-125) em viability_requests. Portável (json, sem geometria) — roda em
- * SQLite. A unicidade 1:1 e do TVL é provada no ViabilityDecisionTest.
+ * SQLite. A unicidade 1:1 e da Viabilidade é provada no ViabilityDecisionTest.
  */
 class ExpressoSchemaTest extends TestCase
 {

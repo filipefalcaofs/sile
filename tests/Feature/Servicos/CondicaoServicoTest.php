@@ -49,6 +49,7 @@ class CondicaoServicoTest extends TestCase
             'address_neighborhood' => 'Centro',
             'address_complement' => 'Sala 1',
             'address_zip' => '40000000',
+            'used_area_m2' => 100,
             ...$atributos,
         ]);
 
@@ -227,6 +228,37 @@ class CondicaoServicoTest extends TestCase
         $this->processo($empresa, ['4712100']);
 
         $this->assertNull($this->detectar($this->processo($empresa, ['4711301']), 'Inscrição dos demais estabelecimentos'));
+    }
+
+    public function test_so_mudando_a_area_e_revisao_de_espaco(): void
+    {
+        $empresa = Company::factory()->create();
+        $this->processo($empresa, [], ['used_area_m2' => 50]);
+        $atual = $this->processo($empresa, [], ['used_area_m2' => 80]);
+
+        $this->assertSame(CondicaoServico::EnderecoEspaco, $this->detectar($atual, self::ENDERECO));
+    }
+
+    public function test_area_igual_ou_ausente_nao_e_revisao_de_espaco(): void
+    {
+        $empresa = Company::factory()->create();
+        $this->processo($empresa, [], ['used_area_m2' => 50]);
+        $igual = $this->processo($empresa, [], ['used_area_m2' => '50.00']);
+
+        $this->assertNull($this->detectar($igual, self::ENDERECO));
+
+        $semArea = $this->processo($empresa, [], ['used_area_m2' => null]);
+
+        $this->assertNull($this->detectar($semArea, self::ENDERECO));
+    }
+
+    public function test_mudando_endereco_e_area_e_alteracao_de_endereco(): void
+    {
+        $empresa = Company::factory()->create();
+        $this->processo($empresa, [], ['used_area_m2' => 50]);
+        $atual = $this->processo($empresa, [], ['used_area_m2' => 80, 'address_number' => '20']);
+
+        $this->assertSame(CondicaoServico::EnderecoLocalizacao, $this->detectar($atual, self::ENDERECO));
     }
 
     public function test_gravar_registra_a_condicao_no_evento(): void

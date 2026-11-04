@@ -14,7 +14,7 @@ class ViabilityDecisionFactory extends Factory
 {
     /**
      * Default = deferimento expresso do sistema (decided_by_user_id null), com
-     * número TVL e os jsonb plausíveis (veredito por CNAE, versões de regras e
+     * número da Viabilidade e os jsonb plausíveis (veredito por CNAE, versões de regras e
      * fundamentação legal). Os states cobrem o indeferimento e o indeferimento
      * por prazo BAP vencido (HU-125).
      *
@@ -63,7 +63,7 @@ class ViabilityDecisionFactory extends Factory
     }
 
     /**
-     * Indeferimento (RN-009): algum CNAE não permitido derruba o processo; sem TVL.
+     * Indeferimento (RN-009): algum CNAE não permitido derruba o processo; sem Viabilidade.
      */
     public function indeferida(): static
     {

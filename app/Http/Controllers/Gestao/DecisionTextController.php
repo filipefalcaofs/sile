@@ -12,7 +12,7 @@ use Inertia\Response;
 
 /**
  * Manutenção dos textos decisórios (Fase 4 — parametrização HU-014): os
- * textos emitidos em documentos oficiais (TVL, parecer, ficha do cidadão)
+ * textos emitidos em documentos oficiais (Viabilidade, parecer, ficha do cidadão)
  * viram dado administrável lido pelo motor via DecisionTextCatalog. SEM
  * create/destroy/toggle — a chave é ligada ao motor (call site no código):
  * uma linha criada pela UI sem call site seria fachada, e apagar uma chave

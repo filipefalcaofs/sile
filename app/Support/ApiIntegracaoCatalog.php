@@ -233,7 +233,7 @@ class ApiIntegracaoCatalog
         return [
             'id' => 'legado_simplifica',
             'nome' => 'Legado Simplifica',
-            'descricao' => 'API do legado Simplifica/SAPS. Traz a viabilidade anterior da empresa (TVL deferida e ativa e os CNAEs dela) para comparar as atividades de uma alteração.',
+            'descricao' => 'API do legado Simplifica/SAPS. Traz a viabilidade anterior da empresa (Viabilidade deferida e ativa e os CNAEs dela) para comparar as atividades de uma alteração.',
             'teste' => ['url' => '/gestao/config-legado-simplifica/testar', 'erro' => 'legado_connection'],
             'espelhar_url_ativa' => null,
             'campos' => [

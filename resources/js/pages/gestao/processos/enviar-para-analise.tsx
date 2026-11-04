@@ -37,7 +37,7 @@ interface PesquisaResposta {
 }
 
 /**
- * Tela T06 — Enviar processo de TVL para análise (relatório de teste SEDUR).
+ * Tela T06 — Enviar processo de Viabilidade para análise (relatório de teste SEDUR).
  * Pesquisa o processo por protocolo; não encontrado → Alert do design system
  * (contraste AA) + Fechar; encontrado → cartão de preview (protocolo, serviço,
  * status atual, requerente — PII reduzida) + confirmação em modal acessível

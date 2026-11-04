@@ -14,7 +14,7 @@ use Tests\Support\Sefaz\ConfiguraLegadoSimplifica;
 use Tests\TestCase;
 
 /**
- * Viabilidade anterior no legado (Simplifica/SAPS): a TVL deferida e ativa da
+ * Viabilidade anterior no legado (Simplifica/SAPS): a Viabilidade deferida e ativa da
  * empresa, com os CNAEs da matriz de atividades dela.
  */
 class LegadoViabilidadeFonteTest extends TestCase
@@ -53,7 +53,7 @@ class LegadoViabilidadeFonteTest extends TestCase
     public function test_devolve_a_tvl_deferida_e_ativa_com_os_cnaes_da_matriz(): void
     {
         Http::fake([
-            'legado.test/v1/provisorias*' => Http::response(['data' => [
+            'legado.test/v1/tvls?*' => Http::response(['data' => [
                 $this->tvl(100, ['deferida' => false]),
                 $this->tvl(200, ['ativa' => false]),
                 $this->tvl(300, ['validade' => '2026-12-01T00:00:00Z']),
@@ -70,13 +70,56 @@ class LegadoViabilidadeFonteTest extends TestCase
         $this->assertSame('400', $viabilidade?->numero);
         $this->assertSame(['4711-3/02', '5611201'], $viabilidade->cnaes);
         Http::assertSent(fn (Request $r): bool => $r->hasHeader('Authorization', 'Bearer lg_teste')
-            && str_contains($r->url(), '/v1/provisorias') && $r['cnpj'] === self::CNPJ);
+            && str_contains($r->url(), '/v1/tvls?') && $r['cnpj'] === self::CNPJ);
+    }
+
+    public function test_usa_a_ultima_deferida_pela_emissao_e_nao_a_de_maior_validade(): void
+    {
+        Http::fake([
+            'legado.test/v1/tvls?*' => Http::response(['data' => [
+                $this->tvl(500, ['emissao' => '2025-01-10T00:00:00Z', 'validade' => '2030-01-10T00:00:00Z']),
+                $this->tvl(600, ['emissao' => '2026-08-01T00:00:00Z', 'validade' => '2027-02-01T00:00:00Z']),
+            ]]),
+            'legado.test/v1/tvls/600' => Http::response(['data' => $this->tvl(600) + ['atividades' => [
+                ['codigo' => '5611201', 'descricao' => 'Restaurantes'],
+            ]]]),
+        ]);
+
+        $this->assertSame('600', $this->consultar()?->numero);
+    }
+
+    public function test_definitiva_deferida_mais_recente_e_a_base(): void
+    {
+        Http::fake([
+            'legado.test/v1/tvls?*' => Http::response(['data' => [
+                $this->tvl(700, ['tipo' => 'provisoria', 'emissao' => '2025-03-01T00:00:00Z']),
+                $this->tvl(800, ['tipo' => 'definitiva', 'emissao' => '2026-09-01T00:00:00Z']),
+            ]]),
+            'legado.test/v1/tvls/800' => Http::response(['data' => $this->tvl(800, ['tipo' => 'definitiva']) + ['atividades' => [
+                ['codigo' => '4711-3/02', 'descricao' => 'Comércio'],
+            ]]]),
+        ]);
+
+        $this->assertSame('800', $this->consultar()?->numero);
+    }
+
+    public function test_api_sem_a_rota_de_tvls_usa_as_provisorias(): void
+    {
+        Http::fake([
+            'legado.test/v1/tvls?*' => Http::response(['message' => 'Not Found'], 404),
+            'legado.test/v1/provisorias*' => Http::response(['data' => [$this->tvl(900)]]),
+            'legado.test/v1/tvls/900' => Http::response(['data' => $this->tvl(900) + ['atividades' => [
+                ['codigo' => '4711-3/02', 'descricao' => 'Comércio'],
+            ]]]),
+        ]);
+
+        $this->assertSame('900', $this->consultar()?->numero);
     }
 
     public function test_sem_tvl_deferida_e_ativa_nao_ha_base_e_nao_consulta_o_detalhe(): void
     {
         Http::fake([
-            'legado.test/v1/provisorias*' => Http::response(['data' => [$this->tvl(100, ['deferida' => false])]]),
+            'legado.test/v1/tvls?*' => Http::response(['data' => [$this->tvl(100, ['deferida' => false])]]),
         ]);
 
         $this->assertNull($this->consultar());
@@ -85,7 +128,7 @@ class LegadoViabilidadeFonteTest extends TestCase
 
     public function test_lista_vazia_nao_tem_base(): void
     {
-        Http::fake(['legado.test/v1/provisorias*' => Http::response(['data' => []])]);
+        Http::fake(['legado.test/v1/tvls?*' => Http::response(['data' => []])]);
 
         $this->assertNull($this->consultar());
     }
@@ -93,7 +136,7 @@ class LegadoViabilidadeFonteTest extends TestCase
     public function test_tvl_sem_atividades_nao_serve_de_base(): void
     {
         Http::fake([
-            'legado.test/v1/provisorias*' => Http::response(['data' => [$this->tvl(500)]]),
+            'legado.test/v1/tvls?*' => Http::response(['data' => [$this->tvl(500)]]),
             'legado.test/v1/tvls/500' => Http::response(['data' => $this->tvl(500) + ['atividades' => []]]),
         ]);
 
@@ -132,7 +175,7 @@ class LegadoViabilidadeFonteTest extends TestCase
     public function test_guarda_o_resultado_por_cnpj_e_nao_repete_a_chamada(): void
     {
         Http::fake([
-            'legado.test/v1/provisorias*' => Http::response(['data' => [$this->tvl(600)]]),
+            'legado.test/v1/tvls?*' => Http::response(['data' => [$this->tvl(600)]]),
             'legado.test/v1/tvls/600' => Http::response(['data' => $this->tvl(600) + ['atividades' => [['codigo' => '4711302', 'descricao' => 'x']]]]),
         ]);
 
@@ -144,7 +187,7 @@ class LegadoViabilidadeFonteTest extends TestCase
 
     public function test_ausencia_de_base_tambem_fica_guardada(): void
     {
-        Http::fake(['legado.test/v1/provisorias*' => Http::response(['data' => []])]);
+        Http::fake(['legado.test/v1/tvls?*' => Http::response(['data' => []])]);
 
         $this->consultar();
         $this->consultar();

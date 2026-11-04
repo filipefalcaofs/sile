@@ -24,9 +24,9 @@ use Illuminate\Support\Facades\DB;
  *
  *  1. DEFERIMENTO — solicitação sobre a ZONA FICTÍCIA (Centro), CNAE de risco
  *     baixo (minimercado 4712-1/00 → expresso): o motor REAL defere e gera o
- *     número TVL. É o caminho que demonstra o deferimento automático.
+ *     número da Viabilidade. É o caminho que demonstra o deferimento automático.
  *  2. EM ANÁLISE — solicitação FORA da zona fictícia (Pituba): sem zona, o motor
- *     degrada HONESTAMENTE para em_analise (nenhuma decisão, nenhum TVL). É a
+ *     degrada HONESTAMENTE para em_analise (nenhuma decisão, nenhuma Viabilidade). É a
  *     prova anti-fachada da degradação que vale em produção até a zona oficial.
  *
  * Dados FICTÍCIOS, lógica REAL (entrega-funcional): protocola pelo

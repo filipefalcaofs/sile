@@ -84,6 +84,21 @@ class IndeferimentoPerguntaSemRespostaTest extends TestCase
         return $solicitacao;
     }
 
+    public function test_pergunta_12_sem_resposta_com_escritorio_vai_para_analise(): void
+    {
+        Event::fake([ResultadoEmitido::class, EncaminhadoParaAnalise::class]);
+        $request = $this->semResposta('5211701');
+        $request->respostasTratamento = [11 => false];
+
+        $resultado = app(FluxoExpressoService::class)->decide($request);
+
+        $request->refresh();
+        $this->assertFalse($resultado->emitted);
+        $this->assertSame(ViabilityRequestStatus::EmAnalise, $request->status);
+        $this->assertDatabaseCount('viability_decisions', 0);
+        Event::assertDispatched(EncaminhadoParaAnalise::class);
+    }
+
     private function emAnaliseNaoAssumida(ViabilityRequest $request): ViabilityRequest
     {
         $request->forceFill([

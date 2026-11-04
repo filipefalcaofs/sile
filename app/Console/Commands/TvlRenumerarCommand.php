@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * Migra os números TVL já emitidos (TVL-AAAA-NNNNNN) para a sequência única
+ * Migra os números de Viabilidade já emitidos (TVL-AAAA-NNNNNN) para a sequência única
  * viabiliza.expresso.tvl.inicio em diante (TVL-3000000...), que é a que segue à
  * SEFAZ. A ordem é a da decisão (decided_at, id), então a numeração conta a
  * história do sistema. Sem --executar só simula. Idempotente: números já no novo
@@ -22,7 +22,7 @@ class TvlRenumerarCommand extends Command
 {
     protected $signature = 'tvl:renumerar {--executar : Grava a renumeração (sem a opção, apenas simula)}';
 
-    protected $description = 'Renumera os TVL existentes para a sequência única a partir de 3000000 (a que segue à SEFAZ)';
+    protected $description = 'Renumera as Viabilidades existentes para a sequência única a partir de 3000000 (a que segue à SEFAZ)';
 
     public function handle(TvlNumberGenerator $gerador, AuditService $audit): int
     {
@@ -35,7 +35,7 @@ class TvlRenumerarCommand extends Command
             ->values();
 
         if ($legados->isEmpty()) {
-            $this->info('Nenhum TVL no formato antigo para renumerar.');
+            $this->info('Nenhuma Viabilidade no formato antigo para renumerar.');
 
             return self::SUCCESS;
         }
@@ -56,7 +56,7 @@ class TvlRenumerarCommand extends Command
         $ultimo = $proximo + $legados->count() - 1;
 
         $this->info(sprintf(
-            '%d TVL a renumerar: %s -> %s.',
+            '%d Viabilidades a renumerar: %s -> %s.',
             $legados->count(),
             $gerador->format($proximo),
             $gerador->format($ultimo),
@@ -92,7 +92,7 @@ class TvlRenumerarCommand extends Command
         $audit->log(
             'integracoes',
             'tvl-renumeracao',
-            sprintf('%d números TVL renumerados para a sequência única', $legados->count()),
+            sprintf('%d números de Viabilidade renumerados para a sequência única', $legados->count()),
             properties: ['quantidade' => $legados->count(), 'ultimo' => $gerador->format($ultimo), 'mapa' => $arquivo],
         );
 

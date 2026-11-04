@@ -6,7 +6,7 @@ use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Support\Facades\Crypt;
 
 /**
- * Credencial da SEFAZ/SIGS na consulta de TVL: usuário e senha da configuração
+ * Credencial da SEFAZ/SIGS na consulta de Viabilidade: usuário e senha da configuração
  * trocados por um token Bearer com validade. O token é o instante de expiração
  * cifrado com a chave da aplicação — sem tabela, e adulterar ou expirar o
  * invalida.

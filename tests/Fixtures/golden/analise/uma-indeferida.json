@@ -1,6 +1,6 @@
 {
     "nome": "uma-indeferida",
-    "descricao": "Basta uma CNAE indeferida na ficha (RN-004) → INDEFERE o processo inteiro, sem TVL.",
+    "descricao": "Basta uma CNAE indeferida na ficha (RN-004) → INDEFERE o processo inteiro, sem Viabilidade.",
     "engine_available": true,
     "per_cnae": [
         {

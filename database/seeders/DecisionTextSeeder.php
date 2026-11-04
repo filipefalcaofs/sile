@@ -7,7 +7,7 @@ use App\Services\Decisao\DecisionTextCatalog;
 use Illuminate\Database\Seeder;
 
 /**
- * Catálogo inicial dos textos decisórios (TVL, parecer, ficha do cidadão) —
+ * Catálogo inicial dos textos decisórios (Viabilidade, parecer, ficha do cidadão) —
  * os textos que viviam em constantes PHP dos motores, agora administráveis
  * por chave estável. Fonte única: os templates vêm de
  * DecisionTextCatalog::defaults() (verbatim do código); aqui ficam só as
@@ -91,6 +91,7 @@ class DecisionTextSeeder extends Seeder
         'louos.motivo.cnlu_enquadramento' => 'Motivo do consolidado quando o enquadramento é sinalizado como CNLU e a zona não proíbe o uso: segue para a análise técnica.',
         'tratamento.motivo.sem_versao' => 'Motivo do ramo da planilha quando não há versão vigente da planilha de tratamento.',
         'tratamento.motivo.cnae_sem_regra' => 'Motivo do ramo da planilha quando o CNAE não tem regra de tratamento vigente.',
+        'tratamento.motivo.p12_escritorio_sem_resposta' => 'Motivo do ramo da planilha quando a P11 diz que no local funcionará só o escritório e a P12 (produtos armazenados) veio sem resposta.',
         'tratamento.motivo.pergunta_sem_resposta' => 'Motivo do ramo da planilha quando uma pergunta ligada ao CNAE não foi respondida. Placeholders: :numero, :texto (enunciado da pergunta).',
         'tratamento.motivo.subdivisao_ausente' => 'Motivo do ramo da planilha quando a pergunta 1 pede a escolha de uma subdivisão do CNAE mas a planilha carregada não traz as opções (carga incompleta, não falta do requerente). Placeholder: :cnae.',
         'tratamento.motivo.sem_linha' => 'Motivo do ramo da planilha quando nenhuma linha de enquadramento do CNAE serve ao ramo escolhido.',

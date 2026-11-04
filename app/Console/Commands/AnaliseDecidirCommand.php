@@ -16,7 +16,7 @@ use Illuminate\Console\Command;
 /**
  * Conclui o processo a partir da ficha do analista pelo serviço REAL
  * (AnaliseTecnicaDecisionService::decide) e imprime a EVIDÊNCIA de ponta a ponta:
- * status final, desfecho (deferida/indeferida), número TVL no deferimento e a
+ * status final, desfecho (deferida/indeferida), número da Viabilidade no deferimento e a
  * fundamentação/parecer. Contraparte humana do expresso:decidir (HU-081 a HU-085)
  * — útil para evidência/reprocesso manual.
  *

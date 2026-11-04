@@ -9,7 +9,7 @@ use App\Support\Settings;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Gera o número de produto TVL {prefixo}-{N} (HU-072 RN-007), com N sequencial
+ * Gera o número de produto da Viabilidade {prefixo}-{N} (HU-072 RN-007), com N sequencial
  * único e SEM reinício anual, a partir de viabiliza.expresso.tvl.inicio (3000000). O
  * N é o mesmo número que segue à SEFAZ (ViabilityDecision::numeroSefaz), então
  * não pode repetir entre anos. O contador (tvl_sequences, linha CONTADOR_UNICO)
@@ -52,7 +52,7 @@ class TvlNumberGenerator
     }
 
     /**
-     * Número do produto TVL do processo. A alteração de atividade com viabilidade
+     * Número do produto da Viabilidade do processo. A alteração de atividade com viabilidade
      * vinculada na SEFAZ mantém o número dela; se ele já pertence a outra decisão
      * do sistema (a coluna é única) ou não tem o formato {prefixo}-{N}, gera um novo.
      */

@@ -17,7 +17,7 @@ use Illuminate\Database\Eloquent\Builder;
  * partir do bag (INVARIANTE do {@see ReportSource}): o construtor injeta apenas o
  * serviço (container) e o recorte viaja no bag serializável — NÃO é SyncOnly.
  *
- * `personalData=false`: as colunas trazem só protocolo, serviço, datas e nº do TVL
+ * `personalData=false`: as colunas trazem só protocolo, serviço, datas e nº da Viabilidade
  * — sem PII do requerente. Os blocos DAM não são modelados e NÃO viram colunas
  * mortas na exportação (na tela ficam ocultos por padrão no seletor de colunas);
  * a duração Emissão−Abertura é reportada em MINUTOS ÚTEIS (mesma semântica do

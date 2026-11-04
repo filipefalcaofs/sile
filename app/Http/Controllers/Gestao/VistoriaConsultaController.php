@@ -344,7 +344,7 @@ class VistoriaConsultaController extends Controller
             'id' => $processo->id,
             'protocol_number' => $processo->protocol_number,
             'bap' => $processo->external_reference,
-            'empresa' => $processo->company?->trade_name ?: $processo->company?->legal_name,
+            'empresa' => $processo->company?->nomeExibido(),
             'imovel' => implode(' - ', array_filter([
                 trim(implode(', ', array_filter([$processo->address_street, $processo->address_number]))),
                 $processo->address_neighborhood,

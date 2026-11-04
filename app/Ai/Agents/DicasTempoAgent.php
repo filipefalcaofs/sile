@@ -34,7 +34,7 @@ class DicasTempoAgent implements Agent, HasStructuredOutput
         Contexto do domínio (use para interpretar, nunca como fonte de número):
         - Viabilidade municipal: antes de abrir o CNPJ, o município confirma se a
           atividade (CNAE) é permitida no endereço, conforme zoneamento e uso do
-          solo (LOUOS), e classifica o risco. A decisão é deferida (com TVL, o
+          solo (LOUOS), e classifica o risco. A decisão é deferida (com Viabilidade, o
           documento da viabilidade) ou indeferida.
         - Fluxos: expresso (decidido pelo motor de regras, em segundos),
           semi-expresso e análise manual por um analista. Pendência documental e

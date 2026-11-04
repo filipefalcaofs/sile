@@ -134,7 +134,7 @@ function formatarDuracao(minutos: number | null): string {
     return `${horas}h ${resto.toString().padStart(2, '0')}m`;
 }
 
-/** Badge de disponibilidade do TVL (Sim enfatizado, Não discreto). */
+/** Badge de disponibilidade da Viabilidade (Sim enfatizado, Não discreto). */
 function DisponivelBadge({ disponivel }: { disponivel: boolean }) {
     return disponivel ? (
         <Badge variant="light" color="success" size="sm">

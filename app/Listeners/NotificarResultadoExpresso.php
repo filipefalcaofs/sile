@@ -14,7 +14,7 @@ use App\Support\Settings;
  * requerente do desfecho do fluxo expresso. A partir do EP11 (11-06) o aviso
  * percorre o NotificationDispatcher (HU-086/090) — ganha in-app + histórico
  * (communications) além do e-mail, unificando as notificações de processo num só
- * roteador. O e-mail segue SEM anexo de TVL (o canal oficial de entrega é o
+ * roteador. O e-mail segue SEM anexo de Viabilidade (o canal oficial de entrega é o
  * Regin/SEFAZ) e NÃO vai a usuário da retaguarda (equipe SEDUR), que recebe só
  * o aviso in-app.
  *

@@ -13,7 +13,7 @@ use App\Models\ViabilityDecision;
  * `emitted` é false na corrida idempotente que reaproveita a decisão já gravada
  * (a unique viability_request_id da Fase 9 barra a 2ª) — não redispara o evento.
  * É o insumo do controller/comando que conclui o processo (endpoint em 10-15) e
- * do TVL PDF (10-13): nunca um resultado simulado, só o que foi decidido de fato.
+ * da Viabilidade PDF (10-13): nunca um resultado simulado, só o que foi decidido de fato.
  */
 final readonly class AnaliseDecisionResult
 {

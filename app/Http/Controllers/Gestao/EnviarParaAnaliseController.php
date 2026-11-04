@@ -12,7 +12,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Tela T06 — Enviar processo de TVL para análise (relatório de teste SEDUR).
+ * Tela T06 — Enviar processo de Viabilidade para análise (relatório de teste SEDUR).
  * Gatilho MANUAL da retaguarda que leva um processo à fila da análise técnica.
  *
  * Regras fechadas (SEDUR): QUALQUER status pode ser enviado (OPEN-F-2 — sem

@@ -22,7 +22,7 @@ use Tests\TestCase;
 
 /**
  * Consulta de processos da retaguarda (HU-078): a SEDUR busca processos com os
- * filtros completos do SAPS (status, número do processo, BAP, produto TVL,
+ * filtros completos do SAPS (status, número do processo, BAP, produto da Viabilidade,
  * serviço, setor, inscrição, nome, CNPJ, CEP, logradouro, bairro, datas) MAIS o
  * filtro por analista responsável e por categoria derivada (Expresso,
  * Semi-Expresso, Malha Fina, Sede de Escritório). Server-driven (espelha o

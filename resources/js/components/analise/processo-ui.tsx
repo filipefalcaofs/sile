@@ -16,8 +16,8 @@ export interface ProcessoCategoria {
 
 /**
  * Bloco de escritório virtual do produto (T03) — presente só quando o produto é
- * sede ou abrigado. `tvl_sede` é o "End. Virtual — TVL Nº" (para o abrigado, o
- * TVL da sede; RN-EV-05). `validade_sede` não é modelada (desfecho spec-2) e
+ * sede ou abrigado. `tvl_sede` é o "End. Virtual — Viabilidade Nº" (para o abrigado, o
+ * Viabilidade da sede; RN-EV-05). `validade_sede` não é modelada (desfecho spec-2) e
  * chega como null → renderizada como "—".
  */
 export interface ProcessoEscritorioVirtual {

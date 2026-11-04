@@ -38,6 +38,23 @@ class Company extends Model
     }
 
     /**
+     * Nome da empresa nas listagens: fantasia, senão razão social. O marcador
+     * "Empresa a constituir" que o REGIN manda não é nome e não aparece.
+     */
+    public function nomeExibido(): ?string
+    {
+        foreach ([$this->trade_name, $this->legal_name] as $nome) {
+            $nome = trim((string) $nome);
+
+            if ($nome !== '' && preg_match('/^empresa a constituir$/iu', $nome) !== 1) {
+                return $nome;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Contagem reutilizável das empresas com vínculo ATIVO do usuário —
      * consumida pela listagem (totalCompanies) e pelo painel do cidadão na
      * evolução (lacuna registrada no STATE).

@@ -5,6 +5,7 @@ namespace Tests\Feature\Expresso;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\Cnae;
 use App\Models\Company;
+use App\Models\Sector;
 use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
@@ -73,6 +74,26 @@ class ResultadoExpressoFiltrosConsultaTest extends TestCase
 
         $this->assertSame([$alvo->id], $this->idsDaLista('bap=000999'));
         $this->assertSame([$alvo->id], $this->idsDaLista('complemento=sala'));
+    }
+
+    public function test_filtra_por_varios_setores_e_oferece_os_setores_pelo_nome(): void
+    {
+        $a = Sector::factory()->create(['name' => 'Setor Alfa']);
+        $b = Sector::factory()->create(['name' => 'Setor Beta']);
+        $c = Sector::factory()->create();
+        $noA = $this->decidida(['sector_id' => $a->id]);
+        $noB = $this->decidida(['sector_id' => $b->id]);
+        $this->decidida(['sector_id' => $c->id]);
+
+        $ids = $this->idsDaLista('setor='.urlencode($a->id.'|'.$b->id));
+
+        $this->assertEqualsCanonicalizing([$noA->id, $noB->id], $ids);
+
+        $analista = User::factory()->analista()->withAcceptedLgpdTerm()->create();
+        $this->actingAs($analista, 'gestao')
+            ->get('/gestao/resultados-expresso')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('setorOptions', fn ($opcoes) => collect($opcoes)->contains(['value' => (string) $a->id, 'label' => 'Setor Alfa'])));
     }
 
     public function test_filtra_por_cnae_e_por_cpf_ou_cnpj_no_mesmo_campo(): void

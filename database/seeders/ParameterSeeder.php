@@ -351,7 +351,7 @@ class ParameterSeeder extends Seeder
                 'type' => 'boolean',
                 'default_value' => '0',
                 'validation_rules' => ['required', 'boolean'],
-                'description' => 'Consulta a viabilidade anterior da empresa no legado Simplifica (TVL deferida e ativa e os CNAEs dela) para comparar as atividades de uma alteração. Desligado, só vale o processo anterior no Viabiliza',
+                'description' => 'Consulta a viabilidade anterior da empresa no legado Simplifica (Viabilidade deferida e ativa e os CNAEs dela) para comparar as atividades de uma alteração. Desligado, só vale o processo anterior no Viabiliza',
             ],
             'features.validacao_ponto_inscricao' => [
                 'group' => 'features',
@@ -711,7 +711,7 @@ class ParameterSeeder extends Seeder
             // Comunicação multicanal (EP11). Os toggles de canal nascem
             // administráveis: e-mail e in-app ligados; WhatsApp DESLIGADO
             // (provedor real bloqueado até a Fase 13 — degradação honesta).
-            // Constantes técnicas de storage (disk dos documentos e do TVL PDF),
+            // Constantes técnicas de storage (disk dos documentos e da Viabilidade PDF),
             // padding de números de protocolo/TVL, timeout/retries/backoff da
             // consulta de CNPJ e paginações de listagem ficam em config/viabiliza.php
             // — não são valores de negócio e não precisam ser administráveis.

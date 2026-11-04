@@ -90,7 +90,7 @@ class ProcessoDecisaoEndpointTest extends TestCase
     {
         // HU-082 RN-004: todas as CNAEs deferidas na ficha → DEFERE. Cria a
         // ViabilityDecision (flow analise_tecnica, decided_by analista) com número
-        // TVL, encerra (em_analise→deferida) e dispara ResultadoEmitido.
+        // Viabilidade, encerra (em_analise→deferida) e dispara ResultadoEmitido.
         Event::fake([ResultadoEmitido::class]);
 
         $processo = $this->processoComFicha([
@@ -117,7 +117,7 @@ class ProcessoDecisaoEndpointTest extends TestCase
 
     public function test_decide_indefere_quando_a_ficha_tem_cnae_indeferida(): void
     {
-        // HU-083 RN-004: basta uma CNAE indeferida → INDEFERE o processo, sem TVL.
+        // HU-083 RN-004: basta uma CNAE indeferida → INDEFERE o processo, sem Viabilidade.
         Event::fake([ResultadoEmitido::class]);
 
         $processo = $this->processoComFicha([

@@ -23,7 +23,7 @@ use Illuminate\Foundation\Events\Dispatchable;
  * é APENAS a base desacoplada dos efeitos colaterais — listeners AUTO-DESCOBERTOS
  * (cada um faz type-hint deste evento no handle; NÃO registrar via Event::listen,
  * que duplicaria o registro) pendurados na Wave 4, sem tocar a decisão:
- *  - NotificarResultadoExpresso (HU-073) — e-mail ao cidadão, sem anexo de TVL;
+ *  - NotificarResultadoExpresso (HU-073) — e-mail ao cidadão, sem anexo de Viabilidade;
  *  - ComunicarResultadoRegin (HU-100) — bloqueado (ReginParecerNotifier); o
  *    listener captura a exceção e audita a pendência de integração.
  */

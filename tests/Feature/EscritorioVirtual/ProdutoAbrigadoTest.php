@@ -29,9 +29,9 @@ use Tests\TestCase;
 /**
  * Produto do ABRIGADO de escritório virtual (RN-EV-05): quando a inscrição tem
  * uma SEDE ativa e os CNAEs estão na Lista EV vigente, a decisão do abrigado
- * grava is_virtual_office_tenant=true e virtual_office_hq_tvl_number = o nº TVL
- * da sede ("End. Virtual - TVL Nº"). Sem sede na inscrição → tenant false, sem
- * referência de TVL. Exercita o fluxo expresso real (FluxoExpressoService).
+ * grava is_virtual_office_tenant=true e virtual_office_hq_tvl_number = o nº da Viabilidade
+ * da sede ("End. Virtual - Viabilidade Nº"). Sem sede na inscrição → tenant false, sem
+ * referência de Viabilidade. Exercita o fluxo expresso real (FluxoExpressoService).
  */
 class ProdutoAbrigadoTest extends TestCase
 {
@@ -50,7 +50,7 @@ class ProdutoAbrigadoTest extends TestCase
     {
         Event::fake([ResultadoEmitido::class]);
 
-        // SEDE deferida com produto (TVL) + trava a inscrição 'X'.
+        // SEDE deferida com produto (Viabilidade) + trava a inscrição 'X'.
         $sede = ViabilityRequest::factory()->protocoled()->create([
             'property_registration' => 'X',
             'protocol_number' => 'VIA-2026-SEDE01',

@@ -14,7 +14,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 /**
  * Payload de leitura do processo para a consulta (HU-078) e a fila (HU-134) da
  * retaguarda. Expõe os TRÊS identificadores do processo (RN-007 — número do
- * processo SEDUR, protocolo BAP e número do produto TVL), a empresa, o imóvel, o
+ * processo SEDUR, protocolo BAP e número do produto da Viabilidade), a empresa, o imóvel, o
  * status, a categoria DERIVADA (RN-005), o analista/setor responsáveis e o SLA
  * resumido (semáforo calculado on-the-fly via AnalysisSlaService — nunca
  * persistido). Consumido como prop do Inertia (->resolve()), sem o wrapper
@@ -51,7 +51,7 @@ class ProcessoResource extends JsonResource
             'tipo_imovel' => $this->tipo_imovel ?? $this->tipo_imovel_cadastro,
             'contingency_reason' => $this->contingency_reason,
             'motivo_da_analise' => $this->motivoDaAnalise(),
-            'empresa' => $this->company?->trade_name ?: $this->company?->legal_name,
+            'empresa' => $this->company?->nomeExibido(),
             // Empresa a constituir não tem CNPJ: o documento de 11 dígitos é o CPF de quem pediu.
             'cnpj' => strlen((string) $this->company?->cnpj) === 14 ? $this->company?->formatted_cnpj : null,
             'solicitante' => $this->solicitante_nome,
@@ -93,8 +93,8 @@ class ProcessoResource extends JsonResource
     /**
      * Card "Escritório virtual" do produto (T03). Deriva o tipo do produto da
      * decisão (sede quando is_virtual_office_hq; abrigado quando
-     * is_virtual_office_tenant) e expõe o TVL da SEDE — para o abrigado é o
-     * `virtual_office_hq_tvl_number` (End. Virtual — TVL Nº, RN-EV-05 CA-P-01);
+     * is_virtual_office_tenant) e expõe a Viabilidade da SEDE — para o abrigado é o
+     * `virtual_office_hq_tvl_number` (End. Virtual — Viabilidade Nº, RN-EV-05 CA-P-01);
      * para a sede é o próprio `tvl_product_number`. A VALIDADE da sede não é
      * modelada (desfecho spec-2) e degrada para null ("—" na tela) — jamais
      * inventada. Null quando o processo não é EV.

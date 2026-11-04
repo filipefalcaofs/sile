@@ -21,7 +21,7 @@ use Tests\TestCase;
 /**
  * Domínio da análise técnica (Fase 10): relations, casts (jsonb→array, enums,
  * datetimes, booleans), a revisão IMUTÁVEL/versionada da ficha (RN-003) e as
- * unicidades de banco (revisão por processo, verification_code do TVL). Roda em
+ * unicidades de banco (revisão por processo, verification_code da Viabilidade). Roda em
  * SQLite com RefreshDatabase — espelha o ViabilityDecisionTest.
  */
 class AnaliseModelsTest extends TestCase

@@ -20,7 +20,7 @@ use Tests\TestCase;
  * toDatabase() alimenta a central in-app. O e-mail (toMail) mantém o assunto
  * parametrizável por desfecho (deferida usa expresso.notificacao.assunto_deferida,
  * indeferida usa _indeferida — RN-005), corpo pt-BR com o número de protocolo e
- * SEM anexo de TVL (RN-004): o canal oficial de entrega do documento é o
+ * SEM anexo de Viabilidade (RN-004): o canal oficial de entrega do documento é o
  * Regin/SEFAZ. Enfileirável (ShouldQueue) como as demais notificações da casa.
  */
 class ResultadoExpressoNotificationTest extends TestCase
@@ -102,8 +102,8 @@ class ResultadoExpressoNotificationTest extends TestCase
 
     public function test_nao_anexa_o_tvl(): void
     {
-        // RN-004: o documento oficial (TVL) é entregue pelo Regin/SEFAZ, nunca
-        // por e-mail. A notificação não pode carregar anexo de TVL/PDF.
+        // RN-004: o documento oficial (Viabilidade) é entregue pelo Regin/SEFAZ, nunca
+        // por e-mail. A notificação não pode carregar anexo de Viabilidade/PDF.
         $mail = (new ResultadoExpressoNotification('VIA-2026-000001', DecisionOutcome::Deferida))
             ->toMail($this->notifiable());
 

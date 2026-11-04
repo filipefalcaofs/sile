@@ -1,9 +1,9 @@
 openapi: 3.0.3
 info:
-  title: Viabiliza — consulta de TVL (api_integracao/tvl)
+  title: Viabiliza — consulta de Viabilidade (api_integracao/tvl)
   version: "1.0.0"
   description: |
-    API que a SEFAZ/SIGS chama para consultar um TVL (liberação de alvará e geração do DAM).
+    API que a SEFAZ/SIGS chama para consultar uma Viabilidade (liberação de alvará e geração do DAM).
     O corpo da resposta segue o padrão do WS SIGS `buscarPorNumeroTVLRegin`.
 
     ## Autenticação
@@ -12,13 +12,13 @@ info:
     2. Envie o token em `Authorization: Bearer <token>` na consulta.
     3. O token vale `expira_em_segundos` (60 minutos). Depois disso, autentique de novo.
 
-    ## Status do TVL (`resposta.status`)
+    ## Status da Viabilidade (`resposta.status`)
 
     | Código | Significado |
     | --- | --- |
-    | `00` | TVL não encontrado (HTTP 404). |
-    | `01` | TVL concedido. |
-    | `02` | TVL inválido, não deferido (cassado, revogado ou desativado). |
+    | `00` | Viabilidade não encontrada (HTTP 404). |
+    | `01` | Viabilidade concedida. |
+    | `02` | Viabilidade inválida, não deferida (cassado, revogado ou desativado). |
     | `99` | Erro no processamento (integração desligada ou falha interna). |
 
     ## Formatos
@@ -42,7 +42,7 @@ tags:
   - name: Autenticação
     description: Troca de usuário e senha por token
   - name: Consulta
-    description: Dados do TVL pelo número da viabilidade
+    description: Dados da Viabilidade pelo número da viabilidade
 
 paths:
   /api_integracao/tvl/autenticar:
@@ -82,7 +82,7 @@ paths:
     get:
       tags: [Consulta]
       operationId: consultarTvl
-      summary: Consultar TVL
+      summary: Consultar Viabilidade
       security:
         - bearerAuth: []
       parameters:
@@ -95,7 +95,7 @@ paths:
           example: "3000123"
       responses:
         "200":
-          description: TVL encontrado. `resposta.status` é `01` (concedido) ou `02` (inválido).
+          description: Viabilidade encontrada. `resposta.status` é `01` (concedido) ou `02` (inválido).
           content:
             application/json:
               schema:
@@ -107,7 +107,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/SemEmpresa"
         "404":
-          description: TVL não encontrado (`resposta.status` `00`)
+          description: Viabilidade não encontrada (`resposta.status` `00`)
           content:
             application/json:
               schema:
@@ -173,14 +173,14 @@ components:
       properties:
         protocolo:
           type: string
-          description: Número da viabilidade (TVL), sem o prefixo `TVL-`.
+          description: Número da viabilidade (Viabilidade), sem o prefixo `TVL-`.
           example: "3000123"
         status:
           type: string
           enum: ["00", "01", "02", "99"]
         mensagem:
           type: string
-          example: TVL concedido.
+          example: Viabilidade concedida.
         cnpj_instituicao:
           type: string
           description: CNPJ da empresa, só dígitos. Vazio quando não há resposta ou quando a empresa ainda vai ser constituída (sem CNPJ).
@@ -228,7 +228,7 @@ components:
         data_vencimento:
           type: string
           nullable: true
-          description: Validade do TVL. Null no TVL definitivo.
+          description: Validade da Viabilidade. Null na Viabilidade definitiva.
           example: "13/10/2027 00:00:00"
         data_viabilidade: {type: string, nullable: true, example: "13/10/2026 14:07:13"}
         data_ini_viabilidade: {type: string, nullable: true, example: "20261009 170941"}

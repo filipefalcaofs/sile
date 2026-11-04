@@ -24,7 +24,7 @@ use Illuminate\Notifications\Notification;
  * {@see $communicationIds} — substitui o antigo par EmailLog + failed() (a fonte
  * de verdade das comunicações de PROCESSO agora é o ledger, sem dupla verdade).
  *
- * NÃO anexa o TVL/PDF (RN-004): o canal oficial de entrega do documento de
+ * NÃO anexa a Viabilidade/PDF (RN-004): o canal oficial de entrega do documento de
  * viabilidade ao cidadão é o Regin/SEFAZ (decisão SEDUR). O e-mail é apenas o
  * aviso do desfecho, com assunto parametrizável pela HU-014
  * (expresso.notificacao.assunto_deferida / _indeferida) — por isso o toMail

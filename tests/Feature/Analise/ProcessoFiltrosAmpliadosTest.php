@@ -5,10 +5,14 @@ namespace Tests\Feature\Analise;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\Cnae;
 use App\Models\Company;
+use App\Models\Sector;
 use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
+use App\Models\ViabilityRequestEvento;
+use App\Models\ViabilityServiceType;
 use App\Services\Analise\ProcessoQueryService;
+use App\Services\Servicos\ServicoNomenclaturaResolver;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -55,6 +59,88 @@ class ProcessoFiltrosAmpliadosTest extends TestCase
             ->pluck('id')
             ->map(fn ($id): int => (int) $id)
             ->all();
+    }
+
+    public function test_filtra_por_varios_setores_e_um_so_continua_valendo(): void
+    {
+        $a = Sector::factory()->create();
+        $b = Sector::factory()->create();
+        $c = Sector::factory()->create();
+        $noA = $this->processo(['sector_id' => $a->id]);
+        $noB = $this->processo(['sector_id' => $b->id]);
+        $this->processo(['sector_id' => $c->id]);
+
+        $this->assertEqualsCanonicalizing([$noA->id, $noB->id], $this->idsFiltrados(['setor' => $a->id.'|'.$b->id]));
+        $this->assertSame([$noA->id], $this->idsFiltrados(['setor' => (string) $a->id]));
+    }
+
+    public function test_filtra_por_varios_servicos_do_tipo_interno(): void
+    {
+        $a = ViabilityServiceType::factory()->create();
+        $b = ViabilityServiceType::factory()->create();
+        $c = ViabilityServiceType::factory()->create();
+        $doA = $this->processo(['service_type_id' => $a->id]);
+        $doB = $this->processo(['service_type_id' => $b->id]);
+        $this->processo(['service_type_id' => $c->id]);
+
+        $this->assertEqualsCanonicalizing([$doA->id, $doB->id], $this->idsFiltrados(['servico' => $a->id.'|'.$b->id]));
+        $this->assertSame([$doA->id], $this->idsFiltrados(['servico' => (string) $a->id]));
+    }
+
+    public function test_viabilidade_locacional_sai_do_filtro_e_entra_em_viabilidade_de_localizacao(): void
+    {
+        $locacional = ViabilityServiceType::factory()->create(['code' => 'tvl', 'name' => 'Viabilidade locacional']);
+        $doPortal = $this->processo(['service_type_id' => $locacional->id]);
+        $daJuceb = $this->processo();
+        ViabilityRequestEvento::factory()->create([
+            'viability_request_id' => $daJuceb->id,
+            'codigo' => '101',
+            'nome' => 'Inscrição de primeiro estabelecimento',
+        ]);
+        $outro = $this->processo(['service_type_id' => ViabilityServiceType::factory()->create()->id]);
+
+        $rotulos = array_column(app(ServicoNomenclaturaResolver::class)->opcoesDoFiltro(), 'label');
+
+        $this->assertNotContains('Viabilidade locacional', $rotulos);
+        $this->assertContains('Viabilidade de Localização', $rotulos);
+        $this->assertEqualsCanonicalizing(
+            [$doPortal->id, $daJuceb->id],
+            $this->idsFiltrados(['servico' => ProcessoQueryService::PREFIXO_NOME_SERVICO.'viabilidade de localizacao']),
+        );
+        $this->assertNotContains($outro->id, $this->idsFiltrados(['servico' => ProcessoQueryService::PREFIXO_NOME_SERVICO.'viabilidade de localizacao']));
+    }
+
+    public function test_viabilidade_de_localizacao_aparece_no_filtro_mesmo_sem_evento_recebido(): void
+    {
+        ViabilityServiceType::factory()->create(['code' => 'tvl', 'name' => 'Viabilidade locacional']);
+
+        $rotulos = array_column(app(ServicoNomenclaturaResolver::class)->opcoesDoFiltro(), 'label');
+
+        $this->assertSame(['Viabilidade de Localização'], array_values(array_filter($rotulos, fn (string $r): bool => str_starts_with($r, 'Viabilidade'))));
+    }
+
+    public function test_filtra_pelo_numero_da_porta_sem_zeros_a_esquerda(): void
+    {
+        $sete = $this->processo(['address_number' => '000007']);
+        $this->processo(['address_number' => '17']);
+        $this->processo(['address_number' => '70']);
+
+        $this->assertSame([$sete->id], $this->idsFiltrados(['numero' => '7']));
+        $this->assertSame([$sete->id], $this->idsFiltrados(['numero' => ' 07 ']));
+    }
+
+    public function test_numero_da_porta_e_filtro_das_caixas(): void
+    {
+        $this->assertContains('numero', ProcessoQueryService::CHAVES_FILTRO_CAIXA);
+    }
+
+    public function test_servico_de_evento_sem_processo_nao_traz_resultado_e_valor_estranho_e_ignorado(): void
+    {
+        $tipo = ViabilityServiceType::factory()->create();
+        $processo = $this->processo(['service_type_id' => $tipo->id]);
+
+        $this->assertSame([], $this->idsFiltrados(['servico' => 'nnome-sem-evento']));
+        $this->assertSame([$processo->id], $this->idsFiltrados(['servico' => 'lixo']));
     }
 
     public function test_filtra_por_codigo_do_cnae_com_ou_sem_pontuacao(): void
@@ -151,5 +237,25 @@ class ProcessoFiltrosAmpliadosTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->has('processos.data', 1)
                 ->where('processos.data.0.id', $alvo->id));
+    }
+
+    public function test_consulta_oferece_servicos_e_setores_com_descricao_e_filtra_por_varios(): void
+    {
+        $a = Sector::factory()->create(['name' => 'Setor Alfa']);
+        $b = Sector::factory()->create(['name' => 'Setor Beta']);
+        $noA = $this->processo(['sector_id' => $a->id]);
+        $noB = $this->processo(['sector_id' => $b->id]);
+        $tipo = ViabilityServiceType::factory()->create(['name' => 'Tipo de teste']);
+        $analista = User::factory()->analista()->withAcceptedLgpdTerm()->create();
+
+        $this->actingAs($analista, 'gestao')
+            ->get('/gestao/processos?setor='.urlencode($a->id.'|'.$b->id))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('processos.data', 2)
+                ->where('processos.data.0.id', $noB->id)
+                ->where('processos.data.1.id', $noA->id)
+                ->where('setorOptions', fn ($opcoes) => collect($opcoes)->contains(['value' => (string) $a->id, 'label' => 'Setor Alfa']))
+                ->where('servicoOptions', fn ($opcoes) => collect($opcoes)->contains(['value' => (string) $tipo->id, 'label' => 'Tipo de teste'])));
     }
 }

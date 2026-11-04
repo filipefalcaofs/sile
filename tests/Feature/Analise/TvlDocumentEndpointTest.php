@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
 
 /**
- * Endpoints do TVL (HU-123): o controller FINO emite o TVL de uma decisão
+ * Endpoints da Viabilidade (HU-123): o controller FINO emite a Viabilidade de uma decisão
  * DEFERIDA via TvlPdfService::generate (10-13) e oferece o download por URL
  * TEMPORÁRIA ASSINADA servindo o disco NÃO público por streaming — nunca URL
  * pública, nunca ao cidadão (CA-02). Gated por emitir-tvl (403 auditado — CA-04);
@@ -119,7 +119,7 @@ class TvlDocumentEndpointTest extends TestCase
 
     public function test_bloqueia_emissao_de_decisao_indeferida_com_422(): void
     {
-        // FA-01: o TVL só sai de decisão deferida. Indeferida → 422; nada gerado.
+        // FA-01: a Viabilidade só sai de decisão deferida. Indeferida → 422; nada gerado.
         $processo = $this->processoIndeferido();
 
         $this->actingAs($this->analista(), 'gestao')

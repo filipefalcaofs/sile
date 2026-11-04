@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\DB;
 /**
  * Construção da query da consulta de processos (HU-078) e da fila do analista
  * (HU-134). Centraliza os filtros completos do SAPS (grupo de status, status,
- * número do processo, BAP, produto TVL, serviço, setor, datas, inscrição, nome,
+ * número do processo, BAP, produto da Viabilidade, serviço, setor, datas, inscrição, nome,
  * CNPJ, CEP, logradouro, bairro) MAIS o filtro por analista responsável e por
  * categoria DERIVADA (Expresso/Semi-Expresso a partir de analysis_category;
  * Malha Fina de in_fine_mesh; Sede de Escritório de is_virtual_office — RN-005),
@@ -46,7 +46,7 @@ class ProcessoQueryService
     /** Filtro "Serviço" pelo nome parametrizado (De x Para), normalizado. */
     public const PREFIXO_NOME_SERVICO = 'n';
 
-    public const CHAVES_FILTRO_CAIXA = ['analysis_status', 'servico', 'protocolo', 'bap', 'data_de', 'data_ate', 'nome', 'cnpj', 'bairro', 'categoria', 'analista', 'cnae', 'complemento'];
+    public const CHAVES_FILTRO_CAIXA = ['analysis_status', 'servico', 'protocolo', 'bap', 'data_de', 'data_ate', 'nome', 'cnpj', 'bairro', 'categoria', 'analista', 'cnae', 'complemento', 'numero'];
 
     /**
      * Grupo de status (filtro macro do SAPS) → conjunto de status do enum.
@@ -92,8 +92,6 @@ class ProcessoQueryService
      */
     public function aplicarFiltros(Builder $query, array $filtros): Builder
     {
-        $eventosDoServico = $this->eventosDoServico($filtros);
-
         return $query
             ->when($this->valor($filtros, 'grupo'), fn (Builder $q, string $grupo) => $this->aplicarGrupo($q, $grupo))
             ->when($this->valor($filtros, 'status'), fn (Builder $q, string $status) => $q->where('status', $status))
@@ -108,9 +106,8 @@ class ProcessoQueryService
             })
             ->when($this->valor($filtros, 'bap'), fn (Builder $q, string $v) => $q->whereLike('external_reference', "%{$v}%", caseSensitive: false))
             ->when($this->valor($filtros, 'produto_tvl'), fn (Builder $q, string $v) => $q->whereHas('decision', fn ($d) => $d->whereLike('tvl_product_number', "%{$v}%", caseSensitive: false)))
-            ->when($this->inteiro($filtros, 'servico'), fn (Builder $q, int $id) => $q->where('service_type_id', $id))
-            ->when($eventosDoServico !== null, fn (Builder $q) => $q->whereHas('eventos', fn ($e) => $this->aplicarEventos($e, $eventosDoServico)))
-            ->when($this->inteiro($filtros, 'setor'), fn (Builder $q, int $id) => $q->where('sector_id', $id))
+            ->tap(fn (Builder $q) => $this->aplicarServicos($q, $filtros))
+            ->when($this->inteiros($filtros, 'setor'), fn (Builder $q, array $ids) => $q->whereIn('sector_id', $ids))
             ->when($this->inteiro($filtros, 'analista'), fn (Builder $q, int $id) => $q->where('assigned_user_id', $id))
             ->when($this->valor($filtros, 'inscricao'), fn (Builder $q, string $v) => $q->whereLike('property_registration', "%{$v}%", caseSensitive: false))
             ->when($this->valor($filtros, 'cep'), fn (Builder $q, string $v) => $q->whereLike('address_zip', "%{$v}%", caseSensitive: false))
@@ -119,6 +116,7 @@ class ProcessoQueryService
             ->when($this->valor($filtros, 'nome'), fn (Builder $q, string $v) => $this->aplicarNome($q, $v))
             ->when($this->valor($filtros, 'cnpj'), fn (Builder $q, string $v) => $this->aplicarDocumento($q, $v))
             ->when($this->valor($filtros, 'cnae'), fn (Builder $q, string $v) => $this->aplicarCnae($q, $v))
+            ->when($this->valor($filtros, 'numero'), fn (Builder $q, string $v) => $q->whereRaw("ltrim(trim(address_number), '0') = ?", [ltrim($v, '0')]))
             ->when($this->valor($filtros, 'complemento'), fn (Builder $q, string $v) => $q->whereLike('address_complement', "%{$v}%", caseSensitive: false))
             ->when($this->data($filtros, 'data_de'), fn (Builder $q, string $d) => $q->whereDate('protocoled_at', '>=', $d))
             ->when($this->data($filtros, 'data_ate'), fn (Builder $q, string $d) => $q->whereDate('protocoled_at', '<=', $d))
@@ -366,7 +364,7 @@ class ProcessoQueryService
      * @return Builder<ViabilityRequest>
      */
     /**
-     * Busca única da consulta: protocolo, BAP, TVL, CNPJ ou nome da empresa.
+     * Busca única da consulta: protocolo, BAP, Viabilidade, CNPJ ou nome da empresa.
      *
      * @param  Builder<ViabilityRequest>  $query
      * @return Builder<ViabilityRequest>
@@ -520,23 +518,76 @@ class ProcessoQueryService
     }
 
     /**
-     * Eventos do filtro "Serviço": pelo nome parametrizado
-     * ("nviabilidade de localizacao"), com código e condição, ou pelos códigos,
-     * formato anterior ("e244", "e101,102"), sem olhar a condição. Nome sem
-     * evento recebido não traz processo.
+     * Filtro "Serviço", com um ou vários valores separados por "|": tipo
+     * interno (id), nome parametrizado ("nviabilidade de localizacao") ou
+     * códigos de evento ("e101,102"). Casa o processo que atenda a qualquer um.
+     * Valor sem evento recebido não traz processo.
      *
+     * @param  Builder<ViabilityRequest>  $query
      * @param  array<string, mixed>  $filtros
+     */
+    private function aplicarServicos(Builder $query, array $filtros): void
+    {
+        $ids = [];
+        $eventos = [];
+        $reconhecido = false;
+
+        foreach ($this->lista($filtros, 'servico') as $valor) {
+            if (ctype_digit($valor)) {
+                $ids[] = (int) $valor;
+                $reconhecido = true;
+
+                continue;
+            }
+
+            $doValor = $this->eventosDoServico($valor);
+
+            if ($doValor !== null) {
+                $eventos = [...$eventos, ...$doValor];
+                $reconhecido = true;
+            }
+
+            if (str_starts_with($valor, self::PREFIXO_NOME_SERVICO)) {
+                $ids = [...$ids, ...app(ServicoNomenclaturaResolver::class)->tiposSinonimosDoNome(substr($valor, strlen(self::PREFIXO_NOME_SERVICO)))];
+            }
+        }
+
+        if (! $reconhecido) {
+            return;
+        }
+
+        $query->where(function (Builder $grupo) use ($ids, $eventos): void {
+            if ($ids === [] && $eventos === []) {
+                $grupo->whereRaw('1 = 0');
+
+                return;
+            }
+
+            if ($ids !== []) {
+                $grupo->orWhereIn('service_type_id', $ids);
+            }
+
+            if ($eventos !== []) {
+                $grupo->orWhereHas('eventos', fn ($e) => $this->aplicarEventos($e, $eventos));
+            }
+        });
+    }
+
+    /**
+     * Eventos de um valor do filtro "Serviço": pelo nome parametrizado, com
+     * código e condição, ou pelos códigos, formato anterior ("e244",
+     * "e101,102"), sem olhar a condição. Nome sem evento recebido não traz
+     * processo. Valor de outro formato devolve null.
+     *
      * @return list<array{codigo: string, condicao?: ?string}>|null
      */
-    private function eventosDoServico(array $filtros): ?array
+    private function eventosDoServico(string $valor): ?array
     {
-        $valor = $this->valor($filtros, 'servico');
-
-        if ($valor !== null && str_starts_with($valor, self::PREFIXO_NOME_SERVICO)) {
+        if (str_starts_with($valor, self::PREFIXO_NOME_SERVICO)) {
             return app(ServicoNomenclaturaResolver::class)->eventosDoNome(substr($valor, strlen(self::PREFIXO_NOME_SERVICO)));
         }
 
-        if ($valor === null || ! str_starts_with($valor, self::PREFIXO_EVENTO)) {
+        if (! str_starts_with($valor, self::PREFIXO_EVENTO)) {
             return null;
         }
 
@@ -581,6 +632,37 @@ class ProcessoQueryService
         $valor = $this->valor($filtros, $chave);
 
         return $valor !== null && ctype_digit($valor) ? (int) $valor : null;
+    }
+
+    /**
+     * Valores de um filtro que aceita vários, separados por "|".
+     *
+     * @param  array<string, mixed>  $filtros
+     * @return list<string>
+     */
+    private function lista(array $filtros, string $chave): array
+    {
+        $valor = $this->valor($filtros, $chave);
+
+        if ($valor === null) {
+            return [];
+        }
+
+        return array_values(array_unique(array_filter(
+            array_map('trim', explode('|', $valor)),
+            fn (string $item): bool => $item !== '',
+        )));
+    }
+
+    /**
+     * @param  array<string, mixed>  $filtros
+     * @return list<int>|null
+     */
+    private function inteiros(array $filtros, string $chave): ?array
+    {
+        $ids = array_map('intval', array_filter($this->lista($filtros, $chave), 'ctype_digit'));
+
+        return $ids === [] ? null : array_values($ids);
     }
 
     /**

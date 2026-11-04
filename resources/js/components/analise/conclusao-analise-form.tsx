@@ -37,6 +37,8 @@ interface ConclusaoAnaliseFormProps {
     parecer?: string;
     onParecer?: (valor: string) => void;
     parecerLabel?: string;
+    /** Parecer em branco bloqueia a conclusão (malha fina). */
+    parecerObrigatorio?: boolean;
     /** Parecer registrado na ficha de análise: é o texto que o botão "Importar parecer" coloca no campo. */
     parecerDaFicha?: string | null;
     erro?: string | null;
@@ -70,6 +72,7 @@ export default function ConclusaoAnaliseForm({
     parecer = '',
     onParecer,
     parecerLabel = 'Parecer',
+    parecerObrigatorio = false,
     parecerDaFicha = null,
     erro,
     divergencia = null,
@@ -94,7 +97,8 @@ export default function ConclusaoAnaliseForm({
     const faltaCampo =
         (pedeTipo && tipo === '') ||
         (pedeValidade && validadeMeses === '') ||
-        (validadePersonalizada && validadeData === '');
+        (validadePersonalizada && validadeData === '') ||
+        (parecerObrigatorio && parecer.trim() === '');
 
     const [importado, setImportado] = useState(false);
     const textoDaFicha = (parecerDaFicha ?? '').trim();
@@ -166,7 +170,10 @@ export default function ConclusaoAnaliseForm({
             {onParecer && (
                 <div>
                     <div className="flex items-center justify-between gap-2">
-                        <Label htmlFor={parecerId}>{parecerLabel}</Label>
+                        <Label htmlFor={parecerId}>
+                            {parecerLabel}
+                            {parecerObrigatorio && <span className="text-error-500"> *</span>}
+                        </Label>
                         <Button
                             type="button"
                             variant="ghost"
@@ -182,7 +189,7 @@ export default function ConclusaoAnaliseForm({
                         rows={4}
                         value={parecer}
                         onChange={(evento) => onParecer(evento.target.value)}
-                        placeholder="Parecer da conclusão, se houver"
+                        placeholder={parecerObrigatorio ? 'Parecer da conclusão' : 'Parecer da conclusão, se houver'}
                     />
                 </div>
             )}

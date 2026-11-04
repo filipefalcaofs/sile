@@ -28,7 +28,7 @@ use Illuminate\Support\Facades\DB;
  *
  * Deferido e Indeferido passam pela decisão da ficha finalizada.
  * Desativado, Cassado e Revogado encerram o processo em análise ou
- * substituem um deferimento já emitido — sem gerar TVL e sem fingir
+ * substituem um deferimento já emitido — sem gerar Viabilidade e sem fingir
  * envio à SEFAZ. Se a inscrição é sede de escritório virtual, esses
  * três resultados (e o indeferimento) desvinculam pelo serviço real.
  *
@@ -226,7 +226,7 @@ class ConclusaoAnaliseService
     /**
      * Processo já deferido concluído de novo como Deferido (ex.: malha fina
      * sobre o expresso): só o tipo e a validade mudam, na decisão existente,
-     * sem novo TVL. A troca fica na auditoria.
+     * sem nova Viabilidade. A troca fica na auditoria.
      */
     private function atualizarValidade(ViabilityRequest $request, User $ator, ValidadeDeferimento $validade): void
     {

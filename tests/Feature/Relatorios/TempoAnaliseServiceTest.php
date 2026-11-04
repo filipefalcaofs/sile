@@ -109,7 +109,7 @@ class TempoAnaliseServiceTest extends TestCase
     }
 
     /**
-     * Decisão com TVL cravada (protocoled_at→decided_at) — SAPS Tempo de Emissão.
+     * Decisão com Viabilidade cravada (protocoled_at→decided_at) — SAPS Tempo de Emissão.
      */
     private function decisaoTvl(string $protocoladoEm, string $decididoEm, ?string $tvl): void
     {
@@ -138,9 +138,9 @@ class TempoAnaliseServiceTest extends TestCase
         $this->decisaoTvl('2026-06-10 10:00', '2026-06-10 15:00', 'TVL-2026-000001'); // 300 (mesma quarta)
         $this->decisaoTvl('2026-06-09 09:00', '2026-06-09 10:00', 'TVL-2026-000002'); // 60 (mesma terça)
 
-        // Ruído que NÃO conta (anti-fachada): indeferida sem TVL no período...
+        // Ruído que NÃO conta (anti-fachada): indeferida sem Viabilidade no período...
         $this->decisaoTvl('2026-06-10 09:00', '2026-06-10 16:00', null);
-        // ...e um TVL DECIDIDO fora do período consultado.
+        // ...e uma Viabilidade DECIDIDO fora do período consultado.
         $this->decisaoTvl('2025-01-05 09:00', '2025-01-05 10:00', 'TVL-2025-000099');
 
         $resultado = $this->service()->tempoEmissaoTvl($this->junho());

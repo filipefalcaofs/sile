@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Contador transacional do número de produto TVL, um por ano. Incrementado pelo
+ * Contador transacional do número de produto da Viabilidade, um por ano. Incrementado pelo
  * TvlNumberGenerator sob lockForUpdate — concorrência-segura no pgsql. Espelha
  * ProtocolSequence.
  */

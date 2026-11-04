@@ -15,7 +15,7 @@ use Tests\TestCase;
  * Relatório sede × abrigados de escritório virtual (Plano R1 — Task 1). A
  * consulta agrupa, por inscrição imobiliária travada, a SEDE (o alvo do lock
  * ativo) e os ABRIGADOS (decisões com is_virtual_office_tenant=true na mesma
- * inscrição). Filtra pelo nº do produto TVL da sede OU pela inscrição, e devolve
+ * inscrição). Filtra pelo nº do produto da Viabilidade da sede OU pela inscrição, e devolve
  * um paginator cujas linhas são mapeadas por `linha()`.
  */
 class RelatorioSedeQueryTest extends TestCase
@@ -31,7 +31,7 @@ class RelatorioSedeQueryTest extends TestCase
     {
         parent::setUp();
 
-        // SEDE: deferida com TVL, marca hq, e trava a inscrição '111'.
+        // SEDE: deferida com Viabilidade, marca hq, e trava a inscrição '111'.
         $sedeCompany = Company::factory()->create([
             'trade_name' => 'Sede EV Ltda',
             'legal_name' => 'Sede Escritório Virtual Ltda',
@@ -53,7 +53,7 @@ class RelatorioSedeQueryTest extends TestCase
             'locked_at' => now(),
         ]);
 
-        // 2 ABRIGADOS na mesma inscrição '111', cada um com empresa e TVL próprios.
+        // 2 ABRIGADOS na mesma inscrição '111', cada um com empresa e Viabilidade próprios.
         foreach (['AB1', 'AB2'] as $i => $sufixo) {
             $company = Company::factory()->create([
                 'legal_name' => "Abrigado {$sufixo} ME",

@@ -21,7 +21,7 @@ class ServiceDeclarationTest extends TestCase
         $tipo = ViabilityServiceType::factory()->create(['code' => 'renovacao-tvl']);
         $vigente = ServiceDeclaration::factory()->create([
             'service_type_id' => $tipo->id,
-            'body' => 'Declaro que os dados do TVL permanecem os mesmos.',
+            'body' => 'Declaro que os dados da Viabilidade permanecem os mesmos.',
             'version' => 2,
             'required' => true,
             'valid_from' => now()->subDay(),

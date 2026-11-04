@@ -259,7 +259,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::get('saturacao', [RelatorioController::class, 'saturacao'])->name('saturacao');
             // Relatório sede × abrigados de escritório virtual (Plano R1): sede
             // (alvo do lock ativo) + abrigados da inscrição travada, recorte por nº
-            // TVL da sede OU inscrição. Export pelo contrato único (?formato=).
+            // Viabilidade da sede OU inscrição. Export pelo contrato único (?formato=).
             Route::get('escritorio-virtual', [RelatorioController::class, 'escritorioVirtual'])->name('escritorio-virtual');
             // Relatório SAPS "Tempo de Emissão de TVL" (Tela R2): página dedicada
             // (separada do KPI `tempo`) — tabela dos processos decididos no recorte
@@ -565,7 +565,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
         });
 
         // Textos decisórios do motor (Fase 4): catálogo administrável dos
-        // textos emitidos em documentos oficiais (TVL/parecer/ficha do
+        // textos emitidos em documentos oficiais (Viabilidade/parecer/ficha do
         // cidadão), lidos via DecisionTextCatalog. SEM create/delete/toggle —
         // a chave é ligada ao motor (call site no código): criar chave sem
         // call site seria fachada e apagar quebraria a emissão do documento.
@@ -659,7 +659,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::get('{viabilityRequest}', [ResultadoExpressoController::class, 'show'])->name('show');
         });
 
-        // Enviar processo de TVL para análise (tela T06 — relatório de teste
+        // Enviar processo de Viabilidade para análise (tela T06 — relatório de teste
         // SEDUR): gatilho MANUAL da retaguarda que leva um processo à fila da
         // análise técnica. Permissão DEDICADA (enviar-tvl-analise, 403 auditado no
         // ponto único); QUALQUER status é aceito (OPEN-F-2), vale para sede E
@@ -839,10 +839,10 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
         // 132/136): os endpoints HTTP FINOS que expõem os serviços já testados das
         // Waves 5/6 — decidir/encerrar (AnaliseTecnicaDecisionService), abrir
         // pendência (PendenciaService), encaminhar à malha fina single+lote
-        // (MalhaFinaService) e emitir/baixar o TVL (TvlPdfService). Toda a regra e
+        // (MalhaFinaService) e emitir/baixar a Viabilidade (TvlPdfService). Toda a regra e
         // a auditoria vivem nos serviços; aqui só a casca gated/auditada que as
         // telas (10-16/10-17) acionam. Cada endpoint é gated pela permissão da
-        // ação (403 auditado no ponto único — CA-04). O download do TVL é por URL
+        // ação (403 auditado no ponto único — CA-04). O download da Viabilidade é por URL
         // TEMPORÁRIA ASSINADA (signed) servindo o disco NÃO público por streaming
         // (HU-123 CA-02 — nunca URL pública, nunca ao cidadão). ÚNICO editor de
         // routes/gestao.php na Wave 7 (10-16/10-17 só páginas).
@@ -864,7 +864,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
                 Route::post('malha-fina', [MalhaFinaController::class, 'store'])->name('malha-fina.store');
             });
 
-            // TVL: emitir (decisão deferida) + download por URL TEMPORÁRIA ASSINADA
+            // Viabilidade: emitir (decisão deferida) + download por URL TEMPORÁRIA ASSINADA
             // (signed) servindo o disco NÃO público por streaming (HU-123 CA-02). As
             // rotas estáticas (malha-fina, tvl/...) convivem com o wildcard
             // {viabilityRequest} por método/estrutura distintos.
@@ -873,7 +873,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
                 Route::get('tvl/{tvlDocument}/download', [TvlDocumentController::class, 'download'])
                     ->middleware('signed')
                     ->name('tvl.download');
-                // Documento de indeferimento fundamentado (espelho do TVL):
+                // Documento de indeferimento fundamentado (espelho da Viabilidade):
                 // emitir (decisão indeferida) + download assinado do disco NÃO
                 // público — nunca URL pública, nunca ao cidadão.
                 Route::post('{viabilityRequest}/indeferimento', [IndeferimentoDocumentController::class, 'store'])->name('indeferimento.store');

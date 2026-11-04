@@ -183,7 +183,7 @@ class AnalysisStatusEndpointTest extends TestCase
     /**
      * SPEC-07: enquanto a SEDUR não define a reabertura, a análise concluída
      * não volta nem com o override. Antes, o eixo voltava a Em análise e o
-     * processo seguia Deferido, com o TVL emitido.
+     * processo seguia Deferido, com a Viabilidade emitida.
      */
     public function test_forcar_nao_reabre_analise_concluida(): void
     {

@@ -119,6 +119,17 @@ class AnalysisRecordResource extends JsonResource
                 ? trim($uso['subgrupo'])
                 : null;
 
+            // Enquadramento que o motor sugeriu: quando o analista troca a
+            // opção LOUOS × TLL, a ficha deixa de mostrar o subgrupo do motor
+            // e passa a mostrar o da nova opção.
+            $encaminhamento = is_array($consulta['risco']['encaminhamento'] ?? null) ? $consulta['risco']['encaminhamento'] : [];
+            $item['enquadramento_motor'] = [
+                'codigo_louos' => filled($uso['codigo_louos'] ?? null) ? (string) $uso['codigo_louos'] : null,
+                'codigo_tll' => filled($encaminhamento['tll'] ?? null) ? (string) $encaminhamento['tll'] : null,
+                'grupo' => filled($uso['grupo'] ?? null) ? (string) $uso['grupo'] : null,
+                'subgrupo' => $item['subgrupo_uso'],
+            ];
+
             // Risco por atividade lido do snapshot (usabilidade SEDUR item 24) —
             // alimenta a justificativa consolidada no início da análise.
             $risco = is_array($consulta['risco'] ?? null) ? $consulta['risco'] : [];

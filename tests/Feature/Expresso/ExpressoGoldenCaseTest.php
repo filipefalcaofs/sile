@@ -31,8 +31,8 @@ use Tests\TestCase;
  * espelhando o padrão golden das Fases 5/6/7/8.
  *
  * Trava a regressão de domínio dos TRÊS caminhos reais e da degradação honesta:
- * permitido → DEFERE (+TVL +evento); permitido_condicionado → DEFERE; proibido →
- * INDEFERE (sem TVL, com evento); sem zona → em_analise SEM decisão e SEM evento
+ * permitido → DEFERE (+Viabilidade +evento); permitido_condicionado → DEFERE; proibido →
+ * INDEFERE (sem Viabilidade, com evento); sem zona → em_analise SEM decisão e SEM evento
  * (anti-fachada); risco alto (semi-expresso) → em_analise. Se o mapeamento
  * RN-009, a consolidação ou a elegibilidade mudarem, o caso âncora falha com o
  * nome do golden.
@@ -94,7 +94,7 @@ class ExpressoGoldenCaseTest extends TestCase
         $this->assertNotNull($decision, "{$contexto}: esperava uma decisão.");
         $this->assertSame($esperado['outcome'], $decision->outcome->value, "{$contexto}: outcome divergente.");
         $this->assertSame($esperado['consolidado'], $decision->consolidated_result, "{$contexto}: consolidado divergente.");
-        $this->assertSame($esperado['tem_tvl'], $decision->tvl_product_number !== null, "{$contexto}: presença de TVL divergente.");
+        $this->assertSame($esperado['tem_tvl'], $decision->tvl_product_number !== null, "{$contexto}: presença de Viabilidade divergente.");
 
         if ($esperado['evento_emitido'] === true) {
             Event::assertDispatched(ResultadoEmitido::class);

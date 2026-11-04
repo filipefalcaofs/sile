@@ -20,7 +20,7 @@ use RuntimeException;
 use Tests\TestCase;
 
 /**
- * TVL em PDF no backoffice (HU-123): o TvlPdfService renderiza o Termo de
+ * Viabilidade em PDF no backoffice (HU-123): o TvlPdfService renderiza o Termo de
  * Viabilidade de Localização DE VERDADE (dompdf sobre um Blade real — o conteúdo
  * gravado começa com '%PDF'), SÓ para decisões deferidas (FA-01: indeferida/em
  * análise → bloqueio), no disco parametrizado e NUNCA público, registrando cada
@@ -38,7 +38,7 @@ class TvlPdfServiceTest extends TestCase
     {
         parent::setUp();
 
-        // O disco padrão do TVL (config viabiliza.analise.tvl.disk) é 'local'; o teste
+        // O disco padrão da Viabilidade (config viabiliza.analise.tvl.disk) é 'local'; o teste
         // grava no disco fake para provar a escrita real sem tocar o filesystem.
         Storage::fake('local');
     }
@@ -49,7 +49,7 @@ class TvlPdfServiceTest extends TestCase
     }
 
     /**
-     * Decisão DEFERIDA padrão (fluxo expresso do factory) — número TVL, per_cnae e
+     * Decisão DEFERIDA padrão (fluxo expresso do factory) — número da Viabilidade, per_cnae e
      * fundamentação plausíveis. $override permite ajustar o cenário.
      *
      * @param  array<string, mixed>  $override
@@ -61,7 +61,7 @@ class TvlPdfServiceTest extends TestCase
 
     /**
      * Decisão DEFERIDA da análise humana (flow analise_tecnica) com a ficha
-     * finalizada que carrega as condicionantes exibidas no TVL (10-09/10-10).
+     * finalizada que carrega as condicionantes exibidas na Viabilidade (10-09/10-10).
      *
      * @param  list<string>  $condicionantes
      * @param  list<array<string, mixed>>  $perCnae
@@ -114,7 +114,7 @@ class TvlPdfServiceTest extends TestCase
             ->latest('id')
             ->first();
 
-        $this->assertNotNull($activity, 'A emissão do TVL deve ser auditada (RN-002/CA-03).');
+        $this->assertNotNull($activity, 'A emissão da Viabilidade deve ser auditada (RN-002/CA-03).');
         $this->assertSame('sucesso', $activity->result);
         $this->assertSame($decision->viability_request_id, $activity->properties['viability_request_id']);
         $this->assertSame($decision->tvl_product_number, $activity->properties['tvl_product_number']);
@@ -123,13 +123,13 @@ class TvlPdfServiceTest extends TestCase
 
     public function test_bloqueia_emissao_de_decisao_indeferida(): void
     {
-        // FA-01: TVL só para deferida. Indeferida → DomainException; nada gerado
+        // FA-01: Viabilidade só para deferida. Indeferida → DomainException; nada gerado
         // (nem arquivo, nem linha, nem auditoria).
         $decision = ViabilityDecision::factory()->indeferida()->create();
 
         try {
             $this->service()->generate($decision, User::factory()->create());
-            $this->fail('Esperava DomainException ao emitir TVL de decisão indeferida (FA-01).');
+            $this->fail('Esperava DomainException ao emitir Viabilidade de decisão indeferida (FA-01).');
         } catch (DomainException) {
             // esperado
         }
@@ -168,7 +168,7 @@ class TvlPdfServiceTest extends TestCase
 
     public function test_usa_o_disco_parametrizado_e_nunca_o_publico(): void
     {
-        // O disco do TVL é parametrizado (analise.tvl.disk) e o default NÃO é
+        // O disco da Viabilidade é parametrizado (analise.tvl.disk) e o default NÃO é
         // 'public': o documento grava no disco configurado (LGPD — nunca exposto).
         $document = $this->service()->generate($this->decisaoDeferida(), User::factory()->create());
 
@@ -179,7 +179,7 @@ class TvlPdfServiceTest extends TestCase
     public function test_recusa_disco_publico_configurado(): void
     {
         // Guarda anti-vazamento: ainda que alguém configure o disco como 'public',
-        // o serviço RECUSA emitir (o TVL nunca pode ir a um disco público).
+        // o serviço RECUSA emitir (a Viabilidade nunca pode ir a um disco público).
         config()->set('viabiliza.analise.tvl.disk', 'public');
 
         $this->expectException(RuntimeException::class);
@@ -189,7 +189,7 @@ class TvlPdfServiceTest extends TestCase
 
     public function test_template_contem_numero_atividades_condicionantes_e_fundamentacao(): void
     {
-        // CA-01: o documento renderizado traz o número de produto (TVL), as
+        // CA-01: o documento renderizado traz o número de produto (Viabilidade), as
         // atividades deferidas (CNAE + descrição), as condicionantes da ficha e a
         // fundamentação legal — em pt-BR, com a nota de relatório interno (CA-02).
         Cnae::factory()->create([
@@ -272,7 +272,7 @@ class TvlPdfServiceTest extends TestCase
     /**
      * I2 da revisão final: os ramos de exclusão de atividade (RN-AA-03/04/05)
      * gravam no per_cnae exatamente os CNAEs EXCLUÍDOS, com
-     * `intencao => 'excluir'` (App\Enums\IntencaoAtividade). O TVL não pode
+     * `intencao => 'excluir'` (App\Enums\IntencaoAtividade). A Viabilidade não pode
      * afirmar que uma atividade excluída foi deferida — a seção "Atividades
      * deferidas" precisa desconsiderar esses itens. Não é a decisão do
      * layout de exclusão (questão de negócio em aberto com a SEDUR): a seção

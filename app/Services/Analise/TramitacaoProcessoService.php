@@ -12,7 +12,7 @@ use App\Models\ViabilityRequest;
 /**
  * Eventos da tramitação do processo que não são mudança de status: situação da
  * análise, atribuições, pendências e convites, vistoria, malha fina, anexos,
- * TVL, a ficha de análise salva pelo botão ou finalizada, a ficha de vistoria
+ * Viabilidade, a ficha de análise salva pelo botão ou finalizada, a ficha de vistoria
  * concluída e o envio do parecer à JUCEB. Vêm da auditoria por uma lista
  * fechada de eventos: consulta de tela, autosave automático da ficha e demais
  * registros técnicos não entram. Os eventos das fichas são gravados com a

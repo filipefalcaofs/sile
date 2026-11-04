@@ -198,7 +198,7 @@ class RolesAndPermissionsSeederTest extends TestCase
 
         // Apoio (tramitação): distribui os processos da caixa do setor para um
         // analista específico, mas NÃO analisa — sem analisar-processos, emitir
-        // TVL, malha fina ou manutenção de setores.
+        // Viabilidade, malha fina ou manutenção de setores.
         $apoio = Role::findByName('apoio', 'web');
 
         foreach ([
@@ -248,7 +248,7 @@ class RolesAndPermissionsSeederTest extends TestCase
             );
         }
 
-        // Analista analisa, provoca malha fina e emite o TVL interno; não
+        // Analista analisa, provoca malha fina e emite a Viabilidade interna; não
         // distribui processos nem administra setores (atribuições do gestor).
         $analista = Role::findByName('Analista Terceirizado', 'web');
         foreach (['analisar-processos', 'encaminhar-malha-fina', 'emitir-tvl'] as $permission) {
@@ -257,7 +257,7 @@ class RolesAndPermissionsSeederTest extends TestCase
         $this->assertFalse($analista->hasPermissionTo('distribuir-processos'));
         $this->assertFalse($analista->hasPermissionTo('manter-setores'));
 
-        // Gestor distribui e também analisa/emite TVL. Setores ficam só com o
+        // Gestor distribui e também analisa/emite Viabilidade. Setores ficam só com o
         // administrador (relatório de usabilidade SEDUR 19/09, itens 03-04).
         $gestor = Role::findByName('Coordenador', 'web');
         foreach (['analisar-processos', 'distribuir-processos', 'emitir-tvl', 'encaminhar-malha-fina', 'analisar-malha-fina'] as $permission) {

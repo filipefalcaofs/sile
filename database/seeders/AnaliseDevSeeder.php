@@ -33,12 +33,12 @@ use Illuminate\Support\Facades\DB;
  * (entrega-funcional): cada estágio é alcançado pelos SERVIÇOS REAIS —
  * FluxoExpressoService (encaminha à análise), DistribuicaoService (distribui/
  * assume), AnalysisRecordService (ficha/finalização), AnaliseTecnicaDecisionService
- * (defere + TVL — ViabilityDecision flow 'analise_tecnica'), PendenciaService e
+ * (defere + Viabilidade — ViabilityDecision flow 'analise_tecnica'), PendenciaService e
  * MalhaFinaService. Nada é simulado.
  *
  *  1. EM ANÁLISE (distribuído, ficha pronta para decidir) — alvo do comando de
  *     evidência `analise:decidir <id> --finalizar`.
- *  2. DEFERIDO PELO ANALISTA (ficha finalizada → deferida + TVL) e, sobre ele,
+ *  2. DEFERIDO PELO ANALISTA (ficha finalizada → deferida + Viabilidade) e, sobre ele,
  *     um encaminhamento à MALHA FINA (corrige o bug legado: atinge deferido).
  *  3. EM PENDÊNCIA (pendência aberta — ciclo HU-079/080 interno).
  *
@@ -122,7 +122,7 @@ class AnaliseDevSeeder extends Seeder
     /**
      * Estágio 2 — DEFERIDO PELO ANALISTA + MALHA FINA: a ficha é finalizada e a
      * decisão humana DEFERE de verdade (ViabilityDecision flow 'analise_tecnica'
-     * + TVL); em seguida o processo é encaminhado à malha fina (revisão sobre um
+     * + Viabilidade); em seguida o processo é encaminhado à malha fina (revisão sobre um
      * deferido — RN-001 da HU-127).
      *
      * @param  AnaliseDevContexto  $ctx

@@ -22,9 +22,9 @@ use Tests\TestCase;
  * Via #[DataProvider], espelhando o padrão golden das Fases 5/6/7/8/9.
  *
  * Trava a regressão de domínio da decisão humana (RN-004): todas as CNAEs
- * deferidas → DEFERE (+TVL); qualquer indeferida → INDEFERE (sem TVL); e o caso
+ * deferidas → DEFERE (+Viabilidade); qualquer indeferida → INDEFERE (sem Viabilidade); e o caso
  * que exige o humano — sem zona oficial (engine_available=false), o analista
- * DEFERE com a fundamentação própria da ficha. Se a regra de consolidação, o TVL
+ * DEFERE com a fundamentação própria da ficha. Se a regra de consolidação, a Viabilidade
  * ou a fundamentação mudarem, o caso âncora falha com o nome do golden.
  */
 class AnaliseGoldenCaseTest extends TestCase
@@ -75,7 +75,7 @@ class AnaliseGoldenCaseTest extends TestCase
         $this->assertSame(
             $esperado['tem_tvl'],
             $decision->tvl_product_number !== null,
-            "{$contexto}: presença de TVL divergente.",
+            "{$contexto}: presença de Viabilidade divergente.",
         );
 
         $statusEsperado = $esperado['outcome'] === DecisionOutcome::Deferida->value

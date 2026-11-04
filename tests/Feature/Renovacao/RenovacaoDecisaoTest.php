@@ -87,7 +87,7 @@ class RenovacaoDecisaoTest extends TestCase
             $processo->currentAnalysisRecord,
             $this->analista(),
             DecisionOutcome::Deferida,
-            'Condicionante do TVL provisório não atendido.',
+            'Condicionante da Viabilidade provisória não atendido.',
             null,
             null,
             false,

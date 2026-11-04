@@ -1,0 +1,5327 @@
+[
+ {
+  "grupo": "Nomenclatura dos serviços (De x Para)",
+  "nome": "Dados - Nomenclatura dos serviços (De x Para)",
+  "situacao": "INCLUIDA",
+  "tipo": "ALI",
+  "td": 4,
+  "ar": 1,
+  "pf": 7,
+  "der": [
+   "nome recebido (De)",
+   "condição do serviço",
+   "nome exibido (Para)",
+   "exibir"
+  ],
+  "ftr": [
+   "Nomenclatura do serviço"
+  ],
+  "evidencia": "787713e41, b7803a0bf, 66c254249, c43c6c8f8 (20/10/2026); migrations 2026_10_20_185442_create_servico_nomenclaturas_table e 2026_10_21_021706_add_condicao_to_servico_nomenclaturas; app/Models/ServicoNomenclatura.php (HasAuditoria); lido por ServicoNomenclaturaResolver em listas, ficha, caixas e filtros.",
+  "justificativa": "Grupo lógico mantido pelo gestor (tela própria e permissão manter-nomenclatura-servicos) e lido pelas consultas. Limítrofe com P2 (substituição nome→nome), mas \"exibir\" decide quais serviços aparecem/filtram e \"condição\" entra na detecção da linha condicional (CondicaoServicoDetector): atributos que mudam o comportamento, como Tipo de imóvel e Feriado na baseline. chave normalizada é técnica (não conta).",
+  "frente": "gestao"
+ },
+ {
+  "grupo": "Nomenclatura dos serviços (De x Para)",
+  "nome": "Nomenclatura - consultar",
+  "situacao": "INCLUIDA",
+  "tipo": "CE",
+  "td": 6,
+  "ar": 1,
+  "pf": 3,
+  "der": [
+   "nome recebido (De)",
+   "condição",
+   "nome exibido (Para)",
+   "exibir (coluna e filtro, DER único)",
+   "busca",
+   "ação pesquisar"
+  ],
+  "ftr": [
+   "Nomenclatura do serviço"
+  ],
+  "evidencia": "b7803a0bf (20/10/2026); GET /gestao/servicos-nomenclatura (ServicoNomenclaturaController@index); tela gestao/servicos-nomenclatura/index.",
+  "justificativa": "Recupera e exibe sem cálculo nem gravação: CE. Lista de sugestões de \"De\" é apoio do formulário de inclusão (P7).",
+  "frente": "gestao"
+ },
+ {
+  "grupo": "Nomenclatura dos serviços (De x Para)",
+  "nome": "Nomenclatura - incluir",
+  "situacao": "INCLUIDA",
+  "tipo": "EE",
+  "td": 6,
+  "ar": 2,
+  "pf": 4,
+  "der": [
+   "nome recebido (De)",
+   "condição",
+   "nome exibido (Para)",
+   "exibir",
+   "mensagem",
+   "ação salvar"
+  ],
+  "ftr": [
+   "Nomenclatura do serviço",
+   "Trilha de auditoria"
+  ],
+  "evidencia": "b7803a0bf, c43c6c8f8 (20/10/2026); POST /gestao/servicos-nomenclatura; StoreServicoNomenclaturaRequest (unicidade De+condição).",
+  "justificativa": "Mantém ALI novo; HasAuditoria grava a trilha no mesmo request (P4).",
+  "frente": "gestao"
+ },
+ {
+  "grupo": "Nomenclatura dos serviços (De x Para)",
+  "nome": "Nomenclatura - alterar",
+  "situacao": "INCLUIDA",
+  "tipo": "EE",
+  "td": 4,
+  "ar": 2,
+  "pf": 3,
+  "der": [
+   "nome exibido (Para)",
+   "exibir",
+   "mensagem",
+   "ação salvar"
+  ],
+  "ftr": [
+   "Nomenclatura do serviço",
+   "Trilha de auditoria"
+  ],
+  "evidencia": "b7803a0bf (20/10/2026); PUT /gestao/servicos-nomenclatura/{id}; UpdateServicoNomenclaturaRequest.",
+  "justificativa": "De e condição são a identificação (imutáveis); altera Para e exibir; trilha por HasAuditoria.",
+  "frente": "gestao"
+ },
+ {
+  "grupo": "Nomenclatura dos serviços (De x Para)",
+  "nome": "Nomenclatura - exibir ou ocultar serviço",
+  "situacao": "INCLUIDA",
+  "tipo": "EE",
+  "td": 3,
+  "ar": 2,
+  "pf": 3,
+  "der": [
+   "serviço selecionado",
+   "mensagem",
+   "ação exibir/ocultar"
+  ],
+  "ftr": [
+   "Nomenclatura do serviço",
+   "Trilha de auditoria"
+  ],
+  "evidencia": "b7803a0bf (20/10/2026); PUT /gestao/servicos-nomenclatura/{id}/exibir (toggleExibir).",
+  "justificativa": "Mesmo padrão de \"ativar ou inativar\" da baseline (Feriados, Tipos de imóvel), contado à parte.",
+  "frente": "gestao"
+ },
+ {
+  "grupo": "Usuários e solicitações de acesso",
+  "nome": "Usuários - reenviar link de definição de senha",
+  "situacao": "INCLUIDA",
+  "tipo": "EE",
+  "td": 3,
+  "ar": 3,
+  "pf": 4,
+  "der": [
+   "usuário selecionado",
+   "mensagem",
+   "ação reenviar"
+  ],
+  "ftr": [
+   "Usuário",
+   "Perfil de acesso",
+   "Trilha de auditoria"
+  ],
+  "evidencia": "ee822084c (21/10/2026); POST /gestao/usuarios/{user}/redefinicao-senha (UserManagementController@resendPasswordReset); tela gestao/usuarios/index.",
+  "justificativa": "Ação explícita do gestor, distinta de \"Recuperação de senha - solicitar\" (ator, lógica: recusa conta AD e inativa, escolhe link da gestão ou do portal pela permissão acessar-gestao). Grava token de redefinição no Usuário e a trilha (link-senha-reenviado). E-mail é efeito (P5).",
+  "frente": "gestao"
+ },
+ {
+  "grupo": "Feriados",
+  "nome": "Feriados - sincronizar feriados de Salvador pela FeriadosAPI",
+  "situacao": "INCLUIDA",
+  "tipo": "EE",
+  "td": 4,
+  "ar": 2,
+  "pf": 3,
+  "der": [
+   "data",
+   "nome",
+   "tipo (nacional/estadual/municipal)",
+   "origem (api)"
+  ],
+  "ftr": [
+   "Feriado",
+   "Trilha de auditoria"
+  ],
+  "evidencia": "03c03b4cb (20/10/2026); app/Services/Feriados/HolidaySyncService.php, FeriadosApiClient.php, SincronizarFeriadosCommand; routes/console.php Schedule feriados:sincronizar mensal (dia 1, 04:00).",
+  "justificativa": "Carga de dado externo que mantém o ALI Feriado: P9 (como a importação REDESIM, contada como EE). Limítrofe: não há botão; é rotina agendada. Se o responsável aplicar P5 (rotina técnica agendada), retirar (3 PF).",
+  "frente": "gestao"
+ },
+ {
+  "grupo": "Ficha de análise técnica",
+  "nome": "Ficha de análise - finalizar ficha",
+  "situacao": "INCLUIDA",
+  "tipo": "EE",
+  "td": 4,
+  "ar": 3,
+  "pf": 4,
+  "der": [
+   "revisão",
+   "situação da ficha resultante",
+   "mensagem",
+   "ação finalizar"
+  ],
+  "ftr": [
+   "Ficha de análise técnica",
+   "Solicitação de viabilidade",
+   "Trilha de auditoria"
+  ],
+  "evidencia": "1deeae1f3 (18/10/2026, botão Finalizar ficha), 43ee7ca5c (24/10), e1cff3de6 (28/10); POST /gestao/processos/{id}/ficha/finalizar (AnalysisRecordController@finalizar); AnalysisRecordService::finalizar.",
+  "justificativa": "Na baseline a rota existia sem tela (memória linha 331, excluída por P8). Voltou a ter botão na ficha: finaliza a revisão (imutável, divergências) sem decidir, grava trilha ficha-finalizar e move o eixo da análise para Em análise quando preciso (iniciarAnaliseSePreciso). Processo elementar próprio, distinto da decisão.",
+  "frente": "gestao"
+ },
+ {
+  "grupo": "Ficha de análise técnica",
+  "nome": "Ficha de análise - alterar zona e via do processo",
+  "situacao": "INCLUIDA",
+  "tipo": "EE",
+  "td": 4,
+  "ar": 6,
+  "pf": 4,
+  "der": [
+   "zona",
+   "classe de via",
+   "mensagem",
+   "ação alterar"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Ficha de análise técnica",
+   "Trilha de auditoria",
+   "Permissão de uso por zona (Quadro 10)",
+   "Condição de instalação por via (Quadro 11A)",
+   "Planilha de enquadramento"
+  ],
+  "evidencia": "b1dbce1ea, ff1e4e5d4, fbd9217e2 (22/10/2026), 1cce76511 (27/10); PATCH /gestao/processos/{id}/zona-via (ZonaViaController, permissão editar-zona-via); AlterarZonaViaService; migration 2026_10_22_190955_add_zona_via_manual_to_viability_requests.",
+  "justificativa": "Analista grava zona_manual/via_manual, a trilha zona-via-alterada (antes/depois) e o motor recalcula a ficha (PreAnaliseService::recalcularFicha, lê os quadros e a planilha). Zona e via são dado de código (P2), não FTR.",
+  "frente": "gestao"
+ },
+ {
+  "grupo": "Ficha de análise técnica",
+  "nome": "Ficha de análise - corrigir CNAE inválido",
+  "situacao": "INCLUIDA",
+  "tipo": "EE",
+  "td": 4,
+  "ar": 4,
+  "pf": 4,
+  "der": [
+   "código CNAE atual (inválido)",
+   "código CNAE novo",
+   "mensagem",
+   "ação corrigir"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "CNAE",
+   "Ficha de análise técnica",
+   "Trilha de auditoria"
+  ],
+  "evidencia": "a03b8c3e4 (23/10/2026) e worktree; PATCH /gestao/processos/{id}/cnae-invalido (CnaeInvalidoController); CorrigirCnaeInvalidoService; CorrigirCnaeInvalidoRequest.",
+  "justificativa": "Troca o CNAE fora da lista oficial na alteração de atividade, recalcula a comparação e a ficha e grava trilha. Lógica e DER próprios. Só aparece quando o recebimento grava comparacao_cnaes com inválidas (alimentado pela outra frente).",
+  "frente": "gestao"
+ },
+ {
+  "grupo": "Ficha de análise técnica",
+  "nome": "Análise - anexar documento à análise",
+  "situacao": "INCLUIDA",
+  "tipo": "EE",
+  "td": 6,
+  "ar": 3,
+  "pf": 6,
+  "der": [
+   "arquivo(s)",
+   "nome",
+   "tipo",
+   "tamanho",
+   "mensagem",
+   "ação anexar"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Ficha de análise técnica",
+   "Trilha de auditoria"
+  ],
+  "evidencia": "1cce76511 (27/10/2026); POST /gestao/processos/{id}/analise/anexos (AnalysisAttachmentController@store); migration 2026_10_27_150652_create_analysis_attachments_table; card anexos-analise-card na ficha.",
+  "justificativa": "Mesmo padrão de \"Vistoria - anexar foto ou documento\". Lê a ficha para recusar ficha finalizada ou de outro analista; grava anexo (subgrupo da Solicitação, P3) e trilha anexo-adicionado. Vários arquivos no mesmo envio não mudam o DER.",
+  "frente": "gestao"
+ },
+ {
+  "grupo": "Ficha de análise técnica",
+  "nome": "Análise - baixar anexo da análise",
+  "situacao": "INCLUIDA",
+  "tipo": "SE",
+  "td": 4,
+  "ar": 2,
+  "pf": 4,
+  "der": [
+   "arquivo",
+   "nome",
+   "tipo",
+   "ação baixar"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Trilha de auditoria"
+  ],
+  "evidencia": "1cce76511 (27/10/2026); GET /gestao/processos/{id}/analise/anexos/{anexo} (download por streaming).",
+  "justificativa": "Entrega o arquivo e grava a trilha anexo-download no mesmo request: P4, SE (como \"Vistoria - baixar anexo\").",
+  "frente": "gestao"
+ },
+ {
+  "grupo": "Ficha de análise técnica",
+  "nome": "Análise - remover anexo da análise",
+  "situacao": "INCLUIDA",
+  "tipo": "EE",
+  "td": 3,
+  "ar": 3,
+  "pf": 4,
+  "der": [
+   "anexo selecionado",
+   "mensagem",
+   "ação remover"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Ficha de análise técnica",
+   "Trilha de auditoria"
+  ],
+  "evidencia": "1cce76511 (27/10/2026); DELETE /gestao/processos/{id}/analise/anexos/{anexo}.",
+  "justificativa": "Exclui arquivo e registro com ficha em rascunho do próprio analista; trilha anexo-removido.",
+  "frente": "gestao"
+ },
+ {
+  "grupo": "Consulta de processos",
+  "nome": "Processos - consultar mapa da zona e da via do processo",
+  "situacao": "INCLUIDA",
+  "tipo": "SE",
+  "td": 20,
+  "ar": 6,
+  "pf": 7,
+  "der": [
+   "polígono do lote",
+   "polígono do endereçamento",
+   "ponto do imóvel",
+   "área do lote",
+   "zona da decisão",
+   "fonte da zona",
+   "logradouro da decisão (código)",
+   "nome do logradouro",
+   "classe da via",
+   "zona (código, geometria)",
+   "zona da decisão (destaque)",
+   "porção da zona no lote (%)",
+   "linha de centralidade (tipo, nome)",
+   "linha passa sobre o lote",
+   "extensão dentro do lote (m)",
+   "distância ao lote (m)",
+   "via do entorno (código, nome, classe)",
+   "camadas indisponíveis",
+   "localização não confirmada",
+   "ação abrir mapa"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Camada do GeoServer",
+   "Parâmetro",
+   "Zonas urbanísticas do GeoServer da SEDUR",
+   "Classificação viária dos logradouros do GeoServer da SEDUR",
+   "Logradouros (eixo viário) do GeoServer da SEDUR"
+  ],
+  "evidencia": "da9ff11be, 93129a20f, f27209feb, 12b03dbac, 59fec7dd9, d77016f14 (22/10/2026); GET /gestao/processos/{id}/mapa-decisao (MapaDecisaoController); app/Services/Geo/MapaDecisaoService.php; usado na página do processo, na ficha e na vistoria (uma função, P6).",
+  "justificativa": "Consulta nova com cálculo (porções de zona em % da área, extensão e distância das linhas de centralidade via PostGIS): SE. Logradouros VM_LOGRADOURO é camada nova lida (ver nao_contados sobre o AIE). Mesmo sem esse AIE, FTR>3.",
+  "frente": "gestao"
+ },
+ {
+  "grupo": "Vistoria",
+  "nome": "Vistoria - imprimir consulta do processo",
+  "situacao": "INCLUIDA",
+  "tipo": "SE",
+  "td": 35,
+  "ar": 8,
+  "pf": 7,
+  "der": [
+   "protocolo",
+   "situação",
+   "situação da análise",
+   "empresa",
+   "CNPJ",
+   "CNAE",
+   "serviço",
+   "tipo de imóvel",
+   "endereço",
+   "inscrição imobiliária",
+   "setor",
+   "analista",
+   "protocolado em",
+   "orientações do encaminhamento",
+   "analista de origem",
+   "setor de origem",
+   "setor de vistoria",
+   "encaminhado em",
+   "resultado e motivo do parecer",
+   "divergência de endereço",
+   "coordenadas",
+   "origem da localização",
+   "desenho do lote (sim/não)",
+   "polígono do endereçamento (sim/não)",
+   "camada e elemento incidente",
+   "regra incide",
+   "logradouro da inscrição",
+   "bairro",
+   "zona (com fonte e porções)",
+   "via",
+   "vistoriador",
+   "situação da ficha de vistoria",
+   "gerado em",
+   "responsável pela emissão",
+   "ação imprimir"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Empresa",
+   "CNAE",
+   "Setor",
+   "Usuário",
+   "Decisão de viabilidade",
+   "Ficha de vistoria",
+   "Trilha de auditoria"
+  ],
+  "evidencia": "d2ffe7d74, 81e7f4f3e (20/10/2026); GET /gestao/vistorias/{id}/consulta/imprimir (VistoriaConsultaController@imprimir); ConsultaVistoriaPdfService; view documentos.consulta-vistoria.",
+  "justificativa": "Ação explícita com saída própria (PDF) e DER diferentes da tela (camadas linha a linha, emissor, data, situação da ficha), grava trilha consulta-imprimir: SE. A capa em tela (GET vistorias/{id}/consulta) reutiliza ProcessoController::detalhe e conta dentro de \"Processos - consultar informações do processo\" (P6).",
+  "frente": "gestao"
+ },
+ {
+  "grupo": "Vistoria",
+  "nome": "Vistoria - encaminhar processo à Caixa do Setor",
+  "situacao": "INCLUIDA",
+  "tipo": "EE",
+  "td": 4,
+  "ar": 5,
+  "pf": 4,
+  "der": [
+   "processo",
+   "analista designado (opcional)",
+   "mensagem",
+   "ação encaminhar"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Ficha de vistoria",
+   "Usuário",
+   "Perfil de acesso",
+   "Trilha de auditoria"
+  ],
+  "evidencia": "a2f8dacec (18/10/2026), d2ffe7d74 (20/10), 34e92b2d6 (27/10), c9f0bca68 (29/10) e worktree (devolvido_em); POST /gestao/processos/{id}/vistoria/encaminhar-ao-setor (InspectionController@encaminharAoSetor); EncaminharVistoriaService::encaminharAoSetor.",
+  "justificativa": "Na baseline a devolução ao analista era efeito automático da conclusão da vistoria (P5, sem função). Agora é ação explícita do vistoriador ou de quem distribui: devolve ao setor de origem, com ou sem analista (valida analisar-processos e vínculo ao setor), grava devolvido_em no encaminhamento, transição e trilha.",
+  "frente": "gestao"
+ },
+ {
+  "grupo": "Solicitação de viabilidade no portal",
+  "nome": "Dados - Solicitação de viabilidade",
+  "situacao": "ALTERADA",
+  "tipo": "ALI",
+  "td": 115,
+  "ar": 10,
+  "pf": 15,
+  "der": [
+   "102 DER da baseline",
+   "zona manual",
+   "via manual",
+   "indicado para concluir",
+   "nome do solicitante",
+   "CPF do solicitante",
+   "tipo do imóvel do cadastro (Utilizacao)",
+   "comparação de CNAEs com a viabilidade anterior",
+   "conferência da localização",
+   "anexo da análise: arquivo",
+   "anexo: nome",
+   "anexo: tipo",
+   "anexo: tamanho",
+   "anexo: enviado por / data"
+  ],
+  "ftr": [
+   "9 RLR da baseline",
+   "anexo da análise"
+  ],
+  "evidencia": "migrations 2026_10_22_190955 (zona/via manual), 2026_10_22_185546 (conclusao_indicada_para), 2026_10_22_185852 (solicitante), 2026_10_23_150247 (comparacao_cnaes), 2026_10_24_151116 (localizacao_conferencia), 2026_10_27_202245 (tipo_imovel_cadastro), 2026_10_27_150652 (analysis_attachments).",
+  "justificativa": "Estruturalmente alterado (atributos mantidos e lidos e subgrupo novo, P3). TD e RLR exibidos como contagem total (102+13 / 9+1); PF segue Alta. ATENÇÃO: ALI compartilhado com a frente REGIN/portal; contar uma única vez no consolidado.",
+  "frente": "gestao"
+ },
+ {
+  "grupo": "Ficha de análise técnica",
+  "nome": "Dados - Ficha de análise técnica",
+  "situacao": "ALTERADA",
+  "tipo": "ALI",
+  "td": 22,
+  "ar": 3,
+  "pf": 10,
+  "der": [
+   "21 DER da baseline",
+   "ficha de origem (based_on_record_id)"
+  ],
+  "ftr": [
+   "ficha",
+   "atividade por CNAE",
+   "divergência"
+  ],
+  "evidencia": "43ee7ca5c (24/10/2026); migration 2026_10_24_011850_ficha_de_analise_por_analista (based_on_record_id, índice único processo+analista, situação substituída).",
+  "justificativa": "Ficha por analista: cada analista mantém a sua revisão, com a ficha de origem gravada. Novo atributo lido na abertura e na cópia para a conclusão.",
+  "frente": "gestao"
+ },
+ {
+  "grupo": "Decisão e conclusão da análise",
+  "nome": "Dados - Decisão de viabilidade",
+  "situacao": "ALTERADA",
+  "tipo": "ALI",
+  "td": 22,
+  "ar": 3,
+  "pf": 10,
+  "der": [
+   "21 DER da baseline",
+   "ficha de análise usada na decisão (analysis_record_id)"
+  ],
+  "ftr": [
+   "decisão",
+   "resultado por CNAE",
+   "emissão do TVL"
+  ],
+  "evidencia": "43ee7ca5c (24/10/2026); migration 2026_10_24_011850_ficha_de_analise_por_analista (viability_decisions.analysis_record_id); AnaliseTecnicaDecisionService grava o vínculo.",
+  "justificativa": "Atributo novo mantido pela decisão. Tipo e validade já constavam do ALI (agora valem para qualquer deferimento, não só renovação).",
+  "frente": "gestao"
+ },
+ {
+  "grupo": "Feriados",
+  "nome": "Dados - Feriado",
+  "situacao": "ALTERADA",
+  "tipo": "ALI",
+  "td": 6,
+  "ar": 1,
+  "pf": 7,
+  "der": [
+   "data",
+   "nome",
+   "recorrência anual",
+   "situação",
+   "tipo (nacional/estadual/municipal)",
+   "origem (manual/api)"
+  ],
+  "ftr": [
+   "Feriado"
+  ],
+  "evidencia": "daf7006db, 03c03b4cb (20/10/2026); migrations 2026_10_20_210630_add_source_and_type_to_holidays_table e 2026_10_20_213000 (preenche tipo nacional).",
+  "justificativa": "Dois atributos novos: tipo (mantido na tela e filtrado) e origem (lida pela sincronização para não sobrescrever cadastro manual).",
+  "frente": "gestao"
+ },
+ {
+  "grupo": "Tipos de imóvel",
+  "nome": "Dados - Tipo de imóvel",
+  "situacao": "ALTERADA",
+  "tipo": "ALI",
+  "td": 6,
+  "ar": 1,
+  "pf": 7,
+  "der": [
+   "código",
+   "rótulo",
+   "dirige regra",
+   "situação",
+   "denominação alternativa",
+   "reconhecido pelo REGIN"
+  ],
+  "ftr": [
+   "Tipo de imóvel"
+  ],
+  "evidencia": "1cce76511 (27/10/2026); migration 2026_10_27_150500_add_regin_reconhece_to_property_types_table; TipoImovelCatalog lê; seeder PropertyTypeVistoriaSeeder.",
+  "justificativa": "Atributo novo lido pelo catálogo (tipo só nas opções da vistoria, fora da decisão automática). Não é editável na tela, por isso as transações do CRUD não mudam.",
+  "frente": "gestao"
+ },
+ {
+  "grupo": "Feriados",
+  "nome": "Feriados - consultar",
+  "situacao": "ALTERADA",
+  "nome_baseline": "Feriados - consultar",
+  "tipo": "CE",
+  "td": 7,
+  "ar": 1,
+  "pf": 3,
+  "der": [
+   "data",
+   "nome",
+   "recorrência anual",
+   "situação",
+   "tipo (coluna e filtro)",
+   "busca por nome",
+   "ação pesquisar"
+  ],
+  "ftr": [
+   "Feriado"
+  ],
+  "evidencia": "daf7006db (20/10/2026); HolidayController@index (filtro type); gestao/feriados/index.",
+  "justificativa": "DER novo: tipo (coluna e filtro, DER único).",
+  "frente": "gestao"
+ },
+ {
+  "grupo": "Feriados",
+  "nome": "Feriados - incluir",
+  "situacao": "ALTERADA",
+  "nome_baseline": "Feriados - incluir",
+  "tipo": "EE",
+  "td": 7,
+  "ar": 2,
+  "pf": 4,
+  "der": [
+   "data",
+   "nome",
+   "recorrência anual",
+   "situação",
+   "tipo",
+   "mensagem",
+   "ação salvar"
+  ],
+  "ftr": [
+   "Feriado",
+   "Trilha de auditoria"
+  ],
+  "evidencia": "daf7006db (20/10/2026); HolidayRequest (type).",
+  "justificativa": "DER novo: tipo.",
+  "frente": "gestao"
+ },
+ {
+  "grupo": "Feriados",
+  "nome": "Feriados - alterar",
+  "situacao": "ALTERADA",
+  "nome_baseline": "Feriados - alterar",
+  "tipo": "EE",
+  "td": 7,
+  "ar": 2,
+  "pf": 4,
+  "der": [
+   "data",
+   "nome",
+   "recorrência anual",
+   "situação",
+   "tipo",
+   "mensagem",
+   "ação salvar"
+  ],
+  "ftr": [
+   "Feriado",
+   "Trilha de auditoria"
+  ],
+  "evidencia": "daf7006db (20/10/2026); HolidayRequest (type).",
+  "justificativa": "DER novo: tipo.",
+  "frente": "gestao"
+ },
+ {
+  "grupo": "Ficha de análise técnica",
+  "nome": "Ficha de análise - consultar",
+  "situacao": "ALTERADA",
+  "nome_baseline": "Ficha de análise - consultar",
+  "tipo": "SE",
+  "td": 62,
+  "ar": 16,
+  "pf": 7,
+  "der": [
+   "42 DER da baseline (menos confiança da IA e card de risco/fundamentação retirados)",
+   "BAP",
+   "serviços (nome parametrizado)",
+   "empresa",
+   "tipo do imóvel do cadastro",
+   "aviso de localização não confirmada",
+   "zona/via alterada: por, em",
+   "zona/via anteriores",
+   "anexos da análise: nome, tipo, tamanho, enviado por, data",
+   "comparação de CNAEs: incluídas",
+   "excluídas",
+   "mantidas",
+   "inválidas",
+   "nº da viabilidade anterior",
+   "sem viabilidade anterior",
+   "subgrupo e faixas de área do enquadramento",
+   "risco do enquadramento e fluxo",
+   "revisão em somente leitura",
+   "ficha salva ou finalizada (habilita conclusão)"
+  ],
+  "ftr": [
+   "15 FTR da baseline",
+   "Nomenclatura do serviço"
+  ],
+  "evidencia": "1deeae1f3 (18/10), e3fe810e1, 32cb9653f, 3c000a0cc, bc6cca32a (20/10), fbd9217e2 (22/10), 43ee7ca5c, 55a83029e (24/10), 1cce76511, 297da247c (27/10), worktree (subgrupo_faixas); GET /gestao/processos/{id}/ficha; AnalysisRecordController@show.",
+  "justificativa": "DER novos e removidos, FTR novo (Nomenclatura) e lógica nova (abre a ficha do próprio analista ou a base disponível; revisão antiga em somente leitura). TD contado: 42-2+~22 ≈ 62.",
+  "frente": "gestao"
+ },
+ {
+  "grupo": "Ficha de análise técnica",
+  "nome": "Ficha de análise - salvar rascunho",
+  "situacao": "ALTERADA",
+  "nome_baseline": "Ficha de análise - salvar rascunho",
+  "tipo": "EE",
+  "td": 14,
+  "ar": 3,
+  "pf": 6,
+  "der": [
+   "CNAE",
+   "status escolhido",
+   "justificativa",
+   "condicionantes do CNAE",
+   "código LOUOS",
+   "código TLL",
+   "condicionantes gerais",
+   "vagas",
+   "parecer",
+   "sede de escritório virtual",
+   "motivos de análise",
+   "endereço confirmado",
+   "mensagem",
+   "ação salvar"
+  ],
+  "ftr": [
+   "Ficha de análise técnica",
+   "Solicitação de viabilidade",
+   "Trilha de auditoria"
+  ],
+  "evidencia": "43ee7ca5c (24/10/2026), e1cff3de6 (28/10); PATCH /gestao/processos/{id}/ficha; AnalysisRecordService::autosave.",
+  "justificativa": "Lógica alterada: grava só na ficha do próprio analista (403 em ficha de outro), atribui o dono e passa o eixo da análise para Em análise ao salvar (transição gravada); botão Salvar registra ficha-salvar (usado pela tramitação e pela exigência de ficha salva na conclusão). TD e AR iguais.",
+  "frente": "gestao"
+ },
+ {
+  "grupo": "Ficha de análise técnica",
+  "nome": "Ficha de análise - abrir nova revisão (abrir minha ficha)",
+  "situacao": "ALTERADA",
+  "nome_baseline": "Ficha de análise - abrir nova revisão",
+  "tipo": "EE",
+  "td": 5,
+  "ar": 2,
+  "pf": 4,
+  "der": [
+   "revisão nova",
+   "situação rascunho",
+   "conteúdo copiado (da própria ficha ou da base do motor)",
+   "mensagem",
+   "ação abrir"
+  ],
+  "ftr": [
+   "Ficha de análise técnica",
+   "Trilha de auditoria"
+  ],
+  "evidencia": "43ee7ca5c (24/10/2026), 79c356b1f (03/11); POST /gestao/processos/{id}/ficha/nova-revisao; AnalysisRecordService::novaRevisao/criarBaseDoMotor.",
+  "justificativa": "Lógica alterada: a revisão passa a ser por analista; sem ficha própria o sistema entrega a base disponível ou cria a base do motor; com rascunho aberto devolve o rascunho.",
+  "frente": "gestao"
+ },
+ {
+  "grupo": "Consulta de processos",
+  "nome": "Processos - alterar situação da análise (encaminhar à chefia)",
+  "situacao": "ALTERADA",
+  "nome_baseline": "Processos - alterar situação da análise",
+  "tipo": "EE",
+  "td": 3,
+  "ar": 5,
+  "pf": 4,
+  "der": [
+   "usuário indicado para concluir",
+   "mensagem",
+   "ação encaminhar à chefia"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Ficha de análise técnica",
+   "Usuário",
+   "Perfil de acesso",
+   "Trilha de auditoria"
+  ],
+  "evidencia": "84959e3d7 (20/10/2026), 9fb4d51ef, fbd9217e2 (22/10), 2b85b13e7 (26/10); POST /gestao/processos/{id}/status-analise; ProcessoController@atualizarStatusAnalise; botão Encaminhar para chefia na ficha.",
+  "justificativa": "Mesma rota e processo elementar da baseline. A página do processo deixou de ter o seletor geral de situação (9fb4d51ef: situação automática); o único acesso é Encaminhar à chefia na ficha, com status fixo Para conclusão. DER removidos (nova situação, motivo, setor e analista de destino, forçar), DER novo (indicado, grava conclusao_indicada_para_user_id), FTR novo (Ficha: guardarParaConclusao finaliza e copia a ficha), permissão nova encaminhar-para-conclusao. PF 6→4.",
+  "frente": "gestao"
+ },
+ {
+  "grupo": "Decisão e conclusão da análise",
+  "nome": "Análise - decidir o processo conforme a ficha",
+  "situacao": "ALTERADA",
+  "nome_baseline": "Análise - decidir o processo conforme a ficha",
+  "tipo": "EE",
+  "td": 10,
+  "ar": 8,
+  "pf": 6,
+  "der": [
+   "tipo da viabilidade (provisória/pré-operacional/definitiva)",
+   "validade (meses)",
+   "validade personalizada (data)",
+   "condicionantes atendidos",
+   "resultado (deferido/indeferido)",
+   "situação do processo",
+   "nº da viabilidade",
+   "confirmar divergência",
+   "mensagem",
+   "ação decidir"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Ficha de análise técnica",
+   "Decisão de viabilidade",
+   "Bloqueio de inscrição de escritório virtual",
+   "Recebimento do REGIN",
+   "Comunicação ao requerente",
+   "Trilha de auditoria",
+   "Chamada de integração"
+  ],
+  "evidencia": "1fef17c08, d20245884, c8ff35608 (20/10/2026), d8760357c (19/10), 43ee7ca5c (24/10); POST /ficha/concluir-processo e /decidir; AnaliseTecnicaDecisionService.",
+  "justificativa": "Tipo e validade passam a valer para todo deferimento (antes só renovação) com validade personalizada; confirmar divergência; decisão ligada à ficha usada; fecha o eixo da análise; só quem recebeu na distribuição conclui processo Para conclusão.",
+  "frente": "gestao"
+ },
+ {
+  "grupo": "Decisão e conclusão da análise",
+  "nome": "Análise - concluir com deferimento, indeferimento, desativação, cassação ou revogação",
+  "situacao": "ALTERADA",
+  "nome_baseline": "Análise - concluir com deferimento, indeferimento, desativação, cassação ou revogação",
+  "tipo": "EE",
+  "td": 9,
+  "ar": 8,
+  "pf": 6,
+  "der": [
+   "resultado",
+   "parecer (com importação do parecer da ficha)",
+   "tipo da viabilidade",
+   "validade (meses)",
+   "validade personalizada (data)",
+   "confirmar divergência",
+   "situação do processo",
+   "mensagem",
+   "ação concluir"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Ficha de análise técnica",
+   "Decisão de viabilidade",
+   "Bloqueio de inscrição de escritório virtual",
+   "Recebimento do REGIN",
+   "Comunicação ao requerente",
+   "Trilha de auditoria",
+   "Chamada de integração"
+  ],
+  "evidencia": "d98b2d047, d20245884, 1fef17c08 (20/10/2026), 1536f7002 (22/10), d8760357c (19/10), 1deeae1f3 (18/10, exige ficha salva); POST /gestao/processos/{id}/conclusao-analise; ConclusaoAnaliseService; ConcluirAnaliseRequest + ValidaTipoDeferimento.",
+  "justificativa": "DER novos (tipo, validade, data personalizada, confirmação de divergência); lógica nova: revisa conclusão de processo já finalizado, exige ficha salva, avisa contradição com a ficha, gera número da viabilidade no deferimento.",
+  "frente": "gestao"
+ },
+ {
+  "grupo": "Encaminhamento à malha fina",
+  "nome": "Malha fina - concluir revisão",
+  "situacao": "ALTERADA",
+  "nome_baseline": "Malha fina - concluir revisão",
+  "tipo": "EE",
+  "td": 7,
+  "ar": 7,
+  "pf": 6,
+  "der": [
+   "resultado",
+   "parecer (agora obrigatório)",
+   "tipo da viabilidade",
+   "validade (meses)",
+   "validade personalizada (data)",
+   "mensagem",
+   "ação concluir"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Encaminhamento à malha fina",
+   "Ficha de análise técnica",
+   "Decisão de viabilidade",
+   "Bloqueio de inscrição de escritório virtual",
+   "Trilha de auditoria",
+   "Comunicação ao requerente"
+  ],
+  "evidencia": "d98b2d047 (20/10/2026), 1536f7002 (22/10), worktree (parecer obrigatório e resultado prevalece sobre a ficha, SEDUR 03/11); POST /gestao/malha-fina/{id}/concluir; ConcluirMalhaFinaRequest.",
+  "justificativa": "DER novos (tipo, validade, data) e regra nova (parecer obrigatório; resultado escolhido prevalece sobre a ficha).",
+  "frente": "gestao"
+ },
+ {
+  "grupo": "Decisão e conclusão da análise",
+  "nome": "TVL - emitir e abrir o termo em PDF",
+  "situacao": "EXCLUIDA",
+  "nome_baseline": "TVL - emitir e abrir o termo em PDF",
+  "tipo": "SE",
+  "td": 21,
+  "ar": 7,
+  "pf": 7,
+  "der": [
+   "21 DER da baseline",
+   "tipo da viabilidade",
+   "válida até"
+  ],
+  "ftr": [
+   "Decisão de viabilidade",
+   "Solicitação de viabilidade",
+   "Empresa",
+   "Ficha de análise técnica",
+   "CNAE",
+   "Parâmetro",
+   "Trilha de auditoria"
+  ],
+  "evidencia": "e728d7472 (20/10/2026); TvlPdfService (tvl_tipo, tvl_valido_ate).",
+  "justificativa": "Reconciliação com o SEMIT: Em S1 nenhuma tela chama o PDF do TVL: 4e6349378 (22/10) tirou 'Visualizar Viabilidade' da ficha e cd76db83a/6298bb8a5 (26/10, 'remoção do botão Abrir PDF') tirou o componente baixar-tvl de processos/show, resultados-expresso/show e relatorios/tempo-emissao-tvl; o portal não tem rota de TVL. Rotas tvl.store/tvl.download seguem sem acesso (P8). Valores da baseline (SE 21/7, 7 PF): PF igual, muda a situação. O dev medido também não usa mais o componente.",
+  "frente": "gestao"
+ },
+ {
+  "grupo": "Precedentes de análise",
+  "nome": "Análise - consultar precedentes",
+  "situacao": "ALTERADA",
+  "nome_baseline": "Análise - consultar precedentes",
+  "tipo": "SE",
+  "td": 17,
+  "ar": 6,
+  "pf": 7,
+  "der": [
+   "14 DER da baseline",
+   "BAP do precedente",
+   "via do precedente",
+   "processos em análise no imóvel (protocolo, BAP)"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Decisão de viabilidade",
+   "Ficha de análise técnica",
+   "Usuário",
+   "Parâmetro",
+   "Trilha de auditoria"
+  ],
+  "evidencia": "13da43ae4 (20/10/2026), c2b15802c (28/10); GET /gestao/processos/{id}/precedentes; PrecedentService.",
+  "justificativa": "DER novos e lógica da estatística alterada (zona gravada/manual e CNAE do processo).",
+  "frente": "gestao"
+ },
+ {
+  "grupo": "Consulta de processos",
+  "nome": "Processos - consultar lista",
+  "situacao": "ALTERADA",
+  "nome_baseline": "Processos - consultar lista",
+  "tipo": "SE",
+  "td": 41,
+  "ar": 8,
+  "pf": 7,
+  "der": [
+   "38 DER da baseline",
+   "CNAE (filtro)",
+   "complemento (filtro)",
+   "número (filtro)"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Empresa",
+   "Decisão de viabilidade",
+   "Setor",
+   "Usuário",
+   "Trilha de auditoria",
+   "CNAE",
+   "Nomenclatura do serviço"
+  ],
+  "evidencia": "f56998ccd (18/10/2026), ac7a428ea (20/10), d89db2f6f (22/10), worktree (serviço e setor com escolha múltipla, número); GET /gestao/processos; ProcessoQueryService::aplicarFiltros.",
+  "justificativa": "DER novos de filtro, CPF aceito no campo CNPJ, serviço pelo nome parametrizado (FTR Nomenclatura) e filtro por CNAE (FTR CNAE).",
+  "frente": "gestao"
+ },
+ {
+  "grupo": "Consulta de processos",
+  "nome": "Processos - consultar caixa de entrada do analista",
+  "situacao": "ALTERADA",
+  "nome_baseline": "Processos - consultar caixa de entrada do analista",
+  "tipo": "SE",
+  "td": 33,
+  "ar": 9,
+  "pf": 7,
+  "der": [
+   "27 DER da baseline sem semáforo do SLA e filtro de analista",
+   "visão (Análise/Analisados)",
+   "janela de dias",
+   "total analisados",
+   "data de entrada",
+   "tipo do imóvel",
+   "CNAE",
+   "complemento",
+   "número"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Empresa",
+   "Decisão de viabilidade",
+   "Setor",
+   "Usuário",
+   "Trilha de auditoria",
+   "Ficha de análise técnica",
+   "CNAE",
+   "Nomenclatura do serviço"
+  ],
+  "evidencia": "f56998ccd (18/10/2026), 4108e1228, f5bbe0dd0, 24c6d5c05, aea0b5ffd (20/10); GET /gestao/processos/fila; ProcessoQueryService::analisados/contadorAnalisados.",
+  "justificativa": "Aba nova Analisados (lê fichas finalizadas, decisões e transições do analista na janela), colunas e filtros novos, colunas Etapa/SLA e filtro Analista retirados.",
+  "frente": "gestao"
+ },
+ {
+  "grupo": "Consulta de processos",
+  "nome": "Processos - consultar informações do processo",
+  "situacao": "ALTERADA",
+  "nome_baseline": "Processos - consultar informações do processo",
+  "tipo": "SE",
+  "td": 46,
+  "ar": 11,
+  "pf": 7,
+  "der": [
+   "36 DER da baseline",
+   "nome do solicitante",
+   "CPF do solicitante",
+   "CNAE: descrição e principal (lista completa)",
+   "orientações do encaminhamento à vistoria",
+   "analista de origem",
+   "setor de origem",
+   "setor de vistoria",
+   "encaminhado em",
+   "parecer já enviado à JUCEB"
+  ],
+  "ftr": [
+   "9 FTR da baseline",
+   "Ficha de vistoria",
+   "Nomenclatura do serviço"
+  ],
+  "evidencia": "303589212, 9fb4d51ef (22/10/2026), d2ffe7d74 (20/10, capa de consulta na vistoria), ac7a428ea (20/10); GET /gestao/processos/{id} e GET /gestao/vistorias/{id}/consulta (mesma lógica, ProcessoController::detalhe); ProcessoResource.",
+  "justificativa": "DER e FTR novos. A capa de consulta da vistoria reutiliza esta função (P6).",
+  "frente": "gestao"
+ },
+ {
+  "grupo": "Consulta de processos",
+  "nome": "Processos - consultar tramitação",
+  "situacao": "ALTERADA",
+  "nome_baseline": "Processos - consultar tramitação",
+  "tipo": "SE",
+  "td": 13,
+  "ar": 5,
+  "pf": 7,
+  "der": [
+   "12 DER da baseline (sem resultado do envio à SEFAZ)",
+   "link para a revisão da ficha ou para a ficha de vistoria",
+   "zona e via antes e depois"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Usuário",
+   "Trilha de auditoria",
+   "Ficha de análise técnica",
+   "Ficha de vistoria"
+  ],
+  "evidencia": "5885c2007, 6582ccf97, a5ac5cbf7 (20/10/2026), f38734023 (28/10), 4e63688d7 (29/10); TramitacaoProcessoService.",
+  "justificativa": "Lógica nova (uma linha por ação, deduplicação no mesmo momento, eventos da ficha salva/finalizada e da vistoria concluída) e FTR novos (lê as fichas para os eventos e os links). SE 5→7.",
+  "frente": "gestao"
+ },
+ {
+  "grupo": "Caixa do setor",
+  "nome": "Caixa do setor - consultar",
+  "situacao": "ALTERADA",
+  "nome_baseline": "Caixa do setor - consultar",
+  "tipo": "SE",
+  "td": 29,
+  "ar": 8,
+  "pf": 7,
+  "der": [
+   "23 DER da baseline",
+   "data de entrada",
+   "tipo do imóvel",
+   "status da tramitação",
+   "indicado para (chefia)",
+   "complemento",
+   "número"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Empresa",
+   "Setor",
+   "Usuário",
+   "CNAE",
+   "Trilha de auditoria",
+   "Perfil de acesso",
+   "Nomenclatura do serviço"
+  ],
+  "evidencia": "f56998ccd (18/10/2026), d89db2f6f, 28eff56f5 (21-22/10), 7d916a2a3 (29/10); GET /gestao/caixa-setor; CaixaSetorController@index.",
+  "justificativa": "Colunas e filtros novos, serviço pelo nome parametrizado, abas recalculadas (Analisados = Para conclusão do apoio; em vistoria/convite segue na caixa).",
+  "frente": "gestao"
+ },
+ {
+  "grupo": "Caixa do setor",
+  "nome": "Caixa do setor - redistribuir processo",
+  "situacao": "ALTERADA",
+  "nome_baseline": "Caixa do setor - redistribuir processo",
+  "tipo": "EE",
+  "td": 5,
+  "ar": 6,
+  "pf": 6,
+  "der": [
+   "processo",
+   "nova analista",
+   "setor de destino",
+   "mensagem",
+   "ação redistribuir"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Usuário",
+   "Setor",
+   "Trilha de auditoria",
+   "Perfil de acesso",
+   "Ficha de vistoria"
+  ],
+  "evidencia": "029ceb7f6 (20/10/2026), 28eff56f5 (21/10), 7d916a2a3 (29/10); DistribuicaoService::redistribuir/transferirFichaEmPreenchimento.",
+  "justificativa": "Lógica nova: redistribui em qualquer situação antes da conclusão (inclusive Para conclusão, gravando o destinatário da conclusão) e transfere a ficha de vistoria em preenchimento ao novo vistoriador (FTR novo).",
+  "frente": "gestao"
+ },
+ {
+  "grupo": "Vistoria",
+  "nome": "Vistorias - consultar lista",
+  "situacao": "ALTERADA",
+  "nome_baseline": "Vistorias - consultar lista",
+  "tipo": "SE",
+  "td": 31,
+  "ar": 8,
+  "pf": 7,
+  "der": [
+   "18 DER da baseline",
+   "serviço",
+   "KPI distribuídos",
+   "aba Distribuídos",
+   "situação da análise (filtro)",
+   "data inicial",
+   "data final",
+   "CNPJ/CPF",
+   "bairro",
+   "categoria",
+   "analista",
+   "CNAE",
+   "complemento",
+   "número"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Ficha de vistoria",
+   "Empresa",
+   "Setor",
+   "Usuário",
+   "Trilha de auditoria",
+   "CNAE",
+   "Nomenclatura do serviço"
+  ],
+  "evidencia": "f56998ccd (18/10/2026), 2ed965231, 092effe25 (20/10), c9f0bca68 (29/10); GET /gestao/vistorias; VistoriaConsultaController@__invoke.",
+  "justificativa": "Caixa de vistoria no padrão das caixas: filtros da caixa, coluna serviço, aba e KPI Distribuídos, escopo do vistoriador.",
+  "frente": "gestao"
+ },
+ {
+  "grupo": "Vistoria",
+  "nome": "Vistoria - concluir ficha",
+  "situacao": "ALTERADA",
+  "nome_baseline": "Vistoria - concluir ficha",
+  "tipo": "EE",
+  "td": 54,
+  "ar": 3,
+  "pf": 6,
+  "der": [
+   "52 campos da ficha com parecer obrigatório",
+   "mensagem",
+   "ação concluir"
+  ],
+  "ftr": [
+   "Ficha de vistoria",
+   "Solicitação de viabilidade",
+   "Trilha de auditoria"
+  ],
+  "evidencia": "a2f8dacec (18/10/2026), d2ffe7d74 (20/10); InspectionService::concluir (removida a chamada devolverAoAnalista).",
+  "justificativa": "Lógica alterada: a conclusão deixa de devolver automaticamente o processo ao analista de origem (setor, responsável e transição); o retorno passou à nova função de encaminhar à Caixa do Setor.",
+  "frente": "gestao"
+ },
+ {
+  "grupo": "Vistoria",
+  "nome": "Vistoria - encaminhar processo para vistoria",
+  "situacao": "ALTERADA",
+  "nome_baseline": "Vistoria - encaminhar processo para vistoria",
+  "tipo": "EE",
+  "td": 4,
+  "ar": 4,
+  "pf": 4,
+  "der": [
+   "setor de vistoria",
+   "motivo",
+   "mensagem",
+   "ação"
+  ],
+  "ftr": [
+   "Ficha de vistoria",
+   "Setor",
+   "Solicitação de viabilidade",
+   "Trilha de auditoria"
+  ],
+  "evidencia": "047c78934 (22/10/2026); EncaminharVistoriaService::podeEncaminhar.",
+  "justificativa": "Regra alterada: o encaminhamento não depende mais da fase da análise (só barra concluída, convite expirado e já em vistoria).",
+  "frente": "gestao"
+ },
+ {
+  "grupo": "Resultados do fluxo expresso",
+  "nome": "Resultados do expresso - consultar lista",
+  "situacao": "ALTERADA",
+  "nome_baseline": "Resultados do expresso - consultar lista",
+  "tipo": "SE",
+  "td": 32,
+  "ar": 8,
+  "pf": 7,
+  "der": [
+   "13 DER da baseline",
+   "grupo de status",
+   "situação",
+   "situação da análise",
+   "BAP",
+   "serviço",
+   "setor",
+   "analista",
+   "categoria",
+   "inscrição imobiliária",
+   "nome",
+   "CEP",
+   "logradouro",
+   "número",
+   "bairro",
+   "fluxo",
+   "CNAE",
+   "complemento",
+   "protocolado de",
+   "protocolado até"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Decisão de viabilidade",
+   "Empresa",
+   "Trilha de auditoria",
+   "Setor",
+   "Usuário",
+   "CNAE",
+   "Nomenclatura do serviço"
+  ],
+  "evidencia": "a2f8dacec (18/10/2026) e worktree; GET /gestao/resultados-expresso; ResultadoExpressoController (CHAVES_FILTRO_CONSULTA, ProcessoQueryService::aplicarFiltros).",
+  "justificativa": "Filtros da Consulta de processos aplicados ao resultado expresso: DER e FTR novos.",
+  "frente": "gestao"
+ },
+ {
+  "grupo": "Resultados do fluxo expresso",
+  "nome": "Ficha do expresso - consultar decisão somente leitura",
+  "situacao": "ALTERADA",
+  "nome_baseline": "Ficha do expresso - consultar decisão somente leitura",
+  "tipo": "SE",
+  "td": 28,
+  "ar": 7,
+  "pf": 7,
+  "der": [
+   "31 DER da baseline menos etapa do motor, situação da etapa e motivo da etapa"
+  ],
+  "ftr": [
+   "Decisão de viabilidade",
+   "Solicitação de viabilidade",
+   "Empresa",
+   "Usuário",
+   "Cadastro imobiliário da SEFAZ",
+   "Trilha de auditoria",
+   "Chamada de integração"
+  ],
+  "evidencia": "ec36400de (17/10/2026); AnalysisRecordController::showExpresso (etapasMotor e podeReprocessar retirados).",
+  "justificativa": "DER removidos (card Etapas do motor). PF inalterado.",
+  "frente": "gestao"
+ },
+ {
+  "grupo": "Painel inicial",
+  "nome": "Painel - consultar indicadores iniciais",
+  "situacao": "ALTERADA",
+  "nome_baseline": "Painel - consultar indicadores iniciais",
+  "tipo": "SE",
+  "td": 21,
+  "ar": 8,
+  "pf": 7,
+  "der": [
+   "22 DER da baseline menos meta expressa"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Decisão de viabilidade",
+   "Pendência da análise",
+   "Comunicação ao requerente",
+   "Setor",
+   "Usuário",
+   "Feriado",
+   "Parâmetro"
+  ],
+  "evidencia": "0e629ee02 (20/10/2026); PainelOperacaoService e gestao/dashboard.",
+  "justificativa": "DER removido (meta da taxa expressa). PF inalterado.",
+  "frente": "gestao"
+ },
+ {
+  "grupo": "Resultados do fluxo expresso",
+  "nome": "Processos - reprocessar etapas do motor",
+  "situacao": "EXCLUIDA",
+  "nome_baseline": "Processos - reprocessar etapas do motor",
+  "tipo": "EE",
+  "td": 2,
+  "ar": 18,
+  "pf": 4,
+  "der": [
+   "ação reprocessar",
+   "mensagem do resultado"
+  ],
+  "ftr": [
+   "18 FTR da baseline"
+  ],
+  "evidencia": "ec36400de (17/10/2026): card Etapas do motor e botão Reprocessar retirados da ficha do expresso (props etapasMotor/podeReprocessar removidas de showExpresso); grep: nenhuma tela chama POST /gestao/processos/{id}/reprocessar.",
+  "justificativa": "Rota segue no código, mas sem tela ou botão: P8. Função da baseline deixa de existir para o usuário.",
+  "frente": "gestao"
+ },
+ {
+  "grupo": "APIs de integração (SEFAZ e BI)",
+  "nome": "APIs de integração - autenticar sistema consumidor (SEFAZ/TVL e BI)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "EE",
+  "td": 6,
+  "ar": 1,
+  "pf": 3,
+  "der": [
+   "usuário",
+   "senha",
+   "token",
+   "tipo do token",
+   "validade em segundos",
+   "mensagem (credencial inválida / integração indisponível)"
+  ],
+  "ftr": [
+   "Chamada de integração (gravada pelo middleware LogInboundIntegration, P4)"
+  ],
+  "evidencia": "d2969ff84 (28/10, POST /api_integracao/tvl/autenticar, ConsultaTvlController::autenticar, TokenTvlService) e não rastreado (POST /api_integracao/bi/autenticar, BiController::autenticar, TokenBiService, AutenticaBi)",
+  "justificativa": "Coerente com a baseline (login do portal e da gestão contados como EE porque gravam registro): a emissão do token grava a Chamada de integração no mesmo request (P4) e libera o acesso do sistema consumidor. Unicidade (P6, CPM §5.5.2.2): autenticar da TVL e do BI têm os mesmos DER, o mesmo FTR e a mesma lógica (compara com usuário/senha da configuração e cifra a expiração); só muda o conjunto de credenciais (dado de configuração), por isso uma função. Token sem tabela; credenciais em .env (não é ALI). Limítrofe: se cada API for contada à parte, +3 PF; se o token for tratado como mecanismo técnico sem processo elementar, -3 PF.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "APIs de integração (SEFAZ e BI)",
+  "nome": "API da SEFAZ - consultar viabilidade (TVL) por número",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 35,
+  "ar": 7,
+  "pf": 7,
+  "der": [
+   "número da viabilidade (entrada/protocolo)",
+   "situação (00/01/02/99)",
+   "mensagem",
+   "CNPJ da instituição",
+   "nome do requerente/nome impresso",
+   "inscrição imobiliária",
+   "área utilizada",
+   "tipo do imóvel",
+   "porte da empresa",
+   "CEP",
+   "bairro",
+   "CODLOG",
+   "tipo de logradouro",
+   "logradouro",
+   "número",
+   "complemento",
+   "tipo de viabilidade (Definitivo/Provisório/Pré-operacional e código 1/2)",
+   "zona",
+   "via",
+   "condicionantes/observação",
+   "data de vencimento",
+   "data da viabilidade",
+   "início da viabilidade (protocolo)",
+   "fim da viabilidade (decisão)",
+   "sede de escritório virtual",
+   "código do CNAE",
+   "categoria do CNAE",
+   "descrição do CNAE",
+   "documento das taxas (nº do processo)",
+   "código TLL",
+   "valor da taxa",
+   "data da taxa",
+   "serviço SEFAZ",
+   "código do serviço",
+   "BAP"
+  ],
+  "ftr": [
+   "Decisão de viabilidade",
+   "Solicitação de viabilidade",
+   "Empresa",
+   "Ficha de análise técnica",
+   "CNAE",
+   "Valor da TLL",
+   "Chamada de integração (gravada pelo middleware LogInboundIntegration, P4)"
+  ],
+  "evidencia": "d2969ff84, 5a3693b21, 288b34ba6 (28/10); 07050a4e4 (29/10); GET /api_integracao/tvl/{numero}; app/Services/Integracao/ConsultaTvlService.php",
+  "justificativa": "Nova saída para a SEFAZ/SIGS (alvará e DAM). Calcula a TLL do deferimento (TllCalculoService) e deriva tipo/condicionantes, além de gravar a Chamada de integração: SE, não CE. Constantes (UF, município, código do município, tipoCNAE, tvlSimplifica=false) e campos sempre nulos (processo, hashDam) não contam como DER. Envio à SEFAZ continua fora (P1); esta é a SEFAZ consultando o Viabiliza.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "APIs de integração (SEFAZ e BI)",
+  "nome": "API do BI - consultar processos completos (lista paginada e processo avulso)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 26,
+  "ar": 9,
+  "pf": 7,
+  "der": [
+   "processo após id",
+   "limite",
+   "atualizado desde",
+   "data inicial",
+   "data final",
+   "situação",
+   "id ou protocolo (avulso)",
+   "id",
+   "protocolo",
+   "ficha do processo (ProcessoResource)",
+   "registro do processo",
+   "empresa",
+   "CNAEs (código, descrição, principal, intenção)",
+   "serviços JUCEB",
+   "decisão (decidido por, parecer)",
+   "fichas de análise (analista)",
+   "vistorias (vistoriador)",
+   "convites (solicitado por)",
+   "anexos da análise",
+   "documentos",
+   "quedas do expresso",
+   "etapas de integração",
+   "histórico da análise",
+   "tramitação (de, para, detalhe, rótulo público, data, ator)",
+   "gerado em",
+   "mensagem (parâmetros inválidos / não encontrado)"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Empresa",
+   "CNAE",
+   "Decisão de viabilidade",
+   "Ficha de análise técnica",
+   "Ficha de vistoria",
+   "Pendência da análise",
+   "Usuário",
+   "Chamada de integração (gravada pelo middleware LogInboundIntegration, P4)"
+  ],
+  "evidencia": "não rastreado: app/Http/Controllers/Integracao/BiProcessosController.php, app/Services/Relatorios/Bi/BiProcessosCompletos.php; GET /api_integracao/bi/processos e /processos/{processo}",
+  "justificativa": "Extração completa de processos para o BI. Lista e avulso devolvem o mesmo registro de processo, com os mesmos FTR e a mesma lógica de montagem; diferem só no critério de seleção e na paginação (controle de navegação não é DER). Contado uma vez de forma conservadora; se separados, +7 PF.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "API de indicadores do BI",
+  "nome": "API do BI - consultar resumo executivo (resumo-executivo)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 16,
+  "ar": 4,
+  "pf": 7,
+  "der": [
+   "data inicial",
+   "data final",
+   "setor",
+   "analista",
+   "bairro",
+   "CNAE (filtro)",
+   "categoria",
+   "protocoladas",
+   "em análise",
+   "deferidas",
+   "indeferidas",
+   "decididas",
+   "taxa de deferimento",
+   "tempo médio (horas úteis)",
+   "processos fora do prazo",
+   "decididas fora do prazo"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Decisão de viabilidade",
+   "CNAE (filtro por código)",
+   "Chamada de integração (gravada pelo middleware LogInboundIntegration, P4)"
+  ],
+  "evidencia": "não rastreado (03/11): app/Http/Controllers/Integracao/BiController.php::indicador, app/Services/Relatorios/Bi/BiCatalogo.php; GET /api_integracao/bi/indicadores/{slug}",
+  "justificativa": "Alternativa A (recomendada): cada indicador do catálogo é um processo elementar próprio, com DER de saída, FTR e lógica de cálculo distintos (CPM §5.5.2.2); o slug parametrizado é solução de interface, como as abas da configuração das APIs (P7). Grava Chamada de integração (P4) e calcula/deriva: SE.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "API de indicadores do BI",
+  "nome": "API do BI - consultar comparativo com período anterior e ano passado (comparativo-periodo)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 15,
+  "ar": 4,
+  "pf": 7,
+  "der": [
+   "data inicial",
+   "data final",
+   "setor",
+   "analista",
+   "bairro",
+   "CNAE (filtro)",
+   "categoria",
+   "indicador",
+   "valor no período",
+   "valor no período anterior",
+   "valor no ano passado",
+   "variação percentual",
+   "subir é bom ou ruim",
+   "período atual (de/até)",
+   "período anterior (de/até)"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Decisão de viabilidade",
+   "CNAE (filtro por código)",
+   "Chamada de integração (gravada pelo middleware LogInboundIntegration, P4)"
+  ],
+  "evidencia": "não rastreado (03/11): app/Http/Controllers/Integracao/BiController.php::indicador, app/Services/Relatorios/Bi/BiCatalogo.php; GET /api_integracao/bi/indicadores/{slug}",
+  "justificativa": "Alternativa A (recomendada): cada indicador do catálogo é um processo elementar próprio, com DER de saída, FTR e lógica de cálculo distintos (CPM §5.5.2.2); o slug parametrizado é solução de interface, como as abas da configuração das APIs (P7). Grava Chamada de integração (P4) e calcula/deriva: SE.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "API de indicadores do BI",
+  "nome": "API do BI - consultar tempo de Salvador frente à REDESIM (benchmark-redesim)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 16,
+  "ar": 5,
+  "pf": 7,
+  "der": [
+   "data inicial",
+   "data final",
+   "setor",
+   "analista",
+   "bairro",
+   "CNAE (filtro)",
+   "categoria",
+   "tempo médio Viabiliza",
+   "tempo REDESIM",
+   "diferença em horas",
+   "diferença percentual",
+   "mês corrente",
+   "competência da série",
+   "tempo Viabiliza no mês",
+   "tempo REDESIM no mês",
+   "média REDESIM antes do Viabiliza"
+  ],
+  "ftr": [
+   "Benchmark nacional de tempo de viabilidade",
+   "Solicitação de viabilidade",
+   "Decisão de viabilidade",
+   "CNAE (filtro por código)",
+   "Chamada de integração (gravada pelo middleware LogInboundIntegration, P4)"
+  ],
+  "evidencia": "não rastreado (03/11): app/Http/Controllers/Integracao/BiController.php::indicador, app/Services/Relatorios/Bi/BiCatalogo.php; GET /api_integracao/bi/indicadores/{slug}",
+  "justificativa": "Alternativa A (recomendada): cada indicador do catálogo é um processo elementar próprio, com DER de saída, FTR e lógica de cálculo distintos (CPM §5.5.2.2); o slug parametrizado é solução de interface, como as abas da configuração das APIs (P7). Grava Chamada de integração (P4) e calcula/deriva: SE.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "API de indicadores do BI",
+  "nome": "API do BI - consultar solicitações protocoladas (solicitacoes-protocoladas)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 11,
+  "ar": 3,
+  "pf": 5,
+  "der": [
+   "data inicial",
+   "data final",
+   "setor",
+   "analista",
+   "bairro",
+   "CNAE (filtro)",
+   "categoria",
+   "agrupamento",
+   "total",
+   "período",
+   "total do período"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "CNAE (filtro por código)",
+   "Chamada de integração (gravada pelo middleware LogInboundIntegration, P4)"
+  ],
+  "evidencia": "não rastreado (03/11): app/Http/Controllers/Integracao/BiController.php::indicador, app/Services/Relatorios/Bi/BiCatalogo.php; GET /api_integracao/bi/indicadores/{slug}",
+  "justificativa": "Alternativa A (recomendada): cada indicador do catálogo é um processo elementar próprio, com DER de saída, FTR e lógica de cálculo distintos (CPM §5.5.2.2); o slug parametrizado é solução de interface, como as abas da configuração das APIs (P7). Grava Chamada de integração (P4) e calcula/deriva: SE.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "API de indicadores do BI",
+  "nome": "API do BI - consultar solicitações em análise (solicitacoes-em-analise)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 9,
+  "ar": 3,
+  "pf": 5,
+  "der": [
+   "setor",
+   "analista",
+   "bairro",
+   "CNAE (filtro)",
+   "categoria",
+   "situação",
+   "rótulo da situação",
+   "total por situação",
+   "total"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "CNAE (filtro por código)",
+   "Chamada de integração (gravada pelo middleware LogInboundIntegration, P4)"
+  ],
+  "evidencia": "não rastreado (03/11): app/Http/Controllers/Integracao/BiController.php::indicador, app/Services/Relatorios/Bi/BiCatalogo.php; GET /api_integracao/bi/indicadores/{slug}",
+  "justificativa": "Alternativa A (recomendada): cada indicador do catálogo é um processo elementar próprio, com DER de saída, FTR e lógica de cálculo distintos (CPM §5.5.2.2); o slug parametrizado é solução de interface, como as abas da configuração das APIs (P7). Grava Chamada de integração (P4) e calcula/deriva: SE.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "API de indicadores do BI",
+  "nome": "API do BI - consultar viabilidades deferidas e indeferidas (decisoes)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 13,
+  "ar": 4,
+  "pf": 7,
+  "der": [
+   "data inicial",
+   "data final",
+   "setor",
+   "analista",
+   "bairro",
+   "CNAE (filtro)",
+   "categoria",
+   "agrupamento",
+   "período",
+   "deferidas",
+   "indeferidas",
+   "total",
+   "taxa de deferimento"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Decisão de viabilidade",
+   "CNAE (filtro por código)",
+   "Chamada de integração (gravada pelo middleware LogInboundIntegration, P4)"
+  ],
+  "evidencia": "não rastreado (03/11): app/Http/Controllers/Integracao/BiController.php::indicador, app/Services/Relatorios/Bi/BiCatalogo.php; GET /api_integracao/bi/indicadores/{slug}",
+  "justificativa": "Alternativa A (recomendada): cada indicador do catálogo é um processo elementar próprio, com DER de saída, FTR e lógica de cálculo distintos (CPM §5.5.2.2); o slug parametrizado é solução de interface, como as abas da configuração das APIs (P7). Grava Chamada de integração (P4) e calcula/deriva: SE.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "API de indicadores do BI",
+  "nome": "API do BI - consultar taxa de deferimento (taxa-deferimento)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 12,
+  "ar": 4,
+  "pf": 7,
+  "der": [
+   "data inicial",
+   "data final",
+   "setor",
+   "analista",
+   "bairro",
+   "CNAE (filtro)",
+   "categoria",
+   "deferidas",
+   "indeferidas",
+   "total",
+   "taxa de deferimento",
+   "taxa de indeferimento"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Decisão de viabilidade",
+   "CNAE (filtro por código)",
+   "Chamada de integração (gravada pelo middleware LogInboundIntegration, P4)"
+  ],
+  "evidencia": "não rastreado (03/11): app/Http/Controllers/Integracao/BiController.php::indicador, app/Services/Relatorios/Bi/BiCatalogo.php; GET /api_integracao/bi/indicadores/{slug}",
+  "justificativa": "Alternativa A (recomendada): cada indicador do catálogo é um processo elementar próprio, com DER de saída, FTR e lógica de cálculo distintos (CPM §5.5.2.2); o slug parametrizado é solução de interface, como as abas da configuração das APIs (P7). Grava Chamada de integração (P4) e calcula/deriva: SE.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "API de indicadores do BI",
+  "nome": "API do BI - consultar tempo médio de análise (tempo-medio-analise)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 13,
+  "ar": 4,
+  "pf": 7,
+  "der": [
+   "data inicial",
+   "data final",
+   "setor",
+   "analista",
+   "bairro",
+   "CNAE (filtro)",
+   "categoria",
+   "amostras",
+   "média",
+   "mediana",
+   "P90",
+   "mínimo",
+   "máximo"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Decisão de viabilidade",
+   "CNAE (filtro por código)",
+   "Chamada de integração (gravada pelo middleware LogInboundIntegration, P4)"
+  ],
+  "evidencia": "não rastreado (03/11): app/Http/Controllers/Integracao/BiController.php::indicador, app/Services/Relatorios/Bi/BiCatalogo.php; GET /api_integracao/bi/indicadores/{slug}",
+  "justificativa": "Alternativa A (recomendada): cada indicador do catálogo é um processo elementar próprio, com DER de saída, FTR e lógica de cálculo distintos (CPM §5.5.2.2); o slug parametrizado é solução de interface, como as abas da configuração das APIs (P7). Grava Chamada de integração (P4) e calcula/deriva: SE. Subconjunto de saída de tempo-conclusao (mesmo cálculo); mantido distinto por DER diferente.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "API de indicadores do BI",
+  "nome": "API do BI - consultar processos fora do prazo (processos-fora-do-prazo)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 14,
+  "ar": 4,
+  "pf": 7,
+  "der": [
+   "data inicial",
+   "data final",
+   "setor",
+   "analista",
+   "bairro",
+   "CNAE (filtro)",
+   "categoria",
+   "vencidos",
+   "vencendo",
+   "etapa",
+   "atrasados por etapa",
+   "decididas com prazo",
+   "dentro do prazo",
+   "fora do prazo"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Decisão de viabilidade",
+   "CNAE (filtro por código)",
+   "Chamada de integração (gravada pelo middleware LogInboundIntegration, P4)"
+  ],
+  "evidencia": "não rastreado (03/11): app/Http/Controllers/Integracao/BiController.php::indicador, app/Services/Relatorios/Bi/BiCatalogo.php; GET /api_integracao/bi/indicadores/{slug}",
+  "justificativa": "Alternativa A (recomendada): cada indicador do catálogo é um processo elementar próprio, com DER de saída, FTR e lógica de cálculo distintos (CPM §5.5.2.2); o slug parametrizado é solução de interface, como as abas da configuração das APIs (P7). Grava Chamada de integração (P4) e calcula/deriva: SE.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "API de indicadores do BI",
+  "nome": "API do BI - consultar solicitações por bairro (solicitacoes-por-bairro)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 13,
+  "ar": 3,
+  "pf": 5,
+  "der": [
+   "data inicial",
+   "data final",
+   "setor",
+   "analista",
+   "bairro",
+   "CNAE (filtro)",
+   "categoria",
+   "limite",
+   "bairro",
+   "total",
+   "deferidas",
+   "indeferidas",
+   "taxa de deferimento"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "CNAE (filtro por código)",
+   "Chamada de integração (gravada pelo middleware LogInboundIntegration, P4)"
+  ],
+  "evidencia": "não rastreado (03/11): app/Http/Controllers/Integracao/BiController.php::indicador, app/Services/Relatorios/Bi/BiCatalogo.php; GET /api_integracao/bi/indicadores/{slug}",
+  "justificativa": "Alternativa A (recomendada): cada indicador do catálogo é um processo elementar próprio, com DER de saída, FTR e lógica de cálculo distintos (CPM §5.5.2.2); o slug parametrizado é solução de interface, como as abas da configuração das APIs (P7). Grava Chamada de integração (P4) e calcula/deriva: SE.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "API de indicadores do BI",
+  "nome": "API do BI - consultar solicitações por risco (solicitacoes-por-risco)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 10,
+  "ar": 4,
+  "pf": 7,
+  "der": [
+   "data inicial",
+   "data final",
+   "setor",
+   "analista",
+   "bairro",
+   "CNAE (filtro)",
+   "categoria",
+   "classificação de risco",
+   "total",
+   "percentual"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "CNAE (filtro por código)",
+   "Classificação de risco municipal",
+   "Chamada de integração (gravada pelo middleware LogInboundIntegration, P4)"
+  ],
+  "evidencia": "não rastreado (03/11): app/Http/Controllers/Integracao/BiController.php::indicador, app/Services/Relatorios/Bi/BiCatalogo.php; GET /api_integracao/bi/indicadores/{slug}",
+  "justificativa": "Alternativa A (recomendada): cada indicador do catálogo é um processo elementar próprio, com DER de saída, FTR e lógica de cálculo distintos (CPM §5.5.2.2); o slug parametrizado é solução de interface, como as abas da configuração das APIs (P7). Grava Chamada de integração (P4) e calcula/deriva: SE.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "API de indicadores do BI",
+  "nome": "API do BI - consultar ranking dos CNAEs mais solicitados (inclui atividades-mais-solicitadas) (ranking-cnaes)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 17,
+  "ar": 4,
+  "pf": 7,
+  "der": [
+   "data inicial",
+   "data final",
+   "setor",
+   "analista",
+   "bairro",
+   "CNAE (filtro)",
+   "categoria",
+   "limite",
+   "posição",
+   "CNAE",
+   "descrição",
+   "total",
+   "deferidas",
+   "indeferidas",
+   "decididas",
+   "taxa de deferimento",
+   "taxa de indeferimento"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "CNAE (filtro por código)",
+   "Decisão de viabilidade",
+   "Chamada de integração (gravada pelo middleware LogInboundIntegration, P4)"
+  ],
+  "evidencia": "não rastreado (03/11): app/Http/Controllers/Integracao/BiController.php::indicador, app/Services/Relatorios/Bi/BiCatalogo.php; GET /api_integracao/bi/indicadores/{slug}",
+  "justificativa": "Alternativa A (recomendada): cada indicador do catálogo é um processo elementar próprio, com DER de saída, FTR e lógica de cálculo distintos (CPM §5.5.2.2); o slug parametrizado é solução de interface, como as abas da configuração das APIs (P7). Grava Chamada de integração (P4) e calcula/deriva: SE. Slug atividades-mais-solicitadas chama o mesmo método (EstrategicoBi::cnaes → EconomicoBi::ranking): mesma função, contada uma vez.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "API de indicadores do BI",
+  "nome": "API do BI - consultar evolução das atividades por CNAE (evolucao-cnaes)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 13,
+  "ar": 3,
+  "pf": 5,
+  "der": [
+   "data inicial",
+   "data final",
+   "setor",
+   "analista",
+   "bairro",
+   "CNAE (filtro)",
+   "categoria",
+   "agrupamento",
+   "limite",
+   "período",
+   "CNAE",
+   "descrição",
+   "total"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "CNAE (filtro por código)",
+   "Chamada de integração (gravada pelo middleware LogInboundIntegration, P4)"
+  ],
+  "evidencia": "não rastreado (03/11): app/Http/Controllers/Integracao/BiController.php::indicador, app/Services/Relatorios/Bi/BiCatalogo.php; GET /api_integracao/bi/indicadores/{slug}",
+  "justificativa": "Alternativa A (recomendada): cada indicador do catálogo é um processo elementar próprio, com DER de saída, FTR e lógica de cálculo distintos (CPM §5.5.2.2); o slug parametrizado é solução de interface, como as abas da configuração das APIs (P7). Grava Chamada de integração (P4) e calcula/deriva: SE.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "API de indicadores do BI",
+  "nome": "API do BI - consultar CNAEs por bairro (cnaes-por-bairro)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 12,
+  "ar": 3,
+  "pf": 5,
+  "der": [
+   "data inicial",
+   "data final",
+   "setor",
+   "analista",
+   "bairro",
+   "CNAE (filtro)",
+   "categoria",
+   "limite",
+   "bairro",
+   "CNAE",
+   "descrição",
+   "total"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "CNAE (filtro por código)",
+   "Chamada de integração (gravada pelo middleware LogInboundIntegration, P4)"
+  ],
+  "evidencia": "não rastreado (03/11): app/Http/Controllers/Integracao/BiController.php::indicador, app/Services/Relatorios/Bi/BiCatalogo.php; GET /api_integracao/bi/indicadores/{slug}",
+  "justificativa": "Alternativa A (recomendada): cada indicador do catálogo é um processo elementar próprio, com DER de saída, FTR e lógica de cálculo distintos (CPM §5.5.2.2); o slug parametrizado é solução de interface, como as abas da configuração das APIs (P7). Grava Chamada de integração (P4) e calcula/deriva: SE.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "API de indicadores do BI",
+  "nome": "API do BI - consultar solicitações por porte de área (solicitacoes-por-porte-area)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 12,
+  "ar": 4,
+  "pf": 7,
+  "der": [
+   "data inicial",
+   "data final",
+   "setor",
+   "analista",
+   "bairro",
+   "CNAE (filtro)",
+   "categoria",
+   "faixa de área",
+   "rótulo da faixa",
+   "total",
+   "deferidas",
+   "indeferidas"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Decisão de viabilidade",
+   "CNAE (filtro por código)",
+   "Chamada de integração (gravada pelo middleware LogInboundIntegration, P4)"
+  ],
+  "evidencia": "não rastreado (03/11): app/Http/Controllers/Integracao/BiController.php::indicador, app/Services/Relatorios/Bi/BiCatalogo.php; GET /api_integracao/bi/indicadores/{slug}",
+  "justificativa": "Alternativa A (recomendada): cada indicador do catálogo é um processo elementar próprio, com DER de saída, FTR e lógica de cálculo distintos (CPM §5.5.2.2); o slug parametrizado é solução de interface, como as abas da configuração das APIs (P7). Grava Chamada de integração (P4) e calcula/deriva: SE.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "API de indicadores do BI",
+  "nome": "API do BI - consultar atividades com maior taxa de indeferimento (atividades-maior-indeferimento)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 15,
+  "ar": 4,
+  "pf": 7,
+  "der": [
+   "data inicial",
+   "data final",
+   "setor",
+   "analista",
+   "bairro",
+   "CNAE (filtro)",
+   "categoria",
+   "limite",
+   "mínimo de decididas",
+   "posição",
+   "CNAE",
+   "descrição",
+   "decididas",
+   "indeferidas",
+   "taxa de indeferimento"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Decisão de viabilidade",
+   "CNAE (filtro por código)",
+   "Chamada de integração (gravada pelo middleware LogInboundIntegration, P4)"
+  ],
+  "evidencia": "não rastreado (03/11): app/Http/Controllers/Integracao/BiController.php::indicador, app/Services/Relatorios/Bi/BiCatalogo.php; GET /api_integracao/bi/indicadores/{slug}",
+  "justificativa": "Alternativa A (recomendada): cada indicador do catálogo é um processo elementar próprio, com DER de saída, FTR e lógica de cálculo distintos (CPM §5.5.2.2); o slug parametrizado é solução de interface, como as abas da configuração das APIs (P7). Grava Chamada de integração (P4) e calcula/deriva: SE.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "API de indicadores do BI",
+  "nome": "API do BI - consultar atividades por classificação de risco (atividades-por-risco)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 12,
+  "ar": 4,
+  "pf": 7,
+  "der": [
+   "data inicial",
+   "data final",
+   "setor",
+   "analista",
+   "bairro",
+   "CNAE (filtro)",
+   "categoria",
+   "limite",
+   "CNAE",
+   "descrição",
+   "nível de risco",
+   "total"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "CNAE (filtro por código)",
+   "Classificação de risco municipal",
+   "Chamada de integração (gravada pelo middleware LogInboundIntegration, P4)"
+  ],
+  "evidencia": "não rastreado (03/11): app/Http/Controllers/Integracao/BiController.php::indicador, app/Services/Relatorios/Bi/BiCatalogo.php; GET /api_integracao/bi/indicadores/{slug}",
+  "justificativa": "Alternativa A (recomendada): cada indicador do catálogo é um processo elementar próprio, com DER de saída, FTR e lógica de cálculo distintos (CPM §5.5.2.2); o slug parametrizado é solução de interface, como as abas da configuração das APIs (P7). Grava Chamada de integração (P4) e calcula/deriva: SE.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "API de indicadores do BI",
+  "nome": "API do BI - consultar perfil da demanda (perfil-demanda)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 14,
+  "ar": 4,
+  "pf": 7,
+  "der": [
+   "data inicial",
+   "data final",
+   "setor",
+   "analista",
+   "bairro",
+   "CNAE (filtro)",
+   "categoria",
+   "limite",
+   "dimensão (serviço JUCEB, tipo de serviço, canal, porte, escritório virtual)",
+   "valor da dimensão",
+   "total",
+   "deferidas",
+   "indeferidas",
+   "taxa"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Decisão de viabilidade",
+   "CNAE (filtro por código)",
+   "Chamada de integração (gravada pelo middleware LogInboundIntegration, P4)"
+  ],
+  "evidencia": "não rastreado (03/11): app/Http/Controllers/Integracao/BiController.php::indicador, app/Services/Relatorios/Bi/BiCatalogo.php; GET /api_integracao/bi/indicadores/{slug}",
+  "justificativa": "Alternativa A (recomendada): cada indicador do catálogo é um processo elementar próprio, com DER de saída, FTR e lógica de cálculo distintos (CPM §5.5.2.2); o slug parametrizado é solução de interface, como as abas da configuração das APIs (P7). Grava Chamada de integração (P4) e calcula/deriva: SE.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "API de indicadores do BI",
+  "nome": "API do BI - consultar impacto econômico (impacto-economico)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 15,
+  "ar": 4,
+  "pf": 7,
+  "der": [
+   "data inicial",
+   "data final",
+   "setor",
+   "analista",
+   "bairro",
+   "CNAE (filtro)",
+   "categoria",
+   "agrupamento",
+   "empresas viabilizadas",
+   "área liberada",
+   "área média",
+   "porte",
+   "total por porte",
+   "período",
+   "total do período"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Decisão de viabilidade",
+   "CNAE (filtro por código)",
+   "Chamada de integração (gravada pelo middleware LogInboundIntegration, P4)"
+  ],
+  "evidencia": "não rastreado (03/11): app/Http/Controllers/Integracao/BiController.php::indicador, app/Services/Relatorios/Bi/BiCatalogo.php; GET /api_integracao/bi/indicadores/{slug}",
+  "justificativa": "Alternativa A (recomendada): cada indicador do catálogo é um processo elementar próprio, com DER de saída, FTR e lógica de cálculo distintos (CPM §5.5.2.2); o slug parametrizado é solução de interface, como as abas da configuração das APIs (P7). Grava Chamada de integração (P4) e calcula/deriva: SE.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "API de indicadores do BI",
+  "nome": "API do BI - consultar novas solicitações por região (novas-solicitacoes-por-regiao)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 15,
+  "ar": 3,
+  "pf": 5,
+  "der": [
+   "data inicial",
+   "data final",
+   "setor",
+   "analista",
+   "bairro",
+   "CNAE (filtro)",
+   "categoria",
+   "limite",
+   "bairro",
+   "atual",
+   "anterior",
+   "variação",
+   "variação percentual",
+   "período atual",
+   "período anterior"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "CNAE (filtro por código)",
+   "Chamada de integração (gravada pelo middleware LogInboundIntegration, P4)"
+  ],
+  "evidencia": "não rastreado (03/11): app/Http/Controllers/Integracao/BiController.php::indicador, app/Services/Relatorios/Bi/BiCatalogo.php; GET /api_integracao/bi/indicadores/{slug}",
+  "justificativa": "Alternativa A (recomendada): cada indicador do catálogo é um processo elementar próprio, com DER de saída, FTR e lógica de cálculo distintos (CPM §5.5.2.2); o slug parametrizado é solução de interface, como as abas da configuração das APIs (P7). Grava Chamada de integração (P4) e calcula/deriva: SE.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "API de indicadores do BI",
+  "nome": "API do BI - consultar mapa de concentração de solicitações (mapa-concentracao)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 12,
+  "ar": 3,
+  "pf": 5,
+  "der": [
+   "data inicial",
+   "data final",
+   "setor",
+   "analista",
+   "bairro",
+   "CNAE (filtro)",
+   "categoria",
+   "precisão",
+   "limite",
+   "latitude",
+   "longitude",
+   "total"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "CNAE (filtro por código)",
+   "Chamada de integração (gravada pelo middleware LogInboundIntegration, P4)"
+  ],
+  "evidencia": "não rastreado (03/11): app/Http/Controllers/Integracao/BiController.php::indicador, app/Services/Relatorios/Bi/BiCatalogo.php; GET /api_integracao/bi/indicadores/{slug}",
+  "justificativa": "Alternativa A (recomendada): cada indicador do catálogo é um processo elementar próprio, com DER de saída, FTR e lógica de cálculo distintos (CPM §5.5.2.2); o slug parametrizado é solução de interface, como as abas da configuração das APIs (P7). Grava Chamada de integração (P4) e calcula/deriva: SE.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "API de indicadores do BI",
+  "nome": "API do BI - consultar mapa de deferimentos e indeferimentos (mapa-decisoes)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 25,
+  "ar": 5,
+  "pf": 7,
+  "der": [
+   "data inicial",
+   "data final",
+   "setor",
+   "analista",
+   "bairro",
+   "CNAE (filtro)",
+   "categoria",
+   "precisão",
+   "limite",
+   "latitude",
+   "longitude",
+   "total",
+   "deferidas",
+   "indeferidas",
+   "em análise",
+   "taxa de indeferimento",
+   "bairro predominante",
+   "zona predominante",
+   "CNAEs principais",
+   "saturação do par bairro×CNAE",
+   "alerta",
+   "fundamentos mais citados",
+   "tempo médio",
+   "total do período anterior",
+   "tendência"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Decisão de viabilidade",
+   "CNAE (filtro por código)",
+   "Parâmetro (limiares/capacidades da saturação)",
+   "Chamada de integração (gravada pelo middleware LogInboundIntegration, P4)"
+  ],
+  "evidencia": "não rastreado (03/11): app/Http/Controllers/Integracao/BiController.php::indicador, app/Services/Relatorios/Bi/BiCatalogo.php; GET /api_integracao/bi/indicadores/{slug}",
+  "justificativa": "Alternativa A (recomendada): cada indicador do catálogo é um processo elementar próprio, com DER de saída, FTR e lógica de cálculo distintos (CPM §5.5.2.2); o slug parametrizado é solução de interface, como as abas da configuração das APIs (P7). Grava Chamada de integração (P4) e calcula/deriva: SE.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "API de indicadores do BI",
+  "nome": "API do BI - consultar solicitações por zona urbanística (solicitacoes-por-zona)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 13,
+  "ar": 4,
+  "pf": 7,
+  "der": [
+   "data inicial",
+   "data final",
+   "setor",
+   "analista",
+   "bairro",
+   "CNAE (filtro)",
+   "categoria",
+   "limite",
+   "zona",
+   "total",
+   "deferidas",
+   "indeferidas",
+   "taxa"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Decisão de viabilidade",
+   "CNAE (filtro por código)",
+   "Chamada de integração (gravada pelo middleware LogInboundIntegration, P4)"
+  ],
+  "evidencia": "não rastreado (03/11): app/Http/Controllers/Integracao/BiController.php::indicador, app/Services/Relatorios/Bi/BiCatalogo.php; GET /api_integracao/bi/indicadores/{slug}",
+  "justificativa": "Alternativa A (recomendada): cada indicador do catálogo é um processo elementar próprio, com DER de saída, FTR e lógica de cálculo distintos (CPM §5.5.2.2); o slug parametrizado é solução de interface, como as abas da configuração das APIs (P7). Grava Chamada de integração (P4) e calcula/deriva: SE.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "API de indicadores do BI",
+  "nome": "API do BI - consultar CNAEs predominantes por bairro (cnaes-predominantes-por-bairro)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 14,
+  "ar": 3,
+  "pf": 5,
+  "der": [
+   "data inicial",
+   "data final",
+   "setor",
+   "analista",
+   "bairro",
+   "CNAE (filtro)",
+   "categoria",
+   "limite",
+   "bairro",
+   "posição",
+   "CNAE",
+   "descrição",
+   "total",
+   "participação"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "CNAE (filtro por código)",
+   "Chamada de integração (gravada pelo middleware LogInboundIntegration, P4)"
+  ],
+  "evidencia": "não rastreado (03/11): app/Http/Controllers/Integracao/BiController.php::indicador, app/Services/Relatorios/Bi/BiCatalogo.php; GET /api_integracao/bi/indicadores/{slug}",
+  "justificativa": "Alternativa A (recomendada): cada indicador do catálogo é um processo elementar próprio, com DER de saída, FTR e lógica de cálculo distintos (CPM §5.5.2.2); o slug parametrizado é solução de interface, como as abas da configuração das APIs (P7). Grava Chamada de integração (P4) e calcula/deriva: SE.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "API de indicadores do BI",
+  "nome": "API do BI - consultar restrições urbanísticas mais recorrentes (restricoes-recorrentes)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 12,
+  "ar": 4,
+  "pf": 7,
+  "der": [
+   "data inicial",
+   "data final",
+   "setor",
+   "analista",
+   "bairro",
+   "CNAE (filtro)",
+   "categoria",
+   "limite",
+   "fundamento legal",
+   "citações",
+   "indeferidas",
+   "peso nos indeferimentos"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Decisão de viabilidade",
+   "CNAE (filtro por código)",
+   "Chamada de integração (gravada pelo middleware LogInboundIntegration, P4)"
+  ],
+  "evidencia": "não rastreado (03/11): app/Http/Controllers/Integracao/BiController.php::indicador, app/Services/Relatorios/Bi/BiCatalogo.php; GET /api_integracao/bi/indicadores/{slug}",
+  "justificativa": "Alternativa A (recomendada): cada indicador do catálogo é um processo elementar próprio, com DER de saída, FTR e lógica de cálculo distintos (CPM §5.5.2.2); o slug parametrizado é solução de interface, como as abas da configuração das APIs (P7). Grava Chamada de integração (P4) e calcula/deriva: SE.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "API de indicadores do BI",
+  "nome": "API do BI - consultar onde a regra mais barra atividades (indeferimentos-zona-atividade)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 16,
+  "ar": 4,
+  "pf": 7,
+  "der": [
+   "data inicial",
+   "data final",
+   "setor",
+   "analista",
+   "bairro",
+   "CNAE (filtro)",
+   "categoria",
+   "limite",
+   "mínimo de decididas",
+   "zona",
+   "CNAE",
+   "descrição",
+   "decisões",
+   "indeferimentos",
+   "taxa",
+   "fundamento mais citado"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Decisão de viabilidade",
+   "CNAE (filtro por código)",
+   "Chamada de integração (gravada pelo middleware LogInboundIntegration, P4)"
+  ],
+  "evidencia": "não rastreado (03/11): app/Http/Controllers/Integracao/BiController.php::indicador, app/Services/Relatorios/Bi/BiCatalogo.php; GET /api_integracao/bi/indicadores/{slug}",
+  "justificativa": "Alternativa A (recomendada): cada indicador do catálogo é um processo elementar próprio, com DER de saída, FTR e lógica de cálculo distintos (CPM §5.5.2.2); o slug parametrizado é solução de interface, como as abas da configuração das APIs (P7). Grava Chamada de integração (P4) e calcula/deriva: SE.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "API de indicadores do BI",
+  "nome": "API do BI - consultar saturação locacional por bairro e CNAE (saturacao-locacional)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 17,
+  "ar": 5,
+  "pf": 7,
+  "der": [
+   "data inicial",
+   "data final",
+   "setor",
+   "analista",
+   "bairro",
+   "CNAE (filtro)",
+   "categoria",
+   "situação (filtro)",
+   "limite",
+   "limiar de alerta",
+   "limiar de bloqueio",
+   "resumo por situação",
+   "bairro",
+   "CNAE",
+   "deferidos",
+   "capacidade",
+   "situação"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Decisão de viabilidade",
+   "CNAE (filtro por código)",
+   "Parâmetro (limiares/capacidades)",
+   "Chamada de integração (gravada pelo middleware LogInboundIntegration, P4)"
+  ],
+  "evidencia": "não rastreado (03/11): app/Http/Controllers/Integracao/BiController.php::indicador, app/Services/Relatorios/Bi/BiCatalogo.php; GET /api_integracao/bi/indicadores/{slug}",
+  "justificativa": "Alternativa A (recomendada): cada indicador do catálogo é um processo elementar próprio, com DER de saída, FTR e lógica de cálculo distintos (CPM §5.5.2.2); o slug parametrizado é solução de interface, como as abas da configuração das APIs (P7). Grava Chamada de integração (P4) e calcula/deriva: SE.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "API de indicadores do BI",
+  "nome": "API do BI - consultar evolução territorial da demanda (evolucao-territorial)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 12,
+  "ar": 3,
+  "pf": 5,
+  "der": [
+   "data inicial",
+   "data final",
+   "setor",
+   "analista",
+   "bairro",
+   "CNAE (filtro)",
+   "categoria",
+   "agrupamento",
+   "limite",
+   "período",
+   "bairro",
+   "total"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "CNAE (filtro por código)",
+   "Chamada de integração (gravada pelo middleware LogInboundIntegration, P4)"
+  ],
+  "evidencia": "não rastreado (03/11): app/Http/Controllers/Integracao/BiController.php::indicador, app/Services/Relatorios/Bi/BiCatalogo.php; GET /api_integracao/bi/indicadores/{slug}",
+  "justificativa": "Alternativa A (recomendada): cada indicador do catálogo é um processo elementar próprio, com DER de saída, FTR e lógica de cálculo distintos (CPM §5.5.2.2); o slug parametrizado é solução de interface, como as abas da configuração das APIs (P7). Grava Chamada de integração (P4) e calcula/deriva: SE.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "API de indicadores do BI",
+  "nome": "API do BI - consultar tempo de conclusão (tempo-conclusao)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 14,
+  "ar": 4,
+  "pf": 7,
+  "der": [
+   "data inicial",
+   "data final",
+   "setor",
+   "analista",
+   "bairro",
+   "CNAE (filtro)",
+   "categoria",
+   "modalidade (geral/expresso/técnica)",
+   "amostras",
+   "média",
+   "mediana",
+   "P90",
+   "mínimo",
+   "máximo"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Decisão de viabilidade",
+   "CNAE (filtro por código)",
+   "Chamada de integração (gravada pelo middleware LogInboundIntegration, P4)"
+  ],
+  "evidencia": "não rastreado (03/11): app/Http/Controllers/Integracao/BiController.php::indicador, app/Services/Relatorios/Bi/BiCatalogo.php; GET /api_integracao/bi/indicadores/{slug}",
+  "justificativa": "Alternativa A (recomendada): cada indicador do catálogo é um processo elementar próprio, com DER de saída, FTR e lógica de cálculo distintos (CPM §5.5.2.2); o slug parametrizado é solução de interface, como as abas da configuração das APIs (P7). Grava Chamada de integração (P4) e calcula/deriva: SE.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "API de indicadores do BI",
+  "nome": "API do BI - consultar tempo por etapa (tempo-por-etapa)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 10,
+  "ar": 4,
+  "pf": 7,
+  "der": [
+   "data inicial",
+   "data final",
+   "setor",
+   "analista",
+   "bairro",
+   "CNAE (filtro)",
+   "categoria",
+   "etapa",
+   "média em horas úteis",
+   "amostras"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Decisão de viabilidade",
+   "CNAE (filtro por código)",
+   "Chamada de integração (gravada pelo middleware LogInboundIntegration, P4)"
+  ],
+  "evidencia": "não rastreado (03/11): app/Http/Controllers/Integracao/BiController.php::indicador, app/Services/Relatorios/Bi/BiCatalogo.php; GET /api_integracao/bi/indicadores/{slug}",
+  "justificativa": "Alternativa A (recomendada): cada indicador do catálogo é um processo elementar próprio, com DER de saída, FTR e lógica de cálculo distintos (CPM §5.5.2.2); o slug parametrizado é solução de interface, como as abas da configuração das APIs (P7). Grava Chamada de integração (P4) e calcula/deriva: SE.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "API de indicadores do BI",
+  "nome": "API do BI - consultar processos dentro do SLA (processos-dentro-sla)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 10,
+  "ar": 4,
+  "pf": 7,
+  "der": [
+   "data inicial",
+   "data final",
+   "setor",
+   "analista",
+   "bairro",
+   "CNAE (filtro)",
+   "categoria",
+   "dentro do prazo",
+   "com prazo",
+   "taxa"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Decisão de viabilidade",
+   "CNAE (filtro por código)",
+   "Chamada de integração (gravada pelo middleware LogInboundIntegration, P4)"
+  ],
+  "evidencia": "não rastreado (03/11): app/Http/Controllers/Integracao/BiController.php::indicador, app/Services/Relatorios/Bi/BiCatalogo.php; GET /api_integracao/bi/indicadores/{slug}",
+  "justificativa": "Alternativa A (recomendada): cada indicador do catálogo é um processo elementar próprio, com DER de saída, FTR e lógica de cálculo distintos (CPM §5.5.2.2); o slug parametrizado é solução de interface, como as abas da configuração das APIs (P7). Grava Chamada de integração (P4) e calcula/deriva: SE.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "API de indicadores do BI",
+  "nome": "API do BI - consultar processos com SLA vencido (processos-sla-vencido)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 12,
+  "ar": 4,
+  "pf": 7,
+  "der": [
+   "data inicial",
+   "data final",
+   "setor",
+   "analista",
+   "bairro",
+   "CNAE (filtro)",
+   "categoria",
+   "vencidos",
+   "vencendo",
+   "ação/detalhe",
+   "etapa",
+   "total por etapa"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Decisão de viabilidade",
+   "CNAE (filtro por código)",
+   "Chamada de integração (gravada pelo middleware LogInboundIntegration, P4)"
+  ],
+  "evidencia": "não rastreado (03/11): app/Http/Controllers/Integracao/BiController.php::indicador, app/Services/Relatorios/Bi/BiCatalogo.php; GET /api_integracao/bi/indicadores/{slug}",
+  "justificativa": "Alternativa A (recomendada): cada indicador do catálogo é um processo elementar próprio, com DER de saída, FTR e lógica de cálculo distintos (CPM §5.5.2.2); o slug parametrizado é solução de interface, como as abas da configuração das APIs (P7). Grava Chamada de integração (P4) e calcula/deriva: SE.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "API de indicadores do BI",
+  "nome": "API do BI - consultar envelhecimento da fila (envelhecimento-fila)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 13,
+  "ar": 3,
+  "pf": 5,
+  "der": [
+   "data inicial",
+   "data final",
+   "setor",
+   "analista",
+   "bairro",
+   "CNAE (filtro)",
+   "categoria",
+   "total",
+   "faixa de idade",
+   "rótulo",
+   "total da faixa",
+   "faixa de avanço sobre o prazo",
+   "total por prazo"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "CNAE (filtro por código)",
+   "Chamada de integração (gravada pelo middleware LogInboundIntegration, P4)"
+  ],
+  "evidencia": "não rastreado (03/11): app/Http/Controllers/Integracao/BiController.php::indicador, app/Services/Relatorios/Bi/BiCatalogo.php; GET /api_integracao/bi/indicadores/{slug}",
+  "justificativa": "Alternativa A (recomendada): cada indicador do catálogo é um processo elementar próprio, com DER de saída, FTR e lógica de cálculo distintos (CPM §5.5.2.2); o slug parametrizado é solução de interface, como as abas da configuração das APIs (P7). Grava Chamada de integração (P4) e calcula/deriva: SE.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "API de indicadores do BI",
+  "nome": "API do BI - consultar processos por analista e setor (carga-por-analista-setor)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 12,
+  "ar": 5,
+  "pf": 7,
+  "der": [
+   "data inicial",
+   "data final",
+   "setor",
+   "analista",
+   "bairro",
+   "CNAE (filtro)",
+   "categoria",
+   "código do setor",
+   "setor",
+   "código do analista",
+   "nome do analista",
+   "total"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Setor",
+   "Usuário",
+   "CNAE (filtro por código)",
+   "Chamada de integração (gravada pelo middleware LogInboundIntegration, P4)"
+  ],
+  "evidencia": "não rastreado (03/11): app/Http/Controllers/Integracao/BiController.php::indicador, app/Services/Relatorios/Bi/BiCatalogo.php; GET /api_integracao/bi/indicadores/{slug}",
+  "justificativa": "Alternativa A (recomendada): cada indicador do catálogo é um processo elementar próprio, com DER de saída, FTR e lógica de cálculo distintos (CPM §5.5.2.2); o slug parametrizado é solução de interface, como as abas da configuração das APIs (P7). Grava Chamada de integração (P4) e calcula/deriva: SE.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "API de indicadores do BI",
+  "nome": "API do BI - consultar produtividade por analista (produtividade-analista)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 13,
+  "ar": 5,
+  "pf": 7,
+  "der": [
+   "data inicial",
+   "data final",
+   "setor",
+   "analista",
+   "bairro",
+   "CNAE (filtro)",
+   "categoria",
+   "código do analista",
+   "nome do analista",
+   "decididas",
+   "deferidas",
+   "indeferidas",
+   "tempo médio"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Decisão de viabilidade",
+   "Usuário",
+   "CNAE (filtro por código)",
+   "Chamada de integração (gravada pelo middleware LogInboundIntegration, P4)"
+  ],
+  "evidencia": "não rastreado (03/11): app/Http/Controllers/Integracao/BiController.php::indicador, app/Services/Relatorios/Bi/BiCatalogo.php; GET /api_integracao/bi/indicadores/{slug}",
+  "justificativa": "Alternativa A (recomendada): cada indicador do catálogo é um processo elementar próprio, com DER de saída, FTR e lógica de cálculo distintos (CPM §5.5.2.2); o slug parametrizado é solução de interface, como as abas da configuração das APIs (P7). Grava Chamada de integração (P4) e calcula/deriva: SE.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "API de indicadores do BI",
+  "nome": "API do BI - consultar tempo de resposta do requerente (tempo-resposta-requerente)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 16,
+  "ar": 5,
+  "pf": 7,
+  "der": [
+   "data inicial",
+   "data final",
+   "setor",
+   "analista",
+   "bairro",
+   "CNAE (filtro)",
+   "categoria",
+   "convites",
+   "convites por situação",
+   "amostras",
+   "média",
+   "mediana",
+   "P90",
+   "espera média",
+   "análise média",
+   "convite médio"
+  ],
+  "ftr": [
+   "Pendência da análise",
+   "Solicitação de viabilidade",
+   "Decisão de viabilidade",
+   "CNAE (filtro por código)",
+   "Chamada de integração (gravada pelo middleware LogInboundIntegration, P4)"
+  ],
+  "evidencia": "não rastreado (03/11): app/Http/Controllers/Integracao/BiController.php::indicador, app/Services/Relatorios/Bi/BiCatalogo.php; GET /api_integracao/bi/indicadores/{slug}",
+  "justificativa": "Alternativa A (recomendada): cada indicador do catálogo é um processo elementar próprio, com DER de saída, FTR e lógica de cálculo distintos (CPM §5.5.2.2); o slug parametrizado é solução de interface, como as abas da configuração das APIs (P7). Grava Chamada de integração (P4) e calcula/deriva: SE.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "API de indicadores do BI",
+  "nome": "API do BI - consultar ranking dos maiores gargalos (ranking-gargalos)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 12,
+  "ar": 3,
+  "pf": 5,
+  "der": [
+   "data inicial",
+   "data final",
+   "setor",
+   "analista",
+   "bairro",
+   "CNAE (filtro)",
+   "categoria",
+   "posição",
+   "etapa",
+   "horas úteis acumuladas",
+   "processos",
+   "média"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "CNAE (filtro por código)",
+   "Chamada de integração (gravada pelo middleware LogInboundIntegration, P4)"
+  ],
+  "evidencia": "não rastreado (03/11): app/Http/Controllers/Integracao/BiController.php::indicador, app/Services/Relatorios/Bi/BiCatalogo.php; GET /api_integracao/bi/indicadores/{slug}",
+  "justificativa": "Alternativa A (recomendada): cada indicador do catálogo é um processo elementar próprio, com DER de saída, FTR e lógica de cálculo distintos (CPM §5.5.2.2); o slug parametrizado é solução de interface, como as abas da configuração das APIs (P7). Grava Chamada de integração (P4) e calcula/deriva: SE.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "API de indicadores do BI",
+  "nome": "API do BI - consultar taxa de automação (taxa-automacao)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 12,
+  "ar": 4,
+  "pf": 7,
+  "der": [
+   "data inicial",
+   "data final",
+   "setor",
+   "analista",
+   "bairro",
+   "CNAE (filtro)",
+   "categoria",
+   "total",
+   "automáticas",
+   "análise técnica",
+   "outras",
+   "taxa de automação"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Decisão de viabilidade",
+   "CNAE (filtro por código)",
+   "Chamada de integração (gravada pelo middleware LogInboundIntegration, P4)"
+  ],
+  "evidencia": "não rastreado (03/11): app/Http/Controllers/Integracao/BiController.php::indicador, app/Services/Relatorios/Bi/BiCatalogo.php; GET /api_integracao/bi/indicadores/{slug}",
+  "justificativa": "Alternativa A (recomendada): cada indicador do catálogo é um processo elementar próprio, com DER de saída, FTR e lógica de cálculo distintos (CPM §5.5.2.2); o slug parametrizado é solução de interface, como as abas da configuração das APIs (P7). Grava Chamada de integração (P4) e calcula/deriva: SE.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "API de indicadores do BI",
+  "nome": "API do BI - consultar decisões por fluxo (automáticas e com análise técnica) (decisoes-automaticas)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 12,
+  "ar": 4,
+  "pf": 7,
+  "der": [
+   "data inicial",
+   "data final",
+   "setor",
+   "analista",
+   "bairro",
+   "CNAE (filtro)",
+   "categoria",
+   "agrupamento",
+   "total",
+   "período",
+   "deferidas",
+   "indeferidas"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Decisão de viabilidade",
+   "CNAE (filtro por código)",
+   "Chamada de integração (gravada pelo middleware LogInboundIntegration, P4)"
+  ],
+  "evidencia": "não rastreado (03/11): app/Http/Controllers/Integracao/BiController.php::indicador, app/Services/Relatorios/Bi/BiCatalogo.php; GET /api_integracao/bi/indicadores/{slug}",
+  "justificativa": "Alternativa A (recomendada): cada indicador do catálogo é um processo elementar próprio, com DER de saída, FTR e lógica de cálculo distintos (CPM §5.5.2.2); o slug parametrizado é solução de interface, como as abas da configuração das APIs (P7). Grava Chamada de integração (P4) e calcula/deriva: SE. decisoes-automaticas e decisoes-analise-tecnica usam o mesmo método (serieDoFluxo) com os mesmos DER e FTR; só muda a constante do fluxo (critério de seleção): uma função.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "API de indicadores do BI",
+  "nome": "API do BI - consultar tempo do fluxo expresso × técnico (tempo-expresso-x-tecnico)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 14,
+  "ar": 4,
+  "pf": 7,
+  "der": [
+   "data inicial",
+   "data final",
+   "setor",
+   "analista",
+   "bairro",
+   "CNAE (filtro)",
+   "categoria",
+   "modalidade",
+   "amostras",
+   "média",
+   "mediana",
+   "P90",
+   "mínimo",
+   "máximo"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Decisão de viabilidade",
+   "CNAE (filtro por código)",
+   "Chamada de integração (gravada pelo middleware LogInboundIntegration, P4)"
+  ],
+  "evidencia": "não rastreado (03/11): app/Http/Controllers/Integracao/BiController.php::indicador, app/Services/Relatorios/Bi/BiCatalogo.php; GET /api_integracao/bi/indicadores/{slug}",
+  "justificativa": "Alternativa A (recomendada): cada indicador do catálogo é um processo elementar próprio, com DER de saída, FTR e lógica de cálculo distintos (CPM §5.5.2.2); o slug parametrizado é solução de interface, como as abas da configuração das APIs (P7). Grava Chamada de integração (P4) e calcula/deriva: SE. Subconjunto de saída de tempo-conclusao; mantido distinto por DER diferente.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "API de indicadores do BI",
+  "nome": "API do BI - consultar processos não concluídos pelo expresso (nao-concluidos-expresso)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 12,
+  "ar": 4,
+  "pf": 7,
+  "der": [
+   "data inicial",
+   "data final",
+   "setor",
+   "analista",
+   "bairro",
+   "CNAE (filtro)",
+   "categoria",
+   "elegíveis",
+   "concluídos pelo expresso",
+   "não concluídos",
+   "taxa de não conclusão",
+   "encaminhados à análise"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Decisão de viabilidade",
+   "CNAE (filtro por código)",
+   "Chamada de integração (gravada pelo middleware LogInboundIntegration, P4)"
+  ],
+  "evidencia": "não rastreado (03/11): app/Http/Controllers/Integracao/BiController.php::indicador, app/Services/Relatorios/Bi/BiCatalogo.php; GET /api_integracao/bi/indicadores/{slug}",
+  "justificativa": "Alternativa A (recomendada): cada indicador do catálogo é um processo elementar próprio, com DER de saída, FTR e lógica de cálculo distintos (CPM §5.5.2.2); o slug parametrizado é solução de interface, como as abas da configuração das APIs (P7). Grava Chamada de integração (P4) e calcula/deriva: SE.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "API de indicadores do BI",
+  "nome": "API do BI - consultar motivos de queda do fluxo expresso (motivos-queda-expresso)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 11,
+  "ar": 3,
+  "pf": 5,
+  "der": [
+   "data inicial",
+   "data final",
+   "setor",
+   "analista",
+   "bairro",
+   "CNAE (filtro)",
+   "categoria",
+   "posição",
+   "motivo",
+   "total",
+   "participação"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "CNAE (filtro por código)",
+   "Chamada de integração (gravada pelo middleware LogInboundIntegration, P4)"
+  ],
+  "evidencia": "não rastreado (03/11): app/Http/Controllers/Integracao/BiController.php::indicador, app/Services/Relatorios/Bi/BiCatalogo.php; GET /api_integracao/bi/indicadores/{slug}",
+  "justificativa": "Alternativa A (recomendada): cada indicador do catálogo é um processo elementar próprio, com DER de saída, FTR e lógica de cálculo distintos (CPM §5.5.2.2); o slug parametrizado é solução de interface, como as abas da configuração das APIs (P7). Grava Chamada de integração (P4) e calcula/deriva: SE.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "API de indicadores do BI",
+  "nome": "API do BI - consultar evolução da automação (evolucao-automacao)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 13,
+  "ar": 4,
+  "pf": 7,
+  "der": [
+   "data inicial",
+   "data final",
+   "setor",
+   "analista",
+   "bairro",
+   "CNAE (filtro)",
+   "categoria",
+   "agrupamento",
+   "período",
+   "total",
+   "automáticas",
+   "análise técnica",
+   "taxa de automação"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Decisão de viabilidade",
+   "CNAE (filtro por código)",
+   "Chamada de integração (gravada pelo middleware LogInboundIntegration, P4)"
+  ],
+  "evidencia": "não rastreado (03/11): app/Http/Controllers/Integracao/BiController.php::indicador, app/Services/Relatorios/Bi/BiCatalogo.php; GET /api_integracao/bi/indicadores/{slug}",
+  "justificativa": "Alternativa A (recomendada): cada indicador do catálogo é um processo elementar próprio, com DER de saída, FTR e lógica de cálculo distintos (CPM §5.5.2.2); o slug parametrizado é solução de interface, como as abas da configuração das APIs (P7). Grava Chamada de integração (P4) e calcula/deriva: SE.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "Configuração das APIs",
+  "nome": "APIs - consultar configuração Legado Simplifica",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "CE",
+  "td": 7,
+  "ar": 1,
+  "pf": 3,
+  "der": [
+   "integração",
+   "descrição",
+   "consulta habilitada",
+   "URL da API",
+   "token (só indicação de valor gravado)",
+   "ajuda do campo",
+   "ação"
+  ],
+  "ftr": [
+   "Parâmetro"
+  ],
+  "evidencia": "90c0886cd (27/10): ApiIntegracaoCatalog::legadoSimplifica, GET /gestao/config-apis?aba=legado_simplifica; migration 2026_10_27_170356_cria_parametros_legado_simplifica",
+  "justificativa": "Nova aba; P7 e decisão de 16/10: cada integração é consultada e alterada como cadastro próprio. Mesmo padrão da aba SEMAP (CE 7/1). Teste de conexão não conta (P7).",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "Configuração das APIs",
+  "nome": "APIs - alterar configuração Legado Simplifica",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "EE",
+  "td": 5,
+  "ar": 2,
+  "pf": 4,
+  "der": [
+   "consulta habilitada",
+   "URL da API",
+   "token de máquina",
+   "mensagem",
+   "ação salvar"
+  ],
+  "ftr": [
+   "Parâmetro",
+   "Trilha de auditoria"
+  ],
+  "evidencia": "90c0886cd (27/10): PUT /gestao/config-apis/legado_simplifica",
+  "justificativa": "Mantém Parâmetro e audita valor anterior/novo (mesmo mecanismo das demais abas). Mesmo padrão da aba SEMAP (EE 5/2).",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "Dados externos consultados pelo Viabiliza",
+  "nome": "Dados externos - Eixo dos logradouros do GeoServer da SEDUR",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "AIE",
+  "td": 2,
+  "ar": 1,
+  "pf": 5,
+  "der": [
+   "CODLOG",
+   "geometria do eixo do logradouro"
+  ],
+  "ftr": [
+   "Logradouros (VM_LOGRADOURO)"
+  ],
+  "evidencia": "53052161d (23/10), 765493bc3 (24/10): app/Services/Geo/GeoServerEixoViarioClient.php (camada logradouros:VM_LOGRADOURO)",
+  "justificativa": "Nova camada externa lida para conferir o ponto da inscrição contra a rua do endereço. A baseline só tinha a classificação viária (CODLOG, classe, hierarquia), sem a linha do eixo; a classificação viária só entra como reserva aqui (não alterada, conservador).",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "Dados externos consultados pelo Viabiliza",
+  "nome": "Dados externos - Cadastro imobiliário da SEFAZ",
+  "situacao": "ALTERADA",
+  "nome_baseline": "Dados externos - Cadastro imobiliário da SEFAZ",
+  "tipo": "AIE",
+  "td": 25,
+  "ar": 1,
+  "pf": 5,
+  "der": [
+   "inscrição imobiliária",
+   "logradouro",
+   "número de porta",
+   "complemento",
+   "número métrico",
+   "loteamento",
+   "quadra",
+   "lote",
+   "edifício/conjunto",
+   "bloco",
+   "subunidade",
+   "número da subunidade",
+   "bairro",
+   "CEP",
+   "área construída",
+   "data do habite-se",
+   "situação cadastral",
+   "área do terreno",
+   "valor venal (VUPT)",
+   "código do logradouro tributário",
+   "logradouro tributário",
+   "data de processamento",
+   "coordenada X",
+   "coordenada Y",
+   "utilização (tipo do imóvel)"
+  ],
+  "ftr": [
+   "Cadastro imobiliário da SEFAZ"
+  ],
+  "evidencia": "b7027119a (23/10): SedurSefazPropertyRegistryLookup lê Utilizacao; produção via proxy-sefaz; 297da247c (27/10)",
+  "justificativa": "Passa a usar o atributo Utilizacao (tipo do imóvel), pedido funcional da SEDUR: DER 24→25. Dados de contribuinte/permissionário são descartados (não estavam no DER). Complexidade inalterada (AIE Baixa).",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "Integração com a JUCEB (REGIN)",
+  "nome": "REGIN - receber declaração e abrir processo",
+  "situacao": "ALTERADA",
+  "nome_baseline": "REGIN - receber declaração e abrir processo",
+  "tipo": "EE",
+  "td": 45,
+  "ar": 25,
+  "pf": 6,
+  "der": [
+   "(45 DER da baseline, sem DER novo de entrada)"
+  ],
+  "ftr": [
+   "Recebimento do REGIN",
+   "Solicitação de viabilidade",
+   "Empresa",
+   "Usuário",
+   "CNAE",
+   "Tipo de imóvel",
+   "Planilha de enquadramento",
+   "Camada geográfica",
+   "Cadastro imobiliário da SEFAZ",
+   "Lotes do endereçamento do GeoServer da SEDUR",
+   "Lotes por inscrição do SEMAP",
+   "Trilha de auditoria",
+   "Chamada de integração",
+   "Decisão de viabilidade",
+   "Permissão de uso por zona (Quadro 10)",
+   "Condição de instalação por via (Quadro 11A)",
+   "Regra territorial",
+   "Poligonais territoriais do GeoServer da SEDUR",
+   "Bloqueio de inscrição de escritório virtual",
+   "Viabilidade anterior da empresa no legado Simplifica (novo)",
+   "Eixo dos logradouros do GeoServer da SEDUR (novo)",
+   "Endereços geocodificados do OpenStreetMap (novo: ponto alternativo por endereço)",
+   "Parâmetro (novo: tolerância da zona linear, CNAEs vedados em via local, legado)",
+   "Texto decisório (novo: textos de indeferimento por inscrição inativa, sede, ponto)",
+   "Atividade permitida em escritório virtual (novo: Anexo B da abrigada)"
+  ],
+  "evidencia": "a03b8c3e4, 53052161d (23/10); 41b571900, c7cdf3e17 (19/10); 0957e5584 (20/10); b1dbce1ea (22/10); f55e34f28, 90c0886cd, 06f7d412a, 18c2e49be (27/10); f7f3c2012 (03/11); app/Services/Expresso/FluxoExpressoService.php e IndeferirInscricaoInativaService, IndeferirPorEstabilidadeSefazService, ValidadorPontoInscricao, GeoServerZonaMaiorPorcaoResolver",
+  "justificativa": "Mudança real da lógica do processamento disparado pelo recebimento (P5: o fluxo expresso entra no AR do recebimento): comparação de CNAEs com a base anterior em cadeia (Viabiliza, legado, SEFAZ), indeferimento por inscrição inativa (situação 0/15), conferência do ponto contra o eixo da rua com ponto por endereço, zona pela centralidade linear com tolerância parametrizada, CNAEs vedados em via local, alteração de atividade tira a sede e barra abrigada fora do Anexo B, expresso roda inteiro e decide no fim. Continua EE Alta. td representado como 45 (lista da baseline).",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "Benchmark nacional e sala de controle",
+  "nome": "Relatórios - consultar benchmark nacional",
+  "situacao": "ALTERADA",
+  "nome_baseline": "Relatórios - consultar benchmark nacional",
+  "tipo": "SE",
+  "td": 29,
+  "ar": 6,
+  "pf": 7,
+  "der": [
+   "competência",
+   "posição nacional de Salvador",
+   "total de municípios com dado",
+   "tempo médio",
+   "UFs ausentes",
+   "posição entre as capitais",
+   "capital",
+   "P90",
+   "quantidade de solicitações",
+   "mensagem (cobertura incompleta ou sem série)",
+   "(11º DER da baseline)",
+   "tempo médio do Viabiliza no mês (novo)",
+   "P50 do Viabiliza (novo)",
+   "P90 do Viabiliza (novo)",
+   "processos do Viabiliza (novo)",
+   "REDESIM do mês anterior (novo)",
+   "REDESIM do mês corrente (novo)",
+   "diferença em horas (novo)",
+   "diferença percentual (novo)",
+   "diferença no mesmo mês em horas (novo)",
+   "diferença no mesmo mês percentual (novo)",
+   "série mensal: competência, Viabiliza, REDESIM (novo)",
+   "média da REDESIM antes do Viabiliza (novo)",
+   "ressalva (novo)",
+   "dicas de IA: resumo (novo)",
+   "dicas de IA: dicas (novo)",
+   "dicas de IA: confiança (novo)",
+   "dicas de IA: gerado em/período (novo)",
+   "disponibilidade/motivo das dicas (novo)"
+  ],
+  "ftr": [
+   "Benchmark nacional de tempo de viabilidade",
+   "Trilha de auditoria",
+   "Solicitação de viabilidade (novo)",
+   "Decisão de viabilidade (novo)",
+   "Sugestão de texto por IA (novo)",
+   "Provedor de inteligência artificial (novo)"
+  ],
+  "evidencia": "167cae07c (20/10), a70006e09 (20/10), 8fa8c1e08 (04/11): BenchmarkController (evolucao, dicas), DistanciaBenchmarkService::evolucaoMensal",
+  "justificativa": "Tela passa a comparar o tempo do Viabiliza (só deferidas, horas corridas) com a REDESIM mês a mês e a mostrar o card de dicas de IA: novos DER e FTR. SE Média 5 → Alta 7.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "Benchmark nacional e sala de controle",
+  "nome": "Sala de controle - consultar visão executiva",
+  "situacao": "ALTERADA",
+  "nome_baseline": "Sala de controle - consultar visão executiva",
+  "tipo": "SE",
+  "td": 29,
+  "ar": 7,
+  "pf": 7,
+  "der": [
+   "(19 DER da baseline)",
+   "REDESIM do mês anterior (novo)",
+   "REDESIM do mês corrente (novo)",
+   "diferença no mesmo mês em horas (novo)",
+   "diferença no mesmo mês percentual (novo)",
+   "média da REDESIM antes do Viabiliza (novo)",
+   "dicas de IA: resumo (novo)",
+   "dicas de IA: dicas (novo)",
+   "dicas de IA: confiança (novo)",
+   "dicas de IA: gerado em/período (novo)",
+   "disponibilidade/motivo das dicas (novo)"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Decisão de viabilidade",
+   "Feriado",
+   "Benchmark nacional de tempo de viabilidade",
+   "Trilha de auditoria",
+   "Sugestão de texto por IA (novo)",
+   "Provedor de inteligência artificial (novo)"
+  ],
+  "evidencia": "fa8707aa7 (21/10), a70006e09 (20/10), 8fa8c1e08 (04/11): SalaDeControleService (evolucao = DistanciaBenchmarkService::evolucaoMensal), SalaDeControleController (dicas)",
+  "justificativa": "Evolução de Salvador troca a série do ranking pela comparação mensal Viabiliza × REDESIM e entra o card de dicas de IA. Continua Alta.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "Benchmark nacional e sala de controle",
+  "nome": "Dicas de IA - gerar dicas para reduzir o tempo de viabilidade",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "EE",
+  "td": 4,
+  "ar": 6,
+  "pf": 4,
+  "der": [
+   "data inicial",
+   "data final",
+   "mensagem (gerando / motivo de não gerar)",
+   "ação gerar"
+  ],
+  "ftr": [
+   "Decisão de viabilidade",
+   "Solicitação de viabilidade",
+   "Benchmark nacional de tempo de viabilidade",
+   "Provedor de inteligência artificial",
+   "Sugestão de texto por IA",
+   "Trilha de auditoria"
+  ],
+  "evidencia": "a70006e09 (20/10): POST /gestao/relatorios/dicas-tempo, DicasTempoController, DicasTempoService, DicasTempoDossie, DicasTempoAgent",
+  "justificativa": "O gestor pede as dicas; monta o dossiê agregado (sem PII), audita e grava a sugestão no ALI de sugestões de IA (o job assíncrono faz parte do mesmo processo: é o resultado de negócio do pedido, não log). A exibição das dicas entra nas consultas do Benchmark e da Sala (DER/FTR acima).",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "Benchmark nacional de viabilidade",
+  "nome": "Benchmark - importar microdados mensais da REDESIM",
+  "situacao": "ALTERADA",
+  "nome_baseline": "Benchmark - importar microdados mensais da REDESIM",
+  "tipo": "EE",
+  "td": 13,
+  "ar": 2,
+  "pf": 4,
+  "der": [
+   "UF",
+   "município",
+   "CNAE",
+   "tempo de viabilidade em horas",
+   "ano da competência",
+   "mês da competência",
+   "reimportar (forçar)",
+   "verificar atualização (novo)",
+   "(demais DER da baseline: 12)"
+  ],
+  "ftr": [
+   "Benchmark nacional de tempo de viabilidade",
+   "Trilha de auditoria"
+  ],
+  "evidencia": "06c1e08c1 (20/10, XLSX), 8fa8c1e08 (04/11, --verificar-atualizacao: regrava só se o hash do arquivo mudou, dias 1 a 10)",
+  "justificativa": "Nova regra: competência já importada é regravada quando o arquivo da origem muda (hash). A leitura do XLSX e a falha sem linhas são correções. Continua EE Média.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "Relatórios gerenciais",
+  "nome": "Relatórios - consultar quedas do expresso",
+  "situacao": "ALTERADA",
+  "nome_baseline": "Relatórios - consultar quedas do expresso",
+  "tipo": "SE",
+  "td": 10,
+  "ar": 3,
+  "pf": 5,
+  "der": [
+   "data inicial",
+   "data final",
+   "taxa de resposta expressa",
+   "elegíveis",
+   "respondidas",
+   "dia",
+   "motivo/gatilho",
+   "quedas por motivo",
+   "mensagem (sem quedas no período)",
+   "(10º DER da baseline sem a meta)"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade",
+   "Decisão de viabilidade",
+   "Trilha de auditoria"
+  ],
+  "evidencia": "0e629ee02 (20/10): ExpressoQuedaService sem metaTaxa (não lê mais relatorios.expresso.meta_taxa); quedas.tsx",
+  "justificativa": "Sai a meta da taxa (DER) e, com ela, a leitura do Parâmetro (FTR). TD 11→10, AR 4→3: SE Alta 7 → Média 5.",
+  "frente": "integracoes"
+ },
+ {
+  "grupo": "Dados externos consultados pelo Viabiliza",
+  "nome": "Dados externos - Processos e viabilidades do Simplifica (legado)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "AIE",
+  "td": 66,
+  "ar": 5,
+  "pf": 10,
+  "der": [
+   "numero do processo",
+   "protocolo REGIN (BAP)",
+   "criado em",
+   "situacao (status nome)",
+   "finalizado (status fim)",
+   "nome do solicitante",
+   "documento do solicitante",
+   "latitude",
+   "longitude",
+   "parecer deferido",
+   "texto do parecer",
+   "tipo do parecer",
+   "parecer atualizado em",
+   "parecer valido ate",
+   "ficha atualizada em",
+   "ficha finalizada",
+   "ficha deferida",
+   "parecer da ficha",
+   "numero TVL da ficha",
+   "condicionante da ficha",
+   "item da ficha (campo)",
+   "item deferido",
+   "item em analise",
+   "atividade da ficha (codigo)",
+   "descricao da atividade",
+   "atividade deferida",
+   "atividade em analise",
+   "atividade incluida",
+   "atividade excluida",
+   "enquadrado",
+   "enquadramento",
+   "numero da TVL",
+   "tipo da TVL",
+   "deferida",
+   "ativa",
+   "emissao",
+   "validade",
+   "situacao da TVL",
+   "dias para vencer",
+   "renovada depois",
+   "ultima renovacao em",
+   "documento do titular",
+   "tipo do titular",
+   "origem do titular",
+   "razao social",
+   "inscricao imobiliaria",
+   "logradouro",
+   "numero",
+   "bairro",
+   "CEP",
+   "complemento",
+   "zona",
+   "via",
+   "flag sede",
+   "flag MEI",
+   "flag escritorio virtual",
+   "flag culto religioso",
+   "flag edificio comercial",
+   "condicionante adicional",
+   "renovacao solicitada em",
+   "renovacao paga em",
+   "historico em",
+   "historico titulo",
+   "historico mensagem",
+   "historico status",
+   "historico por"
+  ],
+  "ftr": [
+   "RLR Processo (com parecer e localizacao)",
+   "RLR Ficha de analise (itens e atividades)",
+   "RLR TVL (atividades e flags)",
+   "RLR Renovacao da TVL",
+   "RLR Historico de tramitacao"
+  ],
+  "evidencia": "integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123); commits 08c1fc981 (19/10, cliente da API legada), 78cb42fdc (24/10), 475b01bd8 (26/10), a481f4817 (29/10); tambem 2bac22eb9 em integra/legado-simplifica-unificado. Arquivos app/Services/Legado/LegadoViabilidadeClient.php (GET /v1/provisorias, /v1/tvls/{n}, /v1/processos, /v1/processos/{n}, /v1/processos/pesquisa), TvlLegada.php, TvlLegadaDetalhe.php, BuscaProcessosLegado.php",
+  "justificativa": "Dados mantidos pelo Simplifica (sistema legado) e so lidos pelo Viabiliza via API: AIE (premissa P9 e regra da frente). Nao existia na baseline. Um unico AIE com 5 RLR (conservador: nao separado em AIE de processo e AIE de TVL). DER > 50 com RLR 2-5 = Alta. ATENCAO CONSOLIDACAO: o checkout principal (90c0886cd/f55e34f28, LegadoViabilidadeFonte) le o mesmo legado (/v1/tvls, /v1/provisorias) na comparacao de atividades; se a frente principal contar AIE do Simplifica, manter um so (este, que tem a uniao dos DER/RLR). Consolidação: o mesmo AIE é lido pela comparação de atividades (base anterior em cadeia), contado uma vez.",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Dados externos consultados pelo Viabiliza",
+  "nome": "Dados externos - Sessao do cidadao no Portal de Servicos da SEDUR",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "AIE",
+  "td": 4,
+  "ar": 1,
+  "pf": 5,
+  "der": [
+   "CPF",
+   "nome",
+   "e-mail",
+   "nivel de confiabilidade GOV.BR"
+  ],
+  "ftr": [
+   "RLR Sessao do cidadao"
+  ],
+  "evidencia": "integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123); commits be8ccc15e, 76ee3184e, b550312c0 (23/10). app/Services/PortalServicos/PortalServicosSessaoClient.php (GET ws-bff-portal-servicos/v1/acesso/... com o token), PortalServicosSessao.php",
+  "justificativa": "Dados do usuario mantidos pelo Portal de Servicos/BFF SEDUR e lidos pelo Viabiliza na entrada e na API de processos: AIE (regra da frente). Nao existia na baseline (o AIE do diretorio SEDUR e de servidores da gestao).",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Conta do cidadao no portal",
+  "nome": "Portal - entrar pelo Portal de Servicos da SEDUR",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "EE",
+  "td": 4,
+  "ar": 7,
+  "pf": 4,
+  "der": [
+   "token da sessao",
+   "destino (servico da Carta)",
+   "numero do processo (Detalhar)",
+   "mensagem de aviso/recusa"
+  ],
+  "ftr": [
+   "Sessao do cidadao no Portal de Servicos da SEDUR (AIE)",
+   "Usuario",
+   "Registro de acesso",
+   "Trilha de auditoria",
+   "Perfil de acesso",
+   "Contato cadastral da SEDUR (CPF) (AIE)",
+   "Chamada de integracao"
+  ],
+  "evidencia": "integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123); commits be8ccc15e, 57770808e, 76ee3184e, b550312c0, f433fc42f, f12b19ae8, 4fc6d368f, 197bbfcb1, cc7584191 (23/10). Rota GET /portal/entrar/portal-servicos (EntradaPortalServicosController), PortalServicosAuthService",
+  "justificativa": "Processo elementar proprio, coerente com a baseline (login do portal e login da gestao contados separados por P6): outro DER (token em vez de CPF/senha), outros FTR (AIE da sessao, Perfil, Trilha, Contato CPF) e outra logica (valida CPF e nivel GOV.BR, cria a conta no primeiro acesso, regulariza e-mail, abre a sessao e redireciona ao servico). Grava Usuario, Registro de acesso e Trilha: EE. Parametro de nivel minimo tratado como seguranca, fora do FTR, como o limite de tentativas na baseline. O link da Carta de Servicos na tela de aviso e navegacao, nao DER.",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Painel do cidadao",
+  "nome": "Processos do cidadao - fornecer ao Portal de Servicos da SEDUR",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 15,
+  "ar": 6,
+  "pf": 7,
+  "der": [
+   "token (Bearer)",
+   "numero do processo",
+   "numero da viabilidade",
+   "BAP",
+   "servico",
+   "empresa",
+   "CNPJ",
+   "situacao",
+   "descricao da situacao",
+   "convite pendente",
+   "protocolado em",
+   "atualizado em",
+   "vinculo (solicitante/socio)",
+   "link Detalhar",
+   "mensagem de erro"
+  ],
+  "ftr": [
+   "Sessao do cidadao no Portal de Servicos da SEDUR (AIE)",
+   "Usuario",
+   "Solicitacao de viabilidade (inclui RLR CPF vinculado)",
+   "Empresa",
+   "Decisao de viabilidade",
+   "Chamada de integracao"
+  ],
+  "evidencia": "integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123); commits ab9d17c7a, 16f218ca5 (23/10). Rota GET /api_integracao/portal-servicos/processos (ProcessosPortalServicosController, ProcessoPortalServicosResource), middleware LogInboundIntegration",
+  "justificativa": "Saida de dados para outra aplicacao (lista da area logada do Portal de Servicos) com DER, FTR e publico diferentes de Minhas solicitacoes (P6). Grava a Chamada de integracao (entrada pelo LogInboundIntegration e saida ao BFF), por isso SE (P4). Vinculo e convite pendente derivados.",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Acompanhamento do protocolo no portal",
+  "nome": "Processo - consultar por numero no portal (Viabiliza e Simplifica)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 17,
+  "ar": 7,
+  "pf": 7,
+  "der": [
+   "numero informado (processo, viabilidade, BAP ou TVL do Simplifica)",
+   "protocolo",
+   "numero da viabilidade",
+   "BAP",
+   "servico",
+   "razao social",
+   "CNPJ",
+   "protocolado em",
+   "situacao (rotulo publico)",
+   "convite aberto",
+   "prazo do convite",
+   "etapa da tramitacao (rotulo)",
+   "data da etapa",
+   "situacao atual",
+   "mensagem (nao encontrado/legado indisponivel)",
+   "acao responder convite",
+   "acao consultar"
+  ],
+  "ftr": [
+   "Solicitacao de viabilidade",
+   "Decisao de viabilidade",
+   "Empresa",
+   "Pendencia da analise",
+   "Trilha de auditoria",
+   "Processos e viabilidades do Simplifica (AIE)",
+   "Chamada de integracao"
+  ],
+  "evidencia": "integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123); commits 5f515f83f, b521a01d6 (24/10), 78cb42fdc, 5efea37d8 (24/10), fabeb3a17 (27/10). Rota GET /portal/consulta (ConsultaProcessoController, LocalizadorProcesso, ConsultaProcessoLegado)",
+  "justificativa": "Funcao nova: consulta por numero aberta a qualquer cidadao logado, diferente de Solicitacoes - consultar andamento (por id, so do dono) e de Protocolo - consultar publicamente (link assinado). Viabiliza e Simplifica na mesma requisicao, mesma entrada e mesma saida (fallback no legado quando nao acha no Viabiliza): contada como UMA consulta com o AIE do Simplifica como FTR a mais, nao duas (P6). Grava Trilha de auditoria: SE (P4).",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Acompanhamento do protocolo no portal",
+  "nome": "Processo - consultar processos de um CNPJ no portal (Viabiliza e Simplifica)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 8,
+  "ar": 5,
+  "pf": 7,
+  "der": [
+   "CNPJ informado",
+   "origem (Viabiliza/Simplifica)",
+   "numero do processo",
+   "empresa",
+   "situacao",
+   "data",
+   "mensagem (legado indisponivel/nao encontrado)",
+   "acao abrir"
+  ],
+  "ftr": [
+   "Solicitacao de viabilidade",
+   "Empresa",
+   "Processos e viabilidades do Simplifica (AIE)",
+   "Trilha de auditoria",
+   "Chamada de integracao"
+  ],
+  "evidencia": "integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123); commit a07a4b559 (26/10). Rota GET /portal/consulta?numero=<CNPJ> (ConsultaProcessoController + ConsultaProcessoPorCnpj)",
+  "justificativa": "Mesma rota, mas entrada (CNPJ), saida (lista de processos das duas fontes) e logica diferentes da consulta por numero: processo elementar separado (P6). Grava Trilha de auditoria: SE.",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Acompanhamento do protocolo no portal",
+  "nome": "Convites - consultar convites para responder",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "CE",
+  "td": 5,
+  "ar": 3,
+  "pf": 3,
+  "der": [
+   "protocolo",
+   "empresa",
+   "descricao do convite",
+   "prazo",
+   "acao responder"
+  ],
+  "ftr": [
+   "Pendencia da analise",
+   "Solicitacao de viabilidade (inclui RLR CPF vinculado)",
+   "Empresa"
+  ],
+  "evidencia": "integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123); commit 186dc0f41 (24/10). Rota GET /portal/convites (ConviteController, ConvitesDoCidadao), item proprio no menu",
+  "justificativa": "Lista transversal dos convites abertos e no prazo que o cidadao (requerente ou solicitante declarado) pode responder; diferente de Pendencias - consultar no portal (de uma solicitacao) e do painel (que tem indicadores). Limitrofe: a mesma lista aparece no painel; contada porque e tela e rota proprias com DER menor que o painel. Nao grava: CE.",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Renovacao da viabilidade locacional",
+  "nome": "Renovacao - consultar dados da renovacao de viabilidade do Simplifica",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 12,
+  "ar": 9,
+  "pf": 7,
+  "der": [
+   "numero da viabilidade de origem",
+   "empresa",
+   "CNPJ",
+   "endereco do imovel",
+   "atividades (CNAE)",
+   "tipo da viabilidade",
+   "validade",
+   "e-mail",
+   "telefone",
+   "declaracoes exigidas",
+   "motivo da inelegibilidade",
+   "acao abrir"
+  ],
+  "ftr": [
+   "Processos e viabilidades do Simplifica (AIE)",
+   "Contato cadastral da SEDUR (CNPJ) (AIE)",
+   "Cadastro imobiliario da SEFAZ (AIE)",
+   "Empresa",
+   "Solicitacao de viabilidade",
+   "CNAE",
+   "Parametro",
+   "Usuario",
+   "Chamada de integracao"
+  ],
+  "evidencia": "integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123) (vem de integra/renovacao-legada-dev, worktree sile-wt-renov-dev, e esta em integra/legado-simplifica-unificado); commits f3f44bf92, c0ef21016, 69d219ced (19/10), 49c4580be, fa6bb6a13, 1a889e84f, 32a29a50e (20/10), 15ea67119 (29/10). Rotas GET /portal/renovacao/legado/{numero} e /portal/renovacao/legado/{cnpj}/{numero} (RenovacaoController::abrirLegado)",
+  "justificativa": "Distinta de Renovacao - consultar dados da renovacao (Viabiliza) por P6: outros FTR (AIE do Simplifica, Contato CNPJ e cadastro SEFAZ para a titularidade e o endereco) e outra logica (conferencia de titularidade por CNPJ e endereco, elegibilidade legada com renovacao no legado e no Viabiliza, CNAE no catalogo). Variante com e sem CNPJ = mesma funcao. Grava Chamada de integracao no mesmo request: SE (P4).",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Renovacao da viabilidade locacional",
+  "nome": "Renovacao - protocolar renovacao de viabilidade do Simplifica",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "EE",
+  "td": 6,
+  "ar": 11,
+  "pf": 6,
+  "der": [
+   "e-mail",
+   "telefone",
+   "celular",
+   "declaracoes aceitas",
+   "mensagem",
+   "acao protocolar"
+  ],
+  "ftr": [
+   "Processos e viabilidades do Simplifica (AIE)",
+   "Contato cadastral da SEDUR (CNPJ) (AIE)",
+   "Cadastro imobiliario da SEFAZ (AIE)",
+   "Solicitacao de viabilidade",
+   "Empresa",
+   "CNAE",
+   "Parametro",
+   "Setor",
+   "Feriado",
+   "Trilha de auditoria",
+   "Chamada de integracao",
+   "(mais os arquivos do completar territorio e envio a analise, como no protocolo de renovacao da baseline)"
+  ],
+  "evidencia": "integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123); commits d3196229d, f3f44bf92 (19/10), 5388f3209, 1de835fa3, 7c0ec1ee1, 32a29a50e (20/10), 49bd4dd9f, 79230a5c8, 15ea67119, a096d6e78 (29/10). Rotas POST /portal/renovacao/legado/{numero} e /{cnpj}/{numero} (RenovacaoProtocoloService::protocolarLegada); migration 2026_10_19_*_add_legacy_tvl_to_viability_requests_table",
+  "justificativa": "Distinta do protocolo de renovacao do Viabiliza (P6): le a TVL no Simplifica, confere titularidade, cria a Empresa com os dados da TVL quando nao existe (source=legado), mapeia as atividades no catalogo, grava o numero e o retrato da TVL legada, com lock por TVL e CNPJ. FTR > 2 e DER 5-15: Alta. AR registrado = 11 listados (piso; o real e maior pelo completar territorio, sem efeito na complexidade).",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Consulta de processos",
+  "nome": "Processos do Simplifica - consultar lista",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 27,
+  "ar": 3,
+  "pf": 7,
+  "der": [
+   "fonte (Viabiliza/Simplifica)",
+   "busca livre",
+   "BAP",
+   "nome da empresa",
+   "CNAE",
+   "complemento",
+   "logradouro",
+   "bairro",
+   "numero do processo",
+   "numero da TVL",
+   "CNPJ/CPF",
+   "inscricao imobiliaria",
+   "CEP",
+   "situacao da analise",
+   "fluxo",
+   "data inicial",
+   "data final",
+   "numero",
+   "protocolo",
+   "criado em",
+   "situacao",
+   "finalizado",
+   "TVLs do processo",
+   "pagina",
+   "total",
+   "mensagem de falha",
+   "acao consultar"
+  ],
+  "ftr": [
+   "Processos e viabilidades do Simplifica (AIE)",
+   "Trilha de auditoria",
+   "Chamada de integracao"
+  ],
+  "evidencia": "integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123); commits 475b01bd8 (26/10), a481f4817, 688f89ab9 (29/10); 2bac22eb9 (29/10) em integra/legado-simplifica-unificado. Rota GET /gestao/processos/legado (ProcessoController::legado, BuscaProcessosLegado), componente resources/js/components/analise/processos-simplifica.tsx no seletor de fonte de gestao/processos/index",
+  "justificativa": "Seletor de fonte na consulta de processos da gestao: a fonte Simplifica le so a API do legado (/v1/processos/pesquisa) com DER, FTR e logica proprios; nao e a mesma funcao que Processos - consultar lista (P6). Grava Trilha de auditoria: SE.",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Consulta de processos",
+  "nome": "Processos do Simplifica - consultar ficha do processo",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 49,
+  "ar": 3,
+  "pf": 7,
+  "der": [
+   "numero do processo",
+   "protocolo",
+   "criado em",
+   "situacao",
+   "finalizado",
+   "nome do solicitante",
+   "documento do solicitante",
+   "latitude",
+   "longitude",
+   "parecer deferido",
+   "texto do parecer",
+   "tipo do parecer",
+   "parecer atualizado em",
+   "parecer valido ate",
+   "ficha atualizada em",
+   "ficha finalizada",
+   "ficha deferida",
+   "parecer da ficha",
+   "numero TVL da ficha",
+   "condicionante",
+   "item (campo)",
+   "item deferido",
+   "item em analise",
+   "atividade (codigo)",
+   "descricao",
+   "atividade deferida",
+   "atividade em analise",
+   "incluida",
+   "excluida",
+   "enquadrado",
+   "enquadramento",
+   "numero da TVL",
+   "tipo",
+   "deferida",
+   "ativa",
+   "emissao",
+   "validade",
+   "situacao da TVL",
+   "razao social",
+   "inscricao imobiliaria",
+   "endereco",
+   "escritorio virtual",
+   "historico em",
+   "historico titulo",
+   "historico mensagem",
+   "historico status",
+   "historico por",
+   "mensagem de falha",
+   "acao abrir"
+  ],
+  "ftr": [
+   "Processos e viabilidades do Simplifica (AIE)",
+   "Trilha de auditoria",
+   "Chamada de integracao"
+  ],
+  "evidencia": "integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123); commit 475b01bd8 (26/10). Rota GET /gestao/processos/legado/detalhe (ProcessoController::legadoDetalhe), componente resources/js/components/analise/ficha-simplifica.tsx",
+  "justificativa": "Ficha so leitura do processo do Simplifica; entrada, saida e FTR diferentes da ficha do Viabiliza. Grava Trilha de auditoria: SE.",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Convites (pendencias) do processo",
+  "nome": "Pendencias - baixar anexo da resposta do convite",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "CE",
+  "td": 3,
+  "ar": 2,
+  "pf": 3,
+  "der": [
+   "anexo (arquivo)",
+   "nome do arquivo",
+   "acao baixar"
+  ],
+  "ftr": [
+   "Pendencia da analise (RLR anexo)",
+   "Solicitacao de viabilidade"
+  ],
+  "evidencia": "integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123); commit 49cf5c67b (29/10). Rotas GET /portal/solicitacoes/{s}/pendencias/{p}/anexos/{a} (PendenciaRespostaController::anexo) e GET /gestao/processos/{v}/pendencias/{p}/anexos/{a} (ProcessoPendenciaController::anexo); migration create_analysis_pendency_attachments_table",
+  "justificativa": "Download de documento do usuario (nao estatico), coerente com Solicitacao - baixar documento anexo da baseline. Portal e gestao com o mesmo DER, FTR e logica: contado uma vez (P6). Nao grava trilha: CE (a baseline so classificou o download de documento como SE pela trilha).",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Renovacao da viabilidade locacional",
+  "nome": "Renovacao - consultar viabilidades renovaveis",
+  "situacao": "ALTERADA",
+  "nome_baseline": "Renovação - consultar viabilidades renováveis",
+  "tipo": "SE",
+  "td": 14,
+  "ar": 9,
+  "pf": 7,
+  "der": [
+   "busca (CNPJ ou numero)",
+   "origem (Viabiliza/Simplifica)",
+   "numero da viabilidade",
+   "empresa",
+   "CNPJ",
+   "endereco",
+   "validade",
+   "situacao",
+   "dias para vencer",
+   "tipo",
+   "elegivel",
+   "motivo da inelegibilidade",
+   "mensagem (legado indisponivel/termo invalido)",
+   "acao renovar"
+  ],
+  "ftr": [
+   "Solicitacao de viabilidade",
+   "Decisao de viabilidade",
+   "Empresa",
+   "Parametro",
+   "Processos e viabilidades do Simplifica (AIE)",
+   "Contato cadastral da SEDUR (CNPJ) (AIE)",
+   "Cadastro imobiliario da SEFAZ (AIE)",
+   "CNAE",
+   "Chamada de integracao"
+  ],
+  "evidencia": "integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123); commits d7e6f16cf (24/10), afa0c2401, 3c26fbd52 (29/10), 602cea1ce, 820600123 (03/11); migration 2026_11_*_cria_parametro_antecedencia_da_renovacao. GET /portal/renovacao?busca= (RenovacaoController::index, BuscaRenovacao, ProvisoriasLegadasService, RenovacaoElegibilidadeService::motivoForaDaJanela)",
+  "justificativa": "Antes: lista das viabilidades das empresas vinculadas ao cidadao. Agora: busca de qualquer cidadao por CNPJ ou numero, no Viabiliza e no Simplifica na mesma tela e requisicao (consulta unica com FTR a mais), com a nova regra da janela de antecedencia (renovacao.antecedencia_meses) e a conferencia de titularidade da TVL legada. Sai o Vinculo de usuario com empresa; entram AIE do Simplifica, Contato CNPJ, cadastro SEFAZ, CNAE e Chamada de integracao. Mudanca de DER, FTR e logica. Continua Alta (7).",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Renovacao da viabilidade locacional",
+  "nome": "Renovacao - consultar dados da renovacao",
+  "situacao": "ALTERADA",
+  "nome_baseline": "Renovação - consultar dados da renovação",
+  "tipo": "CE",
+  "td": 12,
+  "ar": 6,
+  "pf": 6,
+  "der": [
+   "numero da viabilidade de origem",
+   "empresa",
+   "CNPJ",
+   "endereco do imovel",
+   "atividades (CNAE)",
+   "tipo da viabilidade",
+   "validade",
+   "e-mail",
+   "telefone",
+   "declaracoes exigidas",
+   "motivo da inelegibilidade",
+   "acao abrir"
+  ],
+  "ftr": [
+   "Solicitacao de viabilidade",
+   "Decisao de viabilidade",
+   "Empresa",
+   "CNAE",
+   "Parametro",
+   "Usuario"
+  ],
+  "evidencia": "integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123); commits d7e6f16cf (24/10), 602cea1ce (03/11). GET /portal/renovacao/{origem} (RenovacaoController::show)",
+  "justificativa": "Logica alterada: deixa de exigir vinculo com a empresa (qualquer cidadao renova), aplica a janela de antecedencia na elegibilidade e o contato pre-preenchido passa a ser o do usuario (nao o da empresa). FTR: sai Vinculo, entra Usuario. CE Alta (6), PF inalterado.",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Renovacao da viabilidade locacional",
+  "nome": "Renovacao - protocolar renovacao",
+  "situacao": "ALTERADA",
+  "nome_baseline": "Renovação - protocolar renovação",
+  "tipo": "EE",
+  "td": 6,
+  "ar": 23,
+  "pf": 6,
+  "der": [
+   "e-mail",
+   "telefone",
+   "celular",
+   "declaracoes aceitas",
+   "mensagem",
+   "acao protocolar"
+  ],
+  "ftr": [
+   "Solicitacao de viabilidade",
+   "Empresa",
+   "Decisao de viabilidade",
+   "Parametro",
+   "Setor",
+   "Feriado",
+   "Cadastro imobiliario da SEFAZ",
+   "Enderecos geocodificados do OpenStreetMap",
+   "Camada geografica",
+   "Zonas urbanisticas do GeoServer da SEDUR",
+   "Classificacao viaria dos logradouros do GeoServer da SEDUR",
+   "Lotes do enderecamento do GeoServer da SEDUR",
+   "Lotes por inscricao do SEMAP",
+   "Ficha de analise tecnica",
+   "CNAE",
+   "Planilha de enquadramento",
+   "Permissao de uso por zona (Quadro 10)",
+   "Condicao de instalacao por via (Quadro 11A)",
+   "Classificacao de risco municipal",
+   "Regra territorial",
+   "Texto decisorio",
+   "Trilha de auditoria",
+   "Chamada de integracao"
+  ],
+  "evidencia": "integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123); commits 5388f3209 (20/10), d7e6f16cf (24/10), a096d6e78 (29/10), 602cea1ce (03/11). POST /portal/renovacao/{origem} (RenovacaoProtocoloService::protocolar/protocolarComum, ProtocolarRenovacaoRequest)",
+  "justificativa": "Requisito alterado: e-mail e celular passam a obrigatorios, qualquer cidadao protocola (sem vinculo), janela de antecedencia na elegibilidade e o contato informado so preenche o que a empresa nao tem (nao sobrescreve). AR 24 -> 23 (sai Vinculo). EE Alta (6), PF inalterado.",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Painel do cidadao",
+  "nome": "Painel do cidadao - consultar",
+  "situacao": "ALTERADA",
+  "nome_baseline": "Painel do cidadão - consultar",
+  "tipo": "SE",
+  "td": 11,
+  "ar": 3,
+  "pf": 5,
+  "der": [
+   "quantidade em analise",
+   "total de processos",
+   "quantidade em convite",
+   "protocolo",
+   "situacao",
+   "tipo de servico",
+   "razao social da empresa",
+   "data de criacao",
+   "descricao do convite",
+   "prazo do convite",
+   "acao abrir"
+  ],
+  "ftr": [
+   "Solicitacao de viabilidade (inclui RLR CPF vinculado)",
+   "Pendencia da analise",
+   "Empresa"
+  ],
+  "evidencia": "integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123); commits b8232a725, d0cd11f29, 16f218ca5 (23/10), 186dc0f41, d7e6f16cf (24/10). app/Services/Painel/PainelCidadaoService.php (scopeVisivelPara), ConvitesDoCidadao",
+  "justificativa": "Logica de selecao alterada: indicadores e ultimas solicitacoes passam a incluir processos em que o CPF do cidadao e socio ou solicitante declarado do REGIN; a lista de atencao passa a ser so convites abertos e no prazo que ele pode responder (respondivelPor) e saem os rascunhos. SE Media (5), PF inalterado.",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Solicitacao de viabilidade no portal",
+  "nome": "Solicitacoes - consultar minhas solicitacoes",
+  "situacao": "ALTERADA",
+  "nome_baseline": "Solicitações - consultar minhas solicitações",
+  "tipo": "CE",
+  "td": 11,
+  "ar": 3,
+  "pf": 4,
+  "der": [
+   "protocolo",
+   "situacao",
+   "tipo de servico",
+   "razao social",
+   "CNPJ",
+   "data de criacao",
+   "indicador editavel",
+   "indicador cancelavel",
+   "busca por protocolo/razao social",
+   "estado filtrado",
+   "acao consultar"
+  ],
+  "ftr": [
+   "Solicitacao de viabilidade (inclui RLR CPF vinculado)",
+   "Empresa",
+   "Parametro"
+  ],
+  "evidencia": "integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123); commits d0cd11f29, 16f218ca5 (23/10), 5eecbd490 (29/10). GET /portal/solicitacoes (SolicitacaoController::index com visivelPara)",
+  "justificativa": "Logica alterada: a lista passa a trazer tambem os processos do REGIN em que o CPF e socio ou solicitante declarado; editavel e cancelavel so para o requerente. Continua no menu (5eecbd490). CE Media (4), PF inalterado. Limitrofe: mudanca so de criterio de selecao, sem DER/FTR novo.",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Acompanhamento do protocolo no portal",
+  "nome": "Pendencias - responder",
+  "situacao": "ALTERADA",
+  "nome_baseline": "Pendências - responder",
+  "tipo": "EE",
+  "td": 4,
+  "ar": 5,
+  "pf": 4,
+  "der": [
+   "resposta",
+   "anexo (opcional)",
+   "mensagem",
+   "acao responder"
+  ],
+  "ftr": [
+   "Pendencia da analise (RLR anexo)",
+   "Solicitacao de viabilidade",
+   "Parametro",
+   "Trilha de auditoria",
+   "Comunicacao ao requerente"
+  ],
+  "evidencia": "integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123); commits 9f81f4ab9 (24/10), 49cf5c67b (29/10). POST /portal/solicitacoes/{s}/pendencias/{p}/responder (PendenciaService::responder, ResponderPendenciaRequest)",
+  "justificativa": "Novo DER (anexo PDF/JPG/PNG com limite pelo parametro solicitacao.anexos.max_mb, gravado no subgrupo de anexos da pendencia) e nova regra de quem responde (so o requerente ou o solicitante declarado do REGIN). TD 3 -> 4. EE Media (4), PF inalterado.",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Convites (pendencias) do processo",
+  "nome": "Dados - Pendencia da analise",
+  "situacao": "ALTERADA",
+  "nome_baseline": "Dados - Pendência da análise",
+  "tipo": "ALI",
+  "td": 15,
+  "ar": 2,
+  "pf": 7,
+  "der": [
+   "solicitacao",
+   "solicitada por",
+   "descricao",
+   "situacao",
+   "prazo",
+   "respondida em",
+   "resposta",
+   "parecer de cancelamento",
+   "cancelada em",
+   "cancelada por",
+   "solicitada em",
+   "arquivo do anexo",
+   "nome original do anexo",
+   "tipo do anexo",
+   "tamanho do anexo"
+  ],
+  "ftr": [
+   "RLR Pendencia",
+   "RLR Anexo da resposta"
+  ],
+  "evidencia": "integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123); commit 49cf5c67b (29/10). Migration 2026_10_29_*_create_analysis_pendency_attachments_table, model AnalysisPendencyAttachment",
+  "justificativa": "Anexo da resposta so existe com a pendencia (FK cascade, sem ciclo proprio): subgrupo (P3). TD 11 -> 15, TR 1 -> 2. ALI Baixa (7), PF inalterado.",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Consulta prévia de viabilidade",
+  "nome": "Consulta de viabilidade - consultar por endereço",
+  "situacao": "EXCLUIDA",
+  "nome_baseline": "Consulta de viabilidade - consultar por endereço",
+  "tipo": "SE",
+  "td": 18,
+  "ar": 14,
+  "pf": 7,
+  "der": [
+   "(DER da baseline)"
+  ],
+  "ftr": [
+   "(FTR da baseline)"
+  ],
+  "evidencia": "desligada por flag: rota atras do middleware portal.extras (EnsurePortalServicosExtrasEnabled, abort 404) com features.portal_servicos_extras = env SILE_PORTAL_SERVICOS_EXTRAS default false (config/viabiliza.php), desligada em producao. Commit b19251cc9 (24/10) em integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123). POST /portal/viabilidade/endereco (grupo portal.servicos + portal.extras)",
+  "justificativa": "Funcao da baseline indisponivel ao cidadao: desligada por flag. Valores da baseline.",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Consulta prévia de viabilidade",
+  "nome": "Consulta de viabilidade - consultar por CNAE",
+  "situacao": "EXCLUIDA",
+  "nome_baseline": "Consulta de viabilidade - consultar por CNAE",
+  "tipo": "SE",
+  "td": 12,
+  "ar": 6,
+  "pf": 7,
+  "der": [
+   "(DER da baseline)"
+  ],
+  "ftr": [
+   "(FTR da baseline)"
+  ],
+  "evidencia": "desligada por flag: rota atras do middleware portal.extras (EnsurePortalServicosExtrasEnabled, abort 404) com features.portal_servicos_extras = env SILE_PORTAL_SERVICOS_EXTRAS default false (config/viabiliza.php), desligada em producao. Commit b19251cc9 (24/10) em integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123). POST /portal/viabilidade/cnae",
+  "justificativa": "Funcao da baseline indisponivel ao cidadao: desligada por flag. Valores da baseline.",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Consulta prévia de viabilidade",
+  "nome": "Consulta de viabilidade - consultar por inscrição imobiliária",
+  "situacao": "EXCLUIDA",
+  "nome_baseline": "Consulta de viabilidade - consultar por inscrição imobiliária",
+  "tipo": "SE",
+  "td": 18,
+  "ar": 15,
+  "pf": 7,
+  "der": [
+   "(DER da baseline)"
+  ],
+  "ftr": [
+   "(FTR da baseline)"
+  ],
+  "evidencia": "desligada por flag: rota atras do middleware portal.extras (EnsurePortalServicosExtrasEnabled, abort 404) com features.portal_servicos_extras = env SILE_PORTAL_SERVICOS_EXTRAS default false (config/viabiliza.php), desligada em producao. Commit b19251cc9 (24/10) em integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123). POST /portal/viabilidade/inscricao",
+  "justificativa": "Funcao da baseline indisponivel ao cidadao: desligada por flag. Valores da baseline.",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Consulta prévia de viabilidade",
+  "nome": "Consultas de viabilidade - consultar histórico",
+  "situacao": "EXCLUIDA",
+  "nome_baseline": "Consultas de viabilidade - consultar histórico",
+  "tipo": "SE",
+  "td": 6,
+  "ar": 2,
+  "pf": 5,
+  "der": [
+   "(DER da baseline)"
+  ],
+  "ftr": [
+   "(FTR da baseline)"
+  ],
+  "evidencia": "desligada por flag: rota atras do middleware portal.extras (EnsurePortalServicosExtrasEnabled, abort 404) com features.portal_servicos_extras = env SILE_PORTAL_SERVICOS_EXTRAS default false (config/viabiliza.php), desligada em producao. Commit b19251cc9 (24/10) em integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123). GET /portal/viabilidade/historico",
+  "justificativa": "Funcao da baseline indisponivel ao cidadao: desligada por flag. Valores da baseline.",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Consulta prévia de viabilidade",
+  "nome": "Dados - Consulta prévia de viabilidade realizada",
+  "situacao": "EXCLUIDA",
+  "nome_baseline": "Dados - Consulta prévia de viabilidade realizada",
+  "tipo": "ALI",
+  "td": 8,
+  "ar": 1,
+  "pf": 7,
+  "der": [
+   "(DER da baseline)"
+  ],
+  "ftr": [
+   "(FTR da baseline)"
+  ],
+  "evidencia": "desligada por flag: rota atras do middleware portal.extras (EnsurePortalServicosExtrasEnabled, abort 404) com features.portal_servicos_extras = env SILE_PORTAL_SERVICOS_EXTRAS default false (config/viabiliza.php), desligada em producao. Commit b19251cc9 (24/10) em integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123). Model ViabilityQuery so e lido/gravado por ConsultaViabilidadeController e HistoricoConsultaController, ambos atras da flag",
+  "justificativa": "Funcao da baseline indisponivel ao cidadao: desligada por flag. Valores da baseline. LIMITROFE: a tabela continua; excluido porque nenhuma funcao disponivel o mantem ou le. Conflito possivel: o checkout principal alterou ConsultaViabilidadeController (+61 linhas); se a frente principal contou a consulta previa como ALTERADA, decidir na consolidacao (nao pode ser ALTERADA e EXCLUIDA).",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Empresas do cidadão",
+  "nome": "Empresas - consultar",
+  "situacao": "EXCLUIDA",
+  "nome_baseline": "Empresas - consultar",
+  "tipo": "CE",
+  "td": 10,
+  "ar": 3,
+  "pf": 4,
+  "der": [
+   "(DER da baseline)"
+  ],
+  "ftr": [
+   "(FTR da baseline)"
+  ],
+  "evidencia": "desligada por flag: rota atras do middleware portal.extras (EnsurePortalServicosExtrasEnabled, abort 404) com features.portal_servicos_extras = env SILE_PORTAL_SERVICOS_EXTRAS default false (config/viabiliza.php), desligada em producao. Commit b19251cc9 (24/10) em integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123). GET /portal/empresas",
+  "justificativa": "Funcao da baseline indisponivel ao cidadao: desligada por flag. Valores da baseline.",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Empresas do cidadão",
+  "nome": "Empresas - consultar detalhe",
+  "situacao": "EXCLUIDA",
+  "nome_baseline": "Empresas - consultar detalhe",
+  "tipo": "CE",
+  "td": 27,
+  "ar": 4,
+  "pf": 6,
+  "der": [
+   "(DER da baseline)"
+  ],
+  "ftr": [
+   "(FTR da baseline)"
+  ],
+  "evidencia": "desligada por flag: rota atras do middleware portal.extras (EnsurePortalServicosExtrasEnabled, abort 404) com features.portal_servicos_extras = env SILE_PORTAL_SERVICOS_EXTRAS default false (config/viabiliza.php), desligada em producao. Commit b19251cc9 (24/10) em integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123). GET /portal/empresas/{company}",
+  "justificativa": "Funcao da baseline indisponivel ao cidadao: desligada por flag. Valores da baseline.",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Empresas do cidadão",
+  "nome": "Empresas - incluir",
+  "situacao": "EXCLUIDA",
+  "nome_baseline": "Empresas - incluir",
+  "tipo": "EE",
+  "td": 18,
+  "ar": 3,
+  "pf": 6,
+  "der": [
+   "(DER da baseline)"
+  ],
+  "ftr": [
+   "(FTR da baseline)"
+  ],
+  "evidencia": "desligada por flag: rota atras do middleware portal.extras (EnsurePortalServicosExtrasEnabled, abort 404) com features.portal_servicos_extras = env SILE_PORTAL_SERVICOS_EXTRAS default false (config/viabiliza.php), desligada em producao. Commit b19251cc9 (24/10) em integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123). POST /portal/empresas",
+  "justificativa": "Funcao da baseline indisponivel ao cidadao: desligada por flag. Valores da baseline.",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Empresas do cidadão",
+  "nome": "Empresas - alterar",
+  "situacao": "EXCLUIDA",
+  "nome_baseline": "Empresas - alterar",
+  "tipo": "EE",
+  "td": 17,
+  "ar": 3,
+  "pf": 6,
+  "der": [
+   "(DER da baseline)"
+  ],
+  "ftr": [
+   "(FTR da baseline)"
+  ],
+  "evidencia": "desligada por flag: rota atras do middleware portal.extras (EnsurePortalServicosExtrasEnabled, abort 404) com features.portal_servicos_extras = env SILE_PORTAL_SERVICOS_EXTRAS default false (config/viabiliza.php), desligada em producao. Commit b19251cc9 (24/10) em integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123). PUT /portal/empresas/{company}",
+  "justificativa": "Funcao da baseline indisponivel ao cidadao: desligada por flag. Valores da baseline.",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Empresas do cidadão",
+  "nome": "Empresas - consultar CNPJ na base de contatos da SEDUR",
+  "situacao": "EXCLUIDA",
+  "nome_baseline": "Empresas - consultar CNPJ na base de contatos da SEDUR",
+  "tipo": "SE",
+  "td": 7,
+  "ar": 3,
+  "pf": 5,
+  "der": [
+   "(DER da baseline)"
+  ],
+  "ftr": [
+   "(FTR da baseline)"
+  ],
+  "evidencia": "desligada por flag: rota atras do middleware portal.extras (EnsurePortalServicosExtrasEnabled, abort 404) com features.portal_servicos_extras = env SILE_PORTAL_SERVICOS_EXTRAS default false (config/viabiliza.php), desligada em producao. Commit b19251cc9 (24/10) em integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123). POST /portal/empresas/consultar-cnpj",
+  "justificativa": "Funcao da baseline indisponivel ao cidadao: desligada por flag. Valores da baseline.",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Empresas do cidadão",
+  "nome": "Empresas - definir CNAE principal",
+  "situacao": "EXCLUIDA",
+  "nome_baseline": "Empresas - definir CNAE principal",
+  "tipo": "EE",
+  "td": 4,
+  "ar": 3,
+  "pf": 4,
+  "der": [
+   "(DER da baseline)"
+  ],
+  "ftr": [
+   "(FTR da baseline)"
+  ],
+  "evidencia": "desligada por flag: rota atras do middleware portal.extras (EnsurePortalServicosExtrasEnabled, abort 404) com features.portal_servicos_extras = env SILE_PORTAL_SERVICOS_EXTRAS default false (config/viabiliza.php), desligada em producao. Commit b19251cc9 (24/10) em integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123). PUT /portal/empresas/{company}/cnae-principal",
+  "justificativa": "Funcao da baseline indisponivel ao cidadao: desligada por flag. Valores da baseline.",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Empresas do cidadão",
+  "nome": "Empresas - definir CNAEs secundários",
+  "situacao": "EXCLUIDA",
+  "nome_baseline": "Empresas - definir CNAEs secundários",
+  "tipo": "EE",
+  "td": 4,
+  "ar": 3,
+  "pf": 4,
+  "der": [
+   "(DER da baseline)"
+  ],
+  "ftr": [
+   "(FTR da baseline)"
+  ],
+  "evidencia": "desligada por flag: rota atras do middleware portal.extras (EnsurePortalServicosExtrasEnabled, abort 404) com features.portal_servicos_extras = env SILE_PORTAL_SERVICOS_EXTRAS default false (config/viabiliza.php), desligada em producao. Commit b19251cc9 (24/10) em integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123). PUT /portal/empresas/{company}/cnaes-secundarios",
+  "justificativa": "Funcao da baseline indisponivel ao cidadao: desligada por flag. Valores da baseline.",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Empresas do cidadão",
+  "nome": "Empresas - encerrar vínculo do usuário",
+  "situacao": "EXCLUIDA",
+  "nome_baseline": "Empresas - encerrar vínculo do usuário",
+  "tipo": "EE",
+  "td": 4,
+  "ar": 3,
+  "pf": 4,
+  "der": [
+   "(DER da baseline)"
+  ],
+  "ftr": [
+   "(FTR da baseline)"
+  ],
+  "evidencia": "desligada por flag: rota atras do middleware portal.extras (EnsurePortalServicosExtrasEnabled, abort 404) com features.portal_servicos_extras = env SILE_PORTAL_SERVICOS_EXTRAS default false (config/viabiliza.php), desligada em producao. Commit b19251cc9 (24/10) em integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123). DELETE /portal/empresas/{company}/vinculo",
+  "justificativa": "Funcao da baseline indisponivel ao cidadao: desligada por flag. Valores da baseline.",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Empresas do cidadão",
+  "nome": "Dados - Vínculo de usuário com empresa",
+  "situacao": "EXCLUIDA",
+  "nome_baseline": "Dados - Vínculo de usuário com empresa",
+  "tipo": "ALI",
+  "td": 6,
+  "ar": 1,
+  "pf": 7,
+  "der": [
+   "(DER da baseline)"
+  ],
+  "ftr": [
+   "(FTR da baseline)"
+  ],
+  "evidencia": "desligada por flag: rota atras do middleware portal.extras (EnsurePortalServicosExtrasEnabled, abort 404) com features.portal_servicos_extras = env SILE_PORTAL_SERVICOS_EXTRAS default false (config/viabiliza.php), desligada em producao. Commit b19251cc9 (24/10) em integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123). CompanyUser so e lido por CurrentRepresentation::companyIds/actsForCompany, usados apenas em RenovacaoController::consultarCnpj e ConsultarLegadoRequest (ambos atras da flag); mantido so por CompanyController/CompanyLinkController (flag)",
+  "justificativa": "Funcao da baseline indisponivel ao cidadao: desligada por flag. Valores da baseline. LIMITROFE: a tabela continua; excluido porque nenhuma funcao disponivel o mantem ou le (a renovacao deixou de conferir vinculo). O ALI Empresa e o AIE Contato CNPJ continuam (renovacao legada e contingencia).",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Procurações e representação",
+  "nome": "Procurações - consultar",
+  "situacao": "EXCLUIDA",
+  "nome_baseline": "Procurações - consultar",
+  "tipo": "CE",
+  "td": 7,
+  "ar": 2,
+  "pf": 4,
+  "der": [
+   "(DER da baseline)"
+  ],
+  "ftr": [
+   "(FTR da baseline)"
+  ],
+  "evidencia": "desligada por flag: rota atras do middleware portal.extras (EnsurePortalServicosExtrasEnabled, abort 404) com features.portal_servicos_extras = env SILE_PORTAL_SERVICOS_EXTRAS default false (config/viabiliza.php), desligada em producao. Commit b19251cc9 (24/10) em integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123). GET /portal/procuracoes",
+  "justificativa": "Funcao da baseline indisponivel ao cidadao: desligada por flag. Valores da baseline.",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Procurações e representação",
+  "nome": "Procurações - incluir",
+  "situacao": "EXCLUIDA",
+  "nome_baseline": "Procurações - incluir",
+  "tipo": "EE",
+  "td": 4,
+  "ar": 3,
+  "pf": 4,
+  "der": [
+   "(DER da baseline)"
+  ],
+  "ftr": [
+   "(FTR da baseline)"
+  ],
+  "evidencia": "desligada por flag: rota atras do middleware portal.extras (EnsurePortalServicosExtrasEnabled, abort 404) com features.portal_servicos_extras = env SILE_PORTAL_SERVICOS_EXTRAS default false (config/viabiliza.php), desligada em producao. Commit b19251cc9 (24/10) em integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123). POST /portal/procuracoes",
+  "justificativa": "Funcao da baseline indisponivel ao cidadao: desligada por flag. Valores da baseline.",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Procurações e representação",
+  "nome": "Procurações - revogar",
+  "situacao": "EXCLUIDA",
+  "nome_baseline": "Procurações - revogar",
+  "tipo": "EE",
+  "td": 3,
+  "ar": 2,
+  "pf": 3,
+  "der": [
+   "(DER da baseline)"
+  ],
+  "ftr": [
+   "(FTR da baseline)"
+  ],
+  "evidencia": "desligada por flag: rota atras do middleware portal.extras (EnsurePortalServicosExtrasEnabled, abort 404) com features.portal_servicos_extras = env SILE_PORTAL_SERVICOS_EXTRAS default false (config/viabiliza.php), desligada em producao. Commit b19251cc9 (24/10) em integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123). DELETE /portal/procuracoes/{procuration}",
+  "justificativa": "Funcao da baseline indisponivel ao cidadao: desligada por flag. Valores da baseline.",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Procurações e representação",
+  "nome": "Representação - iniciar atuação em nome de terceiro",
+  "situacao": "EXCLUIDA",
+  "nome_baseline": "Representação - iniciar atuação em nome de terceiro",
+  "tipo": "EE",
+  "td": 4,
+  "ar": 3,
+  "pf": 4,
+  "der": [
+   "(DER da baseline)"
+  ],
+  "ftr": [
+   "(FTR da baseline)"
+  ],
+  "evidencia": "desligada por flag: rota atras do middleware portal.extras (EnsurePortalServicosExtrasEnabled, abort 404) com features.portal_servicos_extras = env SILE_PORTAL_SERVICOS_EXTRAS default false (config/viabiliza.php), desligada em producao. Commit b19251cc9 (24/10) em integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123). POST /portal/representacao",
+  "justificativa": "Funcao da baseline indisponivel ao cidadao: desligada por flag. Valores da baseline.",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Procurações e representação",
+  "nome": "Representação - encerrar atuação em nome de terceiro",
+  "situacao": "EXCLUIDA",
+  "nome_baseline": "Representação - encerrar atuação em nome de terceiro",
+  "tipo": "EE",
+  "td": 2,
+  "ar": 1,
+  "pf": 3,
+  "der": [
+   "(DER da baseline)"
+  ],
+  "ftr": [
+   "(FTR da baseline)"
+  ],
+  "evidencia": "desligada por flag: rota atras do middleware portal.extras (EnsurePortalServicosExtrasEnabled, abort 404) com features.portal_servicos_extras = env SILE_PORTAL_SERVICOS_EXTRAS default false (config/viabiliza.php), desligada em producao. Commit b19251cc9 (24/10) em integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123). DELETE /portal/representacao NAO tem a flag, mas so ha o que encerrar depois de iniciar (POST atras da flag): sem acesso do usuario (P8)",
+  "justificativa": "Funcao da baseline indisponivel ao cidadao: desligada por flag. Valores da baseline. LIMITROFE: rota sem a flag; excluida por P8, ja que a atuacao nao pode mais ser iniciada.",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Procurações e representação",
+  "nome": "Dados - Procuração",
+  "situacao": "EXCLUIDA",
+  "nome_baseline": "Dados - Procuração",
+  "tipo": "ALI",
+  "td": 6,
+  "ar": 1,
+  "pf": 7,
+  "der": [
+   "(DER da baseline)"
+  ],
+  "ftr": [
+   "(FTR da baseline)"
+  ],
+  "evidencia": "desligada por flag: rota atras do middleware portal.extras (EnsurePortalServicosExtrasEnabled, abort 404) com features.portal_servicos_extras = env SILE_PORTAL_SERVICOS_EXTRAS default false (config/viabiliza.php), desligada em producao. Commit b19251cc9 (24/10) em integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123). Procuration so e mantida por ProcurationController (flag) e lida por RepresentationController/ResolveRepresentation, que nao tem representacao para resolver sem o iniciar",
+  "justificativa": "Funcao da baseline indisponivel ao cidadao: desligada por flag. Valores da baseline. LIMITROFE: a tabela continua; excluido porque nenhuma funcao disponivel a mantem e a leitura no middleware nunca encontra representacao ativa.",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Solicitação de viabilidade no portal",
+  "nome": "Solicitações - incluir",
+  "situacao": "EXCLUIDA",
+  "nome_baseline": "Solicitações - incluir",
+  "tipo": "EE",
+  "td": 7,
+  "ar": 5,
+  "pf": 6,
+  "der": [
+   "(DER da baseline)"
+  ],
+  "ftr": [
+   "(FTR da baseline)"
+  ],
+  "evidencia": "desligada por flag: rota atras do middleware portal.extras (EnsurePortalServicosExtrasEnabled, abort 404) com features.portal_servicos_extras = env SILE_PORTAL_SERVICOS_EXTRAS default false (config/viabiliza.php), desligada em producao. Commit b19251cc9 (24/10) em integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123). POST /portal/solicitacoes",
+  "justificativa": "Funcao da baseline indisponivel ao cidadao: desligada por flag. Valores da baseline.",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Solicitação de viabilidade no portal",
+  "nome": "Solicitação - informar dados do imóvel",
+  "situacao": "EXCLUIDA",
+  "nome_baseline": "Solicitação - informar dados do imóvel",
+  "tipo": "EE",
+  "td": 23,
+  "ar": 7,
+  "pf": 6,
+  "der": [
+   "(DER da baseline)"
+  ],
+  "ftr": [
+   "(FTR da baseline)"
+  ],
+  "evidencia": "desligada por flag: rota atras do middleware portal.extras (EnsurePortalServicosExtrasEnabled, abort 404) com features.portal_servicos_extras = env SILE_PORTAL_SERVICOS_EXTRAS default false (config/viabiliza.php), desligada em producao. Commit b19251cc9 (24/10) em integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123). PUT /portal/solicitacoes/{s}/imovel",
+  "justificativa": "Funcao da baseline indisponivel ao cidadao: desligada por flag. Valores da baseline.",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Solicitação de viabilidade no portal",
+  "nome": "Solicitação - informar atividades",
+  "situacao": "EXCLUIDA",
+  "nome_baseline": "Solicitação - informar atividades",
+  "tipo": "EE",
+  "td": 7,
+  "ar": 6,
+  "pf": 6,
+  "der": [
+   "(DER da baseline)"
+  ],
+  "ftr": [
+   "(FTR da baseline)"
+  ],
+  "evidencia": "desligada por flag: rota atras do middleware portal.extras (EnsurePortalServicosExtrasEnabled, abort 404) com features.portal_servicos_extras = env SILE_PORTAL_SERVICOS_EXTRAS default false (config/viabiliza.php), desligada em producao. Commit b19251cc9 (24/10) em integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123). PUT /portal/solicitacoes/{s}/atividades",
+  "justificativa": "Funcao da baseline indisponivel ao cidadao: desligada por flag. Valores da baseline.",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Solicitação de viabilidade no portal",
+  "nome": "Solicitação - anexar documento",
+  "situacao": "EXCLUIDA",
+  "nome_baseline": "Solicitação - anexar documento",
+  "tipo": "EE",
+  "td": 7,
+  "ar": 4,
+  "pf": 6,
+  "der": [
+   "(DER da baseline)"
+  ],
+  "ftr": [
+   "(FTR da baseline)"
+  ],
+  "evidencia": "desligada por flag: rota atras do middleware portal.extras (EnsurePortalServicosExtrasEnabled, abort 404) com features.portal_servicos_extras = env SILE_PORTAL_SERVICOS_EXTRAS default false (config/viabiliza.php), desligada em producao. Commit b19251cc9 (24/10) em integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123). POST /portal/solicitacoes/{s}/documentos",
+  "justificativa": "Funcao da baseline indisponivel ao cidadao: desligada por flag. Valores da baseline.",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Solicitação de viabilidade no portal",
+  "nome": "Solicitação - baixar documento anexo",
+  "situacao": "EXCLUIDA",
+  "nome_baseline": "Solicitação - baixar documento anexo",
+  "tipo": "SE",
+  "td": 4,
+  "ar": 2,
+  "pf": 4,
+  "der": [
+   "(DER da baseline)"
+  ],
+  "ftr": [
+   "(FTR da baseline)"
+  ],
+  "evidencia": "desligada por flag: rota atras do middleware portal.extras (EnsurePortalServicosExtrasEnabled, abort 404) com features.portal_servicos_extras = env SILE_PORTAL_SERVICOS_EXTRAS default false (config/viabiliza.php), desligada em producao. Commit b19251cc9 (24/10) em integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123). GET /portal/solicitacoes/{s}/documentos/{d}/download NAO tem a flag, mas o unico botao fica no assistente (etapa-documentos, pagina solicitacoes/wizard) aberto por GET solicitacoes/{s}/editar, que esta atras da flag (P8)",
+  "justificativa": "Funcao da baseline indisponivel ao cidadao: desligada por flag. Valores da baseline. LIMITROFE: rota sem a flag; excluida por P8.",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Solicitação de viabilidade no portal",
+  "nome": "Solicitação - remover documento anexo",
+  "situacao": "EXCLUIDA",
+  "nome_baseline": "Solicitação - remover documento anexo",
+  "tipo": "EE",
+  "td": 3,
+  "ar": 2,
+  "pf": 3,
+  "der": [
+   "(DER da baseline)"
+  ],
+  "ftr": [
+   "(FTR da baseline)"
+  ],
+  "evidencia": "desligada por flag: rota atras do middleware portal.extras (EnsurePortalServicosExtrasEnabled, abort 404) com features.portal_servicos_extras = env SILE_PORTAL_SERVICOS_EXTRAS default false (config/viabiliza.php), desligada em producao. Commit b19251cc9 (24/10) em integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123). DELETE /portal/solicitacoes/{s}/documentos/{d}",
+  "justificativa": "Funcao da baseline indisponivel ao cidadao: desligada por flag. Valores da baseline.",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Solicitação de viabilidade no portal",
+  "nome": "Solicitação - simular viabilidade",
+  "situacao": "EXCLUIDA",
+  "nome_baseline": "Solicitação - simular viabilidade",
+  "tipo": "SE",
+  "td": 12,
+  "ar": 15,
+  "pf": 7,
+  "der": [
+   "(DER da baseline)"
+  ],
+  "ftr": [
+   "(FTR da baseline)"
+  ],
+  "evidencia": "desligada por flag: rota atras do middleware portal.extras (EnsurePortalServicosExtrasEnabled, abort 404) com features.portal_servicos_extras = env SILE_PORTAL_SERVICOS_EXTRAS default false (config/viabiliza.php), desligada em producao. Commit b19251cc9 (24/10) em integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123). POST /portal/solicitacoes/{s}/simular",
+  "justificativa": "Funcao da baseline indisponivel ao cidadao: desligada por flag. Valores da baseline.",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Solicitação de viabilidade no portal",
+  "nome": "Solicitação - protocolar",
+  "situacao": "EXCLUIDA",
+  "nome_baseline": "Solicitação - protocolar",
+  "tipo": "EE",
+  "td": 5,
+  "ar": 19,
+  "pf": 6,
+  "der": [
+   "(DER da baseline)"
+  ],
+  "ftr": [
+   "(FTR da baseline)"
+  ],
+  "evidencia": "desligada por flag: rota atras do middleware portal.extras (EnsurePortalServicosExtrasEnabled, abort 404) com features.portal_servicos_extras = env SILE_PORTAL_SERVICOS_EXTRAS default false (config/viabiliza.php), desligada em producao. Commit b19251cc9 (24/10) em integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123). POST /portal/solicitacoes/{s}/protocolar",
+  "justificativa": "Funcao da baseline indisponivel ao cidadao: desligada por flag. Valores da baseline.",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Solicitação de viabilidade no portal",
+  "nome": "Solicitação - cancelar",
+  "situacao": "EXCLUIDA",
+  "nome_baseline": "Solicitação - cancelar",
+  "tipo": "EE",
+  "td": 4,
+  "ar": 3,
+  "pf": 4,
+  "der": [
+   "(DER da baseline)"
+  ],
+  "ftr": [
+   "(FTR da baseline)"
+  ],
+  "evidencia": "desligada por flag: rota atras do middleware portal.extras (EnsurePortalServicosExtrasEnabled, abort 404) com features.portal_servicos_extras = env SILE_PORTAL_SERVICOS_EXTRAS default false (config/viabiliza.php), desligada em producao. Commit b19251cc9 (24/10) em integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123). DELETE /portal/solicitacoes/{s}",
+  "justificativa": "Funcao da baseline indisponivel ao cidadao: desligada por flag. Valores da baseline.",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Solicitação de viabilidade no portal",
+  "nome": "Solicitação - obter resumo para conferência",
+  "situacao": "EXCLUIDA",
+  "nome_baseline": "Solicitação - obter resumo para conferência",
+  "tipo": "SE",
+  "td": 5,
+  "ar": 5,
+  "pf": 5,
+  "der": [
+   "(DER da baseline)"
+  ],
+  "ftr": [
+   "(FTR da baseline)"
+  ],
+  "evidencia": "desligada por flag: rota atras do middleware portal.extras (EnsurePortalServicosExtrasEnabled, abort 404) com features.portal_servicos_extras = env SILE_PORTAL_SERVICOS_EXTRAS default false (config/viabiliza.php), desligada em producao. Commit b19251cc9 (24/10) em integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123). prop adiada de GET /portal/solicitacoes/{s}/editar (rota atras da flag)",
+  "justificativa": "Funcao da baseline indisponivel ao cidadao: desligada por flag. Valores da baseline.",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Renovação da viabilidade locacional",
+  "nome": "Renovação - localizar viabilidade por CNPJ",
+  "situacao": "EXCLUIDA",
+  "nome_baseline": "Renovação - localizar viabilidade por CNPJ",
+  "tipo": "SE",
+  "td": 10,
+  "ar": 7,
+  "pf": 7,
+  "der": [
+   "(DER da baseline)"
+  ],
+  "ftr": [
+   "(FTR da baseline)"
+  ],
+  "evidencia": "desligada por flag: rota atras do middleware portal.extras (EnsurePortalServicosExtrasEnabled, abort 404) com features.portal_servicos_extras = env SILE_PORTAL_SERVICOS_EXTRAS default false (config/viabiliza.php), desligada em producao. Commit b19251cc9 (24/10) em integra/portal-tres-servicos-dev (worktree sile-wt-portal-dev, HEAD 820600123). POST /portal/renovacao/consultar-cnpj (portal.extras); a busca por CNPJ passou para GET /portal/renovacao?busca= (contada como ALTERADA em Renovacao - consultar viabilidades renovaveis)",
+  "justificativa": "Funcao da baseline indisponivel ao cidadao: desligada por flag. Valores da baseline.",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Conta do cidadão no portal",
+  "nome": "Portal - entrar no sistema",
+  "situacao": "EXCLUIDA",
+  "nome_baseline": "Portal - entrar no sistema",
+  "tipo": "EE",
+  "td": 5,
+  "ar": 2,
+  "pf": 4,
+  "der": [],
+  "ftr": [],
+  "evidencia": "BloqueiaEntradaLocalDoPortal; parâmetro features.login_portal_servicos ligado em produção desde 27-28/10 (SEMIT main v0.143.0)",
+  "justificativa": "Entrada local substituída pela entrada pelo Portal de Serviços da SEDUR.",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Conta do cidadão no portal",
+  "nome": "Cadastro do cidadão - criar conta",
+  "situacao": "EXCLUIDA",
+  "nome_baseline": "Cadastro do cidadão - criar conta",
+  "tipo": "EE",
+  "td": 8,
+  "ar": 6,
+  "pf": 6,
+  "der": [],
+  "ftr": [],
+  "evidencia": "BloqueiaEntradaLocalDoPortal; features.login_portal_servicos ligado em produção",
+  "justificativa": "Conta passa a vir do Portal de Serviços da SEDUR.",
+  "frente": "portal"
+ },
+ {
+  "grupo": "Configuração das APIs",
+  "nome": "APIs - consultar configuração Portal de Serviços SEDUR",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "CE",
+  "td": 9,
+  "ar": 1,
+  "pf": 3,
+  "der": [
+   "integração",
+   "descrição",
+   "entrada pelo Portal de Serviços habilitada",
+   "URL do BFF",
+   "URL de entrada (login)",
+   "URL da Carta de Serviços",
+   "intervalo de conferência da sessão",
+   "ajuda do campo",
+   "ação"
+  ],
+  "ftr": [
+   "Parâmetro"
+  ],
+  "evidencia": "cdc935b68 (26/10, homologa) e b7a30c18c (27/10, main); app-src/app/Support/ApiIntegracaoCatalog.php::portalServicos (aba 'portal_servicos' da tela config-apis); migration 2026_10_26_120000_cria_parametros_portal_servicos. Ausente em S16.",
+  "justificativa": "P7: cada integração da tela de APIs é cadastro próprio (consultar + alterar), como a aba Legado já contada (93/94). A frente portal só registrou os parâmetros como linhas do ALI Parâmetro e não contou a aba.",
+  "frente": "semit"
+ },
+ {
+  "grupo": "Configuração das APIs",
+  "nome": "APIs - alterar configuração Portal de Serviços SEDUR",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "EE",
+  "td": 7,
+  "ar": 2,
+  "pf": 4,
+  "der": [
+   "entrada habilitada",
+   "URL do BFF",
+   "URL de entrada (login)",
+   "URL da Carta de Serviços",
+   "intervalo de conferência da sessão",
+   "mensagem",
+   "ação salvar"
+  ],
+  "ftr": [
+   "Parâmetro",
+   "Trilha de auditoria"
+  ],
+  "evidencia": "cdc935b68/b7a30c18c; PUT gestao/config-apis/portal_servicos (ApiIntegracaoController, mesma rota das demais abas).",
+  "justificativa": "P7, igual a APIs - alterar configuração Legado Simplifica.",
+  "frente": "semit"
+ },
+ {
+  "grupo": "Configuração das APIs",
+  "nome": "APIs - consultar configuração Edificações complementares",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "CE",
+  "td": 12,
+  "ar": 1,
+  "pf": 3,
+  "der": [
+   "integração",
+   "descrição",
+   "Overture ligada",
+   "Microsoft ligada",
+   "contorno por IA ligado",
+   "atualização agendada das bases",
+   "URL do serviço de inferência",
+   "URL da ortofoto 2024",
+   "URL da ortofoto 2016/2017",
+   "token da ortofoto (só indicação)",
+   "ajuda do campo",
+   "ação"
+  ],
+  "ftr": [
+   "Parâmetro"
+  ],
+  "evidencia": "d7c024319 (20/10, v0.92.0): ApiIntegracaoCatalog::edificacoes; parâmetros features.edificacoes_* e integrations.edificacoes.* (ParameterSeeder). Ausente em S16 e no dev.",
+  "justificativa": "P7. Aba nova na tela de APIs para o polígono complementar por edificações (em uso em produção desde 21/10).",
+  "frente": "semit"
+ },
+ {
+  "grupo": "Configuração das APIs",
+  "nome": "APIs - alterar configuração Edificações complementares",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "EE",
+  "td": 10,
+  "ar": 2,
+  "pf": 4,
+  "der": [
+   "Overture ligada",
+   "Microsoft ligada",
+   "contorno por IA ligado",
+   "atualização agendada",
+   "URL do serviço de inferência",
+   "URL da ortofoto 2024",
+   "URL da ortofoto 2016/2017",
+   "token da ortofoto",
+   "mensagem",
+   "ação salvar"
+  ],
+  "ftr": [
+   "Parâmetro",
+   "Trilha de auditoria"
+  ],
+  "evidencia": "d7c024319 (20/10); PUT gestao/config-apis/edificacoes.",
+  "justificativa": "P7.",
+  "frente": "semit"
+ },
+ {
+  "grupo": "Polígono complementar por edificações",
+  "nome": "Dados - Edificações complementares (Overture e Microsoft)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "ALI",
+  "td": 18,
+  "ar": 2,
+  "pf": 7,
+  "der": [
+   "fonte",
+   "identificador na fonte",
+   "versão (release)",
+   "geometria do prédio",
+   "área (m²)",
+   "confiança",
+   "bases de origem",
+   "propriedades",
+   "duplicata de",
+   "retirada em",
+   "validada em",
+   "notas de validação",
+   "carga: checksum",
+   "carga: situação",
+   "carga: contadores",
+   "carga: início",
+   "carga: fim",
+   "carga: erro"
+  ],
+  "ftr": [
+   "RLR Edificação",
+   "RLR Carga da base"
+  ],
+  "evidencia": "d7c024319 (20/10) e 186b36e5e (20/10): migrations 2026_10_19_100000_create_building_footprint_imports_table e 2026_10_19_100100_create_building_footprints_table; models BuildingFootprint, BuildingFootprintImport; PostgisBuildingFootprintRepository. Carga da Overture em produção em 20/10 (591.601 prédios).",
+  "justificativa": "P9: dado externo carregado por importação vira ALI do Viabiliza, lido pelo protocolo/recebimento para achar o polígono do lote quando SEDUR e SEMAP não acham (PoligonoComplementarService). RLR da carga mantido junto (limítrofe; com 1 RLR o PF é o mesmo, 7). lot_polygon_resolutions é RLR da Solicitação (P3, cascade) e vai como reforço.",
+  "frente": "semit"
+ },
+ {
+  "grupo": "Polígono complementar por edificações",
+  "nome": "Edificações - importar base da Overture (agendada)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "EE",
+  "td": 8,
+  "ar": 2,
+  "pf": 4,
+  "der": [
+   "versão (release)",
+   "arquivo da base",
+   "identificador na fonte",
+   "geometria",
+   "área",
+   "confiança",
+   "bases de origem",
+   "propriedades"
+  ],
+  "ftr": [
+   "Edificações complementares",
+   "Camada geográfica (limite do município)"
+  ],
+  "evidencia": "d7c024319/186b36e5e: ImportarEdificacoesOvertureCommand, ImportadorEdificacoes (dentroDoLimite, upsert, retira as ausentes); routes/console.php Schedule::exec overture diário 03:00 quando features.edificacoes_importacao_agendada e a carga não está em dia.",
+  "justificativa": "Mesmo critério da importação da REDESIM (P9, baseline) e da sincronização de feriados (consolidado): carga agendada é EE. LIMÍTROFE: o agendamento depende do interruptor 'Atualização agendada das bases' (padrão desligado; valor de produção não verificado); se desligado, só sobra o comando manual (P8) e a função sai.",
+  "frente": "semit"
+ },
+ {
+  "grupo": "Polígono complementar por edificações",
+  "nome": "Edificações - importar base da Microsoft (agendada)",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "EE",
+  "td": 7,
+  "ar": 2,
+  "pf": 4,
+  "der": [
+   "versão (release)",
+   "quadkey/arquivo",
+   "identificador na fonte",
+   "geometria",
+   "área",
+   "confiança",
+   "propriedades"
+  ],
+  "ftr": [
+   "Edificações complementares",
+   "Camada geográfica (limite do município)"
+  ],
+  "evidencia": "d7c024319/186b36e5e: ImportarEdificacoesMicrosoftCommand (descarta as que a Overture já tem), Quadkey; Schedule geo:edificacoes:importar-microsoft diário 03:30 com o mesmo interruptor.",
+  "justificativa": "Lógica e formato de entrada diferentes da Overture (dedup contra Overture), por isso separada. Mesma ressalva LIMÍTROFE do interruptor de agendamento.",
+  "frente": "semit"
+ },
+ {
+  "grupo": "Consulta de processos",
+  "nome": "Processos - baixar documento do processo",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 3,
+  "ar": 2,
+  "pf": 4,
+  "der": [
+   "arquivo",
+   "nome do arquivo",
+   "ação baixar"
+  ],
+  "ftr": [
+   "Solicitação de viabilidade (RLR documento)",
+   "Trilha de auditoria"
+  ],
+  "evidencia": "e366cdd20 (26/10, pedidos da SEDUR de 22 a 26/10; veio de integra/lisa-2610, fora do dev medido): GET gestao/processos/{viabilityRequest}/anexos/documento/{documento} (ProcessoAnexoController::documento, audita anexo-download). Em S16 a gestão não tinha download dos documentos do processo.",
+  "justificativa": "Download auditado (grava trilha, P4 → SE). Função nova na gestão: o único download de documento do processo na baseline era o do cidadão no portal (P6 não une: ator, permissão e AR diferentes). O par GET anexos/vistoria/{anexo} repete Vistoria - baixar anexo da baseline e não conta.",
+  "frente": "semit"
+ },
+ {
+  "grupo": "API do legado Simplifica - Credenciais e uso",
+  "nome": "Dados - Credencial de acesso à API",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "ALI",
+  "td": 8,
+  "ar": 2,
+  "pf": 7,
+  "der": [
+   "nome",
+   "escopos",
+   "validade",
+   "revogado em",
+   "último uso",
+   "token",
+   "usuário",
+   "nome do usuário"
+  ],
+  "ftr": [
+   "Cliente (sistema consumidor)",
+   "Sessão de usuário"
+  ],
+  "evidencia": "Repositório legado-simplifica/api (criado em 23/10/2026, versão 0.8.0 de 29/10/2026). Migrations 2026_10_19_150507 (api_clientes), 2026_10_23_180000 (api_sessoes), 2026_10_23_200000 (expira_em).",
+  "justificativa": "Aplicação própria (fronteira da API do legado), contada como desenvolvimento. Grupo reconhecido pelo operador: quem pode consumir a API, com que escopo e até quando. Sessão de usuário depende da conta e entra como RLR.",
+  "frente": "api-legado"
+ },
+ {
+  "grupo": "API do legado Simplifica - Credenciais e uso",
+  "nome": "Dados - Registro de uso da API",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "ALI",
+  "td": 11,
+  "ar": 1,
+  "pf": 7,
+  "der": [
+   "data e hora",
+   "quem",
+   "tipo de ator",
+   "cliente",
+   "usuário",
+   "rota",
+   "tipo de chave",
+   "final da chave",
+   "status",
+   "mensagem",
+   "IP"
+  ],
+  "ftr": [
+   "Consulta registrada"
+  ],
+  "evidencia": "Repositório legado-simplifica/api (criado em 23/10/2026, versão 0.8.0 de 29/10/2026). Migrations 2026_10_19_150508 e 2026_10_23_180100 (api_consultas); middleware RegistrarConsulta.",
+  "justificativa": "Aplicação própria (fronteira da API do legado), contada como desenvolvimento. Trilha de uso consultada pelo operador em GET /operacao/uso; gravada em toda chamada (P4).",
+  "frente": "api-legado"
+ },
+ {
+  "grupo": "API do legado Simplifica - Credenciais e uso",
+  "nome": "Dados externos - Conta de usuário da consulta do legado",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "AIE",
+  "td": 4,
+  "ar": 1,
+  "pf": 5,
+  "der": [
+   "identificador",
+   "nome",
+   "escopos",
+   "situação"
+  ],
+  "ftr": [
+   "Conta"
+  ],
+  "evidencia": "Repositório legado-simplifica/api (criado em 23/10/2026, versão 0.8.0 de 29/10/2026). app/Integracao/ConfirmacaoCredencial.php e SituacaoPessoa.php (legado-web confirma a credencial e a situação da pessoa).",
+  "justificativa": "Aplicação própria (fronteira da API do legado), contada como desenvolvimento. Mantida pela aplicação web da consulta; a API só lê.",
+  "frente": "api-legado"
+ },
+ {
+  "grupo": "API do legado Simplifica - Credenciais e uso",
+  "nome": "API do legado - autenticar usuário",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "EE",
+  "td": 6,
+  "ar": 2,
+  "pf": 4,
+  "der": [
+   "identificador",
+   "senha",
+   "token",
+   "validade",
+   "escopos",
+   "mensagem"
+  ],
+  "ftr": [
+   "Credencial de acesso à API",
+   "Conta de usuário da consulta do legado"
+  ],
+  "evidencia": "Repositório legado-simplifica/api (criado em 23/10/2026, versão 0.8.0 de 29/10/2026). POST /v1/auth (AuthController).",
+  "justificativa": "Aplicação própria (fronteira da API do legado), contada como desenvolvimento. Grava a sessão do usuário com token de 8 horas; distinta do token de cliente.",
+  "frente": "api-legado"
+ },
+ {
+  "grupo": "API do legado Simplifica - Credenciais e uso",
+  "nome": "Clientes da API - consultar",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 7,
+  "ar": 2,
+  "pf": 5,
+  "der": [
+   "id",
+   "nome",
+   "escopos",
+   "validade",
+   "revogado em",
+   "último uso",
+   "administra"
+  ],
+  "ftr": [
+   "Credencial de acesso à API",
+   "Registro de uso da API"
+  ],
+  "evidencia": "Repositório legado-simplifica/api (criado em 23/10/2026, versão 0.8.0 de 29/10/2026). GET /operacao/clientes (ClientesController@index).",
+  "justificativa": "Aplicação própria (fronteira da API do legado), contada como desenvolvimento. Consulta que grava o próprio registro de uso (P4), por isso SE.",
+  "frente": "api-legado"
+ },
+ {
+  "grupo": "API do legado Simplifica - Credenciais e uso",
+  "nome": "Clientes da API - incluir",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "EE",
+  "td": 5,
+  "ar": 2,
+  "pf": 4,
+  "der": [
+   "nome",
+   "escopos",
+   "id",
+   "token",
+   "validade"
+  ],
+  "ftr": [
+   "Credencial de acesso à API",
+   "Registro de uso da API"
+  ],
+  "evidencia": "Repositório legado-simplifica/api (criado em 23/10/2026, versão 0.8.0 de 29/10/2026). POST /operacao/clientes (ClientesController@store).",
+  "justificativa": "Aplicação própria (fronteira da API do legado), contada como desenvolvimento. Cria o sistema consumidor com token de 90 dias.",
+  "frente": "api-legado"
+ },
+ {
+  "grupo": "API do legado Simplifica - Credenciais e uso",
+  "nome": "Clientes da API - alterar escopos",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "EE",
+  "td": 3,
+  "ar": 2,
+  "pf": 3,
+  "der": [
+   "cliente",
+   "escopos",
+   "mensagem"
+  ],
+  "ftr": [
+   "Credencial de acesso à API",
+   "Registro de uso da API"
+  ],
+  "evidencia": "Repositório legado-simplifica/api (criado em 23/10/2026, versão 0.8.0 de 29/10/2026). PATCH /operacao/clientes/{cliente}.",
+  "justificativa": "Aplicação própria (fronteira da API do legado), contada como desenvolvimento. Regra própria: cliente revogado não muda e o administrador não perde o escopo admin.",
+  "frente": "api-legado"
+ },
+ {
+  "grupo": "API do legado Simplifica - Credenciais e uso",
+  "nome": "Clientes da API - revogar",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "EE",
+  "td": 2,
+  "ar": 2,
+  "pf": 3,
+  "der": [
+   "cliente",
+   "mensagem"
+  ],
+  "ftr": [
+   "Credencial de acesso à API",
+   "Registro de uso da API"
+  ],
+  "evidencia": "Repositório legado-simplifica/api (criado em 23/10/2026, versão 0.8.0 de 29/10/2026). POST /operacao/clientes/{cliente}/revogar.",
+  "justificativa": "Aplicação própria (fronteira da API do legado), contada como desenvolvimento. Revogação lógica; não revoga o cliente que administra.",
+  "frente": "api-legado"
+ },
+ {
+  "grupo": "API do legado Simplifica - Credenciais e uso",
+  "nome": "Sessões de usuário - revogar por usuário",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "EE",
+  "td": 2,
+  "ar": 2,
+  "pf": 3,
+  "der": [
+   "usuários",
+   "quantidade revogada"
+  ],
+  "ftr": [
+   "Credencial de acesso à API",
+   "Registro de uso da API"
+  ],
+  "evidencia": "Repositório legado-simplifica/api (criado em 23/10/2026, versão 0.8.0 de 29/10/2026). POST /operacao/sessoes/revogar (SessoesController).",
+  "justificativa": "Aplicação própria (fronteira da API do legado), contada como desenvolvimento. Usado quando a conta é bloqueada na consulta web.",
+  "frente": "api-legado"
+ },
+ {
+  "grupo": "API do legado Simplifica - Credenciais e uso",
+  "nome": "Registro de uso da API - consultar",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 16,
+  "ar": 1,
+  "pf": 4,
+  "der": [
+   "cliente",
+   "usuário",
+   "rota",
+   "status",
+   "de",
+   "até",
+   "somente exceções",
+   "página",
+   "data e hora",
+   "quem",
+   "tipo de ator",
+   "tipo de chave",
+   "final da chave",
+   "mensagem",
+   "IP",
+   "total"
+  ],
+  "ftr": [
+   "Registro de uso da API"
+  ],
+  "evidencia": "Repositório legado-simplifica/api (criado em 23/10/2026, versão 0.8.0 de 29/10/2026). GET /operacao/uso (UsoController).",
+  "justificativa": "Aplicação própria (fronteira da API do legado), contada como desenvolvimento. Relatório filtrado por período (padrão 24 h) que também grava a própria chamada (P4).",
+  "frente": "api-legado"
+ },
+ {
+  "grupo": "API do legado Simplifica - Consultas ao legado",
+  "nome": "Dados externos - Processo do legado Simplifica",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "AIE",
+  "td": 21,
+  "ar": 5,
+  "pf": 7,
+  "der": [
+   "número",
+   "protocolo",
+   "criado em",
+   "status",
+   "grupo de status",
+   "situação da análise",
+   "fluxo",
+   "categoria",
+   "serviço",
+   "setor",
+   "analista",
+   "solicitante",
+   "documento",
+   "inscrição imobiliária",
+   "CEP",
+   "localização",
+   "parecer",
+   "fichas",
+   "escritório virtual",
+   "atualizado em",
+   "histórico (data, texto)"
+  ],
+  "ftr": [
+   "Processo",
+   "Processo REGIN",
+   "Item do serviço",
+   "Histórico de status",
+   "Ficha do processo"
+  ],
+  "evidencia": "Repositório legado-simplifica/api (criado em 23/10/2026, versão 0.8.0 de 29/10/2026). SQL Server do legado: dbo.PROCESSO, PROCESSO_REGIN, PROCESSO_ITEM, ITEM_SERVICO, STATUS_HISTORICO, FICHA_MATRIZ_REQUERENTE (app/Legado/ProcessoRepository.php, PesquisaProcessos.php).",
+  "justificativa": "Aplicação própria (fronteira da API do legado), contada como desenvolvimento. Mantido pelo Simplifica; a API só lê. STATUS_PROCESSO e CNAE são dado de código (P2).",
+  "frente": "api-legado"
+ },
+ {
+  "grupo": "API do legado Simplifica - Consultas ao legado",
+  "nome": "Dados externos - TVL do legado Simplifica",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "AIE",
+  "td": 24,
+  "ar": 4,
+  "pf": 7,
+  "der": [
+   "número",
+   "tipo",
+   "deferida",
+   "ativa",
+   "emissão",
+   "validade",
+   "titular",
+   "documento",
+   "tipo de documento",
+   "razão social",
+   "inscrição imobiliária",
+   "logradouro",
+   "número do endereço",
+   "bairro",
+   "CEP",
+   "complemento",
+   "zona",
+   "via",
+   "processo",
+   "condicionante adicional",
+   "indicadores",
+   "atividades (CNAE)",
+   "renovação",
+   "data da renovação"
+  ],
+  "ftr": [
+   "TVL",
+   "Renovação da TVL",
+   "Atividade da TVL",
+   "Requerente/titular"
+  ],
+  "evidencia": "Repositório legado-simplifica/api (criado em 23/10/2026, versão 0.8.0 de 29/10/2026). SQL Server do legado: dbo.TVL, RENOVACAO_TVL, FICHA_TVL, MATRIZ_REQUERENTE, CNAE (app/Legado/TvlRepository.php, TvlDetalheRepository.php, TitularResolver.php).",
+  "justificativa": "Aplicação própria (fronteira da API do legado), contada como desenvolvimento. Mantido pelo Simplifica; a API só lê.",
+  "frente": "api-legado"
+ },
+ {
+  "grupo": "API do legado Simplifica - Consultas ao legado",
+  "nome": "TVLs do legado - consultar por CNPJ, inscrição ou número",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 22,
+  "ar": 2,
+  "pf": 7,
+  "der": [
+   "CNPJ",
+   "inscrição",
+   "número",
+   "janela a vencer",
+   "número da TVL",
+   "tipo",
+   "deferida",
+   "ativa",
+   "emissão",
+   "validade",
+   "situação",
+   "dias para vencer",
+   "renovada depois",
+   "última renovação",
+   "titular",
+   "documento",
+   "tipo de documento",
+   "origem",
+   "razão social",
+   "inscrição imobiliária",
+   "endereço",
+   "limite truncado"
+  ],
+  "ftr": [
+   "TVL do legado Simplifica",
+   "Registro de uso da API"
+  ],
+  "evidencia": "Repositório legado-simplifica/api (criado em 23/10/2026, versão 0.8.0 de 29/10/2026). GET /v1/provisorias e GET /v1/tvls (ProvisoriasController, TvlsDeferidasController); situação calculada em SituacaoCalculator.",
+  "justificativa": "Aplicação própria (fronteira da API do legado), contada como desenvolvimento. Calcula situação e dias para vencer. Provisórias e deferidas usam os mesmos DER e arquivos e diferem só no filtro, por isso contam uma vez (P6).",
+  "frente": "api-legado"
+ },
+ {
+  "grupo": "API do legado Simplifica - Consultas ao legado",
+  "nome": "TVL do legado - consultar detalhe por número",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 21,
+  "ar": 3,
+  "pf": 7,
+  "der": [
+   "número",
+   "titular",
+   "processo",
+   "complemento",
+   "zona",
+   "via",
+   "indicadores",
+   "condicionante adicional",
+   "atividades",
+   "renovações",
+   "tipo",
+   "validade",
+   "situação",
+   "dias para vencer",
+   "emissão",
+   "razão social",
+   "documento",
+   "inscrição imobiliária",
+   "endereço",
+   "bairro",
+   "CEP"
+  ],
+  "ftr": [
+   "TVL do legado Simplifica",
+   "Processo do legado Simplifica",
+   "Registro de uso da API"
+  ],
+  "evidencia": "Repositório legado-simplifica/api (criado em 23/10/2026, versão 0.8.0 de 29/10/2026). GET /v1/tvls/{numero} (TvlController, TvlDetalheResource).",
+  "justificativa": "Aplicação própria (fronteira da API do legado), contada como desenvolvimento. Detalhe da TVL com situação calculada.",
+  "frente": "api-legado"
+ },
+ {
+  "grupo": "API do legado Simplifica - Consultas ao legado",
+  "nome": "Processos do legado - consultar por número, documento, inscrição ou TVL",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 20,
+  "ar": 3,
+  "pf": 7,
+  "der": [
+   "número do processo",
+   "inscrição",
+   "documento",
+   "número da TVL",
+   "número",
+   "protocolo",
+   "criado em",
+   "status",
+   "TVLs",
+   "solicitante",
+   "localização",
+   "parecer",
+   "fichas",
+   "atualizado em",
+   "escritório virtual",
+   "histórico",
+   "tipo da TVL",
+   "validade da TVL",
+   "deferida",
+   "texto do histórico"
+  ],
+  "ftr": [
+   "Processo do legado Simplifica",
+   "TVL do legado Simplifica",
+   "Registro de uso da API"
+  ],
+  "evidencia": "Repositório legado-simplifica/api (criado em 23/10/2026, versão 0.8.0 de 29/10/2026). GET /v1/processos (ProcessosController@index).",
+  "justificativa": "Aplicação própria (fronteira da API do legado), contada como desenvolvimento. Lista os processos de uma chave (usada pela Minha Área do SAD).",
+  "frente": "api-legado"
+ },
+ {
+  "grupo": "API do legado Simplifica - Consultas ao legado",
+  "nome": "Processos do legado - pesquisar com filtros",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 25,
+  "ar": 3,
+  "pf": 7,
+  "der": [
+   "número do processo",
+   "protocolo",
+   "número da TVL",
+   "documento",
+   "inscrição",
+   "CEP",
+   "grupo de status",
+   "status",
+   "situação da análise",
+   "fluxo",
+   "categoria",
+   "serviço",
+   "setor",
+   "analista",
+   "protocolado de",
+   "protocolado até",
+   "página",
+   "por página",
+   "total",
+   "páginas",
+   "número",
+   "criado em",
+   "solicitante",
+   "localização",
+   "atualizado em"
+  ],
+  "ftr": [
+   "Processo do legado Simplifica",
+   "TVL do legado Simplifica",
+   "Registro de uso da API"
+  ],
+  "evidencia": "Repositório legado-simplifica/api (criado em 23/10/2026, versão 0.8.0 de 29/10/2026). GET /v1/processos/pesquisa (PesquisaProcessos).",
+  "justificativa": "Aplicação própria (fronteira da API do legado), contada como desenvolvimento. Pesquisa paginada com 16 filtros, usada pela consulta do Viabiliza; lógica e DER diferentes da consulta por chave.",
+  "frente": "api-legado"
+ },
+ {
+  "grupo": "API do legado Simplifica - Consultas ao legado",
+  "nome": "Processo do legado - consultar detalhe",
+  "situacao": "INCLUIDA",
+  "nome_baseline": "",
+  "tipo": "SE",
+  "td": 20,
+  "ar": 3,
+  "pf": 7,
+  "der": [
+   "número",
+   "protocolo",
+   "criado em",
+   "status",
+   "TVLs",
+   "solicitante",
+   "localização",
+   "parecer",
+   "fichas",
+   "atualizado em",
+   "escritório virtual",
+   "histórico",
+   "tipo da TVL",
+   "validade da TVL",
+   "situação da TVL",
+   "dias para vencer",
+   "texto do histórico",
+   "deferida",
+   "data do histórico",
+   "número da TVL"
+  ],
+  "ftr": [
+   "Processo do legado Simplifica",
+   "TVL do legado Simplifica",
+   "Registro de uso da API"
+  ],
+  "evidencia": "Repositório legado-simplifica/api (criado em 23/10/2026, versão 0.8.0 de 29/10/2026). GET /v1/processos/{numero} (ProcessosController@show).",
+  "justificativa": "Aplicação própria (fronteira da API do legado), contada como desenvolvimento. Detalhe com TVLs e situação de vencimento.",
+  "frente": "api-legado"
+ }
+]

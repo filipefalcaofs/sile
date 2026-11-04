@@ -147,6 +147,18 @@ class TratamentoRamoResolver
                     continue;
                 }
 
+                // A JUCEB não exibe a P12 (produtos armazenados) quando a P11
+                // diz que no local funcionará só o escritório: a falta dela
+                // não indefere, o processo segue para análise (SEDUR, 03/11).
+                if ((int) $numero === 12 && array_key_exists(11, $input->respostas)
+                    && RespostaPlanilha::de($input->respostas[11])->comoBooleano() === false) {
+                    return new TratamentoRamoResult(
+                        status: 'nao_resolvido',
+                        motivo: $this->textos->get('tratamento.motivo.p12_escritorio_sem_resposta'),
+                        versaoRegra: $versao->version,
+                    );
+                }
+
                 // Subdivisão do CNAE ausente da planilha é falha de carga, não
                 // falta de resposta: o motivo é outro e nada é indeferido.
                 $subdivisaoAusente = $this->subdivisaoNaoCarregada((int) $numero, (string) ($textosDasPerguntas[(int) $numero] ?? ''), $input->cnae, (int) $versao->getKey());
@@ -280,7 +292,7 @@ class TratamentoRamoResolver
 
         if (is_string($subgrupoForcado) && $subgrupoForcado !== '') {
             $subgrupo = $subgrupoForcado;
-            $grupo = $this->grupoDe($subgrupoForcado);
+            $grupo = TratamentoEnquadramento::grupoDoSubgrupo($subgrupoForcado);
         }
 
         if ($this->eFamiliaId($subgrupo)) {
@@ -726,21 +738,13 @@ class TratamentoRamoResolver
      */
     private function aplicarFaixa(TratamentoEnquadramento $linha, ?float $area): array
     {
-        $sub = $linha->subcategoria;
-        $grupo = $linha->grupo;
+        ['subgrupo' => $sub, 'grupo' => $grupo, 'faixa' => $faixa] = $linha->faixaDaArea($area);
         $risco = $this->normalizarRisco($linha->risco);
 
-        if ($area !== null && $linha->enquadramento3 && $linha->acima_m2 !== null && $area >= (float) $linha->acima_m2) {
-            $sub = $linha->enquadramento3;
-            $grupo = $this->grupoDe($sub);
+        if ($faixa === 3) {
             $risco = 'alto';
-        } elseif ($area !== null && $linha->ate_m2 !== null && $area > (float) $linha->ate_m2 && $linha->enquadramento2) {
-            $sub = $linha->enquadramento2;
-            $grupo = $this->grupoDe($sub);
-
-            if ($risco === 'baixo') {
-                $risco = 'medio';
-            }
+        } elseif ($faixa === 2 && $risco === 'baixo') {
+            $risco = 'medio';
         }
 
         return [$sub, $grupo, $risco];
@@ -944,12 +948,5 @@ class TratamentoRamoResolver
         }
 
         return 'baixo';
-    }
-
-    private function grupoDe(string $subcategoria): string
-    {
-        $pos = strrpos($subcategoria, '-');
-
-        return $pos === false ? $subcategoria : substr($subcategoria, 0, $pos);
     }
 }

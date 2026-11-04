@@ -293,7 +293,7 @@ class DatabaseSeederTest extends TestCase
         // Em SQLite a decisão do EXPRESSO não roda (reexecuta os motores
         // territoriais — exige PostGIS): os exemplos do expresso ficam
         // protocolados, sem ViabilityDecision, e a zona fictícia não é carregada.
-        // Degradação honesta — o deferimento navegável (decisão + TVL sobre a zona
+        // Degradação honesta — o deferimento navegável (decisão + Viabilidade sobre a zona
         // real) é provado em @group postgis (ExpressoSeedPostgisTest).
         $this->assertSame(ViabilityRequestStatus::Protocolada, $deferimento->status);
         $this->assertNull($deferimento->decision);

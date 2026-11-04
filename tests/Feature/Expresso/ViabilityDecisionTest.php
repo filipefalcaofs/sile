@@ -15,8 +15,8 @@ use Tests\TestCase;
 /**
  * Registro IMUTÁVEL da decisão expressa (HU-072/074): 1:1 com a solicitação,
  * casts jsonb→array para per_cnae/rules_versions/fundamentacao (RN-005/009),
- * número TVL único preenchido SÓ no deferimento (RN-007) e decided_by_user_id
- * null = decisão do sistema. A concorrência do TVL é provada no @group postgis.
+ * número da Viabilidade única preenchido SÓ no deferimento (RN-007) e decided_by_user_id
+ * null = decisão do sistema. A concorrência da Viabilidade é provada no @group postgis.
  */
 class ViabilityDecisionTest extends TestCase
 {

@@ -1,6 +1,6 @@
 numero,texto,observacao,usar_em_predio_comercial
 1,Para funcionamento deverá dispor do número de vagas para estacionamento conforme legislação em vigor. Mínimo: _____.,,
-2,Trata-se de escritório da empresa. O TVL viabiliza apenas o escritório administrativo da empresa neste endereço. A prestação de serviços e o comércio realizados em outros endereços estão condicionados à análise e concessão de novo TVL referente ao local onde serão exercidos.,"(quando o requerente escolher a opção 2 das perguntas 2, 3,",
+2,Trata-se de escritório da empresa. A Viabilidade viabiliza apenas o escritório administrativo da empresa neste endereço. A prestação de serviços e o comércio realizados em outros endereços estão condicionados à análise e concessão de nova Viabilidade referente ao local onde serão exercidos.,"(quando o requerente escolher a opção 2 das perguntas 2, 3,",
 3,Para funcionamento deverá atender a Lei Municipal nº 5.354 de 1998 e suas alterações (Poluição Sonora).,,
 4,Para funcionamento deverá obter licença ou dispensa ambiental conforme Anexo Único da Resolução CEPRAM nº 4579/2018 e Anexos I e IX do Decreto 29.921/2018.,Exibir obrigatoriamente para imóveis com área superior 750m²,
 5,Para funcionamento deverá obter parecer da Delegacia Regional do Ministério da Agricultura ou da ADAB,,
@@ -20,7 +20,7 @@ numero,texto,observacao,usar_em_predio_comercial
 19,CNAE 4723-7/00 refere-se apenas ao comércio de bebidas sem o consumo no local e não contempla o serviço de bar.,4723-7/00,
 20,Só poderá comercializar os animais permitidos por lei federal e deverá atender as condições de conforto e higiene dos animais. Deverão ser atendidas as disposições da resolução vigente do Conselho Federal de Medicina Veterinária (CFMV).,Comércio de ração e animais,
 21,Apenas poderão ser comercializados produtos saneantes registrados pela vigilância sanitária.,comércio de produtos saneantes,
-22,TVL Pré-operacional. Não permite requerer o Alvará de Funcionamento. Renovação condicionada a apresentação do Habite-se referente ao Alvará de Construção nº_____.,TVL Pré-operacional só pode ser feito no fluxo semi- expresso.,
+22,Viabilidade Pré-operacional. Não permite requerer o Alvará de Funcionamento. Renovação condicionada a apresentação do Habite-se referente ao Alvará de Construção nº_____.,Viabilidade Pré-operacional só pode ser feito no fluxo semi- expresso.,
 23,"Os serviços constantes na CNAE 8211-3/00 referem-se aos serviços de apoio administrativo, não estando autorizada a prestação de serviço de escritório virtual.",Quando não se tratar de sede de escritório virtual,
 24,Prestação de serviços de escritório virtual.,Escritório virtual – sede,
 25,Para funcionamento deverá instalar tela ou grade de proteção em janelas e/ou áreas abertas como sacada/varanda;,Estabelecimento de ensino (não usar em prédio comercial),Não

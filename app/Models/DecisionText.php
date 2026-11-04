@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 
 /**
- * Texto decisório administrável (TVL, parecer, ficha do cidadão) — dado
+ * Texto decisório administrável (Viabilidade, parecer, ficha do cidadão) — dado
  * administrável ligado ao motor pela chave estável: SEM create/delete/toggle
  * pela interface, porque a chave ausente quebra a emissão do documento. A
  * edição do template é auditada (HasAuditoria, RN-002) e invalida o cache do

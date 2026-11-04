@@ -58,6 +58,7 @@ interface ResultadosExpressoIndexProps {
     perPageOptions: number[];
     outcomeOptions: SelectOption[];
     servicoOptions: SelectOption[];
+    setorOptions: SelectOption[];
     analysisStatusOptions: SelectOption[];
     categoriaOptions: SelectOption[];
     statusOptions: SelectOption[];
@@ -108,6 +109,7 @@ export default function ResultadosExpressoIndex({
     perPageOptions,
     outcomeOptions,
     servicoOptions,
+    setorOptions,
     analysisStatusOptions,
     categoriaOptions,
     statusOptions,
@@ -309,6 +311,7 @@ export default function ResultadosExpressoIndex({
                                         completo
                                         valores={valoresDaConsulta}
                                         servicoOptions={servicoOptions}
+                                        setorOptions={setorOptions}
                                         analysisStatusOptions={analysisStatusOptions}
                                         categoriaOptions={categoriaOptions}
                                         analistaOptions={analistaOptions}

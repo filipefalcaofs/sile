@@ -52,7 +52,7 @@ class TempoEmissaoTvlTest extends TestCase
     }
 
     /**
-     * Processo DEFERIDO com TVL emitido: decisão com número de produto TVL e
+     * Processo DEFERIDO com Viabilidade emitida: decisão com número de produto da Viabilidade e
      * decided_at (a Emissão). created_at é a Abertura.
      */
     private function processoDeferido(string $protocolo, string $tvl, string $emitidoEm, ?Cnae $cnae = null): ViabilityRequest
@@ -102,7 +102,7 @@ class TempoEmissaoTvlTest extends TestCase
         ], $extra);
     }
 
-    // CA-R2-01: período + Deferido → linhas com TVL emitido no recorte.
+    // CA-R2-01: período + Deferido → linhas com Viabilidade emitida no recorte.
     public function test_periodo_e_deferido_traz_linhas_com_tvl_emitido_no_recorte(): void
     {
         $a = $this->processoDeferido('VIA-2026-000001', 'TVL-2026-000001', '2026-06-05 12:00', $this->cnaeAlvo);
@@ -119,7 +119,7 @@ class TempoEmissaoTvlTest extends TestCase
         $protocolos = collect($page->items())->map(fn (ViabilityRequest $r): ?string => $r->protocol_number)->sort()->values()->all();
         $this->assertSame(['VIA-2026-000001', 'VIA-2026-000002'], $protocolos);
 
-        // Nº de protocolo e Nº de TVL únicos por linha (projeção da tela/export).
+        // Nº de protocolo e Nº de Viabilidade únicas por linha (projeção da tela/export).
         $linhaA = app(RelatorioTempoEmissaoTvlService::class)->linha($a->fresh(['decision', 'serviceType', 'cnaes']));
         $this->assertSame('VIA-2026-000001', $linhaA['processo']);
         $this->assertSame('2026-000001', $linhaA['tvl_numero']);

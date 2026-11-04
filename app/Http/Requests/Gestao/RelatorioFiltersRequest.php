@@ -35,11 +35,11 @@ class RelatorioFiltersRequest extends FormRequest
             'cnae' => ['nullable', 'string'],
             'categoria' => ['nullable', 'string'],
             // Relatório sede × abrigados de escritório virtual (Plano R1): recorte
-            // por nº do produto TVL da sede OU pela inscrição imobiliária. Precisa
+            // por nº do produto da Viabilidade da sede OU pela inscrição imobiliária. Precisa
             // entrar no validated() para viajar no bag (RN-005 no assíncrono).
             'sede' => ['nullable', 'string'],
             'inscricao' => ['nullable', 'string'],
-            // Tela R2 — Tempo de Emissão de TVL (SAPS): serviço (service_type_id),
+            // Tela R2 — Tempo de Emissão de Viabilidade (SAPS): serviço (service_type_id),
             // resultado (deferida/indeferida) e tipo (viabilidade/revisao). A
             // Revisão via REDESIM não é homologada — o valor é aceito só para a
             // degradação honesta (o serviço nunca simula dados de revisão).

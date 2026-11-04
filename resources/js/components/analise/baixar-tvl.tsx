@@ -2,7 +2,7 @@ import { useHttp } from '@inertiajs/react';
 import { useState } from 'react';
 
 /**
- * Abre o PDF real do TVL pelo endpoint que gera o documento e devolve a URL
+ * Abre o PDF real da Viabilidade pelo endpoint que gera o documento e devolve a URL
  * assinada. Sem arquivo, o botão informa a falha em vez de marcar disponibilidade
  * sem saída.
  */

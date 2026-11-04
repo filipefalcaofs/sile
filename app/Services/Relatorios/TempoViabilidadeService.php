@@ -29,7 +29,7 @@ class TempoViabilidadeService
     }
 
     /**
-     * Mesma distribuição, só dos processos deferidos (com número de TVL). É o
+     * Mesma distribuição, só dos processos deferidos (com número de Viabilidade). É o
      * universo do export da REDESIM, em que toda linha traz data de deferimento:
      * viabilidade indeferida não aparece lá, então compará-la com a referência
      * federal inflaria o nosso lado.

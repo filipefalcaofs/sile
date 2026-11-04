@@ -71,7 +71,7 @@ use Illuminate\Support\Facades\DB;
  *    → em_analise SEM criar decisão e SEM evento (anti-fachada: o motor NÃO
  *    defere/indefere sem o dado real; liga sozinho quando a base entrar);
  *  - nao_permitido → INDEFERE; permitido(_com_condicoes) → DEFERE (RN-009),
- *    criando a ViabilityDecision imutável + número TVL (só no deferimento),
+ *    criando a ViabilityDecision imutável + número da Viabilidade (só no deferimento),
  *    transicionando pela StateMachine e auditando SÍNCRONO (HU-074) — tudo numa
  *    transação; o ResultadoEmitido é disparado SÓ após o commit.
  *
@@ -195,10 +195,11 @@ class FluxoExpressoService
             ];
         }
 
-        // Alteração de atividades da JUCEB (evento 244): compara os CNAEs do pedido
-        // com os da viabilidade vinculada ao CNPJ na SEFAZ. Código fora da lista
-        // oficial vai para a análise; sem atividade incluída não há o que
-        // enquadrar (só exclusão, ou pedido igual à viabilidade) e defere sem taxa.
+        // Alteração da JUCEB com CNPJ: compara os CNAEs do pedido com os da
+        // viabilidade anterior (Viabiliza, Simplifica ou SEFAZ). Código fora da
+        // lista oficial vai para a análise; sem atividade incluída não há o que
+        // enquadrar (só exclusão, ou pedido igual à viabilidade) e defere sem
+        // taxa, salvo mudança de endereço, que enquadra tudo no endereço novo.
         try {
             $comparacao = $this->comparacaoCnaes->executar($request);
         } catch (SefazConsultaIndisponivelException $e) {
@@ -216,7 +217,7 @@ class FluxoExpressoService
                 ];
             }
 
-            if ($comparacao->incluidas === []) {
+            if ($comparacao->incluidas === [] && ! $request->alteraEndereco()) {
                 return $pendencias !== []
                     ? $this->encaminharPendencias($request, $pendencias, $actor)
                     : $this->deferirExclusao($request, $actor, $comparacao->excluidas);
@@ -878,7 +879,7 @@ class FluxoExpressoService
      * Defere automaticamente a solicitação exclusivamente de exclusão de
      * atividade (RN-AA-03/RN-AA-05), SEM enquadramento: cria a
      * ViabilityDecision imutável com per_cnae/fundamentação próprios do caso
-     * (sem ConsultaViabilidadeResult — nenhum motor rodou), gera o número TVL
+     * (sem ConsultaViabilidadeResult — nenhum motor rodou), gera o número da Viabilidade
      * (RN-007, todo deferimento tem produto), transiciona pela StateMachine e
      * AUDITA SÍNCRONO, tudo numa transação. O ResultadoEmitido é disparado
      * APÓS o commit — mesmo contrato de `emitir()`.
@@ -981,7 +982,7 @@ class FluxoExpressoService
 
     /**
      * Defere a exclusão CONFIRMADA do CNAE gatilho da sede (RN-AA-04): mesma
-     * base de `deferirExclusao()` (decisão sem enquadramento, TVL, transição,
+     * base de `deferirExclusao()` (decisão sem enquadramento, Viabilidade, transição,
      * auditoria síncrona, tudo numa transação), mas esta solicitação NUNCA é
      * abrigada da sede que ela mesma está desativando — `is_virtual_office_tenant`
      * fica sempre falso, sem consultar o AbrigadoResolver. Coerente com a
@@ -1084,7 +1085,7 @@ class FluxoExpressoService
     /**
      * Indefere no expresso o processo cuja pergunta da planilha, necessária ao
      * enquadramento, chegou sem resposta. Mesma robustez idempotente de
-     * `indeferirTerritorial()`; sem número TVL (só deferimento tem produto).
+     * `indeferirTerritorial()`; sem número da Viabilidade (só deferimento tem produto).
      *
      * @param  array{numero: int, enunciado: string, cnae: string}  $pergunta
      */
@@ -1169,7 +1170,7 @@ class FluxoExpressoService
      * fundamentação própria (base legal da regra + fundamentos do motor), com
      * a versão do dado territorial em rules_versions (RN-002). Mesma
      * robustez idempotente de `emitir()` (unique por solicitação vira NO-OP).
-     * Sem número TVL — só deferimento tem produto.
+     * Sem número da Viabilidade — só deferimento tem produto.
      */
     private function indeferirTerritorial(
         ViabilityRequest $request,
@@ -1252,7 +1253,7 @@ class FluxoExpressoService
      * Emite a decisão vinculante (HU-070/071/072, RN-009): nao_permitido →
      * INDEFERE; permitido(_com_condicoes) → DEFERE. Numa transação cria a
      * ViabilityDecision imutável (per_cnae/rules_versions/fundamentação), gera o
-     * número TVL só no deferimento, transiciona pela StateMachine (timeline +
+     * número da Viabilidade só no deferimento, transiciona pela StateMachine (timeline +
      * auditoria) e AUDITA SÍNCRONO a decisão (HU-074) — tudo antes do commit. O
      * ResultadoEmitido é disparado APÓS o commit.
      *
@@ -1268,7 +1269,7 @@ class FluxoExpressoService
             : DecisionOutcome::Deferida;
 
         // Abrigado de escritório virtual (RN-EV-05): a inscrição tem sede ativa e
-        // os CNAEs estão na Lista EV — o produto referencia o nº TVL da sede.
+        // os CNAEs estão na Lista EV — o produto referencia o nº da Viabilidade da sede.
         $abrigado = $this->abrigadoResolver->resolve($request);
 
         try {

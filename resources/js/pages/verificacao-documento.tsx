@@ -8,7 +8,7 @@ import { ThemeProvider, useTheme } from '@/contexts/theme-context';
 import { formatDateTime } from '@/lib/datas';
 
 /**
- * Verificação PÚBLICA de autenticidade de documentos (TVL, indeferimento,
+ * Verificação PÚBLICA de autenticidade de documentos (Viabilidade, indeferimento,
  * comprovante de protocolo) pelo código de verificação — sem login. Mostra SÓ
  * tipo, protocolo e data de referência (payload mínimo, LGPD). Código
  * desconhecido/adulterado → estado inválido honesto, nunca um "válido"

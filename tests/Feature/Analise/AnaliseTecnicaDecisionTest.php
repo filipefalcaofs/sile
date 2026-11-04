@@ -64,7 +64,7 @@ class AnaliseTecnicaDecisionTest extends TestCase
     {
         // HU-082 RN-004: todas as atividades deferidas na ficha → DEFERE. Cria a
         // ViabilityDecision (flow analise_tecnica, decided_by analista) com número
-        // TVL, transiciona para deferida (encerramento HU-085) e dispara
+        // Viabilidade, transiciona para deferida (encerramento HU-085) e dispara
         // ResultadoEmitido após o commit.
         Event::fake([ResultadoEmitido::class]);
 
@@ -98,7 +98,7 @@ class AnaliseTecnicaDecisionTest extends TestCase
     public function test_indefere_quando_alguma_cnae_esta_indeferida_na_ficha(): void
     {
         // HU-083 RN-004: basta uma atividade indeferida na ficha → INDEFERE o
-        // processo inteiro, sem número TVL.
+        // processo inteiro, sem número da Viabilidade.
         Event::fake([ResultadoEmitido::class]);
 
         $ficha = $this->fichaFinalizada([

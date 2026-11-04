@@ -8,7 +8,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Verificação PÚBLICA de autenticidade de documentos (TVL, indeferimento,
+ * Verificação PÚBLICA de autenticidade de documentos (Viabilidade, indeferimento,
  * comprovante de protocolo) pelo código de verificação — SEM login, com
  * throttle público (reuso do limiter consulta-protocolo). O payload é MÍNIMO
  * (LGPD): tipo, protocolo e data de referência — nunca empresa/CNPJ/endereço.

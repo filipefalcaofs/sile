@@ -2,6 +2,7 @@ import { type FormEvent, useState } from 'react';
 import Input from '@/components/form/input';
 import IsoDateInput from '@/components/form/iso-date-input';
 import Label from '@/components/form/label';
+import MultiOptionSelect from '@/components/form/multi-option-select';
 import Select from '@/components/form/select';
 import Button from '@/components/ui/button';
 import { applyMask, MASK_PATTERNS } from '@/lib/masks';
@@ -25,6 +26,7 @@ export interface ProcessoFiltrosValores {
     analista: string;
     cnae: string;
     complemento: string;
+    numero?: string;
     /** Só no modo completo (os filtros inteiros da Consulta de processos). */
     produto_tvl?: string;
     inscricao?: string;
@@ -45,6 +47,8 @@ interface ProcessoFiltrosProps {
     analysisStatusOptions: SelectOption[];
     categoriaOptions: SelectOption[];
     analistaOptions?: SelectOption[];
+    /** Setores do filtro "Setor" (modo completo). */
+    setorOptions?: SelectOption[];
     mostrarAnalista?: boolean;
     onAplicar: (valores: ProcessoFiltrosValores) => void;
     onLimpar: () => void;
@@ -64,6 +68,7 @@ export const FILTROS_VAZIOS: ProcessoFiltrosValores = {
     analista: '',
     cnae: '',
     complemento: '',
+    numero: '',
     produto_tvl: '',
     inscricao: '',
     logradouro: '',
@@ -104,6 +109,7 @@ export default function ProcessoFiltros({
     analysisStatusOptions,
     categoriaOptions,
     analistaOptions = [],
+    setorOptions = [],
     mostrarAnalista = true,
     completo = false,
     statusOptions = [],
@@ -185,6 +191,10 @@ export default function ProcessoFiltros({
                     <Input id="filtro-cnae" value={form.cnae} onChange={(e) => definir('cnae', e.target.value)} placeholder="Código ou descrição" />
                 </div>
                 <div>
+                    <Label htmlFor="filtro-numero">Número</Label>
+                    <Input id="filtro-numero" value={form.numero ?? ''} onChange={(e) => definir('numero', e.target.value)} />
+                </div>
+                <div>
                     <Label htmlFor="filtro-complemento">Complemento</Label>
                     <Input id="filtro-complemento" value={form.complemento} onChange={(e) => definir('complemento', e.target.value)} />
                 </div>
@@ -219,8 +229,14 @@ export default function ProcessoFiltros({
                             <Select id="filtro-fluxo" value={form.fluxo ?? ''} onChange={(v) => definir('fluxo', v)} placeholder="Todos" options={FLUXOS} />
                         </div>
                         <div>
-                            <Label htmlFor="filtro-setor">Setor (ID)</Label>
-                            <Input id="filtro-setor" type="number" value={form.setor ?? ''} onChange={(e) => definir('setor', e.target.value)} />
+                            <Label htmlFor="filtro-setor">Setor</Label>
+                            <MultiOptionSelect
+                                id="filtro-setor"
+                                value={(form.setor ?? '').split('|').filter((item) => item !== '')}
+                                onChange={(valores) => definir('setor', valores.join('|'))}
+                                options={setorOptions}
+                                placeholder="Todos"
+                            />
                         </div>
                     </>
                 )}

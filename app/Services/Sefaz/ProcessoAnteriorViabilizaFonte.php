@@ -8,7 +8,7 @@ use App\Models\ViabilityRequest;
 
 /**
  * Última viabilidade deferida da mesma empresa (CNPJ) no próprio Viabiliza: o
- * número do TVL e os CNAEs do processo que a gerou. Processo sem CNAEs não serve
+ * número da Viabilidade e os CNAEs do processo que a gerou. Processo sem CNAEs não serve
  * de base: lista vazia não informa nada.
  */
 class ProcessoAnteriorViabilizaFonte implements FonteViabilidadeAnterior

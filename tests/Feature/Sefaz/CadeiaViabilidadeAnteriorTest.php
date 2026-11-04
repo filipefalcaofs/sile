@@ -13,16 +13,20 @@ use App\Services\Sefaz\SefazConsultaIndisponivelException;
 use App\Services\Sefaz\SefazViabilidadeConsultaGateway;
 use App\Services\Sefaz\UnavailableSefazViabilidadeConsultaGateway;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Spatie\Activitylog\Models\Activity;
+use Tests\Support\Sefaz\ConfiguraLegadoSimplifica;
 use Tests\Support\Sefaz\FakeSefazViabilidadeConsultaGateway;
 use Tests\TestCase;
 
 /**
- * Base da comparação de atividades: o processo anterior da empresa no próprio
- * Viabiliza vem primeiro, depois o legado e, por último, a SEFAZ.
+ * Base da comparação de atividades: a última viabilidade deferida no legado
+ * Simplifica vem primeiro, depois o processo anterior da empresa no próprio
+ * Viabiliza e, por último, a SEFAZ.
  */
 class CadeiaViabilidadeAnteriorTest extends TestCase
 {
+    use ConfiguraLegadoSimplifica;
     use LazilyRefreshDatabase;
 
     private const CNPJ = '12345678000190';
@@ -117,6 +121,29 @@ class CadeiaViabilidadeAnteriorTest extends TestCase
 
         $this->assertSame([], $resultado?->incluidas);
         $this->assertSame('TVL-2026-000002', $atual->fresh()->comparacao_cnaes['numero_viabilidade']);
+    }
+
+    public function test_simplifica_vem_antes_do_processo_anterior_no_viabiliza(): void
+    {
+        $this->configurarLegado();
+        Http::fake([
+            'legado.test/v1/tvls?*' => Http::response(['data' => [
+                ['numero' => 416389, 'tipo' => 'provisoria', 'deferida' => true, 'ativa' => true, 'emissao' => '2026-05-10T00:00:00Z', 'validade' => '2026-11-10T00:00:00Z'],
+            ]]),
+            'legado.test/v1/tvls/416389' => Http::response(['data' => [
+                'numero' => 416389, 'tipo' => 'provisoria', 'deferida' => true, 'ativa' => true, 'emissao' => '2026-05-10T00:00:00Z', 'validade' => '2026-11-10T00:00:00Z',
+                'atividades' => [['codigo' => '4520-0/06', 'descricao' => 'Oficina']],
+            ]]),
+        ]);
+        $anterior = $this->processo(['4711302']);
+        $this->decidir($anterior, tvl: 'TVL-2026-000100');
+        $atual = $this->processo(['4520006', '5611201'], alteracaoDaJunta: true);
+
+        $resultado = app(ConsultarComparacaoCnaesService::class)->executar($atual);
+
+        $this->assertSame(['5611201'], $resultado?->incluidas);
+        $this->assertSame(['4520006'], $resultado?->mantidas);
+        $this->assertSame('416389', $atual->fresh()->comparacao_cnaes['numero_viabilidade']);
     }
 
     public function test_sem_processo_anterior_cai_para_a_sefaz(): void

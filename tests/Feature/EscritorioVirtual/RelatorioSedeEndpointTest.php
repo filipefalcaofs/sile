@@ -34,7 +34,7 @@ class RelatorioSedeEndpointTest extends TestCase
 
         $this->seed(RolesAndPermissionsSeeder::class);
 
-        // SEDE: deferida com TVL, marca hq, e trava a inscrição '111'.
+        // SEDE: deferida com Viabilidade, marca hq, e trava a inscrição '111'.
         $sedeCompany = Company::factory()->create([
             'trade_name' => 'Sede EV Ltda',
             'legal_name' => 'Sede Escritório Virtual Ltda',
@@ -56,7 +56,7 @@ class RelatorioSedeEndpointTest extends TestCase
             'locked_at' => now(),
         ]);
 
-        // 2 ABRIGADOS na mesma inscrição '111', cada um com empresa e TVL próprios.
+        // 2 ABRIGADOS na mesma inscrição '111', cada um com empresa e Viabilidade próprios.
         foreach (['AB1', 'AB2'] as $i => $sufixo) {
             $company = Company::factory()->create([
                 'legal_name' => "Abrigado {$sufixo} ME",

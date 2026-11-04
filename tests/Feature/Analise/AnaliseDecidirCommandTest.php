@@ -18,7 +18,7 @@ use Tests\TestCase;
  * Comando de EVIDÊNCIA da decisão técnica humana (`analise:decidir {solicitacao}
  * {--finalizar}`): conclui o processo a partir da ficha do analista pelo serviço
  * REAL (AnaliseTecnicaDecisionService::decide) e imprime o desfecho de ponta a
- * ponta — status final, desfecho (deferida/indeferida), número TVL no
+ * ponta — status final, desfecho (deferida/indeferida), número da Viabilidade no
  * deferimento e a fundamentação/parecer. Útil para evidência/reprocesso manual,
  * espelhando o expresso:decidir.
  *
@@ -67,7 +67,7 @@ class AnaliseDecidirCommandTest extends TestCase
     public function test_finaliza_e_defere_imprimindo_status_e_tvl(): void
     {
         // HU-082: --finalizar finaliza a ficha (rascunho) e DEFERE — imprime
-        // DEFERIDA + o número TVL gerado. Decisão real (flow analise_tecnica).
+        // DEFERIDA + o número da Viabilidade gerado. Decisão real (flow analise_tecnica).
         Event::fake([ResultadoEmitido::class]);
 
         $request = $this->processoEmAnalise([
@@ -89,7 +89,7 @@ class AnaliseDecidirCommandTest extends TestCase
 
     public function test_indefere_quando_ficha_tem_cnae_indeferida(): void
     {
-        // RN-004: basta uma CNAE indeferida na ficha → INDEFERIDA, sem TVL.
+        // RN-004: basta uma CNAE indeferida na ficha → INDEFERIDA, sem Viabilidade.
         Event::fake([ResultadoEmitido::class]);
 
         $request = $this->processoEmAnalise([

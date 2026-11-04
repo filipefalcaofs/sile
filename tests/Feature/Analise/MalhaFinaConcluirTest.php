@@ -5,6 +5,7 @@ namespace Tests\Feature\Analise;
 use App\Enums\DecisionOutcome;
 use App\Enums\TvlKind;
 use App\Enums\ViabilityRequestStatus;
+use App\Models\AnalysisRecord;
 use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
@@ -17,7 +18,7 @@ use Tests\TestCase;
 /**
  * Conclusão pela Caixa de Malha Fina: POST .../concluir exige o resultado
  * da conclusão de análise, aplica esse resultado no processo e só então
- * baixa os encaminhamentos abertos. A observação continua opcional. Gated
+ * baixa os encaminhamentos abertos. O parecer (observação) é obrigatório. Gated
  * por analisar-malha-fina: quem só encaminha não conclui (403 auditado).
  */
 class MalhaFinaConcluirTest extends TestCase
@@ -96,11 +97,11 @@ class MalhaFinaConcluirTest extends TestCase
         $processo->forceFill(['status' => ViabilityRequestStatus::Deferida])->save();
 
         $this->actingAs($revisor, 'gestao')
-            ->post("/gestao/malha-fina/{$processo->id}/concluir", ['resultado' => 'deferido'])
+            ->post("/gestao/malha-fina/{$processo->id}/concluir", ['resultado' => 'deferido', 'observacao' => 'Mantido.'])
             ->assertSessionHasErrors('tipo');
 
         $this->actingAs($revisor, 'gestao')
-            ->post("/gestao/malha-fina/{$processo->id}/concluir", ['resultado' => 'deferido', 'tipo' => 'provisoria', 'validade_meses' => 6])
+            ->post("/gestao/malha-fina/{$processo->id}/concluir", ['resultado' => 'deferido', 'tipo' => 'provisoria', 'validade_meses' => 6, 'observacao' => 'Mantido.'])
             ->assertSessionHasNoErrors();
 
         $decisao = $processo->fresh()->decision;
@@ -109,7 +110,7 @@ class MalhaFinaConcluirTest extends TestCase
         $this->assertSame('TVL-EXPRESSO-1', $decisao->tvl_product_number);
     }
 
-    public function test_conclui_sem_observacao(): void
+    public function test_sem_parecer_nao_conclui(): void
     {
         $revisor = $this->revisor();
         $processo = $this->processoEmMalhaFina($revisor);
@@ -118,19 +119,33 @@ class MalhaFinaConcluirTest extends TestCase
             ->post("/gestao/malha-fina/{$processo->id}/concluir", [
                 'resultado' => 'revogado',
             ])
-            ->assertRedirect()
+            ->assertSessionHasErrors('observacao');
+
+        $processo->refresh();
+        $this->assertTrue((bool) $processo->in_fine_mesh);
+        $this->assertSame(ViabilityRequestStatus::EmAnalise, $processo->status);
+    }
+
+    public function test_indeferido_sem_atividade_indeferida_na_ficha_conclui(): void
+    {
+        $revisor = $this->revisor();
+        $processo = $this->processoEmMalhaFina($revisor);
+        AnalysisRecord::factory()->finalizada()->create([
+            'viability_request_id' => $processo->id,
+            'revision' => 1,
+            'per_cnae' => [['cnae' => '3321000', 'status_escolhido' => 'deferida']],
+        ]);
+
+        $this->actingAs($revisor, 'gestao')
+            ->post("/gestao/malha-fina/{$processo->id}/concluir", [
+                'resultado' => 'indeferido',
+                'observacao' => 'Atividade não permitida em residência (Decreto nº 29.987/2018).',
+            ])
             ->assertSessionHasNoErrors();
 
         $processo->refresh();
         $this->assertFalse((bool) $processo->in_fine_mesh);
-        $this->assertSame(ViabilityRequestStatus::Revogado, $processo->status);
-
-        $this->assertDatabaseHas('fine_mesh_referrals', [
-            'viability_request_id' => $processo->id,
-            'resolved_by_user_id' => $revisor->id,
-            'resolution_note' => null,
-            'resolution_outcome' => 'revogado',
-        ]);
+        $this->assertSame(ViabilityRequestStatus::Indeferida, $processo->status);
     }
 
     public function test_concluir_processo_fora_da_malha_fina_avisa_sem_falhar(): void
@@ -146,6 +161,7 @@ class MalhaFinaConcluirTest extends TestCase
         $this->actingAs($revisor, 'gestao')
             ->post("/gestao/malha-fina/{$processo->id}/concluir", [
                 'resultado' => 'cassado',
+                'observacao' => 'Cassado.',
             ])
             ->assertRedirect()
             ->assertSessionHas('warning');
@@ -176,6 +192,7 @@ class MalhaFinaConcluirTest extends TestCase
             ->post("/gestao/malha-fina/{$processo->id}/concluir", [
                 'resultado' => 'deferido',
                 'tipo' => 'definitiva',
+                'observacao' => 'Mantido.',
             ])
             ->assertSessionHasErrors('conclusao');
 

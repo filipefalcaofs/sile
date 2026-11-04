@@ -53,7 +53,7 @@ class ExclusaoCnaeSedeTest extends TestCase
     }
 
     /**
-     * Sede deferida com produto (TVL) que trava ATIVAMENTE a inscrição
+     * Sede deferida com produto (Viabilidade) que trava ATIVAMENTE a inscrição
      * informada (mesmo arranjo de ExclusaoAtividadeDeferimentoTest). A
      * empresa titular é sempre explicitada — é o que
      * `SedeEscritorioVirtualGatilho::titularDoVinculo()` (C2 da revisão

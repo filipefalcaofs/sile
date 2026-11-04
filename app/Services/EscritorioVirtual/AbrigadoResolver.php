@@ -10,7 +10,7 @@ use App\Services\Expresso\SedeEscritorioVirtualGatilho;
 /**
  * Resolve se uma solicitação é ABRIGADO de escritório virtual (RN-EV-05): a
  * inscrição tem uma SEDE ativa e os CNAEs do processo estão na Lista EV vigente.
- * Devolve a referência ao produto da sede (nº TVL) ou null.
+ * Devolve a referência ao produto da sede (nº da Viabilidade) ou null.
  */
 class AbrigadoResolver
 {

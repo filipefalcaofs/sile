@@ -1,6 +1,6 @@
 {
     "nome": "todas-deferidas",
-    "descricao": "Ficha com todas as CNAEs deferidas pelo analista (zona disponível) → DEFERE com TVL.",
+    "descricao": "Ficha com todas as CNAEs deferidas pelo analista (zona disponível) → DEFERE com Viabilidade.",
     "engine_available": true,
     "per_cnae": [
         {

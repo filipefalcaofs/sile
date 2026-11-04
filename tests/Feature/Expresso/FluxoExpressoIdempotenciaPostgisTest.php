@@ -29,7 +29,7 @@ use Tests\Support\SeedsTratamentoPlanilha;
 /**
  * Idempotência da emissão da decisão sob Postgres REAL (HU-072): duas chamadas
  * de decide() para a MESMA solicitação produzem exatamente 1 ViabilityDecision,
- * 1 número TVL (sequência avança 1, sem buraco) e 1 ResultadoEmitido. A 1ª
+ * 1 número da Viabilidade (sequência avança 1, sem buraco) e 1 ResultadoEmitido. A 1ª
  * chamada decide; a 2ª recai no re-check de status dentro do Cache::lock
  * (status !== protocolada) e devolve a decisão existente sem redecidir nem
  * redisparar o evento.
@@ -58,7 +58,7 @@ class FluxoExpressoIdempotenciaPostgisTest extends PostgisTestCase
         $request = $this->protocoladaDeferivel();
         $service = app(FluxoExpressoService::class);
 
-        // 1ª decisão: defere de verdade (cria decisão + TVL + transição + evento).
+        // 1ª decisão: defere de verdade (cria decisão + Viabilidade + transição + evento).
         $primeira = $service->decide($request);
         // 2ª decisão: recai no re-check (status !== protocolada) — no-op idempotente.
         $segunda = $service->decide($request);
@@ -72,7 +72,7 @@ class FluxoExpressoIdempotenciaPostgisTest extends PostgisTestCase
         $this->assertSame(1, ViabilityDecision::query()->where('viability_request_id', $request->id)->count());
         $this->assertTrue($primeira->decision->is($segunda->decision));
 
-        // A sequência do TVL avançou exatamente 1 — sem buraco, sem duplicidade.
+        // A sequência da Viabilidade avançou exatamente 1 — sem buraco, sem duplicidade.
         $sequence = TvlSequence::query()->where('year', TvlNumberGenerator::CONTADOR_UNICO)->sole();
         $this->assertSame(3000000, (int) $sequence->last_number);
 

@@ -13,13 +13,13 @@ use Tests\TestCase;
 
 /**
  * Aba/Card Produto EV (T03): o detalhe do processo expõe, no recurso do
- * processo, o bloco `escritorio_virtual` com Tipo (sede|abrigado), o TVL da
+ * processo, o bloco `escritorio_virtual` com Tipo (sede|abrigado), a Viabilidade da
  * sede, a inscrição, a validade da sede (não modelada → null/"—") e o status
- * do produto. Para o ABRIGADO, o "End. Virtual" é o nº TVL da sede
+ * do produto. Para o ABRIGADO, o "End. Virtual" é o nº da Viabilidade da sede
  * (virtual_office_hq_tvl_number — RN-EV-05, CA-P-01).
  *
  * CA-P-02: o requerente EXTERNO (portal, guard `web`) NÃO alcança o PDF do
- * produto (TVL) pelo Viabiliza — as rotas do produto vivem sob o guard `gestao`
+ * produto (Viabilidade) pelo Viabiliza — as rotas do produto vivem sob o guard `gestao`
  * (+ emitir-tvl + signed); o cidadão é redirecionado ao login da gestão.
  */
 class ProdutoEvTest extends TestCase
@@ -125,7 +125,7 @@ class ProdutoEvTest extends TestCase
             'tvl_product_number' => 'TVL-EXT',
         ]);
 
-        // Emitir o produto (TVL): rota de gestão — o cidadão do portal cai no login da gestão.
+        // Emitir o produto (Viabilidade): rota de gestão — o cidadão do portal cai no login da gestão.
         $this->actingAs($externo, 'web')
             ->post("/gestao/processos/{$request->id}/tvl")
             ->assertRedirect(route('gestao.login'));

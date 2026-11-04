@@ -9,6 +9,7 @@ import Checkbox from '@/components/form/checkbox';
 import Input from '@/components/form/input';
 import IsoDateInput from '@/components/form/iso-date-input';
 import MaskedInput from '@/components/form/masked-input';
+import MultiOptionSelect from '@/components/form/multi-option-select';
 import Label from '@/components/form/label';
 import Select from '@/components/form/select';
 import { CloseIcon, FileIcon, SearchIcon } from '@/components/icons';
@@ -51,6 +52,7 @@ interface FiltrosTexto {
     fluxo: string;
     cnae: string;
     complemento: string;
+    numero: string;
 }
 
 interface AbasContagem {
@@ -79,6 +81,15 @@ interface ConsultaProps {
     categoriaOptions: SelectOption[];
     analysisStatusOptions: SelectOption[];
     analistaOptions: SelectOption[];
+    servicoOptions: SelectOption[];
+    setorOptions: SelectOption[];
+}
+
+/** Filtros que aceitam vários valores, guardados separados por "|". */
+const SEPARADOR_MULTIPLO = '|';
+
+function valoresDe(texto: string): string[] {
+    return texto === '' ? [] : texto.split(SEPARADOR_MULTIPLO).filter((item) => item !== '');
 }
 
 /** Grupos macro de status (espelham GRUPOS_STATUS do ProcessoQueryService). */
@@ -124,6 +135,7 @@ const ROTULOS_FILTRO: Record<keyof FiltrosTexto, string> = {
     complemento: 'Complemento',
     inscricao: 'Inscrição imobiliária',
     logradouro: 'Logradouro',
+    numero: 'Número',
     bairro: 'Bairro',
     cep: 'CEP',
     servico: 'Serviço',
@@ -157,6 +169,7 @@ const CHAVES_FILTRO: (keyof FiltrosTexto)[] = [
     'fluxo',
     'cnae',
     'complemento',
+    'numero',
 ];
 
 const CHAVES_AVANCADAS = CHAVES_FILTRO.filter((chave) => chave !== 'busca');
@@ -267,6 +280,8 @@ export default function ConsultaProcessos({
     categoriaOptions,
     analysisStatusOptions,
     analistaOptions,
+    servicoOptions,
+    setorOptions,
 }: ConsultaProps) {
     const { auth } = usePage<SharedProps>().props;
     const podeMalhaFina = auth.permissions.includes('encaminhar-malha-fina');
@@ -426,12 +441,16 @@ export default function ConsultaProcessos({
         categoria: categoriaOptions,
         fluxo: FLUXO_OPTIONS,
         analista: analistaOptions,
+        servico: servicoOptions,
+        setor: setorOptions,
     };
 
     const chips = CHAVES_AVANCADAS.filter((chave) => (filtros[chave] ?? '') !== '' && !chavesDaAba.includes(chave)).map(
         (chave) => {
             const valor = filtros[chave] ?? '';
-            const rotulo = opcoesPorChave[chave]?.find((opcao) => opcao.value === valor)?.label ?? valor;
+            const rotulo = valoresDe(valor)
+                .map((parte) => opcoesPorChave[chave]?.find((opcao) => opcao.value === parte)?.label ?? parte)
+                .join(', ');
 
             return { chave, label: `${ROTULOS_FILTRO[chave]}: ${rotulo}` };
         },
@@ -508,6 +527,7 @@ export default function ConsultaProcessos({
                         <CampoTexto id="filtro-complemento" label="Complemento" value={form.complemento} onChange={(valor) => definir('complemento', valor)} />
                         <CampoMascara id="filtro-inscricao" label="Inscrição imobiliária" mask="inscricao" value={form.inscricao} onChange={(valor) => definir('inscricao', valor)} />
                         <CampoTexto id="filtro-logradouro" label="Logradouro" value={form.logradouro} onChange={(valor) => definir('logradouro', valor)} />
+                        <CampoTexto id="filtro-numero" label="Número" value={form.numero} onChange={(valor) => definir('numero', valor)} />
                         <CampoTexto id="filtro-bairro" label="Bairro" value={form.bairro} onChange={(valor) => definir('bairro', valor)} />
                         <CampoMascara id="filtro-cep" label="CEP" mask="cep" value={form.cep} onChange={(valor) => definir('cep', valor)} />
                         <div>
@@ -530,8 +550,26 @@ export default function ConsultaProcessos({
                             <Label htmlFor="filtro-categoria">Categoria</Label>
                             <Select id="filtro-categoria" value={form.categoria} onChange={(valor) => definir('categoria', valor)} placeholder="Todas" options={categoriaOptions} />
                         </div>
-                        <CampoTexto id="filtro-servico" label="Serviço (ID)" type="number" value={form.servico} onChange={(valor) => definir('servico', valor)} />
-                        <CampoTexto id="filtro-setor" label="Setor (ID)" type="number" value={form.setor} onChange={(valor) => definir('setor', valor)} />
+                        <div>
+                            <Label htmlFor="filtro-servico">Serviço</Label>
+                            <MultiOptionSelect
+                                id="filtro-servico"
+                                value={valoresDe(form.servico)}
+                                onChange={(valores) => definir('servico', valores.join(SEPARADOR_MULTIPLO))}
+                                options={servicoOptions}
+                                placeholder="Todos"
+                            />
+                        </div>
+                        <div>
+                            <Label htmlFor="filtro-setor">Setor</Label>
+                            <MultiOptionSelect
+                                id="filtro-setor"
+                                value={valoresDe(form.setor)}
+                                onChange={(valores) => definir('setor', valores.join(SEPARADOR_MULTIPLO))}
+                                options={setorOptions}
+                                placeholder="Todos"
+                            />
+                        </div>
                         <div>
                             <Label htmlFor="filtro-analista">Analista</Label>
                             <Select id="filtro-analista" value={form.analista} onChange={(valor) => definir('analista', valor)} placeholder="Todos" options={analistaOptions} />
@@ -760,11 +798,7 @@ function colunasProcessos(opcoes: {
                     <span className="font-semibold text-gray-800 tabular-nums dark:text-white/90">
                         {item.bap ?? item.protocol_number ?? '-'}
                     </span>
-                    {!/^empresa a constituir$/i.test(item.empresa?.trim() ?? '') && (
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                            {item.empresa ?? 'Requerente não informado'}
-                        </span>
-                    )}
+                    {item.empresa && <span className="text-xs text-gray-500 dark:text-gray-400">{item.empresa}</span>}
                 </div>
             ),
         },

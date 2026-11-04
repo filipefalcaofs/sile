@@ -12,7 +12,7 @@ use Illuminate\Console\Command;
 /**
  * Roda o motor de decisão do fluxo expresso (FluxoExpressoService::decide) sobre
  * uma solicitação protocolada e imprime a EVIDÊNCIA REAL de ponta a ponta:
- * status final, desfecho (deferida/indeferida), número TVL no deferimento e o
+ * status final, desfecho (deferida/indeferida), número da Viabilidade no deferimento e o
  * motivo honesto quando encaminha à análise. Útil para evidência/reprocesso
  * manual, espelhando solicitacao:protocolar / louos:enquadrar.
  *

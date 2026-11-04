@@ -9,10 +9,10 @@ use App\Support\Settings;
 use RuntimeException;
 
 /**
- * Montagem compartilhada dos documentos de DECISÃO (TVL e indeferimento
+ * Montagem compartilhada dos documentos de DECISÃO (Viabilidade e indeferimento
  * fundamentado): dados de empresa/imóvel, assinatura parametrizável, disco
  * parametrizado NUNCA público e normalização de listas jsonb. Extraído do
- * TvlPdfService para o documento de indeferimento espelhar o TVL sem
+ * TvlPdfService para o documento de indeferimento espelhar a Viabilidade sem
  * duplicar regra — os dois documentos respondem à mesma decisão.
  */
 trait MontaDadosDocumentoDecisao

@@ -39,7 +39,7 @@ use Tests\TestCase;
  * listener PreAnalisarProcesso cria a ficha rev 1 → DistribuicaoService distribui/
  * assume → AnalysisRecordService preenche/finaliza (gravando a divergência
  * analista×motor) → AnaliseTecnicaDecisionService DECIDE (ViabilityDecision flow
- * 'analise_tecnica' + TVL no deferimento) → ResultadoEmitido reusa os listeners
+ * 'analise_tecnica' + Viabilidade no deferimento) → ResultadoEmitido reusa os listeners
  * da Fase 9 (Regin/SEFAZ bloqueados honestos → Fase 13). Cobre ainda o ciclo de
  * pendência (HU-079/080), a malha fina sobre um deferido (HU-127) e a degradação
  * honesta (FA-01: sem motor, o humano decide assim mesmo).
@@ -57,7 +57,7 @@ class AnaliseSmokeTest extends TestCase
         // Caminho HUMANO completo: semi-expresso (uma CNAE de risco alto torna
         // inelegível) com a zona identificada e PERMITIDA nos dois quadros → a
         // ficha vem PRÉ-ANALISADA (sem sugestão pré-marcada — SEDUR 21/09). O
-        // analista defere as duas → DEFERE o processo com TVL. (Com a regra do
+        // analista defere as duas → DEFERE o processo com Viabilidade. (Com a regra do
         // e-mail SEDUR 21/09, veto locacional indefere expresso e NUNCA chega
         // à análise — o cenário humano usa alto risco sem veto.)
         Notification::fake();
@@ -103,7 +103,7 @@ class AnaliseSmokeTest extends TestCase
 
         $this->assertDatabaseCount('analysis_divergences', 0);
 
-        // 4) DECIDIR: deferimento real (flow analise_tecnica + TVL); ResultadoEmitido
+        // 4) DECIDIR: deferimento real (flow analise_tecnica + Viabilidade); ResultadoEmitido
         // reusa os listeners da Fase 9.
         $result = app(AnaliseTecnicaDecisionService::class)->decide($finalizada, $analista);
         $this->assertSame(DecisionOutcome::Deferida, $result->outcome);
@@ -140,7 +140,7 @@ class AnaliseSmokeTest extends TestCase
         // INDEFERIR: semi-expresso (alto risco) com a zona PERMITINDO — sem veto
         // locacional, o processo vai à análise (e-mail SEDUR 21/09: veto locacional
         // indeferiria expresso). O motor sugere deferida; o analista DIVERGE e
-        // indefere com parecer → INDEFERE sem TVL, com a divergência gravada.
+        // indefere com parecer → INDEFERE sem Viabilidade, com a divergência gravada.
         Notification::fake();
         $this->fakeBairroComZona('ZR-1');
         $this->classificarMunicipal('4731800', RiscoMunicipal::Alto); // alto → semi-expresso
@@ -183,7 +183,7 @@ class AnaliseSmokeTest extends TestCase
         $this->assertSame(DecisionOutcome::Indeferida, $result->outcome);
         $request->refresh();
         $this->assertSame(ViabilityRequestStatus::Indeferida, $request->status);
-        $this->assertNull($request->decision->tvl_product_number, 'Indeferimento não gera TVL.');
+        $this->assertNull($request->decision->tvl_product_number, 'Indeferimento não gera Viabilidade.');
 
         $this->assertDatabaseMissing('activity_log', ['event' => 'sefaz-viabilidade']);
     }

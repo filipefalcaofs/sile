@@ -115,8 +115,8 @@ class TempoAnaliseService
     }
 
     /**
-     * Tempo médio de EMISSÃO do TVL (SAPS, RN-006) em MINUTOS ÚTEIS:
-     * protocoled_at → decided_at das decisões COM número de produto TVL decididas
+     * Tempo médio de EMISSÃO da Viabilidade (SAPS, RN-006) em MINUTOS ÚTEIS:
+     * protocoled_at → decided_at das decisões COM número de produto da Viabilidade decididas
      * no período. Sem registros ⇒ media_minutos NULL (honesto, jamais 0 disfarçado
      * de real, CA-03).
      *

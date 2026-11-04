@@ -46,6 +46,14 @@ Schedule::command('processos:reprocessar-etapas')
     ->withoutOverlapping()
     ->onOneServer();
 
+// Alteração da JUCEB que chegou à caixa sem a comparação com a viabilidade
+// anterior (Simplifica fora do ar no protocolo): compara de novo e, quando nada
+// foi incluído e o endereço não muda, o motor defere no expresso, sem taxa.
+Schedule::command('processos:comparar-atividades-anteriores --espera=0 --tentativas=1')
+    ->hourly()
+    ->withoutOverlapping()
+    ->onOneServer();
+
 // HU-125 DORMENTE (EP09): indefere "sem atuação" as solicitações paradas em
 // aguardando_bap além do prazo (expresso.bap.prazo_horas). Hoje é NO-OP em
 // produção — nada entra em aguardando_bap até o Regin alimentar bap_due_at

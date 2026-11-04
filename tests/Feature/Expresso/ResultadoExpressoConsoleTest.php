@@ -38,7 +38,7 @@ class ResultadoExpressoConsoleTest extends TestCase
     }
 
     /**
-     * Solicitação DEFERIDA com decisão real (número TVL no deferimento).
+     * Solicitação DEFERIDA com decisão real (número da Viabilidade no deferimento).
      */
     private function deferida(string $protocolo): ViabilityRequest
     {
@@ -54,7 +54,7 @@ class ResultadoExpressoConsoleTest extends TestCase
     }
 
     /**
-     * Solicitação INDEFERIDA com decisão real (sem TVL — RN-009).
+     * Solicitação INDEFERIDA com decisão real (sem Viabilidade — RN-009).
      */
     private function indeferida(string $protocolo): ViabilityRequest
     {

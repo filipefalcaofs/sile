@@ -27,9 +27,9 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Renovação de TVL provisório emitido por este portal (o que o requisito
+ * Renovação de Viabilidade provisória emitido por este portal (o que o requisito
  * chamava de origem Simplifica). A lista mostra os TVLs das empresas do
- * cidadão que existem aqui, elegíveis ou com o motivo do bloqueio. TVL de
+ * cidadão que existem aqui, elegíveis ou com o motivo do bloqueio. Viabilidade de
  * origem SIGS não entra: a renovação dele continua no SIGS.
  */
 class RenovacaoController extends Controller

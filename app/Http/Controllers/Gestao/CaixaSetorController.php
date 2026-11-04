@@ -140,7 +140,7 @@ class CaixaSetorController extends Controller
                     ])
                     ->values()
                     ->all(),
-                'empresa' => $processo->company?->trade_name ?: $processo->company?->legal_name,
+                'empresa' => $processo->company?->nomeExibido(),
                 'cnpj' => $processo->company?->formatted_cnpj,
                 'status' => $processo->status->value,
                 'status_label' => $processo->status->label(),

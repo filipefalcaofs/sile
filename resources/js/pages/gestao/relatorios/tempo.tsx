@@ -28,7 +28,7 @@ interface TempoPorEtapa {
     etapas: EtapaTempo[];
 }
 
-/** Tempo de emissão do TVL (SAPS, RN-006) em minutos úteis. */
+/** Tempo de emissão da Viabilidade (SAPS, RN-006) em minutos úteis. */
 interface TempoEmissaoTvl {
     media_minutos: number | null;
     amostras: number;

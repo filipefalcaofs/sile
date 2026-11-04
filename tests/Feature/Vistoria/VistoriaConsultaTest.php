@@ -3,6 +3,7 @@
 namespace Tests\Feature\Vistoria;
 
 use App\Enums\AnalysisStatus;
+use App\Models\Company;
 use App\Models\Inspection;
 use App\Models\InspectionReferral;
 use App\Models\Sector;
@@ -201,6 +202,19 @@ class VistoriaConsultaTest extends TestCase
         $ids = array_column($resposta->viewData('page')['props']['vistorias']['data'], 'id');
         $this->assertNotContains($devolvido->id, $ids);
         $this->assertCount(2, $ids);
+    }
+
+    public function test_listagem_nao_exibe_empresa_a_constituir(): void
+    {
+        $empresa = Company::factory()->create(['trade_name' => null, 'legal_name' => 'Empresa a constituir']);
+        $this->processoEmVistoria(AnalysisStatus::Vistoriar, ['company_id' => $empresa->id]);
+
+        $this->actingAs($this->apoio(), 'gestao')
+            ->get('/gestao/vistorias')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('vistorias.data', 1)
+                ->where('vistorias.data.0.empresa', null));
     }
 
     public function test_consulta_exige_permissao(): void

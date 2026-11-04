@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Enums\AnalysisStatus;
+use App\Enums\AnalysisPendencyStatus;
 use App\Enums\ResultadoViabilidade;
 use App\Enums\ViabilityRequestOrigin;
 use App\Enums\ViabilityRequestStatus;
@@ -16,12 +16,12 @@ use Illuminate\Console\Command;
 use Throwable;
 
 /**
- * Indefere, como o expresso faz hoje, os processos que ficaram na caixa da
- * análise por pergunta da planilha sem resposta antes dessa regra existir (ou
- * porque outra etapa os encaminhou antes dela). Para os da JUCEB, as respostas
- * são refeitas pelo envelope antes de decidir: pergunta respondida com a
- * numeração trocada não é indeferida. Só toca processo que a analista ainda não
- * começou a analisar: sem ficha, sem vistoria e sem decisão.
+ * Indefere pelo fluxo expresso os processos da caixa da análise (em análise ou
+ * em convite, sem decisão) que têm pergunta da planilha sem resposta: sem ela a
+ * análise não pode ser concluída. Vale também para análise já iniciada, com
+ * ficha, convite ou vistoria; convite aberto é cancelado. Para os da JUCEB, as
+ * respostas são refeitas pelo envelope antes de decidir: pergunta respondida
+ * com a numeração trocada não é indeferida.
  */
 class IndeferirPerguntaSemRespostaCommand extends Command
 {
@@ -30,12 +30,12 @@ class IndeferirPerguntaSemRespostaCommand extends Command
         {--limite= : Máximo de processos nesta passada}
         {--dry-run : Mostra o que seria feito, sem gravar}';
 
-    protected $description = 'Indefere os processos parados na análise por pergunta da planilha sem resposta';
+    protected $description = 'Indefere pelo expresso os processos da caixa da análise com pergunta da planilha sem resposta';
 
-    /** @var list<string> */
-    private const ANALISE_NAO_INICIADA = [
-        AnalysisStatus::ParaDistribuir->value,
-        AnalysisStatus::Analisar->value,
+    /** @var list<ViabilityRequestStatus> */
+    private const STATUS_CAIXA = [
+        ViabilityRequestStatus::EmAnalise,
+        ViabilityRequestStatus::EmPendencia,
     ];
 
     public function handle(
@@ -53,10 +53,8 @@ class IndeferirPerguntaSemRespostaCommand extends Command
         $dryRun = (bool) $this->option('dry-run');
 
         $query = ViabilityRequest::query()
-            ->where('status', ViabilityRequestStatus::EmAnalise)
-            ->where(fn ($q) => $q->whereNull('analysis_status')->orWhereIn('analysis_status', self::ANALISE_NAO_INICIADA))
+            ->whereIn('status', self::STATUS_CAIXA)
             ->whereDoesntHave('decision')
-            ->whereDoesntHave('analysisRecords')
             ->orderBy('id');
 
         $ids = array_filter((array) $this->option('id'));
@@ -93,6 +91,7 @@ class IndeferirPerguntaSemRespostaCommand extends Command
 
                 if (! $dryRun) {
                     $expresso->indeferirPerguntaSemResposta($processo, $resolved, $pergunta, null);
+                    $this->cancelarConvitesAbertos($processo, $audit);
                 }
 
                 $contagem['indeferidos']++;
@@ -105,6 +104,32 @@ class IndeferirPerguntaSemRespostaCommand extends Command
         $this->info(($dryRun ? '[dry-run] ' : '')."indeferidos {$contagem['indeferidos']}, com resposta corrigida {$contagem['respondidos']}, sem pergunta pendente {$contagem['sem_pergunta']}, erros {$contagem['erros']}");
 
         return $contagem['erros'] > 0 ? self::FAILURE : self::SUCCESS;
+    }
+
+    /**
+     * Convite aberto perde o objeto com o processo indeferido: fica cancelado
+     * para o requerente não ser cobrado nem o prazo indeferir de novo.
+     */
+    private function cancelarConvitesAbertos(ViabilityRequest $processo, AuditService $audit): void
+    {
+        $parecer = 'Cancelado pelo indeferimento por pergunta da planilha sem resposta.';
+
+        foreach ($processo->pendencies()->where('status', AnalysisPendencyStatus::Aberta)->get() as $convite) {
+            $convite->forceFill([
+                'status' => AnalysisPendencyStatus::Cancelada,
+                'parecer' => $parecer,
+                'cancelled_at' => now(),
+                'cancelled_by_user_id' => null,
+            ])->save();
+
+            $audit->log(
+                logName: 'analise',
+                event: 'convite-cancelado',
+                description: "Convite #{$convite->id} cancelado pelo indeferimento da solicitação #{$processo->id}",
+                properties: ['viability_request_id' => $processo->id, 'analysis_pendency_id' => $convite->id, 'parecer' => $parecer],
+                subject: $processo,
+            );
+        }
     }
 
     /**

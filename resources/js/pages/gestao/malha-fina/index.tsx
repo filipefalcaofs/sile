@@ -349,8 +349,8 @@ export default function MalhaFinaIndex({
             <Modal isOpen={concluindo !== null} onClose={() => setConcluindo(null)} className="m-4 max-h-[90vh] max-w-lg overflow-y-auto p-6">
                 <h2 className="text-lg font-semibold text-gray-800 dark:text-white/90">Conclusão de análise</h2>
                 <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                    O processo {concluindo?.protocol_number ?? ''} sai da malha fina com o resultado escolhido. Deferido
-                    e indeferido seguem a ficha finalizada. Desativado, cassado e revogado encerram o processo,
+                    O processo {concluindo?.protocol_number ?? ''} sai da malha fina com o resultado escolhido, mesmo
+                    que a ficha diga outra coisa. Desativado, cassado e revogado encerram o processo,
                     inclusive um já deferido.
                 </p>
                 <div className="mt-4">
@@ -386,9 +386,11 @@ export default function MalhaFinaIndex({
                         parecerId="concluir-observacao"
                         parecer={conclusao.data.observacao}
                         onParecer={(valor) => conclusao.setData('observacao', valor)}
-                        parecerLabel="Parecer (opcional)"
+                        parecerLabel="Parecer"
+                        parecerObrigatorio
                         erro={
                             (conclusao.errors as Record<string, string | undefined>).resultado
+                            ?? (conclusao.errors as Record<string, string | undefined>).observacao
                             ?? (conclusao.errors as Record<string, string | undefined>).conclusao
                             ?? null
                         }

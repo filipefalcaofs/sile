@@ -18,7 +18,7 @@ use Tests\PostgisTestCase;
  * AnaliseDevSeeder com a cadeia REAL (PostGIS): a transição protocolada→em_analise
  * reexecuta os motores territoriais (só roda em pgsql), e a partir daí os
  * SERVIÇOS REAIS levam cada processo ao seu estágio — distribuído/em análise,
- * deferido pelo analista (ViabilityDecision flow 'analise_tecnica' + TVL) com
+ * deferido pelo analista (ViabilityDecision flow 'analise_tecnica' + Viabilidade) com
  * malha fina, e em pendência.
  *
  * É a contraparte PostGIS do DatabaseSeederTest (SQLite, onde os estágios são
@@ -55,7 +55,7 @@ class AnaliseSeedPostgisTest extends PostgisTestCase
         );
 
         // 2) DEFERIDO PELO ANALISTA: decisão humana real (flow analise_tecnica +
-        // TVL) e, sobre o deferido, um encaminhamento à malha fina (HU-127 RN-001).
+        // Viabilidade) e, sobre o deferido, um encaminhamento à malha fina (HU-127 RN-001).
         $deferido = $this->processo($cidadao, AnaliseDevSeeder::MARK_DEFERIDO);
         $this->assertSame(ViabilityRequestStatus::Deferida, $deferido->status);
 

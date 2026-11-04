@@ -88,7 +88,7 @@ class RelatoriosDevSeeder extends Seeder
             ]);
         }
 
-        // Deferidas — decisão deferida (TVL único) + timeline até o desfecho.
+        // Deferidas — decisão deferida (Viabilidade única) + timeline até o desfecho.
         for ($i = 0; $i < 5; $i++) {
             $req = $this->solicitacao($requester, $company, $serviceType, ViabilityRequestStatus::Deferida, now()->subDays(30 - $i));
             ViabilityDecision::factory()->create([
@@ -99,7 +99,7 @@ class RelatoriosDevSeeder extends Seeder
             $this->transicao($req, ViabilityRequestStatus::EmAnalise, ViabilityRequestStatus::Deferida, now()->subDays(25 - $i));
         }
 
-        // Indeferidas — decisão indeferida (sem TVL) + timeline até o desfecho.
+        // Indeferidas — decisão indeferida (sem Viabilidade) + timeline até o desfecho.
         for ($i = 0; $i < 3; $i++) {
             $req = $this->solicitacao($requester, $company, $serviceType, ViabilityRequestStatus::Indeferida, now()->subDays(28 - $i));
             ViabilityDecision::factory()->indeferida()->create([
