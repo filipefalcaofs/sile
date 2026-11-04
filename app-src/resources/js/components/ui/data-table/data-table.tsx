@@ -15,9 +15,22 @@ interface DataTableProps<T> {
     skeletonRows?: number;
     /** Conteúdo exibido quando não há linhas (ex.: <EmptyState />). */
     emptyState?: ReactNode;
-    /** Densidade das células: padrão py-4, compacta py-3. */
-    density?: 'default' | 'compact';
+    /** Densidade das células: padrão py-4, compacta py-3, justa px-3 py-2.5 (tabelas largas). */
+    density?: 'default' | 'compact' | 'tight';
+    /** Limita a altura (ex.: 'max-h-[70vh]') com cabeçalho fixo, deixando a rolagem horizontal à vista. */
+    maxHeightClassName?: string;
 }
+
+const paddingStyles = {
+    default: 'px-5 py-4',
+    compact: 'px-5 py-3',
+    tight: 'px-3 py-2.5',
+} as const;
+
+const stickyEndHeader =
+    'sticky right-0 z-10 bg-gray-50 shadow-[-6px_0_8px_-6px_rgba(16,24,40,0.15)] dark:bg-gray-900';
+const stickyEndCell =
+    'sticky right-0 bg-white shadow-[-6px_0_8px_-6px_rgba(16,24,40,0.15)] group-hover:bg-gray-50 dark:bg-gray-900 dark:group-hover:bg-gray-800';
 
 const alignStyles = {
     start: 'text-start',
@@ -49,8 +62,11 @@ export default function DataTable<T>({
     skeletonRows = 5,
     emptyState,
     density = 'default',
+    maxHeightClassName,
 }: DataTableProps<T>) {
-    const cellPadding = density === 'compact' ? 'px-5 py-3' : 'px-5 py-4';
+    const cellPadding = paddingStyles[density];
+    const scrollClassName = maxHeightClassName ? `overflow-auto ${maxHeightClassName}` : 'overflow-x-auto';
+    const theadClassName = maxHeightClassName ? 'sticky top-0 z-20 dark:bg-gray-900' : 'dark:bg-white/[0.02]';
 
     function toggleSort(column: ColumnDef<T>) {
         if (!column.sortable || !onSortChange) {
@@ -66,9 +82,9 @@ export default function DataTable<T>({
 
     return (
         <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-white/[0.05]">
-            <div className="max-w-full overflow-x-auto">
+            <div className={`max-w-full ${scrollClassName}`}>
                 <table className="min-w-full">
-                    <thead className="border-b border-gray-100 bg-gray-50 dark:border-white/[0.05] dark:bg-white/[0.02]">
+                    <thead className={`border-b border-gray-100 bg-gray-50 dark:border-white/[0.05] ${theadClassName}`}>
                         <tr>
                             {columns.map((column) => {
                                 const isSorted = sort?.column === column.id;
@@ -78,7 +94,7 @@ export default function DataTable<T>({
                                         key={column.id}
                                         scope="col"
                                         aria-sort={ariaSortOf(column.id, sort)}
-                                        className={`${cellPadding} text-theme-xs font-medium text-gray-500 dark:text-gray-200 ${alignStyles[column.align ?? 'start']} ${column.headerClassName ?? ''}`}
+                                        className={`${cellPadding} text-theme-xs font-medium text-gray-500 dark:text-gray-200 ${alignStyles[column.align ?? 'start']} ${column.sticky === 'end' ? stickyEndHeader : ''} ${column.headerClassName ?? ''}`}
                                     >
                                         {column.sortable && onSortChange ? (
                                             <button
@@ -116,7 +132,7 @@ export default function DataTable<T>({
                             ? Array.from({ length: skeletonRows }, (_, index) => (
                                   <tr key={index}>
                                       {columns.map((column) => (
-                                          <td key={column.id} className={cellPadding}>
+                                          <td key={column.id} className={`${cellPadding} ${column.sticky === 'end' ? stickyEndCell : ''}`}>
                                               <Skeleton className="h-4 w-full max-w-40" />
                                           </td>
                                       ))}
@@ -125,12 +141,12 @@ export default function DataTable<T>({
                             : rows.map((row) => (
                                   <tr
                                       key={rowKey(row)}
-                                      className="transition hover:bg-gray-50 dark:hover:bg-white/[0.03]"
+                                      className="group transition hover:bg-gray-50 dark:hover:bg-white/[0.03]"
                                   >
                                       {columns.map((column) => (
                                           <td
                                               key={column.id}
-                                              className={`${cellPadding} text-theme-sm text-gray-500 dark:text-gray-400 ${alignStyles[column.align ?? 'start']} ${column.cellClassName ?? ''}`}
+                                              className={`${cellPadding} text-theme-sm text-gray-500 dark:text-gray-400 ${alignStyles[column.align ?? 'start']} ${column.sticky === 'end' ? stickyEndCell : ''} ${column.cellClassName ?? ''}`}
                                           >
                                               {column.cell(row)}
                                           </td>
