@@ -5,8 +5,9 @@ namespace App\Services\Sefaz;
 use App\Models\ViabilityRequest;
 
 /**
- * Procura a viabilidade anterior da empresa nas fontes, em ordem: processo
- * anterior no Viabiliza, legado e SEFAZ. Usa a primeira que responder; fonte sem
+ * Procura a viabilidade anterior da empresa nas fontes, em ordem: última
+ * viabilidade deferida no legado Simplifica, processo anterior no Viabiliza e
+ * SEFAZ. Usa a primeira que responder; fonte sem
  * integração é pulada, e uma falha de fonte disponível propaga.
  */
 class CadeiaViabilidadeAnterior
@@ -21,7 +22,7 @@ class CadeiaViabilidadeAnterior
         LegadoViabilidadeFonte $legado,
         SefazViabilidadeFonte $sefaz,
     ) {
-        $this->fontes = [$viabiliza, $legado, $sefaz];
+        $this->fontes = [$legado, $viabiliza, $sefaz];
     }
 
     /**

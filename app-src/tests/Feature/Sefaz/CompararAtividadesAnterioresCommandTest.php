@@ -33,7 +33,7 @@ class CompararAtividadesAnterioresCommandTest extends TestCase
         config(['viabiliza.sefaz.consulta.ativa' => false]);
         $this->configurarLegado();
         Http::fake([
-            'legado.test/v1/provisorias*' => Http::response(['data' => [
+            'legado.test/v1/tvls?*' => Http::response(['data' => [
                 ['numero' => 416389, 'tipo' => 'provisoria', 'deferida' => true, 'ativa' => true, 'validade' => '2027-01-01T00:00:00Z'],
             ]]),
             'legado.test/v1/tvls/416389' => Http::response(['data' => [

@@ -33,6 +33,30 @@ class LegadoViabilidadeClient
         );
     }
 
+    /**
+     * TVLs deferidas de qualquer tipo (provisória, definitiva, pré-operacional)
+     * do CNPJ. API sem a rota /tvls (404) devolve só as provisórias.
+     *
+     * @return list<TvlLegada>
+     */
+    public function deferidasPorCnpj(string $cnpj): array
+    {
+        $digitos = preg_replace('/\D/', '', $cnpj) ?? '';
+
+        $response = $this->enviar('/tvls', ['cnpj' => $digitos]);
+
+        if ($response->status() === 404) {
+            return $this->provisoriasPorCnpj($cnpj);
+        }
+
+        $this->validar($response);
+
+        return array_map(
+            fn (array $item): TvlLegada => TvlLegada::fromArray($item),
+            $this->lista($response),
+        );
+    }
+
     public function tvlPorNumero(int $numero): ?TvlLegadaDetalhe
     {
         $data = $this->detalheBruto($numero);
