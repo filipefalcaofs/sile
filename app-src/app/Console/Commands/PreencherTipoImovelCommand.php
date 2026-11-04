@@ -15,31 +15,41 @@ use Illuminate\Database\Eloquent\Builder;
 use Throwable;
 
 /**
- * Preenche o tipo do imóvel dos processos em aberto que ficaram sem ele (o
- * REGIN não declarou) com o uso do imóvel no Cadastro Imobiliário
+ * Preenche o tipo do imóvel dos processos que ficaram sem ele (o REGIN não
+ * declarou), em qualquer situação, com o uso do imóvel no Cadastro Imobiliário
  * (Utilizacao da inscrição). Tipo já gravado não muda. Sem `--aplicar`, só
- * mostra o levantamento.
+ * mostra o levantamento. O agendador roda com `--dias` para tentar de novo os
+ * processos novos que chegaram com o cadastro fora do ar.
  */
 class PreencherTipoImovelCommand extends Command
 {
     protected $signature = 'processos:preencher-tipo-imovel
-        {--processo= : Preenche só este processo (id), em qualquer situação}
+        {--processo= : Preenche só este processo (id)}
+        {--dias= : Só processos criados nos últimos N dias}
+        {--pausa-ms=100 : Pausa entre as consultas ao cadastro, em milissegundos}
         {--aplicar : Grava o tipo (sem esta opção, só lista)}';
 
-    protected $description = 'Preenche o tipo do imóvel dos processos em aberto pela inscrição imobiliária';
+    protected $description = 'Preenche o tipo do imóvel dos processos sem tipo pela inscrição imobiliária';
+
+    private const LINHAS_NA_TABELA = 200;
 
     public function handle(PropertyRegistryLookup $cadastro, ReginTipoImovelApplier $tipoImovel, AuditService $audit): int
     {
         $aplicar = (bool) $this->option('aplicar');
+        $pausaUs = max(0, (int) $this->option('pausa-ms')) * 1000;
 
         $verificados = 0;
         $encontrados = [];
         $semTipo = 0;
         $erros = 0;
 
-        $this->consulta()->orderBy('id')->chunkById(100, function ($processos) use ($cadastro, $tipoImovel, $audit, $aplicar, &$verificados, &$encontrados, &$semTipo, &$erros): void {
+        $this->consulta()->orderBy('id')->chunkById(100, function ($processos) use ($cadastro, $tipoImovel, $audit, $aplicar, $pausaUs, &$verificados, &$encontrados, &$semTipo, &$erros): void {
             foreach ($processos as $processo) {
                 $verificados++;
+
+                if ($verificados > 1 && $pausaUs > 0) {
+                    usleep($pausaUs);
+                }
 
                 try {
                     $utilizacao = $this->utilizacao($cadastro->resolve((string) $processo->property_registration));
@@ -93,13 +103,14 @@ class PreencherTipoImovelCommand extends Command
 
         $this->info("Verificados: {$verificados}");
 
-        if ($encontrados !== []) {
+        if ($encontrados !== [] && count($encontrados) <= self::LINHAS_NA_TABELA) {
             $this->table(['Processo', 'Protocolo', 'Situação', 'Inscrição', 'Tipo da inscrição', 'Código'], $encontrados);
         }
 
         $this->info(($aplicar ? 'Preenchidos: ' : 'Com tipo na inscrição: ').count($encontrados));
         $this->info("Inscrição sem tipo: {$semTipo}");
         $this->info("Inscrição não consultada (não encontrada ou base indisponível): {$erros}");
+        $this->info('Sem inscrição imobiliária (sem fonte para o tipo): '.$this->semInscricao()->count());
 
         if (! $aplicar) {
             $this->info('Simulação: nada foi gravado. Rode com --aplicar para gravar.');
@@ -113,19 +124,32 @@ class PreencherTipoImovelCommand extends Command
      */
     private function consulta(): Builder
     {
-        $query = ViabilityRequest::query()
+        return $this->semTipo()
             ->whereNotNull('property_registration')
-            ->where('property_registration', '!=', '')
-            ->where(fn (Builder $semTipo) => $semTipo->whereNull('tipo_imovel')->orWhere('tipo_imovel', ''));
+            ->where('property_registration', '!=', '');
+    }
 
-        if ($this->option('processo') !== null) {
-            return $query->whereKey((int) $this->option('processo'));
-        }
+    /**
+     * @return Builder<ViabilityRequest>
+     */
+    private function semInscricao(): Builder
+    {
+        return $this->semTipo()
+            ->where(fn (Builder $sem) => $sem->whereNull('property_registration')->orWhere('property_registration', ''));
+    }
 
-        return $query->whereIn('status', [
-            ViabilityRequestStatus::EmAnalise->value,
-            ViabilityRequestStatus::EmPendencia->value,
-        ]);
+    /**
+     * Processos sem tipo, fora os rascunhos (ainda não protocolados).
+     *
+     * @return Builder<ViabilityRequest>
+     */
+    private function semTipo(): Builder
+    {
+        return ViabilityRequest::query()
+            ->where(fn (Builder $semTipo) => $semTipo->whereNull('tipo_imovel')->orWhere('tipo_imovel', ''))
+            ->when($this->option('processo') !== null, fn (Builder $q) => $q->whereKey((int) $this->option('processo')))
+            ->when($this->option('processo') === null, fn (Builder $q) => $q->where('status', '!=', ViabilityRequestStatus::Rascunho->value))
+            ->when($this->option('dias') !== null, fn (Builder $q) => $q->where('created_at', '>=', now()->subDays(max(1, (int) $this->option('dias')))));
     }
 
     private function utilizacao(PropertyRegistryResult $resultado): ?string
