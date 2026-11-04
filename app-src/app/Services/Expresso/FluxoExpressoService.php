@@ -211,7 +211,9 @@ class FluxoExpressoService
                 );
             }
 
-            if ($comparacao->incluidas === [] && ! $request->alteraEndereco()) {
+            // Só a exclusão pura defere direto (regra da SEDUR); pedido igual à
+            // viabilidade, sem nada retirado, enquadra as atividades no endereço.
+            if ($comparacao->incluidas === [] && $comparacao->excluidas !== [] && ! $request->alteraEndereco()) {
                 return $this->deferirExclusao($request, $actor, $comparacao->excluidas);
             }
         }

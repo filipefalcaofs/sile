@@ -276,7 +276,7 @@ class FluxoExpressoAlteracaoComparacaoTest extends TestCase
         $this->assertSame(['4712100'], array_column($resultado->decision->per_cnae, 'cnae'));
     }
 
-    public function test_pedido_identico_a_viabilidade_defere_sem_inclusao_nem_taxa(): void
+    public function test_pedido_identico_a_viabilidade_nao_e_exclusao_e_enquadra_as_atividades(): void
     {
         Event::fake([ResultadoEmitido::class]);
         $this->viabilidadeNaSefaz(['4712-1/00']);
@@ -285,10 +285,15 @@ class FluxoExpressoAlteracaoComparacaoTest extends TestCase
 
         $resultado = app(FluxoExpressoService::class)->decide($request);
 
-        $this->assertSame(ViabilityRequestStatus::Deferida, $resultado->status);
         $this->assertSame([], $request->fresh()->comparacao_cnaes['incluidas']);
         $this->assertSame([], $request->fresh()->comparacao_cnaes['excluidas']);
-        $this->assertNull($request->fresh()->camadas_incidentes);
+        $this->assertNotSame(
+            'exclusão de atividade — deferimento automático, sem consulta de enquadramento',
+            $resultado->decision?->reason,
+            'nada foi excluído: não é o deferimento automático da exclusão',
+        );
+        $this->assertNotNull($request->fresh()->camadas_incidentes, 'enquadra as atividades no endereço');
+        $this->assertSame(['4712100'], array_column($resultado->decision?->per_cnae ?? [], 'cnae'));
     }
 
     public function test_alteracao_de_endereco_sem_atividade_nova_enquadra_todas_no_novo_endereco(): void

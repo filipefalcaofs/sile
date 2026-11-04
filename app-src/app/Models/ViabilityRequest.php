@@ -598,7 +598,16 @@ class ViabilityRequest extends Model
 
         $comparacao = $this->comparacao_cnaes;
 
-        return is_array($comparacao) ? array_values($comparacao['incluidas'] ?? []) : null;
+        if (! is_array($comparacao)) {
+            return null;
+        }
+
+        // Pedido igual à viabilidade (nada incluído nem excluído): enquadra todas.
+        if (($comparacao['incluidas'] ?? []) === [] && ($comparacao['excluidas'] ?? []) === []) {
+            return null;
+        }
+
+        return array_values($comparacao['incluidas'] ?? []);
     }
 
     /**
