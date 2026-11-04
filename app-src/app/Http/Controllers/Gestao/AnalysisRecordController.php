@@ -41,6 +41,7 @@ use App\Services\Expresso\SedeEscritorioVirtualGatilho;
 use App\Services\Geo\ProcedenciaPoligono;
 use App\Services\Relatorios\RelatorioSedeEscritorioVirtualService;
 use App\Services\Sefaz\ComparacaoCnaesFicha;
+use App\Services\Servicos\MudancaEnderecoFicha;
 use App\Services\Servicos\ServicoNomenclaturaResolver;
 use App\Services\Vistoria\VistoriaAcesso;
 use App\Support\Audit\AuditService;
@@ -174,6 +175,8 @@ class AnalysisRecordController extends Controller
             'podeEditarZonaVia' => $request->user()?->can('editar-zona-via') === true,
             // Alteração de atividade da JUCEB: o que entra, o que sai e o que já existia na viabilidade da SEFAZ.
             'comparacaoCnaes' => app(ComparacaoCnaesFicha::class)->dados($viabilityRequest),
+            // Alteração de endereço da JUCEB: serviço identificado e o que mudou em relação ao processo anterior.
+            'mudancaEndereco' => app(MudancaEnderecoFicha::class)->dados($viabilityRequest),
             'zonasDisponiveis' => $this->zonasDisponiveis(),
             'viasDisponiveis' => Quadro11aClasseVia::oficiais(),
             'usuariosIndicaveis' => $this->usuariosIndicaveisParaConclusao(),

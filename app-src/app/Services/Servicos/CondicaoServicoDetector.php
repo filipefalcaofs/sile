@@ -29,11 +29,7 @@ class CondicaoServicoDetector
             return null;
         }
 
-        $anterior = ViabilityRequest::query()
-            ->where('company_id', $processo->company_id)
-            ->where('id', '<', $processo->id)
-            ->latest('id')
-            ->first();
+        $anterior = $this->anteriorDaEmpresa($processo);
 
         if ($anterior === null) {
             return $condicoes->contains(fn (CondicaoServico $condicao): bool => $condicao->comparaCnaes())
@@ -44,6 +40,22 @@ class CondicaoServicoDetector
         return $condicoes->contains(fn (CondicaoServico $condicao): bool => $condicao->comparaCnaes())
             ? $this->pelosCnaes($processo, $anterior)
             : $this->peloEndereco($processo, $anterior);
+    }
+
+    /**
+     * Último processo da mesma empresa no Viabiliza, base da comparação.
+     */
+    public function anteriorDaEmpresa(ViabilityRequest $processo): ?ViabilityRequest
+    {
+        if ($processo->company_id === null) {
+            return null;
+        }
+
+        return ViabilityRequest::query()
+            ->where('company_id', $processo->company_id)
+            ->where('id', '<', $processo->id)
+            ->latest('id')
+            ->first();
     }
 
     private function pelosCnaes(ViabilityRequest $processo, ViabilityRequest $anterior): CondicaoServico
@@ -106,11 +118,27 @@ class CondicaoServicoDetector
             return CondicaoServico::EnderecoLocalizacao;
         }
 
-        if ($this->mudou($processo, $anterior, ['address_complement', 'address_zip'])) {
+        if ($this->mudou($processo, $anterior, ['address_complement', 'address_zip'])
+            || $this->areaMudou($processo, $anterior)) {
             return CondicaoServico::EnderecoEspaco;
         }
 
         return null;
+    }
+
+    /**
+     * Área utilizada diferente, em m². Área vazia num dos lados não conta.
+     */
+    private function areaMudou(ViabilityRequest $processo, ViabilityRequest $anterior): bool
+    {
+        $atual = $processo->used_area_m2;
+        $antes = $anterior->used_area_m2;
+
+        if ($atual === null || $antes === null) {
+            return false;
+        }
+
+        return round((float) $atual, 2) !== round((float) $antes, 2);
     }
 
     /**
