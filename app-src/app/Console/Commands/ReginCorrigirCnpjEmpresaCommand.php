@@ -12,7 +12,8 @@ use Illuminate\Console\Command;
  * Nas alterações da JUCEB, RUC_GENERAL traz o CPF de quem pediu e o CNPJ da
  * empresa vem em PSC_PROTOCOLO. Os processos gravados antes da correção ficaram
  * ligados a uma "empresa" com esse CPF: este comando os liga à empresa do CNPJ,
- * pelo envelope guardado, e guarda o CPF como solicitante.
+ * pelo envelope guardado, e guarda o CPF como solicitante. Também desfaz a
+ * ligação de inscrições ao CNPJ de preenchimento 11111111111111.
  */
 class ReginCorrigirCnpjEmpresaCommand extends Command
 {
@@ -29,7 +30,7 @@ class ReginCorrigirCnpjEmpresaCommand extends Command
         ViabilityRequest::query()
             ->where('origin', ViabilityRequestOrigin::Regin)
             ->whereNotNull('external_reference')
-            ->whereHas('company', fn ($q) => $q->whereRaw('length(cnpj) = 11'))
+            ->whereHas('company', fn ($q) => $q->whereRaw('length(cnpj) = 11')->orWhere('cnpj', '11111111111111'))
             ->with('company')
             ->lazyById(200)
             ->each(function (ViabilityRequest $processo) use ($protocolador, $dryRun, &$corrigidos, &$semEnvelope): void {

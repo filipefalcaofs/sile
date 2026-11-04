@@ -16,6 +16,7 @@ use App\Models\TratamentoPergunta;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
+use App\Rules\ValidCnpj;
 use App\Rules\ValidCpf;
 use App\Services\Expresso\FluxoExpressoService;
 use App\Services\Geo\PoligonoEnderecamentoService;
@@ -1234,8 +1235,10 @@ class ReginProcessoProtocolador
 
     /**
      * Liga a alteração já gravada com o CPF de quem pediu à empresa do CNPJ do
-     * protocolo e guarda esse CPF como solicitante. Empresa a constituir (sem
-     * CNPJ no envelope) não muda. Devolve false quando não há o que corrigir.
+     * protocolo e guarda esse CPF como solicitante. Processo ligado a um CNPJ
+     * inválido (o preenchimento da inscrição) volta para a empresa do
+     * documento de RUC_GENERAL. Empresa a constituir sem CNPJ no envelope não
+     * muda. Devolve false quando não há o que corrigir.
      */
     public function corrigirCnpjDaEmpresa(ViabilityRequest $processo, ReginRecebimento $recebimento, bool $gravar = true): bool
     {
@@ -1244,9 +1247,11 @@ class ReginProcessoProtocolador
             ? $corpo['rowset']
             : (is_array($corpo['ROWSET'] ?? null) ? $corpo['ROWSET'] : []);
 
+        $atual = (string) $processo->company?->cnpj;
+        $ligadaAoFalso = strlen($atual) === 14 && ! Validator::make(['cnpj' => $atual], ['cnpj' => new ValidCnpj])->passes();
         $cnpj = $this->cnpjDaEmpresa($rowset);
 
-        if ($cnpj === null || strlen((string) $processo->company?->cnpj) === 14) {
+        if (! $ligadaAoFalso && ($cnpj === null || strlen($atual) === 14)) {
             return false;
         }
 
@@ -1313,7 +1318,9 @@ class ReginProcessoProtocolador
     /**
      * CNPJ da empresa já existente (alteração): em PSC_PROTOCOLO.CNPJ, ou em
      * TAB_INFORM_EXTRA_JUNTA.TIE_CPF_CNPJ. Nesses pedidos RUC_GENERAL traz o
-     * CPF de quem pediu, não o CNPJ. Null quando o envelope não traz CNPJ.
+     * CPF de quem pediu, não o CNPJ. Na inscrição a JUCEB preenche o campo com
+     * um valor que não é CNPJ (11111111111111): só vale CNPJ válido. Null
+     * quando o envelope não traz CNPJ.
      *
      * @param  array<string, mixed>  $rowset
      */
@@ -1325,7 +1332,7 @@ class ReginProcessoProtocolador
         foreach ([$rowset['PSC_PROTOCOLO']['CNPJ'] ?? null, is_array($extra) ? ($extra['TIE_CPF_CNPJ'] ?? null) : null] as $valor) {
             $digitos = preg_replace('/\D/', '', (string) $valor) ?? '';
 
-            if (strlen($digitos) === 14) {
+            if (strlen($digitos) === 14 && Validator::make(['cnpj' => $digitos], ['cnpj' => new ValidCnpj])->passes()) {
                 return $digitos;
             }
         }
