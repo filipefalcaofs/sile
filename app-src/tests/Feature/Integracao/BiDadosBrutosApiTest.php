@@ -115,7 +115,7 @@ class BiDadosBrutosApiTest extends TestCase
         $this->tabela('processos', ['atualizado_desde' => 'ontem'])->assertStatus(422);
     }
 
-    public function test_processos_saem_sem_dado_pessoal_e_com_coordenada_arredondada(): void
+    public function test_desligando_os_dados_identificados_processos_saem_sem_dado_pessoal_e_com_coordenada_arredondada(): void
     {
         $cnae = Cnae::factory()->create(['code' => '4712100']);
         $processo = $this->processo([
@@ -152,7 +152,59 @@ class BiDadosBrutosApiTest extends TestCase
         $this->assertSame('12345678000195', $identificado['cnpj']);
         $this->assertSame('Rua Particular', $identificado['logradouro']);
         $this->assertEquals(-12.9811234, $identificado['latitude']);
-        $this->assertStringNotContainsString('Fulano', json_encode($identificado));
+        $this->assertSame('Fulano de Tal', $identificado['solicitante_nome']);
+    }
+
+    public function test_por_padrao_os_dados_pessoais_e_os_nomes_vem_liberados(): void
+    {
+        $config = require config_path('viabiliza.php');
+
+        $this->assertTrue($config['integrations']['bi']['identificados']);
+        $this->assertTrue($config['integrations']['bi']['nominal']);
+    }
+
+    public function test_com_dados_identificados_saem_requerente_solicitante_e_textos(): void
+    {
+        config(['viabiliza.integrations.bi.identificados' => true]);
+
+        $processo = $this->processo(['contingency_reason' => 'Sistema da JUCEB fora do ar.']);
+        $requerente = $processo->requester;
+        ViabilityDecision::factory()->indeferida()->create(['viability_request_id' => $processo->id]);
+        $processo->pendencies()->create([
+            'description' => 'Envie a planta baixa.',
+            'response' => 'Planta enviada.',
+            'status' => 'respondida',
+        ]);
+
+        $linha = $this->tabela('processos')->json('dados.0');
+        $this->assertSame('Fulano de Tal', $linha['solicitante_nome']);
+        $this->assertSame('12345678909', $linha['solicitante_cpf']);
+        $this->assertSame('Sistema da JUCEB fora do ar.', $linha['justificativa_contingencia']);
+
+        if ($requerente !== null) {
+            $this->assertSame($requerente->name, $linha['requerente_nome']);
+            $this->assertSame($requerente->email, $linha['requerente_email']);
+        }
+
+        $this->assertStringContainsString('indeferimento', (string) $this->tabela('decisoes')->json('dados.0.motivo'));
+
+        $convite = $this->tabela('convites')->json('dados.0');
+        $this->assertSame('Envie a planta baixa.', $convite['descricao']);
+        $this->assertSame('Planta enviada.', $convite['resposta']);
+
+        $this->assertArrayNotHasKey('password', $linha);
+        $this->assertStringNotContainsString('two_factor', json_encode($linha));
+    }
+
+    public function test_sem_dados_identificados_os_textos_ficam_fora(): void
+    {
+        $processo = $this->processo();
+        $processo->pendencies()->create(['description' => 'Envie a planta baixa.', 'status' => 'aberta']);
+        ViabilityDecision::factory()->indeferida()->create(['viability_request_id' => $processo->id]);
+
+        $this->assertArrayNotHasKey('descricao', $this->tabela('convites')->json('dados.0'));
+        $this->assertArrayNotHasKey('motivo', $this->tabela('decisoes')->json('dados.0'));
+        $this->assertArrayNotHasKey('solicitante_cpf', $this->tabela('processos')->json('dados.0'));
     }
 
     public function test_rascunho_nao_entra_em_processos(): void

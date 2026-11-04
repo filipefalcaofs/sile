@@ -32,7 +32,7 @@ class BiDadosController extends Controller
         return response()->json([
             'paginacao' => 'Cada resposta traz até `limite` linhas (padrão '.BiDadosBrutos::LIMITE_PADRAO.', máximo '.BiDadosBrutos::LIMITE_MAXIMO.'). Para a próxima página, chame `proxima_url` (ou repita a chamada com `apos_id` = `ultimo_id`) até `tem_mais` ser falso.',
             'carga_incremental' => 'Informe `atualizado_desde` (AAAA-MM-DD ou data e hora ISO) para trazer só o que mudou desde a última carga.',
-            'privacidade' => 'Sem CPF, nomes, contatos e textos livres. CNPJ, razão social, endereço e coordenada exata só com a liberação de dados identificados.',
+            'privacidade' => 'Com a liberação de dados identificados (padrão), saem CPF, nomes, contatos, CNPJ, endereço, coordenada exata e textos livres; sem ela, ficam fora. Senha, token e 2FA nunca saem.',
             'tabelas' => $tabelas,
         ]);
     }

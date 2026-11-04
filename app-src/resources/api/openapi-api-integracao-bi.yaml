@@ -3,7 +3,7 @@ info:
   title: 'Viabiliza — indicadores para o BI (api_integracao/bi)'
   version: 1.0.0
   description: |-
-    Indicadores agregados do Viabiliza para o BI da SEDUR e tabelas de dados brutos (seção Dados brutos) para o BI montar os próprios indicadores. Não há dado pessoal: o mapa sai em células de grade, o analista por código interno e os dados brutos sem CPF, nomes, contatos e textos livres.
+    Indicadores agregados do Viabiliza para o BI da SEDUR e tabelas de dados brutos (seção Dados brutos) para o BI montar os próprios indicadores. Os indicadores são agregados (o mapa sai em células de grade). Os dados brutos trazem, com a liberação de dados identificados (ligada por padrão), CPF, nomes, contatos, CNPJ, endereço, coordenada exata e textos livres; senha, token e 2FA nunca saem. Acesso só com token.
 
     ## Autenticação
 
@@ -1177,7 +1177,7 @@ paths:
         - 'Eficiência operacional'
       operationId: indicador_carga_por_analista_setor
       summary: 'Processos por analista e setor'
-      description: 'Processos em análise ou em convite por setor e analista (analista identificado por código interno).'
+      description: 'Processos em análise ou em convite por setor e analista (código do analista e, com a liberação nominal, o nome).'
       security:
         -
           bearerAuth: {}
@@ -1586,6 +1586,26 @@ paths:
         - : Data e hora da decisão.
         - : Criação do registro.
         - : Última atualização (use em atualizado_desde).
+        - : CNPJ da empresa.
+        - : Razão social.
+        - : Nome fantasia.
+        - : Logradouro do imóvel.
+        - : Número do imóvel.
+        - : Complemento do endereço.
+        - : Bairro digitado no pedido.
+        - : CEP do imóvel.
+        - : Inscrição imobiliária.
+        - : Referência externa do pedido (protocolo da JUCEB, quando houver).
+        - : E-mail da empresa.
+        - : Telefone da empresa.
+        - : Nome do solicitante informado pela JUCEB.
+        - : CPF do solicitante informado pela JUCEB.
+        - : Nome do requerente com conta no portal.
+        - : CPF do requerente.
+        - : E-mail do requerente.
+        - : Telefone do requerente.
+        - : Motivo do cancelamento.
+        - : Justificativa do registro por contingência.
       security:
         -
           bearerAuth: {}
@@ -1672,6 +1692,7 @@ paths:
         - : Decisão de empresa abrigada em escritório virtual.
         - : Lista dos fundamentos legais citados.
         - : Última atualização.
+        - : Texto do motivo da decisão (justificativa do indeferimento).
       security:
         -
           bearerAuth: {}
@@ -1752,6 +1773,8 @@ paths:
         - : Data e hora da mudança.
         - : Quem agiu: servidor, requerente ou vazio quando foi o sistema.
         - : Servidor que agiu (chave de analistas); vazio para requerente e sistema.
+        - : Motivo registrado na mudança.
+        - : Texto mostrado ao requerente.
       security:
         -
           bearerAuth: {}
@@ -1792,6 +1815,7 @@ paths:
         - : Grupo da etapa nova: Distribuição, Análise, Convite ou Vistoria.
         - : Data e hora da mudança.
         - : Usuário que agiu.
+        - : Motivo registrado na mudança.
       security:
         -
           bearerAuth: {}
@@ -1834,6 +1858,9 @@ paths:
         - : Cancelamento.
         - : Usuário que abriu o convite.
         - : Última atualização.
+        - : O que foi pedido ao requerente.
+        - : Resposta do requerente.
+        - : Parecer do servidor sobre a resposta.
       security:
         -
           bearerAuth: {}
@@ -1883,6 +1910,15 @@ paths:
         - : Área ocupada pela atividade.
         - : A atividade já funcionava no dia.
         - : Última atualização.
+        - : Logradouro conferido.
+        - : Número métrico.
+        - : Bairro conferido.
+        - : CEP conferido.
+        - : Ponto de referência.
+        - : Pessoa que recebeu a vistoria.
+        - : Telefone do contato.
+        - : Observações do vistoriador.
+        - : Parecer da vistoria.
       security:
         -
           bearerAuth: {}
@@ -1924,6 +1960,7 @@ paths:
         - : Abertura da ficha.
         - : Finalização da ficha.
         - : Última atualização.
+        - : Parecer da análise técnica.
       security:
         -
           bearerAuth: {}
@@ -2140,12 +2177,13 @@ paths:
       operationId: dados_analistas
       summary: 'Tabela analistas'
       description: |-
-        Servidores que aparecem como analista, vistoriador ou autor de decisão e transição. O nome só vem com a liberação nominal; sem ela, um rótulo pelo código.
+        Servidores que aparecem como analista, vistoriador ou autor de decisão e transição. Sem a liberação nominal, o nome vira um rótulo pelo código e o e-mail fica fora.
 
         **Campos**
 
         - : Identificador (chave de analista_id, decidido_por_id, ator_id e vistoriador_id).
         - : Nome, ou "Analista {id}" sem a liberação nominal.
+        - : E-mail funcional.
       security:
         -
           bearerAuth: {}
