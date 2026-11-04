@@ -15,5 +15,7 @@ export interface ColumnDef<T> {
     align?: 'start' | 'center' | 'end';
     headerClassName?: string;
     cellClassName?: string;
+    /** Mantém a coluna visível na borda direita durante a rolagem horizontal. */
+    sticky?: 'end';
     cell: (row: T) => ReactNode;
 }
