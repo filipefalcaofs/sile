@@ -3,7 +3,7 @@ info:
   title: 'Viabiliza — indicadores para o BI (api_integracao/bi)'
   version: 1.0.0
   description: |-
-    Indicadores agregados do Viabiliza para o BI da SEDUR e tabelas de dados brutos (seção Dados brutos) para o BI montar os próprios indicadores. Os indicadores são agregados (o mapa sai em células de grade). Os dados brutos trazem, com a liberação de dados identificados (ligada por padrão), CPF, nomes, contatos, CNPJ, endereço, coordenada exata e textos livres; senha, token e 2FA nunca saem. Acesso só com token.
+    Indicadores agregados do Viabiliza para o BI da SEDUR e, na seção Processos, todos os processos com a ficha completa e a tramitação, incluindo dados pessoais. Acesso só com token.
 
     ## Autenticação
 
@@ -33,8 +33,8 @@ tags:
   - name: 'Inteligência territorial'
   - name: 'Eficiência operacional'
   - name: 'Automação do licenciamento'
-  - name: 'Dados brutos'
-    description: 'Uma linha por registro, para o BI montar os próprios indicadores. Paginação por id e carga incremental.'
+  - name: Processos
+    description: 'Processos completos: ficha, registros relacionados e tramitação.'
 paths:
   /api_integracao/bi/autenticar:
     post:
@@ -1515,693 +1515,70 @@ paths:
           description: 'Parâmetros inválidos.'
         503:
           description: 'Integração desligada.'
-  /api_integracao/bi/dados:
+  /api_integracao/bi/processos:
     get:
       tags:
-        - 'Dados brutos'
-      operationId: catalogoDadosBi
-      summary: 'Listar as tabelas brutas'
-      description: 'Tabelas, campos (com descrição) e filtros aceitos por cada uma. Use para montar o modelo do BI.'
-      security:
-        -
-          bearerAuth: {}
-      responses:
-        200:
-          description: 'Catálogo das tabelas.'
-        401:
-          description: 'Token ausente, inválido ou expirado.'
-        503:
-          description: 'Integração desligada.'
-  /api_integracao/bi/dados/processos:
-    get:
-      tags:
-        - 'Dados brutos'
-      operationId: dados_processos
-      summary: 'Tabela processos'
+        - Processos
+      operationId: processosBi
+      summary: 'Todos os processos com a ficha completa e a tramitação'
       description: |-
-        Uma linha por solicitação protocolada (rascunhos ficam fora), com a situação atual, território, empresa (porte e natureza) e a decisão, quando houver.
+        Uma entrada por processo protocolado (rascunhos ficam fora), em páginas por id crescente. Cada processo traz:
 
-        **Campos**
+        - `ficha`: os dados do processo como a tela da gestão mostra.
+        - `registro`: todas as colunas gravadas do processo.
+        - `empresa`, `cnaes`, `servicos_juceb`.
+        - `decisao`: todos os campos da decisão, quem decidiu e o parecer.
+        - `fichas_analise`: todas as revisões da ficha de análise, com o analista.
+        - `vistorias`, `convites`, `anexos_analise`, `documentos`, `quedas_expresso`, `etapas_integracao`.
+        - `historico_analise`: as etapas operacionais da análise.
+        - `tramitacao`: a tramitação da tela, mudanças de situação e eventos (distribuição, convites, vistoria, fichas, documentos, malha fina), da mais antiga para a mais recente.
 
-        - : Identificador do processo (chave das demais tabelas).
-        - : Número do protocolo no Viabiliza.
-        - : Situação atual (código).
-        - : Situação atual (texto).
-        - : Canal de entrada: portal, regin ou contingencia.
-        - : Canal de entrada (texto).
-        - : Tipo de serviço (chave de tipos-servico).
-        - : Categoria da análise: expresso ou semi_expresso.
-        - : Etapa operacional da análise (código).
-        - : Etapa operacional da análise (texto).
-        - : Fase da análise: distribuicao ou analise.
-        - : Processo caiu na malha fina.
-        - : Solicitação de escritório virtual.
-        - : Atividade em área pública.
-        - : Imóvel com acesso independente.
-        - : Área pretendida para a atividade, em m².
-        - : Tipo do imóvel normalizado.
-        - : Zona urbanística identificada no imóvel.
-        - : Bairro oficial, ou o informado quando não identificado.
-        - : Bairro oficial identificado pela camada da prefeitura.
-        - : Latitude do imóvel (arredondada a 3 casas sem dados identificados).
-        - : Longitude do imóvel (idem).
-        - : De onde veio o ponto do imóvel.
-        - : Setor responsável (chave de setores).
-        - : Analista responsável (chave de analistas).
-        - : Porte da empresa.
-        - : Natureza jurídica da empresa.
-        - : Processo renovado por este, quando é renovação.
-        - : Resultado da simulação feita antes do protocolo.
-        - : Código do CNAE principal.
-        - : Data e hora do protocolo.
-        - : Data e hora da distribuição ao analista.
-        - : Início da etapa atual da análise.
-        - : Prazo (SLA) da etapa atual.
-        - : Prazo para a atuação na Junta (BAP).
-        - : Vinculação do BAP.
-        - : Cancelamento.
-        - : Tempo do protocolo à decisão, em horas úteis, sem o tempo com o requerente.
-        - : Desfecho da decisão: deferida, indeferida, desativado, cassado ou revogado.
-        - : Quem decidiu: expresso (automático) ou analise_tecnica.
-        - : Data e hora da decisão.
-        - : Criação do registro.
-        - : Última atualização (use em atualizado_desde).
-        - : CNPJ da empresa.
-        - : Razão social.
-        - : Nome fantasia.
-        - : Logradouro do imóvel.
-        - : Número do imóvel.
-        - : Complemento do endereço.
-        - : Bairro digitado no pedido.
-        - : CEP do imóvel.
-        - : Inscrição imobiliária.
-        - : Referência externa do pedido (protocolo da JUCEB, quando houver).
-        - : E-mail da empresa.
-        - : Telefone da empresa.
-        - : Nome do solicitante informado pela JUCEB.
-        - : CPF do solicitante informado pela JUCEB.
-        - : Nome do requerente com conta no portal.
-        - : CPF do requerente.
-        - : E-mail do requerente.
-        - : Telefone do requerente.
-        - : Motivo do cancelamento.
-        - : Justificativa do registro por contingência.
+        Para a próxima página, chame `paginacao.proxima_url` até `tem_mais` ser falso.
       security:
         -
           bearerAuth: {}
       parameters:
         - $ref: '#/components/parameters/apos_id'
-        - $ref: '#/components/parameters/limite_bruto'
+        - $ref: '#/components/parameters/limite_proc'
         - $ref: '#/components/parameters/atualizado_desde'
         - $ref: '#/components/parameters/data_de'
         - $ref: '#/components/parameters/data_ate'
+        - $ref: '#/components/parameters/situacao_proc'
       responses:
         200:
-          description: 'Página da tabela.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginaDados'
-        401:
-          description: 'Token ausente, inválido ou expirado.'
+          description: 'Página de processos.'
         422:
           description: 'Parâmetros inválidos.'
-        503:
+        423:
+          description: 'Token ausente, inválido ou expirado.'
+        424:
           description: 'Integração desligada.'
-  /api_integracao/bi/dados/processo-cnaes:
+  '/api_integracao/bi/processos/{processo}':
     get:
       tags:
-        - 'Dados brutos'
-      operationId: dados_processo_cnaes
-      summary: 'Tabela processo-cnaes'
-      description: |-
-        CNAEs de cada processo: uma linha por processo × CNAE.
-
-        **Campos**
-
-        - : Identificador da linha.
-        - : Processo (chave de processos).
-        - : Código do CNAE.
-        - : É o CNAE principal.
-        - : Intenção na alteração de atividade (incluir, manter, excluir), quando houver.
-        - : Última atualização.
+        - Processos
+      operationId: processoBi
+      summary: 'Um processo com a ficha completa e a tramitação'
+      description: 'Mesmo conteúdo de cada item da lista, para um processo pelo id ou pelo número do protocolo.'
       security:
         -
           bearerAuth: {}
       parameters:
-        - $ref: '#/components/parameters/apos_id'
-        - $ref: '#/components/parameters/limite_bruto'
-        - $ref: '#/components/parameters/atualizado_desde'
-        - $ref: '#/components/parameters/processo_id'
-      responses:
-        200:
-          description: 'Página da tabela.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginaDados'
-        401:
-          description: 'Token ausente, inválido ou expirado.'
-        422:
-          description: 'Parâmetros inválidos.'
-        503:
-          description: 'Integração desligada.'
-  /api_integracao/bi/dados/decisoes:
-    get:
-      tags:
-        - 'Dados brutos'
-      operationId: dados_decisoes
-      summary: 'Tabela decisoes'
-      description: |-
-        Decisões vinculantes: uma por processo decidido, com desfecho, modalidade, Viabilidade emitida e fundamentos legais.
-
-        **Campos**
-
-        - : Identificador da decisão.
-        - : Processo (chave de processos).
-        - : deferida, indeferida, desativado, cassado ou revogado.
-        - : expresso (automático) ou analise_tecnica.
-        - : Enquadramento consolidado dos CNAEs.
-        - : Número da Viabilidade emitida.
-        - : provisoria, definitiva ou pre_operacional.
-        - : Tipo da Viabilidade (texto).
-        - : Fim da validade da Viabilidade.
-        - : Data e hora da decisão.
-        - : Analista que decidiu (vazio na decisão automática).
-        - : Decisão de sede de escritório virtual.
-        - : Decisão de empresa abrigada em escritório virtual.
-        - : Lista dos fundamentos legais citados.
-        - : Última atualização.
-        - : Texto do motivo da decisão (justificativa do indeferimento).
-      security:
         -
-          bearerAuth: {}
-      parameters:
-        - $ref: '#/components/parameters/apos_id'
-        - $ref: '#/components/parameters/limite_bruto'
-        - $ref: '#/components/parameters/atualizado_desde'
-        - $ref: '#/components/parameters/processo_id'
+          name: processo
+          in: path
+          required: true
+          description: 'Id ou número do protocolo (ex.: VIA-2026-000123).'
+          schema:
+            type: string
       responses:
         200:
-          description: 'Página da tabela.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginaDados'
-        401:
+          description: Processo.
+        404:
+          description: 'Processo não encontrado.'
+        405:
           description: 'Token ausente, inválido ou expirado.'
-        422:
-          description: 'Parâmetros inválidos.'
-        503:
-          description: 'Integração desligada.'
-  /api_integracao/bi/dados/decisao-cnaes:
-    get:
-      tags:
-        - 'Dados brutos'
-      operationId: dados_decisao_cnaes
-      summary: 'Tabela decisao-cnaes'
-      description: |-
-        Enquadramento de cada CNAE na decisão: uma linha por decisão × CNAE. Mostra qual atividade foi permitida ou barrada.
-
-        **Campos**
-
-        - : Decisão (chave de decisoes); a paginação é por decisão.
-        - : Processo (chave de processos).
-        - : Código do CNAE.
-        - : É o CNAE principal.
-        - : Enquadramento do CNAE (por exemplo permitido, nao_permitido).
-        - : Encaminhamento do CNAE (expresso ou análise).
-        - : Intenção na alteração de atividade, quando houver.
-        - : Desfecho da decisão inteira.
-        - : Data e hora da decisão.
-      security:
-        -
-          bearerAuth: {}
-      parameters:
-        - $ref: '#/components/parameters/apos_id'
-        - $ref: '#/components/parameters/limite_bruto'
-        - $ref: '#/components/parameters/atualizado_desde'
-        - $ref: '#/components/parameters/processo_id'
-      responses:
-        200:
-          description: 'Página da tabela.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginaDados'
-        401:
-          description: 'Token ausente, inválido ou expirado.'
-        422:
-          description: 'Parâmetros inválidos.'
-        503:
-          description: 'Integração desligada.'
-  /api_integracao/bi/dados/transicoes:
-    get:
-      tags:
-        - 'Dados brutos'
-      operationId: dados_transicoes
-      summary: 'Tabela transicoes'
-      description: |-
-        Histórico de situação do processo: uma linha por mudança (de → para), com o instante e quem agiu.
-
-        **Campos**
-
-        - : Identificador da transição.
-        - : Processo (chave de processos).
-        - : Situação anterior.
-        - : Situação nova.
-        - : Data e hora da mudança.
-        - : Quem agiu: servidor, requerente ou vazio quando foi o sistema.
-        - : Servidor que agiu (chave de analistas); vazio para requerente e sistema.
-        - : Motivo registrado na mudança.
-        - : Texto mostrado ao requerente.
-      security:
-        -
-          bearerAuth: {}
-      parameters:
-        - $ref: '#/components/parameters/apos_id'
-        - $ref: '#/components/parameters/limite_bruto'
-        - $ref: '#/components/parameters/atualizado_desde'
-        - $ref: '#/components/parameters/processo_id'
-      responses:
-        200:
-          description: 'Página da tabela.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginaDados'
-        401:
-          description: 'Token ausente, inválido ou expirado.'
-        422:
-          description: 'Parâmetros inválidos.'
-        503:
-          description: 'Integração desligada.'
-  /api_integracao/bi/dados/transicoes-analise:
-    get:
-      tags:
-        - 'Dados brutos'
-      operationId: dados_transicoes_analise
-      summary: 'Tabela transicoes-analise'
-      description: |-
-        Histórico das etapas operacionais da análise (distribuir, analisar, convite, vistoria, conclusão): uma linha por mudança.
-
-        **Campos**
-
-        - : Identificador da transição.
-        - : Processo (chave de processos).
-        - : Etapa anterior.
-        - : Etapa nova.
-        - : Etapa nova (texto).
-        - : Grupo da etapa nova: Distribuição, Análise, Convite ou Vistoria.
-        - : Data e hora da mudança.
-        - : Usuário que agiu.
-        - : Motivo registrado na mudança.
-      security:
-        -
-          bearerAuth: {}
-      parameters:
-        - $ref: '#/components/parameters/apos_id'
-        - $ref: '#/components/parameters/limite_bruto'
-        - $ref: '#/components/parameters/atualizado_desde'
-        - $ref: '#/components/parameters/processo_id'
-      responses:
-        200:
-          description: 'Página da tabela.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginaDados'
-        401:
-          description: 'Token ausente, inválido ou expirado.'
-        422:
-          description: 'Parâmetros inválidos.'
-        503:
-          description: 'Integração desligada.'
-  /api_integracao/bi/dados/convites:
-    get:
-      tags:
-        - 'Dados brutos'
-      operationId: dados_convites
-      summary: 'Tabela convites'
-      description: |-
-        Convites (pendências) ao requerente: abertura, prazo, resposta e situação. O texto do convite e da resposta fica fora.
-
-        **Campos**
-
-        - : Identificador do convite.
-        - : Processo (chave de processos).
-        - : aberta, respondida, expirada ou cancelada.
-        - : Situação (texto).
-        - : Abertura do convite.
-        - : Prazo para o requerente responder.
-        - : Resposta do requerente.
-        - : Cancelamento.
-        - : Usuário que abriu o convite.
-        - : Última atualização.
-        - : O que foi pedido ao requerente.
-        - : Resposta do requerente.
-        - : Parecer do servidor sobre a resposta.
-      security:
-        -
-          bearerAuth: {}
-      parameters:
-        - $ref: '#/components/parameters/apos_id'
-        - $ref: '#/components/parameters/limite_bruto'
-        - $ref: '#/components/parameters/atualizado_desde'
-        - $ref: '#/components/parameters/processo_id'
-      responses:
-        200:
-          description: 'Página da tabela.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginaDados'
-        401:
-          description: 'Token ausente, inválido ou expirado.'
-        422:
-          description: 'Parâmetros inválidos.'
-        503:
-          description: 'Integração desligada.'
-  /api_integracao/bi/dados/vistorias:
-    get:
-      tags:
-        - 'Dados brutos'
-      operationId: dados_vistorias
-      summary: 'Tabela vistorias'
-      description: |-
-        Vistorias do imóvel: tipo, situação, datas, vistoriador e os dados medidos que não identificam pessoa.
-
-        **Campos**
-
-        - : Identificador da vistoria.
-        - : Processo (chave de processos).
-        - : Tipo da vistoria.
-        - : Tipo (texto).
-        - : Situação da vistoria.
-        - : Situação (texto).
-        - : Vistoriador (chave de analistas).
-        - : Abertura.
-        - : Conclusão.
-        - : Dia da ida ao imóvel.
-        - : Zona conferida na vistoria.
-        - : Via conferida na vistoria.
-        - : Tipo do imóvel conferido.
-        - : Área total medida.
-        - : Área ocupada pela atividade.
-        - : A atividade já funcionava no dia.
-        - : Última atualização.
-        - : Logradouro conferido.
-        - : Número métrico.
-        - : Bairro conferido.
-        - : CEP conferido.
-        - : Ponto de referência.
-        - : Pessoa que recebeu a vistoria.
-        - : Telefone do contato.
-        - : Observações do vistoriador.
-        - : Parecer da vistoria.
-      security:
-        -
-          bearerAuth: {}
-      parameters:
-        - $ref: '#/components/parameters/apos_id'
-        - $ref: '#/components/parameters/limite_bruto'
-        - $ref: '#/components/parameters/atualizado_desde'
-        - $ref: '#/components/parameters/processo_id'
-      responses:
-        200:
-          description: 'Página da tabela.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginaDados'
-        401:
-          description: 'Token ausente, inválido ou expirado.'
-        422:
-          description: 'Parâmetros inválidos.'
-        503:
-          description: 'Integração desligada.'
-  /api_integracao/bi/dados/fichas-analise:
-    get:
-      tags:
-        - 'Dados brutos'
-      operationId: dados_fichas_analise
-      summary: 'Tabela fichas-analise'
-      description: |-
-        Fichas de análise técnica: revisão, situação, analista e finalização. O parecer fica fora.
-
-        **Campos**
-
-        - : Identificador da ficha.
-        - : Processo (chave de processos).
-        - : Número da revisão da ficha.
-        - : Situação da ficha.
-        - : Analista dono da ficha.
-        - : O analista confirmou o endereço.
-        - : Abertura da ficha.
-        - : Finalização da ficha.
-        - : Última atualização.
-        - : Parecer da análise técnica.
-      security:
-        -
-          bearerAuth: {}
-      parameters:
-        - $ref: '#/components/parameters/apos_id'
-        - $ref: '#/components/parameters/limite_bruto'
-        - $ref: '#/components/parameters/atualizado_desde'
-        - $ref: '#/components/parameters/processo_id'
-      responses:
-        200:
-          description: 'Página da tabela.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginaDados'
-        401:
-          description: 'Token ausente, inválido ou expirado.'
-        422:
-          description: 'Parâmetros inválidos.'
-        503:
-          description: 'Integração desligada.'
-  /api_integracao/bi/dados/quedas-expresso:
-    get:
-      tags:
-        - 'Dados brutos'
-      operationId: dados_quedas_expresso
-      summary: 'Tabela quedas-expresso'
-      description: |-
-        Motivos de o processo sair do fluxo expresso para a análise técnica: uma linha por CNAE que caiu (ou uma por processo quando o motivo é geral).
-
-        **Campos**
-
-        - : Identificador da queda.
-        - : Processo (chave de processos).
-        - : CNAE que levou à análise (vazio quando o motivo é do processo).
-        - : Condição que derrubou o expresso (código).
-        - : Condição (texto).
-        - : Dimensão decisiva (municipal, estadual, etc.).
-        - : Motivo registrado pelo sistema.
-        - : Data e hora do encaminhamento.
-      security:
-        -
-          bearerAuth: {}
-      parameters:
-        - $ref: '#/components/parameters/apos_id'
-        - $ref: '#/components/parameters/limite_bruto'
-        - $ref: '#/components/parameters/atualizado_desde'
-        - $ref: '#/components/parameters/processo_id'
-      responses:
-        200:
-          description: 'Página da tabela.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginaDados'
-        401:
-          description: 'Token ausente, inválido ou expirado.'
-        422:
-          description: 'Parâmetros inválidos.'
-        503:
-          description: 'Integração desligada.'
-  /api_integracao/bi/dados/servicos-juceb:
-    get:
-      tags:
-        - 'Dados brutos'
-      operationId: dados_servicos_juceb
-      summary: 'Tabela servicos-juceb'
-      description: |-
-        Serviços (eventos) pedidos na JUCEB em cada processo: uma linha por processo × evento.
-
-        **Campos**
-
-        - : Identificador da linha.
-        - : Processo (chave de processos).
-        - : Código do evento na JUCEB.
-        - : Nome do evento.
-        - : Condição detectada do evento, quando houver.
-      security:
-        -
-          bearerAuth: {}
-      parameters:
-        - $ref: '#/components/parameters/apos_id'
-        - $ref: '#/components/parameters/limite_bruto'
-        - $ref: '#/components/parameters/atualizado_desde'
-        - $ref: '#/components/parameters/processo_id'
-      responses:
-        200:
-          description: 'Página da tabela.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginaDados'
-        401:
-          description: 'Token ausente, inválido ou expirado.'
-        422:
-          description: 'Parâmetros inválidos.'
-        503:
-          description: 'Integração desligada.'
-  /api_integracao/bi/dados/cnaes:
-    get:
-      tags:
-        - 'Dados brutos'
-      operationId: dados_cnaes
-      summary: 'Tabela cnaes'
-      description: |-
-        Tabela de CNAEs com a hierarquia (seção, divisão, grupo, classe).
-
-        **Campos**
-
-        - : Identificador.
-        - : Código do CNAE (7 dígitos).
-        - : Descrição.
-        - : Seção.
-        - : Descrição da seção.
-        - : Divisão.
-        - : Descrição da divisão.
-        - : Grupo.
-        - : Descrição do grupo.
-        - : CNAE ativo no cadastro.
-      security:
-        -
-          bearerAuth: {}
-      parameters:
-        - $ref: '#/components/parameters/apos_id'
-        - $ref: '#/components/parameters/limite_bruto'
-        - $ref: '#/components/parameters/atualizado_desde'
-      responses:
-        200:
-          description: 'Página da tabela.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginaDados'
-        401:
-          description: 'Token ausente, inválido ou expirado.'
-        422:
-          description: 'Parâmetros inválidos.'
-        503:
-          description: 'Integração desligada.'
-  /api_integracao/bi/dados/setores:
-    get:
-      tags:
-        - 'Dados brutos'
-      operationId: dados_setores
-      summary: 'Tabela setores'
-      description: |-
-        Setores da SEDUR.
-
-        **Campos**
-
-        - : Identificador.
-        - : Código.
-        - : Nome.
-        - : Setor ativo.
-      security:
-        -
-          bearerAuth: {}
-      parameters:
-        - $ref: '#/components/parameters/apos_id'
-        - $ref: '#/components/parameters/limite_bruto'
-        - $ref: '#/components/parameters/atualizado_desde'
-      responses:
-        200:
-          description: 'Página da tabela.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginaDados'
-        401:
-          description: 'Token ausente, inválido ou expirado.'
-        422:
-          description: 'Parâmetros inválidos.'
-        503:
-          description: 'Integração desligada.'
-  /api_integracao/bi/dados/tipos-servico:
-    get:
-      tags:
-        - 'Dados brutos'
-      operationId: dados_tipos_servico
-      summary: 'Tabela tipos-servico'
-      description: |-
-        Tipos de serviço de viabilidade.
-
-        **Campos**
-
-        - : Identificador.
-        - : Código.
-        - : Nome.
-        - : Tipo ativo.
-      security:
-        -
-          bearerAuth: {}
-      parameters:
-        - $ref: '#/components/parameters/apos_id'
-        - $ref: '#/components/parameters/limite_bruto'
-        - $ref: '#/components/parameters/atualizado_desde'
-      responses:
-        200:
-          description: 'Página da tabela.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginaDados'
-        401:
-          description: 'Token ausente, inválido ou expirado.'
-        422:
-          description: 'Parâmetros inválidos.'
-        503:
-          description: 'Integração desligada.'
-  /api_integracao/bi/dados/analistas:
-    get:
-      tags:
-        - 'Dados brutos'
-      operationId: dados_analistas
-      summary: 'Tabela analistas'
-      description: |-
-        Servidores que aparecem como analista, vistoriador ou autor de decisão e transição. Sem a liberação nominal, o nome vira um rótulo pelo código e o e-mail fica fora.
-
-        **Campos**
-
-        - : Identificador (chave de analista_id, decidido_por_id, ator_id e vistoriador_id).
-        - : Nome, ou "Analista {id}" sem a liberação nominal.
-        - : E-mail funcional.
-      security:
-        -
-          bearerAuth: {}
-      parameters:
-        - $ref: '#/components/parameters/apos_id'
-        - $ref: '#/components/parameters/limite_bruto'
-      responses:
-        200:
-          description: 'Página da tabela.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginaDados'
-        401:
-          description: 'Token ausente, inválido ou expirado.'
-        422:
-          description: 'Parâmetros inválidos.'
-        503:
+        406:
           description: 'Integração desligada.'
 components:
   securitySchemes:
@@ -2325,35 +1702,46 @@ components:
       name: apos_id
       in: query
       required: false
-      description: 'Traz os registros com id maior que este (use o ultimo_id da página anterior).'
+      description: 'Traz os processos com id maior que este (use o ultimo_id da página anterior).'
       schema:
         type: integer
         minimum: 0
-    limite_bruto:
+    limite_proc:
       name: limite
       in: query
       required: false
-      description: 'Linhas por página (padrão 1000, máximo 5000).'
+      description: 'Processos por página (padrão 50, máximo 200).'
       schema:
         type: integer
         minimum: 1
-        maximum: 5000
-        default: 1000
+        maximum: 200
+        default: 50
     atualizado_desde:
       name: atualizado_desde
       in: query
       required: false
-      description: 'Só o que mudou desde esta data (AAAA-MM-DD ou ISO 8601), para carga incremental.'
+      description: 'Só os processos alterados desde esta data (AAAA-MM-DD ou ISO 8601), para carga incremental.'
       schema:
         type: string
-    processo_id:
-      name: processo_id
+    situacao_proc:
+      name: situacao
       in: query
       required: false
-      description: 'Só os registros deste processo.'
+      description: 'Situação atual do processo.'
       schema:
-        type: integer
-        minimum: 1
+        type: string
+        enum:
+          - rascunho
+          - protocolada
+          - cancelada
+          - aguardando_bap
+          - em_analise
+          - deferida
+          - indeferida
+          - em_pendencia
+          - desativado
+          - cassado
+          - revogado
   schemas:
     Credenciais:
       type: object
@@ -2376,7 +1764,7 @@ components:
         expira_em_segundos:
           type: integer
           example: 3600
-    PaginaDados:
+    PaginaProcessos:
       type: object
       properties:
         tabela:

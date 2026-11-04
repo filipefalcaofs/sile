@@ -608,16 +608,14 @@ return [
             'senha' => (string) env('SEFAZ_TVL_SENHA', ''),
             'validade_minutos' => 60,
         ],
-        // API do BI da SEDUR (indicadores agregados e dados brutos), atrás de login.
-        // `nominal` mostra o nome dos analistas; `identificados` libera dados
-        // pessoais e textos livres nos dados brutos. Os dois vêm ligados.
+        // API do BI da SEDUR, atrás de login. `nominal` mostra o nome dos analistas
+        // nos indicadores por analista.
         'bi' => [
             'ativo' => (bool) env('BI_API_ATIVO', false),
             'usuario' => (string) env('BI_API_USUARIO', ''),
             'senha' => (string) env('BI_API_SENHA', ''),
             'validade_minutos' => 60,
             'nominal' => (bool) env('BI_API_NOMINAL', true),
-            'identificados' => (bool) env('BI_API_IDENTIFICADOS', true),
             'por_minuto' => (int) env('BI_API_POR_MINUTO', 120),
         ],
         'regin' => [
