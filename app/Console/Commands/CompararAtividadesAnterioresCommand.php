@@ -4,7 +4,7 @@ namespace App\Console\Commands;
 
 use App\Enums\ViabilityRequestStatus;
 use App\Models\ViabilityRequest;
-use App\Services\Expresso\FluxoExpressoService;
+use App\Services\Expresso\DeferirExclusaoAtividadeService;
 use App\Services\Sefaz\ComparacaoCnaesViabilidade;
 use App\Services\Sefaz\ConsultarComparacaoCnaesService;
 use App\Services\Sefaz\LegadoViabilidadeFonte;
@@ -15,9 +15,9 @@ use Throwable;
  * Preenche, nos processos de alteração da JUCEB que já estão na análise, a
  * comparação das atividades com a viabilidade anterior da empresa (Simplifica,
  * Viabiliza ou SEFAZ): incluídas, existentes e excluídas aparecem na ficha.
- * Quando a comparação mostra que nada foi incluído e o endereço não muda (só
- * exclusão, ou pedido igual à viabilidade), o processo que ninguém assumiu
- * volta ao motor e é deferido no expresso, sem taxa. Quando a consulta ao Simplifica
+ * Quando a comparação mostra que o pedido só exclui atividades e o endereço não
+ * muda, o processo volta ao motor, mesmo assumido, e é deferido no expresso,
+ * sem taxa. Quando a consulta ao Simplifica
  * falha (o limite da API é de 60 por minuto), espera e tenta de novo; se não
  * responder, não grava "sem base" e conta como erro.
  */
@@ -34,7 +34,7 @@ class CompararAtividadesAnterioresCommand extends Command
 
     protected $description = 'Compara as atividades dos processos de alteração em análise com a viabilidade anterior da empresa';
 
-    public function handle(ConsultarComparacaoCnaesService $comparacao, LegadoViabilidadeFonte $legado, FluxoExpressoService $motor): int
+    public function handle(ConsultarComparacaoCnaesService $comparacao, LegadoViabilidadeFonte $legado, DeferirExclusaoAtividadeService $exclusao): int
     {
         $dryRun = (bool) $this->option('dry-run');
         $espera = max(0, (int) $this->option('espera'));
@@ -104,18 +104,20 @@ class CompararAtividadesAnterioresCommand extends Command
             $contagem['comparados']++;
             $this->line("{$rotulo}: ".$this->resumo($feita['resultado']));
 
-            if ($feita['resultado']->incluidas !== [] || $processo->alteraEndereco() || ! $motor->podeReavaliar($processo)) {
+            $processo->comparacao_cnaes = $feita['resultado']->toArray();
+
+            if (! $exclusao->elegivel($processo)) {
                 continue;
             }
 
             if ($dryRun) {
-                $this->line("{$rotulo}: sem atividade incluída, seria deferido sem taxa");
+                $this->line("{$rotulo}: só exclusão de atividade, seria deferido sem taxa");
 
                 continue;
             }
 
             try {
-                $decidido = $motor->decide($processo);
+                $decidido = $exclusao->deferir($processo);
             } catch (Throwable $e) {
                 $this->error("{$rotulo}: motor falhou: {$e->getMessage()}");
                 $contagem['erros']++;

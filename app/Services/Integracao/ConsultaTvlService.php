@@ -58,7 +58,8 @@ class ConsultaTvlService
     }
 
     /**
-     * Null quando nenhuma decisão carrega esse número de Viabilidade.
+     * Null quando nenhuma decisão carrega esse número de Viabilidade. A alteração
+     * sem mudança de endereço repete o número; vale a decisão mais recente.
      *
      * @return array<string, mixed>|null
      */
@@ -67,6 +68,7 @@ class ConsultaTvlService
         $decisao = ViabilityDecision::query()
             ->whereIn('tvl_product_number', array_unique([$numero, 'TVL-'.$numero]))
             ->with(['viabilityRequest.company', 'viabilityRequest.currentAnalysisRecord'])
+            ->latest('id')
             ->first();
 
         if ($decisao === null) {

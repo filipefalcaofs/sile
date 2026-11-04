@@ -463,8 +463,8 @@ class ViabilityRequest extends Model
 
     /**
      * Códigos (só dígitos) das atividades incluídas segundo a comparação com a
-     * viabilidade anterior; null quando o pedido não passou por essa comparação
-     * ou muda de endereço (no endereço novo todas as atividades são enquadradas).
+     * viabilidade anterior; null quando o pedido não passou por essa comparação,
+     * muda de endereço ou é igual à viabilidade (todas as atividades são enquadradas).
      *
      * @return list<string>|null
      */
@@ -476,7 +476,16 @@ class ViabilityRequest extends Model
 
         $comparacao = $this->comparacao_cnaes;
 
-        return is_array($comparacao) ? array_values($comparacao['incluidas'] ?? []) : null;
+        if (! is_array($comparacao)) {
+            return null;
+        }
+
+        // Pedido igual à viabilidade (nada incluído nem excluído): enquadra todas.
+        if (($comparacao['incluidas'] ?? []) === [] && ($comparacao['excluidas'] ?? []) === []) {
+            return null;
+        }
+
+        return array_values($comparacao['incluidas'] ?? []);
     }
 
     /**

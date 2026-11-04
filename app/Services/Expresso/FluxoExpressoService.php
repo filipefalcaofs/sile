@@ -197,9 +197,9 @@ class FluxoExpressoService
 
         // Alteração da JUCEB com CNPJ: compara os CNAEs do pedido com os da
         // viabilidade anterior (Viabiliza, Simplifica ou SEFAZ). Código fora da
-        // lista oficial vai para a análise; sem atividade incluída não há o que
-        // enquadrar (só exclusão, ou pedido igual à viabilidade) e defere sem
-        // taxa, salvo mudança de endereço, que enquadra tudo no endereço novo.
+        // lista oficial vai para a análise; só exclusão (nada incluído e algo
+        // retirado) defere sem taxa, salvo mudança de endereço, que enquadra
+        // tudo no endereço novo.
         try {
             $comparacao = $this->comparacaoCnaes->executar($request);
         } catch (SefazConsultaIndisponivelException $e) {
@@ -217,7 +217,9 @@ class FluxoExpressoService
                 ];
             }
 
-            if ($comparacao->incluidas === [] && ! $request->alteraEndereco()) {
+            // Só a exclusão pura defere direto (regra da SEDUR); pedido igual à
+            // viabilidade, sem nada retirado, enquadra as atividades no endereço.
+            if ($comparacao->incluidas === [] && $comparacao->excluidas !== [] && ! $request->alteraEndereco()) {
                 return $pendencias !== []
                     ? $this->encaminharPendencias($request, $pendencias, $actor)
                     : $this->deferirExclusao($request, $actor, $comparacao->excluidas);
