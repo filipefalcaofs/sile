@@ -76,6 +76,24 @@ describe('IsoDateInput', () => {
         expect(host.querySelector('input')!.value).toBe('');
     });
 
+    it('posiciona o calendário junto ao campo visível mesmo com name (input hidden antes)', () => {
+        host = document.createElement('div');
+        document.body.appendChild(host);
+        root = createRoot(host);
+        act(() => {
+            root.render(<IsoDateInput name="date" />);
+        });
+
+        const visivel = host.querySelector<HTMLInputElement>('input:not([type="hidden"])')!;
+        visivel.getBoundingClientRect = () =>
+            ({ top: 300, bottom: 344, left: 500, right: 1000, width: 500, height: 44, x: 500, y: 300, toJSON: () => ({}) }) as DOMRect;
+
+        const painel = abrirCalendario();
+
+        expect(painel!.style.left).toBe('500px');
+        expect(painel!.style.top).toBe('348px');
+    });
+
     it('continua aceitando a data digitada', () => {
         montar('');
 

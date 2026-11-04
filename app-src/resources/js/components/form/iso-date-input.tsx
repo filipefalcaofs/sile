@@ -75,7 +75,7 @@ export default function IsoDateInput({
         }
 
         function medir() {
-            const rect = campoRef.current?.querySelector('input')?.getBoundingClientRect();
+            const rect = campoRef.current?.querySelector('input:not([type="hidden"])')?.getBoundingClientRect();
 
             if (!rect) {
                 return;
