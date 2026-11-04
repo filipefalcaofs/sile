@@ -1233,13 +1233,46 @@ class ReginProcessoProtocolador
     }
 
     /**
+     * Liga a alteração já gravada com o CPF de quem pediu à empresa do CNPJ do
+     * protocolo e guarda esse CPF como solicitante. Empresa a constituir (sem
+     * CNPJ no envelope) não muda. Devolve false quando não há o que corrigir.
+     */
+    public function corrigirCnpjDaEmpresa(ViabilityRequest $processo, ReginRecebimento $recebimento, bool $gravar = true): bool
+    {
+        $corpo = $recebimento->corpo ?? [];
+        $rowset = is_array($corpo['rowset'] ?? null)
+            ? $corpo['rowset']
+            : (is_array($corpo['ROWSET'] ?? null) ? $corpo['ROWSET'] : []);
+
+        $cnpj = $this->cnpjDaEmpresa($rowset);
+
+        if ($cnpj === null || strlen((string) $processo->company?->cnpj) === 14) {
+            return false;
+        }
+
+        if ($gravar) {
+            $solicitante = $this->solicitanteDoRowset($rowset);
+
+            $processo->forceFill([
+                'company_id' => $this->empresa($rowset)->id,
+                'solicitante_nome' => $processo->solicitante_nome ?? $solicitante['nome'],
+                'solicitante_cpf' => $processo->solicitante_cpf ?? $solicitante['cpf'],
+            ])->save();
+        }
+
+        return true;
+    }
+
+    /**
      * @param  array<string, mixed>  $rowset
      */
     private function empresa(array $rowset): Company
     {
-        $cnpj = $this->documentoDoRowset($rowset);
+        $doProtocolo = $this->cnpjDaEmpresa($rowset);
+        $cnpj = $doProtocolo ?? $this->documentoDoRowset($rowset);
         $pretendida = $this->razaoSocialPretendida($rowset);
-        $nome = $pretendida ?? trim((string) ($rowset['RUC_GENERAL']['RGE_NOMB'] ?? 'Empresa REGIN'));
+        // Com o CNPJ do protocolo, RGE_NOMB é o nome de quem pediu, não da empresa.
+        $nome = $pretendida ?? ($doProtocolo !== null ? '' : trim((string) ($rowset['RUC_GENERAL']['RGE_NOMB'] ?? 'Empresa REGIN')));
 
         if ($cnpj === '') {
             $cnpj = '00000000000000';
@@ -1275,6 +1308,29 @@ class ReginProcessoProtocolador
     private function documentoDoRowset(array $rowset): string
     {
         return preg_replace('/\D/', '', (string) ($rowset['RUC_GENERAL']['RGE_CGC_CPF'] ?? '')) ?? '';
+    }
+
+    /**
+     * CNPJ da empresa já existente (alteração): em PSC_PROTOCOLO.CNPJ, ou em
+     * TAB_INFORM_EXTRA_JUNTA.TIE_CPF_CNPJ. Nesses pedidos RUC_GENERAL traz o
+     * CPF de quem pediu, não o CNPJ. Null quando o envelope não traz CNPJ.
+     *
+     * @param  array<string, mixed>  $rowset
+     */
+    private function cnpjDaEmpresa(array $rowset): ?string
+    {
+        $extras = $rowset['GROUPTAB_INFORM_EXTRA_JUNTA']['TAB_INFORM_EXTRA_JUNTA'] ?? [];
+        $extra = is_array($extras) && isset($extras['TIE_CPF_CNPJ']) ? $extras : (is_array($extras) ? ($extras[0] ?? []) : []);
+
+        foreach ([$rowset['PSC_PROTOCOLO']['CNPJ'] ?? null, is_array($extra) ? ($extra['TIE_CPF_CNPJ'] ?? null) : null] as $valor) {
+            $digitos = preg_replace('/\D/', '', (string) $valor) ?? '';
+
+            if (strlen($digitos) === 14) {
+                return $digitos;
+            }
+        }
+
+        return null;
     }
 
     /**
