@@ -29,11 +29,25 @@ class BenchmarkIngestionService
         private readonly AuditService $audit,
     ) {}
 
-    public function ingerir(string $uf, int $ano, int $mes): BenchmarkIngestion
+    /**
+     * Com `$somenteSeMudou`, a competência que já tem ingestão de sucesso só é
+     * regravada quando o arquivo da origem mudou (hash diferente). Arquivo
+     * igual, ou origem fora do ar, devolve a ingestão existente intacta: uma
+     * verificação de rotina nunca derruba um dado bom.
+     */
+    public function ingerir(string $uf, int $ano, int $mes, bool $somenteSeMudou = false): BenchmarkIngestion
     {
         $uf = strtoupper(trim($uf));
 
+        $existente = $somenteSeMudou
+            ? BenchmarkIngestion::query()->sucesso()->where(['uf' => $uf, 'ano' => $ano, 'mes' => $mes])->first()
+            : null;
+
         $download = $this->client->baixar($uf, $ano, $mes);
+
+        if ($existente !== null && (! $download->sucesso || $download->hash === $existente->hash)) {
+            return $existente;
+        }
 
         if (! $download->sucesso) {
             return $this->registrarFalha($uf, $ano, $mes, $download->url, (string) $download->motivo);

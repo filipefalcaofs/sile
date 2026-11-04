@@ -12,7 +12,36 @@ export interface PontoMensal {
     n: number;
 }
 
+export interface PontoSerie {
+    ano: number;
+    mes: number;
+    parcial: boolean;
+    redesim: Omit<PontoMensal, 'ano' | 'mes'>;
+    viabiliza: Omit<PontoMensal, 'ano' | 'mes'>;
+}
+
+export interface Competencia {
+    ano: number;
+    mes: number;
+}
+
+export interface AntesDaOperacao {
+    media: number;
+    n: number;
+    meses: number;
+    de: Competencia;
+    ate: Competencia;
+}
+
+export interface SerieEvolucao {
+    inicio_operacao: Competencia | null;
+    antes_da_operacao: AntesDaOperacao | null;
+    pontos: PontoSerie[];
+    ressalva: string;
+}
+
 export interface Evolucao {
+    serie: SerieEvolucao;
     anterior: PontoMensal;
     atual: PontoMensal;
     redesim_atual: PontoMensal;
@@ -36,124 +65,171 @@ export function formatarHoras(horas: number | null): string {
     return horas === null ? '—' : `${horasFormat.format(horas)} h`;
 }
 
-function evolucaoChartOption({ anterior, atual, redesim_atual }: Evolucao): EChartsOption {
-    const barras = [
-        {
-            nome: `REDESIM\n${rotuloCompetencia(anterior.ano, anterior.mes)}`,
-            valor: anterior.media,
-            cor: chartPalette.gray400,
-        },
-        {
-            nome: `Viabiliza\n${rotuloCompetencia(atual.ano, atual.mes)} (até hoje)`,
-            valor: atual.media,
-            cor: chartPalette.brand,
-        },
-        {
-            nome: `REDESIM\n${rotuloCompetencia(redesim_atual.ano, redesim_atual.mes)}${redesim_atual.media === null ? '\n(aguarda importação)' : ''}`,
-            valor: redesim_atual.media,
-            cor: chartPalette.gray400,
-        },
-    ];
+type Medida = PontoSerie['redesim'];
+
+function detalheDaMedida(nome: string, cor: string, medida: Medida): string {
+    if (medida.media === null) {
+        return `<div style="margin-top:6px"><strong style="color:${cor}">●</strong> ${nome}: sem dado</div>`;
+    }
+
+    return [
+        `<div style="margin-top:6px"><strong style="color:${cor}">●</strong> <strong>${nome}</strong></div>`,
+        `<div>Tempo médio: ${formatarHoras(medida.media)}</div>`,
+        `<div>Metade sai em até: ${formatarHoras(medida.p50)}</div>`,
+        `<div>9 em 10 saem em até: ${formatarHoras(medida.p90)}</div>`,
+        `<div>Processos: ${numberFormat.format(medida.n)}</div>`,
+    ].join('');
+}
+
+function evolucaoChartOption({ pontos, antes_da_operacao }: SerieEvolucao): EChartsOption {
+    const rotulo = (p: PontoSerie) => `${rotuloCompetencia(p.ano, p.mes)}${p.parcial ? '\n(até hoje)' : ''}`;
+    const rotuloValor = ({ value }: { value?: unknown }) => (typeof value === 'number' ? formatarHoras(value) : '');
+    const ponto = (media: number | null, parcial: boolean) =>
+        parcial ? { value: media, symbol: 'emptyCircle', symbolSize: 10 } : { value: media, symbol: 'circle', symbolSize: 8 };
 
     return {
         tooltip: {
             trigger: 'axis',
-            axisPointer: { type: 'shadow' },
-            valueFormatter: (valor) => (typeof valor === 'number' ? formatarHoras(valor) : 'sem dado'),
+            formatter: (params) => {
+                const lista = Array.isArray(params) ? params : [params];
+                const p = pontos[lista[0]?.dataIndex ?? 0];
+
+                if (p === undefined) {
+                    return '';
+                }
+
+                return [
+                    `<div><strong>${rotuloCompetencia(p.ano, p.mes)}${p.parcial ? ' (até hoje)' : ''}</strong></div>`,
+                    detalheDaMedida('REDESIM (Salvador)', chartPalette.gray400, p.redesim),
+                    detalheDaMedida('VIABILIZA', chartPalette.brand, p.viabiliza),
+                ].join('');
+            },
         },
-        grid: { left: 16, right: 24, top: 32, bottom: 16, containLabel: true },
+        legend: { top: 0 },
+        grid: { left: 16, right: 24, top: 48, bottom: 16, containLabel: true },
         xAxis: {
             type: 'category',
-            data: barras.map((b) => b.nome),
+            data: pontos.map(rotulo),
             axisTick: { show: false },
+            boundaryGap: true,
         },
-        yAxis: { type: 'value', name: 'horas úteis' },
+        yAxis: { type: 'value', name: 'horas corridas', min: 0 },
         series: [
             {
-                type: 'bar',
-                name: 'Tempo médio de viabilidade',
-                barWidth: '38%',
-                data: barras.map((b) => ({
-                    value: b.valor,
-                    itemStyle: { color: b.cor, borderRadius: [8, 8, 0, 0] },
-                })),
-                label: {
-                    show: true,
-                    position: 'top',
-                    formatter: ({ value }) => (typeof value === 'number' ? formatarHoras(value) : ''),
-                },
+                type: 'line',
+                name: 'REDESIM (Salvador)',
+                data: pontos.map((p) => ponto(p.redesim.media, false)),
+                itemStyle: { color: chartPalette.gray400 },
+                lineStyle: { color: chartPalette.gray400, width: 2 },
+                label: { show: pontos.length <= 6, position: 'top', formatter: rotuloValor },
+                markLine:
+                    antes_da_operacao === null
+                        ? undefined
+                        : {
+                              symbol: 'none',
+                              silent: true,
+                              lineStyle: { type: 'dashed', color: chartPalette.gray400 },
+                              label: {
+                                  position: 'insideEndTop',
+                                  formatter: `Antes do VIABILIZA: ${formatarHoras(antes_da_operacao.media)}`,
+                              },
+                              data: [{ yAxis: antes_da_operacao.media }],
+                          },
+            },
+            {
+                type: 'line',
+                name: 'VIABILIZA',
+                data: pontos.map((p) => ponto(p.viabiliza.media, p.parcial)),
+                itemStyle: { color: chartPalette.brand },
+                lineStyle: { color: chartPalette.brand, width: 3 },
+                label: { show: pontos.length <= 6, position: 'top', formatter: rotuloValor },
             },
         ],
     };
 }
 
-function descreverDiferenca(horas: number | null, percentual: number | null, referencia: string): string | null {
-    if (horas === null) {
-        return null;
+function variacao(horas: number, referencia: number): string {
+    if (referencia <= 0) {
+        return '';
     }
 
-    const sinal = horas > 0 ? '+' : '';
-    const variacao = percentual === null ? '' : ` (${sinal}${horasFormat.format(percentual)}%)`;
+    const percentual = ((horas - referencia) / referencia) * 100;
 
-    return `${sinal}${horasFormat.format(horas)} h${variacao} frente à ${referencia}`;
+    if (Math.abs(percentual) < 0.5) {
+        return ', igual a antes do VIABILIZA';
+    }
+
+    return `, ${horasFormat.format(Math.abs(percentual))}% ${percentual < 0 ? 'menos' : 'mais'} que antes do VIABILIZA`;
 }
 
 export default function EvolucaoSalvador({ evolucao }: { evolucao: Evolucao }) {
-    const { anterior, atual, redesim_atual } = evolucao;
-    const diferencas = [
-        descreverDiferenca(
-            evolucao.diferenca_horas,
-            evolucao.diferenca_percentual,
-            `REDESIM de ${rotuloCompetencia(anterior.ano, anterior.mes)}`,
-        ),
-        descreverDiferenca(
-            evolucao.diferenca_mesmo_mes_horas,
-            evolucao.diferenca_mesmo_mes_percentual,
-            `REDESIM do mesmo mês, ${rotuloCompetencia(redesim_atual.ano, redesim_atual.mes)}`,
-        ),
-    ].filter((texto): texto is string => texto !== null);
+    const { serie } = evolucao;
+    const { pontos, antes_da_operacao: antes } = serie;
+    const corrente = pontos[pontos.length - 1];
+    const ultimaRedesim = [...pontos].reverse().find((p) => p.redesim.media !== null);
+    const mesesSemRedesim = pontos.filter((p) => p.redesim.media === null);
+    const semNenhumDado = antes === null && pontos.every((p) => p.redesim.media === null && p.viabiliza.media === null);
 
-    if (anterior.media === null && atual.media === null) {
+    if (semNenhumDado) {
         return (
             <EmptyState
                 title="Sem dados para comparar"
-                description="Falta a competência anterior da REDESIM e não há processos deferidos no mês corrente."
+                description="Ainda não há medição da REDESIM para Salvador nem processos deferidos no VIABILIZA."
             />
         );
     }
 
+    const destaques = [
+        antes !== null &&
+            `Antes do VIABILIZA: ${formatarHoras(antes.media)} em média (REDESIM, ${rotuloCompetencia(antes.de.ano, antes.de.mes)} a ${rotuloCompetencia(antes.ate.ano, antes.ate.mes)}).`,
+        ultimaRedesim !== undefined &&
+            ultimaRedesim.redesim.media !== null &&
+            `REDESIM de ${rotuloCompetencia(ultimaRedesim.ano, ultimaRedesim.mes)}: ${formatarHoras(ultimaRedesim.redesim.media)}${antes === null ? '' : variacao(ultimaRedesim.redesim.media, antes.media)}.`,
+        corrente !== undefined &&
+            corrente.viabiliza.media !== null &&
+            `VIABILIZA em ${rotuloCompetencia(corrente.ano, corrente.mes)}, até hoje: ${formatarHoras(corrente.viabiliza.media)}${antes === null ? '' : variacao(corrente.viabiliza.media, antes.media)}.`,
+    ].filter((texto): texto is string => typeof texto === 'string');
+
     return (
         <>
-            {diferencas.length > 0 && (
+            {destaques.length > 0 && (
                 <div className="mb-2 space-y-0.5 text-theme-sm font-medium text-gray-800 dark:text-white/90">
-                    {diferencas.map((texto) => (
+                    {destaques.map((texto) => (
                         <p key={texto}>{texto}</p>
                     ))}
                     <p className="text-theme-xs font-normal text-gray-500 dark:text-gray-400">Menos horas é melhor.</p>
                 </div>
             )}
-            <Chart option={evolucaoChartOption(evolucao)} className="h-72 w-full" />
+            <Chart option={evolucaoChartOption(serie)} className="h-72 w-full" />
             <ul className="mt-3 space-y-1 text-theme-xs text-gray-500 dark:text-gray-400">
-                {anterior.media === null && (
+                {serie.inicio_operacao !== null && (
                     <li>
-                        A REDESIM ainda não publicou a competência {rotuloCompetencia(anterior.ano, anterior.mes)} para Salvador. A origem
-                        consolida o mês ao longo dos primeiros dias do seguinte.
+                        Série a partir de {rotuloCompetencia(serie.inicio_operacao.ano, serie.inicio_operacao.mes)}, mês em que o VIABILIZA
+                        começou a operar, limitada aos últimos 12 meses.
                     </li>
                 )}
-                {redesim_atual.media === null && (
+                {antes !== null && (
                     <li>
-                        A REDESIM de {rotuloCompetencia(redesim_atual.ano, redesim_atual.mes)} entra no gráfico quando a importação mensal
-                        trouxer essa competência, no mês seguinte.
+                        A linha tracejada é a média da REDESIM para Salvador nos {antes.meses} meses com dado antes do VIABILIZA (
+                        {numberFormat.format(antes.n)} solicitações), quando a viabilidade era feita no sistema anterior.
                     </li>
                 )}
-                {atual.media === null && <li>Nenhum processo foi deferido no VIABILIZA neste mês até agora.</li>}
-                {atual.media !== null && (
+                {mesesSemRedesim.length > 0 && (
                     <li>
-                        O mês corrente é parcial: considera {numberFormat.format(atual.n)} processos deferidos (com TVL) de 1º até hoje,
-                        como na REDESIM, e o valor muda até o fim do mês.
+                        A REDESIM de {mesesSemRedesim.map((p) => rotuloCompetencia(p.ano, p.mes)).join(', ')} entra no gráfico quando a
+                        importação trouxer o mês, nos primeiros dias do mês seguinte.
                     </li>
                 )}
-                <li>{evolucao.ressalva}</li>
+                {corrente !== undefined && corrente.viabiliza.media === null && (
+                    <li>Nenhum processo foi deferido no VIABILIZA neste mês até agora.</li>
+                )}
+                {corrente !== undefined && corrente.viabiliza.media !== null && (
+                    <li>
+                        O mês corrente é parcial (ponto vazado): considera {numberFormat.format(corrente.viabiliza.n)} processos deferidos
+                        de 1º até hoje, e o valor muda até o fim do mês.
+                    </li>
+                )}
+                <li>{serie.ressalva}</li>
             </ul>
         </>
     );

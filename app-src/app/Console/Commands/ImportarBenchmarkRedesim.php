@@ -14,6 +14,9 @@ use Illuminate\Support\Carbon;
  * O backfill cobre 27 UFs por quase cem competências desde 2019, com São
  * Paulo a cerca de 16 MB cada — por isso o comando é retomável (pula o que já
  * veio com sucesso), explícito sobre o que falhou e executável em lotes.
+ *
+ * Com `--verificar-atualizacao` (usado pelo agendamento) a competência já
+ * importada é rebaixada e só regravada se o arquivo da origem mudou.
  */
 class ImportarBenchmarkRedesim extends Command
 {
@@ -22,7 +25,8 @@ class ImportarBenchmarkRedesim extends Command
                             {--mes= : Mês da competência (padrão: a última competência fechada)}
                             {--uf= : Importa só esta UF (padrão: as 27)}
                             {--desde= : Importa de AAAA-MM até a última competência fechada}
-                            {--forcar : Reimporta competências já importadas com sucesso}';
+                            {--forcar : Reimporta competências já importadas com sucesso}
+                            {--verificar-atualizacao : Rebaixa as já importadas e só regrava as que a origem alterou}';
 
     protected $description = 'Importa os microdados de tempo de viabilidade da REDESIM por UF e competência';
 
@@ -38,16 +42,25 @@ class ImportarBenchmarkRedesim extends Command
         }
 
         $forcar = (bool) $this->option('forcar');
+        $verificar = (bool) $this->option('verificar-atualizacao');
         $falhas = [];
         $linhas = [];
 
         foreach ($competencias as [$ano, $mes]) {
             foreach ($ufs as $uf) {
-                if (! $forcar && $this->jaImportada($uf, $ano, $mes)) {
+                $jaImportada = ! $forcar && $this->jaImportada($uf, $ano, $mes);
+
+                if ($jaImportada && ! $verificar) {
                     continue;
                 }
 
-                $resultado = $ingestao->ingerir($uf, $ano, $mes);
+                $hashAnterior = $jaImportada ? $this->hashImportado($uf, $ano, $mes) : null;
+
+                $resultado = $ingestao->ingerir($uf, $ano, $mes, somenteSeMudou: $jaImportada);
+
+                if ($jaImportada && $resultado->hash === $hashAnterior) {
+                    continue;
+                }
 
                 $linhas[] = [
                     sprintf('%s %02d/%d', $uf, $mes, $ano),
@@ -124,6 +137,14 @@ class ImportarBenchmarkRedesim extends Command
         }
 
         return [[$ultima->year, $ultima->month]];
+    }
+
+    private function hashImportado(string $uf, int $ano, int $mes): ?string
+    {
+        return BenchmarkIngestion::query()
+            ->sucesso()
+            ->where(['uf' => $uf, 'ano' => $ano, 'mes' => $mes])
+            ->value('hash');
     }
 
     private function jaImportada(string $uf, int $ano, int $mes): bool
