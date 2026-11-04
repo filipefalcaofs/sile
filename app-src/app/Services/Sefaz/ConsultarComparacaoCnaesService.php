@@ -89,6 +89,15 @@ class ConsultarComparacaoCnaesService
         }
 
         ['resultado' => $resultado, 'fonte' => $fonte] = $this->compararSemGravar($request);
+
+        return $this->registrar($request, $resultado, $fonte);
+    }
+
+    /**
+     * Grava no processo a comparação já feita e audita de onde veio a base.
+     */
+    public function registrar(ViabilityRequest $request, ComparacaoCnaesViabilidade $resultado, ?string $fonte): ComparacaoCnaesViabilidade
+    {
         $encontrada = ['fonte' => $fonte];
 
         $request->forceFill(['comparacao_cnaes' => $resultado->toArray()])->save();

@@ -32,24 +32,24 @@ interface ComparacaoCnaesCardProps {
 }
 
 /**
- * Alteração de atividade da JUCEB comparada com a viabilidade vinculada ao CNPJ na
- * SEFAZ: o que entra, o que sai, o que já existia e os códigos fora da lista
- * oficial, que o analista corrige aqui.
+ * Códigos da alteração da JUCEB fora da lista oficial de CNAEs, que o analista
+ * corrige aqui. Incluídas, existentes e excluídas aparecem nos quadros do
+ * "Enquadramento por atividade" da ficha.
  */
 export default function ComparacaoCnaesCard({
   processoId,
   comparacao,
   podeCorrigir,
 }: ComparacaoCnaesCardProps) {
+  if (comparacao.invalidas.length === 0) {
+    return null;
+  }
+
   return (
     <Card>
       <CardHeader
-        title="Atividades × viabilidade da SEFAZ"
-        description={
-          comparacao.sem_viabilidade
-            ? "O CNPJ não tem viabilidade vinculada: todas as atividades são tratadas como incluídas."
-            : `Viabilidade vinculada: ${comparacao.numero_viabilidade ?? "—"}. A viabilidade nova mantém esse número.`
-        }
+        title="Atividades com código inválido"
+        description="Códigos que não constam da lista oficial de CNAEs. Corrija para seguir a análise."
       />
       <CardContent>
         <div className="flex flex-col gap-5">
@@ -70,24 +70,6 @@ export default function ComparacaoCnaesCard({
               </ul>
             </section>
           )}
-          <Grupo
-            titulo="Incluídas"
-            cor="success"
-            itens={comparacao.incluidas}
-            vazio="Nenhuma atividade incluída."
-          />
-          <Grupo
-            titulo="Excluídas"
-            cor="warning"
-            itens={comparacao.excluidas}
-            vazio="Nenhuma atividade excluída."
-          />
-          <Grupo
-            titulo="Já existiam na viabilidade"
-            cor="light"
-            itens={comparacao.mantidas}
-            vazio="Nenhuma."
-          />
         </div>
       </CardContent>
     </Card>
@@ -98,53 +80,13 @@ function Titulo({
   cor,
   children,
 }: {
-  cor: "success" | "warning" | "light" | "error";
+  cor: "error";
   children: string;
 }) {
   return (
     <Badge size="sm" color={cor}>
       {children}
     </Badge>
-  );
-}
-
-function Grupo({
-  titulo,
-  cor,
-  itens,
-  vazio,
-}: {
-  titulo: string;
-  cor: "success" | "warning" | "light";
-  itens: CnaeComparado[];
-  vazio: string;
-}) {
-  return (
-    <section aria-label={titulo}>
-      <Titulo cor={cor}>{titulo}</Titulo>
-      {itens.length === 0 ? (
-        <p className="mt-2 text-theme-xs text-gray-500 dark:text-gray-400">
-          {vazio}
-        </p>
-      ) : (
-        <ul className="mt-2 flex flex-col gap-1.5">
-          {itens.map((cnae) => (
-            <li
-              key={cnae.codigo}
-              className="text-theme-sm text-gray-700 dark:text-gray-300"
-            >
-              <span className="font-medium tabular-nums">{cnae.codigo}</span>
-              {cnae.descricao ? (
-                <span className="text-gray-500 dark:text-gray-400">
-                  {" "}
-                  — {cnae.descricao}
-                </span>
-              ) : null}
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
   );
 }
 

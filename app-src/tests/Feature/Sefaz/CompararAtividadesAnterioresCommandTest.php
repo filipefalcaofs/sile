@@ -32,6 +32,10 @@ class CompararAtividadesAnterioresCommandTest extends TestCase
 
         config(['viabiliza.sefaz.consulta.ativa' => false]);
         $this->configurarLegado();
+    }
+
+    private function legadoPadrao(): void
+    {
         Http::fake([
             'legado.test/v1/tvls?*' => Http::response(['data' => [
                 ['numero' => 416389, 'tipo' => 'provisoria', 'deferida' => true, 'ativa' => true, 'validade' => '2027-01-01T00:00:00Z'],
@@ -66,6 +70,7 @@ class CompararAtividadesAnterioresCommandTest extends TestCase
 
     public function test_grava_incluidas_e_existentes_dos_processos_em_analise(): void
     {
+        $this->legadoPadrao();
         $processo = $this->processo(['4711302', '5611201']);
 
         $this->artisan('processos:comparar-atividades-anteriores')
@@ -80,6 +85,7 @@ class CompararAtividadesAnterioresCommandTest extends TestCase
 
     public function test_dry_run_nao_grava(): void
     {
+        $this->legadoPadrao();
         $processo = $this->processo(['4711302', '5611201']);
 
         $this->artisan('processos:comparar-atividades-anteriores --dry-run')
@@ -91,6 +97,7 @@ class CompararAtividadesAnterioresCommandTest extends TestCase
 
     public function test_ignora_decididos_inscricoes_e_ja_comparados(): void
     {
+        $this->legadoPadrao();
         $decidido = $this->processo(['5611201'], status: ViabilityRequestStatus::Deferida);
         $inscricao = $this->processo(['5611201'], evento: 'Inscrição de primeiro estabelecimento');
         $inscricao->eventos()->update(['codigo' => '101']);
@@ -106,8 +113,68 @@ class CompararAtividadesAnterioresCommandTest extends TestCase
         $this->assertSame(['x'], $jaComparado->fresh()->comparacao_cnaes['incluidas']);
     }
 
+    private function legadoResponde(array $respostas): void
+    {
+        $sequencia = Http::sequence();
+        foreach ($respostas as $resposta) {
+            $sequencia->push(...$resposta);
+        }
+
+        Http::fake([
+            'legado.test/v1/tvls?*' => $sequencia,
+            'legado.test/v1/tvls/416389' => Http::response(['data' => [
+                'numero' => 416389, 'tipo' => 'provisoria', 'deferida' => true, 'ativa' => true, 'validade' => '2027-01-01T00:00:00Z',
+                'atividades' => [['codigo' => '4711-3/02', 'descricao' => 'Comércio']],
+            ]]),
+        ]);
+    }
+
+    public function test_falha_do_simplifica_nao_grava_comparacao_sem_base(): void
+    {
+        $this->legadoResponde(array_fill(0, 5, [['mensagem' => 'Limite de 60 requisições por minuto excedido.'], 429]));
+        $processo = $this->processo(['4711302', '5611201']);
+
+        $this->artisan('processos:comparar-atividades-anteriores', ['--espera' => 0])
+            ->expectsOutputToContain('erros 1')
+            ->assertFailed();
+
+        $this->assertNull($processo->fresh()->comparacao_cnaes);
+    }
+
+    public function test_limite_do_simplifica_espera_e_tenta_de_novo(): void
+    {
+        $this->legadoResponde([
+            [['mensagem' => 'Limite de 60 requisições por minuto excedido.'], 429],
+            [['data' => [['numero' => 416389, 'tipo' => 'provisoria', 'deferida' => true, 'ativa' => true, 'validade' => '2027-01-01T00:00:00Z']]]],
+        ]);
+        $processo = $this->processo(['4711302', '5611201']);
+
+        $this->artisan('processos:comparar-atividades-anteriores', ['--espera' => 0])
+            ->expectsOutputToContain('comparados 1')
+            ->assertSuccessful();
+
+        $this->assertSame(['5611201'], $processo->fresh()->comparacao_cnaes['incluidas']);
+    }
+
+    public function test_refazer_sem_base_recalcula_so_os_que_ficaram_sem_viabilidade(): void
+    {
+        $this->legadoPadrao();
+        $semBase = $this->processo(['4711302', '5611201']);
+        $semBase->forceFill(['comparacao_cnaes' => ['incluidas' => ['4711302', '5611201'], 'excluidas' => [], 'mantidas' => [], 'invalidas' => [], 'sem_viabilidade' => true, 'numero_viabilidade' => null]])->save();
+        $comBase = $this->processo(['5611201']);
+        $comBase->forceFill(['comparacao_cnaes' => ['incluidas' => ['x'], 'excluidas' => [], 'mantidas' => [], 'invalidas' => [], 'sem_viabilidade' => false, 'numero_viabilidade' => '1']])->save();
+
+        $this->artisan('processos:comparar-atividades-anteriores', ['--refazer-sem-base' => true, '--espera' => 0])
+            ->expectsOutputToContain('comparados 1')
+            ->assertSuccessful();
+
+        $this->assertSame(['5611201'], $semBase->fresh()->comparacao_cnaes['incluidas']);
+        $this->assertSame(['x'], $comBase->fresh()->comparacao_cnaes['incluidas']);
+    }
+
     public function test_refazer_recalcula_os_ja_comparados(): void
     {
+        $this->legadoPadrao();
         $processo = $this->processo(['4711302', '5611201']);
         $processo->forceFill(['comparacao_cnaes' => ['incluidas' => ['x'], 'excluidas' => [], 'mantidas' => [], 'invalidas' => [], 'sem_viabilidade' => false, 'numero_viabilidade' => null]])->save();
 
