@@ -19,9 +19,18 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'analista_origem_user_id',
     'setor_vistoria_id',
     'motivo',
+    'devolvido_em',
 ])]
 class InspectionReferral extends Model
 {
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return ['devolvido_em' => 'datetime'];
+    }
+
     /**
      * @return BelongsTo<ViabilityRequest, $this>
      */

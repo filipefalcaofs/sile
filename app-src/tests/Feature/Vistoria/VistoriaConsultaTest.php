@@ -4,14 +4,16 @@ namespace Tests\Feature\Vistoria;
 
 use App\Enums\AnalysisStatus;
 use App\Enums\ViabilityRequestStatus;
+use App\Models\Company;
 use App\Models\Inspection;
+use App\Models\InspectionReferral;
+use App\Models\Sector;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
-use App\Models\Company;
 
 /**
  * Consulta de vistorias (fila do vistoriador): universo = processos no eixo
@@ -40,7 +42,18 @@ class VistoriaConsultaTest extends TestCase
     private function processoEmVistoria(AnalysisStatus $status, array $attrs = []): ViabilityRequest
     {
         $processo = ViabilityRequest::factory()->create($attrs);
-        $processo->forceFill(['analysis_status' => $status])->save();
+        $setorVistoria = Sector::factory()->create();
+        $processo->forceFill(['analysis_status' => $status, 'sector_id' => $setorVistoria->id])->save();
+
+        if ($status === AnalysisStatus::Vistoriado) {
+            InspectionReferral::query()->forceCreate([
+                'viability_request_id' => $processo->id,
+                'encaminhado_por_user_id' => $this->vistoriador->id,
+                'setor_origem_id' => Sector::factory()->create()->id,
+                'setor_vistoria_id' => $setorVistoria->id,
+                'motivo' => 'Conferir no local.',
+            ]);
+        }
 
         return $processo;
     }
@@ -219,6 +232,19 @@ class VistoriaConsultaTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->has('vistorias.data', 1)
                 ->where('vistorias.data.0.empresa', null));
+    }
+
+    public function test_processo_devolvido_a_caixa_do_setor_sai_da_caixa_de_vistoria(): void
+    {
+        $cenario = $this->cenario();
+        $devolvido = $cenario['concluida'];
+        $devolvido->forceFill(['sector_id' => InspectionReferral::query()->where('viability_request_id', $devolvido->id)->value('setor_origem_id')])->save();
+
+        $resposta = $this->actingAs($this->apoio(), 'gestao')->get('/gestao/vistorias')->assertOk();
+
+        $ids = array_column($resposta->viewData('page')['props']['vistorias']['data'], 'id');
+        $this->assertNotContains($devolvido->id, $ids);
+        $this->assertCount(2, $ids);
     }
 
     public function test_consulta_exige_permissao(): void
