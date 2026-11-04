@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Expresso;
 
+use App\Enums\AnalysisStatus;
 use App\Enums\GeoLayerType;
 use App\Enums\Quadro10Permissao;
 use App\Enums\RiscoMunicipal;
@@ -195,6 +196,25 @@ class FluxoExpressoAlteracaoComparacaoTest extends TestCase
         $this->assertSame('4520006', $resultado->decision->per_cnae[0]['cnae']);
         $this->assertSame('excluir', $resultado->decision->per_cnae[0]['intencao']);
         $this->assertNull($request->fresh()->camadas_incidentes, 'sem zoneamento: nada novo a exercer no local');
+    }
+
+    public function test_so_exclusao_ja_na_caixa_e_comparada_depois_volta_ao_motor_e_defere(): void
+    {
+        Event::fake([ResultadoEmitido::class]);
+        $this->fakeCadastro(-12.971, -38.5107, indisponivel: true);
+        $request = $this->comoAlteracaoDaJunta($this->setupDeferivel('4712100'));
+        $request->forceFill([
+            'status' => ViabilityRequestStatus::EmAnalise,
+            'analysis_status' => AnalysisStatus::ParaDistribuir,
+            'assigned_user_id' => null,
+            'comparacao_cnaes' => ['incluidas' => [], 'excluidas' => ['7490104'], 'mantidas' => ['4712100'], 'invalidas' => [], 'numero_viabilidade' => '416389', 'sem_viabilidade' => false],
+        ])->save();
+
+        $resultado = app(FluxoExpressoService::class)->decide($request->fresh());
+
+        $this->assertSame(ViabilityRequestStatus::Deferida, $resultado->status);
+        $this->assertSame(['7490104'], array_column($resultado->decision->per_cnae, 'cnae'));
+        $this->assertSame([], array_filter(array_column($resultado->decision->per_cnae, 'codigo_tll')), 'exclusão não gera taxa');
     }
 
     public function test_inclusao_defere_enquadrando_so_a_atividade_incluida(): void
