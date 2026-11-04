@@ -40,6 +40,16 @@ class ServicoNomenclatura extends Model
     ];
 
     /**
+     * Tipo de serviço interno que é o mesmo serviço de um nome da JUCEB: sai
+     * do filtro e é pesquisado junto com esse nome (SEDUR, 03/11).
+     *
+     * @var array<string, string>
+     */
+    public const TIPOS_SINONIMOS_NO_FILTRO = [
+        'Viabilidade locacional' => 'Viabilidade de Localização',
+    ];
+
+    /**
      * @return array<string, string>
      */
     protected function casts(): array

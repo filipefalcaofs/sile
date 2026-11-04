@@ -44,7 +44,7 @@ class ResultadoExpressoController extends Controller
     private const CHAVES_FILTRO_CONSULTA = [
         'grupo', 'status', 'analysis_status', 'protocolo', 'bap', 'produto_tvl', 'servico', 'setor',
         'analista', 'categoria', 'inscricao', 'nome', 'cnpj', 'cep', 'logradouro', 'bairro', 'fluxo',
-        'cnae', 'complemento',
+        'cnae', 'complemento', 'numero',
     ];
 
     public function __construct(

@@ -60,6 +60,8 @@ class MalhaFinaController extends Controller
     /**
      * Conclusão pela Caixa de Malha Fina: aplica o mesmo resultado da
      * conclusão de análise e só então baixa os encaminhamentos abertos.
+     * O resultado escolhido prevalece sobre a ficha: indeferir sem atividade
+     * indeferida (ou deferir com uma) não trava aqui (SEDUR, 03/11).
      * Processo sem encaminhamento aberto volta com aviso, sem mudar o status.
      * Gated por analisar-malha-fina na rota.
      */
@@ -83,6 +85,7 @@ class MalhaFinaController extends Controller
                 $ator,
                 $resultado,
                 $request->validated('observacao'),
+                confirmarDivergencia: true,
                 validade: $request->validadeDeferimento(),
             );
         } catch (DomainException $e) {

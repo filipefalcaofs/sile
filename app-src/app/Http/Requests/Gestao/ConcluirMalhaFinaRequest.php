@@ -11,7 +11,7 @@ use Illuminate\Validation\Rule;
 /**
  * Conclusão da análise de malha fina pela caixa dedicada. A autorização é o
  * middleware permission:analisar-malha-fina da rota. O resultado é o mesmo da
- * conclusão de análise. A observação é opcional.
+ * conclusão de análise. O parecer (observação) é obrigatório.
  */
 class ConcluirMalhaFinaRequest extends FormRequest
 {
@@ -29,7 +29,7 @@ class ConcluirMalhaFinaRequest extends FormRequest
     {
         return [
             'resultado' => ['required', Rule::enum(ConclusionOutcome::class)],
-            'observacao' => ['nullable', 'string', 'max:2000'],
+            'observacao' => ['required', 'string', 'max:2000'],
         ] + $this->regrasTipoDeferimento();
     }
 
@@ -51,6 +51,7 @@ class ConcluirMalhaFinaRequest extends FormRequest
     {
         return [
             'resultado.required' => 'Escolha o resultado da conclusão de análise.',
+            'observacao.required' => 'Escreva o parecer da conclusão.',
         ] + $this->mensagensTipoDeferimento();
     }
 }

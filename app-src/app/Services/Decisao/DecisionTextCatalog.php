@@ -207,6 +207,7 @@ final class DecisionTextCatalog
             'tratamento.bloqueio.categoria_incompativel' => 'Resposta selecionada para a CNAE :cnae não é compatível com a categoria da empresa indicada nesta etapa. Revise as informações para continuar.',
             'tratamento.motivo.sem_versao' => 'Planilha de tratamento sem versão vigente',
             'tratamento.motivo.cnae_sem_regra' => 'CNAE sem regra de tratamento vigente',
+            'tratamento.motivo.p12_escritorio_sem_resposta' => 'Pergunta 12 sem resposta com a atividade exercida só como escritório: segue para análise',
             'tratamento.motivo.pergunta_sem_resposta' => 'Pergunta :numero sem resposta — :texto',
             'tratamento.motivo.subdivisao_ausente' => 'Subdivisão do CNAE :cnae ausente na planilha de tratamento carregada — rode o complemento da planilha (tratamento:verificar --corrigir)',
             'tratamento.motivo.sem_linha' => 'CNAE sem enquadramento no ramo escolhido',

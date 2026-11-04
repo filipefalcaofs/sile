@@ -89,7 +89,7 @@ class ServicoNomenclaturaResolver
         return ViabilityServiceType::query()
             ->orderBy('name')
             ->get(['id', 'name'])
-            ->reject(fn (ViabilityServiceType $tipo): bool => $this->ocultoNoFiltro($tipo->name))
+            ->reject(fn (ViabilityServiceType $tipo): bool => $this->ocultoNoFiltro($tipo->name) || $this->sinonimoDe($tipo->name) !== null)
             ->map(fn (ViabilityServiceType $tipo): array => ['value' => (string) $tipo->id, 'label' => $tipo->name])
             ->values()
             ->all();
@@ -102,7 +102,51 @@ class ServicoNomenclaturaResolver
      */
     public function opcoesDoFiltro(): array
     {
-        return [...$this->opcoesDeEvento(), ...$this->opcoesDeTipo()];
+        $deEvento = collect($this->opcoesDeEvento());
+
+        $sinonimos = ViabilityServiceType::query()
+            ->pluck('name')
+            ->map(fn (string $nome): ?string => $this->sinonimoDe($nome))
+            ->filter()
+            ->reject(fn (string $para): bool => $deEvento->contains('value', ProcessoQueryService::PREFIXO_NOME_SERVICO.ServicoNomenclatura::chaveDe($para)))
+            ->unique()
+            ->map(fn (string $para): array => [
+                'value' => ProcessoQueryService::PREFIXO_NOME_SERVICO.ServicoNomenclatura::chaveDe($para),
+                'label' => $para,
+            ]);
+
+        return [
+            ...$deEvento->concat($sinonimos)->sortBy('label', SORT_NATURAL | SORT_FLAG_CASE)->values()->all(),
+            ...$this->opcoesDeTipo(),
+        ];
+    }
+
+    /**
+     * Ids dos tipos de serviço interno pesquisados junto com o nome informado.
+     *
+     * @return list<int>
+     */
+    public function tiposSinonimosDoNome(string $chaveDoNome): array
+    {
+        return ViabilityServiceType::query()
+            ->get(['id', 'name'])
+            ->filter(fn (ViabilityServiceType $tipo): bool => ($para = $this->sinonimoDe($tipo->name)) !== null
+                && ServicoNomenclatura::chaveDe($para) === $chaveDoNome)
+            ->map(fn (ViabilityServiceType $tipo): int => (int) $tipo->id)
+            ->values()
+            ->all();
+    }
+
+    /** Nome da JUCEB de que o tipo interno é sinônimo, ou null. */
+    private function sinonimoDe(string $nomeDoTipo): ?string
+    {
+        foreach (ServicoNomenclatura::TIPOS_SINONIMOS_NO_FILTRO as $tipo => $para) {
+            if (ServicoNomenclatura::chaveDe($tipo) === ServicoNomenclatura::chaveDe($nomeDoTipo)) {
+                return $para;
+            }
+        }
+
+        return null;
     }
 
     private function ocultoNoFiltro(string $nome): bool

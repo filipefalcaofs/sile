@@ -211,7 +211,7 @@ class FluxoExpressoService
                 );
             }
 
-            if ($comparacao->incluidas === []) {
+            if ($comparacao->incluidas === [] && ! $request->alteraEndereco()) {
                 return $this->deferirExclusao($request, $actor, $comparacao->excluidas);
             }
         }

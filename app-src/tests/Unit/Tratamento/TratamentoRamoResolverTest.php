@@ -51,6 +51,30 @@ class TratamentoRamoResolverTest extends TestCase
         $this->assertSame(['numero' => 3, 'enunciado' => 'A atividade será desenvolvida de modo artesanal?'], $ramo->perguntaSemResposta);
     }
 
+    public function test_pergunta_12_sem_resposta_com_escritorio_vai_para_analise_sem_indeferir(): void
+    {
+        $ramo = $this->resolver()->resolver(new TratamentoRamoInput(
+            cnae: '5211-7/01',
+            respostas: [11 => false],
+            areaUtilizada: 50.0,
+        ));
+
+        $this->assertSame('nao_resolvido', $ramo->status);
+        $this->assertNull($ramo->perguntaSemResposta);
+        $this->assertStringContainsString('escritório', (string) $ramo->motivo);
+    }
+
+    public function test_pergunta_12_sem_resposta_com_atividade_no_local_continua_pergunta_sem_resposta(): void
+    {
+        $ramo = $this->resolver()->resolver(new TratamentoRamoInput(
+            cnae: '5211-7/01',
+            respostas: [11 => true],
+            areaUtilizada: 50.0,
+        ));
+
+        $this->assertSame(12, $ramo->perguntaSemResposta['numero'] ?? null);
+    }
+
     public function test_pergunta_5_nao_trava_quando_a_4_e_sim(): void
     {
         $ramo = $this->resolver()->resolver(new TratamentoRamoInput(
