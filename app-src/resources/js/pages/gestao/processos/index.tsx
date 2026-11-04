@@ -50,6 +50,7 @@ interface FiltrosTexto {
     analysis_status: string;
     busca: string;
     fluxo: string;
+    empresa: string;
     cnae: string;
     complemento: string;
     numero: string;
@@ -106,6 +107,11 @@ const FLUXO_OPTIONS: SelectOption[] = [
     { value: 'analise_tecnica', label: 'Análise técnica' },
 ];
 
+const EMPRESA_OPTIONS: SelectOption[] = [
+    { value: 'constituida', label: 'Constituída (com CNPJ)' },
+    { value: 'a_constituir', label: 'A constituir' },
+];
+
 const GRUPO_OPTIONS: SelectOption[] = [
     { value: 'rascunho', label: 'Rascunho' },
     { value: 'em_andamento', label: 'Em andamento' },
@@ -133,6 +139,7 @@ const ROTULOS_FILTRO: Record<keyof FiltrosTexto, string> = {
     analysis_status: 'Situação da análise',
     categoria: 'Categoria',
     fluxo: 'Fluxo',
+    empresa: 'Empresa',
     protocolo: 'Nº do processo',
     bap: 'BAP',
     produto_tvl: 'Nº da viabilidade',
@@ -174,6 +181,7 @@ const CHAVES_FILTRO: (keyof FiltrosTexto)[] = [
     'analysis_status',
     'busca',
     'fluxo',
+    'empresa',
     'cnae',
     'complemento',
     'numero',
@@ -476,6 +484,7 @@ export default function ConsultaProcessos({
         analysis_status: analysisStatusOptions,
         categoria: categoriaOptions,
         fluxo: FLUXO_OPTIONS,
+        empresa: EMPRESA_OPTIONS,
         analista: analistaOptions,
     };
 
@@ -622,6 +631,10 @@ export default function ConsultaProcessos({
                             <Select id="filtro-fluxo" value={form.fluxo} onChange={(valor) => definir('fluxo', valor)} placeholder="Todos" options={simplifica ? FLUXO_SIMPLIFICA_OPTIONS : FLUXO_OPTIONS} />
                         </div>
                         {!simplifica && (<>
+                        <div>
+                            <Label htmlFor="filtro-empresa">Empresa</Label>
+                            <Select id="filtro-empresa" value={form.empresa} onChange={(valor) => definir('empresa', valor)} placeholder="Todas" options={EMPRESA_OPTIONS} />
+                        </div>
                         <div>
                             <Label htmlFor="filtro-categoria">Categoria</Label>
                             <Select id="filtro-categoria" value={form.categoria} onChange={(valor) => definir('categoria', valor)} placeholder="Todas" options={categoriaOptions} />

@@ -128,6 +128,7 @@ class ProcessoQueryService
             ->when($this->valor($filtros, 'bairro'), fn (Builder $q, string $v) => $q->whereLike('address_neighborhood', "%{$v}%", caseSensitive: false))
             ->when($this->valor($filtros, 'nome'), fn (Builder $q, string $v) => $this->aplicarNome($q, $v))
             ->when($this->valor($filtros, 'cnpj'), fn (Builder $q, string $v) => $this->aplicarDocumento($q, $v))
+            ->when($this->valor($filtros, 'empresa'), fn (Builder $q, string $v) => $this->aplicarEmpresa($q, $v))
             ->when($this->valor($filtros, 'cnae'), fn (Builder $q, string $v) => $this->aplicarCnae($q, $v))
             ->when($this->valor($filtros, 'numero'), fn (Builder $q, string $v) => $q->whereRaw("ltrim(trim(address_number), '0') = ?", [ltrim($v, '0')]))
             ->when($this->valor($filtros, 'complemento'), fn (Builder $q, string $v) => $q->whereLike('address_complement', "%{$v}%", caseSensitive: false))
@@ -518,6 +519,24 @@ class ProcessoQueryService
             $inner->whereHas('company', fn ($c) => $c->whereLike('cnpj', "%{$digitos}%", caseSensitive: false))
                 ->orWhereHas('requester', fn ($r) => $r->whereLike('cpf', "%{$digitos}%", caseSensitive: false));
         });
+    }
+
+    /**
+     * Empresa constituída (tem CNPJ de 14 dígitos) ou a constituir (o REGIN
+     * manda o CPF de quem pediu, ou não há empresa). Outro valor é ignorado.
+     *
+     * @param  Builder<ViabilityRequest>  $query
+     * @return Builder<ViabilityRequest>
+     */
+    private function aplicarEmpresa(Builder $query, string $empresa): Builder
+    {
+        $constituida = fn (Builder $c) => $c->whereRaw('length(cnpj) = 14');
+
+        return match ($empresa) {
+            'constituida' => $query->whereHas('company', $constituida),
+            'a_constituir' => $query->whereDoesntHave('company', $constituida),
+            default => $query,
+        };
     }
 
     /**

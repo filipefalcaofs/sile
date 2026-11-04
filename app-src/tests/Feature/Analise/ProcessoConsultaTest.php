@@ -226,6 +226,37 @@ class ProcessoConsultaTest extends TestCase
                 ->where('processos.data.0.id', $alvo->id));
     }
 
+    public function test_filtra_empresa_constituida_ou_a_constituir(): void
+    {
+        $constituida = $this->processo(['company_id' => Company::factory()->create(['cnpj' => '11222333000181'])->id]);
+        $aConstituir = $this->processo(['company_id' => Company::factory()->create(['cnpj' => '12345678909', 'legal_name' => 'Empresa a constituir'])->id]);
+        $semEmpresa = $this->processo(['company_id' => null]);
+        $analista = $this->analista();
+
+        $this->actingAs($analista, 'gestao')
+            ->get('/gestao/processos?empresa=constituida')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('processos.data', 1)
+                ->where('processos.data.0.id', $constituida->id)
+                ->where('filtros.empresa', 'constituida'));
+
+        $this->actingAs($analista, 'gestao')
+            ->get('/gestao/processos?empresa=a_constituir')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('processos.data', 2)
+                ->where('processos.data', fn ($dados) => collect($dados)->pluck('id')->sort()->values()->all() === collect([$aConstituir->id, $semEmpresa->id])->sort()->values()->all()));
+
+        $conteudo = $this->actingAs($analista, 'gestao')
+            ->get('/gestao/processos?empresa=constituida&formato=csv')
+            ->assertOk()
+            ->streamedContent();
+
+        $this->assertStringContainsString($constituida->protocol_number, $conteudo);
+        $this->assertStringNotContainsString($aConstituir->protocol_number, $conteudo);
+    }
+
     public function test_paginacao_server_side_expoe_meta(): void
     {
         $this->processo();

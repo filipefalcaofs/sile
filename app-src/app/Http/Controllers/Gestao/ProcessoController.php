@@ -584,7 +584,7 @@ class ProcessoController extends Controller
         $chaves = [
             'grupo', 'status', 'analysis_status', 'protocolo', 'bap', 'produto_tvl', 'servico', 'setor',
             'analista', 'categoria', 'inscricao', 'nome', 'cnpj', 'cep', 'logradouro',
-            'bairro', 'data_de', 'data_ate', 'busca', 'fluxo', 'cnae', 'complemento',
+            'bairro', 'data_de', 'data_ate', 'busca', 'fluxo', 'cnae', 'complemento', 'empresa',
         ];
 
         $filtros = [];

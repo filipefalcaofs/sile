@@ -29,7 +29,7 @@ const base: Props = {
     filtros: {
         grupo: '', status: '', protocolo: '', bap: '', produto_tvl: '', servico: '', setor: '', analista: '', categoria: '',
         inscricao: '', nome: '', cnpj: '', cep: '', logradouro: '', bairro: '', data_de: '', data_ate: '',
-        analysis_status: '', busca: '', fluxo: '', cnae: '', complemento: '', numero: '',
+        analysis_status: '', busca: '', fluxo: '', empresa: '', cnae: '', complemento: '', numero: '',
         per_page: 15, ordem: 'recentes', fonte: 'viabiliza',
     },
     abas: { todos: 0, em_analise: 0, distribuir: 0, pendencia: 0, concluido: 0 },
