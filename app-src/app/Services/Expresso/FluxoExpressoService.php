@@ -1148,7 +1148,7 @@ class FluxoExpressoService
      *
      * @param  array{numero: int, enunciado: string, cnae: string}  $pergunta
      */
-    private function indeferirPerguntaSemResposta(
+    public function indeferirPerguntaSemResposta(
         ViabilityRequest $request,
         ResolvedViability $resolved,
         array $pergunta,
