@@ -49,6 +49,14 @@ Schedule::command('processos:reprocessar-etapas')
     ->withoutOverlapping()
     ->onOneServer();
 
+// Tipo do imóvel pela inscrição: o protocolo já grava; aqui tenta de novo, de
+// hora em hora, os processos da última semana que chegaram sem tipo (cadastro
+// fora do ar no protocolo). Não troca tipo já gravado.
+Schedule::command('processos:preencher-tipo-imovel --aplicar --dias=7')
+    ->hourly()
+    ->withoutOverlapping()
+    ->onOneServer();
+
 // Bases de edificações complementares (polígono do lote quando a Prefeitura
 // não acha o lote). Só rodam com o interruptor ligado no painel de integrações.
 // Verificação diária: importa só a fonte sem carga concluída ou ignorada no

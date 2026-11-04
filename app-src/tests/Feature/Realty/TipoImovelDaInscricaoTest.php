@@ -18,13 +18,16 @@ use App\Services\Realty\PropertyRegistryUnavailableException;
 use App\Services\Solicitacao\ProtocolarSolicitacaoService;
 use Database\Seeders\PropertyTypeSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
+use Illuminate\Console\Scheduling\Event;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\Support\Geo\FakeSpatialRepository;
 use Tests\TestCase;
 
 /**
  * O tipo do imóvel do processo vem da declaração do REGIN; sem ela, vale o
- * uso do imóvel no Cadastro Imobiliário (campo Utilizacao da inscrição).
+ * uso do imóvel no Cadastro Imobiliário (campo Utilizacao da inscrição), em
+ * qualquer situação do processo.
  */
 class TipoImovelDaInscricaoTest extends TestCase
 {
@@ -181,23 +184,53 @@ class TipoImovelDaInscricaoTest extends TestCase
         $this->assertNull($processo->tipo_imovel);
     }
 
-    public function test_comando_com_aplicar_grava_nos_processos_em_aberto_sem_tipo(): void
+    public function test_comando_com_aplicar_grava_em_todos_os_processos_sem_tipo_em_qualquer_situacao(): void
     {
-        $this->fakeCadastro(['344672' => 'GALPÃO', '111' => 'GALPÃO', '222' => 'GALPÃO', '333' => 'GALPÃO']);
+        $this->fakeCadastro(['344672' => 'GALPÃO', '111' => 'GALPÃO', '222' => 'GALPÃO', '333' => 'GALPÃO', '444' => 'GALPÃO']);
         $emAnalise = $this->processo();
         $emPendencia = $this->processo(['status' => ViabilityRequestStatus::EmPendencia, 'property_registration' => '111']);
         $deferido = $this->processo(['status' => ViabilityRequestStatus::Deferida, 'property_registration' => '222']);
+        $indeferido = $this->processo(['status' => ViabilityRequestStatus::Indeferida, 'property_registration' => '444']);
         $comTipo = $this->processo(['property_registration' => '333', 'tipo_imovel' => 'Casa', 'tipo_imovel_normalized' => null]);
         $semInscricao = $this->processo(['property_registration' => null]);
 
-        $this->artisan('processos:preencher-tipo-imovel', ['--aplicar' => true])->assertSuccessful();
+        $this->artisan('processos:preencher-tipo-imovel', ['--aplicar' => true])
+            ->expectsOutputToContain('Sem inscrição imobiliária (sem fonte para o tipo): 1')
+            ->assertSuccessful();
 
         $this->assertSame('galpao', $emAnalise->refresh()->tipo_imovel_normalized);
         $this->assertSame('GALPÃO', $emPendencia->refresh()->tipo_imovel);
-        $this->assertNull($deferido->refresh()->tipo_imovel);
+        $this->assertSame('GALPÃO', $deferido->refresh()->tipo_imovel);
+        $this->assertSame('GALPÃO', $indeferido->refresh()->tipo_imovel);
         $this->assertSame('Casa', $comTipo->refresh()->tipo_imovel);
         $this->assertNull($semInscricao->refresh()->tipo_imovel);
-        $this->assertEqualsCanonicalizing(['344672', '111'], $this->consultadas);
+        $this->assertEqualsCanonicalizing(['344672', '111', '222', '444'], $this->consultadas);
+    }
+
+    public function test_comando_com_dias_so_consulta_os_processos_recentes(): void
+    {
+        $this->fakeCadastro(['344672' => 'GALPÃO', '111' => 'GALPÃO']);
+        $recente = $this->processo(['created_at' => now()->subDays(2)]);
+        $antigo = $this->processo(['property_registration' => '111', 'created_at' => now()->subDays(30)]);
+
+        $this->artisan('processos:preencher-tipo-imovel', ['--dias' => 7, '--aplicar' => true])->assertSuccessful();
+
+        $this->assertSame('GALPÃO', $recente->refresh()->tipo_imovel);
+        $this->assertNull($antigo->refresh()->tipo_imovel);
+        $this->assertSame(['344672'], $this->consultadas);
+    }
+
+    public function test_tipo_do_imovel_e_tentado_de_novo_de_hora_em_hora_nos_processos_recentes(): void
+    {
+        $evento = collect(app(Schedule::class)->events())
+            ->first(fn (Event $e): bool => str_contains((string) $e->command, 'processos:preencher-tipo-imovel'));
+
+        $this->assertNotNull($evento, 'Comando não agendado.');
+        $this->assertStringContainsString('--aplicar', (string) $evento->command);
+        $this->assertStringContainsString('--dias=7', (string) $evento->command);
+        $this->assertSame('0 * * * *', $evento->expression);
+        $this->assertTrue($evento->withoutOverlapping);
+        $this->assertTrue($evento->onOneServer);
     }
 
     public function test_comando_com_processo_atinge_so_ele_mesmo_fora_do_aberto(): void
