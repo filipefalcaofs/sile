@@ -20,10 +20,11 @@ use Illuminate\Support\Facades\Schema;
 /**
  * Tabelas brutas para o BI montar os próprios indicadores: uma linha por
  * registro, paginadas por id crescente e com carga incremental por data de
- * atualização. Ficam fora dado pessoal (CPF, nome, contato) e texto livre
- * (motivos, respostas, pareceres). CNPJ, razão social, endereço e coordenada
- * exata do imóvel só saem com `viabiliza.integrations.bi.identificados`; sem
- * isso a coordenada vem arredondada a 3 casas (≈110 m).
+ * atualização. Os dados pessoais e de identificação (CPF, nomes, contatos,
+ * CNPJ, endereço, coordenada exata) e os textos livres (motivos, convites,
+ * pareceres) saem com `viabiliza.integrations.bi.identificados`, ligado por
+ * padrão; desligado, ficam fora e a coordenada vem arredondada a 3 casas
+ * (≈110 m). Senha, token e 2FA nunca saem.
  */
 class BiDadosBrutos
 {
@@ -162,15 +163,28 @@ class BiDadosBrutos
                         'nome_fantasia' => 'Nome fantasia.',
                         'logradouro' => 'Logradouro do imóvel.',
                         'numero' => 'Número do imóvel.',
+                        'complemento' => 'Complemento do endereço.',
+                        'bairro_informado' => 'Bairro digitado no pedido.',
                         'cep' => 'CEP do imóvel.',
                         'inscricao_imobiliaria' => 'Inscrição imobiliária.',
+                        'referencia_externa' => 'Referência externa do pedido (protocolo da JUCEB, quando houver).',
+                        'empresa_email' => 'E-mail da empresa.',
+                        'empresa_telefone' => 'Telefone da empresa.',
+                        'solicitante_nome' => 'Nome do solicitante informado pela JUCEB.',
+                        'solicitante_cpf' => 'CPF do solicitante informado pela JUCEB.',
+                        'requerente_nome' => 'Nome do requerente com conta no portal.',
+                        'requerente_cpf' => 'CPF do requerente.',
+                        'requerente_email' => 'E-mail do requerente.',
+                        'requerente_telefone' => 'Telefone do requerente.',
+                        'motivo_cancelamento' => 'Motivo do cancelamento.',
+                        'justificativa_contingencia' => 'Justificativa do registro por contingência.',
                     ] : []),
                 ],
                 'filtros' => ['apos_id', 'limite', 'atualizado_desde', 'data_de', 'data_ate'],
                 'chave' => 'vr.id',
                 'atualizado' => 'vr.updated_at',
                 'processo' => 'vr.id',
-                'consulta' => fn (): Builder => DB::table('viability_requests as vr')
+                'consulta' => fn (): Builder => $this->comRequerente(DB::table('viability_requests as vr'))
                     ->whereNotNull('vr.protocoled_at')
                     ->where('vr.status', '!=', ViabilityRequestStatus::Rascunho->value)
                     ->leftJoin('companies as co', 'co.id', '=', 'vr.company_id')
@@ -182,6 +196,12 @@ class BiDadosBrutos
                         'co.cnpj as empresa_cnpj',
                         'co.legal_name as empresa_razao_social',
                         'co.trade_name as empresa_nome_fantasia',
+                        'co.email as empresa_email',
+                        'co.phone as empresa_telefone',
+                        'rq.name as requerente_nome',
+                        'rq.cpf as requerente_cpf',
+                        'rq.email as requerente_email',
+                        'rq.phone as requerente_telefone',
                         'vd.outcome as decisao_desfecho',
                         'vd.flow as decisao_fluxo',
                         'vd.decided_at as decidido_em',
@@ -246,8 +266,21 @@ class BiDadosBrutos
                         'nome_fantasia' => $r->empresa_nome_fantasia,
                         'logradouro' => $r->address_street,
                         'numero' => $r->address_number,
+                        'complemento' => $r->address_complement,
+                        'bairro_informado' => $r->address_neighborhood,
                         'cep' => $r->address_zip,
                         'inscricao_imobiliaria' => $r->property_registration,
+                        'referencia_externa' => $r->external_reference,
+                        'empresa_email' => $r->empresa_email,
+                        'empresa_telefone' => $r->empresa_telefone,
+                        'solicitante_nome' => $r->solicitante_nome ?? null,
+                        'solicitante_cpf' => $r->solicitante_cpf ?? null,
+                        'requerente_nome' => $r->requerente_nome,
+                        'requerente_cpf' => $r->requerente_cpf,
+                        'requerente_email' => $r->requerente_email,
+                        'requerente_telefone' => $r->requerente_telefone,
+                        'motivo_cancelamento' => $r->cancelled_reason,
+                        'justificativa_contingencia' => $r->contingency_reason,
                     ] : []),
                 ]],
             ],
@@ -297,6 +330,7 @@ class BiDadosBrutos
                     'abrigado_escritorio_virtual' => 'Decisão de empresa abrigada em escritório virtual.',
                     'fundamentos' => 'Lista dos fundamentos legais citados.',
                     'atualizado_em' => 'Última atualização.',
+                    ...($identificados ? ['motivo' => 'Texto do motivo da decisão (justificativa do indeferimento).'] : []),
                 ],
                 'filtros' => $filhos,
                 'chave' => 'vd.id',
@@ -319,6 +353,7 @@ class BiDadosBrutos
                     'abrigado_escritorio_virtual' => (bool) $r->is_virtual_office_tenant,
                     'fundamentos' => $this->lista($r->fundamentacao),
                     'atualizado_em' => $this->data($r->updated_at),
+                    ...($identificados ? ['motivo' => $r->reason] : []),
                 ]],
             ],
 
@@ -364,6 +399,10 @@ class BiDadosBrutos
                     'em' => 'Data e hora da mudança.',
                     'ator_tipo' => 'Quem agiu: servidor, requerente ou vazio quando foi o sistema.',
                     'ator_id' => 'Servidor que agiu (chave de analistas); vazio para requerente e sistema.',
+                    ...($identificados ? [
+                        'motivo' => 'Motivo registrado na mudança.',
+                        'rotulo_publico' => 'Texto mostrado ao requerente.',
+                    ] : []),
                 ],
                 'filtros' => $filhos,
                 'chave' => 't.id',
@@ -378,6 +417,7 @@ class BiDadosBrutos
                     'em' => $this->data($r->created_at),
                     'ator_tipo' => $r->ator_tipo,
                     'ator_id' => $this->inteiro($r->ator_id),
+                    ...($identificados ? ['motivo' => $r->reason, 'rotulo_publico' => $r->public_label] : []),
                 ]],
             ],
 
@@ -392,12 +432,13 @@ class BiDadosBrutos
                     'grupo' => 'Grupo da etapa nova: Distribuição, Análise, Convite ou Vistoria.',
                     'em' => 'Data e hora da mudança.',
                     'ator_id' => 'Usuário que agiu.',
+                    ...($identificados ? ['motivo' => 'Motivo registrado na mudança.'] : []),
                 ],
                 'filtros' => $filhos,
                 'chave' => 't.id',
                 'atualizado' => 't.created_at',
                 'processo' => 't.viability_request_id',
-                'consulta' => fn (): Builder => DB::table('analysis_status_transitions as t')->select('t.id', 't.viability_request_id', 't.from_status', 't.to_status', 't.actor_user_id', 't.created_at'),
+                'consulta' => fn (): Builder => DB::table('analysis_status_transitions as t')->select('t.id', 't.viability_request_id', 't.from_status', 't.to_status', 't.actor_user_id', 't.reason', 't.created_at'),
                 'linhas' => fn (object $r): array => [[
                     'id' => (int) $r->id,
                     'processo_id' => (int) $r->viability_request_id,
@@ -407,6 +448,7 @@ class BiDadosBrutos
                     'grupo' => AnalysisStatus::tryFrom((string) $r->to_status)?->grupo(),
                     'em' => $this->data($r->created_at),
                     'ator_id' => $this->inteiro($r->actor_user_id),
+                    ...($identificados ? ['motivo' => $r->reason] : []),
                 ]],
             ],
 
@@ -423,12 +465,17 @@ class BiDadosBrutos
                     'cancelado_em' => 'Cancelamento.',
                     'solicitado_por_id' => 'Usuário que abriu o convite.',
                     'atualizado_em' => 'Última atualização.',
+                    ...($identificados ? [
+                        'descricao' => 'O que foi pedido ao requerente.',
+                        'resposta' => 'Resposta do requerente.',
+                        'parecer' => 'Parecer do servidor sobre a resposta.',
+                    ] : []),
                 ],
                 'filtros' => $filhos,
                 'chave' => 'p.id',
                 'atualizado' => 'p.updated_at',
                 'processo' => 'p.viability_request_id',
-                'consulta' => fn (): Builder => DB::table('analysis_pendencies as p')->select('p.id', 'p.viability_request_id', 'p.status', 'p.created_at', 'p.due_at', 'p.responded_at', 'p.cancelled_at', 'p.requested_by_user_id', 'p.updated_at'),
+                'consulta' => fn (): Builder => DB::table('analysis_pendencies as p')->select('p.id', 'p.viability_request_id', 'p.status', 'p.created_at', 'p.due_at', 'p.responded_at', 'p.cancelled_at', 'p.requested_by_user_id', 'p.updated_at', 'p.description', 'p.response', 'p.parecer'),
                 'linhas' => fn (object $r): array => [[
                     'id' => (int) $r->id,
                     'processo_id' => (int) $r->viability_request_id,
@@ -440,6 +487,7 @@ class BiDadosBrutos
                     'cancelado_em' => $this->data($r->cancelled_at),
                     'solicitado_por_id' => $this->inteiro($r->requested_by_user_id),
                     'atualizado_em' => $this->data($r->updated_at),
+                    ...($identificados ? ['descricao' => $r->description, 'resposta' => $r->response, 'parecer' => $r->parecer] : []),
                 ]],
             ],
 
@@ -463,6 +511,17 @@ class BiDadosBrutos
                     'area_ocupada_atividade_m2' => 'Área ocupada pela atividade.',
                     'atividade_em_funcionamento' => 'A atividade já funcionava no dia.',
                     'atualizado_em' => 'Última atualização.',
+                    ...($identificados ? [
+                        'logradouro' => 'Logradouro conferido.',
+                        'numero_metrico' => 'Número métrico.',
+                        'bairro' => 'Bairro conferido.',
+                        'cep' => 'CEP conferido.',
+                        'ponto_referencia' => 'Ponto de referência.',
+                        'contato_nome' => 'Pessoa que recebeu a vistoria.',
+                        'contato_telefone' => 'Telefone do contato.',
+                        'observacoes' => 'Observações do vistoriador.',
+                        'parecer' => 'Parecer da vistoria.',
+                    ] : []),
                 ],
                 'filtros' => $filhos,
                 'chave' => 'i.id',
@@ -471,7 +530,8 @@ class BiDadosBrutos
                 'consulta' => fn (): Builder => DB::table('inspections as i')->select(
                     'i.id', 'i.viability_request_id', 'i.tipo', 'i.status', 'i.vistoriador_user_id', 'i.opened_at', 'i.concluded_at',
                     'i.data_vistoria', 'i.zona', 'i.via', 'i.tipo_imovel', 'i.area_total_m2', 'i.area_ocupada_atividade_m2',
-                    'i.atividade_em_funcionamento', 'i.updated_at',
+                    'i.atividade_em_funcionamento', 'i.updated_at', 'i.logradouro', 'i.numero_metrico', 'i.bairro', 'i.cep',
+                    'i.ponto_referencia', 'i.contato_nome', 'i.contato_telefone', 'i.observacoes', 'i.parecer',
                 ),
                 'linhas' => fn (object $r): array => [[
                     'id' => (int) $r->id,
@@ -491,6 +551,17 @@ class BiDadosBrutos
                     'area_ocupada_atividade_m2' => $this->decimal($r->area_ocupada_atividade_m2),
                     'atividade_em_funcionamento' => $r->atividade_em_funcionamento,
                     'atualizado_em' => $this->data($r->updated_at),
+                    ...($identificados ? [
+                        'logradouro' => $r->logradouro,
+                        'numero_metrico' => $r->numero_metrico,
+                        'bairro' => $r->bairro,
+                        'cep' => $r->cep,
+                        'ponto_referencia' => $r->ponto_referencia,
+                        'contato_nome' => $r->contato_nome,
+                        'contato_telefone' => $r->contato_telefone,
+                        'observacoes' => $r->observacoes,
+                        'parecer' => $r->parecer,
+                    ] : []),
                 ]],
             ],
 
@@ -506,12 +577,13 @@ class BiDadosBrutos
                     'criada_em' => 'Abertura da ficha.',
                     'finalizada_em' => 'Finalização da ficha.',
                     'atualizado_em' => 'Última atualização.',
+                    ...($identificados ? ['parecer' => 'Parecer da análise técnica.'] : []),
                 ],
                 'filtros' => $filhos,
                 'chave' => 'a.id',
                 'atualizado' => 'a.updated_at',
                 'processo' => 'a.viability_request_id',
-                'consulta' => fn (): Builder => DB::table('analysis_records as a')->select('a.id', 'a.viability_request_id', 'a.revision', 'a.status', 'a.analyst_user_id', 'a.address_confirmed', 'a.created_at', 'a.finalized_at', 'a.updated_at'),
+                'consulta' => fn (): Builder => DB::table('analysis_records as a')->select('a.id', 'a.viability_request_id', 'a.revision', 'a.status', 'a.analyst_user_id', 'a.address_confirmed', 'a.created_at', 'a.finalized_at', 'a.updated_at', 'a.parecer'),
                 'linhas' => fn (object $r): array => [[
                     'id' => (int) $r->id,
                     'processo_id' => (int) $r->viability_request_id,
@@ -522,6 +594,7 @@ class BiDadosBrutos
                     'criada_em' => $this->data($r->created_at),
                     'finalizada_em' => $this->data($r->finalized_at),
                     'atualizado_em' => $this->data($r->updated_at),
+                    ...($identificados ? ['parecer' => $r->parecer] : []),
                 ]],
             ],
 
@@ -643,14 +716,18 @@ class BiDadosBrutos
             ],
 
             'analistas' => [
-                'descricao' => 'Servidores que aparecem como analista, vistoriador ou autor de decisão e transição. O nome só vem com a liberação nominal; sem ela, um rótulo pelo código.',
-                'campos' => ['id' => 'Identificador (chave de analista_id, decidido_por_id, ator_id e vistoriador_id).', 'nome' => 'Nome, ou "Analista {id}" sem a liberação nominal.'],
+                'descricao' => 'Servidores que aparecem como analista, vistoriador ou autor de decisão e transição. Sem a liberação nominal, o nome vira um rótulo pelo código e o e-mail fica fora.',
+                'campos' => [
+                    'id' => 'Identificador (chave de analista_id, decidido_por_id, ator_id e vistoriador_id).',
+                    'nome' => 'Nome, ou "Analista {id}" sem a liberação nominal.',
+                    ...($nominal ? ['email' => 'E-mail funcional.'] : []),
+                ],
                 'filtros' => ['apos_id', 'limite'],
                 'chave' => 'u.id',
                 'atualizado' => 'u.updated_at',
                 'processo' => 'u.id',
                 'consulta' => fn (): Builder => DB::table('users as u')
-                    ->select('u.id', 'u.name')
+                    ->select('u.id', 'u.name', 'u.email')
                     ->where(fn (Builder $q): Builder => $q
                         ->whereIn('u.id', DB::table('viability_requests')->whereNotNull('assigned_user_id')->select('assigned_user_id'))
                         ->orWhereIn('u.id', DB::table('viability_decisions')->whereNotNull('decided_by_user_id')->select('decided_by_user_id'))
@@ -659,9 +736,21 @@ class BiDadosBrutos
                 'linhas' => fn (object $r): array => [[
                     'id' => (int) $r->id,
                     'nome' => $nominal ? $r->name : 'Analista '.$r->id,
+                    ...($nominal ? ['email' => $r->email] : []),
                 ]],
             ],
         ];
+    }
+
+    /**
+     * Junta o requerente com conta no portal (`rq`): cidadão onde o cadastro é
+     * separado, usuário onde não é.
+     */
+    private function comRequerente(Builder $query): Builder
+    {
+        return Schema::hasColumn('viability_requests', 'requester_cidadao_id')
+            ? $query->leftJoin('cidadaos as rq', 'rq.id', '=', 'vr.requester_cidadao_id')
+            : $query->leftJoin('users as rq', 'rq.id', '=', 'vr.requester_user_id');
     }
 
     /**
@@ -671,7 +760,7 @@ class BiDadosBrutos
     private function transicoesComAtor(): Builder
     {
         $query = DB::table('viability_request_transitions as t')
-            ->select('t.id', 't.viability_request_id', 't.from_status', 't.to_status', 't.created_at');
+            ->select('t.id', 't.viability_request_id', 't.from_status', 't.to_status', 't.reason', 't.public_label', 't.created_at');
 
         if (Schema::hasColumn('viability_request_transitions', 'actor_user_id')) {
             return $query
