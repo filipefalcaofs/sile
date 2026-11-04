@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Integracao\BiController;
+use App\Http\Controllers\Integracao\BiDadosController;
 use App\Http\Controllers\Integracao\ConsultaTvlController;
 use App\Http\Controllers\Portal\ProcessosPortalServicosController;
 use App\Http\Controllers\Regin\ReginDocumentacaoController;
@@ -70,6 +71,14 @@ Route::middleware(LogInboundIntegration::class)->group(function (): void {
             Route::get('/{slug}', [BiController::class, 'indicador'])
                 ->where('slug', '[a-z0-9\\-]+')
                 ->name('integracao.bi.indicador');
+        });
+    Route::middleware(['throttle:bi-api', AutenticaBi::class])
+        ->prefix('api_integracao/bi/dados')
+        ->group(function (): void {
+            Route::get('/', [BiDadosController::class, 'catalogo'])->name('integracao.bi.dados.catalogo');
+            Route::get('/{tabela}', [BiDadosController::class, 'tabela'])
+                ->where('tabela', '[a-z0-9\\-]+')
+                ->name('integracao.bi.dados.tabela');
         });
 });
 

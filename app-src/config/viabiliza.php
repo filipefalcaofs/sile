@@ -609,6 +609,8 @@ return [
             'senha' => (string) env('BI_API_SENHA', ''),
             'validade_minutos' => 60,
             'nominal' => (bool) env('BI_API_NOMINAL', false),
+            // Libera CNPJ, razão social, endereço e coordenada exata nos dados brutos.
+            'identificados' => (bool) env('BI_API_IDENTIFICADOS', false),
             'por_minuto' => (int) env('BI_API_POR_MINUTO', 120),
         ],
         'regin' => [
