@@ -204,11 +204,21 @@ export default function Fila({
             id: 'data_entrada',
             header: 'Data de entrada',
             cellClassName: 'whitespace-nowrap',
-            cell: (item) => formatarDataHora(item.protocoled_at),
+            cell: (item) => {
+                const [data, hora] = formatarDataHora(item.protocoled_at).split(', ');
+
+                return (
+                    <div className="flex flex-col">
+                        <span>{data}</span>
+                        {hora && <span className="text-theme-xs text-gray-400 dark:text-gray-500">{hora}</span>}
+                    </div>
+                );
+            },
         },
         {
             id: 'endereco',
             header: 'Endereço',
+            cellClassName: 'min-w-44 max-w-56',
             cell: (item) => (
                 <span className="text-gray-700 dark:text-gray-300">{item.imovel !== '' ? item.imovel : '-'}</span>
             ),
@@ -216,13 +226,13 @@ export default function Fila({
         {
             id: 'tipo_imovel',
             header: 'Tipo do imóvel',
-            cellClassName: 'min-w-32',
+            cellClassName: 'min-w-24 max-w-32',
             cell: (item) => item.tipo_imovel ?? <span className="text-gray-400 dark:text-gray-500">-</span>,
         },
         {
             id: 'servico',
             header: 'Serviço',
-            cellClassName: 'min-w-56 max-w-xs',
+            cellClassName: 'min-w-40 max-w-52',
             cell: (item) =>
                 item.servicos.length === 0 ? (
                     <span className="text-gray-400 dark:text-gray-500">-</span>
@@ -239,15 +249,15 @@ export default function Fila({
         {
             id: 'cnae',
             header: 'CNAE',
-            cellClassName: 'min-w-64 max-w-sm',
+            cellClassName: 'min-w-48 max-w-60',
             cell: (item) => <CnaesDoProcesso cnaes={item.cnaes_detalhe ?? []} />,
         },
         {
             id: 'analise',
             header: 'Análise',
-            cellClassName: 'max-w-64 align-top whitespace-normal',
+            cellClassName: 'max-w-52 align-top whitespace-normal',
             cell: (item) => (
-                <div className="flex w-64 max-w-full flex-col items-start gap-1">
+                <div className="flex w-52 max-w-full flex-col items-start gap-1">
                     <CategoriaBadges categorias={item.categorias} />
                     {item.motivo_da_analise ? (
                         <span className="min-w-0 whitespace-normal text-theme-xs leading-snug text-gray-500 dark:text-gray-400">
@@ -262,7 +272,7 @@ export default function Fila({
         {
             id: 'status_tramitacao',
             header: 'Status',
-            cellClassName: 'whitespace-nowrap',
+            cellClassName: 'min-w-28 max-w-36',
             cell: (item) => (
                 <span className={item.analysis_status === 'convite_respondido' ? 'font-bold text-gray-900 dark:text-white' : undefined}>
                     {item.analysis_status_label ?? item.status_label ?? <span className="text-gray-400 dark:text-gray-500">-</span>}
@@ -273,6 +283,7 @@ export default function Fila({
             id: 'actions',
             header: 'Ações',
             align: 'end',
+            sticky: 'end',
             cellClassName: 'whitespace-nowrap',
             cell: (item) => (
                 <div className="flex justify-end">
@@ -356,7 +367,8 @@ export default function Fila({
                                 columns={columns}
                                 rows={processos.data}
                                 rowKey={(item) => item.id}
-                                density="compact"
+                                density="tight"
+                                maxHeightClassName="max-h-[70vh]"
                                 emptyState={
                                     visao === 'analise' ? (
                                         <EmptyState
