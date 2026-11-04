@@ -39,6 +39,7 @@ import { Modal } from '@/components/ui/modal';
 import GestaoLayout from '@/layouts/gestao-layout';
 import type { SharedProps } from '@/types';
 import { agruparCnaes } from './agrupar-cnaes';
+import { enquadramentoExibido, quadrosExibidos, type EnquadramentoMotor } from './enquadramento-exibido';
 
 type StatusFicha = 'deferida' | 'indeferida';
 
@@ -56,6 +57,7 @@ interface PerCnae {
     valor_tll?: number | string | null;
     codigo_louos?: string | null;
     codigo_tll?: string | null;
+    enquadramento_motor?: EnquadramentoMotor | null;
     gatilhos?: string[] | null;
     motivo_fora_do_expresso?: string | null;
     fundamentacao?: string[] | null;
@@ -271,6 +273,11 @@ interface EscritorioVirtual {
 
 interface EnquadramentoOpcao {
     codigo_louos: string;
+    subgrupo?: string | null;
+    subgrupo_faixas?: { codigo: string; limite: string }[];
+    subgrupo_area?: string | null;
+    grupo_area?: string | null;
+    quadros?: QuadroChecklist[] | null;
     denominacao_louos: string | null;
     codigo_tll: string | null;
     especificacao_tll: string | null;
@@ -1995,6 +2002,11 @@ export default function FichaAnaliseShow({
                                             const opcaoSelecionada = opcoesCnae.find(
                                                 (opcao) => `${opcao.codigo_louos}|${opcao.codigo_tll ?? ''}` === enquadramentoAtual,
                                             );
+                                            const enquadramento = enquadramentoExibido(item, opcaoSelecionada);
+                                            const subgrupoExibido = enquadramento.subgrupo;
+                                            const grupoExibido = enquadramento.alterado ? enquadramento.grupo : (enquadramento.grupo ?? item.grupo_uso);
+                                            const faixasPlanilha = opcaoSelecionada?.subgrupo_faixas ?? [];
+                                            const quadros = quadrosExibidos(enquadramento.alterado, item.quadros ?? [], opcaoSelecionada);
                                             const riscoDaAtividade = opcaoSelecionada?.risco_label ?? item.risco_municipal ?? null;
                                             const atualForaDaPlanilha =
                                                 item.codigo_louos != null &&
@@ -2026,12 +2038,25 @@ export default function FichaAnaliseShow({
                                                                     </span>
                                                                 )}
                                                             </div>
-                                                            {(item.subgrupo_uso || item.grupo_uso || item.codigo_louos) && (
+                                                            {(subgrupoExibido || grupoExibido || item.codigo_louos) && (
                                                                 <p className="mt-1 text-theme-xs text-gray-500 dark:text-gray-400">
                                                                     Enquadramento:{' '}
-                                                                    {[item.subgrupo_uso ?? item.grupo_uso, item.codigo_louos]
+                                                                    {[subgrupoExibido ?? grupoExibido, item.codigo_louos]
                                                                         .filter(Boolean)
                                                                         .join(' · ')}
+                                                                    {subgrupoExibido == null && faixasPlanilha.length > 0 && (
+                                                                        <span>
+                                                                            {' '}
+                                                                            ({faixasPlanilha.map((faixa) => `${faixa.codigo} ${faixa.limite}`).join('; ')})
+                                                                        </span>
+                                                                    )}
+                                                                    {enquadramento.alterado &&
+                                                                        enquadramento.subgrupoMotor &&
+                                                                        enquadramento.subgrupoMotor !== subgrupoExibido && (
+                                                                            <span className="ml-1 font-medium text-warning-600 dark:text-orange-400">
+                                                                                (alterado pelo analista, o sistema sugeriu {enquadramento.subgrupoMotor})
+                                                                            </span>
+                                                                        )}
                                                                 </p>
                                                             )}
                                                         </div>
@@ -2048,8 +2073,24 @@ export default function FichaAnaliseShow({
                                                         </div>
                                                     </div>
 
-                                                    {(item.quadros?.length ?? 0) > 0 && (
-                                                        <QuadrosChecklist quadros={item.quadros ?? []} />
+                                                    {quadros.quadros.length > 0 && (
+                                                        <>
+                                                            {quadros.recalculados ? (
+                                                                <p className="mt-3 text-theme-xs text-warning-600 dark:text-orange-400">
+                                                                    Quadros recalculados para o enquadramento escolhido
+                                                                    {subgrupoExibido ? ` (${subgrupoExibido})` : ''}.
+                                                                </p>
+                                                            ) : (
+                                                                enquadramento.alterado && (
+                                                                    <p className="mt-3 text-theme-xs text-warning-600 dark:text-orange-400">
+                                                                        Os quadros abaixo foram calculados para o enquadramento sugerido pelo sistema
+                                                                        {enquadramento.subgrupoMotor ? ` (${enquadramento.subgrupoMotor})` : ''}. Confira a
+                                                                        permissão do novo enquadramento na zona do imóvel.
+                                                                    </p>
+                                                                )
+                                                            )}
+                                                            <QuadrosChecklist quadros={quadros.quadros} />
+                                                        </>
                                                     )}
 
                                                     {item.cnae.replace(/\D/g, '') ===

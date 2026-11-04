@@ -10,6 +10,7 @@ use App\Models\LouosQuadro11CondicaoVia;
 use App\Models\RuleVersion;
 use App\Models\TratamentoCondicionante;
 use App\Services\Decisao\DecisionTextCatalog;
+use App\Services\Geo\TerritoryResult;
 use App\Services\Territorial\TerritorialRuleService;
 use App\Services\Tratamento\TratamentoRamoInput;
 use App\Services\Tratamento\TratamentoRamoResolver;
@@ -95,6 +96,44 @@ class LouosEnquadramentoService
         );
 
         return $result;
+    }
+
+    /**
+     * Quadros 10 e 11-A de um grupo/subgrupo escolhido fora do motor (troca do
+     * enquadramento pelo analista na ficha), sobre o território já gravado na
+     * pré-análise. Mesma busca e mesmas degradações do enquadramento completo,
+     * nas versões vigentes e sem auditoria (é só leitura para a tela).
+     *
+     * @param  array<string, mixed>  $territorio  TerritoryResult::toArray() do snapshot.
+     * @return array{enquadramento: array<string, mixed>, quadro10: array<string, mixed>, quadro11a: array<string, mixed>}
+     */
+    public function quadrosDoUso(?string $grupo, ?string $subgrupo, array $territorio): array
+    {
+        $dimensao = fn (string $chave): array => is_array($territorio[$chave] ?? null) ? $territorio[$chave] : ['status' => EnquadramentoResult::STATUS_INDISPONIVEL];
+
+        $input = new EnquadramentoInput(
+            area: 0,
+            cnaePrincipal: '',
+            territory: new TerritoryResult(
+                bairro: $dimensao('bairro'),
+                via: $dimensao('via'),
+                zona: $dimensao('zona'),
+                lote: $dimensao('lote'),
+                restricoes: $dimensao('restricoes'),
+            ),
+        );
+
+        $enquadramento = [
+            'status' => filled($grupo) ? EnquadramentoResult::STATUS_IDENTIFICADO : EnquadramentoResult::STATUS_NAO_ENCONTRADO,
+            'grupo' => filled($grupo) ? $grupo : null,
+            'subgrupo' => filled($subgrupo) ? $subgrupo : null,
+        ];
+
+        return [
+            'enquadramento' => $enquadramento,
+            'quadro10' => $this->enquadrarQuadro10($enquadramento, $input),
+            'quadro11a' => $this->enquadrarCondicoesVia(RuleDomain::LouosQuadro11a, $enquadramento, $input),
+        ];
     }
 
     /**
