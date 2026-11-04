@@ -77,7 +77,7 @@ class RelatorioSedeEscritorioVirtualService
         return [
             'tipo' => $this->ehSede($r) ? 'sede' : 'abrigado',
             'tvl' => ViabilityDecision::semPrefixo($r->decision?->tvl_product_number),
-            'razao_social' => $r->company?->trade_name ?: $r->company?->legal_name,
+            'razao_social' => $r->company?->nomeExibido(),
             'data_emissao' => $r->decision?->decided_at?->toIso8601String(),
             'inscricao' => $r->property_registration,
             'protocolo' => $r->protocol_number,

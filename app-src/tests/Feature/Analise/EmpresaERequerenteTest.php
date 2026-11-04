@@ -53,7 +53,7 @@ class EmpresaERequerenteTest extends TestCase
         $empresa = Company::factory()->create(['cnpj' => '12345678901', 'legal_name' => 'MARIA SOUZA', 'trade_name' => null]);
         $processo = $this->processo($empresa, 'Maria Souza');
 
-        $this->assertSame('Empresa a constituir', $processo->nomeDaEmpresa());
+        $this->assertNull($processo->nomeDaEmpresa());
     }
 
     public function test_sem_solicitante_o_requerente_e_o_usuario_que_pediu(): void

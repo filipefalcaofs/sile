@@ -10,12 +10,16 @@ use App\Services\Sefaz\ConsultarComparacaoCnaesService;
 use App\Services\Sefaz\SefazConsultaIndisponivelException;
 use App\Services\Sefaz\SefazViabilidadeConsultaGateway;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\Http;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Spatie\Activitylog\Models\Activity;
+use Tests\Support\Sefaz\ConfiguraLegadoSimplifica;
 use Tests\Support\Sefaz\FakeSefazViabilidadeConsultaGateway;
 use Tests\TestCase;
 
 class ConsultarComparacaoCnaesServiceTest extends TestCase
 {
+    use ConfiguraLegadoSimplifica;
     use LazilyRefreshDatabase;
 
     private const CNPJ = '12345678000190';
@@ -37,7 +41,7 @@ class ConsultarComparacaoCnaesServiceTest extends TestCase
     /**
      * @param  list<string>  $codigos
      */
-    private function pedidoDaJunta(array $codigos, string $cnpj = self::CNPJ, ?string $intencao = null, string $evento = '244'): ViabilityRequest
+    private function pedidoDaJunta(array $codigos, string $cnpj = self::CNPJ, ?string $intencao = null, string $evento = '244', string $nomeEvento = 'Evento'): ViabilityRequest
     {
         $request = ViabilityRequest::factory()->protocoled()->create([
             'company_id' => Company::factory()->create(['cnpj' => $cnpj])->id,
@@ -48,7 +52,7 @@ class ConsultarComparacaoCnaesServiceTest extends TestCase
             $request->cnaes()->attach($cnae->id, ['is_primary' => $indice === 0, 'intencao' => $intencao]);
         }
 
-        ViabilityRequestEvento::factory()->create(['viability_request_id' => $request->id, 'codigo' => $evento, 'nome' => 'Evento']);
+        ViabilityRequestEvento::factory()->create(['viability_request_id' => $request->id, 'codigo' => $evento, 'nome' => $nomeEvento]);
 
         return $request->fresh();
     }
@@ -85,6 +89,63 @@ class ConsultarComparacaoCnaesServiceTest extends TestCase
     public function test_pedido_que_nao_e_alteracao_da_junta_nao_consulta(): void
     {
         $request = $this->pedidoDaJunta(['4711302'], evento: '101');
+
+        $this->assertNull(app(ConsultarComparacaoCnaesService::class)->executar($request));
+    }
+
+    private function legadoCom(string $cnpj, string $numero, array $codigos): void
+    {
+        config(['viabiliza.sefaz.consulta.ativa' => false]);
+        $this->configurarLegado();
+        Http::fake([
+            'legado.test/v1/provisorias*' => Http::response(['data' => [
+                ['numero' => (int) $numero, 'tipo' => 'provisoria', 'deferida' => true, 'ativa' => true, 'validade' => '2027-01-01T00:00:00Z'],
+            ]]),
+            "legado.test/v1/tvls/{$numero}" => Http::response(['data' => [
+                'numero' => (int) $numero, 'tipo' => 'provisoria', 'deferida' => true, 'ativa' => true, 'validade' => '2027-01-01T00:00:00Z',
+                'atividades' => array_map(fn (string $codigo): array => ['codigo' => $codigo, 'descricao' => 'Atividade'], $codigos),
+            ]]),
+        ]);
+    }
+
+    /**
+     * @return array<string, array{0: string, 1: string}>
+     */
+    public static function alteracoesDaJunta(): array
+    {
+        return [
+            'atividade' => ['244', 'Alteração de atividades econômicas (principal e secundárias)'],
+            'endereço' => ['211', 'Alteração de endereço dentro do mesmo município'],
+            'outra alteração' => ['220', 'Alteração do nome empresarial (firma ou denominação)'],
+        ];
+    }
+
+    #[DataProvider('alteracoesDaJunta')]
+    public function test_alteracao_da_junta_com_cnpj_compara_com_o_simplifica(string $codigo, string $nome): void
+    {
+        $this->legadoCom(self::CNPJ, '416389', ['4711-3/02', '4520-0/06']);
+        $request = $this->pedidoDaJunta(['4711302', '5611201'], evento: $codigo, nomeEvento: $nome);
+
+        $resultado = app(ConsultarComparacaoCnaesService::class)->executar($request);
+
+        $this->assertSame(['5611201'], $resultado?->incluidas);
+        $this->assertSame(['4711302'], $resultado?->mantidas);
+        $this->assertSame(['4520006'], $resultado?->excluidas);
+        $this->assertSame('416389', $request->fresh()->comparacao_cnaes['numero_viabilidade']);
+    }
+
+    public function test_inscricao_de_estabelecimento_nao_compara_com_o_simplifica(): void
+    {
+        $this->legadoCom(self::CNPJ, '416389', ['4711-3/02']);
+        $request = $this->pedidoDaJunta(['4711302'], evento: '102', nomeEvento: 'Inscrição dos demais estabelecimentos');
+
+        $this->assertNull(app(ConsultarComparacaoCnaesService::class)->executar($request));
+    }
+
+    public function test_alteracao_sem_cnpj_de_verdade_nao_compara(): void
+    {
+        $this->legadoCom('12345678901', '416389', ['4711-3/02']);
+        $request = $this->pedidoDaJunta(['4711302'], cnpj: '12345678901', evento: '211', nomeEvento: 'Alteração de endereço dentro do mesmo município');
 
         $this->assertNull(app(ConsultarComparacaoCnaesService::class)->executar($request));
     }

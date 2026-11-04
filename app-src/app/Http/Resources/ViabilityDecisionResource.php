@@ -52,7 +52,7 @@ class ViabilityDecisionResource extends JsonResource
                 'protocol_number' => $solicitacao->protocol_number,
                 'status' => $solicitacao->status->value,
                 'status_label' => $solicitacao->status->label(),
-                'empresa' => $solicitacao->company?->trade_name ?: $solicitacao->company?->legal_name,
+                'empresa' => $solicitacao->company?->nomeExibido(),
                 'cnpj' => $solicitacao->company?->formatted_cnpj,
                 'endereco' => $this->enderecoResumo($solicitacao),
             ],

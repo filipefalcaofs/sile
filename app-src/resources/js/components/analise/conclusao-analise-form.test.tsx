@@ -177,3 +177,59 @@ describe('ConclusaoAnaliseForm — tipo do deferimento e validade', () => {
         expect(botaoConcluir().disabled).toBe(false);
     });
 });
+
+describe('ConclusaoAnaliseForm — parecer obrigatório', () => {
+    let root: Root;
+    let host: HTMLDivElement;
+
+    (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+
+    afterEach(() => {
+        act(() => {
+            root.unmount();
+        });
+        host.remove();
+    });
+
+    function montar(parecer: string) {
+        host = document.createElement('div');
+        document.body.appendChild(host);
+        root = createRoot(host);
+        act(() => {
+            root.render(
+                <ConclusaoAnaliseForm
+                    resultadoId="resultado"
+                    resultado="revogado"
+                    onResultado={() => undefined}
+                    opcoes={[{ value: 'revogado', label: 'Revogado' }]}
+                    parecer={parecer}
+                    onParecer={() => undefined}
+                    parecerObrigatorio
+                    onConfirm={() => undefined}
+                />,
+            );
+        });
+    }
+
+    function botaoConcluir(): HTMLButtonElement {
+        const botao = Array.from(host.querySelectorAll('button')).find((item) => item.textContent?.includes('Concluir análise'));
+
+        if (!botao) {
+            throw new Error('botão Concluir análise não encontrado');
+        }
+
+        return botao as HTMLButtonElement;
+    }
+
+    it('não deixa concluir com o parecer em branco', () => {
+        montar('   ');
+
+        expect(botaoConcluir().disabled).toBe(true);
+    });
+
+    it('libera a conclusão com o parecer escrito', () => {
+        montar('Atividade não permitida em residência.');
+
+        expect(botaoConcluir().disabled).toBe(false);
+    });
+});

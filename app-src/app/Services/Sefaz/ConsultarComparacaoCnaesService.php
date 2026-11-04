@@ -3,13 +3,13 @@
 namespace App\Services\Sefaz;
 
 use App\Models\ViabilityRequest;
-use App\Services\Expresso\SedeEscritorioVirtualGatilho;
 use App\Support\Audit\AuditService;
 
 /**
- * Alteração de atividades recebida da JUCEB (evento 244): busca a viabilidade
- * anterior da empresa (processo anterior no Viabiliza, legado ou SEFAZ), compara
- * os CNAEs e grava o resultado no processo.
+ * Alteração recebida da JUCEB (atividade, endereço ou outra) de empresa com
+ * CNPJ: busca a viabilidade anterior da empresa (processo anterior no
+ * Viabiliza, legado Simplifica ou SEFAZ), compara os CNAEs e grava as
+ * incluídas, existentes e excluídas no processo.
  * Pedido do portal, que traz a intenção incluir/excluir por CNAE, não passa por aqui.
  */
 class ConsultarComparacaoCnaesService
@@ -18,14 +18,15 @@ class ConsultarComparacaoCnaesService
         private CadeiaViabilidadeAnterior $anterior,
         private ComparacaoCnaesViabilidadeService $comparacao,
         private AuditService $audit,
+        private LegadoSimplificaAjustes $legado,
     ) {}
 
     public function aplica(ViabilityRequest $request): bool
     {
-        return (bool) config('viabiliza.sefaz.consulta.ativa', false)
-            && $request->eventos()->where('codigo', SedeEscritorioVirtualGatilho::EVENTO_ALTERACAO_ATIVIDADES)->exists()
-            && ! $request->cnaes()->wherePivotNotNull('intencao')->exists()
-            && filled($request->company?->cnpj);
+        return ((bool) config('viabiliza.sefaz.consulta.ativa', false) || $this->legado->disponivel())
+            && strlen((string) preg_replace('/\D/', '', (string) $request->company?->cnpj)) === 14
+            && $request->eAlteracaoDaJunta()
+            && ! $request->cnaes()->wherePivotNotNull('intencao')->exists();
     }
 
     /**
@@ -53,6 +54,28 @@ class ConsultarComparacaoCnaesService
     }
 
     /**
+     * Compara com a viabilidade anterior sem gravar nada no processo.
+     *
+     * @return array{resultado: ComparacaoCnaesViabilidade, fonte: ?string}
+     *
+     * @throws SefazConsultaIndisponivelException
+     */
+    public function compararSemGravar(ViabilityRequest $request): array
+    {
+        $encontrada = $this->anterior->consultar($request, (string) $request->company?->cnpj);
+        $viabilidade = $encontrada['viabilidade'] ?? null;
+
+        return [
+            'resultado' => $this->comparacao->comparar(
+                $request->cnaes()->pluck('code')->all(),
+                $viabilidade?->cnaes,
+                $viabilidade?->numero,
+            ),
+            'fonte' => $encontrada['fonte'] ?? null,
+        ];
+    }
+
+    /**
      * @throws SefazConsultaIndisponivelException
      */
     public function executar(ViabilityRequest $request, bool $refazer = false): ?ComparacaoCnaesViabilidade
@@ -65,14 +88,8 @@ class ConsultarComparacaoCnaesService
             return ComparacaoCnaesViabilidade::fromArray($request->comparacao_cnaes);
         }
 
-        $encontrada = $this->anterior->consultar($request, (string) $request->company->cnpj);
-        $viabilidade = $encontrada['viabilidade'] ?? null;
-
-        $resultado = $this->comparacao->comparar(
-            $request->cnaes()->pluck('code')->all(),
-            $viabilidade?->cnaes,
-            $viabilidade?->numero,
-        );
+        ['resultado' => $resultado, 'fonte' => $fonte] = $this->compararSemGravar($request);
+        $encontrada = ['fonte' => $fonte];
 
         $request->forceFill(['comparacao_cnaes' => $resultado->toArray()])->save();
 

@@ -216,7 +216,7 @@ class FluxoExpressoService
                 ];
             }
 
-            if ($comparacao->incluidas === []) {
+            if ($comparacao->incluidas === [] && ! $request->alteraEndereco()) {
                 return $pendencias !== []
                     ? $this->encaminharPendencias($request, $pendencias, $actor)
                     : $this->deferirExclusao($request, $actor, $comparacao->excluidas);

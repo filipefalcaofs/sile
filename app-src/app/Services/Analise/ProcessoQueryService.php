@@ -47,7 +47,7 @@ class ProcessoQueryService
     /** Filtro "Serviço" pelo nome parametrizado (De x Para), normalizado. */
     public const PREFIXO_NOME_SERVICO = 'n';
 
-    public const CHAVES_FILTRO_CAIXA = ['analysis_status', 'servico', 'protocolo', 'bap', 'data_de', 'data_ate', 'nome', 'cnpj', 'bairro', 'categoria', 'analista', 'cnae', 'complemento'];
+    public const CHAVES_FILTRO_CAIXA = ['analysis_status', 'servico', 'protocolo', 'bap', 'data_de', 'data_ate', 'nome', 'cnpj', 'bairro', 'categoria', 'analista', 'cnae', 'complemento', 'numero'];
 
     /**
      * Grupo de status (filtro macro do SAPS) → conjunto de status do enum.
@@ -110,7 +110,16 @@ class ProcessoQueryService
             ->when($this->valor($filtros, 'bap'), fn (Builder $q, string $v) => $q->whereLike('external_reference', "%{$v}%", caseSensitive: false))
             ->when($this->valor($filtros, 'produto_tvl'), fn (Builder $q, string $v) => $q->whereHas('decision', fn ($d) => $d->whereLike('tvl_product_number', "%{$v}%", caseSensitive: false)))
             ->when($this->inteiro($filtros, 'servico'), fn (Builder $q, int $id) => $q->where('service_type_id', $id))
-            ->when($eventosDoServico !== null, fn (Builder $q) => $q->whereHas('eventos', fn ($e) => $this->aplicarEventos($e, $eventosDoServico)))
+            ->when($eventosDoServico !== null, fn (Builder $q) => $q->where(function (Builder $grupo) use ($eventosDoServico, $filtros): void {
+                $grupo->whereHas('eventos', fn ($e) => $this->aplicarEventos($e, $eventosDoServico));
+
+                $valor = (string) $this->valor($filtros, 'servico');
+                $tipos = app(ServicoNomenclaturaResolver::class)->tiposSinonimosDoNome(substr($valor, strlen(self::PREFIXO_NOME_SERVICO)));
+
+                if (str_starts_with($valor, self::PREFIXO_NOME_SERVICO) && $tipos !== []) {
+                    $grupo->orWhereIn('service_type_id', $tipos);
+                }
+            }))
             ->when($this->inteiro($filtros, 'setor'), fn (Builder $q, int $id) => $q->where('sector_id', $id))
             ->when($this->inteiro($filtros, 'analista'), fn (Builder $q, int $id) => $q->where('assigned_user_id', $id))
             ->when($this->valor($filtros, 'inscricao'), fn (Builder $q, string $v) => $q->whereLike('property_registration', "%{$v}%", caseSensitive: false))
@@ -120,6 +129,7 @@ class ProcessoQueryService
             ->when($this->valor($filtros, 'nome'), fn (Builder $q, string $v) => $this->aplicarNome($q, $v))
             ->when($this->valor($filtros, 'cnpj'), fn (Builder $q, string $v) => $this->aplicarDocumento($q, $v))
             ->when($this->valor($filtros, 'cnae'), fn (Builder $q, string $v) => $this->aplicarCnae($q, $v))
+            ->when($this->valor($filtros, 'numero'), fn (Builder $q, string $v) => $q->whereRaw("ltrim(trim(address_number), '0') = ?", [ltrim($v, '0')]))
             ->when($this->valor($filtros, 'complemento'), fn (Builder $q, string $v) => $q->whereLike('address_complement', "%{$v}%", caseSensitive: false))
             ->when($this->data($filtros, 'data_de'), fn (Builder $q, string $d) => $q->whereDate('protocoled_at', '>=', $d))
             ->when($this->data($filtros, 'data_ate'), fn (Builder $q, string $d) => $q->whereDate('protocoled_at', '<=', $d))

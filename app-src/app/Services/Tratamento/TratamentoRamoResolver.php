@@ -147,6 +147,18 @@ class TratamentoRamoResolver
                     continue;
                 }
 
+                // A JUCEB não exibe a P12 (produtos armazenados) quando a P11
+                // diz que no local funcionará só o escritório: a falta dela
+                // não indefere, o processo segue para análise (SEDUR, 03/11).
+                if ((int) $numero === 12 && array_key_exists(11, $input->respostas)
+                    && RespostaPlanilha::de($input->respostas[11])->comoBooleano() === false) {
+                    return new TratamentoRamoResult(
+                        status: 'nao_resolvido',
+                        motivo: $this->textos->get('tratamento.motivo.p12_escritorio_sem_resposta'),
+                        versaoRegra: $versao->version,
+                    );
+                }
+
                 // Subdivisão do CNAE ausente da planilha é falha de carga, não
                 // falta de resposta: o motivo é outro e nada é indeferido.
                 $subdivisaoAusente = $this->subdivisaoNaoCarregada((int) $numero, (string) ($textosDasPerguntas[(int) $numero] ?? ''), $input->cnae, (int) $versao->getKey());

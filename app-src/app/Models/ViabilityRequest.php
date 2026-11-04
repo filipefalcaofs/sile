@@ -442,14 +442,15 @@ class ViabilityRequest extends Model
     /**
      * Nome do campo Empresa (SEDUR, 22/10): a razão social, nunca o nome do
      * solicitante. Empresa a constituir do REGIN sem razão social pretendida
-     * nasce com o nome da pessoa; nesse caso o campo diz "Empresa a constituir".
+     * nasce com o nome da pessoa; nesse caso, ou com o marcador "Empresa a
+     * constituir" no lugar do nome, o campo fica vazio (SEDUR, 03/11).
      */
     public function nomeDaEmpresa(): ?string
     {
         $empresa = $this->company;
         $nome = $empresa?->legal_name ?: $empresa?->trade_name;
 
-        if ($nome === null || $nome === '') {
+        if ($nome === null || trim($nome) === '' || preg_match('/^empresa a constituir$/iu', trim($nome)) === 1) {
             return null;
         }
 
@@ -458,7 +459,7 @@ class ViabilityRequest extends Model
 
         if (strlen($documento) === 11 && $solicitante !== ''
             && mb_strtolower(Str::ascii(trim($nome))) === mb_strtolower(Str::ascii(trim($solicitante)))) {
-            return 'Empresa a constituir';
+            return null;
         }
 
         return $nome;
@@ -584,12 +585,17 @@ class ViabilityRequest extends Model
 
     /**
      * Códigos (só dígitos) das atividades incluídas segundo a comparação com a
-     * viabilidade da SEFAZ; null quando o pedido não passou por essa comparação.
+     * viabilidade anterior; null quando o pedido não passou por essa comparação
+     * ou muda de endereço (no endereço novo todas as atividades são enquadradas).
      *
      * @return list<string>|null
      */
     public function codigosIncluidosNaComparacao(): ?array
     {
+        if ($this->alteraEndereco()) {
+            return null;
+        }
+
         $comparacao = $this->comparacao_cnaes;
 
         return is_array($comparacao) ? array_values($comparacao['incluidas'] ?? []) : null;
@@ -620,6 +626,22 @@ class ViabilityRequest extends Model
     public function documents(): HasMany
     {
         return $this->hasMany(ViabilityRequestDocument::class);
+    }
+
+    /**
+     * Pedido da JUCEB que altera empresa já existente (endereço, atividade,
+     * nome etc.): algum evento recebido é uma "Alteração ..." ou o 244.
+     */
+    public function eAlteracaoDaJunta(): bool
+    {
+        return $this->eventos->contains(fn (ViabilityRequestEvento $evento): bool => $evento->codigo === '244'
+            || str_starts_with(ServicoNomenclatura::chaveDe((string) $evento->nome), 'alteracao'));
+    }
+
+    /** Pedido da JUCEB com evento de alteração de endereço. */
+    public function alteraEndereco(): bool
+    {
+        return $this->eventos->contains(fn (ViabilityRequestEvento $evento): bool => str_starts_with(ServicoNomenclatura::chaveDe((string) $evento->nome), 'alteracao de endereco'));
     }
 
     /**

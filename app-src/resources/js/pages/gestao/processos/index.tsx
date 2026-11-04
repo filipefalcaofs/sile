@@ -52,6 +52,7 @@ interface FiltrosTexto {
     fluxo: string;
     cnae: string;
     complemento: string;
+    numero: string;
 }
 
 interface AbasContagem {
@@ -141,6 +142,7 @@ const ROTULOS_FILTRO: Record<keyof FiltrosTexto, string> = {
     complemento: 'Complemento',
     inscricao: 'Inscrição imobiliária',
     logradouro: 'Logradouro',
+    numero: 'Número',
     bairro: 'Bairro',
     cep: 'CEP',
     servico: 'Serviço',
@@ -174,6 +176,7 @@ const CHAVES_FILTRO: (keyof FiltrosTexto)[] = [
     'fluxo',
     'cnae',
     'complemento',
+    'numero',
 ];
 
 const CHAVES_AVANCADAS = CHAVES_FILTRO.filter((chave) => chave !== 'busca');
@@ -597,6 +600,7 @@ export default function ConsultaProcessos({
                         <CampoTexto id="filtro-complemento" label="Complemento" value={form.complemento} onChange={(valor) => definir('complemento', valor)} />
                         <CampoMascara id="filtro-inscricao" label="Inscrição imobiliária" mask="inscricao" value={form.inscricao} onChange={(valor) => definir('inscricao', valor)} />
                         <CampoTexto id="filtro-logradouro" label="Logradouro" value={form.logradouro} onChange={(valor) => definir('logradouro', valor)} />
+                        <CampoTexto id="filtro-numero" label="Número" value={form.numero} onChange={(valor) => definir('numero', valor)} />
                         <CampoTexto id="filtro-bairro" label="Bairro" value={form.bairro} onChange={(valor) => definir('bairro', valor)} />
                         <CampoMascara id="filtro-cep" label="CEP" mask="cep" value={form.cep} onChange={(valor) => definir('cep', valor)} />
                         {!simplifica && (<>
@@ -890,11 +894,7 @@ function colunasProcessos(opcoes: {
                     <span className="font-semibold text-gray-800 tabular-nums dark:text-white/90">
                         {item.bap ?? item.protocol_number ?? '-'}
                     </span>
-                    {!/^empresa a constituir$/i.test(item.empresa?.trim() ?? '') && (
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                            {item.empresa ?? 'Requerente não informado'}
-                        </span>
-                    )}
+                    {item.empresa && <span className="text-xs text-gray-500 dark:text-gray-400">{item.empresa}</span>}
                 </div>
             ),
         },

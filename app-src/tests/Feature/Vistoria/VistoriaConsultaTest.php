@@ -11,6 +11,7 @@ use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
+use App\Models\Company;
 
 /**
  * Consulta de vistorias (fila do vistoriador): universo = processos no eixo
@@ -205,6 +206,19 @@ class VistoriaConsultaTest extends TestCase
         $this->actingAs($this->vistoriador, 'gestao')
             ->get('/gestao/vistorias?busca=Carlos')
             ->assertInertia(fn (Assert $page) => $page->has('vistorias.data', 2));
+    }
+
+    public function test_listagem_nao_exibe_empresa_a_constituir(): void
+    {
+        $empresa = Company::factory()->create(['trade_name' => null, 'legal_name' => 'Empresa a constituir']);
+        $this->processoEmVistoria(AnalysisStatus::Vistoriar, ['company_id' => $empresa->id]);
+
+        $this->actingAs($this->apoio(), 'gestao')
+            ->get('/gestao/vistorias')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('vistorias.data', 1)
+                ->where('vistorias.data.0.empresa', null));
     }
 
     public function test_consulta_exige_permissao(): void

@@ -25,6 +25,7 @@ export interface ProcessoFiltrosValores {
     analista: string;
     cnae: string;
     complemento: string;
+    numero?: string;
     /** Só no modo completo (os filtros inteiros da Consulta de processos). */
     produto_tvl?: string;
     inscricao?: string;
@@ -64,6 +65,7 @@ export const FILTROS_VAZIOS: ProcessoFiltrosValores = {
     analista: '',
     cnae: '',
     complemento: '',
+    numero: '',
     produto_tvl: '',
     inscricao: '',
     logradouro: '',
@@ -183,6 +185,10 @@ export default function ProcessoFiltros({
                 <div>
                     <Label htmlFor="filtro-cnae">CNAE</Label>
                     <Input id="filtro-cnae" value={form.cnae} onChange={(e) => definir('cnae', e.target.value)} placeholder="Código ou descrição" />
+                </div>
+                <div>
+                    <Label htmlFor="filtro-numero">Número</Label>
+                    <Input id="filtro-numero" value={form.numero ?? ''} onChange={(e) => definir('numero', e.target.value)} />
                 </div>
                 <div>
                     <Label htmlFor="filtro-complemento">Complemento</Label>

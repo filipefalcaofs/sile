@@ -14,6 +14,9 @@ use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
+use App\Models\ViabilityRequestEvento;
+use App\Services\Servicos\ServicoNomenclaturaResolver;
+use App\Models\ViabilityServiceType;
 
 /**
  * Filtros da consulta de processos e das caixas pedidos pela SEDUR: CNAE,
@@ -138,6 +141,53 @@ class ProcessoFiltrosAmpliadosTest extends TestCase
         $valores = array_column(ProcessoQueryService::categoriasDe($processo), 'value');
 
         $this->assertContains('abrigado_escritorio', $valores);
+    }
+
+    public function test_viabilidade_locacional_sai_do_filtro_e_entra_em_viabilidade_de_localizacao(): void
+    {
+        $locacional = ViabilityServiceType::factory()->create(['code' => 'tvl', 'name' => 'Viabilidade locacional']);
+        $doPortal = $this->processo(['service_type_id' => $locacional->id]);
+        $daJuceb = $this->processo();
+        ViabilityRequestEvento::factory()->create([
+            'viability_request_id' => $daJuceb->id,
+            'codigo' => '101',
+            'nome' => 'Inscrição de primeiro estabelecimento',
+        ]);
+        $outro = $this->processo(['service_type_id' => ViabilityServiceType::factory()->create()->id]);
+
+        $rotulos = array_column(app(ServicoNomenclaturaResolver::class)->opcoesDoFiltro(), 'label');
+
+        $this->assertNotContains('Viabilidade locacional', $rotulos);
+        $this->assertContains('Viabilidade de Localização', $rotulos);
+        $this->assertEqualsCanonicalizing(
+            [$doPortal->id, $daJuceb->id],
+            $this->idsFiltrados(['servico' => ProcessoQueryService::PREFIXO_NOME_SERVICO.'viabilidade de localizacao']),
+        );
+        $this->assertNotContains($outro->id, $this->idsFiltrados(['servico' => ProcessoQueryService::PREFIXO_NOME_SERVICO.'viabilidade de localizacao']));
+    }
+
+    public function test_viabilidade_de_localizacao_aparece_no_filtro_mesmo_sem_evento_recebido(): void
+    {
+        ViabilityServiceType::factory()->create(['code' => 'tvl', 'name' => 'Viabilidade locacional']);
+
+        $rotulos = array_column(app(ServicoNomenclaturaResolver::class)->opcoesDoFiltro(), 'label');
+
+        $this->assertSame(['Viabilidade de Localização'], array_values(array_filter($rotulos, fn (string $r): bool => str_starts_with($r, 'Viabilidade'))));
+    }
+
+    public function test_filtra_pelo_numero_da_porta_sem_zeros_a_esquerda(): void
+    {
+        $sete = $this->processo(['address_number' => '000007']);
+        $this->processo(['address_number' => '17']);
+        $this->processo(['address_number' => '70']);
+
+        $this->assertSame([$sete->id], $this->idsFiltrados(['numero' => '7']));
+        $this->assertSame([$sete->id], $this->idsFiltrados(['numero' => ' 07 ']));
+    }
+
+    public function test_numero_da_porta_e_filtro_das_caixas(): void
+    {
+        $this->assertContains('numero', ProcessoQueryService::CHAVES_FILTRO_CAIXA);
     }
 
     public function test_consulta_de_processos_aceita_os_filtros_novos_na_url(): void

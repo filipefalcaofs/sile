@@ -271,6 +271,26 @@ class FluxoExpressoAlteracaoComparacaoTest extends TestCase
         $this->assertNull($request->fresh()->camadas_incidentes);
     }
 
+    public function test_alteracao_de_endereco_sem_atividade_nova_enquadra_todas_no_novo_endereco(): void
+    {
+        Event::fake([ResultadoEmitido::class]);
+        $this->viabilidadeNaSefaz(['4712-1/00']);
+        $this->fakeCadastro(-12.971, -38.5107);
+        $request = $this->setupDeferivel('4712100');
+        $request->forceFill(['company_id' => Company::factory()->create(['cnpj' => self::CNPJ])->id])->save();
+        ViabilityRequestEvento::factory()->create(['viability_request_id' => $request->id, 'codigo' => '211', 'nome' => 'Alteração de endereço dentro do mesmo município']);
+        $request = $request->fresh();
+        $request->respostasTratamento = [11 => true];
+
+        $resultado = app(FluxoExpressoService::class)->decide($request);
+
+        $this->assertSame([], $request->fresh()->comparacao_cnaes['incluidas']);
+        $this->assertSame(['4712100'], $request->fresh()->comparacao_cnaes['mantidas']);
+        $this->assertNull($request->fresh()->codigosIncluidosNaComparacao());
+        $this->assertNotNull($request->fresh()->camadas_incidentes);
+        $this->assertSame(['4712100'], array_column($resultado->decision?->per_cnae ?? [], 'cnae'));
+    }
+
     public function test_deferimento_mantem_o_numero_da_viabilidade_existente(): void
     {
         Event::fake([ResultadoEmitido::class]);
