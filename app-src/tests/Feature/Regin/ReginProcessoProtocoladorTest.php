@@ -271,19 +271,19 @@ class ReginProcessoProtocoladorTest extends TestCase
 
     public function test_alteracao_usa_o_cnpj_do_protocolo_e_guarda_o_cpf_como_solicitante(): void
     {
-        $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($this->alteracao('52351234000177')));
+        $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($this->alteracao('52351234000187')));
 
-        $this->assertSame('52351234000177', $processo?->company->cnpj);
+        $this->assertSame('52351234000187', $processo?->company->cnpj);
         $this->assertSame('86781234500', $processo?->solicitante_cpf);
         $this->assertSame('JOAO CONTADOR', $processo?->solicitante_nome);
     }
 
     public function test_alteracoes_de_empresas_diferentes_pelo_mesmo_solicitante_nao_viram_uma_empresa_so(): void
     {
-        $primeira = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($this->alteracao('52351234000177')));
+        $primeira = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($this->alteracao('52351234000187')));
         $segunda = app(ReginProcessoProtocolador::class)->protocolar(ReginRecebimento::factory()->create([
             'protocolo' => '43748',
-            'corpo' => $this->alteracao('32151234000166'),
+            'corpo' => $this->alteracao('32151234000126'),
         ]));
 
         $this->assertNotSame($primeira?->company_id, $segunda?->company_id);
@@ -292,17 +292,42 @@ class ReginProcessoProtocoladorTest extends TestCase
 
     public function test_cnpj_so_no_bloco_extra_da_junta_tambem_vale(): void
     {
-        $envelope = $this->alteracao('66111234000155');
+        $envelope = $this->alteracao('66111234000114');
         $envelope['rowset']['PSC_PROTOCOLO']['CNPJ'] = '';
 
         $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($envelope));
 
-        $this->assertSame('66111234000155', $processo?->company->cnpj);
+        $this->assertSame('66111234000114', $processo?->company->cnpj);
+    }
+
+    public function test_inscricao_com_cnpj_de_preenchimento_continua_empresa_a_constituir(): void
+    {
+        $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($this->alteracao('11111111111111')));
+
+        $this->assertSame('86781234500', $processo?->company->cnpj);
+        $this->assertSame(0, Company::query()->where('cnpj', '11111111111111')->count());
+    }
+
+    public function test_comando_desfaz_a_ligacao_ao_cnpj_de_preenchimento(): void
+    {
+        $falsa = Company::factory()->create(['cnpj' => '11111111111111', 'legal_name' => 'Empresa REGIN']);
+        $processo = ViabilityRequest::factory()->create([
+            'origin' => ViabilityRequestOrigin::Regin,
+            'company_id' => $falsa->id,
+            'external_reference' => '43747',
+            'solicitante_cpf' => '86781234500',
+            'solicitante_nome' => 'JOAO CONTADOR',
+        ]);
+        $this->recebimento($this->alteracao('11111111111111'));
+
+        $this->artisan('regin:corrigir-cnpj-empresa')->expectsOutputToContain('Corrigidos: 1')->assertSuccessful();
+
+        $this->assertSame('86781234500', $processo->fresh()?->company->cnpj);
     }
 
     public function test_alteracao_sem_razao_social_nao_usa_o_nome_do_solicitante_como_empresa(): void
     {
-        $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($this->alteracao('52351234000177')));
+        $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($this->alteracao('52351234000187')));
 
         $this->assertNotSame('JOAO CONTADOR', $processo?->company->legal_name);
     }
@@ -310,13 +335,13 @@ class ReginProcessoProtocoladorTest extends TestCase
     public function test_comando_liga_a_alteracao_ja_gravada_a_empresa_do_cnpj(): void
     {
         $doCpf = Company::factory()->create(['cnpj' => '86781234500', 'legal_name' => 'JOAO CONTADOR']);
-        $daEmpresa = Company::factory()->create(['cnpj' => '52351234000177', 'legal_name' => 'Padaria Sol Ltda']);
+        $daEmpresa = Company::factory()->create(['cnpj' => '52351234000187', 'legal_name' => 'Padaria Sol Ltda']);
         $processo = ViabilityRequest::factory()->create([
             'origin' => ViabilityRequestOrigin::Regin,
             'company_id' => $doCpf->id,
             'external_reference' => '43747',
         ]);
-        $this->recebimento($this->alteracao('52351234000177'));
+        $this->recebimento($this->alteracao('52351234000187'));
 
         $this->artisan('regin:corrigir-cnpj-empresa', ['--dry-run' => true])->expectsOutputToContain('A corrigir: 1')->assertSuccessful();
         $this->assertSame($doCpf->id, $processo->fresh()?->company_id);
@@ -337,7 +362,7 @@ class ReginProcessoProtocoladorTest extends TestCase
             'company_id' => $doCpf->id,
             'external_reference' => '43747',
         ]);
-        $this->recebimento($this->alteracao('52351234000177'));
+        $this->recebimento($this->alteracao('52351234000187'));
         $aConstituir = ViabilityRequest::factory()->create([
             'origin' => ViabilityRequestOrigin::Regin,
             'company_id' => $doCpf->id,
@@ -349,7 +374,7 @@ class ReginProcessoProtocoladorTest extends TestCase
 
         $this->artisan('regin:corrigir-cnpj-empresa')->expectsOutputToContain('Corrigidos: 1')->assertSuccessful();
 
-        $this->assertSame('52351234000177', $alteracao->fresh()?->company->cnpj);
+        $this->assertSame('52351234000187', $alteracao->fresh()?->company->cnpj);
         $this->assertSame($doCpf->id, $aConstituir->fresh()?->company_id);
     }
 
