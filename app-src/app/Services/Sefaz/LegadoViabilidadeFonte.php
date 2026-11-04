@@ -66,9 +66,9 @@ class LegadoViabilidadeFonte implements FonteViabilidadeAnterior
      */
     private function buscar(string $cnpj): ?ViabilidadeVinculada
     {
-        $vigente = collect($this->client->provisoriasPorCnpj($cnpj))
+        $vigente = collect($this->client->deferidasPorCnpj($cnpj))
             ->filter(fn (TvlLegada $tvl): bool => $tvl->deferida && $tvl->ativa)
-            ->sortByDesc(fn (TvlLegada $tvl): string => sprintf('%s|%018d', $tvl->validade?->toIso8601String() ?? '', $tvl->numero))
+            ->sortByDesc(fn (TvlLegada $tvl): string => sprintf('%s|%018d', $tvl->emissao?->toIso8601String() ?? '', $tvl->numero))
             ->first();
 
         if ($vigente === null) {
