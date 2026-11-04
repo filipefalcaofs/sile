@@ -19,6 +19,8 @@ use Throwable;
  */
 class LegadoViabilidadeFonte implements FonteViabilidadeAnterior
 {
+    private bool $falhou = false;
+
     public function __construct(
         private LegadoSimplificaAjustes $ajustes,
         private LegadoViabilidadeClient $client,
@@ -34,8 +36,15 @@ class LegadoViabilidadeFonte implements FonteViabilidadeAnterior
         return $this->ajustes->disponivel();
     }
 
+    /** A última consulta falhou (rede, limite, erro da API) e devolveu null sem saber se há base. */
+    public function falhou(): bool
+    {
+        return $this->falhou;
+    }
+
     public function consultar(ViabilityRequest $processo, string $cnpj): ?ViabilidadeVinculada
     {
+        $this->falhou = false;
         $digitos = (string) preg_replace('/\D/', '', $cnpj);
         $chave = "legado:viabilidade:{$digitos}";
         $guardado = Cache::get($chave);
@@ -48,6 +57,8 @@ class LegadoViabilidadeFonte implements FonteViabilidadeAnterior
             $viabilidade = $this->buscar($digitos);
         } catch (Throwable $e) {
             report($e);
+
+            $this->falhou = true;
 
             return null;
         }

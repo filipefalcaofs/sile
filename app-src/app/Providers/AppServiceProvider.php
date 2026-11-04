@@ -45,6 +45,7 @@ use App\Services\Regin\HttpReginParecerNotifier;
 use App\Services\Regin\ReginParecerNotifier;
 use App\Services\Regin\UnavailableBapRegistry;
 use App\Services\Renovacao\ResolvedorEnderecoImovel;
+use App\Services\Sefaz\LegadoViabilidadeFonte;
 use App\Services\Sefaz\SefazViabilidadeConsultaGateway;
 use App\Services\Sefaz\SefazViabilidadeGateway;
 use App\Services\Sefaz\UnavailableSefazViabilidadeConsultaGateway;
@@ -131,6 +132,9 @@ class AppServiceProvider extends ServiceProvider
         // Sem feriado municipal cadastrado, degrada honesto (hasOfficialCalendar
         // = false) — nunca inventa feriado. A lista oficial é pendência SEDUR.
         $this->app->singleton(HolidayProvider::class, DatabaseHolidayProvider::class);
+
+        // Uma só instância por processo: o comando de comparação lê se a última consulta ao legado falhou.
+        $this->app->singleton(LegadoViabilidadeFonte::class);
 
         // Parecer ao Regin/Junta: provider HTTP real (api_integracao, header JWT).
         // SEFAZ e BAP continuam bloqueados honestos — o Unavailable lança e o

@@ -6,14 +6,17 @@ use App\Enums\ViabilityRequestStatus;
 use App\Models\ViabilityRequest;
 use App\Services\Sefaz\ComparacaoCnaesViabilidade;
 use App\Services\Sefaz\ConsultarComparacaoCnaesService;
+use App\Services\Sefaz\LegadoViabilidadeFonte;
 use Illuminate\Console\Command;
 use Throwable;
 
 /**
  * Preenche, nos processos de alteração da JUCEB que já estão na análise, a
- * comparação das atividades com a viabilidade anterior da empresa (Viabiliza,
- * Simplifica ou SEFAZ): incluídas, existentes e excluídas aparecem na ficha.
- * Não decide nem muda o status do processo.
+ * comparação das atividades com a viabilidade anterior da empresa (Simplifica,
+ * Viabiliza ou SEFAZ): incluídas, existentes e excluídas aparecem na ficha.
+ * Não decide nem muda o status do processo. Quando a consulta ao Simplifica
+ * falha (o limite da API é de 60 por minuto), espera e tenta de novo; se não
+ * responder, não grava "sem base" e conta como erro.
  */
 class CompararAtividadesAnterioresCommand extends Command
 {
@@ -21,20 +24,29 @@ class CompararAtividadesAnterioresCommand extends Command
         {--id=* : Só estes processos (id)}
         {--limite= : Máximo de processos nesta passada}
         {--refazer : Compara de novo quem já tem comparação}
+        {--refazer-sem-base : Compara de novo só quem ficou sem viabilidade anterior}
+        {--espera=60 : Segundos de espera quando o Simplifica não responde}
+        {--tentativas=3 : Tentativas por processo quando o Simplifica não responde}
         {--dry-run : Mostra o resultado, sem gravar}';
 
     protected $description = 'Compara as atividades dos processos de alteração em análise com a viabilidade anterior da empresa';
 
-    public function handle(ConsultarComparacaoCnaesService $comparacao): int
+    public function handle(ConsultarComparacaoCnaesService $comparacao, LegadoViabilidadeFonte $legado): int
     {
         $dryRun = (bool) $this->option('dry-run');
+        $espera = max(0, (int) $this->option('espera'));
+        $tentativas = max(1, (int) $this->option('tentativas'));
 
         $query = ViabilityRequest::query()
             ->where('status', ViabilityRequestStatus::EmAnalise)
             ->whereDoesntHave('decision')
             ->whereHas('eventos')
             ->whereHas('company', fn ($q) => $q->whereNotNull('cnpj'))
-            ->when(! $this->option('refazer'), fn ($q) => $q->whereNull('comparacao_cnaes'))
+            ->when(
+                $this->option('refazer-sem-base'),
+                fn ($q) => $q->where('comparacao_cnaes->sem_viabilidade', true),
+                fn ($q) => $q->when(! $this->option('refazer'), fn ($q) => $q->whereNull('comparacao_cnaes')),
+            )
             ->with(['company', 'eventos'])
             ->orderBy('id');
 
@@ -60,9 +72,7 @@ class CompararAtividadesAnterioresCommand extends Command
             }
 
             try {
-                $resultado = $dryRun
-                    ? $comparacao->compararSemGravar($processo)['resultado']
-                    : $comparacao->executar($processo, refazer: true);
+                $feita = $this->comparar($comparacao, $legado, $processo, $tentativas, $espera);
             } catch (Throwable $e) {
                 $this->error("{$rotulo}: {$e->getMessage()}");
                 $contagem['erros']++;
@@ -70,7 +80,18 @@ class CompararAtividadesAnterioresCommand extends Command
                 continue;
             }
 
-            if ($resultado === null || $resultado->semViabilidade) {
+            if ($feita === null) {
+                $this->error("{$rotulo}: o Simplifica não respondeu; nada gravado");
+                $contagem['erros']++;
+
+                continue;
+            }
+
+            if (! $dryRun) {
+                $comparacao->registrar($processo, $feita['resultado'], $feita['fonte']);
+            }
+
+            if ($feita['resultado']->semViabilidade) {
                 $contagem['sem_base']++;
                 $this->line("{$rotulo}: sem viabilidade anterior encontrada");
 
@@ -78,12 +99,35 @@ class CompararAtividadesAnterioresCommand extends Command
             }
 
             $contagem['comparados']++;
-            $this->line("{$rotulo}: ".$this->resumo($resultado));
+            $this->line("{$rotulo}: ".$this->resumo($feita['resultado']));
         }
 
         $this->info(($dryRun ? '[dry-run] ' : '')."comparados {$contagem['comparados']}, sem base {$contagem['sem_base']}, fora da regra {$contagem['ignorados']}, erros {$contagem['erros']}");
 
         return $contagem['erros'] > 0 ? self::FAILURE : self::SUCCESS;
+    }
+
+    /**
+     * Compara sem gravar. Null quando o Simplifica falhou em todas as tentativas.
+     *
+     * @return array{resultado: ComparacaoCnaesViabilidade, fonte: ?string}|null
+     */
+    private function comparar(ConsultarComparacaoCnaesService $comparacao, LegadoViabilidadeFonte $legado, ViabilityRequest $processo, int $tentativas, int $espera): ?array
+    {
+        for ($tentativa = 1; $tentativa <= $tentativas; $tentativa++) {
+            $feita = $comparacao->compararSemGravar($processo);
+
+            if (! $legado->falhou()) {
+                return $feita;
+            }
+
+            if ($tentativa < $tentativas && $espera > 0) {
+                $this->warn("Simplifica sem resposta; aguardando {$espera}s");
+                sleep($espera);
+            }
+        }
+
+        return null;
     }
 
     private function resumo(ComparacaoCnaesViabilidade $resultado): string

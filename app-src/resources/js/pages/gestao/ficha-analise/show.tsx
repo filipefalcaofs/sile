@@ -37,6 +37,7 @@ import EmptyState from '@/components/ui/empty-state';
 import { Modal } from '@/components/ui/modal';
 import GestaoLayout from '@/layouts/gestao-layout';
 import type { SharedProps } from '@/types';
+import { agruparCnaes } from './agrupar-cnaes';
 
 type StatusFicha = 'deferida' | 'indeferida';
 
@@ -1942,6 +1943,13 @@ export default function FichaAnaliseShow({
                         <Card>
                             <CardHeader
                                 title="Enquadramento por atividade (CNAE)"
+                                description={
+                                    comparacaoCnaes && !comparacaoCnaes.sem_viabilidade
+                                        ? `Comparado com a viabilidade anterior nº ${comparacaoCnaes.numero_viabilidade ?? '—'}.`
+                                        : comparacaoCnaes?.sem_viabilidade
+                                          ? 'Sem viabilidade anterior da empresa: todas as atividades são tratadas como incluídas.'
+                                          : undefined
+                                }
                                 actions={
                                     editavel && perCnae.length > 0 ? (
                                         <Checkbox
@@ -1959,8 +1967,21 @@ export default function FichaAnaliseShow({
                                         description="Nenhuma atividade foi pré-preenchida pelo sistema para este processo."
                                     />
                                 ) : (
+                                    <div className="space-y-6">
+                                        {agruparCnaes(perCnae, comparacaoCnaes).map((grupo) => (
+                                            <section key={grupo.chave} aria-label={grupo.titulo ?? 'Atividades'}>
+                                                {grupo.titulo && (
+                                                    <h4 className="mb-3 text-theme-sm font-semibold text-gray-800 dark:text-white/90">
+                                                        {grupo.titulo} ({grupo.itens.length})
+                                                    </h4>
+                                                )}
+                                                {grupo.titulo && grupo.itens.length === 0 && (
+                                                    <p className="text-theme-xs text-gray-500 dark:text-gray-400">
+                                                        {grupo.chave === 'incluidas' ? 'Nenhuma atividade incluída.' : 'Nenhuma atividade existente.'}
+                                                    </p>
+                                                )}
                                     <ul className="space-y-5">
-                                        {perCnae.map((item, indice) => {
+                                        {grupo.itens.map(({ item, indice }) => {
                                             const escolhido = item.status_escolhido ?? null;
                                             const digitosCnae = item.cnae.replace(/\D/g, '');
                                             const opcoesCnae = enquadramentoOpcoes[item.cnae] ?? enquadramentoOpcoes[digitosCnae] ?? [];
@@ -2156,6 +2177,38 @@ export default function FichaAnaliseShow({
                                             );
                                         })}
                                     </ul>
+                                            </section>
+                                        ))}
+                                        {comparacaoCnaes && !comparacaoCnaes.sem_viabilidade && (
+                                            <section aria-label="Atividades excluídas">
+                                                <h4 className="mb-3 text-theme-sm font-semibold text-gray-800 dark:text-white/90">
+                                                    Atividades excluídas ({comparacaoCnaes.excluidas.length})
+                                                </h4>
+                                                {comparacaoCnaes.excluidas.length === 0 ? (
+                                                    <p className="text-theme-xs text-gray-500 dark:text-gray-400">Nenhuma atividade excluída.</p>
+                                                ) : (
+                                                    <ul className="space-y-3">
+                                                        {comparacaoCnaes.excluidas.map((cnae) => (
+                                                            <li
+                                                                key={cnae.codigo}
+                                                                className="rounded-xl border-2 border-gray-200 p-4 dark:border-gray-700"
+                                                            >
+                                                                <div className="flex flex-wrap items-center gap-2">
+                                                                    <span className="font-medium text-gray-800 dark:text-white/90">{cnae.codigo}</span>
+                                                                    <Badge color="warning" size="sm">
+                                                                        Excluída
+                                                                    </Badge>
+                                                                    {cnae.descricao && (
+                                                                        <span className="text-theme-sm text-gray-600 dark:text-gray-300">{cnae.descricao}</span>
+                                                                    )}
+                                                                </div>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                )}
+                                            </section>
+                                        )}
+                                    </div>
                                 )}
                             </CardContent>
                         </Card>
