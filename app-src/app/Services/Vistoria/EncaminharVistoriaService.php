@@ -155,6 +155,8 @@ class EncaminharVistoriaService
                 'assigned_at' => $analista !== null ? now() : null,
             ])->save();
 
+            $referral?->forceFill(['devolvido_em' => now()])->save();
+
             $this->audit->log(
                 logName: 'vistoria',
                 event: 'vistoria-devolver',
