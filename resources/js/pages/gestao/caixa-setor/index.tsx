@@ -93,6 +93,21 @@ function emVistoria(item: ProcessoItem): boolean {
 }
 
 /** Formata a data-hora ISO do prazo para o padrão pt-BR (dd/mm/aaaa hh:mm). */
+function DataHora({ iso }: { iso: string | null }) {
+  const [data, hora] = formatarPrazo(iso).split(", ");
+
+  return (
+    <div className="flex flex-col">
+      <span>{data}</span>
+      {hora && (
+        <span className="text-theme-xs text-gray-400 dark:text-gray-500">
+          {hora}
+        </span>
+      )}
+    </div>
+  );
+}
+
 function formatarPrazo(iso: string | null): string {
   if (!iso) {
     return "-";
@@ -299,11 +314,12 @@ export default function CaixaSetorIndex({
       id: "data_entrada",
       header: "Data de entrada",
       cellClassName: "whitespace-nowrap",
-      cell: (item) => formatarPrazo(item.data_entrada),
+      cell: (item) => <DataHora iso={item.data_entrada} />,
     },
     {
       id: "endereco",
       header: "Endereço",
+      cellClassName: "min-w-40 max-w-52",
       cell: (item) => (
         <span className="text-gray-700 dark:text-gray-300">
           {item.imovel !== "" ? item.imovel : "-"}
@@ -313,7 +329,7 @@ export default function CaixaSetorIndex({
     {
       id: "tipo_imovel",
       header: "Tipo do imóvel",
-      cellClassName: "min-w-32",
+      cellClassName: "min-w-24 max-w-32",
       cell: (item) =>
         item.tipo_imovel ?? (
           <span className="text-gray-400 dark:text-gray-500">-</span>
@@ -322,7 +338,7 @@ export default function CaixaSetorIndex({
     {
       id: "servico",
       header: "Serviço",
-      cellClassName: "min-w-56 max-w-xs",
+      cellClassName: "min-w-36 max-w-48",
       cell: (item) =>
         item.servicos.length === 0 ? (
           <span className="text-gray-400 dark:text-gray-500">-</span>
@@ -342,19 +358,19 @@ export default function CaixaSetorIndex({
     {
       id: "cnae",
       header: "CNAE",
-      cellClassName: "min-w-64 max-w-sm",
+      cellClassName: "min-w-48 max-w-60",
       cell: (item) => <CnaesDoProcesso cnaes={item.cnaes} />,
     },
     {
       id: "etapa",
       header: "Etapa",
-      cellClassName: "whitespace-nowrap",
+      cellClassName: "min-w-24 max-w-32",
       cell: (item) => item.analysis_stage_label ?? "-",
     },
     {
       id: "responsavel",
       header: "Analista",
-      cellClassName: "whitespace-nowrap",
+      cellClassName: "min-w-28 max-w-40",
       cell: (item) =>
         (visao === "distribuidos"
           ? (item.encaminhado_para ?? item.assigned_to)
@@ -370,7 +386,7 @@ export default function CaixaSetorIndex({
           {
             id: "status_tramitacao",
             header: "Status",
-            cellClassName: "whitespace-nowrap",
+            cellClassName: "min-w-28 max-w-36",
             cell: (item: ProcessoItem) =>
               item.status_tramitacao ?? (
                 <span className="text-gray-400 dark:text-gray-500">-</span>
@@ -382,7 +398,7 @@ export default function CaixaSetorIndex({
           {
             id: "indicado_para",
             header: "Indicado para",
-            cellClassName: "whitespace-nowrap",
+            cellClassName: "min-w-28 max-w-40",
             cell: (item: ProcessoItem) => item.indicado_para ?? "",
           },
         ]
@@ -391,12 +407,13 @@ export default function CaixaSetorIndex({
       id: "prazo",
       header: "Prazo",
       cellClassName: "whitespace-nowrap",
-      cell: (item) => formatarPrazo(item.analysis_due_at),
+      cell: (item) => <DataHora iso={item.analysis_due_at} />,
     },
     {
       id: "actions",
       header: "Ações",
       align: "end",
+      sticky: "end",
       cellClassName: "whitespace-nowrap",
       cell: (item) => (
         <div className="flex justify-end gap-2">
@@ -558,7 +575,8 @@ export default function CaixaSetorIndex({
               columns={columns}
               rows={linhas}
               rowKey={(item) => item.id}
-              density="compact"
+              density="tight"
+              maxHeightClassName="max-h-[70vh]"
               emptyState={
                 <EmptyState
                   title={
